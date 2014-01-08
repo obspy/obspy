@@ -297,6 +297,8 @@ def _createExampleStream(headonly=False):
             st.append(Trace(data=data[channel], header=header))
         else:
             st.append(Trace(header=header))
+    from obspy.station import read_inventory
+    st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
     return st
 
 
@@ -2634,26 +2636,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         trace.stats.response. Does not raise an exception but shows a warning
         if response information can not be found for all traces. Returns a
         list of traces for which no response could be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Stream.remove_response`.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
         >>> st.attach_response(inv)
         []
-        >>> tr = st[1]
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-        >>> st = read()
-        >>> st.attach_response("/path/to/BW_RJOB.xml")
-        []
-        >>> tr = st[1]
+        >>> tr = st[0]
         >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
@@ -2684,6 +2675,49 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 else:
                     raise
         return skipped_traces
+
+    def remove_response(self, *args, **kwargs):
+        """
+        Method to deconvolve instrument response for all Traces in Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.remove_response` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> # Response object is already attached to example data:
+        >>> resp = st[0].stats.response
+        >>> print resp  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        Channel Response
+            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+            4 stages:
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+        >>> st.remove_response()  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
+        >>> st.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            st = read()
+            st.remove_response()
+            st.plot()
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.remove_response(*args, **kwargs)
+        return self
 
 
 def isPickle(filename):  # @UnusedVariable

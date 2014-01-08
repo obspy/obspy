@@ -10,6 +10,9 @@ Classes related to instrument responses.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import warnings
+import ctypes as C
+import numpy as np
+from collections import defaultdict
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex, \
@@ -393,7 +396,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
                "\tDIGITAL") % value
         value = value.lower()
         if "analog" in value:
-            if "radian" in value:
+            if "rad" in value:
                 self._cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
             elif "hertz" in value or "hz" in value:
                 self._cf_transfer_function_type = "ANALOG (HERTZ)"
@@ -698,65 +701,101 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def get_evalresp_response(self, t_samp, nfft):
+    def get_evalresp_response(self, t_samp, nfft, output="VEL",
+                              start_stage=None, end_stage=None):
         """
         Returns frequency response and corresponding frequencies using
         evalresp.
 
-        .. note::
-
-            This method is still experimental and not yet tested for all
-            possible response scenarios.
-
+        :type t_samp: float
         :param t_samp: time resolution (inverse frequency resolution)
+        :type nfft: int
         :param nfft: Number of FFT points to use
-        :returns: tuple containing frequency response and frequencies
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: tuple of two arrays
+        :returns: frequency response and corresponding frequencies
         """
-        msg = ("Response.get_evalresp_response() is experimental and not yet "
-               "tested for all possible response scenarios.")
-        warnings.warn(msg)
-        import ctypes as C
-        import numpy as np
         import obspy.signal.evrespwrapper as ew
-        from collections import defaultdict
         from obspy.signal.headers import clibevresp
+
+        out_units = output.upper()
+        if out_units not in ("DISP", "VEL", "ACC"):
+            msg = ("requested output is '%s' but must be one of 'DISP', 'VEL' "
+                   "or 'ACC'") % output
+            raise ValueError(msg)
 
         # Whacky. Evalresp uses a global variable and uses that to scale the
         # response if it encounters any unit that is not SI.
         scale_factor = [1.0]
 
         def get_unit_mapping(key):
+            try:
+                key = key.upper()
+            except:
+                pass
             units_mapping = {
                 "M": ew.ENUM_UNITS["DIS"],
                 "NM": ew.ENUM_UNITS["DIS"],
                 "CM": ew.ENUM_UNITS["DIS"],
                 "MM": ew.ENUM_UNITS["DIS"],
                 "M/S": ew.ENUM_UNITS["VEL"],
+                "M/SEC": ew.ENUM_UNITS["VEL"],
                 "NM/S": ew.ENUM_UNITS["VEL"],
+                "NM/SEC": ew.ENUM_UNITS["VEL"],
                 "CM/S": ew.ENUM_UNITS["VEL"],
+                "CM/SEC": ew.ENUM_UNITS["VEL"],
                 "MM/S": ew.ENUM_UNITS["VEL"],
+                "MM/SEC": ew.ENUM_UNITS["VEL"],
                 "M/S**2": ew.ENUM_UNITS["ACC"],
+                "M/(S**2)": ew.ENUM_UNITS["ACC"],
+                "M/SEC**2": ew.ENUM_UNITS["ACC"],
+                "M/(SEC**2)": ew.ENUM_UNITS["ACC"],
                 "NM/S**2": ew.ENUM_UNITS["ACC"],
+                "NM/(S**2)": ew.ENUM_UNITS["ACC"],
+                "NM/SEC**2": ew.ENUM_UNITS["ACC"],
+                "NM/(SEC**2)": ew.ENUM_UNITS["ACC"],
                 "CM/S**2": ew.ENUM_UNITS["ACC"],
+                "CM/(S**2)": ew.ENUM_UNITS["ACC"],
+                "CM/SEC**2": ew.ENUM_UNITS["ACC"],
+                "CM/(SEC**2)": ew.ENUM_UNITS["ACC"],
                 "MM/S**2": ew.ENUM_UNITS["ACC"],
+                "MM/(S**2)": ew.ENUM_UNITS["ACC"],
+                "MM/SEC**2": ew.ENUM_UNITS["ACC"],
+                "MM/(SEC**2)": ew.ENUM_UNITS["ACC"],
                 "V": ew.ENUM_UNITS["VOLTS"],
+                "VOLT": ew.ENUM_UNITS["VOLTS"],
+                "VOLTS": ew.ENUM_UNITS["VOLTS"],
+                # This is weird, but evalresp appears to do the same.
+                "V/M": ew.ENUM_UNITS["VOLTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
-                "PA": ew.ENUM_UNITS["PRESSURE"]}
+                "T": ew.ENUM_UNITS["TESLA"],
+                "PA": ew.ENUM_UNITS["PRESSURE"],
+                "MBAR": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
-                msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
-                       "would refuse to calculate a response for this channel."
-                       " Proceed with caution.") % key
-                warnings.warn(msg)
+                if key is not None:
+                    msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
+                           "would refuse to calculate a response for this "
+                           "channel. Proceed with caution.") % key
+                    warnings.warn(msg)
                 value = ew.ENUM_UNITS["UNDEF_UNITS"]
             else:
                 value = units_mapping[key]
 
             # Scale factor with the same logic as evalresp.
-            if key in ["CM/S**2", "CM/S*2"]:
+            if key in ["CM/S**2", "CM/S", "CM/SEC", "CM"]:
                 scale_factor[0] = 1.0E2
-            elif key in ["MM/S**2", "MM/S*2"]:
+            elif key in ["MM/S**2", "MM/S", "MM/SEC", "MM"]:
                 scale_factor[0] = 1.0E3
-            elif key in ["NM/S**2", "NM/S*2"]:
+            elif key in ["NM/S**2", "NM/S", "NM/SEC", "NM"]:
                 scale_factor[0] = 1.0E9
 
             return value
@@ -764,6 +803,13 @@ class Response(ComparingObject):
         all_stages = defaultdict(list)
 
         for stage in self.response_stages:
+            # optionally select only stages as requested by user
+            if start_stage is not None:
+                if stage.stage_sequence_number < start_stage:
+                    continue
+            if end_stage is not None:
+                if stage.stage_sequence_number > end_stage:
+                    continue
             all_stages[stage.stage_sequence_number].append(stage)
 
         stage_lengths = set(map(len, all_stages.values()))
@@ -781,8 +827,6 @@ class Response(ComparingObject):
 
             stage_blkts = []
 
-            blkt = ew.blkt()
-
             blockette = all_stages[stage_number][0]
 
             # Write the input and output units.
@@ -790,6 +834,7 @@ class Response(ComparingObject):
             st.output_units = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
+                blkt = ew.blkt()
                 # Map the transfer function type.
                 transfer_fct_mapping = {
                     "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
@@ -822,6 +867,7 @@ class Response(ComparingObject):
                 pz.zeros = C.cast(C.pointer(zeros),
                                   C.POINTER(ew.complex_number))
             elif isinstance(blockette, CoefficientsTypeResponseStage):
+                blkt = ew.blkt()
                 # This type can have either an FIR or an IIR response. If
                 # the number of denominators is 0, it is a FIR. Otherwise
                 # an IIR.
@@ -846,12 +892,66 @@ class Response(ComparingObject):
                                         C.POINTER(C.c_double))
                 # IIR
                 else:
-                    raise NotImplementedError
-            else:
-                msg = "Type: %s." % str(type(blockette))
-                raise NotImplementedError(msg)
+                    blkt.type = ew.ENUM_FILT_TYPES["IIR_COEFFS"]
+                    coeff = blkt.blkt_info.coeff
 
-            stage_blkts.append(blkt)
+                    coeff.h0 = 1.0
+                    coeff.nnumer = len(blockette.numerator)
+                    coeff.ndenom = len(blockette.denominator)
+
+                    # XXX: Find a better way to do this.
+                    coeffs = (C.c_double * len(blockette.numerator))()
+                    for i, value in enumerate(blockette.numerator):
+                        coeffs[i] = float(value)
+                    coeff.numer = C.cast(C.pointer(coeffs),
+                                         C.POINTER(C.c_double))
+                    coeffs = (C.c_double * len(blockette.denominator))()
+                    for i, value in enumerate(blockette.denominator):
+                        coeffs[i] = float(value)
+                    coeff.denom = C.cast(C.pointer(coeffs),
+                                         C.POINTER(C.c_double))
+            elif isinstance(blockette, ResponseListResponseStage):
+                msg = ("ResponseListResponseStage not yet implemented due to "
+                       "missing example data. Please contact the developers "
+                       "with a test data set (waveforms and StationXML "
+                       "metadata).")
+                raise NotImplementedError(msg)
+            elif isinstance(blockette, FIRResponseStage):
+                blkt = ew.blkt()
+
+                if blockette.symmetry == "NONE":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
+                if blockette.symmetry == "ODD":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_SYM_1"]
+                if blockette.symmetry == "EVEN":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_SYM_2"]
+
+                # The blockette is a fir blockette
+                fir = blkt.blkt_info.fir
+                fir.h0 = 1.0
+                fir.ncoeffs = len(blockette.coefficients)
+
+                # XXX: Find a better way to do this.
+                coeffs = (C.c_double * len(blockette.coefficients))()
+                for i, value in enumerate(blockette.coefficients):
+                    coeffs[i] = float(value)
+                fir.coeffs = C.cast(C.pointer(coeffs),
+                                    C.POINTER(C.c_double))
+            elif isinstance(blockette, PolynomialResponseStage):
+                msg = ("PolynomialResponseStage not yet implemented. "
+                       "Please contact the developers.")
+                raise NotImplementedError(msg)
+            else:
+                # Otherwise it could be a gain only stage.
+                if blockette.stage_gain is not None and \
+                        blockette.stage_gain_frequency is not None:
+                    blkt = None
+                else:
+                    msg = "Type: %s." % str(type(blockette))
+                    raise NotImplementedError(msg)
+
+            if blkt is not None:
+                stage_blkts.append(blkt)
 
             # Parse the decimation if is given.
             decimation_values = set([
@@ -883,13 +983,15 @@ class Response(ComparingObject):
                     blockette.decimation_correction
                 stage_blkts.append(blkt)
 
-            # Always add the gain.
-            blkt = ew.blkt()
-            blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
-            gain_blkt = blkt.blkt_info.gain
-            gain_blkt.gain = blockette.stage_gain
-            gain_blkt.gain_freq = blockette.stage_gain_frequency
-            stage_blkts.append(blkt)
+            # Add the gain if it is available.
+            if blockette.stage_gain is not None and \
+                    blockette.stage_gain_frequency is not None:
+                blkt = ew.blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+                gain_blkt = blkt.blkt_info.gain
+                gain_blkt.gain = blockette.stage_gain
+                gain_blkt.gain_freq = blockette.stage_gain_frequency
+                stage_blkts.append(blkt)
 
             if not stage_blkts:
                 msg = "At least one blockette is needed for the stage."
@@ -901,6 +1003,19 @@ class Response(ComparingObject):
                 stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
 
             stage_objects.append(st)
+
+        # Attach the instrument sensitivity as stage 0 at the end.
+        st = ew.stage()
+        st.sequence_no = 0
+        st.input_units = 0
+        st.output_units = 0
+        blkt = ew.blkt()
+        blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+        gain_blkt = blkt.blkt_info.gain
+        gain_blkt.gain = self.instrument_sensitivity.value
+        gain_blkt.gain_freq = self.instrument_sensitivity.frequency
+        st.first_blkt = C.pointer(blkt)
+        stage_objects.append(st)
 
         chan = ew.channel()
         if not stage_objects:
@@ -914,21 +1029,23 @@ class Response(ComparingObject):
 
         chan.nstages = len(stage_objects)
 
-        chan.sensit = self.instrument_sensitivity.value
-        chan.sensfreq = self.instrument_sensitivity.frequency
+        # Evalresp will take care of setting it to the overall sensitivity.
+        chan.sensit = 0.0
+        chan.sensfreq = 0.0
 
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
 
         output = np.empty(len(freqs), dtype="complex128")
-        out_units = C.c_char_p("VEL")
+        out_units = C.c_char_p(out_units)
 
         clibevresp.check_channel(C.pointer(chan))
         clibevresp.norm_resp(C.pointer(chan), -1, 0)
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
-        output *= scale_factor[0]
+        # XXX: Check if this is really not needed.
+        #output *= scale_factor[0]
 
         return output, freqs
 

@@ -486,43 +486,6 @@
                         <Coefficient number="842967163" plusError="2049296765.147" minusError="-895477797.444">-415687076.061</Coefficient>
                     </InstrumentPolynomial>
                     <Stage number="1" resourceId="yobZEhLY2LA_">
-                        <PolesZeros resourceId="RDDy9vjRfbjaErsgjt_1f9" name="aAy1A2I3aBIUqBnzRw">
-                            <Description>Wcg-33DHzIIk2sGZ4s_</Description>
-                            <InputUnits>
-                                <Name>R</Name>
-                                <Description>dVd81L7KII</Description>
-                            </InputUnits>
-                            <OutputUnits>
-                                <Name>YnM6rxi_wrdqVgooHPps</Name>
-                                <Description>dbbugkobSs8W238sLO.Win6vbXIUe</Description>
-                            </OutputUnits>
-                            <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0</NormalizationFactor>
-                            <NormalizationFrequency unit="HERTZ" plusError="319491633.227" minusError="-815247494.851">822303443.336</NormalizationFrequency>
-                            <Zero number="1318118000">
-                                <Real plusError="-1302784845.318" minusError="-573682549.904">1752038279.834</Real>
-                                <Imaginary plusError="-1032907432.991" minusError="269626460.547">-2114195840.05</Imaginary>
-                            </Zero>
-                            <Zero number="-427410725">
-                                <Real plusError="1446721018.61" minusError="616023801.575">-771243394.086</Real>
-                                <Imaginary plusError="-766052912.434" minusError="-1648692417.169">61567770.811</Imaginary>
-                            </Zero>
-                            <Pole number="1471327394">
-                                <Real plusError="2146077168.103" minusError="-267763763.499">-1290864537.231</Real>
-                                <Imaginary plusError="-1612412428.633" minusError="-872177133.071">-395968565.032</Imaginary>
-                            </Pole>
-                            <Pole number="-842837773">
-                                <Real plusError="1637276735.877" minusError="-1368588667.562">-1172820033.932</Real>
-                                <Imaginary plusError="-481909360.182" minusError="1881103970.024">-261477843.524</Imaginary>
-                            </Pole>
-                        </PolesZeros>
-                        <Decimation>
-                            <InputSampleRate unit="HERTZ" plusError="-128966995.742" minusError="799506635.498">1970605524.64</InputSampleRate>
-                            <Factor>2003433169</Factor>
-                            <Offset>1535733715</Offset>
-                            <Delay unit="NfcN0-v-WU.PZ" plusError="1540531124.605" minusError="85142356.928">-1581349208.345</Delay>
-                            <Correction unit="lrlBJ4cuIO0TF9NQ4abf8bhbtgli" plusError="1047940659.274" minusError="-703735380.759">-40309367.026</Correction>
-                        </Decimation>
                         <StageGain>
                             <Value>645229256.279</Value>
                             <Frequency>-1839866753.384</Frequency>

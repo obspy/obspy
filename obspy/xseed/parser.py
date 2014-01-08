@@ -764,10 +764,18 @@ class Parser(object):
             'B052F22     Start date:  %s\n' % channel_info['Start date'] +
             'B052F23     End date:    %s\n' % channel_info['End date'] +
             '#\t\t=======================================\n')
-        # Write all other blockettes. Currently now sorting takes place. This
-        # is just an experiment to see how rdseed does it. The Blockettes
-        # might need to be sorted.
-        for blkt in blockettes[1:]:
+
+        # Write all other blockettes. Sort by stage number (0 at the end) and
+        # the specified blockette id order.
+        order = [53, 54, 55, 56, 60, 61, 62, 57, 58, 59]
+        blockettes = sorted(
+            blockettes[1:],
+            key=lambda x: (x.stage_sequence_number
+                           if (hasattr(x, "stage_sequence_number") and
+                               x.stage_sequence_number)
+                           else float("inf"), order.index(x.id)))
+
+        for blkt in blockettes:
             if blkt.id not in RESP_BLOCKETTES:
                 continue
             try:

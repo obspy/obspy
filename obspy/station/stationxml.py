@@ -21,7 +21,7 @@ from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
 from obspy.station.response import PolesZerosResponseStage, \
     CoefficientsTypeResponseStage, ResponseListResponseStage, \
     FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
-    CoefficientWithUncertainties
+    CoefficientWithUncertainties, ResponseStage
 from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
     ComplexWithUncertainties
 
@@ -296,6 +296,8 @@ def _read_response(resp_element, _ns):
             _read_instrument_polynomial(instrument_polynomial, _ns)
     # Now read all the stages.
     for stage in resp_element.findall(_ns("Stage")):
+        if not len(stage):
+            continue
         response.response_stages.append(_read_response_stage(stage, _ns))
     return response
 
@@ -350,6 +352,14 @@ def _read_response_stage(stage_elem, _ns):
         if elem is not None:
             break
     else:
+        # Nothing more to parse for gain only blockettes, create minimal
+        # ResponseStage and return
+        if stage_gain is not None and stage_gain_frequency is not None:
+            return obspy.station.ResponseStage(
+                stage_sequence_number=stage_sequence_number,
+                stage_gain=stage_gain,
+                stage_gain_frequency=stage_gain_frequency,
+                resource_id=resource_id, input_units=None, output_units=None)
         # Raise if none of the previous ones has been found.
         msg = "Could not find a valid Response Stage Type."
         raise ValueError(msg)
@@ -958,62 +968,69 @@ def _write_response_stage(parent, stage):
     sub = etree.SubElement(parent, "Stage",
                            {'number': str(stage.stage_sequence_number),
                             'resourceId': stage.resource_id})
-    # create tag for stage type
-    tagname_map = {PolesZerosResponseStage: "PolesZeros",
-                   CoefficientsTypeResponseStage: "Coefficients",
-                   ResponseListResponseStage: "ResponseList",
-                   FIRResponseStage: "FIR",
-                   PolynomialResponseStage: "Polynomial"}
-    sub_ = etree.SubElement(sub, tagname_map[type(stage)],
-                            {'name': str(stage.name),
-                             'resourceId': stage.resource_id2})
-    # write operations common to all stage types
-    _obj2tag(sub_, "Description", stage.description)
-    sub__ = etree.SubElement(sub_, "InputUnits")
-    _obj2tag(sub__, "Name", stage.input_units)
-    _obj2tag(sub__, "Description", stage.input_units_description)
-    sub__ = etree.SubElement(sub_, "OutputUnits")
-    _obj2tag(sub__, "Name", stage.output_units)
-    _obj2tag(sub__, "Description", stage.output_units_description)
+    # do nothing for gain only response stages
+    if type(stage) == ResponseStage:
+        pass
+    else:
+        # create tag for stage type
+        tagname_map = {PolesZerosResponseStage: "PolesZeros",
+                       CoefficientsTypeResponseStage: "Coefficients",
+                       ResponseListResponseStage: "ResponseList",
+                       FIRResponseStage: "FIR",
+                       PolynomialResponseStage: "Polynomial"}
+        sub_ = etree.SubElement(sub, tagname_map[type(stage)],
+                                {'name': str(stage.name),
+                                 'resourceId': stage.resource_id2})
+        # write operations common to all stage types
+        _obj2tag(sub_, "Description", stage.description)
+        sub__ = etree.SubElement(sub_, "InputUnits")
+        _obj2tag(sub__, "Name", stage.input_units)
+        _obj2tag(sub__, "Description", stage.input_units_description)
+        sub__ = etree.SubElement(sub_, "OutputUnits")
+        _obj2tag(sub__, "Name", stage.output_units)
+        _obj2tag(sub__, "Description", stage.output_units_description)
 
-    # write custom fields of respective stage type
-    if isinstance(stage, PolesZerosResponseStage):
-        _obj2tag(sub_, "PzTransferFunctionType",
-                 stage.pz_transfer_function_type)
-        _obj2tag(sub_, "NormalizationFactor",
-                 stage.normalization_factor)
-        _write_floattype(sub_, stage, "normalization_frequency",
-                         "NormalizationFrequency")
-        _write_polezero_list(sub_, stage)
-    elif isinstance(stage, CoefficientsTypeResponseStage):
-        _obj2tag(sub_, "CfTransferFunctionType",
-                 stage.cf_transfer_function_type)
-        _write_floattype_list(sub_, stage,
-                              "numerator", "Numerator")
-        _write_floattype_list(sub_, stage,
-                              "denominator", "Denominator")
-    elif isinstance(stage, ResponseListResponseStage):
-        for rlelem in stage.response_list_elements:
-            sub__ = etree.SubElement(sub_, "ResponseListElement")
-            _write_floattype(sub__, rlelem, "frequency", "Frequency")
-            _write_floattype(sub__, rlelem, "amplitude", "Amplitude")
-            _write_floattype(sub__, rlelem, "phase", "Phase")
-    elif isinstance(stage, FIRResponseStage):
-        _obj2tag(sub_, "Symmetry", stage.symmetry)
-        _write_floattype_list(sub_, stage, "coefficients",
-                              "NumeratorCoefficient",
-                              additional_mapping={'number': 'i'})
-    elif isinstance(stage, PolynomialResponseStage):
-        _write_polynomial_common_fields(sub_, stage)
+        # write custom fields of respective stage type
+        if type(stage) == ResponseStage:
+            pass
+        elif isinstance(stage, PolesZerosResponseStage):
+            _obj2tag(sub_, "PzTransferFunctionType",
+                     stage.pz_transfer_function_type)
+            _obj2tag(sub_, "NormalizationFactor",
+                     stage.normalization_factor)
+            _write_floattype(sub_, stage, "normalization_frequency",
+                             "NormalizationFrequency")
+            _write_polezero_list(sub_, stage)
+        elif isinstance(stage, CoefficientsTypeResponseStage):
+            _obj2tag(sub_, "CfTransferFunctionType",
+                     stage.cf_transfer_function_type)
+            _write_floattype_list(sub_, stage,
+                                  "numerator", "Numerator")
+            _write_floattype_list(sub_, stage,
+                                  "denominator", "Denominator")
+        elif isinstance(stage, ResponseListResponseStage):
+            for rlelem in stage.response_list_elements:
+                sub__ = etree.SubElement(sub_, "ResponseListElement")
+                _write_floattype(sub__, rlelem, "frequency", "Frequency")
+                _write_floattype(sub__, rlelem, "amplitude", "Amplitude")
+                _write_floattype(sub__, rlelem, "phase", "Phase")
+        elif isinstance(stage, FIRResponseStage):
+            _obj2tag(sub_, "Symmetry", stage.symmetry)
+            _write_floattype_list(sub_, stage, "coefficients",
+                                  "NumeratorCoefficient",
+                                  additional_mapping={'number': 'i'})
+        elif isinstance(stage, PolynomialResponseStage):
+            _write_polynomial_common_fields(sub_, stage)
 
     # write decimation
-    sub_ = etree.SubElement(sub, "Decimation")
-    _write_floattype(sub_, stage, "decimation_input_sample_rate",
-                     "InputSampleRate")
-    _obj2tag(sub_, "Factor", stage.decimation_factor)
-    _obj2tag(sub_, "Offset", stage.decimation_offset)
-    _write_floattype(sub_, stage, "decimation_delay", "Delay")
-    _write_floattype(sub_, stage, "decimation_correction", "Correction")
+    if stage.decimation_input_sample_rate is not None:
+        sub_ = etree.SubElement(sub, "Decimation")
+        _write_floattype(sub_, stage, "decimation_input_sample_rate",
+                         "InputSampleRate")
+        _obj2tag(sub_, "Factor", stage.decimation_factor)
+        _obj2tag(sub_, "Offset", stage.decimation_offset)
+        _write_floattype(sub_, stage, "decimation_delay", "Delay")
+        _write_floattype(sub_, stage, "decimation_correction", "Correction")
     # write gain
     sub_ = etree.SubElement(sub, "StageGain")
     _obj2tag(sub_, "Value", stage.stage_gain)
