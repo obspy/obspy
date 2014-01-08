@@ -31,9 +31,9 @@ from future import standard_library
 from future.builtins import range
 from future.builtins import zip
 
+from obspy.core import compatibility
 import matplotlib.pyplot as plt
 from matplotlib import patches, collections, path as mplpath
-import io
 import numpy as np
 
 
@@ -209,7 +209,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
     elif format and not outfile:
-        imgdata = io.StringIO()
+        imgdata = compatibility.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
         return imgdata.read()

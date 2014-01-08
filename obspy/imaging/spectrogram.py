@@ -19,6 +19,7 @@ Plotting spectrogram of seismograms.
 from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import int
+from future.builtins import str
 
 from matplotlib import mlab
 from matplotlib.colors import Normalize
@@ -161,6 +162,11 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     halfbin_time = (time[1] - time[0]) / 2.0
     halfbin_freq = (freq[1] - freq[0]) / 2.0
 
+    # argument None is not allowed for kwargs on matplotlib python 3.3
+    kwargs = dict((k, v) for k, v in
+                  (('cmap', cmap), ('zorder', zorder))
+                  if v is not None)
+
     if log:
         # pcolor expects one bin more at the right end
         freq = np.concatenate((freq, [freq[-1] + 2 * halfbin_freq]))
@@ -178,8 +184,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
             # Log scaling for frequency values (y-axis)
             ax.set_yscale('log')
             # Plot times
-            ax.pcolormesh(time, freq, specgram, cmap=cmap, zorder=zorder,
-                          norm=norm)
+            ax.pcolormesh(time, freq, specgram, norm=norm, **kwargs)
         else:
             X, Y = np.meshgrid(time, freq)
             ax.pcolor(X, Y, specgram, cmap=cmap, zorder=zorder, norm=norm)
@@ -190,8 +195,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         # center bin
         extent = (time[0] - halfbin_time, time[-1] + halfbin_time,
                   freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
-        ax.imshow(specgram, interpolation="nearest", extent=extent,
-                  cmap=cmap, zorder=zorder)
+        ax.imshow(specgram, interpolation="nearest", extent=extent, **kwargs)
 
     # set correct way of axis, whitespace before and after with window
     # length

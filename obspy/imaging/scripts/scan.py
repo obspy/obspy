@@ -268,7 +268,7 @@ def main(option_list=None):
         ids = [x for x in ids if x in options.ids]
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
-    print()
+    print('\n')
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
         data[_id].sort()

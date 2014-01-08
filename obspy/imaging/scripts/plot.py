@@ -22,6 +22,12 @@ def main():
                       help="Disable automatic merging of matching channels.")
 
     (options, args) = parser.parse_args()
+
+    # Print help and exit if no arguments are given
+    if len(args) == 0:
+        parser.print_help()
+        raise SystemExit()
+
     st = Stream()
     for arg in args:
         st += read(arg, format=options.format)

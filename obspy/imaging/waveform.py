@@ -17,11 +17,11 @@ from future.builtins import range
 from copy import copy
 from datetime import datetime
 from obspy import UTCDateTime, Stream, Trace
+from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
     getMatplotlibVersion, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
-import io
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -218,13 +218,13 @@ class WaveformPlotting(object):
         try:
             if tr.stats.preview:
                 tr_id += 'preview'
-        except KeyError:
+        except AttributeError:
             pass
         # don't merge traces with different processing steps
         try:
             if tr.stats.processing:
                 tr_id += str(tr.stats.processing)
-        except KeyError:
+        except AttributeError:
             pass
         return tr_id
 
@@ -289,7 +289,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = io.StringIO()
+                imgdata = compatibility.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)

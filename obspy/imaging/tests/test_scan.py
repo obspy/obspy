@@ -41,7 +41,7 @@ class ScanTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
             try:
                 tmp_stdout = sys.stdout
-                sys.stdout = open(os.devnull, 'wb')
+                sys.stdout = open(os.devnull, 'wt')
                 obspy_scan(waveform_dirs + ['--output', ic.name])
             finally:
                 sys.stdout.close()
@@ -68,7 +68,8 @@ class ScanTestCase(unittest.TestCase):
             with NamedTemporaryFile() as f2:
                 with NamedTemporaryFile() as f3:
                     for i, fp in enumerate([f1, f2, f3]):
-                        fp.write("%s\n" % lines[i])
+                        fp.write(("%s\n" % lines[i]).encode('ascii',
+                                                            'strict'))
                         fp.flush()
                         fp.seek(0)
                         files.append(fp.name)
@@ -76,7 +77,7 @@ class ScanTestCase(unittest.TestCase):
                                          reltol=reltol) as ic:
                         try:
                             tmp_stdout = sys.stdout
-                            sys.stdout = open(os.devnull, 'wb')
+                            sys.stdout = open(os.devnull, 'wt')
                             obspy_scan(files + ['--output', ic.name])
                         finally:
                             sys.stdout.close()
