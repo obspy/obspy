@@ -416,26 +416,26 @@ class Client(object):
             data_stream.close()
             return inventory
 
-    def get_waveform(self, network, station, location, channel, starttime,
-                     endtime, quality=None, minimumlength=None,
-                     longestonly=None, filename=None, **kwargs):
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime, quality=None, minimumlength=None,
+                      longestonly=None, filename=None, **kwargs):
         """
         Query the dataselect service of the client.
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
-        >>> st = client.get_waveform("IU", "ANMO", "00", "BHZ", t1, t2)
+        >>> st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t1, t2)
         >>> print st  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveform("IU", "ANMO", "00", "BH*", t1, t2)
+        >>> st = client.get_waveforms("IU", "ANMO", "00", "BH*", t1, t2)
         >>> print st  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.00.BH2 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveform("IU", "A*", "*", "BHZ", t1, t2)
+        >>> st = client.get_waveforms("IU", "A*", "*", "BHZ", t1, t2)
         >>> print st  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         IU.ADK.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
@@ -445,7 +445,7 @@ class Client(object):
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
         IU.ANTO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveform("IU", "A??", "?0", "BHZ", t1, t2)
+        >>> st = client.get_waveforms("IU", "A??", "?0", "BHZ", t1, t2)
         >>> print st  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         IU.ADK.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
@@ -516,7 +516,7 @@ class Client(object):
             data_stream.close()
             return st
 
-    def get_waveform_bulk(self, bulk, quality=None, minimumlength=None,
+    def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
                           longestonly=None, filename=None, **kwargs):
         r"""
         Query the dataselect service of the client. Bulk request.
@@ -548,7 +548,7 @@ class Client(object):
         >>> bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
         ...         ("IU", "AFI", "1?", "BHE", t1, t3),
         ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
-        >>> st = client.get_waveform_bulk(bulk)
+        >>> st = client.get_waveforms_bulk(bulk)
         >>> print st  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
@@ -561,7 +561,7 @@ class Client(object):
         ...        'IU ANMO * BHZ 2010-02-27 2010-02-27T00:00:02\n' + \
         ...        'IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n' + \
         ...        'GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n'
-        >>> st = client.get_waveform_bulk(bulk)
+        >>> st = client.get_waveforms_bulk(bulk)
         >>> print st  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -569,7 +569,7 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: +SKIP
+        >>> st = client.get_waveforms_bulk("/tmp/request.txt")  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
