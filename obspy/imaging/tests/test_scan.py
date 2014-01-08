@@ -2,6 +2,8 @@
 """
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison

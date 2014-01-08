@@ -5,6 +5,7 @@ USAGE: obspy-plot [ -f format ] file1 file2 ...
 
 Wiggle plot of the data in files
 """
+from __future__ import unicode_literals
 from obspy import read, Stream
 from obspy import __version__
 from optparse import OptionParser

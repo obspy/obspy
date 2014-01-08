@@ -23,6 +23,8 @@ written by Lars Krieger and Sebastian Heimann.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
+from __future__ import division
+from __future__ import unicode_literals
 
 import numpy as np
 from matplotlib import patches, collections

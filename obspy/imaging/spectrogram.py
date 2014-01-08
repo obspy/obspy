@@ -16,6 +16,9 @@ Plotting spectrogram of seismograms.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
 
 from matplotlib import mlab
 from matplotlib.colors import Normalize
