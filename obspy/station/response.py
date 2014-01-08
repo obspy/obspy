@@ -709,8 +709,9 @@ class Response(ComparingObject):
 
         .. note::
 
-            This method is still experimental and not yet tested for all
-            possible response scenarios.
+            This method is still experimental. It has been tested for a very
+            large number of responses but there still might be non-working
+            edge-cases.
 
         :type t_samp: float
         :param t_samp: time resolution (inverse frequency resolution)
@@ -904,7 +905,9 @@ class Response(ComparingObject):
                     coeff.denom = C.cast(C.pointer(coeffs),
                                          C.POINTER(C.c_double))
             elif isinstance(blockette, ResponseListResponseStage):
-                raise NotImplementedError
+                msg = ("ResponseListResponseStage not yet implemented. Please"
+                       " contact the developers.")
+                raise NotImplementedError(msg)
             elif isinstance(blockette, FIRResponseStage):
                 blkt = ew.blkt()
 
