@@ -99,8 +99,10 @@ from client import Client
 from header import URL_MAPPINGS
 
 # insert supported URL mapping list dynamically in docstring
-Client.__init__.im_func.func_doc = \
-    Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
+# we need an if clause because add_doctests() executes the file once again
+if r"%s" in Client.__init__.__doc__:
+    Client.__init__.im_func.func_doc = \
+        Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
 
 if __name__ == '__main__':
