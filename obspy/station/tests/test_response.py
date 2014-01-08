@@ -40,7 +40,7 @@ class ResponseTest(unittest.TestCase):
         nfft = 16384
         # Test for different output units.
         units = ["DISP", "VEL", "ACC"]
-        filenames = ["IRIS_single_channel_with_response", "XM.05"]
+        filenames = ["IRIS_single_channel_with_response", "XM.05", "AU.MEEK"]
 
         for filename in filenames:
             xml_filename = os.path.join(self.data_dir,
