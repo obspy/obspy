@@ -338,10 +338,14 @@ class ClientTestCase(unittest.TestCase):
             # with open(file_, "wt") as fh:
             #    fh.write(got)
             expected = read_inventory(file_, format="STATIONXML")
-            # delete both creating time before comparing objects
+            # delete both creating times and modules before comparing objects.
             got.created = None
             expected.created = None
+            got.module = None
+            expected.module = None
+
             self.assertEqual(got, expected, failmsg(got, expected))
+
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_stations(filename=tf.name, **query)
@@ -349,7 +353,7 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_) as fh:
                     expected = fh.read()
-            ignore_lines = ['<Created>', '<TotalNumberStations>']
+            ignore_lines = ['<Created>', '<TotalNumberStations>', '<Module>']
             msg = failmsg(got, expected, ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
