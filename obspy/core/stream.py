@@ -2644,6 +2644,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         trace.stats.response. Does not raise an exception but shows a warning
         if response information can not be found for all traces. Returns a
         list of traces for which no response could be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Stream.remove_response`.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
@@ -2682,12 +2684,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise
         return skipped_traces
 
-    def deconvolve(self, *args, **kwargs):
+    def remove_response(self, *args, **kwargs):
         """
         Method to deconvolve instrument response for all Traces in Stream.
 
         For details see the corresponding
-        :meth:`~obspy.core.trace.Trace.deconvolve` method of
+        :meth:`~obspy.core.trace.Trace.remove_response` method of
         :class:`~obspy.core.trace.Trace`.
 
         >>> from obspy import read
@@ -2703,7 +2705,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
                 Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
                 Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-        >>> st.deconvolve()  # doctest: +ELLIPSIS
+        >>> st.remove_response()  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
 
@@ -2711,7 +2713,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             from obspy import read
             st = read()
-            st.deconvolve()
+            st.remove_response()
             st.plot()
 
         .. note::
@@ -2722,7 +2724,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your stream object.
         """
         for tr in self:
-            tr.deconvolve(*args, **kwargs)
+            tr.remove_response(*args, **kwargs)
         return self
 
 

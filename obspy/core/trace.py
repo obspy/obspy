@@ -1232,6 +1232,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
                 (paz_simulate, simulate_sensitivity)
             self._addProcessingInfo(proc_info)
+        if "seedresp" in kwargs:
+            proc_info = ("simulate:seedresp:" +
+                         ":".join(["%s=%s" % kv
+                                   for kv in seedresp.iteritems()]))
+            self._addProcessingInfo(proc_info)
         return self
 
     def filter(self, type, **options):
@@ -2023,6 +2028,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Search for and attach channel response to the trace as
         :class:`Trace`.stats.response. Raises an exception if no matching
         response can be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Trace.remove_response`.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
@@ -2062,8 +2069,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise Exception(msg)
         self.stats.response = responses[0]
 
-    def deconvolve(self, output="VEL", water_level=60, pre_filt=None,
-                   zero_mean=True, taper=True, taper_fraction=0.05, **kwargs):
+    def remove_response(self, output="VEL", water_level=60, pre_filt=None,
+                        zero_mean=True, taper=True, taper_fraction=0.05,
+                        **kwargs):
         """
         Deconvolve instrument response.
 
@@ -2082,8 +2090,22 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         spectrum, i.e. perform a pre-filtering in the frequency domain
         (specifying the four corner frequencies of the frequency taper as a
         tuple in `pre_filt`).
-        Any additional kwargs will be passed on to
-        :meth:`obspy.station.response.Response.get_evalresp_response`.
+
+        .. note::
+
+            Any additional kwargs will be passed on to
+            :meth:`obspy.station.response.Response.get_evalresp_response`, see
+            documentation of that method for further customization (e.g.
+            start/stop stage).
+
+        .. note::
+
+            Using :meth:`~Trace.remove_response` is equivalent to using
+            :meth:`~Trace.simulate` with the identical response provided as
+            a (dataless) SEED or RESP file and when using the same
+            `water_level` and `pre_filt` (and options `sacsim=True` and
+            `pitsasim=False` which influence very minor details in detrending
+            and tapering).
 
         .. rubric:: Example
 
@@ -2101,7 +2123,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
                 Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
                 Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-        >>> tr.deconvolve()  # doctest: +ELLIPSIS
+        >>> tr.remove_response()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
 
@@ -2110,7 +2132,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             from obspy import read
             st = read()
             tr = st[0]
-            tr.deconvolve()
+            tr.remove_response()
             tr.plot()
 
         :type output: str
@@ -2181,7 +2203,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         data = np.fft.irfft(data)[0:npts]
         # assign processed data and store processing information
         self.data = data
-        info = ":".join(["deconvolve"] +
+        info = ":".join(["remove_response"] +
                         map(str, [output, water_level, pre_filt,
                                   zero_mean, taper, taper_fraction]) +
                         ["%s=%s" % (k, v) for k, v in kwargs.iteritems()])

@@ -2030,6 +2030,8 @@ class StreamTestCase(unittest.TestCase):
         kwargs = dict(seedresp={'filename': p, 'units': "DIS"},
                       pre_filt=(1, 2, 50, 60), waterlevel=60)
         st.simulate(**kwargs)
+        for tr in st:
+            tr.stats.processing.pop()
 
         for resp_string, stringio in p.getRESP():
             stringio.seek(0, 0)
@@ -2039,6 +2041,7 @@ class StreamTestCase(unittest.TestCase):
                     fh.write(stringio.read())
                 tr1 = read().select(component=component)[0]
                 tr1.simulate(**kwargs)
+                tr1.stats.processing.pop()
             tr2 = st.select(component=component)[0]
             self.assertEqual(tr1, tr2)
 

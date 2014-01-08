@@ -2,10 +2,12 @@ dev:
  - obspy.core:
    * check if ndim == 1 when setting Trace.data and raise if necessary,
      see #695
- - new method Stream/Trace.deconvolve() to remove instrument response from
-   Response object attached to Trace, e.g. after parsing a StationXML file.
-   Similar to Stream/Trace.simulate(seedresp=...) but less cluttered 
-   parameters and without the simulating a different instrument part.
+ - new method Stream/Trace.remove_response() to remove instrument response
+   from Response object attached to trace(s), e.g. after parsing a
+   StationXML file. Similar to Stream/Trace.simulate(seedresp=...) for using a
+   Parser object (from dataless or xseed) or RESP file, but less
+   cluttered parameters and without the simulating a different instrument
+   part.
 
 0.9.0rc1:
  -  general:
