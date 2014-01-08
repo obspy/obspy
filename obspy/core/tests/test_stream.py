@@ -2079,6 +2079,19 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st.select(component="N")), 1)
         self.assertEqual(len(st.select(component="E")), 0)
 
+    def test_remove_response(self):
+        """
+        Test remove_response() method against simulate() with equivalent
+        parameters to check response removal from Response object read from
+        StationXML against pure evalresp providing an external RESP file.
+        """
+        st1 = read()
+        st2 = read()
+        for tr in st1:
+            tr.remove_response(pre_filt=(0.1, 0.5, 30, 50))
+        st2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
+        self.assertEqual(st1, st2)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
