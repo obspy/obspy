@@ -517,7 +517,7 @@ class Client(object):
             return st
 
     def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
-                          longestonly=None, filename=None, **kwargs):
+                           longestonly=None, filename=None, **kwargs):
         r"""
         Query the dataselect service of the client. Bulk request.
 
@@ -569,7 +569,8 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> st = client.get_waveforms_bulk("/tmp/request.txt")  # doctest: +SKIP
+        >>> st = client.get_waveforms_bulk("/tmp/request.txt")  \
+            # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
