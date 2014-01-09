@@ -6,8 +6,8 @@ from future.builtins import range
 from future.builtins import str
 from future.builtins import int
 
-from io import StringIO
 from lxml.etree import Element, SubElement
+from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
 from obspy.xseed.utils import setXPath, getXPath
@@ -73,9 +73,11 @@ class Blockette060(Blockette):
         Read Blockette 60.
         """
         # convert to stream for test issues
-        if isinstance(data, str):
+        if isinstance(data, bytes):
             length = len(data)
-            data = StringIO(data)
+            data = compatibility.BytesIO(data)
+        elif isinstance(data, str):
+            raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
         new_data = new_data[7:]
         number_of_stages = int(new_data[0:2])
@@ -200,4 +202,4 @@ class Blockette060(Blockette):
                           '%d could not be found.' % response_key
                     raise Exception(msg)
         string += '#\t\t\n'
-        return string
+        return string.encode()

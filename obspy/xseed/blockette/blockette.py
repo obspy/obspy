@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import str
 
-from io import StringIO
 from lxml.etree import Element
+from obspy.core import compatibility 
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils
 from obspy.xseed.fields import Integer, Loop
 import os
@@ -87,9 +87,11 @@ class Blockette(object):
         Parse given data for blockette fields and create attributes.
         """
         # convert to stream for test issues
-        if isinstance(data, str):
+        if isinstance(data, bytes):
             expected_length = len(data)
-            data = StringIO(data)
+            data = compatibility.BytesIO(data)
+        elif isinstance(data, str):
+            raise TypeError("data must be bytes, not string")
         start_pos = data.tell()
         # debug
         if self.debug:
@@ -137,11 +139,12 @@ class Blockette(object):
         Converts the blockette to a valid SEED string and returns it.
         """
         # loop over all blockette fields
-        data = ''
+        data = b''
         for field in self.getFields():
             data += field.getSEED(self)
         # add blockette id and length
-        return '%03d%04d%s' % (self.id, len(data) + 7, data)
+        _head = '%03d%04d' % (self.id, len(data) + 7)
+        return _head.encode('ascii', 'strict') + data
 
     def parseXML(self, xml_doc):
         """

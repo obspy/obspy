@@ -63,4 +63,4 @@ class Blockette057(Blockette):
                       self.decimation_offset,
                       formatRESP(self.estimated_delay, 6),
                       formatRESP(self.correction_applied, 6))
-        return out
+        return out.encode()

@@ -38,7 +38,7 @@ def xseed2dataless(filename, options):
     for file in files:
         if not os.path.isfile(file):
             continue
-        f = open(file, 'r')
+        f = open(file, 'rb')
         if f.read(1) != '<':
             if options.verbose:
                 msg = 'Skipping file %s' % file

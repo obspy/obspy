@@ -65,7 +65,10 @@ class Field(object):
         This method is partly adopted from fseed.py, the SEED builder for
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
-        sn = str(s).strip()
+        if isinstance(s, bytes):
+            sn = s.decode().strip()
+        else:
+            sn = str(s).strip()
         if self.flags and 'T' in self.flags:
             if not sn and self.default_value:
                 return self.default_value
@@ -179,7 +182,10 @@ class Field(object):
             result = utils.setXPath(self.xpath, result)
         # create XML element
         node = Element(self.field_name)
-        node.text = str(result).strip()
+        if isinstance(result, bytes):
+            node.text = result.decode().strip()
+        else:
+            node.text = str(result).strip()
         # debug
         if blockette.debug:
             print(('  %s: %s' % (self, [node])))
@@ -251,7 +257,7 @@ class Integer(Field):
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
-        return result
+        return result.encode()
 
 
 class Float(Field):
@@ -297,7 +303,7 @@ class Float(Field):
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
-        return result
+        return result.encode()
 
 
 class FixedString(Field):
@@ -322,7 +328,7 @@ class FixedString(Field):
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
-        return result
+        return result.encode()
 
 
 class VariableString(Field):
@@ -353,9 +359,9 @@ class VariableString(Field):
             # default value
             if data:
                 # create a full SEED date string
-                temp = "0000,000,00:00:00.0000"
+                temp = b"0000,000,00:00:00.0000"
                 data += temp[len(data):]
-                return UTCDateTime(data)
+                return UTCDateTime(data.decode())
             if self.default_value:
                 return self.default_value
             if self.min_length:
@@ -370,18 +376,18 @@ class VariableString(Field):
                 return data
 
     def _read(self, data):
-        buffer = ''
+        buffer = b''
         if self.min_length:
             buffer = data.read(self.min_length)
-            if '~' in buffer:
-                return buffer.split('~')[0]
-        temp = ''
+            if b'~' in buffer:
+                return buffer.split(b'~')[0]
+        temp = b''
         i = self.min_length
-        while temp != '~':
+        while temp != b'~':
             temp = data.read(1)
-            if temp == '~':
+            if temp == b'~':
                 return buffer
-            elif temp == '':
+            elif temp == b'':
                 # raise if EOF is reached
                 raise SEEDTypeException('Variable string has no terminator')
             buffer += temp
@@ -412,7 +418,7 @@ class VariableString(Field):
             msg += ' Adding %d space(s).' % (delta)
             warnings.warn(msg, UserWarning)
             result = ' ' * delta + result
-        return result
+        return result.encode()
 
 
 class Loop(Field):
@@ -468,7 +474,7 @@ class Loop(Field):
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
-        data = ''
+        data = b''
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:

@@ -113,4 +113,4 @@ class Blockette054(Blockette):
                     formatRESP(self.denominator_coefficient, 6),
                     formatRESP(self.denominator_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

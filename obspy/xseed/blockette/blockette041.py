@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import range
 from future.builtins import int
+from future.builtins import str
 
-from io import StringIO
+import os
+from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
     Loop
@@ -44,16 +46,18 @@ class Blockette041(Blockette):
         response lookup key is expected - this is checked here.
         """
         # convert to stream for test issues
-        if isinstance(data, str):
+        if isinstance(data, bytes):
             expected_length = len(data)
-            data = StringIO(data)
+            data = compatibility.BytesIO(data)
+        elif isinstance(data, str):
+            raise TypeError("Data must be bytes, not string")
         # get current lookup key
         pos = data.tell()
         data.read(7)
         global_lookup_key = int(data.read(4))
         data.seek(pos)
         # read first blockette
-        temp = StringIO()
+        temp = compatibility.BytesIO()
         temp.write(data.read(expected_length))
         # check next blockettes
         while True:
@@ -84,8 +88,10 @@ class Blockette041(Blockette):
         # reposition file pointer
         data.seek(pos)
         # parse new combined temporary blockette
+        temp.seek(0, os.SEEK_END)
+        _len = temp.tell()
         temp.seek(0)
-        Blockette.parseSEED(self, temp, expected_length=temp.len)
+        Blockette.parseSEED(self, temp, expected_length=_len)
 
     def parseXML(self, xml_doc, *args, **kwargs):
         if self.xseed_version == '1.0':

@@ -80,4 +80,4 @@ class Blockette061(Blockette):
             out += 'B061F09    %4s %13s\n' % \
                 (0, formatRESP(self.FIR_coefficient, 6))
         out += '#\t\t\n'
-        return out
+        return out.encode()

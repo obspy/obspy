@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from future.builtins import open
 from future.builtins import range
 from future.builtins import int
+from future.builtins import str
+from future.utils import PY2
 
 from glob import iglob
 from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
@@ -29,7 +31,7 @@ class BlocketteTestCase(unittest.TestCase):
         A wrong blockette length should raise an exception.
         """
         # create a blockette 054 which is way to long
-        b054 = "0540240A0400300300000020" + ("+1.58748E-03" * 40)
+        b054 = b"0540240A0400300300000020" + (b"+1.58748E-03" * 40)
         blockette = Blockette054(strict=True)
         self.assertRaises(BlocketteLengthException, blockette.parseSEED, b054)
 
@@ -40,7 +42,7 @@ class BlocketteTestCase(unittest.TestCase):
         # Create a new empty list to store all information of the test in it.
         test_examples = []
         # Now read the corresponding file and parse it.
-        file = open(blkt_file, 'r')
+        file = open(blkt_file, 'rb')
         # Helper variable to parse the file. Might be a little bit slow but its
         # just for tests.
         cur_stat = None
@@ -163,7 +165,7 @@ class BlocketteTestCase(unittest.TestCase):
                     if key2 == 'SEED':
                         continue
                     xseed = etree.tostring(blkt1['blkt'].getXML(
-                        xseed_version=blkt2['version']))
+                        xseed_version=blkt2['version'])).decode()
                     self.assertEqual(xseed, versions[key2]['data'],
                                      errmsg % (blkt_number, 'XSEED', key2,
                                                xseed, blkt2['data']))
@@ -210,7 +212,7 @@ class BlocketteTestCase(unittest.TestCase):
             "0363210102003,211,11:18:00.0000~2004,146,08:52:00.0000~NFR"
         # reading should work but without issues
         blockette = Blockette050()
-        blockette.parseSEED(b050_orig)
+        blockette.parseSEED(b050_orig.encode())
         self.assertEquals(len(blockette.site_name), 72)
         # writing raises an UserWarning by default
         with warnings.catch_warnings(record=True):
