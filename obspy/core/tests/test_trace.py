@@ -11,6 +11,7 @@ from obspy import UTCDateTime, Trace, read, Stream
 from obspy.core import Stats
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
+from obspy.xseed import Parser
 import math
 import mock
 import numpy as np
@@ -1524,6 +1525,24 @@ class TraceTestCase(unittest.TestCase):
                 ]
         for d in data:
             self.assertRaises(ValueError, Trace, data=d)
+
+    def test_remove_response(self):
+        """
+        Test remove_response() method against simulate() with equivalent
+        parameters to check response removal from Response object read from
+        StationXML against pure evalresp providing an external RESP file.
+        """
+        tr1 = read()[0]
+        tr2 = tr1.copy()
+        # deconvolve from dataless with simulate() via Parser from
+        # dataless/RESP
+        parser = Parser("/path/to/dataless.seed.BW_RJOB")
+        tr1.simulate(seedresp={"filename": parser, "units": "VEL"},
+                     water_level=60, pre_filt=(0.1, 0.5, 30, 50), sacsim=True,
+                     pitsasim=False)
+        # deconvolve from StationXML with remove_response()
+        tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
+        np.testing.assert_array_almost_equal(tr1.data, tr2.data)
 
 
 def suite():

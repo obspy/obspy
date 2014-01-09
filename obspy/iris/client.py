@@ -41,7 +41,7 @@ class Client(object):
 
     :type base_url: str, optional
     :param base_url: Base URL of the IRIS Web service (default
-        is ``'http://www.iris.edu/ws'``).
+        is ``'http://service.iris.edu/irisws'``).
     :type user: str, optional
     :param user: The user name used for authentication with the Web
         service (default an empty string).
@@ -176,8 +176,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
 
@@ -190,8 +190,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
 
@@ -204,8 +204,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
 
@@ -217,8 +217,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
 
@@ -227,7 +227,8 @@ class Client(object):
                    output='miniseed', **kwargs):
         """
         Low-level interface for `timeseries` Web service of IRIS
-        (http://www.iris.edu/ws/timeseries/)- release 1.3.5 (2012-06-07).
+        (http://service.iris.edu/irisws/timeseries/)- release 1.3.5
+        (2012-06-07).
 
         This method fetches segments of seismic data and returns data formatted
         in either MiniSEED, ASCII or SAC. It can optionally filter the data.
@@ -409,7 +410,7 @@ class Client(object):
              starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `resp` Web service of IRIS
-        (http://www.iris.edu/ws/resp/) - 1.4.1 (2011-04-14).
+        (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
         `RESP <http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F>`_
@@ -506,8 +507,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
 
@@ -520,8 +521,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
 
@@ -553,8 +554,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
 
@@ -562,7 +563,7 @@ class Client(object):
               starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `sacpz` Web service of IRIS
-        (http://www.iris.edu/ws/sacpz/) - release 1.1.1 (2012-1-9).
+        (http://service.iris.edu/irisws/sacpz/) - release 1.1.1 (2012-1-9).
 
         This method provides access to instrument response information
         (per-channel) as poles and zeros in the ASCII format used by SAC and
@@ -666,7 +667,7 @@ class Client(object):
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
         Low-level interface for `distaz` Web service of IRIS
-        (http://www.iris.edu/ws/distaz/) - release 1.0.1 (2010).
+        (http://service.iris.edu/irisws/distaz/) - release 1.0.1 (2010).
 
         This method will calculate the great-circle angular distance, azimuth,
         and backazimuth between two geographic coordinate pairs. All results
@@ -724,7 +725,8 @@ class Client(object):
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
         Low-level interface for `flinnengdahl` Web service of IRIS
-        (http://www.iris.edu/ws/flinnengdahl/) - release 1.1 (2011-06-08).
+        (http://service.iris.edu/irisws/flinnengdahl/) - release 1.1
+        (2011-06-08).
 
         This method converts a latitude, longitude pair into either a
         `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
@@ -783,7 +785,8 @@ class Client(object):
                    mintimeonly=False, filename=None):
         """
         Low-level interface for `traveltime` Web service of IRIS
-        (http://www.iris.edu/ws/traveltime/) - release 1.1.1 (2012-05-15).
+        (http://service.iris.edu/irisws/traveltime/) - release 1.1.1
+        (2012-05-15).
 
         This method will calculates travel-times for seismic phases using a 1-D
         spherical earth model.
@@ -924,7 +927,8 @@ class Client(object):
                  filename=None, **kwargs):
         """
         Low-level interface for `evalresp` Web service of IRIS
-        (http://www.iris.edu/ws/evalresp/) - release 1.0.0 (2011-08-11).
+        (http://service.iris.edu/irisws/evalresp/) - release 1.0.0
+        (2011-08-11).
 
         This method evaluates instrument response information stored at the
         IRIS DMC and outputs ASCII data or
@@ -1113,8 +1117,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
 

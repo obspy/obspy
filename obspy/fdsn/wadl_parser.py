@@ -17,6 +17,7 @@ from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
 
+from collections import defaultdict
 from lxml import etree
 import warnings
 
@@ -50,15 +51,40 @@ class WADLParser(object):
             self._short_to_long_mapping[item[1]] = item[0]
 
         # Retrieve all the parameters.
-        parameters = self._xpath(
-            doc, "/application/resources/resource/resource/"
-            "method[@id='query'][@name='GET']/request/param")
-        # XXX: USGS is special right now. They have to make it one layer
-        # deeper. Remove once they fix it.
-        if not parameters and "usgs" in url.lower():
-            parameters = self._xpath(
-                doc, "/application/resources/resource/"
-                "method[@id='query'][@name='GET']/request/param")
+        parameters = self._xpath(doc, "//method[@name='GET']/request/param")
+
+        # The following is an attempt to parse WADL files in a very general way
+        # that is hopefully able to deal with faulty WADLs as maintaining a
+        # list of special cases for different WADLs is not a good solution.
+        all_parameters = defaultdict(list)
+
+        # Group the parameters by the 'id' attribute of the greatparents tag.
+        # The 'name' tag will always be 'GET' due to the construction of the
+        # xpath expression.
+        for param in parameters:
+            gparent = param.getparent().getparent()
+            id_attr = gparent.get("id") or ""
+            all_parameters[id_attr.lower()].append(param)
+
+        # If query is a key, choose it.
+        if "query" in all_parameters:
+            parameters = all_parameters["query"]
+        # Otherwise discard any keys that have "auth" in them but choose others
+        # that have query in them. If all of that fails but an empty "id"
+        # attribute is available, choose that.
+        else:
+            for key in all_parameters.iterkeys():
+                if "query" in key and "auth" not in key:
+                    parameters = all_parameters[key]
+                    break
+            else:
+                if "" in all_parameters:
+                    parameters = all_parameters[""]
+                else:
+                    msg = "Could not parse the WADL at '%s'. Invalid WADL?" \
+                        % url
+                    raise ValueError(msg)
+
         if not parameters:
             msg = "Could not find any parameters"
             raise ValueError(msg)
@@ -112,19 +138,21 @@ class WADLParser(object):
                 param_type = DEFAULT_TYPES[name]
             else:
                 param_type = str
-        elif param_type in ["xs:date", "xs:dateTime"]:
-            param_type = UTCDateTime
-        elif param_type == "xs:string":
-            param_type = str
-        elif param_type == "xs:double":
-            param_type = float
-        elif param_type in ["xs:long", "xs:int", "xs:integer"]:
-            param_type = int
-        elif param_type == "xs:boolean":
-            param_type = bool
         else:
-            msg = "Unknown parameter type '%s' in WADL." % param_type
-            raise ValueError(msg)
+            p = param_type.lower()
+            if "date" in p:
+                param_type = UTCDateTime
+            elif "string" in p:
+                param_type = str
+            elif "double" in p or "float" in p:
+                param_type = float
+            elif "long" in p or "int" in p:
+                param_type = int
+            elif "bool" in p:
+                param_type = bool
+            else:
+                msg = "Unknown parameter type '%s' in WADL." % param_type
+                raise ValueError(msg)
 
         default_value = param_doc.get("default")
         if default_value is not None:

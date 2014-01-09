@@ -1,22 +1,17 @@
-dev:
- - obspy.core:
-   * check if ndim == 1 when setting Trace.data and raise if necessary,
-     see #695
- - obspy.core:
-   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
-     WaveformStreamID as specified in QuakeML docs (#633)
- - obspy.xseed:
-   * allow parsing of oversized VariableString from SEED, but warn and cut
-     string to max_length at writing SEED (#701)
- - obspy.mseed:
-   * libmseed v2.12
-
-0.9.0rc1:
+0.9.0:
  -  general:
    * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
  - obspy.core:
+   * Stream/Trace.attach_response(): convenience method to attach response to
+     traces from inventories.
+   * new method Stream/Trace.remove_response() to remove instrument response
+     from Response object attached to trace(s), e.g. after parsing a
+     StationXML file. Similar to Stream/Trace.simulate(seedresp=...) for
+     using a Parser object (from dataless or xseed) or RESP file, but less
+     cluttered parameters and without the simulating a different instrument
+     part.
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
    * The writeQuakeML() function, also accessible through
@@ -61,10 +56,12 @@ dev:
    * inverse filtering of catalogs.
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
-   * Stream/Trace.attach_response(): convenience method to attach response to
-     traces from inventories.
    * added command line script "obspy-print" to print information on local
      waveform files
+   * check if ndim == 1 when setting Trace.data and raise if necessary,
+     see #695
+   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
+     WaveformStreamID as specified in QuakeML docs (#633)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -118,6 +115,7 @@ dev:
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
+   * libmseed v2.12
  - obspy.neic:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
@@ -217,6 +215,8 @@ dev:
    * added getInventory() method to the Parser object. Returns a dictionary
      about the contents of the Parser object. This is also integrated in the
      string representation and makes it more informative.
+   * allow parsing of oversized VariableString from SEED, but warn and cut
+     string to max_length at writing SEED (#701)
  - obspy.mseed:
    * adding experimental details option, which extracts timing quality and
      info on the calibration

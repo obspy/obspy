@@ -1166,7 +1166,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.plot()  # doctest: +SKIP
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
         ...                       -131.04-467.29j, -131.04+467.29j],
@@ -1186,7 +1185,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             from obspy.signal import cornFreq2Paz
             st = read()
             tr = st[0]
-            tr.plot()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
                                   -131.04-467.29j, -131.04+467.29j],
@@ -1242,6 +1240,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if paz_simulate:
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
                 (paz_simulate, simulate_sensitivity)
+            self._addProcessingInfo(proc_info)
+        if "seedresp" in kwargs:
+            proc_info = ("simulate:seedresp:" +
+                         ":".join(["%s=%s" % kv
+                                   for kv in seedresp.iteritems()]))
             self._addProcessingInfo(proc_info)
         return self
 
@@ -2032,8 +2035,25 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def attach_response(self, inventories):
         """
         Search for and attach channel response to the trace as
-        trace.stats.response. Raises an exception if no matching response can
-        be found.
+        :class:`Trace`.stats.response. Raises an exception if no matching
+        response can be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Trace.remove_response`.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> tr = st[0]
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> tr.attach_response(inv)
+        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
 
         :type inventories: :class:`~obspy.station.inventory.Inventory` or
             :class:`~obspy.station.network.Network` or a list containing
@@ -2057,6 +2077,147 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             msg = "No matching response information found."
             raise Exception(msg)
         self.stats.response = responses[0]
+
+    def remove_response(self, output="VEL", water_level=60, pre_filt=None,
+                        zero_mean=True, taper=True, taper_fraction=0.05,
+                        **kwargs):
+        """
+        Deconvolve instrument response.
+
+        Uses the :class:`obspy.station.response.Response` object attached as
+        :class:`Trace`.stats.response to deconvolve the instrument response
+        from the trace's timeseries data. Raises an exception if the response
+        is not present. Use e.g. :meth:`Trace.attach_response` to attach
+        response to trace providing :class:`obspy.station.inventory.Inventory`
+        data.
+        Note that there are two ways to prevent overamplification
+        while convolving the inverted instrument spectrum: One possibility is
+        to specify a water level which represents a clipping of the inverse
+        spectrum and limits amplification to a certain maximum cut-off value
+        (`water_level` in dB). The other possibility is to taper the waveform
+        data in the frequency domain prior to multiplying with the inverse
+        spectrum, i.e. perform a pre-filtering in the frequency domain
+        (specifying the four corner frequencies of the frequency taper as a
+        tuple in `pre_filt`).
+
+        .. note::
+
+            Any additional kwargs will be passed on to
+            :meth:`obspy.station.response.Response.get_evalresp_response`, see
+            documentation of that method for further customization (e.g.
+            start/stop stage).
+
+        .. note::
+
+            Using :meth:`~Trace.remove_response` is equivalent to using
+            :meth:`~Trace.simulate` with the identical response provided as
+            a (dataless) SEED or RESP file and when using the same
+            `water_level` and `pre_filt` (and options `sacsim=True` and
+            `pitsasim=False` which influence very minor details in detrending
+            and tapering).
+
+        .. rubric:: Example
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> tr = st[0].copy()
+        >>> tr.plot()  # doctest: +SKIP
+        >>> # Response object is already attached to example data:
+        >>> print tr.stats.response  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        Channel Response
+            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+            4 stages:
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+        >>> tr.remove_response()  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            st = read()
+            tr = st[0]
+            tr.remove_response()
+            tr.plot()
+
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type water_level: float
+        :param water_level: Water level for deconvolution.
+        :type pre_filt: List or tuple of four float
+        :param pre_filt: Apply a bandpass filter in frequency domain to the
+            data before deconvolution. The list or tuple defines
+            the four corner frequencies `(f1, f2, f3, f4)` of a cosine taper
+            which is one between `f2` and `f3` and tapers to zero for
+            `f1 < f < f2` and `f3 < f < f4`.
+        :type zero_mean: bool
+        :param zero_mean: If `True`, the mean of the waveform data is
+            subtracted in time domain prior to deconvolution.
+        :type taper: bool
+        :param taper: If `True`, a cosine taper is applied to the waveform data
+            in time domain prior to deconvolution.
+        :type taper_fraction: float
+        :param taper_fraction: Taper fraction of cosine taper to use.
+        """
+        from obspy.station import Response
+        from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
+
+        if "response" not in self.stats:
+            msg = ("No response information attached to trace "
+                   "(as Trace.stats.response).")
+            raise KeyError(msg)
+        if not isinstance(self.stats.response, Response):
+            msg = ("Response must be of type obspy.station.response.Response "
+                   "(but is of type %s).") % type(self.stats.response)
+            raise TypeError(msg)
+
+        data = self.data.astype("float64")
+        npts = len(data)
+        # time domain pre-processing
+        if zero_mean:
+            data -= data.mean()
+        if taper:
+            data *= cosTaper(npts, taper_fraction,
+                             sactaper=True, halfcosine=False)
+        # The number of points for the FFT has to be at least 2 * npts (in
+        # order to prohibit wrap around effects during convolution) cf.
+        # evalresp scales directly with nfft, therefore taking the next power
+        # of two has a greater negative performance impact than the slow down
+        # of a not power of two in the FFT
+        if npts & 0x1:  # check if uneven
+            nfft = 2 * (npts + 1)
+        else:
+            nfft = 2 * npts
+        # Transform data to Frequency domain
+        data = np.fft.rfft(data, n=nfft)
+        # calculate and apply frequency response,
+        # optionally prefilter in frequency domain and/or apply water level
+        freq_response, freqs = \
+            self.stats.response.get_evalresp_response(self.stats.delta, nfft,
+                                                      output=output, **kwargs)
+        if pre_filt:
+            data *= c_sac_taper(freqs, flimit=pre_filt)
+        if water_level is not None:
+            specInv(freq_response, water_level)
+        data *= freq_response
+
+        data[-1] = abs(data[-1]) + 0.0j
+        # transform data back into the time domain
+        data = np.fft.irfft(data)[0:npts]
+        # assign processed data and store processing information
+        self.data = data
+        info = ":".join(["remove_response"] +
+                        map(str, [output, water_level, pre_filt,
+                                  zero_mean, taper, taper_fraction]) +
+                        ["%s=%s" % (k, v) for k, v in kwargs.iteritems()])
+        self._addProcessingInfo(info)
+        return self
 
 
 def _data_sanity_checks(value):

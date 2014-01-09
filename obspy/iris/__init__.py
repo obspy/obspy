@@ -47,6 +47,12 @@ examples to retrieve various data from the IRIS DMC.
 """
 
 from client import Client
+import warnings
+
+msg = ("Development and maintenance efforts will focus on the new obspy.fdsn "
+       "client. Please consider moving all code from using obspy.iris to "
+       "using obspy.fdsn.")
+warnings.warn(msg, DeprecationWarning)
 
 
 if __name__ == '__main__':
