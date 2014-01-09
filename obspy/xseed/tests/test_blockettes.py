@@ -4,6 +4,7 @@ from future.builtins import open
 from future.builtins import range
 from future.builtins import int
 from future.builtins import str
+from future.builtins import bytes
 from future.utils import PY2
 
 from glob import iglob
@@ -204,6 +205,7 @@ class BlocketteTestCase(unittest.TestCase):
         """
         Testing an oversized site name.
         """
+
         b050_orig = "0500168ANTF +43.564000  +7.123000  +54.0   6  0" + \
             "Antibes - 06004 - Alpes-Maritimes - Provence-Alpes-Côte d'" + \
             "Azur - France~ 363210102003,211,11:18:00~2004,146,08:52:00~NFR"
@@ -212,9 +214,10 @@ class BlocketteTestCase(unittest.TestCase):
             "0363210102003,211,11:18:00.0000~2004,146,08:52:00.0000~NFR"
         # reading should work but without issues
         blockette = Blockette050()
-        blockette.parseSEED(b050_orig.encode())
-        self.assertEqual(len(blockette.site_name), 72)
-        # writing raises an UserWarning by default
+        # utf-8 only needed for PY2
+        blockette.parseSEED(b050_orig.encode('utf-8'))
+        # utf-8 only needed for PY2
+        self.assertEqual(len(blockette.site_name.encode('utf-8')), 72)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, blockette.getSEED)
@@ -222,14 +225,17 @@ class BlocketteTestCase(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             # writing should cut to 60 chars
             out = blockette.getSEED()
-            self.assertEqual(out, b050_cut)
+            # utf-8 only needed for PY2
+            self.assertEqual(out.decode('utf-8'), b050_cut)
             # reading it again should have cut length
             blockette = Blockette050()
             blockette.parseSEED(out)
-            self.assertEqual(len(blockette.site_name), 60)
+            # utf-8 only needed for PY2
+            self.assertEqual(len(blockette.site_name.encode('utf-8')), 60)
         # writing with strict=True will raise
         blockette = Blockette050(strict=True)
-        blockette.parseSEED(b050_orig)
+        # utf-8 only needed for PY2
+        blockette.parseSEED(b050_orig.encode('utf-8'))
         self.assertRaises(SEEDTypeException, blockette.getSEED)
 
 

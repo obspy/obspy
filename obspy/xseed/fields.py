@@ -11,6 +11,7 @@ Helper module containing xseed fields.
 from __future__ import print_function
 from __future__ import unicode_literals
 from future.builtins import str
+from future.builtins import bytes
 from future.builtins import range
 from future.builtins import int
 
@@ -66,7 +67,7 @@ class Field(object):
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
         if isinstance(s, bytes):
-            sn = s.decode().strip()
+            sn = s.decode('utf-8').strip()
         else:
             sn = str(s).strip()
         if self.flags and 'T' in self.flags:
@@ -395,7 +396,7 @@ class VariableString(Field):
         return buffer
 
     def write(self, data, strict=False):  # @UnusedVariable
-        result = self._formatString(data)
+        result = self._formatString(data).encode('utf-8')
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.max_length, self.attribute_name)
@@ -408,7 +409,7 @@ class VariableString(Field):
         # not include the tilde terminator - however this is not valid for
         # minimum sizes - e.g. optional date fields in Blockette 10
         # so we add here the terminator string, and check minimum size below
-        result += '~'
+        result += b'~'
         if len(result) < self.min_length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.min_length, self.attribute_name)
@@ -417,8 +418,8 @@ class VariableString(Field):
             delta = self.min_length - len(result)
             msg += ' Adding %d space(s).' % (delta)
             warnings.warn(msg, UserWarning)
-            result = ' ' * delta + result
-        return result.encode()
+            result = b' ' * delta + result
+        return result
 
 
 class Loop(Field):
