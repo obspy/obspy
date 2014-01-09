@@ -49,13 +49,16 @@ class ResponseTest(unittest.TestCase):
                                          filename + os.path.extsep + "seed")
 
             p = Parser(seed_filename)
-            resp_filename = p.getRESP()[0][-1]
+
             # older systems don't like an end date in the year 2599
             t_ = UTCDateTime(2030, 1, 1)
             if p.blockettes[50][0].end_effective_date > t_:
                 p.blockettes[50][0].end_effective_date = None
             if p.blockettes[52][0].end_date > t_:
                 p.blockettes[52][0].end_date = None
+
+            resp_filename = p.getRESP()[0][-1]
+
             inv = read_inventory(xml_filename)
 
             network = inv[0].code
