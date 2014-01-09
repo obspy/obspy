@@ -213,7 +213,7 @@ class BlocketteTestCase(unittest.TestCase):
         # reading should work but without issues
         blockette = Blockette050()
         blockette.parseSEED(b050_orig.encode())
-        self.assertEquals(len(blockette.site_name), 72)
+        self.assertEqual(len(blockette.site_name), 72)
         # writing raises an UserWarning by default
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
@@ -222,11 +222,11 @@ class BlocketteTestCase(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             # writing should cut to 60 chars
             out = blockette.getSEED()
-            self.assertEquals(out, b050_cut)
+            self.assertEqual(out, b050_cut)
             # reading it again should have cut length
             blockette = Blockette050()
             blockette.parseSEED(out)
-            self.assertEquals(len(blockette.site_name), 60)
+            self.assertEqual(len(blockette.site_name), 60)
         # writing with strict=True will raise
         blockette = Blockette050(strict=True)
         blockette.parseSEED(b050_orig)

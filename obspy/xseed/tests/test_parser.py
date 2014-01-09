@@ -55,7 +55,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertEqual(len(w), 1)
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue('date' and 'required' in
-                            w[-1].message.message.lower())
+                            str(w[-1].message).lower())
             # Triggers a warning.
             paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
             result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
@@ -94,7 +94,7 @@ class ParserTestCase(unittest.TestCase):
         p = Parser(filename)
         sp = str(p).splitlines()
         sp = [_i.strip() for _i in sp]
-        self.assertEquals(sp, [
+        self.assertEqual(sp, [
             "Networks:",
             "BW (BayernNetz)",
             "Stations:",
@@ -162,12 +162,12 @@ class ParserTestCase(unittest.TestCase):
         b010 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
+        self.assertEqual(b010, blockette.getSEED())
         # create a valid blockette 054
         b054 = b"0540240A0400300300000009" + (b"+1.58748E-03" * 18)
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054)
-        self.assertEquals(b054, blockette.getSEED())
+        self.assertEqual(b054, blockette.getSEED())
         # combine data
         data = b"000001V " + b010 + (b' ' * 206)
         data += b"000002S " + b054 + (b' ' * 8)
@@ -183,7 +183,7 @@ class ParserTestCase(unittest.TestCase):
         b010 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
+        self.assertEqual(b010, blockette.getSEED())
         # create a valid blockette 054
         b054 = b"0540960A0400300300000039"
         nr = b""
@@ -191,7 +191,7 @@ class ParserTestCase(unittest.TestCase):
             nr = nr + ("+1.000%02dE-03" % i).encode('ascii', 'strict')  # 960 chars
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
-        self.assertEquals(b054 + nr, blockette.getSEED())
+        self.assertEqual(b054 + nr, blockette.getSEED())
         # create a blockette 051
         b051 = b'05100271999,123~~0001000000'
         blockette = Blockette051(strict=False)
@@ -217,10 +217,10 @@ class ParserTestCase(unittest.TestCase):
             warnings.simplefilter("ignore")
             parser.read(data)
         # check results
-        self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
-        self.assertEquals(len(parser.blockettes[10]), 1)
-        self.assertEquals(len(parser.blockettes[51]), 1)
-        self.assertEquals(len(parser.blockettes[54]), 2)
+        self.assertEqual(sorted(parser.blockettes.keys()), [10, 51, 54])
+        self.assertEqual(len(parser.blockettes[10]), 1)
+        self.assertEqual(len(parser.blockettes[51]), 1)
+        self.assertEqual(len(parser.blockettes[54]), 2)
 
     def test_blocketteLongerThanRecordLength(self):
         """
@@ -569,7 +569,7 @@ class ParserTestCase(unittest.TestCase):
             warnings.simplefilter("ignore", UserWarning)
             blockette = Blockette010()
             blockette.parseSEED(b010)
-            self.assertEquals(b010, blockette.getSEED())
+            self.assertEqual(b010, blockette.getSEED())
         # blockette 10 - missing volume time
         b010 = b"0100034 2.4082008,001~2038,001~~~~"
         # strict raises an exception
@@ -580,7 +580,7 @@ class ParserTestCase(unittest.TestCase):
         # The warning cannot be tested due to being issued only once.
         # A similar case is tested in test_bug165.
         blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
+        self.assertEqual(b010, blockette.getSEED())
 
     def test_issue298a(self):
         """
@@ -610,7 +610,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertRaises(UserWarning, Parser, filename)
             warnings.simplefilter("ignore", UserWarning)
             parser = Parser(filename)
-            self.assertEquals(parser.version, 2.3)
+            self.assertEqual(parser.version, 2.3)
 
     def test_issue157(self):
         """

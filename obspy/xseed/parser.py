@@ -160,7 +160,8 @@ class Parser(object):
                 data = compatibility.BytesIO(data)
             elif os.path.isfile(data):
                 # looks like a file - read it
-                data = open(data, 'rb').read()
+                with open(data, 'rb') as f:
+                    data = f.read()
                 data = compatibility.BytesIO(data)
             else:
                 raise IOError("data is neither filename nor valid URL")
@@ -267,7 +268,8 @@ class Parser(object):
         """
         result = self.getXSEED(*args, **kwargs)
         if isinstance(result, bytes):
-            open(filename, 'wb').write(result)
+            with open(filename, 'wb') as f:
+                f.write(result)
             return
         elif isinstance(result, dict):
             for key, value in result.items():
@@ -278,7 +280,8 @@ class Parser(object):
                 else:
                     # current meta data - leave original filename
                     fn = filename
-                open(fn, 'wb').write(value)
+                with open(fn, 'wb') as f:
+                    f.write(value)
             return
         else:
             raise TypeError
