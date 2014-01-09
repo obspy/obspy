@@ -35,14 +35,14 @@ import zipfile
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
-HEADERS = [b'V', b'A', b'S']
+HEADERS = ['V', 'A', 'S']
 # @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
 HEADER_INFO = {
-    b'V': {'name': 'Volume Index Control Header',
+    'V': {'name': 'Volume Index Control Header',
            'blockettes': [10, 11, 12]},
-    b'A': {'name': 'Abbreviation Dictionary Control Header',
+    'A': {'name': 'Abbreviation Dictionary Control Header',
            'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
-    b'S': {'name': 'Station Control Header',
+    'S': {'name': 'Station Control Header',
            'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
 }
 RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
@@ -637,8 +637,8 @@ class Parser(object):
         # Loop through file and pass merged records to _parseMergedData.
         while record:
             record_continuation = (record[7:8] == CONTINUE_FROM_LAST_RECORD)
-            same_record_type = (record[6:7] == record_type)
-            if record_type == b'S' and record[8:11] != b'050':
+            same_record_type = (record[6:7].decode() == record_type)
+            if record_type == 'S' and record[8:11] != b'050':
                 record_continuation = True
             if record_continuation and same_record_type:
                 # continued record
@@ -646,7 +646,7 @@ class Parser(object):
             else:
                 self._parseMergedData(merged_data.strip(), record_type)
                 # first or new type of record
-                record_type = record[6:7]
+                record_type = record[6:7].decode()
                 merged_data = record[8:]
                 if record_type not in HEADERS:
                     # only parse headers, no data
@@ -743,12 +743,12 @@ class Parser(object):
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(
-            self._parseXMLBlockette(headers[0].getchildren()[0], b'V',
+            self._parseXMLBlockette(headers[0].getchildren()[0], 'V',
                                     xseed_version))
         # Append all abbreviations.
         for blkt in headers[1].getchildren():
             self.temp['abbreviations'].append(
-                self._parseXMLBlockette(blkt, b'A', xseed_version))
+                self._parseXMLBlockette(blkt, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -756,7 +756,7 @@ class Parser(object):
             self.temp['stations'].append([])
             for blkt in control_header.getchildren():
                 self.temp['stations'][-1].append(
-                    self._parseXMLBlockette(blkt, b'S', xseed_version))
+                    self._parseXMLBlockette(blkt, 'S', xseed_version))
         # Update internal values.
         self._updateInternalSEEDStructure()
 
@@ -1023,11 +1023,11 @@ class Parser(object):
         blockette_length = 0
         blockette_id = -1
         # Find out what kind of record is being parsed.
-        if record_type == b'S':
+        if record_type == 'S':
             # Create new station blockettes list.
             self.temp['stations'].append([])
             root_attribute = self.temp['stations'][-1]
-        elif record_type == b'V':
+        elif record_type == 'V':
             # Just one Volume header per file allowed.
             if len(self.temp['volume']):
                 msg = 'More than one Volume index control header found!'
