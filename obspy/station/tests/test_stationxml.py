@@ -9,10 +9,13 @@ Test suite for the StationXML reader and writer.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import open
 import fnmatch
 from io import BytesIO
 import inspect
-from itertools import izip
+
 import os
 import unittest
 import re
@@ -44,7 +47,7 @@ class StationXMLTestCase(unittest.TestCase):
         org_lines = [_i.strip() for _i in org_lines
                      if not _i.strip().startswith("<Module")]
 
-        for new_line, org_line in izip(new_lines, org_lines):
+        for new_line, org_line in zip(new_lines, org_lines):
             regex = "<(.*?) (.*?)>"
 
             def callback(pattern):

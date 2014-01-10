@@ -9,6 +9,10 @@ Utility objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import str
+from future.builtins import int
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \

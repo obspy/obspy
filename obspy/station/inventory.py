@@ -1,4 +1,4 @@
-#d!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Provides the Inventory class.
@@ -9,6 +9,8 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import str
 from pkg_resources import load_entry_point
 import obspy
 from obspy.core.util.base import ComparingObject
@@ -28,7 +30,7 @@ def read_inventory(path_or_file_object, format=None):
     :param path_or_file_object: Filename or file like object.
     """
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(path_or_file_object, basestring) and \
+    if isinstance(path_or_file_object, str) and \
        path_or_file_object.startswith('/path/to/'):
         try:
             path_or_file_object = getExampleFile(path_or_file_object[9:])
@@ -119,7 +121,7 @@ class Inventory(ComparingObject):
             "channels": []}
         for network in self.networks:
             content_dict['networks'].append(network.code)
-            for key, value in network.get_contents().iteritems():
+            for key, value in network.get_contents().items():
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()

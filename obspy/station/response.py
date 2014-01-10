@@ -9,6 +9,13 @@ Classes related to instrument responses.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import range
+from future.builtins import int
+from future.builtins import map
+from future.builtins import str
 import warnings
 import ctypes as C
 import numpy as np
@@ -812,7 +819,7 @@ class Response(ComparingObject):
                     continue
             all_stages[stage.stage_sequence_number].append(stage)
 
-        stage_lengths = set(map(len, all_stages.values()))
+        stage_lengths = set(map(len, list(all_stages.values())))
         if len(stage_lengths) != 1 or stage_lengths.pop() != 1:
             msg = "Each stage can only appear once."
             raise ValueError(msg)
@@ -999,7 +1006,7 @@ class Response(ComparingObject):
 
             # Attach the blockette chain to the stage.
             st.first_blkt = C.pointer(stage_blkts[0])
-            for _i in xrange(1, len(stage_blkts)):
+            for _i in range(1, len(stage_blkts)):
                 stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
 
             stage_objects.append(st)
@@ -1024,7 +1031,7 @@ class Response(ComparingObject):
 
         # Attach the stage chain to the channel.
         chan.first_stage = C.pointer(stage_objects[0])
-        for _i in xrange(1, len(stage_objects)):
+        for _i in range(1, len(stage_objects)):
             stage_objects[_i - 1].next_stage = C.pointer(stage_objects[_i])
 
         chan.nstages = len(stage_objects)

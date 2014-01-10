@@ -9,6 +9,7 @@ Test suite for the inventory class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 import unittest
 
 import obspy
