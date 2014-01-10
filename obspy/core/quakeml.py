@@ -29,6 +29,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
+from obspy.core import compatibility
 import io
 import inspect
 import os
@@ -1405,14 +1406,14 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and not _validate(io.StringIO(xml_doc)):
+    if validate is True and not _validate(compatibility.BytesIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, "write"):
         file_opened = True
-        fh = open(filename, "wt")
+        fh = open(filename, "wb")
     else:
         file_opened = False
         fh = filename

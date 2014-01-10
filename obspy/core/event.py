@@ -17,6 +17,7 @@ from future.builtins import int
 from future.builtins import super
 from future.builtins import round
 from future.builtins import str
+from future.builtins import bytes
 from future.utils import native_str
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
@@ -763,7 +764,8 @@ class ResourceIdentifier(object):
     @id.setter
     def id(self, value):
         self.fixed = True
-        if not isinstance(value, str):
+        # XXX: no idea why I had to add bytes for PY2 here
+        if not isinstance(value, (str, bytes)):
             msg = "attribute id needs to be a string."
             raise TypeError(msg)
         self.__dict__["id"] = value
@@ -2470,7 +2472,7 @@ class Event(__Event):
         try:
             return ResourceIdentifier(self.preferred_origin_id).\
                 getReferredObject()
-        except KeyError:
+        except AttributeError:
             return None
 
     def preferred_magnitude(self):
@@ -2480,7 +2482,7 @@ class Event(__Event):
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
                 getReferredObject()
-        except KeyError:
+        except AttributeError:
             return None
 
     def preferred_focal_mechanism(self):
@@ -2490,7 +2492,7 @@ class Event(__Event):
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
                 getReferredObject()
-        except KeyError:
+        except AttributeError:
             return None
 
 

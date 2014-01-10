@@ -14,6 +14,7 @@ Only supports file format revision of February 24, 2004.
 """
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import print_function
 from future import standard_library
 from future.builtins import range
 from future.builtins import open
@@ -31,9 +32,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.decorator import map_example_filename
+from obspy.core import compatibility
 from datetime import timedelta
 import string as s
-import io
 import math
 import numpy as np
 
@@ -60,13 +61,13 @@ def isMchedr(filename):
     """
     if not isinstance(filename, str):
         return False
-    with open(filename, 'r') as fh:
+    with open(filename, 'rb') as fh:
         for line in fh.readlines():
             # skip blanck lines at beginnning, if any
-            if line.strip() == '':
+            if line.strip() == b'':
                 continue
             # first record has to be 'HY':
-            if line[0:2] == 'HY':
+            if line[0:2] == b'HY':
                 return True
             else:
                 return False
@@ -91,7 +92,7 @@ class Unpickler(object):
         if not isinstance(filename, str):
             raise TypeError('File name must be a string.')
         self.filename = filename
-        self.fh = open(filename, 'r')
+        self.fh = open(filename, 'rb')
         return self._deserialize()
 
     def loads(self, string):
@@ -103,7 +104,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.fh = io.StringIO(string)
+        self.fh = compatibility.BytesIO(string)
         self.filename = None
         return self._deserialize()
 
@@ -463,7 +464,7 @@ class Unpickler(object):
             comment.text = line[2:60]
         # strip non printable-characters
         comment.text =\
-            [x for x in comment.text if x in s.printable]
+            "".join(x for x in comment.text if x in s.printable)
 
     def _parseRecordAH(self, line, event):
         """
@@ -1021,6 +1022,9 @@ class Unpickler(object):
         catalog.comments = ''
         catalog.creation_info = CreationInfo(creation_time=UTCDateTime())
         for line in self.fh.readlines():
+            # XXX: ugly, probably we should do everything in byte strings
+            # here? Is the pde / mchedr format unicode aware?
+            line = line.decode()
             record_id = line[0:2]
             if record_id == 'HY':
                 event = self._parseRecordHY(line)
@@ -1078,7 +1082,7 @@ def readMchedr(filename):
 
     >>> from obspy.core.event import readEvents
     >>> cat = readEvents('/path/to/mchedr.dat')
-    >>> print cat
+    >>> print(cat)
     1 Event(s) in Catalog:
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
     """

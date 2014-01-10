@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import int
-# -*- coding: utf-8 -*-
+from future.builtins import str
 import io
 import warnings
 try:
