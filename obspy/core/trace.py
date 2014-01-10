@@ -2068,8 +2068,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             inventories = [inventories]
         elif isinstance(inventories, str):
             inventories = [read_inventory(inventories)]
-        responses = [obj.get_response(self.id, self.stats.starttime)
-                     for obj in inventories]
+        responses = []
+        for inv in inventories:
+            try:
+                responses.append(inv.get_response(self.id,
+                                                  self.stats.starttime))
+            except:
+                pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Attaching first."
             warnings.warn(msg)

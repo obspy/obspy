@@ -315,72 +315,74 @@ class Client(object):
                     IU.ANMO.50.LKO, IU.ANMO.50.LRH, IU.ANMO.50.LRI,
                     IU.ANMO.50.LWD, IU.ANMO.50.LWS, IU.ANMO.60.HDF
 
-        :type starttime:
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit to metadata epochs starting on or after the
             specified start time.
-        :type endtime:
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Limit to metadata epochs ending on or before the
             specified end time.
-        :type startbefore:
+        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param startbefore: Limit to metadata epochs starting before specified
             time.
-        :type startafter:
+        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param startafter: Limit to metadata epochs starting after specified
             time.
-        :type endbefore:
+        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endbefore: Limit to metadata epochs ending before specified
             time.
-        :type endafter:
+        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endafter: Limit to metadata epochs ending after specified time.
-        :type network:
+        :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
             comma-separated.
-        :type station:
+        :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
             are comma-separated.
-        :type location:
+        :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
             identifiers are comma-separated. As a special case “--“ (two
             dashes) will be translated to a string of two space characters to
             match blank location IDs.
-        :type channel:
+        :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
             are comma-separated.
-        :type minlatitude:
+        :type minlatitude: float
         :param minlatitude: Limit to stations with a latitude larger than the
             specified minimum.
-        :type maxlatitude:
+        :type maxlatitude: float
         :param maxlatitude: Limit to stations with a latitude smaller than the
             specified maximum.
-        :type minlongitude:
+        :type minlongitude: float
         :param minlongitude: Limit to stations with a longitude larger than the
             specified minimum.
-        :type maxlongitude:
+        :type maxlongitude: float
         :param maxlongitude: Limit to stations with a longitude smaller than
             the specified maximum.
-        :type latitude:
+        :type latitude: float
         :param latitude: Specify the latitude to be used for a radius search.
-        :type longitude:
+        :type longitude: float
         :param longitude: Specify the longitude to the used for a radius
             search.
-        :type minradius:
+        :type minradius: float
         :param minradius: Limit results to stations within the specified
             minimum number of degrees from the geographic point defined by the
                     latitude and longitude parameters.
-        :type maxradius:
+        :type maxradius: float
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
             latitude and longitude parameters.
-        :type level:
-        :param level: Specify the level of detail for the results.
-        :type includerestricted:
+        :type level: str
+        :param level: Specify the level of detail for the results ("network",
+        "station", "channel", "response"), e.g. specify "response" to get full
+            information including instrument response for each channel.
+        :type includerestricted: bool
         :param includerestricted: Specify if results should include information
             for restricted stations.
-        :type includeavailability:
+        :type includeavailability: bool
         :param includeavailability: Specify if results should include
             information about time series data availability.
-        :type updatedafter:
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param updatedafter: Limit to metadata updated after specified date;
             updates are data center specific.
         :type filename: str or open file-like object
@@ -418,7 +420,8 @@ class Client(object):
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, quality=None, minimumlength=None,
-                      longestonly=None, filename=None, **kwargs):
+                      longestonly=None, filename=None, attach_response=False,
+                      **kwargs):
         """
         Query the dataselect service of the client.
 
@@ -452,6 +455,26 @@ class Client(object):
         IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
         IU.AFI.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.AFI.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
+        >>> st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
+        ...                           attach_response=True)
+        >>> st.remove_response(output="VEL")
+        >>> st.plot()
+
+        .. plot::
+
+            from obspy.fdsn import Client
+            client = Client("IRIS")
+            st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
+                                      attach_response=True)
+            st.remove_response(output="VEL")
+            st.plot()
+
+        .. note::
+
+            Use `attach_response=True` to automatically add response
+            information to each trace. This can be used to remove response
+            using :meth:`~obspy.core.stream.Stream.remove_response`.
 
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
@@ -485,6 +508,12 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type attach_response: bool
+        :param attach_response: Specify whether the station web service should
+            be used to automatically attach response information to each trace
+            in the result set. A warning will be shown if a response can not be
+            found for a channel. Does nothing if output to a file was
+            specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -514,10 +543,28 @@ class Client(object):
         else:
             st = obspy.read(data_stream, format="MSEED")
             data_stream.close()
+            if attach_response:
+                self._attach_responses(st)
             return st
 
+    def _attach_responses(self, st):
+        """
+        Helper method to fetch response via get_stations() and attach it to
+        each trace in stream.
+        """
+        netstas = set([tuple(tr.id.split(".")[:2]) for tr in st])
+        inventories = []
+        for net, sta in netstas:
+            try:
+                inventories.append(self.get_stations(network=net, station=sta,
+                                                     level="response"))
+            except Exception as e:
+                warnings.warn(str(e))
+        st.attach_response(inventories)
+
     def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
-                           longestonly=None, filename=None, **kwargs):
+                           longestonly=None, filename=None,
+                           attach_response=False, **kwargs):
         r"""
         Query the dataselect service of the client. Bulk request.
 
@@ -578,6 +625,35 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
+        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
+        >>> t1 = t + 300
+        >>> t2 = t + 400
+        >>> bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
+        ...         ("TA", "W42A", "*", "BHZ", t1, t2),
+        ...         ("TA", "Z42A", "*", "BHZ", t1, t2)]
+        >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
+        >>> st.remove_response(output="VEL")
+        >>> st.plot()
+
+        .. plot::
+
+            from obspy.fdsn import Client
+            client = Client("IRIS")
+            t = UTCDateTime("2012-12-14T10:36:01.6Z")
+            t1 = t + 300
+            t2 = t + 400
+            bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
+                    ("TA", "W42A", "*", "BHZ", t1, t2),
+                    ("TA", "Z42A", "*", "BHZ", t1, t2)]
+            st = client.get_waveforms_bulk(bulk, attach_response=True)
+            st.remove_response(output="VEL")
+            st.plot()
+
+        .. note::
+
+            Use `attach_response=True` to automatically add response
+            information to each trace. This can be used to remove response
+            using :meth:`~obspy.core.stream.Stream.remove_response`.
 
         :type bulk: str, file-like object or list of lists
         :param bulk: Information about the requested data. See above for
@@ -597,6 +673,12 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type attach_response: bool
+        :param attach_response: Specify whether the station web service should
+            be used to automatically attach response information to each trace
+            in the result set. A warning will be shown if a response can not be
+            found for a channel. Does nothing if output to a file was
+            specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -653,6 +735,8 @@ class Client(object):
         else:
             st = obspy.read(data_stream, format="MSEED")
             data_stream.close()
+            if attach_response:
+                self._attach_responses(st)
             return st
 
     def _write_to_file_object(self, filename_or_object, data_stream):

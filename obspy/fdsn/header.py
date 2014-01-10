@@ -21,7 +21,8 @@ class FDSNException(Exception):
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USGS": "http://comcat.cr.usgs.gov",
                 "RESIF": "http://ws.resif.fr",
-                "NCEDC": "http://service.ncedc.org"
+                "NCEDC": "http://service.ncedc.org",
+                "USP": "http://sismo.iag.usp.br",
                 }
 
 FDSNWS = ("dataselect", "event", "station")
