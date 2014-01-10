@@ -110,8 +110,8 @@ class RtTrace(Trace):
         >>> print(peak)
         0.136404
         >>> mwp = calculateMwpMag(peak, epicentral_distance)
-        >>> print(mwp)
-        8.78902911791
+        >>> print(mwp)  # doctest: +ELLIPSIS
+        8.78902911791...
     """
     have_appended_data = False
 

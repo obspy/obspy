@@ -82,7 +82,9 @@ def scale(trace, factor=1.0, rtmemory_list=None):  # @UnusedVariable
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
-    trace.data *= factor
+    #XXX not sure how this should be for realtime analysis, here
+    # I assume, we do not want to change the underlying dtype
+    trace.data *= np.array(factor, dtype=trace.data.dtype)
     return trace.data
 
 
