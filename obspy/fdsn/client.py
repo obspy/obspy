@@ -455,6 +455,20 @@ class Client(object):
         IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
         IU.AFI.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.AFI.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
+        >>> st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
+        ...                           attach_response=True)
+        >>> st.remove_response(output="VEL")
+        >>> st.plot()
+
+        .. plot::
+
+            from obspy.fdsn import Client
+            client = Client("IRIS")
+            st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
+                                      attach_response=True)
+            st.remove_response(output="VEL")
+            st.plot()
 
         .. note::
 
@@ -611,6 +625,29 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
+        >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
+        >>> t1 = t + 300
+        >>> t2 = t + 400
+        >>> bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
+        ...         ("TA", "W42A", "*", "BHZ", t1, t2),
+        ...         ("TA", "Z42A", "*", "BHZ", t1, t2)]
+        >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
+        >>> st.remove_response(output="VEL")
+        >>> st.plot()
+
+        .. plot::
+
+            from obspy.fdsn import Client
+            client = Client("IRIS")
+            t = UTCDateTime("2012-12-14T10:36:01.6Z")
+            t1 = t + 300
+            t2 = t + 400
+            bulk = [("TA", "S42A", "*", "BHZ", t1, t2),
+                    ("TA", "W42A", "*", "BHZ", t1, t2),
+                    ("TA", "Z42A", "*", "BHZ", t1, t2)]
+            st = client.get_waveforms_bulk(bulk, attach_response=True)
+            st.remove_response(output="VEL")
+            st.plot()
 
         .. note::
 

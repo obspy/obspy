@@ -14,6 +14,7 @@ from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.station import Response
 import os
 from StringIO import StringIO
 import sys
@@ -597,6 +598,27 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected1, failmsg(got, expected1))
             got = client.get_waveforms_bulk(StringIO(bulk2))
             self.assertEqual(got, expected2, failmsg(got, expected2))
+
+    def test_get_waveform_attach_response(self):
+        """
+        minimal test for automatic attaching of metadata
+        """
+        client = self.client
+
+        bulk = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                "IU ANMO * BH? 2010-03-25 2010-03-25T00:00:08\n"
+                "IU ANMO 10 HHZ 2010-05-25T00:00:00 2010-05-25T00:00:04\n"
+                "II KURK 00 BHN 2010-03-25T00:00:00 2010-03-25T00:00:04\n")
+        st = client.get_waveforms_bulk(bulk, attach_response=True)
+        for tr in st:
+            self.assertTrue(isinstance(tr.stats.get("response"), Response))
+
+        st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
+                                  UTCDateTime("2010-02-27T06:30:00.000"),
+                                  UTCDateTime("2010-02-27T06:40:00.000"),
+                                  attach_response=True)
+        for tr in st:
+            self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
 
 def suite():
