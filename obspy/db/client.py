@@ -9,6 +9,8 @@ Client for a database created by obspy.db.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
+from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.preview import mergePreviews
 from obspy.core.stream import Stream
@@ -38,7 +40,7 @@ class Client(object):
         :param debug: Enables verbose output.
         """
         if url:
-            self.engine = create_engine(url, encoding='utf-8',
+            self.engine = create_engine(url, encoding=native_str('utf-8'),
                                         convert_unicode=True)
             Base.metadata.create_all(self.engine,  # @UndefinedVariable
                                      checkfirst=True)

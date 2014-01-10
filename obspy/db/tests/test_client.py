@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from future.builtins import super
+from future.builtins import str
 
 from obspy.core.preview import createPreview
 from obspy.core.trace import Trace
@@ -16,13 +17,13 @@ class ClientTestCase(unittest.TestCase):
     """
     Test suite for obspy.db.client.
     """
-    def __init__(self, *args, **kwargs):
-        super(ClientTestCase, self).__init__(*args, **kwargs)
+    @classmethod  
+    def setUpClass(cls):  
         # Create a in memory database only once for test suite
         url = 'sqlite:///:memory:'
-        self.client = Client(url)
+        cls.client = Client(url)
         # add paths
-        session = self.client.session()
+        session = cls.client.session()
         path1 = WaveformPath({'path': '/path/to/1'})
         path2 = WaveformPath({'path': '/path/to/2'})
         session.add_all([path1, path2])
@@ -72,12 +73,12 @@ class ClientTestCase(unittest.TestCase):
         data[2000000] = 14
         data[2000001] = -14
         tr = Trace(data=data, header=header)
-        self.preview = createPreview(tr, 30).data
+        cls.preview = createPreview(tr, 30).data
         header = dict(tr.stats)
         header['starttime'] = tr.stats.starttime.datetime
         header['endtime'] = tr.stats.endtime.datetime
         channel3 = WaveformChannel(header)
-        channel3.preview = self.preview.dumps()
+        channel3.preview = cls.preview.dumps()
         file1.channels.append(channel1)
         file2.channels.append(channel2)
         file3.channels.append(channel3)
