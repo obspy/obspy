@@ -315,72 +315,74 @@ class Client(object):
                     IU.ANMO.50.LKO, IU.ANMO.50.LRH, IU.ANMO.50.LRI,
                     IU.ANMO.50.LWD, IU.ANMO.50.LWS, IU.ANMO.60.HDF
 
-        :type starttime:
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit to metadata epochs starting on or after the
             specified start time.
-        :type endtime:
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Limit to metadata epochs ending on or before the
             specified end time.
-        :type startbefore:
+        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param startbefore: Limit to metadata epochs starting before specified
             time.
-        :type startafter:
+        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param startafter: Limit to metadata epochs starting after specified
             time.
-        :type endbefore:
+        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endbefore: Limit to metadata epochs ending before specified
             time.
-        :type endafter:
+        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endafter: Limit to metadata epochs ending after specified time.
-        :type network:
+        :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
             comma-separated.
-        :type station:
+        :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
             are comma-separated.
-        :type location:
+        :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
             identifiers are comma-separated. As a special case “--“ (two
             dashes) will be translated to a string of two space characters to
             match blank location IDs.
-        :type channel:
+        :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
             are comma-separated.
-        :type minlatitude:
+        :type minlatitude: float
         :param minlatitude: Limit to stations with a latitude larger than the
             specified minimum.
-        :type maxlatitude:
+        :type maxlatitude: float
         :param maxlatitude: Limit to stations with a latitude smaller than the
             specified maximum.
-        :type minlongitude:
+        :type minlongitude: float
         :param minlongitude: Limit to stations with a longitude larger than the
             specified minimum.
-        :type maxlongitude:
+        :type maxlongitude: float
         :param maxlongitude: Limit to stations with a longitude smaller than
             the specified maximum.
-        :type latitude:
+        :type latitude: float
         :param latitude: Specify the latitude to be used for a radius search.
-        :type longitude:
+        :type longitude: float
         :param longitude: Specify the longitude to the used for a radius
             search.
-        :type minradius:
+        :type minradius: float
         :param minradius: Limit results to stations within the specified
             minimum number of degrees from the geographic point defined by the
                     latitude and longitude parameters.
-        :type maxradius:
+        :type maxradius: float
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
             latitude and longitude parameters.
-        :type level:
-        :param level: Specify the level of detail for the results.
-        :type includerestricted:
+        :type level: str
+        :param level: Specify the level of detail for the results ("network",
+        "station", "channel", "response"), e.g. specify "response" to get full
+            information including instrument response for each channel.
+        :type includerestricted: bool
         :param includerestricted: Specify if results should include information
             for restricted stations.
-        :type includeavailability:
+        :type includeavailability: bool
         :param includeavailability: Specify if results should include
             information about time series data availability.
-        :type updatedafter:
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param updatedafter: Limit to metadata updated after specified date;
             updates are data center specific.
         :type filename: str or open file-like object
