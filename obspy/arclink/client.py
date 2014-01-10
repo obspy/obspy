@@ -95,6 +95,7 @@ class Client(object):
     * ETHZ:  eida.ethz.ch:18001
     * BGR:   eida.bgr.de:18001
     * IPGP:  eida.ipgp.fr:18001
+    * USP:   seisrequest.iag.usp.br:18001
     """
     #: Delay in seconds between each status request
     status_delay = 0.5
