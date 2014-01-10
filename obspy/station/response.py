@@ -1045,7 +1045,7 @@ class Response(ComparingObject):
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
 
         output = np.empty(len(freqs), dtype="complex128")
-        out_units = C.c_char_p(out_units)
+        out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
         clibevresp.check_channel(C.pointer(chan))
         clibevresp.norm_resp(C.pointer(chan), -1, 0)

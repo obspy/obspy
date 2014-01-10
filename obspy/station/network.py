@@ -10,6 +10,7 @@ Provides the Network class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
+from __future__ import print_function
 from future.builtins import super
 from future.builtins import str
 from obspy.station.util import BaseNode
@@ -111,9 +112,12 @@ class Network(BaseNode):
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
         >>> network = inventory.networks[0]
-        >>> network.get_contents()  # doctest: +NORMALIZE_WHITESPACE
-        {'channels': ['IU.ANMO.10.BHZ'],
-         'stations': [u'IU.ANMO (Albuquerque, New Mexico, USA)']}
+        >>> network.get_contents()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        {...}
+        >>> for k, v in sorted(network.get_contents().items()):
+        ...     print(k, *v)
+        channels IU.ANMO.10.BHZ
+        stations IU.ANMO (Albuquerque, New Mexico, USA)
         """
         content_dict = {"stations": [], "channels": []}
 

@@ -13,12 +13,12 @@ from __future__ import unicode_literals
 from future.builtins import int
 from future.builtins import str
 import inspect
-from io import BytesIO
 from lxml import etree
 import os
 import warnings
 
 import obspy
+from obspy.core import compatibility
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
@@ -677,7 +677,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
     if validate is True:
-        buf = BytesIO()
+        buf = compatibility.BytesIO()
         tree.write(buf)
         buf.seek(0)
         validates, errors = validate_StationXML(buf)
@@ -1125,6 +1125,7 @@ def _write_phone(parent, phone):
 def _tag2obj(element, tag, convert):
     # make sure, only unicode
     if convert is str:
+        ### XXX: this warning if often raised with python3
         warnings.warn("overriding 'str' with 'unicode'.")
         convert = str
     try:
@@ -1137,6 +1138,7 @@ def _tags2obj(element, tag, convert):
     values = []
     # make sure, only unicode
     if convert is str:
+        ### XXX: this warning if raised with python3
         warnings.warn("overriding 'str' with 'unicode'.")
         convert = str
     for elem in element.findall(tag):
