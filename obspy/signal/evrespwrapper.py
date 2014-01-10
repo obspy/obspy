@@ -223,9 +223,11 @@ clibevresp.norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
 clibevresp.norm_resp.restype = C.c_void_p
 
 
+# Only useful for debugging thus not officially included as every import of
+# this file results in the function pointer being created thus slowing it down.
 # void print_chan(struct channel *chan, int start_stage, int stop_stage,
 #                 int stdio_flag, int listinterp_out_flag,
 #                 int listinterp_in_flag, int useTotalSensitivityFlag)
-clibevresp.print_chan.argtypes = [C.POINTER(channel), C.c_int, C.c_int,
-                                  C.c_int, C.c_int, C.c_int, C.c_int]
-clibevresp.print_chan.restype = C.c_void_p
+#clibevresp.print_chan.argtypes = [C.POINTER(channel), C.c_int, C.c_int,
+                                  #C.c_int, C.c_int, C.c_int, C.c_int]
+#clibevresp.print_chan.restype = C.c_void_p
