@@ -11,3 +11,4 @@ file based waveform archive and storing in into a standard SQL database.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals

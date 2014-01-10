@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 import unittest
 from obspy.core.util import add_unittests, add_doctests

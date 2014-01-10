@@ -8,6 +8,7 @@ Client for a database created by obspy.db.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
 from obspy.core.preview import mergePreviews
 from obspy.core.stream import Stream
@@ -143,7 +144,7 @@ class Client(object):
         # process arguments
         kwargs = {'network': network, 'station': station,
                   'location': location, 'channel': channel}
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if value is None:
                 continue
             col = getattr(WaveformChannel, key)
@@ -179,7 +180,7 @@ class Client(object):
         # process arguments
         kwargs = {'network': network, 'station': station,
                   'location': location, 'channel': channel}
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if value is None:
                 continue
             col = getattr(WaveformChannel, key)
@@ -255,7 +256,7 @@ class Client(object):
             # filter over network/station/location/channel id
             kwargs = {'network': network, 'station': station,
                       'location': location, 'channel': channel}
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 if value is None:
                     continue
                 col = getattr(WaveformChannel, key)

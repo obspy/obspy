@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import super
 
 from obspy.core.preview import createPreview
 from obspy.core.trace import Trace
