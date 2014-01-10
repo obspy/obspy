@@ -420,7 +420,8 @@ class Client(object):
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, quality=None, minimumlength=None,
-                      longestonly=None, filename=None, **kwargs):
+                      longestonly=None, filename=None, attach_response=False,
+                      **kwargs):
         """
         Query the dataselect service of the client.
 
@@ -455,6 +456,12 @@ class Client(object):
         IU.AFI.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.AFI.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
 
+        .. note::
+
+            Use `attach_response=True` to automatically add response
+            information to each trace. This can be used to remove response
+            using :meth:`~obspy.core.stream.Stream.remove_response`.
+
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
@@ -487,6 +494,12 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type attach_response: bool
+        :param attach_response: Specify whether the station web service should
+            be used to automatically attach response information to each trace
+            in the result set. A warning will be shown if a response can not be
+            found for a channel. Does nothing if output to a file was
+            specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -516,10 +529,28 @@ class Client(object):
         else:
             st = obspy.read(data_stream, format="MSEED")
             data_stream.close()
+            if attach_response:
+                self._attach_responses(st)
             return st
 
+    def _attach_responses(self, st):
+        """
+        Helper method to fetch response via get_stations() and attach it to
+        each trace in stream.
+        """
+        netstas = set([tuple(tr.id.split(".")[:2]) for tr in st])
+        inventories = []
+        for net, sta in netstas:
+            try:
+                inventories.append(self.get_stations(network=net, station=sta,
+                                                     level="response"))
+            except Exception as e:
+                warnings.warn(str(e))
+        st.attach_response(inventories)
+
     def get_waveforms_bulk(self, bulk, quality=None, minimumlength=None,
-                           longestonly=None, filename=None, **kwargs):
+                           longestonly=None, filename=None,
+                           attach_response=False, **kwargs):
         r"""
         Query the dataselect service of the client. Bulk request.
 
@@ -581,6 +612,12 @@ class Client(object):
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
 
+        .. note::
+
+            Use `attach_response=True` to automatically add response
+            information to each trace. This can be used to remove response
+            using :meth:`~obspy.core.stream.Stream.remove_response`.
+
         :type bulk: str, file-like object or list of lists
         :param bulk: Information about the requested data. See above for
             details.
@@ -599,6 +636,12 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type attach_response: bool
+        :param attach_response: Specify whether the station web service should
+            be used to automatically attach response information to each trace
+            in the result set. A warning will be shown if a response can not be
+            found for a channel. Does nothing if output to a file was
+            specified.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -655,6 +698,8 @@ class Client(object):
         else:
             st = obspy.read(data_stream, format="MSEED")
             data_stream.close()
+            if attach_response:
+                self._attach_responses(st)
             return st
 
     def _write_to_file_object(self, filename_or_object, data_stream):
