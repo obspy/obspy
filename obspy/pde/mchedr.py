@@ -12,6 +12,15 @@ Only supports file format revision of February 24, 2004.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import open
+from future.builtins import round
+from future.builtins import int
+from future.builtins import map
+from future.builtins import str
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, \
@@ -24,7 +33,7 @@ from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.decorator import map_example_filename
 from datetime import timedelta
 import string as s
-import StringIO
+import io
 import math
 import numpy as np
 
@@ -49,7 +58,7 @@ def isMchedr(filename):
     >>> isMchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         return False
     with open(filename, 'r') as fh:
         for line in fh.readlines():
@@ -79,7 +88,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        if not isinstance(filename, basestring):
+        if not isinstance(filename, str):
             raise TypeError('File name must be a string.')
         self.filename = filename
         self.fh = open(filename, 'r')
@@ -94,7 +103,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.fh = StringIO.StringIO(string)
+        self.fh = io.StringIO(string)
         self.filename = None
         return self._deserialize()
 
@@ -129,7 +138,7 @@ class Unpickler(object):
         return val
 
     def _floatWithFormat(self, string, format_string, scale=1):
-        ndigits, ndec = map(int, format_string.split('.'))
+        ndigits, ndec = list(map(int, format_string.split('.')))
         nint = ndigits - ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint + ndec])
         if val is not None:
@@ -454,7 +463,7 @@ class Unpickler(object):
             comment.text = line[2:60]
         # strip non printable-characters
         comment.text =\
-            filter(lambda x: x in s.printable, comment.text)
+            [x for x in comment.text if x in s.printable]
 
     def _parseRecordAH(self, line, event):
         """
@@ -706,7 +715,7 @@ class Unpickler(object):
         tensor = Tensor()
         exponent = self._intZero(line[3:5])
         scale = math.pow(10, exponent)
-        for i in xrange(6, 51 + 1, 9):
+        for i in range(6, 51 + 1, 9):
             code = line[i:i + 2]
             value = self._floatWithFormat(line[i + 2:i + 6], '4.2', scale)
             error = self._floatWithFormat(line[i + 6:i + 9], '3.2', scale)

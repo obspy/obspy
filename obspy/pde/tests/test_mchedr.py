@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import str
 
 from obspy.core.event import ResourceIdentifier, readEvents
 from obspy.pde.mchedr import readMchedr
