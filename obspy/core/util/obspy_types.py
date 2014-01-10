@@ -256,7 +256,7 @@ class Enum(object):
     def __str__(self):
         """
         >>> enum = Enum(["c", "a", "b"])
-        >>> print enum
+        >>> print(enum)
         Enum(["c", "a", "b"])
         """
         keys = list(self.__enums.keys())

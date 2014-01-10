@@ -9,6 +9,7 @@ Testing utilities for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
+from __future__ import print_function
 from future import standard_library
 from future.builtins import super
 from future.builtins import str
