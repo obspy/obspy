@@ -22,6 +22,11 @@ in a previous packet, so has to be retrieved from memory see
 """
 
 from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import round
+from future.builtins import int
+from future.builtins import range
 import math
 import sys
 import numpy as np
@@ -611,7 +616,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     k4_bar_last = rtmemory_k4_bar.input[0]
 
     # do recursive kurtosis
-    for i in xrange(npts):
+    for i in range(npts):
         mu1 = a1 * mu1_last + C1 * sample[i]
         dx2 = (sample[i] - mu1_last) * (sample[i] - mu1_last)
         mu2 = a1 * mu2_last + C2 * dx2
