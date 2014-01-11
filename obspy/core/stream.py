@@ -17,6 +17,7 @@ from future.builtins import int
 from future.builtins import open
 from future.builtins import round
 from future.builtins import str
+from future.utils import native_str
 from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
@@ -34,7 +35,6 @@ import math
 import numpy as np
 import os
 import warnings
-
 
 
 @map_example_filename("pathname_or_url")
@@ -55,7 +55,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or io.BytesIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
@@ -171,9 +171,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from compatibility import StringIO, urlopen
+        >>> from obspy.core.compatibility import BytesIO, urlopen
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = StringIO(urlopen(example_url).read())
+        >>> stringio_obj = BytesIO(urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -758,7 +758,9 @@ class Stream(object):
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
-        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        [[...'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        >>> print(*st.getGaps()[0])  # doctest: +ELLIPSIS
+        BW RJOB  EHZ 2009-08-24T00:20:13.000000Z 2009-08-24T00:20:14.000000Z...
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
@@ -1153,7 +1155,7 @@ class Stream(object):
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
-        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        [[..., UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
@@ -1172,7 +1174,7 @@ class Stream(object):
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
-        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        [[...'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
@@ -2045,8 +2047,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
         """
         for tr in self:
-            tr.resample(sampling_rate, window=window, no_filter=no_filter,
-                        strict_length=strict_length)
+            tr.resample(sampling_rate, window=native_str(window),
+                        no_filter=no_filter, strict_length=strict_length)
         return self
 
     def decimate(self, factor, no_filter=False, strict_length=False):
@@ -2299,12 +2301,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
-        >>> st[0].stats.processing
-        ['normalize:9']
+        >>> print(st[0].stats.processing[0])
+        normalize:9
         >>> st[1].data
         array([ 0.375, -0.625, -1.   ,  0.5  ,  0.375])
-        >>> st[1].stats.processing
-        ['normalize:-0.8']
+        >>> print(st[1].stats.processing[0])
+        normalize:-0.8
 
         Now let's do it again normalize all traces to the stream's global
         maximum:
@@ -2317,12 +2319,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
-        >>> st[0].stats.processing
-        ['normalize:9']
+        >>> print(st[0].stats.processing[0])
+        normalize:9
         >>> st[1].data  # doctest: +ELLIPSIS
         array([ 0.03333333, -0.05555556, -0.08888889,  0.04444444,  ...])
-        >>> st[1].stats.processing
-        ['normalize:9']
+        >>> print(st[1].stats.processing[0])
+        normalize:9
         """
         # use the same value for normalization on all traces?
         if global_max:
@@ -2654,7 +2656,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.attach_response(inv)
         []
         >>> tr = st[0]
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tr.stats.response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2697,7 +2699,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st = read()
         >>> # Response object is already attached to example data:
         >>> resp = st[0].stats.response
-        >>> print resp  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        >>> print(resp)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
             From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
             Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz

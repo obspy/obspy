@@ -1,15 +1,16 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import range
 from future.builtins import open
-# -*- coding: utf-8 -*-
+from future.builtins import str
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
-#from obspy.xseed import Parser
+from obspy.xseed import Parser
 from obspy.core.util.decorator import skipIf
 import pickle
 import numpy as np

@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import int
 from future.builtins import str
-import io
+from obspy.core import compatibility
 import warnings
+import os
 try:
     # try using lxml as it is faster
     from lxml import etree
@@ -48,8 +49,9 @@ def tostring(element, xml_declaration=True, encoding="utf-8",
     # use xml
     out = __etree.tostring(element, encoding=encoding)
     if xml_declaration:
-        out = "<?xml version='1.0' encoding='%s'?>\n%s" % (encoding, out)
-    return out
+        out = "<?xml version='1.0' encoding='%s'?>\n%s" % (encoding,
+                                                           out.decode())
+    return out.encode()
 
 
 class XMLParser:
@@ -65,11 +67,16 @@ class XMLParser:
         :type namespace: str, optional
         :param namespace: Document-wide default namespace. Defaults to ``''``.
         """
-        if isinstance(xml_doc, str):
+        if isinstance(xml_doc, bytes):
             # some string - check if it starts with <?xml
-            if xml_doc.strip()[0:5].upper().startswith('<?XML'):
-                xml_doc = io.StringIO(xml_doc)
+            if xml_doc.strip()[0:5].upper().startswith(b'<?XML'):
+                xml_doc = compatibility.BytesIO(xml_doc)
             # parse XML file
+            self.xml_doc = etree.parse(xml_doc)
+        elif isinstance(xml_doc, str):
+            # filename
+            if not os.path.exists(xml_doc):
+                raise IOError("filename %s does not exist" % xml_doc)
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):
             # some file-based content

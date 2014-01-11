@@ -8,9 +8,8 @@ from future.builtins import open
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
+from obspy.core import compatibility
 from pkg_resources import load_entry_point
-import io
-import io
 import numpy as np
 import os
 import threading
@@ -97,25 +96,25 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # StringIO without format
-                            temp = io.StringIO(
+                            temp = compatibility.BytesIO(
                                 open(outfile, 'rb').read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # StringIO with format
-                            temp = io.StringIO(
+                            temp = compatibility.BytesIO(
                                 open(outfile, 'rb').read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # cStringIO without format
-                            temp = io.StringIO(
+                            temp = compatibility.BytesIO(
                                 open(outfile, 'rb').read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # cStringIO with format
-                            temp = io.StringIO(
+                            temp = compatibility.BytesIO(
                                 open(outfile, 'rb').read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)

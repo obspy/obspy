@@ -10,6 +10,7 @@ Module for handling ObsPy Trace objects.
 """
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import print_function
 from future.builtins import range
 from future.builtins import super
 from future.builtins import str
@@ -1244,7 +1245,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "seedresp" in kwargs:
             proc_info = ("simulate:seedresp:" +
                          ":".join(["%s=%s" % kv
-                                   for kv in seedresp.iteritems()]))
+                                   for kv in seedresp.items()]))
             self._addProcessingInfo(proc_info)
         return self
 
@@ -2045,7 +2046,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0]
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
         >>> tr.attach_response(inv)
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tr.stats.response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2128,7 +2129,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0].copy()
         >>> tr.plot()  # doctest: +SKIP
         >>> # Response object is already attached to example data:
-        >>> print tr.stats.response  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        >>> print(tr.stats.response)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
             From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
             Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2218,9 +2219,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # assign processed data and store processing information
         self.data = data
         info = ":".join(["remove_response"] +
-                        map(str, [output, water_level, pre_filt,
-                                  zero_mean, taper, taper_fraction]) +
-                        ["%s=%s" % (k, v) for k, v in kwargs.iteritems()])
+                        [str(x) for x in (output, water_level, pre_filt,
+                                  zero_mean, taper, taper_fraction)] +
+                        ["%s=%s" % (k, v) for k, v in kwargs.items()])
         self._addProcessingInfo(info)
         return self
 

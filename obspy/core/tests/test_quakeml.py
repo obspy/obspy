@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import open
 from future.builtins import str
-# -*- coding: utf-8 -*-
+from future.builtins import bytes
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
@@ -13,6 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
+from obspy.core import compatibility
 from xml.etree.ElementTree import tostring, fromstring
 import io
 import difflib
@@ -49,23 +51,20 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         obj1 = fromstring(doc1)
         obj2 = fromstring(doc2)
-        str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
-        str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
+        str1 = [_i.strip() for _i in tostring(obj1).split(b"\n")]
+        str2 = [_i.strip() for _i in tostring(obj2).split(b"\n")]
         # when xml is used instead of old lxml in obspy.core.util.xmlwrapper
         # there is no pretty_print option and we get a string without line
         # breaks, so we have to allow for that in the test
         if not LXML_ETREE:
-            str1 = "".join(str1)
-            str2 = "".join(str2)
+            str1 = b"".join(str1)
+            str2 = b"".join(str2)
 
         unified_diff = difflib.unified_diff(str1, str2)
-        has_error = False
-        for line in unified_diff:  # pragma: no cover
-            has_error = True
-            print(line)
-        if has_error:  # pragma: no cover
-            msg = "Strings are not equal."
-            raise AssertionError(msg)
+        err_msg = "\n".join(unified_diff)
+        if err_msg:
+            msg = "Strings are not equal.\n"
+            raise AssertionError(msg + err_msg)
 
     def test_readQuakeML(self):
         """
@@ -522,7 +521,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
         self.assertAlmostEqual(mt.clvd, 0.22)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        original = open(filename, "rb").read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -580,15 +579,16 @@ class QuakeMLTestCase(unittest.TestCase):
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
-        for stype in root.findall("xs:simpleType", namespaces=root.nsmap):
+        nsmap = dict((k, v) for k, v in root.nsmap.items() if k is not None)
+        for stype in root.findall("xs:simpleType", namespaces=nsmap):
             type_name = stype.get("name")
-            restriction = stype.find("xs:restriction", namespaces=root.nsmap)
+            restriction = stype.find("xs:restriction", namespaces=nsmap)
             if restriction is None:
                 continue
             if restriction.get("base") != "xs:string":
                 continue
             enums = restriction.findall(
-                "xs:enumeration", namespaces=root.nsmap)
+                "xs:enumeration", namespaces=nsmap)
             if not enums:
                 continue
             enums = [_i.get("value") for _i in enums]
@@ -631,7 +631,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Test reading a QuakeML string/unicode object via readEvents.
         """
-        data = open(self.neries_filename, 'rt').read()
+        data = open(self.neries_filename, 'rb').read()
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 
@@ -701,7 +701,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # write QuakeML file
         cat = Catalog(events=[ev])
-        memfile = io.StringIO()
+        memfile = compatibility.BytesIO()
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)

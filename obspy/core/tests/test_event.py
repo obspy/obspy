@@ -390,10 +390,12 @@ class CatalogTestCase(unittest.TestCase):
             attr_filter = attr.split('.')[-1]
             cat_smaller = cat.filter('%s < %s' % (attr_filter, value))
             cat_bigger = cat.filter('%s >= %s' % (attr_filter, value))
-            self.assertTrue(all(getattrs(event, attr) < value
-                                for event in cat_smaller))
-            self.assertTrue(all(getattrs(event, attr) >= value
-                                for event in cat_bigger))
+            self.assertTrue(all(True if a is None else a < value
+                                for event in cat_smaller
+                                for a in [getattrs(event, attr)]))
+            self.assertTrue(all(False if a is None else a >= value
+                                for event in cat_bigger
+                                for a in [getattrs(event, attr)]))
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
             cat_smaller_inverse = cat.filter(

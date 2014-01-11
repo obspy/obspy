@@ -10,6 +10,7 @@ Module for handling ObsPy Catalog and Event objects.
 """
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import print_function
 from future import standard_library
 from future.builtins import zip
 from future.builtins import map
@@ -31,7 +32,7 @@ from obspy.core.util import uncompressFile, _readFromPlugin, \
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
-from obspy.core.compatibility import urlopen
+from obspy.core import compatibility
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
@@ -103,15 +104,16 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
                 fh.write(pathname_or_url.read())
                 catalog = _read(fh.name, format, **kwargs)
         return catalog
-    elif pathname_or_url.strip().startswith('<'):
+    elif isinstance(pathname_or_url, bytes) and \
+             pathname_or_url.strip().startswith(b'<'):
         # XML string
-        return _read(io.StringIO(pathname_or_url), format, **kwargs)
+        return _read(compatibility.BytesIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urlopen(pathname_or_url).read())
+            fh.write(compatibilty.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
@@ -165,8 +167,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if value == 0 or\
-       isinstance(value, str):
+    if value == 0 or isinstance(value, str):
         return True
     return bool(value)
 
@@ -216,7 +217,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
         >>> test_event.resource_id
         ResourceIdentifier(id="event/123456")
-        >>> print test_event.creation_info
+        >>> print(test_event.creation_info)
         CreationInfo(author='obspy.org', version='0.1')
 
     All others will be set to None.
@@ -370,6 +371,10 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         def __repr__(self):
             return self.__str__(force_one_line=True)
 
+        # called for bool on PY2
+        def __nonzero__(self):
+            return self.__bool__()
+
         def __bool__(self):
             # We use custom _bool() for testing getattr() since we want
             # zero valued int and float and empty string attributes to be True.
@@ -507,15 +512,15 @@ class ResourceIdentifier(object):
     >>> ref_count = sys.getrefcount(event)
     >>> res_id = ResourceIdentifier(referred_object=event)
     >>> # The reference does not changed the reference count of the object.
-    >>> print ref_count == sys.getrefcount(event)
+    >>> print(ref_count == sys.getrefcount(event))
     True
     >>> # It actually is the same object.
-    >>> print event is res_id.getReferredObject()
+    >>> print(event is res_id.getReferredObject())
     True
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print res_id.getReferredObject()
+    >>> print(res_id.getReferredObject())
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -533,7 +538,7 @@ class ResourceIdentifier(object):
     >>> ref_a = ResourceIdentifier(res_id)
     >>> # The object is refers to cannot be found yet. Because no instance that
     >>> # an attached object has been created so far.
-    >>> print ref_a.getReferredObject()
+    >>> print(ref_a.getReferredObject())
     None
     >>> # This instance has an attached object.
     >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
@@ -588,10 +593,11 @@ class ResourceIdentifier(object):
     >>> dictionary[res_id] = "bar"
     >>> # The same ID can still be used as a key.
     >>> dictionary["foo"] = "bar"
-    >>> items = dictionary.items()
-    >>> items.sort()
-    >>> print items
-    [(ResourceIdentifier(id="foo"), 'bar'), ('foo', 'bar')]
+    >>> items = sorted(dictionary.items(), key=lambda kv: repr(kv[0])[1])
+    >>> for k, v in items:  # doctest:+ELLIPSIS
+    ...     print(repr(k), v)
+    ResourceIdentifier(id="foo") bar
+    ...'foo' bar
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
@@ -705,10 +711,10 @@ class ResourceIdentifier(object):
         change the ID itself.
 
         >>> res_id = ResourceIdentifier("some_id")
-        >>> print res_id.getQuakeMLURI()
+        >>> print(res_id.getQuakeMLURI())
         smi:local/some_id
         >>> # Did not change the actual resource id.
-        >>> print res_id.id
+        >>> print(res_id.id)
         some_id
         """
         id = self.id
@@ -735,9 +741,9 @@ class ResourceIdentifier(object):
 
         >>> res_id = ResourceIdentifier()
         >>> res_id_2 = res_id.copy()
-        >>> print res_id is res_id_2
+        >>> print(res_id is res_id_2)
         False
-        >>> print res_id == res_id_2
+        >>> print(res_id == res_id_2)
         True
         """
         return deepcopy(self)
@@ -887,7 +893,7 @@ class CreationInfo(__CreationInfo):
     :param version: Version string of a resource
 
     >>> info = CreationInfo(author="obspy.org", version="0.0.1")
-    >>> print info
+    >>> print(info)
     CreationInfo(author='obspy.org', version='0.0.1')
     """
 
@@ -963,10 +969,10 @@ class CompositeTime(__CompositeTime):
     :type second_errors: :class:`~obspy.core.util.AttribDict`
     :param second_errors: AttribDict containing error quantities.
 
-    >>> print CompositeTime(2011, 1, 1)
+    >>> print(CompositeTime(2011, 1, 1))
     CompositeTime(year=2011, month=1, day=1)
     >>> # Can also be instantiated with the uncertainties.
-    >>> print CompositeTime(year=2011, year_errors={"uncertainty":1})
+    >>> print(CompositeTime(year=2011, year_errors={"uncertainty":1}))
     CompositeTime(year=2011 [uncertainty=1])
     """
 
@@ -994,16 +1000,16 @@ class Comment(__Comment):
     :param creation_info: Creation info for the comment.
 
     >>> comment = Comment(text="Some comment")
-    >>> print comment  # doctest:+ELLIPSIS
+    >>> print(comment)  # doctest:+ELLIPSIS
     Comment(text='Some comment', resource_id=ResourceIdentifier(...))
     >>> comment = Comment(text="Some comment", force_resource_id=False)
-    >>> print comment
+    >>> print(comment)
     Comment(text='Some comment')
     >>> comment.resource_id = "comments/obspy-comment-123456"
-    >>> print comment # doctest:+ELLIPSIS
+    >>> print(comment) # doctest:+ELLIPSIS
     Comment(text='Some comment', resource_id=ResourceIdentifier(...))
     >>> comment.creation_info = {"author": "obspy.org"}
-    >>> print comment.creation_info
+    >>> print(comment.creation_info)
     CreationInfo(author='obspy.org')
     """
 
@@ -1054,21 +1060,21 @@ class WaveformStreamID(__WaveformStreamID):
     >>> # Can be initialized with a SEED string or with individual components.
     >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR",
     ...                              location_code="", channel_code="EHZ")
-    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(stream_id) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     WaveformStreamID
           network_code: 'BW'
           station_code: 'FUR'
           channel_code: 'EHZ'
          location_code: ''
     >>> stream_id = WaveformStreamID(seed_string="BW.FUR..EHZ")
-    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(stream_id) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     WaveformStreamID
           network_code: 'BW'
           station_code: 'FUR'
           channel_code: 'EHZ'
          location_code: ''
     >>> # Can also return the SEED string.
-    >>> print stream_id.getSEEDString()
+    >>> print(stream_id.getSEEDString())
     BW.FUR..EHZ
     """
     def __init__(self, network_code=None, station_code=None,
@@ -1729,7 +1735,7 @@ class Origin(__Origin):
                time: UTCDateTime(1970, 1, 1, 0, 0)
           longitude: 42.0
            latitude: 12.0 [confidence_level=95.0]
-         depth_type: 'from location'
+         depth_type: ...'from location'
     """
 
 
@@ -2733,48 +2739,50 @@ class Catalog(object):
 
         >>> from obspy.core.event import readEvents
         >>> cat = readEvents()
-        >>> print cat
+        >>> print(cat)
         3 Event(s) in Catalog:
         2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         >>> cat2 = cat.filter("magnitude >= 4.0", "latitude < 40.0")
-        >>> print cat2
+        >>> print(cat2)
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
         >>> cat3 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20")
-        >>> print cat3
+        >>> print(cat3)
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
         >>> cat4 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20",
         ...                   inverse=True)
-        >>> print cat4
+        >>> print(cat4)
         2 Event(s) in Catalog:
         2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
-        # Helper functions.
+        # Helper functions. Only first argument might be None. Avoid
+        # unorderable types by checking first shortcut on positiv is None 
+        # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
-            if value_1 < value_2:
+            if value_1 is None or value_1 < value_2:
                 return True
             return False
 
         def __is_smaller_or_equal(value_1, value_2):
-            if value_1 <= value_2:
+            if value_1 is None or value_1 <= value_2:
                 return True
             return False
 
         def __is_greater(value_1, value_2):
-            if value_1 > value_2:
-                return True
-            return False
+            if value_1 is None or value_1 <= value_2:
+                return False
+            return True
 
         def __is_greater_or_equal(value_1, value_2):
-            if value_1 >= value_2:
-                return True
-            return False
+            if value_1 is None or value_1 < value_2:
+                return False
+            return True
 
         # Map the function to the operators.
         operator_map = {"<": __is_smaller,
