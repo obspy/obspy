@@ -182,14 +182,16 @@ def uncompressFile(func):
             # bz2 module
             try:
                 import bz2
-                obj_list.append(bz2.decompress(open(filename, 'rb').read()))
+                with open(filename, 'rb') as fp:
+                    obj_list.append(bz2.decompress(fp.read()))
             except:
                 pass
         elif filename.endswith('.gz'):
             # gzip module
             try:
                 import gzip
-                obj_list.append(gzip.open(filename, 'rb').read())
+                with gzip.open(filename, 'rb') as fp:
+                    obj_list.append(fp.read())
             except:
                 pass
         # handle results

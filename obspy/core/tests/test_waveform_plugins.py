@@ -1,9 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import range
 from future.builtins import str
-from future.builtins import open
-# -*- coding: utf-8 -*-
 
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
@@ -86,36 +85,24 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         # it needs multiple files
                         if format not in ['Q']:
                             # file handler without format
-                            temp = open(outfile, 'rb')
-                            st = read(temp)
+                            with open(outfile, 'rb') as fp:
+                                st = read(fp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # file handler with format
-                            temp = open(outfile, 'rb')
-                            st = read(temp, format=format)
+                            with open(outfile, 'rb') as fp:
+                                st = read(fp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
-                            # StringIO without format
-                            temp = compatibility.BytesIO(
-                                open(outfile, 'rb').read())
+                            # BytesIO without format
+                            with open(outfile, 'rb') as fp:
+                                temp = compatibility.BytesIO(fp.read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
-                            # StringIO with format
-                            temp = compatibility.BytesIO(
-                                open(outfile, 'rb').read())
-                            st = read(temp, format=format)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
-                            # cStringIO without format
-                            temp = compatibility.BytesIO(
-                                open(outfile, 'rb').read())
-                            st = read(temp)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
-                            # cStringIO with format
-                            temp = compatibility.BytesIO(
-                                open(outfile, 'rb').read())
+                            # BytesIO with format
+                            with open(outfile, 'rb') as fp:
+                                temp = compatibility.BytesIO(fp.read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
@@ -335,13 +322,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         Test case for issue #338:
         """
-        tmpfile = NamedTemporaryFile().name
-        # create empty file
-        open(tmpfile, 'wb').close()
-        # using format keyword
-        self.assertRaises(TypeError, read, tmpfile)
-        # cleanup
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # create empty file
+            open(tmpfile, 'wb').close()
+            # using format keyword
+            self.assertRaises(TypeError, read, tmpfile)
 
     def test_deepcopy(self):
         """
@@ -370,17 +356,17 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 dt = 'i4'
             for tr in stream:
                 tr.data = np.arange(tr.stats.npts).astype(dt)
-            tmpfile = NamedTemporaryFile().name
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                stream.write(format=format, filename=tmpfile)
-            st = read(tmpfile, format=format)
+            with NamedTemporaryFile() as tf:
+                tmpfile = tf.name
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    stream.write(format=format, filename=tmpfile)
+                st = read(tmpfile, format=format)
             st.sort()
             st_deepcopy = deepcopy(st)
             st_deepcopy.sort()
             msg = "Error in wavform format=%s" % format
-            self.assertEquals(str(st), str(st_deepcopy), msg=msg)
-            os.remove(tmpfile)
+            self.assertEqual(str(st), str(st_deepcopy), msg=msg)
 
 
 def suite():

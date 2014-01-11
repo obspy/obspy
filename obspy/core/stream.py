@@ -2773,7 +2773,8 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :return: A ObsPy Stream object.
     """
     if isinstance(filename, str):
-        return pickle.load(open(filename, 'rb'))
+        with open(filename, 'rb') as fp:
+            return pickle.load(fp)
     else:
         return pickle.load(filename)
 
@@ -2799,7 +2800,8 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :param protocol: Pickle protocol, defaults to ``2``.
     """
     if isinstance(filename, str):
-        pickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+        with open(filename, 'wb') as fp:
+            pickle.dump(stream, fp, protocol=protocol)
     else:
         pickle.dump(stream, filename, protocol=protocol)
 

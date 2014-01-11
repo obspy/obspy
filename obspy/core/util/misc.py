@@ -249,6 +249,7 @@ def get_untracked_files_from_git():
                   cwd=dir_, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         stdout = p.stdout.readlines()
+        p.stdout.close()
         files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
                  for line in stdout
                  if line.startswith("??")]

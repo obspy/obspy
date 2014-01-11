@@ -135,7 +135,7 @@ def mergePreviews(stream):
         # Get the minimum start and maximum endtime for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
-        samples = (max_endtime - min_starttime) / delta + 1
+        samples = int(round((max_endtime - min_starttime) / delta)) + 1
         data = np.empty(samples, dtype=dtype)
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
