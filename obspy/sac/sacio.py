@@ -737,8 +737,8 @@ class SacIO(object):
             # apart from the second field which is 16 characters long
             # resulting in a total length of 192 characters
             for i in range(0, 24, 3):
-                self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
-                f.readline()  # strip the newline
+                line = f.readline()
+                self.hs[i:i + 3] = np.fromstring(line, dtype='|S8', count=3)
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
