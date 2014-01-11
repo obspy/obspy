@@ -328,7 +328,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     if not hasattr(stream, 'stats'):
         stream.stats = AttribDict()
     if not hasattr(stream.stats, 'textual_file_header'):
-        stream.stats.textual_file_header = ""
+        stream.stats.textual_file_header = b""
     if not hasattr(stream.stats, 'binary_file_header'):
         stream.stats.binary_file_header = SEGYBinaryFileHeader()
 

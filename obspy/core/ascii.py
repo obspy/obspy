@@ -323,7 +323,6 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
             else:
                 data = trace.data
             data = data.reshape((-1, 6))
-            #import pdb; pdb.set_trace()
             np.savetxt(fh, data, delimiter='\t',
                        fmt=fmt.encode('ascii', 'strict'))
             if rest:

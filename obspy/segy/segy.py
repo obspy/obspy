@@ -102,7 +102,7 @@ class SEGYFile(object):
             # And the textual header encoding to ASCII.
             if textual_header_encoding is None:
                 self.textual_header_encoding = 'ASCII'
-            self.textual_header = ''
+            self.textual_header = b''
             return
         self.file = file
         # If endian is None autodetect is.
@@ -274,7 +274,7 @@ class SEGYFile(object):
         length = len(self.textual_file_header)
         # Append spaces to the end if its too short.
         if length < 3200:
-            textual_header = self.textual_file_header + ' ' * (3200 - length)
+            textual_header = self.textual_file_header + b' ' * (3200 - length)
         elif length == 3200:
             textual_header = self.textual_file_header
         # The length must not exceed 3200 byte.
@@ -407,6 +407,8 @@ class SEGYBinaryFileHeader(object):
             # These are the two unassigned values in the binary file header.
             elif name.startswith('unassigned'):
                 temp = getattr(self, name)
+                if not isinstance(temp, bytes):
+                    temp = str(temp).encode('ascii', 'strict')
                 temp_length = len(temp)
                 # Pad to desired length if necessary.
                 if temp_length != length:
@@ -420,8 +422,7 @@ class SEGYBinaryFileHeader(object):
         """
         Just fills all necessary class attributes with zero.
         """
-        for item in BINARY_FILE_HEADER_FORMAT:
-            _, name, _ = item
+        for _, name, _ in BINARY_FILE_HEADER_FORMAT:
             setattr(self, name, 0)
 
 
@@ -715,8 +716,7 @@ class SEGYTraceHeader(object):
         Just returns all header values.
         """
         retval = ''
-        for item in TRACE_HEADER_FORMAT:
-            _, name, _, _ = item
+        for _, name, _, _ in TRACE_HEADER_FORMAT:
             # Do not print the unassigned value.
             if name == 'unassigned':
                 continue

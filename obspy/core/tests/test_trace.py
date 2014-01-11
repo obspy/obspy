@@ -18,10 +18,6 @@ import numpy as np
 import unittest
 import warnings
 
-# filter out special warnings
-warnings.filterwarnings("error", category=DeprecationWarning,
-                        message="using a") 
-
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
