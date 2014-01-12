@@ -1703,7 +1703,7 @@ class StreamTestCase(unittest.TestCase):
         tr = read('/path/to/slist_float.ascii', headonly=True)[0]
         self.assertFalse(tr.data)
         # not existing
-        self.assertRaises(IOError, read, '/path/to/UNKNOWN')
+        self.assertRaises(OSError, read, '/path/to/UNKNOWN')
 
         # 4 - file patterns
         path = os.path.dirname(__file__)

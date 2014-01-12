@@ -27,6 +27,12 @@ import doctest
 import shutil
 import warnings
 
+# pyflakes autodetection of PY2 does not work with the future library.
+# Therefore, overwrite the pyflakes autodetection manually
+if PY2:
+    import pyflakes.checker
+    pyflakes.checker.PY2 = True
+
 
 def add_unittests(testsuite, module_name):
     """
