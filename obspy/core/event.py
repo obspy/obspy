@@ -235,7 +235,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     possible.
 
         >>> test_event.description = 1
-        >>> assert(test_event.description is "1")
+        >>> assert(test_event.description == "1")
 
     Trying to set with an inappropriate value will raise an error.
 
@@ -590,14 +590,14 @@ class ResourceIdentifier(object):
 
     >>> dictionary = {}
     >>> res_id = ResourceIdentifier(id="foo")
-    >>> dictionary[res_id] = "bar"
+    >>> dictionary[res_id] = "bar1"
     >>> # The same ID can still be used as a key.
-    >>> dictionary["foo"] = "bar"
-    >>> items = sorted(dictionary.items(), key=lambda kv: repr(kv[0])[1])
-    >>> for k, v in items:  # doctest:+ELLIPSIS
+    >>> dictionary["foo"] = "bar2"
+    >>> items = sorted(dictionary.items(), key=lambda kv: kv[1])
+    >>> for k, v in items:  # doctest: +ELLIPSIS
     ...     print(repr(k), v)
-    ResourceIdentifier(id="foo") bar
-    ...'foo' bar
+    ResourceIdentifier(id="foo") bar1
+    ...'foo' bar2
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
