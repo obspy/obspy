@@ -81,6 +81,7 @@ Advanced Examples
  ('sensitivity', 2516800000.0),
  ('zeros', [0j, 0j])]
 """
+from __future__ import unicode_literals
 
 from obspy.seishub.client import Client
 

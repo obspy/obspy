@@ -8,34 +8,30 @@ import numpy as np
 if PY2:
     import urllib2
     urlopen = urllib2.urlopen
+    from urlparse import urlparse
+    from urllib import urlencode
+    from urllib2 import HTTPPasswordMgrWithDefaultRealm, \
+        HTTPBasicAuthHandler, build_opener, install_opener, HTTPError, Request
 else:
     import urllib.request
     urlopen = urllib.request.urlopen
-
+    from urllib.parse import urlparse
+    from urllib.parse import urlencode
+    from urllib.request import HTTPPasswordMgrWithDefaultRealm, \
+        HTTPBasicAuthHandler, build_opener, install_opener, HTTPError, Request
 
 if PY2:
     from StringIO import StringIO
-else:
-    import io
-    StringIO = io.StringIO
-
-if PY2:
     from StringIO import StringIO as BytesIO
 else:
     import io
+    StringIO = io.StringIO
     BytesIO = io.BytesIO
 
 if PY2:
     from string import maketrans
 else:
     maketrans = bytes.maketrans
-
-if PY2:
-    from urlparse import urlparse
-    from urllib import urlencode
-else:
-    from urllib.parse import urlparse
-    from urllib.parse import urlencode
 
 def round_away(number):
     """

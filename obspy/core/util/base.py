@@ -155,7 +155,7 @@ def getExampleFile(filename):
     >>> getExampleFile('does.not.exists')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    IOError: Could not find file does.not.exists ...
+    OSError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
         try:
@@ -168,7 +168,7 @@ def getExampleFile(filename):
             return file
     msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
-    raise IOError(msg)
+    raise OSError(msg)
 
 
 def _getEntryPoints(group, subgroup=None):
@@ -395,6 +395,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
         mod_list.append((name, module_short, func_str))
 
+    mod_list = sorted(mod_list)
     headers = ["Format", "Required Module", "_`Linked Function Call`"]
     maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
                max([len(x[1]) for x in mod_list] + [len(headers[1])]),

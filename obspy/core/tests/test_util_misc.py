@@ -55,7 +55,7 @@ class UtilMiscTestCase(unittest.TestCase):
 
         with CatchOutput() as out:
             os.system('echo "abc"')
-            libc.printf("def\n")
+            libc.printf(b"def\n")
             print("ghi")
             print("jkl", file=sys.stdout)
             os.system('echo "123" 1>&2')

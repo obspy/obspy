@@ -113,7 +113,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(compatibilty.urlopen(pathname_or_url).read())
+            fh.write(compatibility.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
