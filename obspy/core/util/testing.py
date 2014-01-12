@@ -13,9 +13,10 @@ from __future__ import print_function
 from future import standard_library
 from future.builtins import super
 from future.builtins import str
-from future.utils import native_str
+from future.utils import native_str, PY2
 from obspy.core.util.misc import get_untracked_files_from_git
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core import compatibility
 import fnmatch
 import inspect
 import sys
@@ -23,7 +24,6 @@ import os
 import glob
 import unittest
 import doctest
-import io
 import shutil
 import warnings
 
@@ -334,7 +334,9 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    sys.stdout = io.StringIO()
+    sys.stdout = compatibility.StringIO()
+    if PY2:
+        files = [native_str(f) for f in files]
     report = flake8_style.check_files(files)
     sys.stdout.seek(0)
     message = sys.stdout.read()

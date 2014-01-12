@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from future.builtins import open
-# -*- coding: utf-8 -*-
+from future.builtins import str
 import json
 from obspy.core.json import Default
 

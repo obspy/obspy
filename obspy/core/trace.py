@@ -16,6 +16,7 @@ from future.builtins import super
 from future.builtins import str
 from future.builtins import int
 from future.builtins import round
+from future.utils import native_str
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
@@ -49,11 +50,11 @@ class Stats(AttribDict):
 
     >>> stats = Stats()
     >>> stats.network = 'BW'
-    >>> stats['network']
-    'BW'
+    >>> print(stats['network'])
+    BW
     >>> stats['station'] = 'MANZ'
-    >>> stats.station
-    'MANZ'
+    >>> print(stats.station)
+    MANZ
 
     .. rubric:: _`Default Attributes`
 
@@ -756,10 +757,10 @@ class Trace(object):
 
         >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
         >>> tr = Trace(header=meta)
-        >>> tr.getId()
-        'BW.MANZ..EHZ'
-        >>> tr.id
-        'BW.MANZ..EHZ'
+        >>> print(tr.getId())
+        BW.MANZ..EHZ
+        >>> print(tr.id)
+        BW.MANZ..EHZ
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
@@ -1476,7 +1477,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
         # resample
         num = int(self.stats.npts / factor)
-        self.data = resample(self.data, num, window=window)
+        self.data = resample(self.data, num, window=native_str(window))
         self.stats.sampling_rate = sampling_rate
         # add processing information to the stats dictionary
         proc_info = "resample:%d:%s" % (sampling_rate, window)
@@ -1915,15 +1916,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
-        >>> tr.stats.processing
-        ['normalize:9']
+        >>> print(tr.stats.processing[0])
+        normalize:9
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
         >>> tr.normalize()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
-        >>> tr.stats.processing
-        ['normalize:-9.2']
+        >>> print(tr.stats.processing[0])
+        normalize:-9.2
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:

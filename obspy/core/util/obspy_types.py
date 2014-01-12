@@ -1,7 +1,3 @@
-from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import zip
-from future.builtins import str
 # -*- coding: utf-8 -*-
 """
 Various types used in ObsPy.
@@ -12,6 +8,10 @@ Various types used in ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import zip
+from future.builtins import str
 
 # try native OrderDict implementations first (Python >= 2.7.x)
 try:
@@ -163,14 +163,14 @@ class Enum(object):
 
     There are different ways to access the correct enum values:
 
-        >>> units.get('m/s')
-        'm/s'
-        >>> units['S']
-        's'
-        >>> units.OTHER
-        'other'
-        >>> units[3]
-        'm/(s*s)'
+        >>> print(units.get('m/s'))
+        m/s
+        >>> print(units['S'])
+        s
+        >>> print(units.OTHER)
+        other
+        >>> print(units[3])
+        m/(s*s)
         >>> units.xxx  # doctest: +ELLIPSIS
         Traceback (most recent call last):
         ...
@@ -189,20 +189,20 @@ class Enum(object):
 
     Calling with a value will either return the mapped enum value or ``None``:
 
-        >>> units("M*s")
-        'm*s'
+        >>> print(units("M*s"))
+        m*s
         >>> units('xxx')
-        >>> units(5)
-        'other'
+        >>> print(units(5))
+        other
 
     The following enum allows replacing certain entries:
 
         >>> units2 = Enum(["m", "s", "m/s", "m/(s*s)", "m*s", "other"],
         ...               replace={'meter': 'm'})
-        >>> units2('m')
-        'm'
-        >>> units2('meter')
-        'm'
+        >>> print(units2('m'))
+        m
+        >>> print(units2('meter'))
+        m
     """
     # marker needed for for usage within ABC classes
     __isabstractmethod__ = False
