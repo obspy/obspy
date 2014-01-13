@@ -12,23 +12,21 @@ NERIES Web service client for ObsPy.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, guessDelta
+from obspy.core import compatibility
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
-import io
 import functools
 import json
 import platform
-import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
 import warnings
 
 
@@ -141,13 +139,13 @@ class Client(object):
         self.user = user
         self.password = password
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, self.base_url, self.user,
                                   self.password)
-        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib.request.build_opener(auth_handler)
+        auth_handler = compatibility.HTTPBasicAuthHandler(password_mgr)
+        opener = compatibility.build_opener(auth_handler)
         # install globally
-        urllib.request.install_opener(opener)
+        compatibility.install_opener(opener)
 
     def _fetch(self, url, headers={}, **params):
         """
@@ -160,10 +158,11 @@ class Client(object):
         """
         headers['User-Agent'] = self.user_agent
         # replace special characters
-        remoteaddr = self.base_url + url + '?' + urllib.parse.urlencode(params)
+        remoteaddr = self.base_url + url + '?' + \
+            compatibility.urlencode(params)
         if self.debug:
             print(('\nRequesting %s' % (remoteaddr)))
-        response = urllib.request.urlopen(remoteaddr, timeout=self.timeout)
+        response = compatibility.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -285,9 +284,9 @@ class Client(object):
         data = self._fetch("/services/event/search", **kwargs)
         # format output
         if format == "list":
-            return self._json2list(data)
+            return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(io.StringIO(data), 'QUAKEML')
+            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -349,9 +348,9 @@ class Client(object):
         data = self._fetch("/services/event/latest", **kwargs)
         # format output
         if format == "list":
-            return self._json2list(data)
+            return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(io.StringIO(data), 'QUAKEML')
+            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -410,9 +409,9 @@ class Client(object):
         data = self._fetch("/services/event/detail", **kwargs)
         # format output
         if format == "list":
-            return self._json2list(data)
+            return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(io.StringIO(data), 'QUAKEML')
+            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -601,7 +600,7 @@ class Client(object):
             xpath = '*/*/{urn:xml:seisml:orfeus:neries:org}ArclinkInventory'
             inventory = temp.find(xpath)
             # export XML prepending a XML declaration
-            XML_DECLARATION = "<?xml version='1.0' encoding='UTF-8'?>\n\n"
+            XML_DECLARATION = b"<?xml version='1.0' encoding='UTF-8'?>\n\n"
             return XML_DECLARATION + tostring(inventory, encoding='utf-8')
         else:
             # response is a SUDS object
@@ -638,7 +637,7 @@ class Client(object):
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
         >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+30)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         NL.WIT..BHZ | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         NL.WIT..BHN | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
@@ -766,13 +765,13 @@ class Client(object):
         # create file handler if a file name is given
         if isinstance(filename, str):
             fh = open(filename, "wb")
-        elif isinstance(filename, file):
+        elif hasattr(filename, "write"):
             fh = filename
         else:
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         for url in urls:
-            fh.write(urllib.request.urlopen(url).read())
+            fh.write(compatibility.urlopen(url).read())
         if isinstance(filename, str):
             fh.close()
         # clean up
