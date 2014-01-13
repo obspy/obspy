@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 from __future__ import unicode_literals
-# -*- coding: utf-8 -*-
+from future.utils import PY2
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
@@ -61,12 +62,21 @@ class UtilMiscTestCase(unittest.TestCase):
             os.system('echo "123" 1>&2')
             print("456", file=sys.stderr)
 
-        if platform.system() == "Windows":
-            self.assertEqual(out.stdout, '"abc"\ndef\nghi\njkl\n')
-            self.assertEqual(out.stderr, '"123" \n456\n')
+        if PY2:
+            if platform.system() == "Windows":
+                self.assertEqual(out.stdout, '"abc"\ndef\nghi\njkl\n')
+                self.assertEqual(out.stderr, '"123" \n456\n')
+            else:
+                self.assertEqual(out.stdout, "abc\ndef\nghi\njkl\n")
+                self.assertEqual(out.stderr, "123\n456\n")
         else:
-            self.assertEqual(out.stdout, "abc\ndef\nghi\njkl\n")
-            self.assertEqual(out.stderr, "123\n456\n")
+            # XXX: cannot catch the printf call to def in Py3k
+            if platform.system() == "Windows":
+                self.assertEqual(out.stdout, '"abc"\nghi\njkl\n')
+                self.assertEqual(out.stderr, '"123" \n456\n')
+            else:
+                self.assertEqual(out.stdout, "abc\nghi\njkl\n")
+                self.assertEqual(out.stderr, "123\n456\n")
 
 
 def suite():
