@@ -9,6 +9,13 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import open
+from future.builtins import str
+from future.builtins import map
 from io import BytesIO
 from lxml import etree
 import obspy
@@ -19,10 +26,10 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
 
-import Queue
+import queue
 import threading
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import warnings
 import os
 
@@ -98,20 +105,20 @@ class Client(object):
         # Authentication
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib2.build_opener(auth_handler)
+            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
+            opener = urllib.request.build_opener(auth_handler)
             # install globally
-            urllib2.install_opener(opener)
+            urllib.request.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
 
         if self.debug is True:
-            print "Base URL: %s" % self.base_url
-            print "Request Headers: %s" % str(self.request_headers)
+            print("Base URL: %s" % self.base_url)
+            print("Request Headers: %s" % str(self.request_headers))
 
         self._discover_services()
 
@@ -713,7 +720,7 @@ class Client(object):
             # if it has a read method, read data from there
             if hasattr(bulk, "read"):
                 bulk = bulk.read()
-            elif isinstance(bulk, basestring):
+            elif isinstance(bulk, str):
                 # check if bulk is a local file
                 if "\n" not in bulk and os.path.isfile(bulk):
                     with open(bulk) as fh:
@@ -754,7 +761,7 @@ class Client(object):
         service_params = self.services[service]
         # Get all required parameters and make sure they are available!
         required_parameters = [
-            key for key, value in service_params.iteritems()
+            key for key, value in service_params.items()
             if value["required"] is True]
         for req_param in required_parameters:
             if req_param not in parameters:
@@ -765,7 +772,7 @@ class Client(object):
 
         # Now loop over all parameters, convert them and make sure they are
         # accepted by the service.
-        for key, value in parameters.iteritems():
+        for key, value in parameters.items():
             if key not in service_params:
                 # If it is not in the service but in the default parameters
                 # raise a warning.
@@ -796,7 +803,7 @@ class Client(object):
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 if not value:
                     continue
             final_parameter_set[key] = value
@@ -833,7 +840,7 @@ class Client(object):
             raise ValueError(msg)
 
         if service is None:
-            services = self.services.keys()
+            services = list(self.services.keys())
         elif service in FDSNWS:
             services = [service]
         else:
@@ -867,7 +874,7 @@ class Client(object):
                 else:
                     missing_default_parameters.append(name)
 
-            for name in self.services[service].iterkeys():
+            for name in self.services[service].keys():
                 if name not in SERVICE_DEFAULT:
                     additional_parameters.append(name)
 
@@ -924,7 +931,7 @@ class Client(object):
             if printed_something is False:
                 msg.append("No derivations from standard detected")
 
-        print "\n".join(msg)
+        print("\n".join(msg))
 
     def _download(self, url, return_string=False, data=None):
         code, data = download_url(
@@ -982,7 +989,7 @@ class Client(object):
         urls.append(self._build_url("event", "contributors"))
 
         # Request all in parallel.
-        wadl_queue = Queue.Queue()
+        wadl_queue = queue.Queue()
 
         headers = self.request_headers
         debug = self.debug
@@ -998,7 +1005,7 @@ class Client(object):
                         wadl_queue.put((url, None))
             return ThreadURL()
 
-        threads = map(get_download_thread, urls)
+        threads = list(map(get_download_thread, urls))
         for thread in threads:
             thread.start()
         for thread in threads:
@@ -1013,15 +1020,15 @@ class Client(object):
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print "Discovered dataselect service"
+                    print("Discovered dataselect service")
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print "Discovered event service"
+                    print("Discovered event service")
             elif "station" in url:
                 self.services["station"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print "Discovered station service"
+                    print("Discovered station service")
             elif "event" in url and "catalogs" in url:
                 try:
                     self.services["available_event_catalogs"] = \
@@ -1057,7 +1064,7 @@ class Client(object):
 
         url = self._build_url(service, "version")
         version = self._download(url, return_string=True)
-        return map(int, version.split("."))
+        return list(map(int, version.split(".")))
 
     def _get_webservice_versionstring(self, service):
         """
@@ -1087,7 +1094,7 @@ def convert_to_string(value):
     >>> convert_to_string(False)
     'false'
     """
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         return value
     # Boolean test must come before integer check!
     elif isinstance(value, bool):
@@ -1140,12 +1147,12 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
                     str(major_version), resource_type))
     if parameters:
         # Strip parameters.
-        for key, value in parameters.iteritems():
+        for key, value in parameters.items():
             try:
                 parameters[key] = value.strip()
             except:
                 pass
-        url = "?".join((url, urllib.urlencode(parameters)))
+        url = "?".join((url, urllib.parse.urlencode(parameters)))
     return url
 
 
@@ -1162,20 +1169,20 @@ def download_url(url, timeout=10, headers={}, debug=False,
     Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
-        print "Downloading %s" % url
+        print("Downloading %s" % url)
 
     try:
-        url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
+        url_obj = urllib.request.urlopen(urllib.request.Request(url=url, headers=headers),
                                   timeout=timeout, data=data)
     # Catch HTTP errors.
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         if debug is True:
-            print("HTTP error %i while downloading '%s': %s" %
-                  (e.code, url, e.read()))
+            print(("HTTP error %i while downloading '%s': %s" %
+                  (e.code, url, e.read())))
         return e.code, None
     except Exception as e:
         if debug is True:
-            print "Error while downloading: %s" % url
+            print("Error while downloading: %s" % url)
         return None, None
 
     code = url_obj.getcode()
@@ -1185,7 +1192,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
         data = url_obj.read()
 
     if debug is True:
-        print "Downloaded %s with HTTP code: %i" % (url, code)
+        print("Downloaded %s with HTTP code: %i" % (url, code))
 
     return code, data
 

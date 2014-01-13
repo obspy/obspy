@@ -9,6 +9,11 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import str
+from future.builtins import open
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
@@ -16,7 +21,7 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.station import Response
 import os
-from StringIO import StringIO
+from io import StringIO
 import sys
 import unittest
 from difflib import Differ

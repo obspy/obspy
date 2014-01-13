@@ -9,6 +9,7 @@ Header files for the FDSN webservice.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 from obspy import __version__, UTCDateTime
 
 import platform

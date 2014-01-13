@@ -94,14 +94,17 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
 Please see the documentation for each method for further information and
 examples.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import str
 
-from client import Client
-from header import URL_MAPPINGS
+from .client import Client
+from .header import URL_MAPPINGS
 
 # insert supported URL mapping list dynamically in docstring
 # we need an if clause because add_doctests() executes the file once again
 if r"%s" in Client.__init__.__doc__:
-    Client.__init__.im_func.func_doc = \
+    Client.__init__.__func__.__doc__ = \
         Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
 
