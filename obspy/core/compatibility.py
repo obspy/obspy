@@ -12,6 +12,7 @@ if PY2:
     from urllib import urlencode  # NOQA
     from urllib2 import HTTPPasswordMgrWithDefaultRealm  # NOQA
     from urllib2 import HTTPBasicAuthHandler  # NOQA
+    from urllib2 import HTTPDigestAuthHandler  # NOQA
     from urllib2 import build_opener  # NOQA
     from urllib2 import install_opener  # NOQA
     from urllib2 import HTTPError  # NOQA
@@ -23,6 +24,7 @@ else:
     from urllib.parse import urlencode  # NOQA
     from urllib.request import HTTPPasswordMgrWithDefaultRealm  # NOQA
     from urllib.request import HTTPBasicAuthHandler  # NOQA
+    from urllib.request import HTTPDigestAuthHandler  # NOQA
     from urllib.request import build_opener  # NOQA
     from urllib.request import install_opener  # NOQA
     from urllib.request import HTTPError  # NOQA

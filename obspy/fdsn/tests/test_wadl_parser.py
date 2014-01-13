@@ -11,7 +11,8 @@ The obspy.fdsn.wadl_parser test suite.
 """
 from __future__ import unicode_literals
 from future.builtins import open
-from future.builtins import str
+from future.builtins import str  # NOQA
+from future.utils import native_str
 from obspy import UTCDateTime
 
 from obspy.fdsn.wadl_parser import WADLParser
@@ -33,7 +34,7 @@ class WADLParserTestCase(unittest.TestCase):
         Parses wadl, returns WADLParser and any catched warnings.
         """
         filename = os.path.join(self.data_path, filename)
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -46,7 +47,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of a dataselect wadl.
         """
         filename = os.path.join(self.data_path, "dataselect.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -68,10 +69,10 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["endtime"]["type"], UTCDateTime)
         self.assertEqual(params["endtime"]["required"], True)
 
-        self.assertEqual(params["network"]["type"], str)
-        self.assertEqual(params["station"]["type"], str)
-        self.assertEqual(params["location"]["type"], str)
-        self.assertEqual(params["channel"]["type"], str)
+        self.assertEqual(params["network"]["type"], native_str)
+        self.assertEqual(params["station"]["type"], native_str)
+        self.assertEqual(params["location"]["type"], native_str)
+        self.assertEqual(params["channel"]["type"], native_str)
 
         self.assertEqual(sorted(params["quality"]["options"]),
                          sorted(["D", "R", "Q", "M", "B"]))
@@ -86,7 +87,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of an event wadl.
         """
         filename = os.path.join(self.data_path, "event.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -154,7 +155,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of a station wadl.
         """
         filename = os.path.join(self.data_path, "station.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -201,7 +202,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the reading of WADL files that have no type.
         """
         filename = os.path.join(self.data_path, "station_no_types.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -213,10 +214,10 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["startafter"]["type"], UTCDateTime)
         self.assertEqual(params["endbefore"]["type"], UTCDateTime)
         self.assertEqual(params["endafter"]["type"], UTCDateTime)
-        self.assertEqual(params["network"]["type"], str)
-        self.assertEqual(params["station"]["type"], str)
-        self.assertEqual(params["location"]["type"], str)
-        self.assertEqual(params["channel"]["type"], str)
+        self.assertEqual(params["network"]["type"], native_str)
+        self.assertEqual(params["station"]["type"], native_str)
+        self.assertEqual(params["location"]["type"], native_str)
+        self.assertEqual(params["channel"]["type"], native_str)
         self.assertEqual(params["minlatitude"]["type"], float)
         self.assertEqual(params["maxlatitude"]["type"], float)
         self.assertEqual(params["latitude"]["type"], float)
@@ -225,14 +226,14 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["longitude"]["type"], float)
         self.assertEqual(params["minradius"]["type"], float)
         self.assertEqual(params["maxradius"]["type"], float)
-        self.assertEqual(params["level"]["type"], str)
+        self.assertEqual(params["level"]["type"], native_str)
         self.assertEqual(params["includerestricted"]["type"], bool)
         self.assertEqual(params["includeavailability"]["type"], bool)
         self.assertEqual(params["updatedafter"]["type"], UTCDateTime)
 
         # Now read a dataselect file with no types.
         filename = os.path.join(self.data_path, "dataselect_no_types.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -240,11 +241,11 @@ class WADLParserTestCase(unittest.TestCase):
         # Assert that types have been assigned.
         self.assertEqual(params["starttime"]["type"], UTCDateTime)
         self.assertEqual(params["endtime"]["type"], UTCDateTime)
-        self.assertEqual(params["network"]["type"], str)
-        self.assertEqual(params["station"]["type"], str)
-        self.assertEqual(params["location"]["type"], str)
-        self.assertEqual(params["channel"]["type"], str)
-        self.assertEqual(params["quality"]["type"], str)
+        self.assertEqual(params["network"]["type"], native_str)
+        self.assertEqual(params["station"]["type"], native_str)
+        self.assertEqual(params["location"]["type"], native_str)
+        self.assertEqual(params["channel"]["type"], native_str)
+        self.assertEqual(params["quality"]["type"], native_str)
         self.assertEqual(params["minimumlength"]["type"], float)
         self.assertEqual(params["longestonly"]["type"], bool)
 
@@ -253,7 +254,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of an event wadl.
         """
         filename = os.path.join(self.data_path, "usgs_event.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -298,7 +299,7 @@ class WADLParserTestCase(unittest.TestCase):
         # longestonly parameters.
         filename = os.path.join(self.data_path,
                                 "dataselect_missing_attributes.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -306,7 +307,7 @@ class WADLParserTestCase(unittest.TestCase):
             parser = WADLParser(wadl_string)
             # Assert that the warning raised is correct.
             self.assertEqual(len(w), 1)
-            msg = w[0].message.message
+            msg = str(w[0].message)
             self.assertTrue("quality" in msg)
             self.assertTrue("minimumlength" in msg)
             self.assertTrue("longestonly" in msg)
@@ -329,7 +330,7 @@ class WADLParserTestCase(unittest.TestCase):
         # parameters.
         filename = os.path.join(self.data_path,
                                 "event_missing_attributes.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -337,7 +338,7 @@ class WADLParserTestCase(unittest.TestCase):
             parser = WADLParser(wadl_string)
             # Assert that the warning raised is correct.
             self.assertEqual(len(w), 1)
-            msg = w[0].message.message
+            msg = str(w[0].message)
             self.assertTrue("includeallorigins" in msg)
             self.assertTrue("updatedafter" in msg)
 

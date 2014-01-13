@@ -14,6 +14,7 @@ and should be removed once the datacenters are fully standard compliant.
 """
 from __future__ import unicode_literals
 from obspy import UTCDateTime
+from obspy.core import compatibility
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
@@ -25,7 +26,7 @@ import warnings
 
 class WADLParser(object):
     def __init__(self, wadl_string):
-        doc = etree.fromstring(wadl_string)
+        doc = etree.parse(compatibility.BytesIO(wadl_string)).getroot()
         self.nsmap = doc.nsmap
         self._ns = self.nsmap.get(None, None)
         self.parameters = {}

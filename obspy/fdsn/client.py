@@ -16,6 +16,7 @@ from future.builtins import range
 from future.builtins import open
 from future.builtins import str
 from future.builtins import map
+from future.utils import PY2
 from lxml import etree
 import obspy
 from obspy import UTCDateTime, read_inventory
@@ -700,13 +701,15 @@ class Client(object):
         locs = locals()
         # if it's an iterable, we build up the query string from it
         # StringIO objects also have __iter__ so check for read as well
-        if hasattr(bulk, "__iter__") and not hasattr(bulk, "read"):
+        if hasattr(bulk, "__iter__") \
+                and not hasattr(bulk, "read") \
+                and not isinstance(bulk, str):
             tmp = ["%s=%s" % (key, convert_to_string(locs[key]))
                    for key in ("quality", "minimumlength", "longestonly")
                    if locs[key] is not None]
             # empty location codes have to be represented by two dashes
             tmp += [" ".join((net, sta, loc or "--", cha,
-                             convert_to_string(t1), convert_to_string(t2)))
+                              convert_to_string(t1), convert_to_string(t2)))
                     for net, sta, loc, cha, t1, t2 in bulk]
             bulk = "\n".join(tmp)
         else:
@@ -721,7 +724,7 @@ class Client(object):
             elif isinstance(bulk, str):
                 # check if bulk is a local file
                 if "\n" not in bulk and os.path.isfile(bulk):
-                    with open(bulk) as fh:
+                    with open(bulk, 'r') as fh:
                         tmp = fh.read()
                     bulk = tmp
                 # just use bulk as input data
@@ -734,7 +737,8 @@ class Client(object):
 
         url = self._build_url("dataselect", "query")
 
-        data_stream = self._download(url, data=bulk)
+        data_stream = self._download(url,
+                                     data=bulk.encode('ascii', 'strict'))
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1062,7 +1066,7 @@ class Client(object):
 
         url = self._build_url(service, "version")
         version = self._download(url, return_string=True)
-        return list(map(int, version.split(".")))
+        return list(map(int, version.split(b".")))
 
     def _get_webservice_versionstring(self, service):
         """
@@ -1103,6 +1107,10 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, obspy.UTCDateTime):
         return str(value).replace("Z", "")
+    elif PY2 and isinstance(value, bytes):
+        return value
+    else:
+        raise TypeError("Unexpected type %s" % repr(value))
 
 
 def build_url(base_url, service, major_version, resource_type, parameters={}):
