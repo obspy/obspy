@@ -458,7 +458,8 @@ class Client(object):
         >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
         >>> st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
         ...                           attach_response=True)
-        >>> st.remove_response(output="VEL")
+        >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at ...>
         >>> st.plot()
 
         .. plot::
@@ -632,7 +633,8 @@ class Client(object):
         ...         ("TA", "W42A", "*", "BHZ", t1, t2),
         ...         ("TA", "Z42A", "*", "BHZ", t1, t2)]
         >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
-        >>> st.remove_response(output="VEL")
+        >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at ...>
         >>> st.plot()
 
         .. plot::
