@@ -468,7 +468,8 @@ def parse_STA2(line):
     positions. Here are some real-world examples:
 
     >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
-    >>> for k, v in sorted(parse_STA2(l).items()):
+    >>> for k, v in sorted(parse_STA2(l).items()):  \
+            # doctest: +NORMALIZE_WHITESPACE
     ...     print(k, v)
     coordsys
     edepth -0.999
