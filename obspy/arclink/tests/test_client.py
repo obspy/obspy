@@ -2,6 +2,11 @@
 """
 The obspy.arclink.client test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import str
+from future.builtins import open
 
 from obspy import read
 from obspy.arclink import Client
@@ -10,7 +15,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
 import numpy as np
 import operator
-import StringIO
+import io
 import unittest
 import warnings
 
@@ -267,9 +272,9 @@ class ClientTestCase(unittest.TestCase):
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
-                'filesize': 30720L,
+                'filesize': 30720,
                 'dataquality': 'D',
-                'number_of_records': 60L,
+                'number_of_records': 60,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 47.737167,
@@ -309,9 +314,9 @@ class ClientTestCase(unittest.TestCase):
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
-                'filesize': 3584L,
+                'filesize': 3584,
                 'dataquality': 'D',
-                'number_of_records': 7L,
+                'number_of_records': 7,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 49.3084,
@@ -364,7 +369,7 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         result = client.getNetworks(start, end)
-        self.assertTrue('BW' in result.keys())
+        self.assertTrue('BW' in list(result.keys()))
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
 
@@ -561,7 +566,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(open(tempfile).read(8), "000001V ")
 
         # Try again but write to a StringIO instance.
-        file_object = StringIO.StringIO()
+        file_object = io.StringIO()
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -590,8 +595,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
-        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ",
-                                    t, t + 30).values()[0]
+        poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
+                                    t, t + 30).values())[0]
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])

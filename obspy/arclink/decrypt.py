@@ -10,6 +10,7 @@ Decryption class of ArcLink/WebDC client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
 try:
     from M2Crypto import EVP
