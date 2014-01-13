@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import open
 from lxml import etree as lxml_etree
 from xml.etree import ElementTree as xml_etree
 from obspy.core.util.xmlwrapper import XMLParser, tostring
 from obspy.core import compatibility
-import io
 import os
 import unittest
 

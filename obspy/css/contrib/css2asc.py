@@ -38,8 +38,8 @@ def main(wfdisc):
 
         # check if already there
         if os.path.exists(destname):
-            print("I won't overwrite existing file \"%s\", skipping..." % \
-                os.path.split(destname)[1])
+            print("I won't overwrite existing file \"%s\", skipping..." %
+                  os.path.split(destname)[1])
             continue
 
         # read unnormalized data
@@ -71,8 +71,8 @@ def convert(parts):
         datafile.seek(parts[17])
         values = struct.unpack(fmt, datafile.read(size))
     except:
-        print("error reading binary packed data from \"%s\"" % \
-            os.path.split(parts[16])[1])
+        print("error reading binary packed data from \"%s\"" %
+              os.path.split(parts[16])[1])
         return False
 
     datafile.close()

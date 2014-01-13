@@ -105,7 +105,7 @@ class SEG2(object):
            unpack(b'B', file_descriptor_block[1:2])[0] == 0x3a:
             self.endian = b'<'
         elif unpack(b'B', file_descriptor_block[0:1])[0] == 0x3a and \
-             unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
+                unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
             self.endian = b'>'
         else:
             msg = 'Wrong File Descriptor Block ID'
@@ -130,8 +130,8 @@ class SEG2(object):
          second_string_terminator_char,
          size_of_line_terminator,
          first_line_terminator_char,
-         second_line_terminator_char) =  \
-                unpack(b'BccBcc', file_descriptor_block[8:14])
+         second_line_terminator_char
+         ) = unpack(b'BccBcc', file_descriptor_block[8:14])
 
         # Assemble the string terminator.
         if size_of_string_terminator == 1:
@@ -297,7 +297,7 @@ def isSEG2(filename):
            unpack(b'B', file_descriptor_block[1:2])[0] == 0x3a:
             endian = b'<'
         elif unpack(b'B', file_descriptor_block[0:1])[0] == 0x3a and \
-             unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
+                unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
             endian = b'>'
         else:
             return False

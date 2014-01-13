@@ -208,7 +208,7 @@ def readHeader(fh):
         fh.seek(pos)
     # Py3k: convert to unicode
     header['gse2'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
-                for k, v in header['gse2'].items())
+                          for k, v in header['gse2'].items())
     return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                 for k, v in header.items())
 
@@ -470,12 +470,12 @@ def parse_STA2(line):
     >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
     >>> for k, v in sorted(parse_STA2(l).items()):
     ...     print(k, v)
-    coordsys 
+    coordsys
     edepth -0.999
     elev -0.999
     lat -999.0
     lon -999.0
-    network 
+    network
     >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
     >>> for k, v in sorted(parse_STA2(l).items()):
     ...     print(k, v)

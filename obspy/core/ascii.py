@@ -32,7 +32,7 @@ Simple ASCII time series formats
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import open
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats

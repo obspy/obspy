@@ -69,7 +69,8 @@ MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
 VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS
 
 # expected data types for libmseed id: (numpy, ctypes)
-DATATYPES = {b"a": C.c_char, b"i": C.c_int32, b"f": C.c_float, b"d": C.c_double}
+DATATYPES = {b"a": C.c_char, b"i": C.c_int32, b"f": C.c_float,
+             b"d": C.c_double}
 SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 
 # Valid record lengths for Mini-SEED files.
@@ -541,8 +542,6 @@ clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
                                 C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
-
-
 #####################################
 # Define the C structures.
 #####################################
@@ -551,6 +550,7 @@ clibmseed.msr_parse.restype = C.c_int
 # Container for a continuous trace segment, linkable
 class MSTraceSeg(C.Structure):
     pass
+
 
 MSTraceSeg._fields_ = [
     ('starttime', C.c_longlong),      # Time of first sample

@@ -69,15 +69,15 @@ class RotateTestCase(unittest.TestCase):
             data_back_z, data_back_n, data_back_e = \
                 rotate_LQT_ZNE(data_l, data_q, data_t, ba, inci)
             # load pitsa files
-            with gzip.open(os.path.join( self.path,
+            with gzip.open(os.path.join(self.path,
                                         'rjob_20051006_q_%sba_%sinc.gz' %
                                         (ba, inci))) as f:
                 data_pitsa_q = np.loadtxt(f)
-            with gzip.open(os.path.join( self.path,
+            with gzip.open(os.path.join(self.path,
                                         'rjob_20051006_t_%sba_%sinc.gz' %
                                         (ba, inci))) as f:
                 data_pitsa_t = np.loadtxt(f)
-            with gzip.open(os.path.join( self.path,
+            with gzip.open(os.path.join(self.path,
                                         'rjob_20051006_l_%sba_%sinc.gz' %
                                         (ba, inci))) as f:
                 data_pitsa_l = np.loadtxt(f)

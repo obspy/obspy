@@ -9,7 +9,7 @@
 #---------------------------------------------------------------------
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import str
 from future.builtins import round
 from future.builtins import int

@@ -6,7 +6,7 @@ from future.builtins import open
 from future.builtins import zip
 from future.builtins import int
 from future.builtins import range
-from future.builtins import str
+from future.builtins import str  # NOQA
 from future.utils import native_str
 
 import os
@@ -94,7 +94,8 @@ class FlinnEngdahl(object):
 
         with open(self.numbers_file, 'rt') as csvfile:
             FE_csv = csv.reader(csvfile, delimiter=native_str(';'),
-                                quotechar=native_str('#'), skipinitialspace=True)
+                                quotechar=native_str('#'),
+                                skipinitialspace=True)
             self.by_number = \
                 dict((int(row[0]), row[1]) for row in FE_csv if len(row) > 1)
 

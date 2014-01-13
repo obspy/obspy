@@ -10,9 +10,8 @@ Testing utilities for ObsPy.
 """
 from __future__ import unicode_literals
 from __future__ import print_function
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import super
-from future.builtins import str
 from future.utils import native_str, PY2
 from obspy.core.util.misc import get_untracked_files_from_git
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile

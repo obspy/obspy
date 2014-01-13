@@ -10,12 +10,11 @@ Module for handling ObsPy Stream objects.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import range
 from future.builtins import int
 from future.builtins import open
-from future.builtins import round
 from future.builtins import str
 from future.utils import native_str
 from glob import glob, has_magic
@@ -753,14 +752,13 @@ class Stream(object):
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
         >>> st[0].trim(endtime=t)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
-        >>> tr.trim(starttime=t+1)  # doctest: +ELLIPSIS
+        >>> tr.trim(starttime=t + 1)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
-        >>> st.getGaps()  # doctest: +ELLIPSIS
-        [[...'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
-        >>> print(*st.getGaps()[0])  # doctest: +ELLIPSIS
-        BW RJOB  EHZ 2009-08-24T00:20:13.000000Z 2009-08-24T00:20:14.000000Z...
+        >>> st.getGaps()[0]  # doctest: +SKIP
+        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13),
+          UTCDateTime(2009, 8, 24, 0, 20, 14), 1.0, 99]]
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
@@ -795,7 +793,8 @@ class Stream(object):
             if max_gap and delta > max_gap:
                 continue
             # Number of missing samples
-            nsamples = int(compatibility.round_away(math.fabs(delta) * stats['sampling_rate']))
+            nsamples = int(compatibility.round_away(math.fabs(delta) *
+                                                    stats['sampling_rate']))
             # skip if is equal to delta (1 / sampling rate)
             if flag and nsamples == 1:
                 continue
@@ -1182,8 +1181,8 @@ class Stream(object):
         """
         result = self.getGaps(min_gap, max_gap)
         print(("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
-                                                'Next Sample', 'Delta',
-                                                'Samples')))
+                                                 'Next Sample', 'Delta',
+                                                 'Samples')))
         gaps = 0
         overlaps = 0
         for r in result:
@@ -1191,9 +1190,9 @@ class Stream(object):
                 gaps += 1
             else:
                 overlaps += 1
-            print(("%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
-                                                      r[4], r[5], r[6], r[7])))
-        print(("Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps)))
+            print("%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
+                                                      r[4], r[5], r[6], r[7]))
+        print("Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps))
 
     def remove(self, trace):
         """
@@ -1415,12 +1414,12 @@ class Stream(object):
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
-                delta = compatibility.round_away((starttime - tr.stats.starttime) *
-                              tr.stats.sampling_rate)
+                delta = compatibility.round_away(
+                    (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
-                delta = compatibility.round_away((endtime - tr.stats.endtime) *
-                              tr.stats.sampling_rate)
+                delta = compatibility.round_away(
+                    (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
@@ -2656,7 +2655,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.attach_response(inv)
         []
         >>> tr = st[0]
-        >>> print(tr.stats.response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tr.stats.response)  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz

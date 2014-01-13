@@ -2,10 +2,9 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import str
-from future.builtins import bytes
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
@@ -16,7 +15,6 @@ from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
 from obspy.core import compatibility
 from xml.etree.ElementTree import tostring, fromstring
-import io
 import difflib
 import math
 import os

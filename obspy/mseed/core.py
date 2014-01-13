@@ -290,7 +290,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # after the dataquality which is disabled here to not confuse
             # users. (* == all data qualities)
             selections.srcname = (sourcename.replace('.', '_') + '_*').\
-                                 encode('ascii', 'ignore')
+                encode('ascii', 'ignore')
         else:
             selections.srcname = b'*'
     all_data = []
@@ -378,8 +378,9 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 header['npts'] = currentSegment.samplecnt
             # Make sure to init the number of samples.
             # Py3k: convert to unicode
-            header['mseed'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
-                                  for k, v in header['mseed'].items())
+            header['mseed'] = dict((k, v.decode())
+                                   if isinstance(v, bytes) else (k, v)
+                                   for k, v in header['mseed'].items())
             header = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                           for k, v in header.items())
             trace = Trace(header=header, data=data)
@@ -695,7 +696,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         msr.contents.station = trace.stats.station.encode('ascii', 'strict')
         msr.contents.location = trace.stats.location.encode('ascii', 'strict')
         msr.contents.channel = trace.stats.channel.encode('ascii', 'strict')
-        msr.contents.dataquality = trace_attr['dataquality'].encode('ascii', 'strict')
+        msr.contents.dataquality = trace_attr['dataquality'].\
+            encode('ascii', 'strict')
 
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:
@@ -766,10 +768,14 @@ class MST(object):
         sampletype = SAMPLETYPE[data.dtype.type]
 
         # Set the header values.
-        self.mst.contents.network = trace.stats.network.encode('ascii', 'strict')
-        self.mst.contents.station = trace.stats.station.encode('ascii', 'strict')
-        self.mst.contents.location = trace.stats.location.encode('ascii', 'strict')
-        self.mst.contents.channel = trace.stats.channel.encode('ascii', 'strict')
+        self.mst.contents.network = trace.stats.network.\
+            encode('ascii', 'strict')
+        self.mst.contents.station = trace.stats.station.\
+            encode('ascii', 'strict')
+        self.mst.contents.location = trace.stats.location.\
+            encode('ascii', 'strict')
+        self.mst.contents.channel = trace.stats.channel.\
+            encode('ascii', 'strict')
         self.mst.contents.dataquality = dataquality.encode('ascii', 'strict')
         self.mst.contents.type = b'\x00'
         self.mst.contents.starttime = \

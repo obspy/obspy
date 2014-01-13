@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 from future.builtins import open
 from future.builtins import range
 from future.builtins import int
-from future.builtins import str
-from future.builtins import bytes
-from future.utils import PY2
+from future.builtins import str  # NOQA
 
 from glob import iglob
 from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050

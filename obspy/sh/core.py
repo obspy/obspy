@@ -10,7 +10,7 @@ SH bindings to ObsPy core module.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import range
 from future.builtins import int

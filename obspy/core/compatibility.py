@@ -8,17 +8,25 @@ import numpy as np
 if PY2:
     import urllib2
     urlopen = urllib2.urlopen
-    from urlparse import urlparse
-    from urllib import urlencode
-    from urllib2 import HTTPPasswordMgrWithDefaultRealm, \
-        HTTPBasicAuthHandler, build_opener, install_opener, HTTPError, Request
+    from urlparse import urlparse  # NOQA
+    from urllib import urlencode  # NOQA
+    from urllib2 import HTTPPasswordMgrWithDefaultRealm  # NOQA
+    from urllib2 import HTTPBasicAuthHandler  # NOQA
+    from urllib2 import build_opener  # NOQA
+    from urllib2 import install_opener  # NOQA
+    from urllib2 import HTTPError  # NOQA
+    from urllib2 import Request  # NOQA
 else:
     import urllib.request
     urlopen = urllib.request.urlopen
-    from urllib.parse import urlparse
-    from urllib.parse import urlencode
-    from urllib.request import HTTPPasswordMgrWithDefaultRealm, \
-        HTTPBasicAuthHandler, build_opener, install_opener, HTTPError, Request
+    from urllib.parse import urlparse  # NOQA
+    from urllib.parse import urlencode  # NOQA
+    from urllib.request import HTTPPasswordMgrWithDefaultRealm  # NOQA
+    from urllib.request import HTTPBasicAuthHandler  # NOQA
+    from urllib.request import build_opener  # NOQA
+    from urllib.request import install_opener  # NOQA
+    from urllib.request import HTTPError  # NOQA
+    from urllib.request import Request  # NOQA
 
 if PY2:
     from StringIO import StringIO
@@ -32,6 +40,7 @@ if PY2:
     from string import maketrans
 else:
     maketrans = bytes.maketrans
+
 
 def round_away(number):
     """

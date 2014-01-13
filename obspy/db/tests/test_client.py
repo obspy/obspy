@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import str
+from future.builtins import str  # NOQA
 
 from obspy.core.preview import createPreview
 from obspy.core.trace import Trace
@@ -17,8 +16,8 @@ class ClientTestCase(unittest.TestCase):
     """
     Test suite for obspy.db.client.
     """
-    @classmethod  
-    def setUpClass(cls):  
+    @classmethod
+    def setUpClass(cls):
         # Create a in memory database only once for test suite
         url = 'sqlite:///:memory:'
         cls.client = Client(url)

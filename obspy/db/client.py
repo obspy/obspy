@@ -9,7 +9,7 @@ Client for a database created by obspy.db.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future.builtins import str
+from future.builtins import str  # NOQA
 from future.utils import native_str
 
 from obspy.core.preview import mergePreviews

@@ -40,7 +40,8 @@ def readPaz(paz_file):
     :func:`~obspy.gse2.libgse2.attach_paz` instead.
 
     >>> from obspy.core import compatibility
-    >>> f = compatibility.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    >>> f = compatibility.StringIO(
+    ... """CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
     ... -4.39823 -4.48709
@@ -109,9 +110,9 @@ def attach_paz(tr, paz_file):
     :param paz_file: path to pazfile or file pointer
 
     >>> from obspy.core import Trace, compatibility
-    >>> from obspy import Trace
     >>> tr = Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
-    >>> f = compatibility.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    >>> f = compatibility.StringIO(
+    ... """CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
     ... -4.39823 -4.48709

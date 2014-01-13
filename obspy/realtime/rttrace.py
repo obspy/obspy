@@ -258,9 +258,9 @@ class RtTrace(Trace):
                 self.stats.starttime = \
                     self.stats.starttime + diff - self.stats.delta
                 if verbose:
-                    print("%s: self.stats.starttime adjusted by: %gs" \
-                        % (self.__class__.__name__, diff -
-                           self.stats.delta))
+                    print("%s: self.stats.starttime adjusted by: %gs"
+                          % (self.__class__.__name__, diff -
+                             self.stats.delta))
         # first apply all registered processing to Trace
         for proc in self.processing:
             process_name, options, rtmemory_list = proc

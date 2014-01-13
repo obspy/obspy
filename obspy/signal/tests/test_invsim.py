@@ -5,7 +5,7 @@ The InvSim test suite.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile

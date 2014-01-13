@@ -12,7 +12,7 @@ Functions to generate benchmark plots from given SU files.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import str
 

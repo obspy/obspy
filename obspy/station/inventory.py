@@ -111,10 +111,12 @@ class Inventory(ComparingObject):
         Example
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
-        >>> inventory.get_contents()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        >>> inventory.get_contents()  \
+                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         {...}
-        >>> for k, v in sorted(inventory.get_contents().items()):  # doctest: +NORMALIZE_WHITESPACE
-        ...     print(k, *v)
+        >>> for k, v in sorted(inventory.get_contents().items()):  \
+                    # doctest: +NORMALIZE_WHITESPACE
+        ...     print(k, v[0])
         channels IU.ANMO.10.BHZ
         networks IU
         stations IU.ANMO (Albuquerque, New Mexico, USA)

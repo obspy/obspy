@@ -20,7 +20,6 @@ Example
 """
 from __future__ import unicode_literals
 from future.builtins import str
-from future.builtins import bytes
 
 from obspy.core.event import (AttribDict, Catalog, UTCDateTime,
                               ResourceIdentifier)

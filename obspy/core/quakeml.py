@@ -17,11 +17,10 @@ by a distributed team in a transparent collaborative manner.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
-from future.builtins import bytes
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -935,7 +934,8 @@ class Pickler(object):
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(_tostring(el).decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el).decode())  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
@@ -971,7 +971,8 @@ class Pickler(object):
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(_tostring(el).decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el).decode())  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
@@ -1004,7 +1005,8 @@ class Pickler(object):
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(_tostring(el).decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el).decode())  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
         """
@@ -1431,11 +1433,12 @@ def readSeisHubEventXML(filename):
     """
     # XXX: very ugly way to add new root tags without parsing
     lines = open(filename, 'rb').readlines()
-    lines.insert(2, b'<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
+    lines.insert(2,
+                 b'<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
     lines.insert(3, b'  <eventParameters>')
     lines.append(b'  </eventParameters>\n')
     lines.append(b'</quakeml>\n')
-    temp = compatiblity.BytesIO(b''.join(lines))
+    temp = compatibility.BytesIO(b''.join(lines))
     return readQuakeML(temp)
 
 

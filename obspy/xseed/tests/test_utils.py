@@ -41,7 +41,7 @@ class UtilsTestCase(unittest.TestCase):
     def test_DateTime2StringCompact(self):
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22, 123456)
         self.assertEqual(utils.DateTime2String(dt, True),
-                          "2008,358,01:30:22.1234")
+                         "2008,358,01:30:22.1234")
         dt = UTCDateTime(2008, 12, 23, 0o1, 30, 22)
         self.assertEqual(utils.DateTime2String(dt, True), "2008,358,01:30:22")
         dt = UTCDateTime(2008, 12, 23, 0o1, 30)

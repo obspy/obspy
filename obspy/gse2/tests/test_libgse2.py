@@ -4,7 +4,7 @@
 The libgse2 test suite.
 """
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import open
 from ctypes import ArgumentError
@@ -120,7 +120,7 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        filename =  os.path.join(self.path, 'loc_RNON20040609200559.z')
+        filename = os.path.join(self.path, 'loc_RNON20040609200559.z')
         with open(filename, 'rb') as f:
             pos = f.tell()
             self.assertEqual(None, libgse2.isGse2(f))
@@ -196,9 +196,10 @@ class LibGSE2TestCase(unittest.TestCase):
             lines = (l for l in fin if not l.startswith(b'DAT2'))
             fout.write(b"".join(lines))
         fout.seek(0)
-        with CatchOutput() as out:
+        #with CatchOutput() as out:
+        with CatchOutput():
             self.assertRaises(GSEUtiError, libgse2.read, fout)
-        # CatchOutput does not work on Py3k, skipping for now
+        # XXX: CatchOutput does not work on Py3k, skipping for now
         #self.assertEqual(out.stdout,
         #                 "decomp_6b: Neither DAT2 or DAT1 found!\n")
 

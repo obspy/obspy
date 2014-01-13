@@ -83,7 +83,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     >>> npts = 100
     >>> p = 0.1
     >>> tap3 = cosTaper(npts, p)
-    >>> ( tap3[int(npts*p/2):int(npts*(1-p/2))]==np.ones(int(npts*(1-p))) ).all()
+    >>> (tap3[int(npts*p/2):int(npts*(1-p/2))]==np.ones(int(npts*(1-p)))).all()
     True
     """
     if p < 0 or p > 1:
@@ -133,10 +133,12 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
                           (idx4 - idx3))))
     else:
         cos_win[idx1:idx2 + 1] = np.cos(-(
-            np.pi / 2.0 * (float(idx2) - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+            np.pi / 2.0 * (float(idx2) -
+                           np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
         cos_win[idx3:idx4 + 1] = np.cos((
-            np.pi / 2.0 * (float(idx3) - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+            np.pi / 2.0 * (float(idx3) -
+                           np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win
@@ -231,7 +233,8 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         else:
             vbs = C.create_string_buffer(b"")
         rtyp = C.create_string_buffer(b"CS")
-        datime = C.create_string_buffer(date.formatSEED().encode('ascii', 'strict'))
+        datime = C.create_string_buffer(
+            date.formatSEED().encode('ascii', 'strict'))
         fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
         nfreqs = C.c_int(freqs.shape[0])
         res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import range
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import str
-from future.builtins import bytes
 from future.utils import native_str
 
 from obspy.core.json import (Default, get_dump_kwargs, writeJSON)

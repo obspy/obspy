@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import str
-from future.builtins import bytes
 from future.builtins import open
 
 from lxml import etree
@@ -188,7 +187,8 @@ class ParserTestCase(unittest.TestCase):
         b054 = b"0540960A0400300300000039"
         nr = b""
         for i in range(0, 78):
-            nr = nr + ("+1.000%02dE-03" % i).encode('ascii', 'strict')  # 960 chars
+            # 960 chars
+            nr = nr + ("+1.000%02dE-03" % i).encode('ascii', 'strict')
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
         self.assertEqual(b054 + nr, blockette.getSEED())

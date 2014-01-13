@@ -11,9 +11,8 @@ Module for handling ObsPy Catalog and Event objects.
 from __future__ import division
 from __future__ import unicode_literals
 from __future__ import print_function
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import zip
-from future.builtins import map
 from future.builtins import int
 from future.builtins import super
 from future.builtins import round
@@ -45,7 +44,6 @@ import os
 import re
 import warnings
 import weakref
-import io
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -105,7 +103,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
                 catalog = _read(fh.name, format, **kwargs)
         return catalog
     elif isinstance(pathname_or_url, bytes) and \
-             pathname_or_url.strip().startswith(b'<'):
+            pathname_or_url.strip().startswith(b'<'):
         # XML string
         return _read(compatibility.BytesIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
@@ -2762,7 +2760,7 @@ class Catalog(object):
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
-        # unorderable types by checking first shortcut on positiv is None 
+        # unorderable types by checking first shortcut on positiv is None
         # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:

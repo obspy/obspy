@@ -5,7 +5,7 @@ The SacIO test suite.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import int
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile

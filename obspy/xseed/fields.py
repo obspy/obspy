@@ -201,8 +201,8 @@ class Field(object):
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
-                print(('  %s: set to default value %s' % (self,
-                                                         self.default_value)))
+                print('  %s: set to default value %s' % (self,
+                                                         self.default_value))
             return
         # Parse X-Path if necessary. The isdigit test assures legacy support
         # for XSEED without XPaths.

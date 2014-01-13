@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import str
 
 from lxml.etree import Element
-from obspy.core import compatibility 
+from obspy.core import compatibility
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils
 from obspy.xseed.fields import Integer, Loop
 import os

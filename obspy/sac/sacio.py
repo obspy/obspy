@@ -13,16 +13,13 @@ from __future__ import unicode_literals
 from future.builtins import map
 from future.builtins import int
 from future.builtins import range
-from future.builtins import round
 from future.builtins import str
-from future.builtins import bytes
 from future.utils import native_str
 from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
 from obspy.core import compatibility
 import numpy as np
 import os
-import string
 import time
 import warnings
 """
@@ -119,7 +116,7 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(list(map(chr, list(range(32, 127)))) + \
+    text_characters = "".join(list(map(chr, list(range(32, 127)))) +
                               list("\n\r\t\b")).encode('ascii', 'ignore')
     _null_trans = compatibility.maketrans(b"", b"")
     with open(filename, 'rb') as fp:
@@ -442,7 +439,7 @@ class SacIO(object):
             elif index == 1:
                 myarray = self.hs[1].decode() + self.hs[2].decode()
             else:
-                myarray = self.hs[index + 1].decode()  # extra 1 is from item #2
+                myarray = self.hs[index + 1].decode()  # extra 1 from item #2
             return myarray
         else:
             raise SacError("Cannot find header entry for: " + item)
@@ -457,11 +454,11 @@ class SacIO(object):
 
         >>> from obspy.sac import SacIO
         >>> tr = SacIO()
-        >>> print(tr.GetHvalue('kstnm'))
-        -12345  
+        >>> print(tr.GetHvalue('kstnm').strip())
+        -12345
         >>> tr.SetHvalue('kstnm', 'STA_NEW')
-        >>> print(tr.GetHvalue('kstnm'))
-        STA_NEW 
+        >>> print(tr.GetHvalue('kstnm').strip())
+        STA_NEW
         """
         key = item.lower()  # convert the item to lower case
         #
@@ -981,12 +978,12 @@ class SacIO(object):
                                  "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
             print((pattern % (month, date,
-                             self.GetHvalue('nzyear'),
-                             self.GetHvalue('nzjday'),
-                             self.GetHvalue('nzhour'),
-                             self.GetHvalue('nzmin'),
-                             self.GetHvalue('nzsec'),
-                             self.GetHvalue('nzmsec'))))
+                              self.GetHvalue('nzyear'),
+                              self.GetHvalue('nzjday'),
+                              self.GetHvalue('nzhour'),
+                              self.GetHvalue('nzmin'),
+                              self.GetHvalue('nzsec'),
+                              self.GetHvalue('nzmsec'))))
         except ValueError:
             pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
@@ -1499,7 +1496,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     sensitivity
     t_shift
     zeros
-    >>> print tr.stats.paz.poles  # doctest: +SKIP
+    >>> print(tr.stats.paz.poles)  # doctest: +SKIP
     [(-0.15931644664884559+0.15931644664884559j),
      (-0.15931644664884559-0.15931644664884559j),
      (-314.15926535897933+202.31856689118268j),

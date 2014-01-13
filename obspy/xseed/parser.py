@@ -11,7 +11,7 @@ Main module containing XML-SEED parser.
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import open
 from future.builtins import int
@@ -39,11 +39,11 @@ HEADERS = ['V', 'A', 'S']
 # @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
 HEADER_INFO = {
     'V': {'name': 'Volume Index Control Header',
-           'blockettes': [10, 11, 12]},
+          'blockettes': [10, 11, 12]},
     'A': {'name': 'Abbreviation Dictionary Control Header',
-           'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
+          'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
     'S': {'name': 'Station Control Header',
-           'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
+          'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
 }
 RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
 
@@ -786,7 +786,7 @@ class Parser(object):
             'B052F04     Channel:     %s\n' % channel_info['Channel'] +
             'B052F22     Start date:  %s\n' % channel_info['Start date'] +
             'B052F23     End date:    %s\n' % channel_info['End date'] +
-            '#\t\t=======================================\n'\
+            '#\t\t=======================================\n'
             ).encode('ascii', 'strict'))
         # Write all other blockettes. Sort by stage number (0 at the end) and
         # the specified blockette id order.
@@ -891,7 +891,8 @@ class Parser(object):
         b_record_type = record_type.encode('ascii', 'ignore')
         return_records[0] = b_record_type + b' ' + return_records[0]
         for _i in range(len(return_records) - 1):
-            return_records[_i + 1] = b_record_type + b'*' + return_records[_i + 1]
+            return_records[_i + 1] = b_record_type + b'*' + \
+                return_records[_i + 1]
         return return_records
 
     def _checkBlockettes(self):

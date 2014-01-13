@@ -30,7 +30,8 @@ except:
     sys.exit("cannot read wfdisc file (arg)")
 
 input = head[15]  # input file name
-timedata = list(map(int, head[1].split(".")))  # 0 -> timestamp, 1-> milliseconds
+# 0 -> timestamp, 1-> milliseconds
+timedata = list(map(int, head[1].split(".")))
 
 # headers for SH ASCII file
 SH = {

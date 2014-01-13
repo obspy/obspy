@@ -11,7 +11,8 @@ from future.builtins import open
 from future.builtins import int
 from future.builtins import str
 from future.utils import native_str
-from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
+from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
+    ENDIAN
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
@@ -362,7 +363,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
-    fmt = lambda s: native_str('%sHHBBBxHHhhBBBxlxxH' % s) #.encode('ascii', 'strict')
+    fmt = lambda s: native_str('%sHHBBBxHHhhBBBxlxxH' % s)
     if endian is None:
         try:
             endian = ">"
@@ -459,7 +460,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     info['byteorder'] = endian
 
     info['number_of_records'] = int(info['filesize'] //
-                                     info['record_length'])
+                                    info['record_length'])
     info['excess_bytes'] = int(info['filesize'] % info['record_length'])
 
     # Reset file pointer.

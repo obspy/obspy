@@ -115,7 +115,7 @@ class Network(BaseNode):
         >>> network.get_contents()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         {...}
         >>> for k, v in sorted(network.get_contents().items()):
-        ...     print(k, *v)
+        ...     print(k, v[0])
         channels IU.ANMO.10.BHZ
         stations IU.ANMO (Albuquerque, New Mexico, USA)
         """

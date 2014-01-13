@@ -125,7 +125,7 @@ def readHeader(fh):
     header['gse1']['unknown4'] = float(line[74:80])
     # Py3k: convert to unicode
     header['gse1'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
-                for k, v in header['gse1'].items())
+                          for k, v in header['gse1'].items())
     return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                 for k, v in header.items())
 

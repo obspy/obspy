@@ -153,7 +153,7 @@ class Station(BaseNode):
         >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         {...}
         >>> for (k, v) in sorted(station.get_contents().items()):
-        ...     print(k, *v)
+        ...     print(k, v[0])
         channels ANMO.10.BHZ
         stations ANMO (Albuquerque, New Mexico, USA)
         """

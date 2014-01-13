@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from __future__ import print_function
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import range
 from future.builtins import open

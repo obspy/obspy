@@ -3,7 +3,7 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import range
 
 from obspy import Trace, Stream, UTCDateTime
@@ -67,8 +67,7 @@ class SonicTestCase(unittest.TestCase):
         st = Stream(trl)
 
         stime = UTCDateTime(1970, 1, 1, 0, 0)
-        etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-                4.0
+        etime = UTCDateTime(1970, 1, 1, 0, 0) + 4.0
         # TODO: check why this does not work any more
         #    (length - abs(min_dt) - abs(max_dt)) / df
 

@@ -67,7 +67,7 @@ USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import round
 from future.builtins import range
 from future.builtins import str
@@ -313,8 +313,10 @@ class MomentTensor:
         All internal calculations are carried out within the NED space.
         """
         if not self._input_basis in self._list_of_possible_input_bases:
-            print('provided input basis not implemented - please specify one', end=' ')
-            print('of the following bases:', self._list_of_possible_input_bases)
+            print('provided input basis not implemented - please specify one',
+                  end=' ')
+            print('of the following bases:',
+                  self._list_of_possible_input_bases)
             raise MTError(' !! ')
 
         NED_2_NED = np.asmatrix(np.diag([1, 1, 1]))
@@ -967,7 +969,8 @@ class MomentTensor:
         visual control.
         """
         if not system.upper() in self._list_of_possible_output_bases:
-            print('\nprovided output basis not supported - please specify', end=' ')
+            print('\nprovided output basis not supported - please specify',
+                  end=' ')
             print('one of the following bases: (default=NED)\n', end=' ')
             print(self._list_of_possible_input_bases, '\n')
             raise MTError(' !! ')
@@ -1016,7 +1019,8 @@ class MomentTensor:
         interpreted as vectors, otherwise, its transposed is used.
         """
         if not system.upper() in self._list_of_possible_output_bases:
-            print('\n provided output basis not supported - please specify', end=' ')
+            print('\n provided output basis not supported - please specify',
+                  end=' ')
             print('one of the following bases: (default=NED)\n', end=' ')
             print(self._list_of_possible_input_bases, '\n')
             raise MTError(' !! ')
@@ -1399,11 +1403,11 @@ class MomentTensor:
         if style == 'f':
 
             if self._plot_clr_order < 0:
-                print('\n    Eigenvectors T N P (in basis system %s): ' % \
-                    (system))
+                print('\n    Eigenvectors T N P (in basis system %s): ' %
+                      (system))
             else:
-                print('\n    Eigenvectors P N T (in basis system %s): ' % \
-                    (system))
+                print('\n    Eigenvectors P N T (in basis system %s): ' %
+                      (system))
 
         return self._vector_w_style_and_system(self._eigenvectors, system,
                                                style)
@@ -2130,7 +2134,8 @@ class BeachBall:
 
         elif self._GMT_1fp:
             if not int(self._GMT_1fp) in [1, 2]:
-                print('no fault plane specified for being plotted...continue', end=' ')
+                print('no fault plane specified for being plotted...continue',
+                      end=' ')
                 print('without fault plane(s)')
                 pass
             else:
@@ -3069,7 +3074,8 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print('desired plotting projection not possible - choose from :\n', end=' ')
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
             print(available_coord_systems)
             raise MTError(' !! ')
 
@@ -3146,7 +3152,8 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print('desired plotting projection not possible - choose from :\n', end=' ')
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
             print(available_coord_systems)
             raise MTError(' !! ')
 
@@ -3221,7 +3228,8 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print('desired plotting projection not possible - choose from :\n', end=' ')
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
             print(available_coord_systems)
             raise MTError(' !! ')
 
@@ -3300,7 +3308,8 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print('desired plotting projection not possible - choose from :\n', end=' ')
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
             print(available_coord_systems)
             raise MTError(' !! ')
 
@@ -3848,7 +3857,8 @@ class BeachBall:
 
         elif self._plot_show_1faultplane:
             if not self._plot_show_FP_index in [1, 2]:
-                print('no fault plane specified for being plotted... ', end=' ')
+                print('no fault plane specified for being plotted... ',
+                      end=' ')
                 print('continue without faultplane')
                 pass
             else:
@@ -3951,7 +3961,8 @@ def main():
         try:
             call = \
                 dict(list(zip(('p', 'g', 'c', 'd'),
-                         ('plot', 'gmt', 'convert', 'decompose'))))[call_raw[0]]
+                          ('plot', 'gmt', 'convert', 'decompose')))
+                     )[call_raw[0]]
         except:
             call = 'help'
 
@@ -4035,13 +4046,13 @@ def main():
                         MT.get_M(),
                         'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
-                        print('\n  Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['in_system'].upper()))
+                        print('\n  Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['in_system'].upper()))
                         print(fancy_matrix(MT.get_M(
-                            system=kwargs_dict['in_system'].upper())))
+                              system=kwargs_dict['in_system'].upper())))
                         print()
-                        print('\n Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['out_system'].upper()))
+                        print('\n Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['out_system'].upper()))
                         return fancy_matrix(M_converted)
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
@@ -4051,13 +4062,13 @@ def main():
                     M_converted = _puzzle_basis_transformation(
                         MT.get_M(), 'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
-                        print('\n  Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['in_system'].upper()))
+                        print('\n  Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['in_system'].upper()))
                         print(fancy_matrix(MT.get_M(
-                            system=kwargs_dict['in_system'].upper())))
+                              system=kwargs_dict['in_system'].upper())))
                         print()
-                        print('\n Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['out_system'].upper()))
+                        print('\n Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['out_system'].upper()))
                         return fancy_matrix(M_converted)
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
@@ -4078,8 +4089,8 @@ def main():
                 M_converted = _puzzle_basis_transformation(
                     MT.get_M(), 'NED', kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
-                    print('\n  Moment tensor in basis  %s: ' % \
-                        (kwargs_dict['out_system'].upper()))
+                    print('\n  Moment tensor in basis  %s: ' %
+                          (kwargs_dict['out_system'].upper()))
                     return fancy_matrix(M_converted)
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
@@ -4090,8 +4101,8 @@ def main():
                     _puzzle_basis_transformation(MT.get_M(), 'NED',
                                                  kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
-                    print('\n  Momemnt tensor in basis  %s: ' % \
-                        (kwargs_dict['out_system'].upper()))
+                    print('\n  Momemnt tensor in basis  %s: ' %
+                          (kwargs_dict['out_system'].upper()))
                     return fancy_matrix(M_converted)
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
@@ -4099,20 +4110,22 @@ def main():
                         M_converted[0, 2], M_converted[1, 2]
             else:
                 print('this try is meaningless - read the possible', end=' ')
-                print('choices!\n(perhaps you want option "-v"(convert a', end=' ')
-                print('vector) or "-t"(convert strike, dip, rake to a matrix', end=' ')
+                print('choices!\n(perhaps you want option "-v"(convert a',
+                      end=' ')
+                print('vector) or "-t"(convert strike, dip, rake to a matrix',
+                      end=' ')
                 print('and show THAT matrix in another basis system)', end=' ')
                 print('instead!?!?)\n')
                 sys.exit(-1)
 
         if kwargs_dict['vector_conversion']:
             if kwargs_dict['fancy_conversion']:
-                print('\n  Vector in basis  %s:\n ' % \
-                    (kwargs_dict['vector_in_system'].upper()))
+                print('\n  Vector in basis  %s:\n ' %
+                      (kwargs_dict['vector_in_system'].upper()))
                 print(fancy_vector(MT._original_M))
                 print()
-                print('\n  Vector in basis  %s:\n ' % \
-                    (kwargs_dict['vector_out_system'].upper()))
+                print('\n  Vector in basis  %s:\n ' %
+                      (kwargs_dict['vector_out_system'].upper()))
                 return fancy_vector(_puzzle_basis_transformation(
                     MT._original_M, kwargs_dict['vector_in_system'],
                     kwargs_dict['vector_out_system']))
@@ -4165,34 +4178,34 @@ def main():
         else:
             # argument dictionary - setting the appropriate calls
             do_calls = dict(list(zip(('in', 'out',
-                                 'type',
-                                 'full', 'm',
-                                 'iso', 'iso_perc',
-                                 'dev', 'devi', 'devi_perc',
-                                 'dc', 'dc_perc',
-                                 'dc2', 'dc2_perc',
-                                 'dc3', 'dc3_perc',
-                                 'clvd', 'clvd_perc',
-                                 'mom', 'mag',
-                                 'eigvals', 'eigvecs',
-                                 't', 'n', 'p',
-                                 'fps', 'faultplanes', 'fp',
-                                 'decomp_key'),
-                                ('input_system', 'output_system',
-                                 'decomp_type',
-                                 'M', 'M',
-                                 'iso', 'iso_percentage',
-                                 'devi', 'devi', 'devi_percentage',
-                                 'DC', 'DC_percentage',
-                                 'DC2', 'DC2_percentage',
-                                 'DC3', 'DC3_percentage',
-                                 'CLVD', 'CLVD_percentage',
-                                 'moment', 'mag',
-                                 'eigvals', 'eigvecs',
-                                 't_axis', 'null_axis', 'p_axis',
-                                 'fps', 'fps', 'fps',
-                                 'decomp_type')
-                                )))
+                                      'type',
+                                      'full', 'm',
+                                      'iso', 'iso_perc',
+                                      'dev', 'devi', 'devi_perc',
+                                      'dc', 'dc_perc',
+                                      'dc2', 'dc2_perc',
+                                      'dc3', 'dc3_perc',
+                                      'clvd', 'clvd_perc',
+                                      'mom', 'mag',
+                                      'eigvals', 'eigvecs',
+                                      't', 'n', 'p',
+                                      'fps', 'faultplanes', 'fp',
+                                      'decomp_key'),
+                                     ('input_system', 'output_system',
+                                      'decomp_type',
+                                      'M', 'M',
+                                      'iso', 'iso_percentage',
+                                      'devi', 'devi', 'devi_percentage',
+                                      'DC', 'DC_percentage',
+                                      'DC2', 'DC2_percentage',
+                                      'DC3', 'DC3_percentage',
+                                      'CLVD', 'CLVD_percentage',
+                                      'moment', 'mag',
+                                      'eigvals', 'eigvecs',
+                                      't_axis', 'null_axis', 'p_axis',
+                                      'fps', 'fps', 'fps',
+                                      'decomp_type')
+                                     )))
 
             # build argument for local call within MT object:
             lo_args = kwargs_dict['decomp_out_part']
@@ -4265,8 +4278,8 @@ def main():
 
         if float(temp_dict['GMT_scaling']) < epsilon:
             print('GMT scaling factor must be a factor larger than')
-            print('%f - set to 1, due to obviously stupid input value' % \
-                (epsilon))
+            print('%f - set to 1, due to obviously stupid input value' %
+                  (epsilon))
             temp_dict['GMT_scaling'] = 1
 
         if temp_dict['plot_viewpoint']:
@@ -4383,7 +4396,8 @@ def main():
             # if only wrong or no arguments are handed over, change to complete
             # decomposition:
             if len(lo_correct_attribs) == 0:
-                print(' no correct attributes for partial decomposition -', end=' ')
+                print(' no correct attributes for partial decomposition -',
+                      end=' ')
                 print('returning complete decomposition')
                 consistent_kwargs_dict['decomp_out_complete'] = 1
                 consistent_kwargs_dict['decomp_out_part'] = 0
@@ -4462,7 +4476,8 @@ def main():
            temp_dict['type_conversion'].lower() == 'sdr':
             if temp_dict['basis_conversion']:
                 if temp_dict['basis_conversion'][1] != 'NED':
-                    print('output "sdr" from type conversion cannot be', end=' ')
+                    print('output "sdr" from type conversion cannot be',
+                          end=' ')
                     print('displayed in another basis system!')
                     consistent_kwargs_dict['out_system'] = 'NED'
 

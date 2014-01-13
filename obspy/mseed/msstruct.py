@@ -8,7 +8,8 @@ from __future__ import unicode_literals
 from future.builtins import int
 from future.builtins import open
 
-from obspy.mseed.headers import clibmseed, MSRecord, MSFileParam, MS_NOERROR, HPTMODULUS
+from obspy.mseed.headers import clibmseed, MSRecord, MSFileParam, \
+    MS_NOERROR, HPTMODULUS
 from obspy import UTCDateTime
 import ctypes as C
 import os
@@ -35,7 +36,7 @@ def _getMSFileInfo(f, real_name):
     info['record_length'] = clibmseed.ms_detect(rec_buffer, 512)
     # Calculate Number of Records
     info['number_of_records'] = int(info['filesize'] //
-                                     info['record_length'])
+                                    info['record_length'])
     info['excess_bytes'] = info['filesize'] % info['record_length']
     f.seek(pos)
     return info

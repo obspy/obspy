@@ -871,16 +871,16 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = compatibility.round_away((starttime - self.stats.starttime) *
-                          self.stats.sampling_rate)
+            delta = compatibility.round_away(
+                (starttime - self.stats.starttime) * self.stats.sampling_rate)
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
             if delta < 0 and pad:
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
                     float(self.stats.sampling_rate)
-                newdelta = compatibility.round_away((starttime - newstarttime) *
-                                 self.stats.sampling_rate)
+                newdelta = compatibility.round_away(
+                    (starttime - newstarttime) * self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
@@ -933,13 +933,15 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = compatibility.round_away((endtime - self.stats.starttime) *
-                          self.stats.sampling_rate) - self.stats.npts + 1
+            delta = compatibility.round_away(
+                (endtime - self.stats.starttime) *
+                self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
-            #delta = -1*int(math.floor(compatibility.round_away((self.stats.endtime - endtime) * \
-            #                       self.stats.sampling_rate, 7)))
+            # delta = -1*int(math.floor(compatibility.round_away(
+            #     (self.stats.endtime - endtime) * \
+            #     self.stats.sampling_rate, 7)))
             delta = int(math.floor(round((endtime - self.stats.endtime) *
                                    self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
@@ -2047,7 +2049,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0]
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
         >>> tr.attach_response(inv)
-        >>> print(tr.stats.response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tr.stats.response)  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2130,7 +2133,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0].copy()
         >>> tr.plot()  # doctest: +SKIP
         >>> # Response object is already attached to example data:
-        >>> print(tr.stats.response)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        >>> print(tr.stats.response)  \
+                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
             From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
             Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2221,7 +2225,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = data
         info = ":".join(["remove_response"] +
                         [str(x) for x in (output, water_level, pre_filt,
-                                  zero_mean, taper, taper_fraction)] +
+                                          zero_mean, taper, taper_fraction)] +
                         ["%s=%s" % (k, v) for k, v in kwargs.items()])
         self._addProcessingInfo(info)
         return self
