@@ -10,7 +10,7 @@ The obspy.fdsn.client test suite.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import str
 from future.builtins import open
@@ -19,9 +19,9 @@ from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core import compatibility
 from obspy.station import Response
 import os
-from io import StringIO
 import sys
 import unittest
 from difflib import Differ
@@ -429,12 +429,12 @@ class ClientTestCase(unittest.TestCase):
         """
         try:
             client = self.client
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
             client.help()
             sys.stdout.close()
 
             # Capture output
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
 
             client.help("event")
             got = sys.stdout.getvalue()
@@ -462,7 +462,7 @@ class ClientTestCase(unittest.TestCase):
 
             # Reset. Creating a new one is faster then clearing the old one.
             sys.stdout.close()
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
 
             client.help("station")
             got = sys.stdout.getvalue()
@@ -480,7 +480,7 @@ class ClientTestCase(unittest.TestCase):
 
             # Reset.
             sys.stdout.close()
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
 
             client.help("dataselect")
             got = sys.stdout.getvalue()
@@ -599,9 +599,9 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a file-like object
         for client in clients:
-            got = client.get_waveforms_bulk(StringIO(bulk1))
+            got = client.get_waveforms_bulk(compatibility.BytesIO(bulk1))
             self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveforms_bulk(StringIO(bulk2))
+            got = client.get_waveforms_bulk(compatibility.BytesIO(bulk2))
             self.assertEqual(got, expected2, failmsg(got, expected2))
 
     def test_get_waveform_attach_response(self):

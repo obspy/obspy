@@ -11,12 +11,11 @@ FDSN Web service client for ObsPy.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import open
 from future.builtins import str
 from future.builtins import map
-from io import BytesIO
 from lxml import etree
 import obspy
 from obspy import UTCDateTime, read_inventory
@@ -25,11 +24,10 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
+from obspy.core import compatibility
 
 import queue
 import threading
-import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
 import warnings
 import os
 
@@ -42,7 +40,7 @@ class Client(object):
     FDSN Web service request client.
 
     >>> client = Client("IRIS")
-    >>> print client  # doctest: +SKIP
+    >>> print(client)  # doctest: +SKIP
     FDSN Webservice Client (base url: http://service.iris.edu)
     Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
     'station' (v1.0.7), 'available_event_contributors',
@@ -61,7 +59,7 @@ class Client(object):
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print client  # doctest: +SKIP
+        >>> print(client)  # doctest: +SKIP
         FDSN Webservice Client (base url: http://service.iris.edu)
         Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
         'station' (v1.0.7), 'available_event_contributors',
@@ -105,12 +103,12 @@ class Client(object):
         # Authentication
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(auth_handler)
+            auth_handler = compatibility.HTTPDigestAuthHandler(password_mgr)
+            opener = compatibility.build_opener(auth_handler)
             # install globally
-            urllib.request.install_opener(opener)
+            compatibility.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_versions = DEFAULT_SERVICE_VERSIONS
@@ -136,13 +134,13 @@ class Client(object):
 
         >>> client = Client("IRIS")
         >>> cat = client.get_events(eventid=609301)
-        >>> print cat
+        >>> print(cat)
         1 Event(s) in Catalog:
         1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 mw
         >>> t1 = UTCDateTime("2011-01-07T01:00:00")
         >>> t2 = UTCDateTime("2011-01-07T02:00:00")
         >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4)
-        >>> print cat
+        >>> print(cat)
         4 Event(s) in Catalog:
         2011-01-07T01:29:49.760000Z | +49.520, +156.895 | 4.2 mb
         2011-01-07T01:19:16.660000Z | +20.123,  -45.656 | 5.5 MW
@@ -272,10 +270,10 @@ class Client(object):
         >>> client = Client("IRIS")
         >>> inventory = client.get_stations(latitude=-56.1, longitude=-26.7,
         ...                                 maxradius=15)
-        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query?lat...
+                    http://service.iris.edu/fdsnws/station/1/query?...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (3):
@@ -291,10 +289,10 @@ class Client(object):
         >>> inventory = client.get_stations(
         ...     starttime=UTCDateTime("2013-01-01"), network="IU",
         ...     sta="ANMO", level="channel")
-        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query?station=...
+                    http://service.iris.edu/fdsnws/station/1/query?...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (1):
@@ -436,17 +434,17 @@ class Client(object):
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         >>> st = client.get_waveforms("IU", "ANMO", "00", "BH*", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.00.BH2 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         >>> st = client.get_waveforms("IU", "A*", "*", "BHZ", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         IU.ADK.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ADK.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
@@ -456,7 +454,7 @@ class Client(object):
         IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
         IU.ANTO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         >>> st = client.get_waveforms("IU", "A??", "?0", "BHZ", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         IU.ADK.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
@@ -604,7 +602,7 @@ class Client(object):
         ...         ("IU", "AFI", "1?", "BHE", t1, t3),
         ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
         >>> st = client.get_waveforms_bulk(bulk)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
         GR.GRA1..BHN   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
@@ -617,7 +615,7 @@ class Client(object):
         ...        'IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n' + \
         ...        'GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n'
         >>> st = client.get_waveforms_bulk(bulk)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -626,7 +624,7 @@ class Client(object):
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
         >>> st = client.get_waveforms_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
-        >>> print st  # doctest: +SKIP
+        >>> print(st)  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -1152,7 +1150,7 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
                 parameters[key] = value.strip()
             except:
                 pass
-        url = "?".join((url, urllib.parse.urlencode(parameters)))
+        url = "?".join((url, compatibility.urlencode(parameters)))
     return url
 
 
@@ -1172,10 +1170,12 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print("Downloading %s" % url)
 
     try:
-        url_obj = urllib.request.urlopen(urllib.request.Request(url=url, headers=headers),
-                                  timeout=timeout, data=data)
+        url_obj = compatibility.urlopen(
+            compatibility.Request(url=url, headers=headers),
+            timeout=timeout,
+            data=data)
     # Catch HTTP errors.
-    except urllib.error.HTTPError as e:
+    except compatibility.HTTPError as e:
         if debug is True:
             print(("HTTP error %i while downloading '%s': %s" %
                   (e.code, url, e.read())))
@@ -1187,7 +1187,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
 
     code = url_obj.getcode()
     if return_string is False:
-        data = BytesIO(url_obj.read())
+        data = compatibility.BytesIO(url_obj.read())
     else:
         data = url_obj.read()
 

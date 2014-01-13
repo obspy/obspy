@@ -96,16 +96,17 @@ examples.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from future.builtins import str
+from future.builtins import str  # NOQA
 
-from .client import Client
-from .header import URL_MAPPINGS
+from .client import Client  # NOQA
+from .header import URL_MAPPINGS  # NOQA
 
 # insert supported URL mapping list dynamically in docstring
 # we need an if clause because add_doctests() executes the file once again
-if r"%s" in Client.__init__.__doc__:
-    Client.__init__.__func__.__doc__ = \
-        Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
+# XXX: fails on Py3k
+#if r"%s" in Client.__init__.__doc__:
+#    Client.__init__.__func__.__doc__ = \
+#        Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
 
 if __name__ == '__main__':
