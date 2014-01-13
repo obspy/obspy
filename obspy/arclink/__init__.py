@@ -159,7 +159,7 @@ Further Resources
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from .client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':
