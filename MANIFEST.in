@@ -6,6 +6,8 @@
 # See http://scipy-user.10969.n7.nabble.com/SciPy-User-setuptools-messing-with-sdists-using-numpy-distutils-and-Fortran-libraries-td19023.html
 # for more details.
 
+# Include the release-version file.
+include obspy/RELEASE-VERSION
 
 # Include source files, XML schemas files and some documentation files.
 global-include *.c *.h *.f *.pyf *.inc *.xsd *.rng LICENSE.txt README.txt
