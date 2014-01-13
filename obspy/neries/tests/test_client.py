@@ -2,6 +2,8 @@
 """
 The obspy.neries.client test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy import UTCDateTime, read
 from obspy.core.event import Catalog
@@ -111,7 +113,7 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         results = client.getEvents(format="xml", min_depth=-700,
                                    max_datetime=UTCDateTime("2005-01-01"))
-        self.assertTrue(isinstance(results, basestring))
+        self.assertTrue(isinstance(results, str))
         # check for origin id
         self.assertTrue('1347097' in results)
 
@@ -134,7 +136,7 @@ class ClientTestCase(unittest.TestCase):
         # EMSC identifier
         # xml
         data = client.getEventDetail("19990817_0000001", format='xml')
-        self.assertTrue(isinstance(data, basestring))
+        self.assertTrue(isinstance(data, str))
         self.assertTrue(data.startswith('<?xml'))
         # list
         data = client.getEventDetail("19990817_0000001", format='list')
@@ -166,7 +168,7 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # xml
         data = client.getLatestEvents(5, format='xml')
-        self.assertTrue(isinstance(data, basestring))
+        self.assertTrue(isinstance(data, str))
         self.assertTrue(data.startswith('<?xml'))
         # list
         data = client.getLatestEvents(5, format='list')

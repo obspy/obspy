@@ -10,6 +10,12 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
+from future.builtins import int
+from future.builtins import str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, guessDelta
@@ -17,12 +23,12 @@ from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
-import StringIO
+import io
 import functools
 import json
 import platform
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import warnings
 
 
@@ -41,7 +47,7 @@ MAP = {'min_datetime': "dateMin", 'max_datetime': "dateMax",
        'longitude': "lon", 'magnitude': "mag", 'origin_id': "orid",
        'event_id': "unid"}
 
-MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
+MAP_INVERSE = dict([(value, key) for key, value in MAP.items()])
 # in results the "magType" key is all lowercase, so add it to..
 MAP_INVERSE['magtype'] = "magnitude_type"
 
@@ -92,7 +98,7 @@ class _AttributePlugin(MessagePlugin):
 
     def marshalled(self, context):
         method = context.envelope.getChild('Body')[0]
-        for key, item in self.dict.iteritems():
+        for key, item in self.dict.items():
             method.attributes.append(Attribute(key, item))
 
 
@@ -135,13 +141,13 @@ class Client(object):
         self.user = user
         self.password = password
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, self.base_url, self.user,
                                   self.password)
-        auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib2.build_opener(auth_handler)
+        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib.request.build_opener(auth_handler)
         # install globally
-        urllib2.install_opener(opener)
+        urllib.request.install_opener(opener)
 
     def _fetch(self, url, headers={}, **params):
         """
@@ -154,10 +160,10 @@ class Client(object):
         """
         headers['User-Agent'] = self.user_agent
         # replace special characters
-        remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
+        remoteaddr = self.base_url + url + '?' + urllib.parse.urlencode(params)
         if self.debug:
-            print('\nRequesting %s' % (remoteaddr))
-        response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+            print(('\nRequesting %s' % (remoteaddr)))
+        response = urllib.request.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -170,7 +176,7 @@ class Client(object):
         float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
         for result in results['unids']:
             event = dict([(MAP_INVERSE[k], v)
-                          for k, v in result.iteritems()])
+                          for k, v in result.items()])
             for k in float_keys:
                 event[k] = float(event[k])
             event['magnitude_type'] = event['magnitude_type'].lower()
@@ -281,7 +287,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data)
         elif format == "catalog":
-            return readEvents(StringIO.StringIO(data), 'QUAKEML')
+            return readEvents(io.StringIO(data), 'QUAKEML')
         else:
             return data
 
@@ -345,7 +351,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data)
         elif format == "catalog":
-            return readEvents(StringIO.StringIO(data), 'QUAKEML')
+            return readEvents(io.StringIO(data), 'QUAKEML')
         else:
             return data
 
@@ -406,7 +412,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data)
         elif format == "catalog":
-            return readEvents(StringIO.StringIO(data), 'QUAKEML')
+            return readEvents(io.StringIO(data), 'QUAKEML')
         else:
             return data
 
@@ -758,7 +764,7 @@ class Client(object):
         response = client.service.dataRetrieve(usertoken, request_ids)
         urls = [r.DownloadToken.DownloadURL for r in response.DataItem]
         # create file handler if a file name is given
-        if isinstance(filename, basestring):
+        if isinstance(filename, str):
             fh = open(filename, "wb")
         elif isinstance(filename, file):
             fh = filename
@@ -766,8 +772,8 @@ class Client(object):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         for url in urls:
-            fh.write(urllib2.urlopen(url).read())
-        if isinstance(filename, basestring):
+            fh.write(urllib.request.urlopen(url).read())
+        if isinstance(filename, str):
             fh.close()
         # clean up
         response = client.service.purgeData(usertoken, request_ids)
