@@ -42,13 +42,13 @@ class Client(object):
     >>> client = Client()
     >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
     >>> st = client.getWaveform("IU", "ANMO", "00", "BH?", t, t + 10)
-    >>> print st  # doctest: +ELLIPSIS
+    >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
-    >>> print st  # doctest: +ELLIPSIS
+    >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
@@ -60,8 +60,8 @@ class Client(object):
         Initializes access to a CWB QueryServer
         """
         if debug:
-            print("int __init__" + host + "/" + str(port) + " timeout=" + \
-                str(timeout))
+            print("int __init__" + host + "/" + str(port) + " timeout=" +
+                  str(timeout))
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -107,7 +107,7 @@ class Client(object):
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
         >>> st = client.getWaveform("IU", "ANMO", "0?", "BH?", t, t + 10)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH... | 20.0 Hz, 201 samples
         IU.ANMO.00.BH... | 20.0 Hz, 201 samples
@@ -158,7 +158,7 @@ class Client(object):
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
         >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH... | 20.0 Hz, 201 samples
         IU.ANMO.00.BH... | 20.0 Hz, 201 samples
@@ -175,11 +175,11 @@ class Client(object):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 with NamedTemporaryFile() as tf:
                     if self.debug:
-                        print(ascdate(), asctime(), "connecting temp file", \
-                            tf.name)
+                        print(ascdate(), asctime(), "connecting temp file",
+                              tf.name)
                     s.connect((self.host, self.port))
                     s.setblocking(0)
-                    s.send(line)
+                    s.send(line.encode('ascii', 'strict'))
                     if self.debug:
                         print(ascdate(), asctime(), "Connected - start reads")
                     slept = 0
@@ -189,13 +189,13 @@ class Client(object):
                         try:
                             data = s.recv(102400)
                             if self.debug:
-                                print(ascdate(), asctime(), "read len", \
-                                    str(len(data)), " total", str(totlen))
-                            if data.find("EOR") >= 0:
+                                print(ascdate(), asctime(), "read len",
+                                      str(len(data)), " total", str(totlen))
+                            if data.find(b"EOR") >= 0:
                                 if self.debug:
-                                    print(ascdate(), asctime(), "<EOR> seen")
-                                tf.write(data[0:data.find("<EOR>")])
-                                totlen += len(data[0:data.find("<EOR>")])
+                                    print(ascdate(), asctime(), b"<EOR> seen")
+                                tf.write(data[0:data.find(b"<EOR>")])
+                                totlen += len(data[0:data.find(b"<EOR>")])
                                 tf.seek(0)
                                 try:
                                     st = read(tf.name, 'MSEED')
@@ -211,9 +211,9 @@ class Client(object):
                                 slept = 0
                         except socket.error as e:
                             if slept > maxslept:
-                                print(ascdate(), asctime(), \
-                                    "Timeout on connection", \
-                                    "- try to reconnect")
+                                print(ascdate(), asctime(),
+                                      "Timeout on connection",
+                                      "- try to reconnect")
                                 slept = 0
                                 s.close()
                             sleep(0.05)
@@ -227,7 +227,8 @@ class Client(object):
                 print("**** exception found=" + str(e))
                 raise
         if self.debug:
-            print(ascdate() + " " + asctime() + " success?  len=" + str(totlen))
+            print(ascdate() + " " + asctime() + " success?  len=" +
+                  str(totlen))
         st.merge(-1)
         return st
 
