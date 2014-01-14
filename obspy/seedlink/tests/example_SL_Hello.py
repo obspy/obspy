@@ -10,7 +10,7 @@ PORT = 18000              # The remote port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('s.connect((', HOST, PORT, '))')
 s.connect((HOST, PORT))
-sendbytes = 'HELLO\r'
+sendbytes = b'HELLO\r'
 print('Sent:', repr(sendbytes))
 s.send(sendbytes)
 data = s.recv(1024)

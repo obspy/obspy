@@ -109,10 +109,10 @@ class SeedLinkConnection(object):
     """
 
     SEEDLINK_PROTOCOL_PREFIX = "seedlink://"
-    UNISTATION = "UNISTATION"
-    UNINETWORK = "UNINETWORK"
+    UNISTATION = b"UNISTATION"
+    UNINETWORK = b"UNINETWORK"
     DFT_READBUF_SIZE = 1024
-    QUOTE_CHAR = '"'
+    QUOTE_CHAR = b'"'
 
     def __init__(self):
         """
@@ -1217,16 +1217,16 @@ class SeedLinkConnection(object):
         :raise: SeedLinkException on error.
         :raise: IOException if an I/O error occurs.
         """
-        sendStr = "HELLO"
-        logger.debug("sending: %s" % (sendStr))
-        bytes = sendStr + "\r"
+        sendStr = b"HELLO"
+        logger.debug("sending: %s" % (sendStr.decode()))
+        bytes = sendStr + b"\r"
         bytesread = self.sendData(bytes, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
 
         # Parse the server ID and version from the returned string
         servstr = None
         try:
-            servstr = str(bytesread)
+            servstr = bytesread.decode()
             vndx = servstr.find(" v")
             if vndx < 0:
                 self.server_id = servstr
@@ -1278,7 +1278,7 @@ class SeedLinkConnection(object):
         :raise: IOException if an I/O error occurs.
         """
         if self.checkVersion(2.92) >= 0:
-            bytes = "INFO " + infoLevel + "\r"
+            bytes = b"INFO " + infoLevel.encode('ascii', 'strict') + b"\r"
             msg = "sending: requesting INFO level %s" % (infoLevel)
             if verb_level == 1:
                 logger.info(msg)
@@ -1346,18 +1346,19 @@ class SeedLinkConnection(object):
         selectors = curstream.getSelectors()
 
         acceptsel = 0  # Count of accepted selectors
-        for selector in selectors:
+        for selector_str in selectors:
+            selector = selector_str.encode('ascii', 'strict')
             if len(selector) > SLNetStation.MAX_SELECTOR_SIZE:
                 logger.warn("invalid selector: %s" % (selector))
             else:
                 # Build SELECT command, send it and receive response
-                sendStr = "SELECT " + selector
+                sendStr = b"SELECT " + selector
                 logger.debug("sending: %s" % (sendStr))
-                bytes = sendStr + "\r"
+                bytes = sendStr + b"\r"
                 bytesread = None
                 bytesread = self.sendData(bytes, self.sladdr,
                                           SeedLinkConnection.DFT_READBUF_SIZE)
-                readStr = str(bytesread)
+                readStr = bytesread.decode()
 
                 # Check response to SELECT
                 if readStr == "OK\r\n":
@@ -1385,16 +1386,16 @@ class SeedLinkConnection(object):
         sendStr = None
         if (curstream.seqnum != -1) and self.resume:
             if self.dialup:
-                sendStr = "FETCH"
+                sendStr = b"FETCH"
             else:
-                sendStr = "DATA"
+                sendStr = b"DATA"
 
             # Append the last packet time if the feature is enabled and server
             # is >= 2.93
             if self.lastpkttime and self.checkVersion(2.93) >= 0 and \
                curstream.btime is not None:
                 # Increment sequence number by 1
-                sendStr += " " + hex(curstream.seqnum + 1) + " " + \
+                sendStr += b" " + hex(curstream.seqnum + 1) + b" " + \
                     curstream.getSLTimeStamp()
                 msg = "requesting resume data from 0x%s (decimal: %s) at %s"
                 logger.info(msg % (hex(curstream.seqnum + 1).upper(),
@@ -1402,16 +1403,18 @@ class SeedLinkConnection(object):
                             curstream.getSLTimeStamp())
             else:
                 # Increment sequence number by 1
-                sendStr += " " + hex(curstream.seqnum + 1)
+                sendStr += b" " + hex(curstream.seqnum + 1)
                 msg = "requesting resume data from 0x%s (decimal: %s)"
                 logger.info(msg % (hex(curstream.seqnum + 1).upper(),
                                    curstream.seqnum + 1))
         elif self.begin_time is not None:
             # begin time specified (should only be at initial startup)
             if self.checkVersion(2.92) >= 0:
-                sendStr = "TIME " + self.begin_time.formatSeedLink()
+                sendStr = b"TIME " + self.begin_time.\
+                    formatSeedLink().encode('ascii', 'strict')
                 if self.end_time is not None:
-                    sendStr += " " + self.end_time.formatSeedLink()
+                    sendStr += b" " + self.end_time.formatSeedLink().\
+                        encode('ascii', 'strict')
                 logger.info("requesting specified time window")
             else:
                 msg = "detected SeedLink version %s does not support " + \
@@ -1420,20 +1423,20 @@ class SeedLinkConnection(object):
         else:
             # default
             if self.dialup:
-                sendStr = "FETCH"
+                sendStr = b"FETCH"
             else:
-                sendStr = "DATA"
+                sendStr = b"DATA"
             logger.info("requesting next available data")
 
         # Send action command and receive response
         logger.debug("sending: %s" % (sendStr))
-        bytes = sendStr + "\r"
+        bytes = sendStr + b"\r"
         bytesread = None
         bytesread = self.sendData(bytes, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
 
         # Check response to DATA/FETCH/TIME
-        readStr = str(bytesread)
+        readStr = bytesread.decode()
         if readStr == "OK\r\n":
             logger.debug("response: DATA/FETCH/TIME command is OK")
             acceptsel += 1
@@ -1498,18 +1501,19 @@ class SeedLinkConnection(object):
             #slring = curstream.net + curstream.station
 
             # Build STATION command, send it and receive response
-            sendStr = "STATION  " + curstream.station + " " + curstream.net
-            logger.debug("sending: %s" % (sendStr))
-            bytes = sendStr + "\r"
+            sendStr = ("STATION  " + curstream.station + " " +
+                       curstream.net).encode('ascii', 'strict')
+            logger.debug("sending: %s" % sendStr.decode())
+            bytes = sendStr + b"\r"
             bytesread = None
             bytesread = self.sendData(bytes, self.sladdr,
                                       SeedLinkConnection.DFT_READBUF_SIZE)
-            readStr = str(bytesread)
+            readStr = bytesread
 
             # Check response to SELECT
-            if readStr == "OK\r\n":
+            if readStr == b"OK\r\n":
                 logger.debug("response: station is OK (selected)")
-            elif readStr == "ERROR\r\n":
+            elif readStr == b"ERROR\r\n":
                 logger.error("response: station not accepted, skipping")
                 continue
             else:
@@ -1531,9 +1535,9 @@ class SeedLinkConnection(object):
         logger.info("%s station(s) accepted" % (acceptsta))
 
         # Issue END action command
-        sendStr = "END"
-        logger.debug("sending: %s" % (sendStr))
-        bytes = sendStr + "\r"
+        sendStr = b"END"
+        logger.debug("sending: %s" % (sendStr.decode()))
+        bytes = sendStr + b"\r"
         self.sendData(bytes, self.sladdr, 0)
 
     def updateStream(self, slpacket):

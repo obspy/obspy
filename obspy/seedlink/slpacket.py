@@ -63,15 +63,15 @@ class SLPacket(object):
     """
     TYPE_SLINFT = -101
     TYPE_SLINF = -102
-    SLTERMINATE = "SLTERMINATE"
-    SLNOPACKET = "SLNOPACKET"
-    SLERROR = "SLERROR"
+    SLTERMINATE = b"SLTERMINATE"
+    SLNOPACKET = b"SLNOPACKET"
+    SLERROR = b"SLERROR"
     SLHEADSIZE = 8
     SLRECSIZE = 512
-    SIGNATURE = "SL"
-    INFOSIGNATURE = "SLINFO"
-    ERRORSIGNATURE = "ERROR\r\n"
-    ENDSIGNATURE = "END"
+    SIGNATURE = b"SL"
+    INFOSIGNATURE = b"SLINFO"
+    ERRORSIGNATURE = b"ERROR\r\n"
+    ENDSIGNATURE = b"END"
     slhead = None
     msrecord = None
     blockette = None
