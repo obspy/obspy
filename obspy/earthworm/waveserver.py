@@ -76,12 +76,12 @@ class tracebuf2:
         """
         Parse tracebuf header into class variables
         """
-        packStr = '2i3d7s9s4s3s2s3s2s2s'
+        packStr = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
         if dtype[0] in 'ts':
-            endian = '>'
+            endian = b'>'
         elif dtype[0] in 'if':
-            endian = '<'
+            endian = b'<'
         else:
             raise ValueError
         self.inputType = getNumpyType(dtype)
@@ -111,14 +111,14 @@ class tracebuf2:
         Return class contents as obspy.Trace object
         """
         stat = Stats()
-        stat.network = self.net.split('\x00')[0]
-        stat.station = self.sta.split('\x00')[0]
-        location = self.loc.split('\x00')[0]
+        stat.network = self.net.split(b'\x00')[0].decode()
+        stat.station = self.sta.split(b'\x00')[0].decode()
+        location = self.loc.split(b'\x00')[0].decode()
         if location == '--':
             stat.location = ''
         else:
             stat.location = location
-        stat.channel = self.chan.split('\x00')[0]
+        stat.channel = self.chan.split(b'\x00')[0].decode()
         stat.starttime = UTCDateTime(self.start)
         stat.sampling_rate = self.rate
         stat.npts = len(self.data)
@@ -146,9 +146,9 @@ def getSockCharLine(sock, timeout=10.):
     """
     sock.settimeout(timeout)
     chunks = []
-    indat = '^'
+    indat = b'^'
     try:
-        while indat[-1] != '\n':
+        while indat[-1] != b'\n':
             # see http://obspy.org/ticket/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
@@ -157,7 +157,7 @@ def getSockCharLine(sock, timeout=10.):
         print('socket timeout in getSockCharLine()')
         return None
     if chunks:
-        response = ''.join(chunks)
+        response = b''.join(chunks)
         return response
     else:
         return None
@@ -198,11 +198,15 @@ def getMenu(server, port, scnl=None, timeout=None):
     else:
         # added SCNL not documented but required
         getstr = 'MENU: %s SCNL\n' % rid
-    sock = sendSockReq(server, port, getstr, timeout=timeout)
+    sock = sendSockReq(server, port,
+                       getstr.encode('ascii', 'strict'),
+                       timeout=timeout)
     r = getSockCharLine(sock, timeout=timeout)
     sock.close()
     if r:
-        tokens = r.split()
+        # XXX: we got here from bytes to utf-8 to keep the remaining code
+        # intact
+        tokens = r.decode().split()
         if tokens[0] == rid:
             tokens = tokens[1:]
         flag = tokens[-1]
@@ -242,7 +246,7 @@ def readWaveServerV(server, port, scnl, start, end, timeout=None):
     r = getSockCharLine(sock, timeout=timeout)
     if not r:
         return []
-    tokens = r.split()
+    tokens = r.decode().split()
     flag = tokens[6]
     if flag != 'F':
         msg = 'readWaveServerV returned flag %s - %s'
