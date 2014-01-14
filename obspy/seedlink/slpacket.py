@@ -11,6 +11,12 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import int
+from future.builtins import chr
 
 
 from obspy.core.trace import Trace
@@ -102,7 +108,7 @@ class SLPacket(object):
             seqnum = int(seqstr, 16)
         except Exception:
             msg = "SLPacket.getSequenceNumber(): bad packet sequence number: "
-            print msg, seqstr
+            print(msg, seqstr)
             return -1
         return seqnum
 

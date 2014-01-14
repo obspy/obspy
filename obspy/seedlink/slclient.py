@@ -16,6 +16,11 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import str
 
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.seedlink.seedlinkexception import SeedLinkException
@@ -123,7 +128,7 @@ class SLClient(object):
 
         ## for-while
         for line in SLClient.BANNER:
-            print line
+            print(line)
         self.slconn = SeedLinkConnection()
 
     def parseCmdLineArgs(self, args):
@@ -140,7 +145,7 @@ class SLClient(object):
         optind = 1
         while optind < len(args):
             if args[optind] == "-V":
-                print(self.VERSION_INFO, sys.stderr)
+                print((self.VERSION_INFO, sys.stderr))
                 return 1
             elif args[optind] == "-h":
                 self.printUsage(False)
@@ -180,12 +185,12 @@ class SLClient(object):
                 optind += 1
                 self.infolevel = args[optind]
             elif args[optind].startswith("-"):
-                print("Unknown option: " + args[optind], sys.stderr)
+                print(("Unknown option: " + args[optind], sys.stderr))
                 return -1
             elif self.slconn.getSLAddress() is None:
                 self.slconn.setSLAddress(args[optind])
             else:
-                print("Unknown option: " + args[optind], sys.stderr)
+                print(("Unknown option: " + args[optind], sys.stderr))
                 return -1
             optind += 1
         return 0
@@ -235,11 +240,11 @@ class SLClient(object):
                 if terminate:
                     break
             except SeedLinkException as sle:
-                print(self.__class__.__name__ + ": " + sle.value)
-            if count >= sys.maxint:
+                print((self.__class__.__name__ + ": " + sle.value))
+            if count >= sys.maxsize:
                 count = 1
-                print "DEBUG INFO: " + self.__class__.__name__ + ":",
-                print "Packet count reset to 1"
+                print("DEBUG INFO: " + self.__class__.__name__ + ":", end=' ')
+                print("Packet count reset to 1")
             else:
                 count += 1
             slpack = self.slconn.collect()
@@ -273,7 +278,7 @@ class SLClient(object):
         if (type == SLPacket.TYPE_SLINF):
             return False
         if (type == SLPacket.TYPE_SLINFT):
-            print "Complete INFO:\n" + self.slconn.getInfoString()
+            print("Complete INFO:\n" + self.slconn.getInfoString())
             if self.infolevel is not None:
                 return True
             else:
@@ -286,36 +291,36 @@ class SLClient(object):
                 infostr = "ID"
                 self.slconn.requestInfo(infostr)
         except SeedLinkException as sle:
-            print(self.__class__.__name__ + ": " + sle.value)
+            print((self.__class__.__name__ + ": " + sle.value))
 
         # if here, must be a data blockette
-        print self.__class__.__name__ + ": packet seqnum:",
-        print str(seqnum) + ": blockette type: " + str(type)
+        print(self.__class__.__name__ + ": packet seqnum:", end=' ')
+        print(str(seqnum) + ": blockette type: " + str(type))
         if not self.ppackets:
             return False
 
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: "
-            print trace.id, trace.stats['starttime'],
-            print " dt:" + str(1.0 / trace.stats['sampling_rate']),
-            print " npts:" + str(trace.stats['npts']),
-            print " sampletype:" + str(trace.stats['sampletype']),
-            print " dataquality:" + str(trace.stats['dataquality'])
+            print(self.__class__.__name__ + ": blockette contains a trace: ")
+            print(trace.id, trace.stats['starttime'], end=' ')
+            print(" dt:" + str(1.0 / trace.stats['sampling_rate']), end=' ')
+            print(" npts:" + str(trace.stats['npts']), end=' ')
+            print(" sampletype:" + str(trace.stats['sampletype']), end=' ')
+            print(" dataquality:" + str(trace.stats['dataquality']))
             if self.verbose >= 3:
-                print self.__class__.__name__ + ":"
-                print "blockette contains a trace: " + str(trace.stats)
+                print(self.__class__.__name__ + ":")
+                print("blockette contains a trace: " + str(trace.stats))
         else:
-            print self.__class__.__name__ + ": blockette contains no trace"
+            print(self.__class__.__name__ + ": blockette contains no trace")
         return False
 
     def printUsage(self, concise=True):
         """
         Prints the usage message for this class.
         """
-        print("\nUsage: python %s [options] <[host]:port>" %
-              (self.__class__.__name__))
+        print(("\nUsage: python %s [options] <[host]:port>" %
+              (self.__class__.__name__)))
         if concise:
             usage = "Use '-h' for detailed help"
         else:
