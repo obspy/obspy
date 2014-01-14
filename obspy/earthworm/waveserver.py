@@ -8,6 +8,10 @@ Low-level Earthworm Wave Server tools.
     GNU General Public License (GPLv2)
     (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
 
 from obspy import Trace, UTCDateTime, Stream
 from obspy.core import Stats
@@ -85,7 +89,7 @@ class tracebuf2:
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
             struct.unpack(endian + packStr, head)
         if not tp.startswith(dtype):
-            print 'Error parsing header: %s!=%s' % (dtype, tp)
+            print('Error parsing header: %s!=%s' % (dtype, tp))
         self.start = UTCDateTime(ts)
         self.end = UTCDateTime(te)
         return
@@ -97,8 +101,8 @@ class tracebuf2:
         self.data = np.fromstring(dat, self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
-            print 'data count in header (%d) != data count (%d)' % (self.nsamp,
-                                                                    ndat)
+            print('data count in header (%d) != data count (%d)' % (self.nsamp,
+                                                                    ndat))
             self.ndata = ndat
         return
 
@@ -150,7 +154,7 @@ def getSockCharLine(sock, timeout=10.):
             indat = sock.recv(1)
             chunks.append(indat)
     except socket.timeout:
-        print 'socket timeout in getSockCharLine()'
+        print('socket timeout in getSockCharLine()')
         return None
     if chunks:
         response = ''.join(chunks)
@@ -173,7 +177,7 @@ def getSockBytes(sock, nbytes, timeout=None):
             btoread -= len(indat)
             chunks.append(indat)
     except socket.timeout:
-        print 'socket timeout in getSockBytes()'
+        print('socket timeout in getSockBytes()')
         return None
     if chunks:
         response = ''.join(chunks)
@@ -203,14 +207,14 @@ def getMenu(server, port, scnl=None, timeout=None):
             tokens = tokens[1:]
         flag = tokens[-1]
         if flag in ['FN', 'FC', 'FU']:
-            print 'request returned %s - %s' % (flag, RETURNFLAG_KEY[flag])
+            print('request returned %s - %s' % (flag, RETURNFLAG_KEY[flag]))
             return []
         if tokens[7] in DATATYPE_KEY:
             elen = 8  # length of return entry if location included
         elif tokens[6] in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
-            print 'no type token found in getMenu'
+            print('no type token found in getMenu')
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
@@ -242,7 +246,7 @@ def readWaveServerV(server, port, scnl, start, end, timeout=None):
     flag = tokens[6]
     if flag != 'F':
         msg = 'readWaveServerV returned flag %s - %s'
-        print msg % (flag, RETURNFLAG_KEY[flag])
+        print(msg % (flag, RETURNFLAG_KEY[flag]))
         return []
     nbytes = int(tokens[-1])
     dat = getSockBytes(sock, nbytes, timeout=timeout)

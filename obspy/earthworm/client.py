@@ -10,6 +10,7 @@ Earthworm Wave Server client for ObsPy.
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
+from __future__ import unicode_literals
 
 from fnmatch import fnmatch
 from obspy import Stream, UTCDateTime
