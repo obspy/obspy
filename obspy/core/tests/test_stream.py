@@ -314,9 +314,11 @@ class StreamTestCase(unittest.TestCase):
             for _j in range(6):
                 self.assertEqual(gap_list[_i][_j], mseed_gap_list[_i][_j])
             # The small differences are probably due to rounding errors.
-            self.assertAlmostEqual(mseed_gap_list[_i][6], gap_list[_i][6],
+            self.assertAlmostEqual(float(mseed_gap_list[_i][6]),
+                                   float(gap_list[_i][6]),
                                    places=3)
-            self.assertAlmostEqual(mseed_gap_list[_i][7], gap_list[_i][7],
+            self.assertAlmostEqual(float(mseed_gap_list[_i][7]),
+                                   float(gap_list[_i][7]),
                                    places=3)
 
     def test_getGapsMultiplexedStreams(self):
