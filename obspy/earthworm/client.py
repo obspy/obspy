@@ -191,7 +191,7 @@ class Client(object):
         >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
         >>> response = client.availability(network="UW", station="TUCA",
         ...         channel="BH*")
-        >>> print response  # doctest: +SKIP
+        >>> print(response)  # doctest: +SKIP
         [('UW',
           'TUCA',
           '--',
