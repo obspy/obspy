@@ -10,7 +10,7 @@ IRIS Web service client for ObsPy.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
+from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
@@ -391,7 +391,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("timeseries", param_list=filter, **kwargs)
-        except HTTPError as e:
+        except compatibility.HTTPError as e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -494,7 +494,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("resp", **kwargs)
-        except HTTPError as e:
+        except compatibility.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -714,7 +714,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         try:
             data = self._fetch("distaz", headers=headers, stalat=stalat,
                                stalon=stalon, evtlat=evtlat, evtlon=evtlon)
-        except HTTPError as e:
+        except compatibility.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -779,7 +779,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                               "lon=%s" % lon]
                 region = self._fetch(service, param_list=param_list).strip()
                 return (code, region.decode())
-        except HTTPError as e:
+        except compatibility.HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -920,7 +920,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("traveltime", **kwargs)
-        except HTTPError as e:
+        except compatibility.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
