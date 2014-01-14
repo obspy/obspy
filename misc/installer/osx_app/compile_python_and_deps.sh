@@ -35,8 +35,8 @@ mkdir -p $PREFIX/lib
 mkdir -p $BUILD_DIR
 mkdir -p $FRAMEWORK_BIN
 
-LAUNCH_IPYTHON="/usr/bin/env bash
-$FRAMEWORK_BIN/ipython notebook"
+LAUNCH_IPYTHON="#!/usr/bin/env bash
+$FRAMEWORK_BIN/ipython notebook --pylab=inline"
 echo "$LAUNCH_IPYTHON" > $FRAMEWORK_BIN/launch_ipython_notebook
 chmod a+x $FRAMEWORK_BIN/launch_ipython_notebook
 
