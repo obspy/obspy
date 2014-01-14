@@ -2,6 +2,8 @@
 """
 The obspy.iris.client test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
