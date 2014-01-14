@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import open
 
 from obspy import UTCDateTime, read, Trace
 from obspy.core.util import NamedTemporaryFile
@@ -123,8 +126,10 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             writeASC(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
             # read both files and compare the content
-            text1 = open(origfile, 'rt').readlines()
-            text2 = open(tempfile, 'rt').readlines()
+            with open(origfile, 'rt') as f:
+                text1 = f.readlines()
+            with open(tempfile, 'rt') as f:
+                text2 = f.readlines()
             self.assertEqual(text1, text2)
             # read again
             stream2 = readASC(tempfile)

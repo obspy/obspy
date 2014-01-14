@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from future.builtins import map
 # -*- coding: utf-8 -*-
 import unittest
 from obspy.core.util.decorator import map_example_filename
@@ -15,11 +17,11 @@ class TestCase(unittest.TestCase):
         path_mapped = getExampleFile(example_file)
 
         def unchanged(a, b="", **kwargs):
-            return map(str, (a, b, kwargs))
+            return list(map(str, (a, b, kwargs)))
 
         @map_example_filename("a")
         def changed1(a, b="", **kwargs):
-            return map(str, (a, b, kwargs))
+            return list(map(str, (a, b, kwargs)))
         self.assertEqual(
             changed1(dummy, dummy), unchanged(dummy, dummy))
         self.assertEqual(
@@ -36,7 +38,7 @@ class TestCase(unittest.TestCase):
 
         @map_example_filename("b")
         def changed2(a, b="", **kwargs):
-            return map(str, (a, b, kwargs))
+            return list(map(str, (a, b, kwargs)))
         self.assertEqual(
             changed2(dummy, dummy), unchanged(dummy, dummy))
         self.assertEqual(
@@ -53,7 +55,7 @@ class TestCase(unittest.TestCase):
 
         @map_example_filename("x")
         def changed3(a, b="", **kwargs):
-            return map(str, (a, b, kwargs))
+            return list(map(str, (a, b, kwargs)))
         self.assertEqual(
             changed3(dummy, dummy), unchanged(dummy, dummy))
         self.assertEqual(

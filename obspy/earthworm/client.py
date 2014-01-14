@@ -10,6 +10,7 @@ Earthworm Wave Server client for ObsPy.
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
+from __future__ import unicode_literals
 
 from fnmatch import fnmatch
 from obspy import Stream, UTCDateTime
@@ -190,7 +191,7 @@ class Client(object):
         >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
         >>> response = client.availability(network="UW", station="TUCA",
         ...         channel="BH*")
-        >>> print response  # doctest: +SKIP
+        >>> print(response)  # doctest: +SKIP
         [('UW',
           'TUCA',
           '--',

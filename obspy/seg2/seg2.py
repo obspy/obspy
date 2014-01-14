@@ -11,6 +11,11 @@ A file format description is given by [Pullan1990]_.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import open
 from copy import deepcopy
 import numpy as np
 from struct import unpack
@@ -18,7 +23,7 @@ import warnings
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core import AttribDict
-from header import MONTHS
+from obspy.seg2.header import MONTHS
 
 
 WARNING_HEADER = "Many companies use custom defined SEG2 header variables." + \
@@ -67,7 +72,7 @@ class SEG2(object):
         beginning of the SEG-2 file.
         """
         # Read the file if it is a filename.
-        if isinstance(file_object, basestring):
+        if not hasattr(file_object, 'write'):
             self.file_pointer = open(file_object, 'rb')
         else:
             self.file_pointer = file_object
@@ -84,6 +89,8 @@ class SEG2(object):
             self.file_pointer.seek(tr_pointer, 0)
             self.stream.append(self.parseNextTrace())
 
+        if not hasattr(file_object, 'write'):
+            self.file_pointer.close()
         return self.stream
 
     def readFileDescriptorBlock(self):
@@ -94,18 +101,18 @@ class SEG2(object):
         file_descriptor_block = self.file_pointer.read(32)
 
         # Determine the endianness and check if the block id is valid.
-        if (unpack('B', file_descriptor_block[0])[0] == 0x55) and \
-           (unpack('B', file_descriptor_block[1])[0] == 0x3a):
-            self.endian = '<'
-        elif (unpack('B', file_descriptor_block[0])[0] == 0x3a) and \
-                (unpack('B', file_descriptor_block[1])[0] == 0x55):
-            self.endian = '>'
+        if unpack(b'B', file_descriptor_block[0:1])[0] == 0x55 and \
+           unpack(b'B', file_descriptor_block[1:2])[0] == 0x3a:
+            self.endian = b'<'
+        elif unpack(b'B', file_descriptor_block[0:1])[0] == 0x3a and \
+                unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
+            self.endian = b'>'
         else:
             msg = 'Wrong File Descriptor Block ID'
             raise SEG2InvalidFileError(msg)
 
         # Check the revision number.
-        revision_number = unpack('%sH' % self.endian,
+        revision_number = unpack(self.endian + b'H',
                                  file_descriptor_block[2:4])[0]
         if revision_number != 1:
             msg = '\nOnly SEG 2 revision 1 is officially supported. This file '
@@ -113,18 +120,18 @@ class SEG2(object):
             msg += '\nPlease contact the ObsPy developers with a sample file.'
             warnings.warn(msg)
         size_of_trace_pointer_sub_block = unpack(
-            '%sH' % self.endian, file_descriptor_block[4:6])[0]
+            self.endian + b'H', file_descriptor_block[4:6])[0]
         number_of_traces = unpack(
-            '%sH' % self.endian, file_descriptor_block[6:8])[0]
+            self.endian + b'H', file_descriptor_block[6:8])[0]
 
         # Define the string and line terminators.
-        size_of_string_terminator = unpack('B', file_descriptor_block[8])[0]
-        first_string_terminator_char = unpack('c', file_descriptor_block[9])[0]
-        second_string_terminator_char = unpack('c',
-                                               file_descriptor_block[10])[0]
-        size_of_line_terminator = unpack('B', file_descriptor_block[11])[0]
-        first_line_terminator_char = unpack('c', file_descriptor_block[12])[0]
-        second_line_terminator_char = unpack('c', file_descriptor_block[13])[0]
+        (size_of_string_terminator,
+         first_string_terminator_char,
+         second_string_terminator_char,
+         size_of_line_terminator,
+         first_line_terminator_char,
+         second_line_terminator_char
+         ) = unpack(b'BccBcc', file_descriptor_block[8:14])
 
         # Assemble the string terminator.
         if size_of_string_terminator == 1:
@@ -149,10 +156,10 @@ class SEG2(object):
         trace_pointer_sub_block = \
             self.file_pointer.read(size_of_trace_pointer_sub_block)
         self.trace_pointers = []
-        for _i in xrange(number_of_traces):
+        for _i in range(number_of_traces):
             index = _i * 4
             self.trace_pointers.append(
-                unpack('%sL' % self.endian,
+                unpack(self.endian + b'L',
                        trace_pointer_sub_block[index:index + 4])[0])
 
         # The rest of the header up to where the first trace pointer points is
@@ -180,15 +187,15 @@ class SEG2(object):
         """
         trace_descriptor_block = self.file_pointer.read(32)
         # Check if the trace descripter block id is valid.
-        if unpack('%sH' % self.endian, trace_descriptor_block[0:2])[0] != \
+        if unpack(self.endian + b'H', trace_descriptor_block[0:2])[0] != \
            0x4422:
             msg = 'Invalid trace descripter block id.'
             raise SEG2InvalidFileError(msg)
-        size_of_this_block = unpack('%sH' % self.endian,
+        size_of_this_block = unpack(self.endian + b'H',
                                     trace_descriptor_block[2:4])[0]
         number_of_samples_in_data_block = \
-            unpack('%sL' % self.endian, trace_descriptor_block[8:12])[0]
-        data_format_code = unpack('B', trace_descriptor_block[12])[0]
+            unpack(self.endian + b'L', trace_descriptor_block[8:12])[0]
+        data_format_code = unpack(b'B', trace_descriptor_block[12:13])[0]
 
         # Parse the data format code.
         if data_format_code == 4:
@@ -254,7 +261,7 @@ class SEG2(object):
         # 'random offset byte'
         # Therefore every string has to be at least 3 bytes wide to be
         # acceptable after being split at the string terminator.
-        strings = [_i for _i in strings if len(_i) >= 3]
+        strings = [_i.decode() for _i in strings if len(_i) >= 3]
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
         for string in strings:
@@ -265,7 +272,7 @@ class SEG2(object):
             setattr(attrib_dict, key, value)
         # Parse the notes string again.
         if hasattr(attrib_dict, 'NOTE'):
-            notes = attrib_dict.NOTE.split(self.line_terminator)
+            notes = attrib_dict.NOTE.split(self.line_terminator.decode())
             attrib_dict.NOTE = AttribDict()
             for note in notes:
                 note = note.strip()
@@ -276,30 +283,28 @@ class SEG2(object):
 
 
 def isSEG2(filename):
-    if isinstance(filename, basestring):
-        is_filename = True
+    if not hasattr(filename, 'write'):
         file_pointer = open(filename, 'rb')
     else:
-        is_filename = False
         file_pointer = filename
 
     file_descriptor_block = file_pointer.read(4)
-    if is_filename is True:
+    if not hasattr(filename, 'write'):
         file_pointer.close()
     try:
         # Determine the endianness and check if the block id is valid.
-        if (unpack('B', file_descriptor_block[0])[0] == 0x55) and \
-           (unpack('B', file_descriptor_block[1])[0] == 0x3a):
-            endian = '<'
-        elif (unpack('B', file_descriptor_block[0])[0] == 0x3a) and \
-                (unpack('B', file_descriptor_block[1])[0] == 0x55):
-            endian = '>'
+        if unpack(b'B', file_descriptor_block[0:1])[0] == 0x55 and \
+           unpack(b'B', file_descriptor_block[1:2])[0] == 0x3a:
+            endian = b'<'
+        elif unpack(b'B', file_descriptor_block[0:1])[0] == 0x3a and \
+                unpack(b'B', file_descriptor_block[1:2])[0] == 0x55:
+            endian = b'>'
         else:
             return False
     except:
         return False
     # Check the revision number.
-    revision_number = unpack('%sH' % endian,
+    revision_number = unpack(endian + b'H',
                              file_descriptor_block[2:4])[0]
     if revision_number != 1:
         return False

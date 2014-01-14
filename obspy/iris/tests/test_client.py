@@ -2,6 +2,8 @@
 """
 The obspy.iris.client test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -31,19 +33,20 @@ class ClientTestCase(unittest.TestCase):
         # drop lines with creation date (current time during request)
         result = result.splitlines()
         sacpz_file = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.sacpz')
-        expected = open(sacpz_file, 'rt').read().splitlines()
+        with open(sacpz_file, 'rb') as fp:
+            expected = fp.read().splitlines()
         result.pop(5)
         expected.pop(5)
         self.assertEqual(result, expected)
         # 2 - empty location code
         dt = UTCDateTime("2002-11-01")
         result = client.sacpz('UW', 'LON', '', 'BHZ', dt)
-        self.assertTrue("* STATION    (KSTNM): LON" in result)
-        self.assertTrue("* LOCATION   (KHOLE):   " in result)
+        self.assertTrue(b"* STATION    (KSTNM): LON" in result)
+        self.assertTrue(b"* LOCATION   (KHOLE):   " in result)
         # 3 - empty location code via '--'
         result = client.sacpz('UW', 'LON', '--', 'BHZ', dt)
-        self.assertTrue("* STATION    (KSTNM): LON" in result)
-        self.assertTrue("* LOCATION   (KHOLE):   " in result)
+        self.assertTrue(b"* STATION    (KSTNM): LON" in result)
+        self.assertTrue(b"* LOCATION   (KHOLE):   " in result)
 
     def test_distaz(self):
         """
@@ -107,7 +110,7 @@ class ClientTestCase(unittest.TestCase):
         result = client.traveltime(
             evloc=(-36.122, -72.898), evdepth=22.9,
             staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
-        self.assertTrue(result.startswith('Model: iasp91'))
+        self.assertTrue(result.startswith(b'Model: iasp91'))
 
     def test_evalresp(self):
         """
@@ -121,69 +124,78 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            with open(tempfile, 'rb') as fp:
+                self.assertEqual(fp.read(4)[1:4], b'PNG')
         # plot-amp as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-amp',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            with open(tempfile, 'rb') as fp:
+                self.assertEqual(fp.read(4)[1:4], b'PNG')
         # plot-phase as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-phase',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            with open(tempfile, 'rb') as fp:
+                self.assertEqual(fp.read(4)[1:4], b'PNG')
         # fap as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rt').readline(),
-                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            with open(tempfile, 'rt') as fp:
+                self.assertEqual(fp.readline(),
+                                 '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='cs',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rt').readline(),
-                             '1.000000E-05 -1.202685E+04 1.677835E+02\n')
+            with open(tempfile, 'rt') as fp:
+                self.assertEqual(fp.readline(),
+                                 '1.000000E-05 -1.202685E+04 1.677835E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='def',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rt').readline(),
-                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            with open(tempfile, 'rt') as fp:
+                self.assertEqual(fp.readline(),
+                                 '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='dis',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rt').readline(),
-                             '1.000000E-05  7.557425E-01  2.692007E+02\n')
+            with open(tempfile, 'rt') as fp:
+                self.assertEqual(fp.readline(),
+                                 '1.000000E-05  7.557425E-01  2.692007E+02\n')
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='vel',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rt').readline(),
-                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            with open(tempfile, 'rt') as fp:
+                self.assertEqual(fp.readline(),
+                                 '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='acc',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rt').readline(),
-                             '1.000000E-05  1.914318E+08  8.920073E+01\n')
+            with open(tempfile, 'rt') as fp:
+                self.assertEqual(fp.readline(),
+                                 '1.000000E-05  1.914318E+08  8.920073E+01\n')
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
@@ -206,19 +218,19 @@ class ClientTestCase(unittest.TestCase):
         t1 = UTCDateTime("2005-001T00:00:00")
         t2 = UTCDateTime("2008-001T00:00:00")
         result = client.resp("IU", "ANMO", "00", "BHZ", t1, t2)
-        self.assertTrue('B050F03     Station:     ANMO' in result)
+        self.assertTrue(b'B050F03     Station:     ANMO' in result)
         # 2 - empty location code
         result = client.resp("UW", "LON", "", "EHZ")
-        self.assertTrue('B050F03     Station:     LON' in result)
-        self.assertTrue('B052F03     Location:    ??' in result)
+        self.assertTrue(b'B050F03     Station:     LON' in result)
+        self.assertTrue(b'B052F03     Location:    ??' in result)
         # 3 - empty location code via '--'
         result = client.resp("UW", "LON", "--", "EHZ")
-        self.assertTrue('B050F03     Station:     LON' in result)
-        self.assertTrue('B052F03     Location:    ??' in result)
+        self.assertTrue(b'B050F03     Station:     LON' in result)
+        self.assertTrue(b'B052F03     Location:    ??' in result)
         # 4
         dt = UTCDateTime("2010-02-27T06:30:00.000")
         result = client.resp("IU", "ANMO", "*", "*", dt)
-        self.assertTrue('B050F03     Station:     ANMO' in result)
+        self.assertTrue(b'B050F03     Station:     ANMO' in result)
 
     def test_timeseries(self):
         """

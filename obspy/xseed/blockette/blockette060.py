@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import super
+from future.builtins import range
+from future.builtins import str
+from future.builtins import int
 
-from StringIO import StringIO
 from lxml.etree import Element, SubElement
+from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
 from obspy.xseed.utils import setXPath, getXPath
@@ -67,20 +73,22 @@ class Blockette060(Blockette):
         Read Blockette 60.
         """
         # convert to stream for test issues
-        if isinstance(data, basestring):
+        if isinstance(data, bytes):
             length = len(data)
-            data = StringIO(data)
+            data = compatibility.BytesIO(data)
+        elif isinstance(data, str):
+            raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
         new_data = new_data[7:]
         number_of_stages = int(new_data[0:2])
         # Loop over all stages.
         counter = 2
-        for _i in xrange(number_of_stages):
+        for _i in range(number_of_stages):
             number_of_responses = int(new_data[counter + 2:counter + 4])
             self.stages.append([])
             # Start inner loop
             counter += 4
-            for _j in xrange(number_of_responses):
+            for _j in range(number_of_responses):
                 # Append to last list.
                 self.stages[-1].append(int(new_data[counter:counter + 4]))
                 counter += 4
@@ -122,12 +130,12 @@ class Blockette060(Blockette):
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))
         # Loop over stages.
-        for _i in xrange(len(self.stages)):
+        for _i in range(len(self.stages)):
             inner_stage = SubElement(node, 'stage')
             SubElement(inner_stage, 'stage_sequence_number').text = str(_i + 1)
             SubElement(inner_stage, 'number_of_responses').text = \
                 str(len(self.stages[_i]))
-            for _j in xrange(len(self.stages[_i])):
+            for _j in range(len(self.stages[_i])):
                 SubElement(inner_stage, 'response_lookup_key').text = \
                     setXPath('dictionary', self.stages[_i][_j])
         return node
@@ -157,7 +165,7 @@ class Blockette060(Blockette):
         string = ''
         # Possible dictionary blockettes.
         dict_blockettes = [41, 43, 44, 45, 46, 47, 48]
-        for _i in xrange(len(self.stages)):
+        for _i in range(len(self.stages)):
             string += \
                 '#\t\t+            +----------------------------------' + \
                 '----------------+             +\n' + \
@@ -194,4 +202,4 @@ class Blockette060(Blockette):
                           '%d could not be found.' % response_key
                     raise Exception(msg)
         string += '#\t\t\n'
-        return string
+        return string.encode()

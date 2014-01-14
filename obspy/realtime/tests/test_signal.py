@@ -2,6 +2,9 @@
 """
 The obspy.realtime.signal test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import super
 from obspy import read
 from obspy.core.stream import Stream
 from obspy.realtime import RtTrace, signal

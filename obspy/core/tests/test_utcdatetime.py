@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import int
 # -*- coding: utf-8 -*-
 
 from obspy import UTCDateTime
@@ -282,7 +285,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_add(self):
         a = UTCDateTime(0.0)
         self.assertEqual(a + 1, UTCDateTime(1970, 1, 1, 0, 0, 1))
-        self.assertEqual(a + long(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEqual(a + int(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEqual(a + np.int32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEqual(a + np.int64(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEqual(a + np.float32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
@@ -438,7 +441,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests subtraction of floats from UTCDateTime
         """
-        time = UTCDateTime(2010, 05, 31, 19, 54, 24.490)
+        time = UTCDateTime(2010, 0o5, 31, 19, 54, 24.490)
         res = -0.045149
 
         result1 = UTCDateTime("2010-05-31T19:54:24.535148Z")
@@ -869,14 +872,14 @@ class UTCDateTimeTestCase(unittest.TestCase):
                 return "Manila"
 
         dt = datetime.datetime(2006, 11, 21, 16, 30, tzinfo=ManilaTime())
-        self.assertEquals(dt.isoformat(), '2006-11-21T16:30:00+08:00')
-        self.assertEquals(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
+        self.assertEqual(dt.isoformat(), '2006-11-21T16:30:00+08:00')
+        self.assertEqual(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
 
     def test_hash(self):
         """
         Test __hash__ method of UTCDateTime class.
         """
-        self.assertEquals(UTCDateTime().__hash__(), None)
+        self.assertEqual(UTCDateTime().__hash__(), None)
 
     def test_now(self):
         """
@@ -897,15 +900,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
         Test __abs__ method of UTCDateTime class.
         """
         dt = UTCDateTime(1970, 1, 1, 0, 0, 1)
-        self.assertEquals(abs(dt), 1)
+        self.assertEqual(abs(dt), 1)
         dt = UTCDateTime(1970, 1, 1, 0, 0, 1, 500000)
-        self.assertEquals(abs(dt), 1.5)
+        self.assertEqual(abs(dt), 1.5)
         dt = UTCDateTime(1970, 1, 1)
-        self.assertEquals(abs(dt), 0)
+        self.assertEqual(abs(dt), 0)
         dt = UTCDateTime(1969, 12, 31, 23, 59, 59)
-        self.assertEquals(abs(dt), 1)
+        self.assertEqual(abs(dt), 1)
         dt = UTCDateTime(1969, 12, 31, 23, 59, 59, 500000)
-        self.assertEquals(abs(dt), 0.5)
+        self.assertEqual(abs(dt), 0.5)
 
     def test_string_with_timezone(self):
         """

@@ -17,6 +17,12 @@ Various Routines Related to Spectral Estimation
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import int
+from future.builtins import open
 
 import os
 import warnings
@@ -245,16 +251,16 @@ class PPSD():
     ...        'zeros': [0j, 0j]}
 
     >>> ppsd = PPSD(tr.stats, paz)
-    >>> print ppsd.id
+    >>> print(ppsd.id)
     BW.RJOB..EHZ
-    >>> print ppsd.times
+    >>> print(ppsd.times)
     []
 
     Now we could add data to the probabilistic psd (all processing like
     demeaning, tapering and so on is done internally) and plot it like ...
 
     >>> ppsd.add(st) # doctest: +SKIP
-    >>> print ppsd.times # doctest: +SKIP
+    >>> print(ppsd.times) # doctest: +SKIP
     >>> ppsd.plot() # doctest: +SKIP
 
     ... but the example stream is too short and does not contain enough data.
@@ -571,7 +577,7 @@ class PPSD():
                     if success:
                         self.__insert_used_time(t1)
                         if verbose:
-                            print t1
+                            print(t1)
                         changed = True
                 t1 += (1 - self.overlap) * self.ppsd_length  # advance
 
@@ -597,7 +603,7 @@ class PPSD():
         if len(tr) != self.len:
             msg = "Got a piece of data with wrong length. Skipping"
             warnings.warn(msg)
-            print len(tr), self.len
+            print(len(tr), self.len)
             return False
         # being paranoid, only necessary if in-place operations would follow
         tr.data = tr.data.astype("float64")
@@ -612,7 +618,7 @@ class PPSD():
         # get instrument response preferably from parser object
         try:
             paz = self.parser.getPAZ(self.id, datetime=tr.stats.starttime)
-        except Exception, e:
+        except Exception as e:
             if self.parser is not None:
                 msg = "Error getting response from parser:\n%s: %s\n" \
                       "Skipping time segment(s)."
@@ -745,11 +751,11 @@ class PPSD():
         if compress:
             # due to an bug in older python version we can't use with
             # http://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'w')
+            file_ = bz2.BZ2File(filename, 'wb')
             pickle.dump(self, file_)
             file_.close()
         else:
-            with open(filename, 'w') as file_:
+            with open(filename, 'wb') as file_:
                 pickle.dump(self, file_)
 
     @staticmethod
@@ -764,7 +770,7 @@ class PPSD():
         :param filename: Name of file containing the pickled PPSD object
         """
         # identify bzip2 compressed file using bzip2's magic number
-        bz2_magic = '\x42\x5a\x68'
+        bz2_magic = b'\x42\x5a\x68'
         with open(filename, 'rb') as file_:
             file_start = file_.read(len(bz2_magic))
 
@@ -778,11 +784,11 @@ class PPSD():
             #
             # due to an bug in older python version we can't use with
             # http://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'r')
+            file_ = bz2.BZ2File(filename, 'rb')
             ppsd = pickle.load(file_)
             file_.close()
         else:
-            with open(filename, 'r') as file_:
+            with open(filename, 'rb') as file_:
                 ppsd = pickle.load(file_)
 
         return ppsd

@@ -3,10 +3,14 @@
 """
 The SacIO test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import int
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError, attach_paz, attach_resp
-import StringIO
+import io
 import numpy as np
 import os
 import unittest
@@ -204,7 +208,7 @@ class SacIOTestCase(unittest.TestCase):
     ###     sys.path.extend(signal_path)
 
     def test_attach_paz(self):
-        fvelhz = StringIO.StringIO("""ZEROS 3
+        fvelhz = io.StringIO("""ZEROS 3
         -5.032 0.0
         POLES 6
         -0.02365 0.02365

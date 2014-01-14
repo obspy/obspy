@@ -81,6 +81,16 @@ and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import int
+from future.builtins import super
+from future.builtins import input
+from future.builtins import map
+from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
@@ -156,11 +166,11 @@ def _getSuites(verbosity=1, names=[]):
             test = name
         try:
             suite.append(ut.loadTestsFromName(test, None))
-        except Exception, e:
+        except Exception as e:
             status = False
             if verbosity:
                 print(e)
-                print("Cannot import test suite for module obspy.%s" % name)
+                print(("Cannot import test suite for module obspy.%s" % name))
         else:
             suites[name] = ut.suiteClass(suite)
     return suites, status
@@ -168,9 +178,7 @@ def _getSuites(verbosity=1, names=[]):
 
 def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
-    import httplib
-    import urllib
-    from urlparse import urlparse
+    from obspy.core import compatibility
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -182,7 +190,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
             data = codecs.open(log, 'r', encoding='UTF-8').read()
             result['install_log'] = escape(data)
         except:
-            print("Cannot open log file %s" % log)
+            print(("Cannot open log file %s" % log))
     # get ObsPy module versions
     result['obspy'] = {}
     tests = 0
@@ -235,12 +243,13 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     for module in DEPENDENCIES:
         temp = module.split('.')
         try:
-            mod = __import__(module, fromlist=temp[1:])
+            mod = __import__(module,
+                             fromlist=[native_str(temp[1:])])
             if module == '_omnipy':
                 result['dependencies'][module] = mod.coreVersion()
             else:
                 result['dependencies'][module] = mod.__version__
-        except:
+        except ImportError:
             result['dependencies'][module] = ''
     # get system / environment settings
     result['platform'] = {}
@@ -269,16 +278,16 @@ def _createReport(ttrs, timetaken, log, server, hostname):
 
     # generate XML document
     def _dict2xml(doc, result):
-        for key, value in result.iteritems():
+        for key, value in result.items():
             key = key.split('(')[0].strip()
             if isinstance(value, dict):
                 child = etree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
-                if isinstance(value, unicode):
+                if isinstance(value, str):
                     etree.SubElement(doc, key).text = value
                 elif isinstance(value, str):
-                    etree.SubElement(doc, key).text = unicode(value, 'utf-8')
+                    etree.SubElement(doc, key).text = str(value, 'utf-8')
                 else:
                     etree.SubElement(doc, key).text = str(value)
             else:
@@ -286,9 +295,9 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     root = etree.Element("report")
     _dict2xml(root, result)
     xml_doc = etree.tostring(root)
-    print
+    print()
     # send result to report server
-    params = urllib.urlencode({
+    params = compatibility.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
@@ -301,23 +310,23 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = httplib.HTTPConnection(server)
+    conn = compatibility.HTTPConnection(server)
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
-        o = urlparse(response.msg['location'])
-        conn = httplib.HTTPConnection(o.netloc)
+        o = compatibility.urlparse(response.msg['location'])
+        conn = compatibility.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response
         response = conn.getresponse()
     # handle errors
     if response.status == 200:
-        print("Test report has been sent to %s. Thank you!" % (server))
+        print(("Test report has been sent to %s. Thank you!" % (server)))
     else:
-        print("Error: Could not sent a test report to %s." % (server))
-        print(response.reason)
+        print(("Error: Could not sent a test report to %s." % (server)))
+        print((response.reason))
 
 
 class _TextTestResult(unittest._TextTestResult):
@@ -381,8 +390,8 @@ class _TextTestRunner:
         wasSuccessful = True
         if self.verbosity:
             self.stream.writeln()
-        for result in results.values():
-            failed, errored = map(len, (result.failures, result.errors))
+        for result in list(results.values()):
+            failed, errored = list(map(len, (result.failures, result.errors)))
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
@@ -463,21 +472,21 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     if slowest:
         mydict = {}
         # loop over modules
-        for mod in ttr.values():
+        for mod in list(ttr.values()):
             mydict.update(dict(mod.timer))
-        sorted_tests = sorted(mydict.iteritems(), key=operator.itemgetter(1))
+        sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
         sorted_tests = sorted_tests[::-1][:slowest]
         sorted_tests = ["%0.3fs: %s" % (dt, desc)
                         for (desc, dt) in sorted_tests]
-        print
-        print "Slowest Tests"
-        print "-------------"
-        print os.linesep.join(sorted_tests)
-        print
-        print
+        print()
+        print("Slowest Tests")
+        print("-------------")
+        print(os.linesep.join(sorted_tests))
+        print()
+        print()
     if interactive and not report:
         msg = "Do you want to report this to %s? [n]: " % (server)
-        var = raw_input(msg).lower()
+        var = input(msg).lower()
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
@@ -582,11 +591,11 @@ def run(interactive=True):
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
-    if options.report or 'OBSPY_REPORT' in os.environ.keys():
+    if options.report or 'OBSPY_REPORT' in list(os.environ.keys()):
         report = True
     else:
         report = False
-    if 'OBSPY_REPORT_SERVER' in os.environ.keys():
+    if 'OBSPY_REPORT_SERVER' in list(os.environ.keys()):
         options.server = os.environ['OBSPY_REPORT_SERVER']
     # check interactivity settings
     if interactive and options.dontask:
@@ -626,10 +635,10 @@ def main(interactive=True):
                     'obspy.pstats')
         import pstats
         stats = pstats.Stats('obspy.pstats')
-        print
-        print "Profiling:"
+        print()
+        print("Profiling:")
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
-        print PSTATS_HELP
+        print(PSTATS_HELP)
     else:
         errors = run(interactive)
         if errors:

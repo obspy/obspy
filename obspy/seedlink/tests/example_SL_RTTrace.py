@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import super
+from future.builtins import str
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.realtime.rttrace import RtTrace
@@ -52,8 +58,8 @@ class MySLClient(SLClient):
         if (type == SLPacket.TYPE_SLINF):
             return False
         if (type == SLPacket.TYPE_SLINFT):
-            print "-" * 40
-            print "Complete INFO:\n" + self.slconn.getInfoString()
+            print("-" * 40)
+            print("Complete INFO:\n" + self.slconn.getInfoString())
             if self.infolevel is not None:
                 return True
             else:
@@ -65,19 +71,20 @@ class MySLClient(SLClient):
             self.slconn.requestInfo(infostr)
 
         # if here, must be a data blockette
-        print "-" * 40
-        print self.__class__.__name__ + ": packet seqnum:",
-        print str(seqnum) + ": blockette type: " + str(type)
+        print("-" * 40)
+        print(self.__class__.__name__ + ": packet seqnum:", end=' ')
+        print(str(seqnum) + ": blockette type: " + str(type))
 
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: ",
-            print trace.id, trace.stats['starttime'],
-            print " dt:" + str(1.0 / trace.stats['sampling_rate']),
-            print " npts:" + str(trace.stats['npts']),
-            print " sampletype:" + str(trace.stats['sampletype']),
-            print " dataquality:" + str(trace.stats['dataquality'])
+            print(self.__class__.__name__ +
+                  ": blockette contains a trace: ", end=' ')
+            print(trace.id, trace.stats['starttime'], end=' ')
+            print(" dt:" + str(1.0 / trace.stats['sampling_rate']), end=' ')
+            print(" npts:" + str(trace.stats['npts']), end=' ')
+            print(" sampletype:" + str(trace.stats['sampletype']), end=' ')
+            print(" dataquality:" + str(trace.stats['dataquality']))
             # Custom: append packet data to RtTrace
             #g_o_check = True    # raises Error on gap or overlap
             g_o_check = False   # clears RTTrace memory on gap or overlap
@@ -85,14 +92,15 @@ class MySLClient(SLClient):
                                  verbose=True)
             length = self.rt_trace.stats.npts /\
                 self.rt_trace.stats.sampling_rate
-            print self.__class__.__name__ + ":",
-            print "append to RTTrace: npts:", str(self.rt_trace.stats.npts),
-            print "length:" + str(length) + "s"
+            print(self.__class__.__name__ + ":", end=' ')
+            print("append to RTTrace: npts:",
+                  str(self.rt_trace.stats.npts), end=' ')
+            print("length:" + str(length) + "s")
             # post processing to do something interesting
             peak = np.amax(np.abs(self.rt_trace.data))
-            print self.__class__.__name__ + ": abs peak = " + str(peak)
+            print(self.__class__.__name__ + ": abs peak = " + str(peak))
         else:
-            print self.__class__.__name__ + ": blockette contains no trace"
+            print(self.__class__.__name__ + ": blockette contains no trace")
         return False
 
 
@@ -105,8 +113,8 @@ def main():
     boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
     rttrace.registerRtProcess('boxcar', width=boxcar_width)
 
-    print "The SeedLink client will collect data packets and append " + \
-        "them to an RTTrace object."
+    print("The SeedLink client will collect data packets and append " +
+          "them to an RTTrace object.")
 
     # create SeedLink client
     slClient = None
@@ -126,8 +134,9 @@ def main():
         dt = UTCDateTime()
         slClient.begin_time = (dt - 120.0).formatSeedLink()
         slClient.end_time = (dt + 5.0).formatSeedLink()
-        print "SeedLink date-time range:", slClient.begin_time, " -> ",
-        print slClient.end_time
+        print("SeedLink date-time range:", slClient.begin_time, " -> ",
+              end=' ')
+        print(slClient.end_time)
         slClient.verbose = 3
         slClient.initialize()
         slClient.run()

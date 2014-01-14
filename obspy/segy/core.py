@@ -8,6 +8,11 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import open
+from future.builtins import super
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
@@ -63,25 +68,24 @@ def isSEGY(filename):
     # greater than 0 and that the number of samples per trace is greater than
     # 0.
     try:
-        temp = open(filename, 'rb')
-        temp.seek(3212)
-        _number_of_data_traces = temp.read(2)
-        _number_of_auxiliary_traces = temp.read(2)
-        _sample_interval = temp.read(2)
-        temp.seek(2, 1)
-        _samples_per_trace = temp.read(2)
-        temp.seek(2, 1)
-        data_format_code = temp.read(2)
-        temp.seek(3500, 0)
-        _format_number = temp.read(2)
-        _fixed_length = temp.read(2)
-        _extended_number = temp.read(2)
-        temp.close()
+        with open(filename, 'rb') as fp:
+            fp.seek(3212)
+            _number_of_data_traces = fp.read(2)
+            _number_of_auxiliary_traces = fp.read(2)
+            _sample_interval = fp.read(2)
+            fp.seek(2, 1)
+            _samples_per_trace = fp.read(2)
+            fp.seek(2, 1)
+            data_format_code = fp.read(2)
+            fp.seek(3500, 0)
+            _format_number = fp.read(2)
+            _fixed_length = fp.read(2)
+            _extended_number = fp.read(2)
     except:
         return False
     # Unpack using big endian first and check if it is valid.
     try:
-        format = unpack('>h', data_format_code)[0]
+        format = unpack(b'>h', data_format_code)[0]
     except:
         return False
     if format in VALID_FORMATS:
@@ -90,20 +94,21 @@ def isSEGY(filename):
     # both yield a valid data sample format code because they are restricted to
     # be between 1 and 8.
     else:
-        format = unpack('<h', data_format_code)[0]
+        format = unpack(b'<h', data_format_code)[0]
         if format in VALID_FORMATS:
             _endian = '<'
         else:
             return False
     # Check if the sample interval and samples per Trace make sense.
-    _sample_interval = unpack('%sh' % _endian, _sample_interval)[0]
-    _samples_per_trace = unpack('%sh' % _endian, _samples_per_trace)[0]
-    _number_of_data_traces = unpack('%sh' % _endian, _number_of_data_traces)[0]
-    _number_of_auxiliary_traces = unpack('%sh' % _endian,
+    fmt = ('%sh' % _endian).encode('ascii', 'strict')
+    _sample_interval = unpack(fmt, _sample_interval)[0]
+    _samples_per_trace = unpack(fmt, _samples_per_trace)[0]
+    _number_of_data_traces = unpack(fmt, _number_of_data_traces)[0]
+    _number_of_auxiliary_traces = unpack(fmt,
                                          _number_of_auxiliary_traces)[0]
-    _format_number = unpack('%sh' % _endian, _format_number)[0]
-    _fixed_length = unpack('%sh' % _endian, _fixed_length)[0]
-    _extended_number = unpack('%sh' % _endian, _extended_number)[0]
+    _format_number = unpack(fmt, _format_number)[0]
+    _fixed_length = unpack(fmt, _fixed_length)[0]
+    _extended_number = unpack(fmt, _extended_number)[0]
     # Make some sanity checks and return False if they fail.
     # Unfortunately the format number is 0 in many files so it cannot be truly
     # tested.
@@ -169,7 +174,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
     textual_file_header = segy_object.textual_file_header
     # The binary file header will be a new AttribDict
     binary_file_header = AttribDict()
-    for key, value in segy_object.binary_file_header.__dict__.iteritems():
+    for key, value in segy_object.binary_file_header.__dict__.items():
         setattr(binary_file_header, key, value)
     # Get the data encoding and the endianness from the first trace.
     data_encoding = segy_object.traces[0].data_encoding
@@ -200,7 +205,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
         if unpack_trace_headers:
             # Add the trace header as a new attrib dictionary.
             header = AttribDict()
-            for key, value in tr.header.__dict__.iteritems():
+            for key, value in tr.header.__dict__.items():
                 setattr(header, key, value)
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
@@ -322,7 +327,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     if not hasattr(stream, 'stats'):
         stream.stats = AttribDict()
     if not hasattr(stream.stats, 'textual_file_header'):
-        stream.stats.textual_file_header = ""
+        stream.stats.textual_file_header = b""
     if not hasattr(stream.stats, 'binary_file_header'):
         stream.stats.binary_file_header = SEGYBinaryFileHeader()
 
@@ -510,7 +515,7 @@ def readSU(filename, headonly=False, byteorder=None,
         if unpack_trace_headers:
             # Add the trace header as a new attrib dictionary.
             header = AttribDict()
-            for key, value in tr.header.__dict__.iteritems():
+            for key, value in tr.header.__dict__.items():
                 setattr(header, key, value)
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
@@ -658,7 +663,7 @@ def __segy_trace__str__(self, *args, **kwargs):
         out = "%s" % (
             'Seq. No. in line: %4i' %
             self.stats.segy.trace_header.trace_sequence_number_within_line)
-    except KeyError:
+    except (KeyError, AttributeError):
         # fall back if for some reason the segy attribute does not exists
         return getattr(Trace, '__original_str__')(self, *args, **kwargs)
     # output depending on delta or sampling rate bigger than one
@@ -732,7 +737,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
         ad = self.__class__(
             unpacked_header=deepcopy(self.__dict__['unpacked_header']),
             unpacked_header_endian=deepcopy(self.__dict__['endian']),
-            data=dict((k, deepcopy(v)) for k, v in self.__dict__.iteritems()
+            data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
                       if k not in ('unpacked_data', 'endian')))
         return ad
 

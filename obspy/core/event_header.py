@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from obspy.core.util import Enum
 
 OriginUncertaintyDescription = Enum([

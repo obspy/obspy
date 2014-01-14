@@ -8,6 +8,8 @@ SQLAlchemy ORM definitions (database layout) for obspy.db.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import int
 
 from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
     PickleType, Boolean

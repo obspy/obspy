@@ -8,7 +8,7 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals, print_function
 import collections
 import copy
 
@@ -27,16 +27,16 @@ class AttribDict(collections.MutableMapping):
     >>> stats = AttribDict()
     >>> stats.network = 'BW'
     >>> stats['station'] = 'ROTZ'
-    >>> stats.get('network')
-    'BW'
-    >>> stats['network']
-    'BW'
-    >>> stats.station
-    'ROTZ'
+    >>> print(stats.get('network'))
+    BW
+    >>> print(stats['network'])
+    BW
+    >>> print(stats.station)
+    ROTZ
     >>> x = stats.keys()
     >>> x = sorted(x)
-    >>> x[0:3]
-    ['network', 'station']
+    >>> print(x[0], x[1])
+    network station
     """
     defaults = {}
     readonly = []
@@ -49,7 +49,7 @@ class AttribDict(collections.MutableMapping):
 
         >>> attrib_dict_1 = AttribDict({"a":1, "b":2})
         >>> attrib_dict_2 = AttribDict(a=1, b=2)
-        >>> print attrib_dict_1
+        >>> attrib_dict_1  #doctest: +SKIP
         AttribDict({'a': 1, 'b': 2})
         >>> assert(attrib_dict_1 == attrib_dict_2)
         """
@@ -91,7 +91,16 @@ class AttribDict(collections.MutableMapping):
         # update with pickle dictionary
         self.update(adict)
 
-    __getattr__ = __getitem__
+    def __getattr__(self, name, default=None):
+        """
+        Py3k hasattr() expects an AttributeError no KeyError to be
+        raised if the attribute is not found.
+        """
+        try:
+            return self.__getitem__(name, default)
+        except KeyError as e:
+            raise AttributeError(e.args[0])
+
     __setattr__ = __setitem__
     __delattr__ = __delitem__
 
@@ -104,7 +113,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in adict.iteritems():
+        for (key, value) in list(adict.items()):
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)
@@ -122,7 +131,7 @@ class AttribDict(collections.MutableMapping):
             to ``16``.
         :return: String representation of current AttribDict object.
         """
-        keys = self.keys()
+        keys = list(self.keys())
         # determine longest key name for alignment of all items
         try:
             i = max(max([len(k) for k in keys]), min_label_length)

@@ -8,7 +8,11 @@ SAC bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import open
+from future.utils import native_str
 from obspy import Trace, Stream
 from obspy.sac.sacio import SacIO, _isText
 import os
@@ -32,39 +36,39 @@ def isSAC(filename):
         with open(filename, 'rb') as f:
             # read delta (first header float)
             delta_bin = f.read(4)
-            delta = struct.unpack('<f', delta_bin)[0]
+            delta = struct.unpack(native_str('<f'), delta_bin)[0]
             # read nvhdr (70 header floats, 6 position in header integers)
             f.seek(4 * 70 + 4 * 6)
             nvhdr_bin = f.read(4)
-            nvhdr = struct.unpack('<i', nvhdr_bin)[0]
+            nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
             # read leven (70 header floats, 35 header integers, 0 position in
             # header bool)
             f.seek(4 * 70 + 4 * 35)
             leven_bin = f.read(4)
-            leven = struct.unpack('<i', leven_bin)[0]
+            leven = struct.unpack(native_str('<i'), leven_bin)[0]
             # read lpspol (70 header floats, 35 header integers, 1 position in
             # header bool)
             f.seek(4 * 70 + 4 * 35 + 4 * 1)
             lpspol_bin = f.read(4)
-            lpspol = struct.unpack('<i', lpspol_bin)[0]
+            lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
             # read lovrok (70 header floats, 35 header integers, 2 position in
             # header bool)
             f.seek(4 * 70 + 4 * 35 + 4 * 2)
             lovrok_bin = f.read(4)
-            lovrok = struct.unpack('<i', lovrok_bin)[0]
+            lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
             # read lcalda (70 header floats, 35 header integers, 3 position in
             # header bool)
             f.seek(4 * 70 + 4 * 35 + 4 * 3)
             lcalda_bin = f.read(4)
-            lcalda = struct.unpack('<i', lcalda_bin)[0]
+            lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
             # check if file is big-endian
             if nvhdr < 0 or nvhdr > 20:
-                nvhdr = struct.unpack('>i', nvhdr_bin)[0]
-                delta = struct.unpack('>f', delta_bin)[0]
-                leven = struct.unpack('>i', leven_bin)[0]
-                lpspol = struct.unpack('>i', lpspol_bin)[0]
-                lovrok = struct.unpack('>i', lovrok_bin)[0]
-                lcalda = struct.unpack('>i', lcalda_bin)[0]
+                nvhdr = struct.unpack(native_str('>i'), nvhdr_bin)[0]
+                delta = struct.unpack(native_str('>f'), delta_bin)[0]
+                leven = struct.unpack(native_str('>i'), leven_bin)[0]
+                lpspol = struct.unpack(native_str('>i'), lpspol_bin)[0]
+                lovrok = struct.unpack(native_str('>i'), lovrok_bin)[0]
+                lcalda = struct.unpack(native_str('>i'), lcalda_bin)[0]
             # check again nvhdr
             if nvhdr < 1 or nvhdr > 20:
                 return False
@@ -103,14 +107,14 @@ def isSACXY(filename):
     if not _isText(filename, blocksize=512):
         return False
     try:
-        f = open(filename)
-        hdcards = []
-        # read in the header cards
-        for _i in xrange(30):
-            hdcards.append(f.readline())
-        npts = int(hdcards[15].split()[-1])
-        # read in the seismogram
-        seis = f.read(-1).split()
+        with open(filename) as f:
+            hdcards = []
+            # read in the header cards
+            for _i in range(30):
+                hdcards.append(f.readline())
+            npts = int(hdcards[15].split()[-1])
+            # read in the seismogram
+            seis = f.read(-1).split()
     except:
         return False
     # check that npts header value and seismogram length are consistent

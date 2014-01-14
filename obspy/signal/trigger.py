@@ -25,6 +25,9 @@ characteristic functions and a coincidence triggering routine.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
 
 import warnings
 import ctypes as C
@@ -96,7 +99,7 @@ def recSTALTAPy(a, nsta, nlta):
     charfct = [0.0] * len(a)
     icsta = 1 - csta
     iclta = 1 - clta
-    for i in xrange(1, ndat):
+    for i in range(1, ndat):
         sq = a[i] ** 2
         sta = csta * sq + icsta * sta
         lta = clta * sq + iclta * lta
@@ -135,24 +138,24 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     pad_lta = np.zeros(nlta)  # avoid for 0 division 0/1=0
     #
     # compute the short time average (STA)
-    for i in xrange(nsta):  # window size to smooth over
+    for i in range(nsta):  # window size to smooth over
         sta += np.concatenate((pad_sta, a[i:m - nsta + i]))
     sta /= nsta
     #
     # compute the long time average (LTA), 8 sec average over sta
-    for i in xrange(nlta):  # window size to smooth over
+    for i in range(nlta):  # window size to smooth over
         lta += np.concatenate((pad_lta, sta[i:m - nlta + i]))
     lta /= nlta
     lta = np.concatenate((np.zeros(1), lta))[:m]  # XXX ???
     #
     # compute star, average of abs diff between trace and lta
-    for i in xrange(nsta):  # window size to smooth over
+    for i in range(nsta):  # window size to smooth over
         star += np.concatenate((pad_sta,
                                abs(a[i:m - nsta + i] - lta[i:m - nsta + i])))
     star /= nsta
     #
     # compute ltar, 8 sec average over star
-    for i in xrange(nlta):  # window size to smooth over
+    for i in range(nlta):  # window size to smooth over
         ltar += np.concatenate((pad_lta, star[i:m - nlta + i]))
     ltar /= nlta
     #
@@ -226,14 +229,14 @@ def classicSTALTAPy(a, nsta, nlta):
     # Tricky: Construct a big window of length len(a)-nsta. Now move this
     # window nsta points, i.e. the window "sees" every point in a at least
     # once.
-    for i in xrange(nsta):  # window size to smooth over
+    for i in range(nsta):  # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - nsta_1 + i] ** 2))
     sta = sta / nsta
     #
     # compute the long time average (LTA)
     lta = np.zeros(len(a), dtype='float64')
     pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
-    for i in xrange(nlta):  # window size to smooth over
+    for i in range(nlta):  # window size to smooth over
         lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
     lta = lta / nlta
     #
@@ -265,7 +268,7 @@ def delayedSTALTA(a, nsta, nlta):
     # don't start for STA at nsta because it's muted later anyway
     sta = np.zeros(m, dtype='float64')
     lta = np.zeros(m, dtype='float64')
-    for i in xrange(m):
+    for i in range(m):
         sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
             nlta + lta[i - 1]
@@ -288,7 +291,7 @@ def zDetect(a, nsta):
     sta = np.zeros(len(a), dtype='float64')
     # Standard Sta
     pad_sta = np.zeros(nsta)
-    for i in xrange(nsta):  # window size to smooth over
+    for i in range(nsta):  # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
     a_mean = np.mean(sta)
     a_std = np.std(sta)
@@ -396,7 +399,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     """
     pptime = C.c_int()
     # c_chcar_p strings are immutable, use string_buffer for pointers
-    pfm = C.create_string_buffer("     ", 5)
+    pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
     reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
@@ -681,7 +684,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             if not event['similarity']:
                 continue
             elif not any([val > similarity_threshold[_s]
-                          for _s, val in event['similarity'].iteritems()]):
+                          for _s, val in event['similarity'].items()]):
                 continue
         # skip coincidence trigger if it is just a subset of the previous
         # (determined by a shared off-time, this is a bit sloppy)

@@ -5,6 +5,8 @@ The audio wav.core test suite.
 """
 
 from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
 from obspy import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
@@ -14,7 +16,7 @@ import os
 import unittest
 
 
-numpy_version = float(np.version.version.rsplit('.', 1)[0])
+numpy_version = float(".".join(np.version.version.split('.')[:2]))
 if numpy_version <= 1.3:
     OLD_NUMPY = True
 else:

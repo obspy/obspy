@@ -23,9 +23,12 @@ written by Lars Krieger and Sebastian Heimann.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
+from __future__ import division
+from __future__ import unicode_literals
 
 import numpy as np
-from matplotlib import patches, collections
+from matplotlib import patches
+import matplotlib.collections as mpl_collections
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
 from obspy.imaging.scripts.mopad import epsilon
@@ -164,7 +167,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     # transform the patches to a path collection and set
     # the appropriate attributes
-    collection = collections.PatchCollection(coll, match_original=False)
+    collection = mpl_collections.PatchCollection(coll, match_original=False)
     collection.set_facecolors(fc)
     collection.set_edgecolors(edgecolor)
     collection.set_alpha(alpha)

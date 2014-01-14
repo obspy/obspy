@@ -7,11 +7,19 @@
 #
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import map
+from future.builtins import int
+from future.builtins import range
+from future.builtins import str
+from future.utils import native_str
 from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
+from obspy.core import compatibility
 import numpy as np
 import os
-import string
 import time
 import warnings
 """
@@ -108,10 +116,12 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
-    _null_trans = string.maketrans("", "")
-    s = open(filename).read(blocksize)
-    if "\0" in s:
+    text_characters = "".join(list(map(chr, list(range(32, 127)))) +
+                              list("\n\r\t\b")).encode('ascii', 'ignore')
+    _null_trans = compatibility.maketrans(b"", b"")
+    with open(filename, 'rb') as fp:
+        s = fp.read(blocksize)
+    if b"\0" in s:
         return False
 
     if not s:  # Empty files are considered text
@@ -334,7 +344,7 @@ class SacIO(object):
         #
         # allocate the array for header characters
         self.hs = np.ndarray(24, dtype='|S8')
-        self.hs[:] = '-12345  '  # setting default value
+        self.hs[:] = b'-12345  '  # setting default value
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
@@ -425,11 +435,11 @@ class SacIO(object):
         elif key in SDICT:
             index = SDICT[key]
             if index == 0:
-                myarray = self.hs[0]
+                myarray = self.hs[0].decode()
             elif index == 1:
-                myarray = self.hs[1] + self.hs[2]
+                myarray = self.hs[1].decode() + self.hs[2].decode()
             else:
-                myarray = self.hs[index + 1]  # extra 1 is from item #2
+                myarray = self.hs[index + 1].decode()  # extra 1 from item #2
             return myarray
         else:
             raise SacError("Cannot find header entry for: " + item)
@@ -444,13 +454,11 @@ class SacIO(object):
 
         >>> from obspy.sac import SacIO
         >>> tr = SacIO()
-        >>> tr.GetHvalue('kstnm')
-        '-12345  '
+        >>> print(tr.GetHvalue('kstnm').strip())
+        -12345
         >>> tr.SetHvalue('kstnm', 'STA_NEW')
-        >>> tr.GetHvalue('kstnm')
-        'STA_NEW '
-
-
+        >>> print(tr.GetHvalue('kstnm').strip())
+        STA_NEW
         """
         key = item.lower()  # convert the item to lower case
         #
@@ -467,14 +475,15 @@ class SacIO(object):
             else:
                 value = '-12345  '
             if index == 0:
-                self.hs[0] = value
+                self.hs[0] = value.encode('ascii', 'strict')
             elif index == 1:
                 value1 = '%-8s' % value[0:8]
                 value2 = '%-8s' % value[8:16]
-                self.hs[1] = value1
-                self.hs[2] = value2
+                self.hs[1] = value1.encode('ascii', 'strict')
+                self.hs[2] = value2.encode('ascii', 'strict')
+
             else:
-                self.hs[index + 1] = value
+                self.hs[index + 1] = value.encode('ascii', 'strict')
         else:
             raise SacError("Cannot find header entry for: " + item)
 
@@ -543,7 +552,7 @@ class SacIO(object):
             raise SacIOError("Cannot read all header values")
         try:
             self.IsSACfile(fname)
-        except SacError, e:
+        except SacError as e:
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
@@ -554,7 +563,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 self.hf = self.hi = self.hs = None
                 f.close()
                 raise SacError(e)
@@ -600,7 +609,7 @@ class SacIO(object):
                 self.hf.tofile(f)
                 self.hi.tofile(f)
                 self.hs.tofile(f)
-            except Exception, e:
+            except Exception as e:
                 f.close()
                 raise SacError("Cannot write header to file: " + fname, e)
         f.close()
@@ -656,7 +665,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname, fsize)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 f.close()
                 raise SacError(e)
         #--------------------------------------------------------------
@@ -705,7 +714,7 @@ class SacIO(object):
         """
         ###### open the file
         try:
-            f = open(fname, 'r')
+            f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
         try:
@@ -724,14 +733,14 @@ class SacIO(object):
             # because every string field has to be 8 characters long
             # apart from the second field which is 16 characters long
             # resulting in a total length of 192 characters
-            for i in xrange(0, 24, 3):
-                self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
-                f.readline()  # strip the newline
+            for i in range(0, 24, 3):
+                line = f.readline()
+                self.hs[i:i + 3] = np.fromstring(line, dtype='|S8', count=3)
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
             self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
@@ -767,7 +776,7 @@ class SacIO(object):
         """
         ###### open the file
         try:
-            f = open(fname, 'r')
+            f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
         try:
@@ -786,16 +795,16 @@ class SacIO(object):
             # because every string field has to be 8 characters long
             # apart from the second field which is 16 characters long
             # resulting in a total length of 192 characters
-            for i in xrange(0, 24, 3):
+            for i in range(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline()  # strip the newline
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
         try:
             self.IsSACfile(fname, fsize=False)
-        except SacError, e:
+        except SacError as e:
             f.close()
             raise SacError(e)
         try:
@@ -824,7 +833,7 @@ class SacIO(object):
         self.fromarray(trace.data, begin=b, delta=trace.stats.delta,
                        starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
-        for _j, _k in convert_dict.iteritems():
+        for _j, _k in convert_dict.items():
             self.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
         # note that the SAC reference time values (including B and E) are
@@ -833,7 +842,7 @@ class SacIO(object):
         for _i in SAC_EXTRA:
             try:
                 self.SetHvalue(_i, trace.stats.sac[_i])
-            except KeyError:
+            except (AttributeError, KeyError):
                 pass
         return
 
@@ -850,29 +859,30 @@ class SacIO(object):
         True
         """
         try:
-            f = open(ofname, 'w')
+            f = open(ofname, 'wb')
         except IOError:
             raise SacIOError("Cannot open file: " + ofname)
         # header
         try:
             np.savetxt(f, np.reshape(self.hf, (14, 5)),
-                       fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
+                       fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
             np.savetxt(f, np.reshape(self.hi, (8, 5)),
-                       fmt="%10d%10d%10d%10d%10d")
-            for i in xrange(0, 24, 3):
+                       fmt=native_str("%10d%10d%10d%10d%10d"))
+            for i in range(0, 24, 3):
                 self.hs[i:i + 3].tofile(f)
-                f.write('\n')
+                f.write(b'\n')
         except:
             f.close()
             raise SacIOError("Cannot write header values: " + ofname)
         # traces
         npts = self.GetHvalue('npts')
-        if npts == -12345:
+        if npts == -12345 or npts == 0:
+            f.close()
             return
         try:
-            rows = npts / 5
+            rows = npts // 5
             np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
-                       fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
+                       fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
             np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
         except:
             f.close()
@@ -901,7 +911,7 @@ class SacIO(object):
             self.hi.tofile(f)
             self.hs.tofile(f)
             self.seis.tofile(f)
-        except Exception, e:
+        except Exception as e:
             f.close()
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
@@ -913,21 +923,21 @@ class SacIO(object):
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
-            print(label, value)
+            print((label, value))
 
     def PrintFValue(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
         if value != -12345.0:
-            print('%s %.8g' % (label, value))
+            print(('%s %.8g' % (label, value)))
 
     def PrintSValue(self, label='=', value='-12345'):
         """
         Convenience function for printing undefined string header values.
         """
         if value.find('-12345') == -1:
-            print(label, value)
+            print((label, value))
 
     def ListStdValues(self):  # h is a header list, s is a float list
         """
@@ -967,13 +977,13 @@ class SacIO(object):
             date = time.strptime(repr(nzyear) + " " + repr(nzjday),
                                  "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
-            print(pattern % (month, date,
-                             self.GetHvalue('nzyear'),
-                             self.GetHvalue('nzjday'),
-                             self.GetHvalue('nzhour'),
-                             self.GetHvalue('nzmin'),
-                             self.GetHvalue('nzsec'),
-                             self.GetHvalue('nzmsec')))
+            print((pattern % (month, date,
+                              self.GetHvalue('nzyear'),
+                              self.GetHvalue('nzjday'),
+                              self.GetHvalue('nzhour'),
+                              self.GetHvalue('nzmin'),
+                              self.GetHvalue('nzsec'),
+                              self.GetHvalue('nzmsec'))))
         except ValueError:
             pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
@@ -1114,8 +1124,8 @@ class SacIO(object):
         If date header values are set calculate date in julian seconds
 
         >>> t = SacIO()
-        >>> t.fromarray(np.random.randn(100), delta=1.0, \
-                        starttime=UTCDateTime(1970,01,01))
+        >>> t.fromarray(np.random.randn(100), delta=1.0,
+        ...             starttime=UTCDateTime(1970,1,1))
         >>> t._get_date()
         >>> t.reftime.timestamp
         0.0
@@ -1175,11 +1185,11 @@ class SacIO(object):
         >>> t.SetHvalue('stla',-41.2869)
         >>> t.SetHvalue('stlo',174.7746)
         >>> t._get_dist()
-        >>> print(round(t.GetHvalue('dist'), 2))
+        >>> print('%.2f' % t.GetHvalue('dist'))
         18486.53
-        >>> print(round(t.GetHvalue('az'), 5))
+        >>> print('%.5f' % t.GetHvalue('az'))
         65.65415
-        >>> print(round(t.GetHvalue('baz'), 4))
+        >>> print('%.4f' % t.GetHvalue('baz'))
         305.9755
 
         The original SAC-program calculates the distance assuming a
@@ -1248,7 +1258,7 @@ class SacIO(object):
         """
         header = {}
         # convert common header types of the ObsPy trace object
-        for i, j in convert_dict.iteritems():
+        for i, j in convert_dict.items():
             value = self.GetHvalue(i)
             if isinstance(value, str):
                 null_term = value.find('\x00')
@@ -1320,9 +1330,9 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> from obspy import Trace
+    >>> from obspy.core import compatibility
     >>> tr = Trace()
-    >>> import StringIO
-    >>> f = StringIO.StringIO("""ZEROS 3
+    >>> f = compatibility.StringIO("""ZEROS 3
     ... -5.032 0.0
     ... POLES 6
     ... -0.02365 0.02365
@@ -1333,8 +1343,11 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     ... -53.5979 -21.7494
     ... CONSTANT 2.16e18""")
     >>> attach_paz(tr, f,torad=True)
-    >>> print(tr.stats.paz['zeros'][0])
-    (-31.6169884657+0j)
+    >>> for z in tr.stats.paz['zeros']:
+    ...     print("%.2f %.2f" % (z.real, z.imag))
+    -31.62 0.00
+    0.00 0.00
+    0.00 0.00
     '''
 
     poles = []
@@ -1353,7 +1366,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         if line.find('ZEROS') != -1:
             a = line.split()
             noz = int(a[1])
-            for _k in xrange(noz):
+            for _k in range(noz):
                 line = paz_file.readline()
                 a = line.split()
                 if line.find('POLES') != -1 or line.find('CONSTANT') != -1 or \
@@ -1367,7 +1380,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         if line.find('POLES') != -1:
             a = line.split()
             nop = int(a[1])
-            for _k in xrange(nop):
+            for _k in range(nop):
                 line = paz_file.readline()
                 a = line.split()
                 if line.find('CONSTANT') != -1 or line.find('ZEROS') != -1 or \
@@ -1474,17 +1487,25 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
     ...                         'RESP.NZ.CRLZ.10.HHZ')
     >>> attach_resp(tr, respfile, torad=True, todisp=False)
-    >>> print tr.stats.paz.keys()  # doctest: +NORMALIZE_WHITESPACE
-    ['sensitivity', 'digitizer_gain', 'seismometer_gain', 'zeros', 'gain',
-     't_shift', 'poles']
-    >>> print tr.stats.paz.poles  # doctest: +SKIP
+    >>> for k in sorted(tr.stats.paz):  # doctest: +NORMALIZE_WHITESPACE
+    ...     print(k)
+    digitizer_gain
+    gain
+    poles
+    seismometer_gain
+    sensitivity
+    t_shift
+    zeros
+    >>> print(tr.stats.paz.poles)  # doctest: +SKIP
     [(-0.15931644664884559+0.15931644664884559j),
      (-0.15931644664884559-0.15931644664884559j),
      (-314.15926535897933+202.31856689118268j),
      (-314.15926535897933-202.31856689118268j)]
     """
-    if isinstance(resp_file, str):
-        resp_file = open(resp_file, 'r')
+    if not hasattr(resp_file, 'write'):
+        resp_filep = open(resp_file, 'r')
+    else:
+        resp_filep = resp_file
 
     zeros_pat = r'B053F10-13'
     poles_pat = r'B053F15-18'
@@ -1495,7 +1516,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     poles = []
     zeros = []
     while True:
-        line = resp_file.readline()
+        line = resp_filep.readline()
         if not line:
             break
         if line.startswith(a0_pat):
@@ -1511,6 +1532,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         if line.startswith(t_shift_pat):
             t_shift += float(line.split(':')[1])
     constant = a0 * sens
+
+    if not hasattr(resp_file, 'write'):
+        resp_filep.close()
 
     if torad:
         tmp = [z * 2. * np.pi for z in zeros]

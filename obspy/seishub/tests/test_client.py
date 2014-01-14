@@ -3,6 +3,7 @@
 """
 The obspy.seishub.client test suite.
 """
+from __future__ import unicode_literals
 
 from obspy.seishub import Client
 import unittest

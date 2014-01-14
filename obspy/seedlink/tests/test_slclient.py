@@ -2,6 +2,8 @@
 """
 The obspy.seedlink.slclient test suite.
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
 from obspy.seedlink.slclient import SLClient
@@ -28,8 +30,9 @@ class SLClientTestCase(unittest.TestCase):
         dt = UTCDateTime()
         slClient.begin_time = (dt - 120.0).formatSeedLink()
         slClient.end_time = (dt + 5.0).formatSeedLink()
-        print "SeedLink date-time range:", slClient.begin_time, " -> ",
-        print slClient.end_time
+        print("SeedLink date-time range:", slClient.begin_time, " -> ",
+              end=' ')
+        print(slClient.end_time)
         slClient.verbose = 2
         slClient.initialize()
         slClient.run()

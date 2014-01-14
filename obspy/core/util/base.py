@@ -8,7 +8,11 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import map
+from future.builtins import range
+from future.utils import native_str
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
@@ -55,10 +59,8 @@ class NamedTemporaryFile(object):
     .. rubric:: Example
 
     >>> with NamedTemporaryFile() as tf:
-    ...     tf._fileobj  # doctest: +ELLIPSIS
-    ...     tf.write("test")
+    ...     _ = tf.write(b"test")
     ...     os.path.exists(tf.name)
-    <open file '<fdopen>', mode 'w+b' at 0x...>
     True
     >>> # when using the with statement, the file is deleted at the end:
     >>> os.path.exists(tf.name)
@@ -67,9 +69,9 @@ class NamedTemporaryFile(object):
     >>> with NamedTemporaryFile() as tf:
     ...     filename = tf.name
     ...     with open(filename, 'wb') as fh:
-    ...         fh.write("just a test")
+    ...         _ = fh.write(b"just a test")
     ...     with open(filename, 'r') as fh:
-    ...         print fh.read()
+    ...         print(fh.read())
     just a test
     >>> # when using the with statement, the file is deleted at the end:
     >>> os.path.exists(tf.name)
@@ -153,11 +155,12 @@ def getExampleFile(filename):
     >>> getExampleFile('does.not.exists')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    IOError: Could not find file does.not.exists ...
+    OSError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
         try:
-            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+            mod = __import__("obspy.%s.tests" % module,
+                             fromlist=[native_str("obspy")])
         except ImportError:
             continue
         file = os.path.join(mod.__path__[0], "data", filename)
@@ -165,7 +168,7 @@ def getExampleFile(filename):
             return file
     msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
-    raise IOError(msg)
+    raise OSError(msg)
 
 
 def _getEntryPoints(group, subgroup=None):
@@ -257,7 +260,7 @@ def _getFunctionFromEntryPoint(group, type):
             entry_point = ep_dict[type]
         else:
             # search using lower cases only
-            entry_point = [v for k, v in ep_dict.items()
+            entry_point = [v for k, v in list(ep_dict.items())
                            if k.lower() == type.lower()][0]
     except (KeyError, IndexError):
         # check if any entry points are available at all
@@ -293,7 +296,7 @@ def getMatplotlibVersion():
         import matplotlib
         version = matplotlib.__version__
         version = version.split("~rc")[0]
-        version = map(toIntOrZero, version.split("."))
+        version = list(map(toIntOrZero, version.split(".")))
     except ImportError:
         version = None
     return version
@@ -308,7 +311,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in EPS.values():
+        for format_ep in list(EPS.values()):
             # search isFormat for given entry point
             isFormat = load_entry_point(
                 format_ep.dist.key,
@@ -357,7 +360,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     in docstrings.
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
-    >>> print table  # doctest: +NORMALIZE_WHITESPACE
+    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
     ======= ================= =======================================
         Format  Required Module   _`Linked Function Call`
         ======= ================= =======================================
@@ -385,13 +388,14 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     eps = _getOrderedEntryPoints("obspy.plugin.%s" % group, method,
                                  WAVEFORM_PREFERRED_ORDER)
     mod_list = []
-    for name, ep in eps.iteritems():
+    for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
         func = load_entry_point(ep.dist.key,
                                 "obspy.plugin.%s.%s" % (group, name), method)
-        func_str = ':func:`%s`' % ".".join((ep.module_name, func.func_name))
+        func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
         mod_list.append((name, module_short, func_str))
 
+    mod_list = sorted(mod_list)
     headers = ["Format", "Required Module", "_`Linked Function Call`"]
     maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
                max([len(x[1]) for x in mod_list] + [len(headers[1])]),
@@ -399,12 +403,12 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     info_str = [" ".join(["=" * x for x in maxlens])]
     info_str.append(
-        " ".join([headers[i].ljust(maxlens[i]) for i in xrange(3)]))
+        " ".join([headers[i].ljust(maxlens[i]) for i in range(3)]))
     info_str.append(info_str[0])
 
     for mod_infos in mod_list:
         info_str.append(
-            " ".join([mod_infos[i].ljust(maxlens[i]) for i in xrange(3)]))
+            " ".join([mod_infos[i].ljust(maxlens[i]) for i in range(3)]))
     info_str.append(info_str[0])
 
     ret = " " * numspaces + ("\n" + " " * numspaces).join(info_str)

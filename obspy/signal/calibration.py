@@ -17,6 +17,11 @@ Functions for relative calibration.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import str
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
@@ -207,7 +212,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
     windowVals = np.hanning(NFFT)
 
-    step = NFFT - noverlap
+    step = int(NFFT) - int(noverlap)
     ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
     Pxy = np.zeros((numFreqs, n), np.complex_)

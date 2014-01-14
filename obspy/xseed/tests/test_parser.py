@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import str
+from future.builtins import open
 
-from StringIO import StringIO
 from lxml import etree
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import compatibility
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
@@ -49,7 +54,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertEqual(len(w), 1)
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue('date' and 'required' in
-                            w[-1].message.message.lower())
+                            str(w[-1].message).lower())
             # Triggers a warning.
             paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
             result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
@@ -68,7 +73,7 @@ class ParserTestCase(unittest.TestCase):
         """
         A SEED Volume must start with a Volume Index Control Header.
         """
-        data = "000001S 0510019~~0001000000"
+        data = b"000001S 0510019~~0001000000"
         sp = Parser(strict=True)
         self.assertRaises(SEEDParserException, sp.read, data)
 
@@ -76,7 +81,7 @@ class ParserTestCase(unittest.TestCase):
         """
         A SEED Volume must start with Blockette 010.
         """
-        data = "000001V 0510019~~0001000000"
+        data = b"000001V 0510019~~0001000000"
         sp = Parser(strict=True)
         self.assertRaises(SEEDParserException, sp.read, data)
 
@@ -88,7 +93,7 @@ class ParserTestCase(unittest.TestCase):
         p = Parser(filename)
         sp = str(p).splitlines()
         sp = [_i.strip() for _i in sp]
-        self.assertEquals(sp, [
+        self.assertEqual(sp, [
             "Networks:",
             "BW (BayernNetz)",
             "Stations:",
@@ -153,19 +158,19 @@ class ParserTestCase(unittest.TestCase):
         ' 0543864' -> results in Blockette 005
         """
         # create a valid blockette 010 with record length 256
-        b010 = "0100042 2.4082008,001~2038,001~2009,001~~~"
+        b010 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
+        self.assertEqual(b010, blockette.getSEED())
         # create a valid blockette 054
-        b054 = "0540240A0400300300000009" + ("+1.58748E-03" * 18)
+        b054 = b"0540240A0400300300000009" + (b"+1.58748E-03" * 18)
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054)
-        self.assertEquals(b054, blockette.getSEED())
+        self.assertEqual(b054, blockette.getSEED())
         # combine data
-        data = "000001V " + b010 + (' ' * 206)
-        data += "000002S " + b054 + (' ' * 8)
-        data += "000003S*" + b054 + (' ' * 8)
+        data = b"000001V " + b010 + (b' ' * 206)
+        data += b"000002S " + b054 + (b' ' * 8)
+        data += b"000003S*" + b054 + (b' ' * 8)
         # read records
         parser = Parser(strict=True)
         parser.read(data)
@@ -174,36 +179,37 @@ class ParserTestCase(unittest.TestCase):
         """
         """
         # create a valid blockette 010 with record length 256
-        b010 = "0100042 2.4082008,001~2038,001~2009,001~~~"
+        b010 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
+        self.assertEqual(b010, blockette.getSEED())
         # create a valid blockette 054
-        b054 = "0540960A0400300300000039"
-        nr = ""
+        b054 = b"0540960A0400300300000039"
+        nr = b""
         for i in range(0, 78):
-            nr = nr + "+1.000%02dE-03" % i  # 960 chars
+            # 960 chars
+            nr = nr + ("+1.000%02dE-03" % i).encode('ascii', 'strict')
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
-        self.assertEquals(b054 + nr, blockette.getSEED())
+        self.assertEqual(b054 + nr, blockette.getSEED())
         # create a blockette 051
-        b051 = '05100271999,123~~0001000000'
+        b051 = b'05100271999,123~~0001000000'
         blockette = Blockette051(strict=False)
         # ignore user warning
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
-        data = "000001V " + b010 + (' ' * 206)
-        data += "000002S " + b054 + nr[0:224]  # 256-8-24 = 224
-        data += "000003S*" + nr[224:472]  # 256-8 = 248
-        data += "000004S*" + nr[472:720]
-        data += "000005S*" + nr[720:] + b051 + ' ' * 5  # 5 spaces left
+        data = b"000001V " + b010 + (b' ' * 206)
+        data += b"000002S " + b054 + nr[0:224]  # 256-8-24 = 224
+        data += b"000003S*" + nr[224:472]  # 256-8 = 248
+        data += b"000004S*" + nr[472:720]
+        data += b"000005S*" + nr[720:] + b051 + b' ' * 5  # 5 spaces left
         self.assertEqual(len(data), 256 * 5)
-        data += "000006S " + b054 + nr[0:224]  # 256-8-24 = 224
-        data += "000007S*" + nr[224:472]  # 256-8 = 248
-        data += "000008S*" + nr[472:720]
-        data += "000009S*" + nr[720:] + ' ' * 32  # 32 spaces left
+        data += b"000006S " + b054 + nr[0:224]  # 256-8-24 = 224
+        data += b"000007S*" + nr[224:472]  # 256-8 = 248
+        data += b"000008S*" + nr[472:720]
+        data += b"000009S*" + nr[720:] + b' ' * 32  # 32 spaces left
         self.assertEqual(len(data), 256 * 9)
         # read records
         parser = Parser(strict=False)
@@ -211,10 +217,10 @@ class ParserTestCase(unittest.TestCase):
             warnings.simplefilter("ignore")
             parser.read(data)
         # check results
-        self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
-        self.assertEquals(len(parser.blockettes[10]), 1)
-        self.assertEquals(len(parser.blockettes[51]), 1)
-        self.assertEquals(len(parser.blockettes[54]), 2)
+        self.assertEqual(sorted(parser.blockettes.keys()), [10, 51, 54])
+        self.assertEqual(len(parser.blockettes[10]), 1)
+        self.assertEqual(len(parser.blockettes[51]), 1)
+        self.assertEqual(len(parser.blockettes[54]), 2)
 
     def test_blocketteLongerThanRecordLength(self):
         """
@@ -225,13 +231,13 @@ class ParserTestCase(unittest.TestCase):
         # Set record length to 100.
         parser.record_length = 100
         # Use a blockette 53 string.
-        SEED_string = '0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E' \
-            '+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+0' \
-            '0+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+' \
-            '00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00' \
-            '-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4' \
-            '.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.0' \
-            '0000E+00+0.00000E+00'
+        SEED_string = b'0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E' \
+            b'+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+0' \
+            b'0+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+' \
+            b'00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00' \
+            b'-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4' \
+            b'.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.0' \
+            b'0000E+00+0.00000E+00'
         blkt_53 = Blockette053()
         blkt_53.parseSEED(SEED_string)
         # This just tests an internal SEED method.
@@ -242,7 +248,7 @@ class ParserTestCase(unittest.TestCase):
         for record in records:
             self.assertEqual(len(record), 94)
         # Reassemble the String.
-        new_string = ''
+        new_string = b''
         for record in records:
             new_string += record[2:]
         # Compare the new and the old string.
@@ -264,8 +270,8 @@ class ParserTestCase(unittest.TestCase):
         chapter 3 for more informations.
         """
         # Loop over all files.
-        for file in self.BW_SEED_files:
-            f = open(file, 'r')
+        for file in (self.BW_SEED_files[-1],):
+            f = open(file, 'rb')
             # Original SEED file.
             original_seed = f.read()
             f.seek(0)
@@ -300,7 +306,7 @@ class ParserTestCase(unittest.TestCase):
             # Path to XML schema file.
             xsd_path = os.path.join(self.path, 'xml-seed-%s.xsd' % version)
             # Prepare validator.
-            f = open(xsd_path, 'r')
+            f = open(xsd_path, 'rb')
             xmlschema_doc = etree.parse(f)
             f.close()
             xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -317,7 +323,7 @@ class ParserTestCase(unittest.TestCase):
                 xseed_string = parser2.getXSEED(version=version)
                 del parser2
                 # Validate XSEED.
-                doc = etree.parse(StringIO(xseed_string))
+                doc = etree.parse(compatibility.BytesIO(xseed_string))
                 self.assertTrue(xmlschema.validate(doc))
                 del doc
                 parser3 = Parser(xseed_string)
@@ -385,7 +391,7 @@ class ParserTestCase(unittest.TestCase):
         # And the same for yet another dataless file
         #
         filename = os.path.join(self.path, 'nied.dataless.gz')
-        f = StringIO(gzip.open(filename).read())
+        f = compatibility.BytesIO(gzip.open(filename).read())
         sp = Parser(f)
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
@@ -532,13 +538,13 @@ class ParserTestCase(unittest.TestCase):
         Tests the comparison of two blockettes.
         """
         p = Parser()
-        b010_1 = "0100042 2.4082008,001~2038,001~2009,001~~~"
+        b010_1 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette1 = Blockette010(strict=True, compact=True,
                                   xseed_version='1.0')
         blockette1.parseSEED(b010_1)
         blockette2 = Blockette010()
         blockette2.parseSEED(b010_1)
-        b010_3 = "0100042 2.4082009,001~2038,001~2009,001~~~"
+        b010_3 = b"0100042 2.4082009,001~2038,001~2009,001~~~"
         blockette3 = Blockette010(strict=True, compact=True)
         blockette3.parseSEED(b010_3)
         blockette4 = Blockette010(xseed_version='1.0')
@@ -553,7 +559,7 @@ class ParserTestCase(unittest.TestCase):
         A warning should be raised if a blockette misses a required date.
         """
         # blockette 10 - missing start time
-        b010 = "0100034 2.408~2038,001~2009,001~~~"
+        b010 = b"0100034 2.408~2038,001~2009,001~~~"
         # strict raises an exception
         blockette = Blockette010(strict=True)
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
@@ -563,9 +569,9 @@ class ParserTestCase(unittest.TestCase):
             warnings.simplefilter("ignore", UserWarning)
             blockette = Blockette010()
             blockette.parseSEED(b010)
-            self.assertEquals(b010, blockette.getSEED())
+            self.assertEqual(b010, blockette.getSEED())
         # blockette 10 - missing volume time
-        b010 = "0100034 2.4082008,001~2038,001~~~~"
+        b010 = b"0100034 2.4082008,001~2038,001~~~~"
         # strict raises an exception
         blockette = Blockette010(strict=True)
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
@@ -574,7 +580,7 @@ class ParserTestCase(unittest.TestCase):
         # The warning cannot be tested due to being issued only once.
         # A similar case is tested in test_bug165.
         blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
+        self.assertEqual(b010, blockette.getSEED())
 
     def test_issue298a(self):
         """
@@ -604,7 +610,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertRaises(UserWarning, Parser, filename)
             warnings.simplefilter("ignore", UserWarning)
             parser = Parser(filename)
-            self.assertEquals(parser.version, 2.3)
+            self.assertEqual(parser.version, 2.3)
 
     def test_issue157(self):
         """

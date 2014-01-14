@@ -8,6 +8,9 @@ Client for a database created by obspy.db.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import str  # NOQA
+from future.utils import native_str
 
 from obspy.core.preview import mergePreviews
 from obspy.core.stream import Stream
@@ -37,7 +40,7 @@ class Client(object):
         :param debug: Enables verbose output.
         """
         if url:
-            self.engine = create_engine(url, encoding='utf-8',
+            self.engine = create_engine(url, encoding=native_str('utf-8'),
                                         convert_unicode=True)
             Base.metadata.create_all(self.engine,  # @UndefinedVariable
                                      checkfirst=True)
@@ -143,7 +146,7 @@ class Client(object):
         # process arguments
         kwargs = {'network': network, 'station': station,
                   'location': location, 'channel': channel}
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if value is None:
                 continue
             col = getattr(WaveformChannel, key)
@@ -179,7 +182,7 @@ class Client(object):
         # process arguments
         kwargs = {'network': network, 'station': station,
                   'location': location, 'channel': channel}
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if value is None:
                 continue
             col = getattr(WaveformChannel, key)
@@ -255,7 +258,7 @@ class Client(object):
             # filter over network/station/location/channel id
             kwargs = {'network': network, 'station': station,
                       'location': location, 'channel': channel}
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 if value is None:
                     continue
                 col = getattr(WaveformChannel, key)

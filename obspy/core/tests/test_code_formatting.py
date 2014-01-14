@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import check_flake8

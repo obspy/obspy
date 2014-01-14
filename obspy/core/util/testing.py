@@ -8,8 +8,14 @@ Testing utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from future import standard_library  # NOQA
+from future.builtins import super
+from future.utils import native_str, PY2
 from obspy.core.util.misc import get_untracked_files_from_git
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core import compatibility
 import fnmatch
 import inspect
 import sys
@@ -17,9 +23,14 @@ import os
 import glob
 import unittest
 import doctest
-import StringIO
 import shutil
 import warnings
+
+# pyflakes autodetection of PY2 does not work with the future library.
+# Therefore, overwrite the pyflakes autodetection manually
+if PY2:
+    import pyflakes.checker
+    pyflakes.checker.PY2 = True
 
 
 def add_unittests(testsuite, module_name):
@@ -41,14 +52,15 @@ def add_unittests(testsuite, module_name):
     >>> add_unittests(suite, "obspy.core")
     """
     MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
-
+    MODULE_TESTS = __import__(MODULE_NAME + ".tests",
+                              fromlist=[native_str("obspy")])
     filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
     for module_name in module_names:
-        module = __import__(module_name, fromlist="obspy")
+        module = __import__(module_name,
+                            fromlist=[native_str("obspy")])
         testsuite.addTest(module.suite())
 
 
@@ -71,7 +83,7 @@ def add_doctests(testsuite, module_name):
     >>> add_doctests(suite, "obspy.core")
     """
     MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist="obspy")
+    MODULE = __import__(MODULE_NAME, fromlist=[native_str("obspy")])
     MODULE_PATH = MODULE.__path__[0]
     MODULE_PATH_LEN = len(MODULE_PATH)
 
@@ -97,7 +109,8 @@ def add_doctests(testsuite, module_name):
             parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
             module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
             try:
-                module = __import__(module_name, fromlist="obspy")
+                module = __import__(module_name,
+                                    fromlist=[native_str("obspy")])
                 testsuite.addTest(doctest.DocTestSuite(module))
             except ValueError:
                 pass
@@ -185,11 +198,11 @@ class ImageComparison(NamedTemporaryFile):
         import locale
 
         try:
-            locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+            locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
         except:
             try:
                 locale.setlocale(locale.LC_ALL,
-                                 str('English_United States.1252'))
+                                 native_str('English_United States.1252'))
             except:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
@@ -326,7 +339,9 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    sys.stdout = StringIO.StringIO()
+    sys.stdout = compatibility.StringIO()
+    if PY2:
+        files = [native_str(f) for f in files]
     report = flake8_style.check_files(files)
     sys.stdout.seek(0)
     message = sys.stdout.read()

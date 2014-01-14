@@ -4,6 +4,9 @@
 The gse2.core test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import open
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2.libgse2 import ChksumError

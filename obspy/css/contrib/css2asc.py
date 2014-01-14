@@ -1,6 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import open
 import sys
 import os
 import struct
@@ -28,14 +32,14 @@ def main(wfdisc):
         destname = "%s-%s-%s-%s.ASC" % \
             (os.path.splitext(parts[16])[0], parts[0], parts[1],
              time.strftime("%Y%m%d-%H%M%S", time.gmtime(parts[2])))
-        print "station %s, component %s, %u samples" % (parts[0], parts[1],
-                                                        parts[7])
-        print "=> %s ..." % destname
+        print("station %s, component %s, %u samples" % (parts[0], parts[1],
+                                                        parts[7]))
+        print("=> %s ..." % destname)
 
         # check if already there
         if os.path.exists(destname):
-            print "I won't overwrite existing file \"%s\", skipping..." % \
-                os.path.split(destname)[1]
+            print("I won't overwrite existing file \"%s\", skipping..." %
+                  os.path.split(destname)[1])
             continue
 
         # read unnormalized data
@@ -67,8 +71,8 @@ def convert(parts):
         datafile.seek(parts[17])
         values = struct.unpack(fmt, datafile.read(size))
     except:
-        print "error reading binary packed data from \"%s\"" % \
-            os.path.split(parts[16])[1]
+        print("error reading binary packed data from \"%s\"" %
+              os.path.split(parts[16])[1])
         return False
 
     datafile.close()
@@ -118,14 +122,14 @@ if __name__ == '__main__':
     try:
         wfdisc = open(sys.argv[1])
     except IndexError:
-        print """
+        print("""
         Usage: css2asc wfdisc-file
 
         All traces referenced by the given wfdisc file will be converted
         to ASCII
-        """
+        """)
     except IOError:
-        print "Cannot access file \"%s\"!" % sys.argv[1]
+        print("Cannot access file \"%s\"!" % sys.argv[1])
 
     main(wfdisc)
 

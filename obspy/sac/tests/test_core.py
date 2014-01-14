@@ -2,6 +2,11 @@
 """
 The sac.core test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import str
+from future.builtins import int
 
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -288,8 +293,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SAC')
             st = read(sac_file)
-        self.assertEquals(st[0].stats.delta, 0.01)
-        self.assertEquals(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.delta, 0.01)
+        self.assertEqual(st[0].stats.sampling_rate, 100.0)
         #2
         tr = Trace()
         tr.stats.delta = 0.005
@@ -298,8 +303,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SAC')
             st = read(sac_file)
-        self.assertEquals(st[0].stats.delta, 0.005)
-        self.assertEquals(st[0].stats.sampling_rate, 200.0)
+        self.assertEqual(st[0].stats.delta, 0.005)
+        self.assertEqual(st[0].stats.sampling_rate, 200.0)
 
     def test_writeSACXYWithMinimumStats(self):
         """
@@ -312,8 +317,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SACXY')
             st = read(sac_file)
-        self.assertEquals(st[0].stats.delta, 0.01)
-        self.assertEquals(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.delta, 0.01)
+        self.assertEqual(st[0].stats.sampling_rate, 100.0)
 
     def test_notUsedButGivenHeaders(self):
         """
@@ -330,7 +335,7 @@ class CoreTestCase(unittest.TestCase):
             tr1.write(sac_file, 'SAC')
             tr2 = read(sac_file)[0]
         for i, header_value in enumerate(not_used):
-            self.assertEquals(int(tr2.stats.sac[header_value]), i)
+            self.assertEqual(int(tr2.stats.sac[header_value]), i)
 
     def test_writingMicroSeconds(self):
         """
@@ -365,18 +370,18 @@ class CoreTestCase(unittest.TestCase):
 
     def test_writeSmallTrace(self):
         """
-        Tests writing Traces containing 0, 1 or 2 samples only.
+        Tests writing Traces containing 0, 1, 2, 3, 4 samples only.
         """
         for format in ['SAC', 'SACXY']:
-            for num in range(0, 4):
+            for num in range(5):
                 tr = Trace(data=np.arange(num))
                 with NamedTemporaryFile() as tf:
                     tempfile = tf.name
                     tr.write(tempfile, format=format)
                     # test results
                     st = read(tempfile, format=format)
-                self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
+                self.assertEqual(len(st), 1)
+                np.testing.assert_array_equal(tr.data, st[0].data)
 
     def test_issue390(self):
         """

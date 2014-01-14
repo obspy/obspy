@@ -15,6 +15,12 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import open
+from future.builtins import int
+from future.builtins import str
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -23,7 +29,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
-import StringIO
+from obspy.core import compatibility
 import inspect
 import os
 import warnings
@@ -84,7 +90,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(StringIO.StringIO(string))
+        self.parser = XMLParser(compatibility.BytesIO(string))
         return self._deserialize()
 
     def _xpath2obj(self, *args, **kwargs):
@@ -169,7 +175,7 @@ class Unpickler(object):
     def _value(self, element, name, quantity_type=float):
         try:
             el = self._xpath(name, element)[0]
-        except:
+        except IndexError:
             return None, None
 
         value = self._xpath2obj('value', el, quantity_type)
@@ -258,7 +264,7 @@ class Unpickler(object):
             ce_el = self._xpath('originUncertainty/confidenceEllipsoid',
                                 element)
             obj.confidence_ellipsoid = self._confidence_ellipsoid(ce_el[0])
-        except:
+        except IndexError:
             obj.confidence_ellipsoid = ConfidenceEllipsoid()
         return obj
 
@@ -352,7 +358,7 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <origin>
         ...   <latitude><value>34.23</value></latitude>
         ... </origin>'''
@@ -398,7 +404,7 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <magnitude>
         ...   <mag><value>3.2</value></mag>
         ... </magnitude>'''
@@ -436,7 +442,7 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <stationMagnitude>
         ...   <mag><value>3.2</value></mag>
         ... </stationMagnitude>'''
@@ -471,7 +477,7 @@ class Unpickler(object):
         obj = Axis()
         try:
             sub_el = self._xpath(name, element)[0]
-        except:
+        except IndexError:
             return obj
         # required parameter
         obj.azimuth, obj.azimuth_errors = self._float_value(sub_el, 'azimuth')
@@ -488,7 +494,7 @@ class Unpickler(object):
         """
         try:
             sub_el = self._xpath('principalAxes', element)[0]
-        except:
+        except IndexError:
             return None
         obj = PrincipalAxes()
         # required parameter
@@ -509,7 +515,7 @@ class Unpickler(object):
         obj = NodalPlane()
         try:
             sub_el = self._xpath(name, element)[0]
-        except:
+        except IndexError:
             return obj
         # required parameter
         obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
@@ -527,7 +533,7 @@ class Unpickler(object):
         obj = NodalPlanes()
         try:
             sub_el = self._xpath('nodalPlanes', element)[0]
-        except:
+        except IndexError:
             return obj
         # optional parameter
         obj.nodal_plane_1 = self._nodal_plane(sub_el, 'nodalPlane1')
@@ -549,7 +555,7 @@ class Unpickler(object):
         obj = SourceTimeFunction()
         try:
             sub_el = self._xpath('sourceTimeFunction', element)[0]
-        except:
+        except IndexError:
             return obj
         # required parameters
         obj.type = self._xpath2obj('type', sub_el)
@@ -569,7 +575,7 @@ class Unpickler(object):
         obj = Tensor()
         try:
             sub_el = self._xpath('tensor', element)[0]
-        except:
+        except IndexError:
             return obj
         # required parameters
         obj.m_rr, obj.m_rr_errors = self._float_value(sub_el, 'Mrr')
@@ -590,7 +596,7 @@ class Unpickler(object):
         obj = DataUsed()
         try:
             sub_el = self._xpath('dataUsed', element)[0]
-        except:
+        except IndexError:
             return obj
         # required parameters
         obj.wave_type = self._xpath2obj('waveType', sub_el)
@@ -611,7 +617,7 @@ class Unpickler(object):
         obj = MomentTensor(force_resource_id=False)
         try:
             mt_el = self._xpath('momentTensor', element)[0]
-        except:
+        except IndexError:
             return obj
         # required parameters
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
@@ -648,7 +654,7 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <focalMechanism>
         ...   <methodID>smi:ISC/methodID=Best_double_couple</methodID>
         ... </focalMechanism>'''
@@ -686,7 +692,7 @@ class Unpickler(object):
         try:
             namespace = self.parser._getFirstChildNamespace()
             catalog_el = self._xpath('eventParameters', namespace=namespace)[0]
-        except:
+        except IndexError:
             raise Exception("Not a QuakeML compatible file or string")
         # set default namespace for parser
         self.parser.namespace = self.parser._getElementNamespace(catalog_el)
@@ -928,7 +934,8 @@ class Pickler(object):
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el).decode())  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
@@ -964,7 +971,8 @@ class Pickler(object):
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el).decode())  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
@@ -997,7 +1005,8 @@ class Pickler(object):
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el).decode())  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
         """
@@ -1370,7 +1379,7 @@ def readQuakeML(filename):
 
     >>> from obspy.core.event import readEvents
     >>> cat = readEvents('/path/to/iris_events.xml')
-    >>> print cat
+    >>> print(cat)
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
     2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
@@ -1399,14 +1408,14 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and not _validate(StringIO.StringIO(xml_doc)):
+    if validate is True and not _validate(compatibility.BytesIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, "write"):
         file_opened = True
-        fh = open(filename, "wt")
+        fh = open(filename, "wb")
     else:
         file_opened = False
         fh = filename
@@ -1423,12 +1432,13 @@ def readSeisHubEventXML(filename):
     Reads a single SeisHub event XML file and returns an ObsPy Catalog object.
     """
     # XXX: very ugly way to add new root tags without parsing
-    lines = open(filename, 'rt').readlines()
-    lines.insert(2, '<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
-    lines.insert(3, '  <eventParameters>')
-    lines.append('  </eventParameters>\n')
-    lines.append('</quakeml>\n')
-    temp = StringIO.StringIO(''.join(lines))
+    lines = open(filename, 'rb').readlines()
+    lines.insert(2,
+                 b'<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
+    lines.insert(3, b'  <eventParameters>')
+    lines.append(b'  </eventParameters>\n')
+    lines.append(b'</quakeml>\n')
+    temp = compatibility.BytesIO(b''.join(lines))
     return readQuakeML(temp)
 
 
@@ -1459,9 +1469,9 @@ def _validate(xml_file, verbose=False):
 
     # Pretty error printing if the validation fails.
     if verbose and valid is not True:
-        print "Error validating QuakeML file:"
+        print("Error validating QuakeML file:")
         for entry in relaxng.error_log:
-            print "\t%s" % entry
+            print("\t%s" % entry)
     return valid
 
 

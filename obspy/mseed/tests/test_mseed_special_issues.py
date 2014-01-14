@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
+from obspy.core import compatibility
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
-from obspy.mseed.headers import clibmseed, PyFile_FromFile
+from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
 import ctypes as C
 import numpy as np
 import os
 import random
-from StringIO import StringIO
 import sys
 import unittest
 import warnings
@@ -88,7 +91,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, cl.ms_readmsr_r, *args)
         self.assertRaises(TypeError, cl.ms_readmsr_r, *args[:-1])
         self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
-        self.assertRaises(ArgumentError, PyFile_FromFile, *args[:5])
         self.assertRaises(ArgumentError, cl.ms_detect, *args[:4])
         args.append(1)  # 10 argument function
         self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
@@ -108,7 +110,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
         # independent reading of the data
-        data_string = open(file, 'rb').read()[128:]  # 128 Bytes header
+        with open(file, 'rb') as fp:
+            data_string = fp.read()[128:]  # 128 Bytes header
         data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
                                   verbose=0)
         # test readMSTraces
@@ -535,7 +538,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(10, dtype="int32"))
 
         # Test with little endian.
-        memfile = StringIO()
+        memfile = compatibility.BytesIO()
         tr.write(memfile, format="mseed", byteorder="<")
         memfile.seek(0, 0)
         # Reading little endian should work just fine.
@@ -551,7 +554,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertRaises(ValueError, read, memfile, header_byteorder=">")
 
         # Same test with big endian
-        memfile = StringIO()
+        memfile = compatibility.BytesIO()
         tr.write(memfile, format="mseed", byteorder=">")
         memfile.seek(0, 0)
         # Reading big endian should work just fine.
@@ -577,10 +580,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # documentation for more details.
         # Use every 5th year. Otherwise the test takes too long. Use 1901 as
         # start to get year 2056.
-        years = range(1901, 2101, 5)
+        years = list(range(1901, 2101, 5))
         for year in years:
             for byteorder in ["<", ">"]:
-                memfile = StringIO()
+                memfile = compatibility.BytesIO()
                 # Get some random time with the year and byteorder as the seed.
                 random.seed(year + ord(byteorder))
                 tr.stats.starttime = UTCDateTime(

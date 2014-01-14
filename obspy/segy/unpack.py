@@ -11,7 +11,11 @@
 Functions that will all take a file pointer and the sample count and return a
 numpy array with the unpacked values.
 """
-from util import clibsegy
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import open
+from future.utils import native_str
+from obspy.segy.util import clibsegy
 
 import ctypes as C
 import numpy as np
@@ -28,7 +32,8 @@ else:
 
 
 clibsegy.ibm2ieee.argtypes = [
-    np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='float32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int]
 clibsegy.ibm2ieee.restype = C.c_void_p
 
@@ -147,6 +152,7 @@ class OnTheFlyDataUnpacker:
             msg += "; data may be read incorrectly "
             msg += "(modification time = %s)." % mtime
             warnings.warn(msg)
-        file = open(self.filename, self.filemode)
-        file.seek(self.seek)
-        return self.unpack_function(file, self.count, endian=self.endian)
+        with open(self.filename, self.filemode) as fp:
+            fp.seek(self.seek)
+            raw = self.unpack_function(fp, self.count, endian=self.endian)
+        return raw

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import int
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------
@@ -121,7 +124,7 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                 pos = m.find(pattern, pos + 1)
 
     # rename event files with packet information included
-    for ev_no, ev_info in event_info.iteritems():
+    for ev_no, ev_info in event_info.items():
         filename_old = "%s.%04d" % (reftek_id, ev_no)
         filename_new = filename_old + \
             ".%d-%d-%05d" % (ev_info['EH'], ev_info['ET'], ev_info['DT'])

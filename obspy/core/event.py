@@ -8,6 +8,16 @@ Module for handling ObsPy Catalog and Event objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from future import standard_library  # NOQA
+from future.builtins import zip
+from future.builtins import int
+from future.builtins import super
+from future.builtins import str
+from future.builtins import bytes
+from future.utils import native_str
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
@@ -20,6 +30,7 @@ from obspy.core.util import uncompressFile, _readFromPlugin, \
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core import compatibility
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
@@ -30,10 +41,8 @@ import inspect
 import numpy as np
 import os
 import re
-import urllib2
 import warnings
 import weakref
-import cStringIO
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -79,7 +88,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         return _createExampleCatalog()
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
         try:
             # first try reading directly
@@ -92,15 +101,16 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
                 fh.write(pathname_or_url.read())
                 catalog = _read(fh.name, format, **kwargs)
         return catalog
-    elif pathname_or_url.strip().startswith('<'):
+    elif isinstance(pathname_or_url, bytes) and \
+            pathname_or_url.strip().startswith(b'<'):
         # XML string
-        return _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
+        return _read(compatibility.BytesIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib2.urlopen(pathname_or_url).read())
+            fh.write(compatibility.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
@@ -154,8 +164,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if value == 0 or\
-       isinstance(value, basestring):
+    if value == 0 or isinstance(value, str):
         return True
     return bool(value)
 
@@ -205,7 +214,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
         >>> test_event.resource_id
         ResourceIdentifier(id="event/123456")
-        >>> print test_event.creation_info
+        >>> print(test_event.creation_info)
         CreationInfo(author='obspy.org', version='0.1')
 
     All others will be set to None.
@@ -223,7 +232,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     possible.
 
         >>> test_event.description = 1
-        >>> assert(test_event.description is "1")
+        >>> assert(test_event.description == "1")
 
     Trying to set with an inappropriate value will raise an error.
 
@@ -319,7 +328,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 error_key = key + "_errors"
                 if hasattr(self, error_key) and\
                    _bool(getattr(self, error_key)):
-                    err_items = getattr(self, error_key).items()
+                    err_items = list(getattr(self, error_key).items())
                     err_items.sort()
                     repr_str += " [%s]" % ', '.join(
                         [str(k) + "=" + str(v) for k, v in err_items])
@@ -359,7 +368,11 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         def __repr__(self):
             return self.__str__(force_one_line=True)
 
+        # called for bool on PY2
         def __nonzero__(self):
+            return self.__bool__()
+
+        def __bool__(self):
             # We use custom _bool() for testing getattr() since we want
             # zero valued int and float and empty string attributes to be True.
             if any([_bool(getattr(self, _i))
@@ -393,7 +406,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             inheriting from AttribDict.
             """
             # Pass to the parent method if not a custom property.
-            if name not in self._property_dict.keys():
+            if name not in list(self._property_dict.keys()):
                 AttribDict.__setattr__(self, name, value)
                 return
             attrib_type = self._property_dict[name]
@@ -429,7 +442,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         base_class = AbstractEventType
 
     # Set the class type name.
-    setattr(base_class, "__name__", class_name)
+    setattr(base_class, "__name__", native_str(class_name))
     return base_class
 
 
@@ -496,15 +509,15 @@ class ResourceIdentifier(object):
     >>> ref_count = sys.getrefcount(event)
     >>> res_id = ResourceIdentifier(referred_object=event)
     >>> # The reference does not changed the reference count of the object.
-    >>> print ref_count == sys.getrefcount(event)
+    >>> print(ref_count == sys.getrefcount(event))
     True
     >>> # It actually is the same object.
-    >>> print event is res_id.getReferredObject()
+    >>> print(event is res_id.getReferredObject())
     True
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print res_id.getReferredObject()
+    >>> print(res_id.getReferredObject())
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -522,7 +535,7 @@ class ResourceIdentifier(object):
     >>> ref_a = ResourceIdentifier(res_id)
     >>> # The object is refers to cannot be found yet. Because no instance that
     >>> # an attached object has been created so far.
-    >>> print ref_a.getReferredObject()
+    >>> print(ref_a.getReferredObject())
     None
     >>> # This instance has an attached object.
     >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
@@ -574,13 +587,14 @@ class ResourceIdentifier(object):
 
     >>> dictionary = {}
     >>> res_id = ResourceIdentifier(id="foo")
-    >>> dictionary[res_id] = "bar"
+    >>> dictionary[res_id] = "bar1"
     >>> # The same ID can still be used as a key.
-    >>> dictionary["foo"] = "bar"
-    >>> items = dictionary.items()
-    >>> items.sort()
-    >>> print items
-    [(ResourceIdentifier(id="foo"), 'bar'), ('foo', 'bar')]
+    >>> dictionary["foo"] = "bar2"
+    >>> items = sorted(dictionary.items(), key=lambda kv: kv[1])
+    >>> for k, v in items:  # doctest: +ELLIPSIS
+    ...     print(repr(k), v)
+    ResourceIdentifier(id="foo") bar1
+    ...'foo' bar2
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
@@ -694,10 +708,10 @@ class ResourceIdentifier(object):
         change the ID itself.
 
         >>> res_id = ResourceIdentifier("some_id")
-        >>> print res_id.getQuakeMLURI()
+        >>> print(res_id.getQuakeMLURI())
         smi:local/some_id
         >>> # Did not change the actual resource id.
-        >>> print res_id.id
+        >>> print(res_id.id)
         some_id
         """
         id = self.id
@@ -724,9 +738,9 @@ class ResourceIdentifier(object):
 
         >>> res_id = ResourceIdentifier()
         >>> res_id_2 = res_id.copy()
-        >>> print res_id is res_id_2
+        >>> print(res_id is res_id_2)
         False
-        >>> print res_id == res_id_2
+        >>> print(res_id == res_id_2)
         True
         """
         return deepcopy(self)
@@ -753,7 +767,8 @@ class ResourceIdentifier(object):
     @id.setter
     def id(self, value):
         self.fixed = True
-        if not isinstance(value, basestring):
+        # XXX: no idea why I had to add bytes for PY2 here
+        if not isinstance(value, (str, bytes)):
             msg = "attribute id needs to be a string."
             raise TypeError(msg)
         self.__dict__["id"] = value
@@ -768,7 +783,7 @@ class ResourceIdentifier(object):
 
     @prefix.setter
     def prefix(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             msg = "prefix id needs to be a string."
             raise TypeError(msg)
         self._prefix = value
@@ -875,7 +890,7 @@ class CreationInfo(__CreationInfo):
     :param version: Version string of a resource
 
     >>> info = CreationInfo(author="obspy.org", version="0.0.1")
-    >>> print info
+    >>> print(info)
     CreationInfo(author='obspy.org', version='0.0.1')
     """
 
@@ -951,10 +966,10 @@ class CompositeTime(__CompositeTime):
     :type second_errors: :class:`~obspy.core.util.AttribDict`
     :param second_errors: AttribDict containing error quantities.
 
-    >>> print CompositeTime(2011, 1, 1)
+    >>> print(CompositeTime(2011, 1, 1))
     CompositeTime(year=2011, month=1, day=1)
     >>> # Can also be instantiated with the uncertainties.
-    >>> print CompositeTime(year=2011, year_errors={"uncertainty":1})
+    >>> print(CompositeTime(year=2011, year_errors={"uncertainty":1}))
     CompositeTime(year=2011 [uncertainty=1])
     """
 
@@ -982,16 +997,16 @@ class Comment(__Comment):
     :param creation_info: Creation info for the comment.
 
     >>> comment = Comment(text="Some comment")
-    >>> print comment  # doctest:+ELLIPSIS
+    >>> print(comment)  # doctest:+ELLIPSIS
     Comment(text='Some comment', resource_id=ResourceIdentifier(...))
     >>> comment = Comment(text="Some comment", force_resource_id=False)
-    >>> print comment
+    >>> print(comment)
     Comment(text='Some comment')
     >>> comment.resource_id = "comments/obspy-comment-123456"
-    >>> print comment # doctest:+ELLIPSIS
+    >>> print(comment) # doctest:+ELLIPSIS
     Comment(text='Some comment', resource_id=ResourceIdentifier(...))
     >>> comment.creation_info = {"author": "obspy.org"}
-    >>> print comment.creation_info
+    >>> print(comment.creation_info)
     CreationInfo(author='obspy.org')
     """
 
@@ -1042,21 +1057,21 @@ class WaveformStreamID(__WaveformStreamID):
     >>> # Can be initialized with a SEED string or with individual components.
     >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR",
     ...                              location_code="", channel_code="EHZ")
-    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(stream_id) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     WaveformStreamID
           network_code: 'BW'
           station_code: 'FUR'
           channel_code: 'EHZ'
          location_code: ''
     >>> stream_id = WaveformStreamID(seed_string="BW.FUR..EHZ")
-    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    >>> print(stream_id) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     WaveformStreamID
           network_code: 'BW'
           station_code: 'FUR'
           channel_code: 'EHZ'
          location_code: ''
     >>> # Can also return the SEED string.
-    >>> print stream_id.getSEEDString()
+    >>> print(stream_id.getSEEDString())
     BW.FUR..EHZ
     """
     def __init__(self, network_code=None, station_code=None,
@@ -1717,7 +1732,7 @@ class Origin(__Origin):
                time: UTCDateTime(1970, 1, 1, 0, 0)
           longitude: 42.0
            latitude: 12.0 [confidence_level=95.0]
-         depth_type: 'from location'
+         depth_type: ...'from location'
     """
 
 
@@ -2460,7 +2475,7 @@ class Event(__Event):
         try:
             return ResourceIdentifier(self.preferred_origin_id).\
                 getReferredObject()
-        except KeyError:
+        except AttributeError:
             return None
 
     def preferred_magnitude(self):
@@ -2470,7 +2485,7 @@ class Event(__Event):
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
                 getReferredObject()
-        except KeyError:
+        except AttributeError:
             return None
 
     def preferred_focal_mechanism(self):
@@ -2480,7 +2495,7 @@ class Event(__Event):
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
                 getReferredObject()
-        except KeyError:
+        except AttributeError:
             return None
 
 
@@ -2639,7 +2654,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, basestring):
+        if not isinstance(index, str):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
@@ -2721,48 +2736,50 @@ class Catalog(object):
 
         >>> from obspy.core.event import readEvents
         >>> cat = readEvents()
-        >>> print cat
+        >>> print(cat)
         3 Event(s) in Catalog:
         2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         >>> cat2 = cat.filter("magnitude >= 4.0", "latitude < 40.0")
-        >>> print cat2
+        >>> print(cat2)
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
         >>> cat3 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20")
-        >>> print cat3
+        >>> print(cat3)
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
         >>> cat4 = cat.filter("time > 2012-04-04T14:10",
         ...                   "time < 2012-04-04T14:20",
         ...                   inverse=True)
-        >>> print cat4
+        >>> print(cat4)
         2 Event(s) in Catalog:
         2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
-        # Helper functions.
+        # Helper functions. Only first argument might be None. Avoid
+        # unorderable types by checking first shortcut on positiv is None
+        # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
-            if value_1 < value_2:
+            if value_1 is None or value_1 < value_2:
                 return True
             return False
 
         def __is_smaller_or_equal(value_1, value_2):
-            if value_1 <= value_2:
+            if value_1 is None or value_1 <= value_2:
                 return True
             return False
 
         def __is_greater(value_1, value_2):
-            if value_1 > value_2:
-                return True
-            return False
+            if value_1 is None or value_1 <= value_2:
+                return False
+            return True
 
         def __is_greater_or_equal(value_1, value_2):
-            if value_1 >= value_2:
-                return True
-            return False
+            if value_1 is None or value_1 < value_2:
+                return False
+            return True
 
         # Map the function to the operators.
         operator_map = {"<": __is_smaller,
@@ -3048,11 +3065,11 @@ class Catalog(object):
             map_ax = fig.add_axes([0.05, 0.05, 0.90, 0.90])
 
         if projection == 'cyl':
-            map = Basemap(resolution=resolution)
+            bmap = Basemap(resolution=resolution)
         elif projection == 'ortho':
-            map = Basemap(projection='ortho', resolution=resolution,
-                          area_thresh=1000.0, lat_0=sum(lats) / len(lats),
-                          lon_0=sum(lons) / len(lons))
+            bmap = Basemap(projection='ortho', resolution=resolution,
+                           area_thresh=1000.0, lat_0=sum(lats) / len(lats),
+                           lon_0=sum(lons) / len(lons))
         elif projection == 'local':
             if min(lons) < -150 and max(lons) > 150:
                 max_lons = max(np.array(lons) % 360)
@@ -3076,9 +3093,9 @@ class Catalog(object):
                 height = 2.0 * deg2m_lat
                 width = 5.0 * deg2m_lon
 
-            map = Basemap(projection='aeqd', resolution=resolution,
-                          area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
-                          width=width, height=height)
+            bmap = Basemap(projection='aeqd', resolution=resolution,
+                           area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
+                           width=width, height=height)
             # not most elegant way to calculate some round lats/lons
 
             def linspace2(val1, val2, N):
@@ -3094,37 +3111,37 @@ class Catalog(object):
                 return np.linspace(new_val1, new_val2, N)
             N1 = int(np.ceil(height / max(width, height) * 8))
             N2 = int(np.ceil(width / max(width, height) * 8))
-            map.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                        lat_0 + height / 2 / deg2m_lat, N1),
-                              labels=[0, 1, 1, 0])
+            bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
+                                         lat_0 + height / 2 / deg2m_lat, N1),
+                               labels=[0, 1, 1, 0])
             if min(lons) < -150 and max(lons) > 150:
                 lon_0 %= 360
             meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
                                   lon_0 + width / 2 / deg2m_lon, N2)
             meridians[meridians > 180] -= 360
-            map.drawmeridians(meridians, labels=[1, 0, 0, 1])
+            bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
         else:
             msg = "Projection %s not supported." % projection
             raise ValueError(msg)
 
         # draw coast lines, country boundaries, fill continents.
-        map.drawcoastlines(color="0.4")
-        map.drawcountries(color="0.75")
-        map.fillcontinents(color=continent_fill_color,
-                           lake_color=water_fill_color)
-        # draw the edge of the map projection region (the projection limb)
-        map.drawmapboundary(fill_color=water_fill_color)
+        bmap.drawcoastlines(color="0.4")
+        bmap.drawcountries(color="0.75")
+        bmap.fillcontinents(color=continent_fill_color,
+                            lake_color=water_fill_color)
+        # draw the edge of the bmap projection region (the projection limb)
+        bmap.drawmapboundary(fill_color=water_fill_color)
         # draw lat/lon grid lines every 30 degrees.
-        map.drawmeridians(np.arange(-180, 180, 30))
-        map.drawparallels(np.arange(-90, 90, 30))
+        bmap.drawmeridians(np.arange(-180, 180, 30))
+        bmap.drawparallels(np.arange(-90, 90, 30))
 
-        # compute the native map projection coordinates for events.
-        x, y = map(lons, lats)
+        # compute the native bmap projection coordinates for events.
+        x, y = bmap(lons, lats)
         # plot labels
         if 100 > len(self.events) > 1:
             for name, xpt, ypt, colorpt in zip(labels, x, y, colors):
-                # Check if the point can actually be seen with the current map
-                # projection. The map object will set the coordinates to very
+                # Check if the point can actually be seen with the current bmap
+                # projection. The bmap object will set the coordinates to very
                 # large values if it cannot project a point.
                 if xpt > 1e25:
                     continue
@@ -3143,8 +3160,8 @@ class Catalog(object):
         else:
             magnitude_size = 15.0 ** 2
             colors_plot = "red"
-        map.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
-                    zorder=10)
+        bmap.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
+                     zorder=10)
         times = [event.origins[0].time for event in self.events]
         if len(self.events) > 1:
             plt.title(

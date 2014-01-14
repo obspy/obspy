@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import open
+from future.builtins import str
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
@@ -7,8 +13,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
+from obspy.core import compatibility
 from xml.etree.ElementTree import tostring, fromstring
-import StringIO
 import difflib
 import math
 import os
@@ -43,23 +49,20 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         obj1 = fromstring(doc1)
         obj2 = fromstring(doc2)
-        str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
-        str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
+        str1 = [_i.strip() for _i in tostring(obj1).split(b"\n")]
+        str2 = [_i.strip() for _i in tostring(obj2).split(b"\n")]
         # when xml is used instead of old lxml in obspy.core.util.xmlwrapper
         # there is no pretty_print option and we get a string without line
         # breaks, so we have to allow for that in the test
         if not LXML_ETREE:
-            str1 = "".join(str1)
-            str2 = "".join(str2)
+            str1 = b"".join(str1)
+            str2 = b"".join(str2)
 
         unified_diff = difflib.unified_diff(str1, str2)
-        has_error = False
-        for line in unified_diff:  # pragma: no cover
-            has_error = True
-            print line
-        if has_error:  # pragma: no cover
-            msg = "Strings are not equal."
-            raise AssertionError(msg)
+        err_msg = "\n".join(unified_diff)
+        if err_msg:
+            msg = "Strings are not equal.\n"
+            raise AssertionError(msg + err_msg)
 
     def test_readQuakeML(self):
         """
@@ -137,7 +140,8 @@ class QuakeMLTestCase(unittest.TestCase):
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -237,7 +241,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c.semi_major_axis_length, 0.123)
         self.assertEqual(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -281,7 +286,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.creation_info.creation_time, None)
         self.assertEqual(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -314,7 +320,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(stat_contrib.residual, 0.11)
 
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -351,7 +358,8 @@ class QuakeMLTestCase(unittest.TestCase):
                              resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -386,7 +394,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(ar.comments), 1)
         self.assertEqual(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -423,7 +432,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(pick.comments), 2)
         self.assertEqual(pick.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -516,7 +526,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
         self.assertAlmostEqual(mt.clvd, 0.22)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rb") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -574,15 +585,16 @@ class QuakeMLTestCase(unittest.TestCase):
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
-        for stype in root.findall("xs:simpleType", namespaces=root.nsmap):
+        nsmap = dict((k, v) for k, v in root.nsmap.items() if k is not None)
+        for stype in root.findall("xs:simpleType", namespaces=nsmap):
             type_name = stype.get("name")
-            restriction = stype.find("xs:restriction", namespaces=root.nsmap)
+            restriction = stype.find("xs:restriction", namespaces=nsmap)
             if restriction is None:
                 continue
             if restriction.get("base") != "xs:string":
                 continue
             enums = restriction.findall(
-                "xs:enumeration", namespaces=root.nsmap)
+                "xs:enumeration", namespaces=nsmap)
             if not enums:
                 continue
             enums = [_i.get("value") for _i in enums]
@@ -598,11 +610,11 @@ class QuakeMLTestCase(unittest.TestCase):
                 continue
             # Assign clearer names.
             enum_name = module_item_name
-            enum_values = [_i.lower() for _i in module_item.keys()]
+            enum_values = [_i.lower() for _i in list(module_item.keys())]
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
-        for enum_name, enum_items in xsd_enum_definitions.iteritems():
-            self.assertTrue(enum_name in all_enums.keys())
+        for enum_name, enum_items in xsd_enum_definitions.items():
+            self.assertTrue(enum_name in list(all_enums.keys()))
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
@@ -625,7 +637,8 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Test reading a QuakeML string/unicode object via readEvents.
         """
-        data = open(self.neries_filename, 'rt').read()
+        with open(self.neries_filename, 'rb') as fp:
+            data = fp.read()
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 
@@ -695,7 +708,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # write QuakeML file
         cat = Catalog(events=[ev])
-        memfile = StringIO.StringIO()
+        memfile = compatibility.BytesIO()
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)

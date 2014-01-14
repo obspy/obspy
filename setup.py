@@ -79,12 +79,14 @@ KEYWORDS = [
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
+    'future',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy',
-    'suds>=0.4.0']
+    'sqlalchemy']
+    #'suds']
+    #'suds>=0.4.0']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',

@@ -8,6 +8,8 @@ Various geodetic utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
 
 import math
 import numpy as np
@@ -225,7 +227,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
               "Install the Python module 'geographiclib' to solve this issue."
         warnings.warn(msg)
         return (20004314.5, 0.0, 0.0)
-    except ValueError, e:
+    except ValueError as e:
         raise e
 
 

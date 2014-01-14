@@ -16,6 +16,8 @@ Low-level module internally used for handling GSE1 files
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import int
 
 from obspy import UTCDateTime
 from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum
@@ -62,7 +64,7 @@ def readIntegerData(fh, npts):
     # find next DAT1 section within file
     buf = fh.readline()
     while buf:
-        if buf.startswith("DAT1"):
+        if buf.startswith(b"DAT1"):
             data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
             break
         buf = fh.readline()
@@ -79,11 +81,11 @@ def readHeader(fh):
     # search for WID1 field
     line = fh.readline()
     while line:
-        if line.startswith("WID1"):
+        if line.startswith(b"WID1"):
             # valid GSE1 header
             break
         line = fh.readline()
-    if line == '':
+    else:
         raise EOFError
     # fetch header
     header = {}
@@ -102,7 +104,9 @@ def readHeader(fh):
     header['npts'] = int(line[27:35])
     header['station'] = line[36:42].strip()
     header['gse1']['instype'] = line[43:51].strip()
-    header['channel'] = "%03s" % line[52:54].strip().upper()
+    _chan = line[52:54].strip()
+    _chan = "%03s" % _chan.decode().upper()
+    header['channel'] = _chan.encode('ascii', 'strict')
     header['sampling_rate'] = float(line[55:66])
     header['gse1']['type'] = line[67:73].strip()
     header['gse1']['datatype'] = line[74:78].strip()
@@ -119,7 +123,11 @@ def readHeader(fh):
     header['gse1']['unknown2'] = float(line[66:73])
     header['gse1']['unknown3'] = float(line[74:81])
     header['gse1']['unknown4'] = float(line[74:80])
-    return header
+    # Py3k: convert to unicode
+    header['gse1'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                          for k, v in header['gse1'].items())
+    return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                for k, v in header.items())
 
 
 if __name__ == '__main__':

@@ -12,6 +12,15 @@ Only supports file format revision of February 24, 2004.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import open
+from future.builtins import int
+from future.builtins import map
+from future.builtins import str
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, \
@@ -22,9 +31,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.decorator import map_example_filename
+from obspy.core import compatibility
 from datetime import timedelta
 import string as s
-import StringIO
 import math
 import numpy as np
 
@@ -49,15 +58,15 @@ def isMchedr(filename):
     >>> isMchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, str):
         return False
-    with open(filename, 'r') as fh:
+    with open(filename, 'rb') as fh:
         for line in fh.readlines():
             # skip blanck lines at beginnning, if any
-            if line.strip() == '':
+            if line.strip() == b'':
                 continue
             # first record has to be 'HY':
-            if line[0:2] == 'HY':
+            if line[0:2] == b'HY':
                 return True
             else:
                 return False
@@ -79,10 +88,10 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        if not isinstance(filename, basestring):
+        if not isinstance(filename, str):
             raise TypeError('File name must be a string.')
         self.filename = filename
-        self.fh = open(filename, 'r')
+        self.fh = open(filename, 'rb')
         return self._deserialize()
 
     def loads(self, string):
@@ -94,7 +103,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.fh = StringIO.StringIO(string)
+        self.fh = compatibility.BytesIO(string)
         self.filename = None
         return self._deserialize()
 
@@ -129,7 +138,7 @@ class Unpickler(object):
         return val
 
     def _floatWithFormat(self, string, format_string, scale=1):
-        ndigits, ndec = map(int, format_string.split('.'))
+        ndigits, ndec = list(map(int, format_string.split('.')))
         nint = ndigits - ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint + ndec])
         if val is not None:
@@ -181,12 +190,13 @@ class Unpickler(object):
         degrees = 180 * radians / np.pi
         return degrees
 
-    def _sphericalToCartesian(self, (lenght, azimuth, plunge)):
+    def _sphericalToCartesian(self, spherical_coords):
+        length, azimuth, plunge = spherical_coords
         plunge_rad = self._toRad(plunge)
         azimuth_rad = self._toRad(azimuth)
-        x = lenght * np.sin(plunge_rad) * np.cos(azimuth_rad)
-        y = lenght * np.sin(plunge_rad) * np.sin(azimuth_rad)
-        z = lenght * np.cos(plunge_rad)
+        x = length * np.sin(plunge_rad) * np.cos(azimuth_rad)
+        y = length * np.sin(plunge_rad) * np.sin(azimuth_rad)
+        z = length * np.cos(plunge_rad)
         return (x, y, z)
 
     def _angleBetween(self, u1, u2):
@@ -453,7 +463,7 @@ class Unpickler(object):
             comment.text = line[2:60]
         # strip non printable-characters
         comment.text =\
-            filter(lambda x: x in s.printable, comment.text)
+            "".join(x for x in comment.text if x in s.printable)
 
     def _parseRecordAH(self, line, event):
         """
@@ -705,7 +715,7 @@ class Unpickler(object):
         tensor = Tensor()
         exponent = self._intZero(line[3:5])
         scale = math.pow(10, exponent)
-        for i in xrange(6, 51 + 1, 9):
+        for i in range(6, 51 + 1, 9):
             code = line[i:i + 2]
             value = self._floatWithFormat(line[i + 2:i + 6], '4.2', scale)
             error = self._floatWithFormat(line[i + 6:i + 9], '3.2', scale)
@@ -1011,6 +1021,9 @@ class Unpickler(object):
         catalog.comments = ''
         catalog.creation_info = CreationInfo(creation_time=UTCDateTime())
         for line in self.fh.readlines():
+            # XXX: ugly, probably we should do everything in byte strings
+            # here? Is the pde / mchedr format unicode aware?
+            line = line.decode()
             record_id = line[0:2]
             if record_id == 'HY':
                 event = self._parseRecordHY(line)
@@ -1068,7 +1081,7 @@ def readMchedr(filename):
 
     >>> from obspy.core.event import readEvents
     >>> cat = readEvents('/path/to/mchedr.dat')
-    >>> print cat
+    >>> print(cat)
     1 Event(s) in Catalog:
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
     """
