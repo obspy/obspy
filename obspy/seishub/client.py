@@ -119,7 +119,7 @@ class Client(object):
     >>> from obspy.seishub import Client
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
-    >>> client = Client("http://localhost:8888", timeout=30)
+    >>> client = Client()
     >>>
     >>> st = client.waveform.getWaveform("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
