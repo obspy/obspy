@@ -33,19 +33,19 @@ class ClientTestCase(unittest.TestCase):
         # drop lines with creation date (current time during request)
         result = result.splitlines()
         sacpz_file = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.sacpz')
-        expected = open(sacpz_file, 'rt').read().splitlines()
+        expected = open(sacpz_file, 'rb').read().splitlines()
         result.pop(5)
         expected.pop(5)
         self.assertEqual(result, expected)
         # 2 - empty location code
         dt = UTCDateTime("2002-11-01")
         result = client.sacpz('UW', 'LON', '', 'BHZ', dt)
-        self.assertTrue("* STATION    (KSTNM): LON" in result)
-        self.assertTrue("* LOCATION   (KHOLE):   " in result)
+        self.assertTrue(b"* STATION    (KSTNM): LON" in result)
+        self.assertTrue(b"* LOCATION   (KHOLE):   " in result)
         # 3 - empty location code via '--'
         result = client.sacpz('UW', 'LON', '--', 'BHZ', dt)
-        self.assertTrue("* STATION    (KSTNM): LON" in result)
-        self.assertTrue("* LOCATION   (KHOLE):   " in result)
+        self.assertTrue(b"* STATION    (KSTNM): LON" in result)
+        self.assertTrue(b"* LOCATION   (KHOLE):   " in result)
 
     def test_distaz(self):
         """
@@ -109,7 +109,7 @@ class ClientTestCase(unittest.TestCase):
         result = client.traveltime(
             evloc=(-36.122, -72.898), evdepth=22.9,
             staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
-        self.assertTrue(result.startswith('Model: iasp91'))
+        self.assertTrue(result.startswith(b'Model: iasp91'))
 
     def test_evalresp(self):
         """
@@ -123,21 +123,21 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], b'PNG')
         # plot-amp as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-amp',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], b'PNG')
         # plot-phase as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-phase',
                             filename=tempfile)
-            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], b'PNG')
         # fap as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -208,19 +208,19 @@ class ClientTestCase(unittest.TestCase):
         t1 = UTCDateTime("2005-001T00:00:00")
         t2 = UTCDateTime("2008-001T00:00:00")
         result = client.resp("IU", "ANMO", "00", "BHZ", t1, t2)
-        self.assertTrue('B050F03     Station:     ANMO' in result)
+        self.assertTrue(b'B050F03     Station:     ANMO' in result)
         # 2 - empty location code
         result = client.resp("UW", "LON", "", "EHZ")
-        self.assertTrue('B050F03     Station:     LON' in result)
-        self.assertTrue('B052F03     Location:    ??' in result)
+        self.assertTrue(b'B050F03     Station:     LON' in result)
+        self.assertTrue(b'B052F03     Location:    ??' in result)
         # 3 - empty location code via '--'
         result = client.resp("UW", "LON", "--", "EHZ")
-        self.assertTrue('B050F03     Station:     LON' in result)
-        self.assertTrue('B052F03     Location:    ??' in result)
+        self.assertTrue(b'B050F03     Station:     LON' in result)
+        self.assertTrue(b'B052F03     Location:    ??' in result)
         # 4
         dt = UTCDateTime("2010-02-27T06:30:00.000")
         result = client.resp("IU", "ANMO", "*", "*", dt)
-        self.assertTrue('B050F03     Station:     ANMO' in result)
+        self.assertTrue(b'B050F03     Station:     ANMO' in result)
 
     def test_timeseries(self):
         """

@@ -16,12 +16,9 @@ from future.builtins import int
 from future.builtins import str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
-from urllib.error import HTTPError
-import io
+from obspy.core import compatibility
 import json
 import platform
-import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -99,12 +96,12 @@ class Client(object):
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib.request.build_opener(auth_handler)
+        auth_handler = compatibility.HTTPBasicAuthHandler(password_mgr)
+        opener = compatibility.build_opener(auth_handler)
         # install globally
-        urllib.request.install_opener(opener)
+        compatibility.install_opener(opener)
 
     def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
@@ -125,13 +122,13 @@ class Client(object):
         if params:
             if options:
                 options += '&'
-            options += urllib.parse.urlencode(params)
+            options += compatibility.urlencode(params)
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
             print(('\nRequesting %s' % (remoteaddr)))
-        req = urllib.request.Request(url=remoteaddr, data=data, headers=headers)
-        response = urllib.request.urlopen(req, timeout=self.timeout)
+        req = compatibility.Request(url=remoteaddr, data=data, headers=headers)
+        response = compatibility.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -460,7 +457,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         >>> client = Client()
         >>> dt = UTCDateTime("2010-02-27T06:30:00.000")
         >>> data = client.resp("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(data)  # doctest: +ELLIPSIS
+        >>> print(data.decode())  # doctest: +ELLIPSIS
         #
         ####################################################################...
         #
@@ -604,7 +601,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         >>> client = Client()
         >>> dt = UTCDateTime("2005-01-01")
         >>> sacpz = client.sacpz("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(sacpz)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(sacpz.decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         * **********************************
         * NETWORK   (KNETWK): IU
         * STATION    (KSTNM): ANMO
@@ -721,7 +718,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        data = json.loads(data)
+        data = json.loads(data.decode())
         results = {}
         results['distance'] = data['distance']
         results['backazimuth'] = data['backAzimuth']
@@ -755,11 +752,12 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         683
 
-        >>> client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
-        'OREGON'
+        >>> print(client.flinnengdahl(lat=42, lon=-122.24, rtype="region"))
+        OREGON
 
-        >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
-        (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
+        >>> code, region = client.flinnengdahl(lat=-20.5, lon=-100.6)
+        >>> print(code, region)
+        683 SOUTHEAST CENTRAL PACIFIC OCEAN
         """
         service = 'flinnengdahl'
         # check rtype
@@ -771,7 +769,8 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             elif rtype == 'region':
                 param_list = ["output=%s" % rtype, "lat=%s" % lat,
                               "lon=%s" % lon]
-                return self._fetch(service, param_list=param_list).strip()
+                return self._fetch(service,
+                                   param_list=param_list).strip().decode()
             else:
                 param_list = ["output=code", "lat=%s" % lat,
                               "lon=%s" % lon]
@@ -779,7 +778,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                 param_list = ["output=region", "lat=%s" % lat,
                               "lon=%s" % lon]
                 region = self._fetch(service, param_list=param_list).strip()
-                return (code, region)
+                return (code, region.decode())
         except HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -872,7 +871,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         >>> result = client.traveltime(evloc=(-36.122,-72.898),
         ...     staloc=[(-33.45,-70.67),(47.61,-122.33),(35.69,139.69)],
         ...     evdepth=22.9)
-        >>> print(result)  # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
+        >>> print(result.decode())  # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
         Model: iasp91
         Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident ...
           (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   ...
@@ -1111,9 +1110,9 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(io.StringIO(data), ndlim=1)
+                return loadtxt(compatibility.BytesIO(data), ndlim=1)
             else:
-                return self._toFileOrData(filename, data)
+                return self._toFileOrData(filename, data, binary=True)
 
     def event(self, filename=None, **kwargs):
         """
