@@ -17,6 +17,7 @@ if PY2:
     from urllib2 import install_opener  # NOQA
     from urllib2 import HTTPError  # NOQA
     from urllib2 import Request  # NOQA
+    from httplib import HTTPConnection  # NOQA
 else:
     import urllib.request
     urlopen = urllib.request.urlopen
@@ -29,6 +30,7 @@ else:
     from urllib.request import install_opener  # NOQA
     from urllib.request import HTTPError  # NOQA
     from urllib.request import Request  # NOQA
+    from http.client import HTTPConnection  # NOQA
 
 if PY2:
     from StringIO import StringIO

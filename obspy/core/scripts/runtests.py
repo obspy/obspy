@@ -179,7 +179,6 @@ def _getSuites(verbosity=1, names=[]):
 def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
     from obspy.core import compatibility
-    import http.client
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -311,14 +310,14 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = http.client.HTTPConnection(server)
+    conn = compatibility.HTTPConnection(server)
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
         o = compatibility.urlparse(response.msg['location'])
-        conn = http.client.HTTPConnection(o.netloc)
+        conn = compatibility.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response
         response = conn.getresponse()
