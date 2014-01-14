@@ -68,7 +68,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from future import standard_library  # NOQA
-from future.builtins import round
 from future.builtins import range
 from future.builtins import str
 from future.builtins import zip

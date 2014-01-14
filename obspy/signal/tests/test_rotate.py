@@ -26,23 +26,28 @@ class RotateTestCase(unittest.TestCase):
         Test horizontal component rotation against PITSA.
         """
         # load test files
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
-            data_n = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
-            data_e = np.loadtxt(f)
+        # no with due to py 2.6
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz'))
+        data_n = np.loadtxt(f)
+        f.close()
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz'))
+        data_e = np.loadtxt(f)
+        f.close()
         #test different angles, one from each sector
         for angle in [30, 115, 185, 305]:
             # rotate traces
             datcorr_r, datcorr_t = rotate_NE_RT(data_n, data_e, angle)
             # load pitsa files
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_r_%sdeg.gz' %
-                                        angle)) as f:
-                data_pitsa_r = np.loadtxt(f)
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_t_%sdeg.gz' %
-                                        angle)) as f:
-                data_pitsa_t = np.loadtxt(f)
+            f = gzip.open(os.path.join(self.path,
+                                       'rjob_20051006_r_%sdeg.gz' %
+                                       angle))
+            data_pitsa_r = np.loadtxt(f)
+            f.close()
+            f = gzip.open(os.path.join(self.path,
+                                       'rjob_20051006_t_%sdeg.gz' %
+                                       angle))
+            data_pitsa_t = np.loadtxt(f)
+            f.close()
             # Assert.
             self.assertTrue(np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
                                         atol=1E-5))
@@ -54,12 +59,15 @@ class RotateTestCase(unittest.TestCase):
         Test LQT component rotation against PITSA. Test back-rotation.
         """
         # load test files
-        with gzip.open(os.path.join(self.path, 'rjob_20051006.gz')) as f:
-            data_z = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
-            data_n = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
-            data_e = np.loadtxt(f)
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006.gz'))
+        data_z = np.loadtxt(f)
+        f.close()
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz'))
+        data_n = np.loadtxt(f)
+        f.close()
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz'))
+        data_e = np.loadtxt(f)
+        f.close()
         # test different backazimuth/incidence combinations
         for ba, inci in ((60, 130), (210, 60)):
             # rotate traces
@@ -69,18 +77,21 @@ class RotateTestCase(unittest.TestCase):
             data_back_z, data_back_n, data_back_e = \
                 rotate_LQT_ZNE(data_l, data_q, data_t, ba, inci)
             # load pitsa files
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_q_%sba_%sinc.gz' %
-                                        (ba, inci))) as f:
-                data_pitsa_q = np.loadtxt(f)
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_t_%sba_%sinc.gz' %
-                                        (ba, inci))) as f:
-                data_pitsa_t = np.loadtxt(f)
-            with gzip.open(os.path.join(self.path,
-                                        'rjob_20051006_l_%sba_%sinc.gz' %
-                                        (ba, inci))) as f:
-                data_pitsa_l = np.loadtxt(f)
+            f = gzip.open(os.path.join(self.path,
+                                       'rjob_20051006_q_%sba_%sinc.gz' %
+                                       (ba, inci)))
+            data_pitsa_q = np.loadtxt(f)
+            f.close()
+            f = gzip.open(os.path.join(self.path,
+                                       'rjob_20051006_t_%sba_%sinc.gz' %
+                                       (ba, inci)))
+            data_pitsa_t = np.loadtxt(f)
+            f.close()
+            f = gzip.open(os.path.join(self.path,
+                                       'rjob_20051006_l_%sba_%sinc.gz' %
+                                       (ba, inci)))
+            data_pitsa_l = np.loadtxt(f)
+            f.close()
             # Assert the output. Has to be to rather low accuracy due to
             # rounding error prone rotation and single precision value.
             self.assertTrue(
@@ -102,10 +113,12 @@ class RotateTestCase(unittest.TestCase):
         the data.
         """
         # load the data
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
-            data_n = np.loadtxt(f)
-        with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
-            data_e = np.loadtxt(f)
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz'))
+        data_n = np.loadtxt(f)
+        f.close()
+        f = gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz'))
+        data_e = np.loadtxt(f)
+        f.close()
         # Use double precision to get more accuracy for testing.
         data_n = np.require(data_n, "float64")
         data_e = np.require(data_e, "float64")

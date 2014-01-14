@@ -190,8 +190,10 @@ def uncompressFile(func):
             # gzip module
             try:
                 import gzip
-                with gzip.open(filename, 'rb') as fp:
-                    obj_list.append(fp.read())
+                # no with due to py 2.6
+                fp = gzip.open(filename, 'rb')
+                obj_list.append(fp.read())
+                fp.close()
             except:
                 pass
         # handle results

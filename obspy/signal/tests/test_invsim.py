@@ -74,8 +74,10 @@ class InvSimTestCase(unittest.TestCase):
         """
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(file) as f:
-            data = np.loadtxt(f)
+        # no with due to py 2.6
+        f = gzip.open(file)
+        data = np.loadtxt(f)
+        f.close()
 
         # paz of test file
         samp_rate = 200.0
@@ -93,8 +95,10 @@ class InvSimTestCase(unittest.TestCase):
                               zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
-            with gzip.open(file) as f:
-                data_pitsa = np.loadtxt(f)
+            # no with due to py 2.6
+            f = gzip.open(file)
+            data_pitsa = np.loadtxt(f)
+            f.close()
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -107,8 +111,9 @@ class InvSimTestCase(unittest.TestCase):
         """
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
-        with gzip.open(file) as f:
-            data = np.loadtxt(f)
+        f = gzip.open(file)
+        data = np.loadtxt(f)
+        f.close()
 
         # paz of test file
         samp_rate = 200.0
@@ -125,8 +130,10 @@ class InvSimTestCase(unittest.TestCase):
                               zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
-            with gzip.open(file) as f:
-                data_pitsa = np.loadtxt(f)
+            # no with due to py 2.6
+            f = gzip.open(file)
+            data_pitsa = np.loadtxt(f)
+            f.close()
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -207,16 +214,18 @@ class InvSimTestCase(unittest.TestCase):
                  'station': 'KARC', 'location': 'S1',
                  'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
                  'calib': 1.00868e+09, 'channel': 'BHZ'}
-        with gzip.open(sacf) as f:
-            tr = Trace(np.loadtxt(f), stats)
+        f = gzip.open(sacf)
+        tr = Trace(np.loadtxt(f), stats)
+        f.close()
 
         attach_paz(tr, pzf, tovel=False)
         tr.data = seisSim(tr.data, tr.stats.sampling_rate,
                           paz_remove=tr.stats.paz, remove_sensitivity=False,
                           pre_filt=(fl1, fl2, fl3, fl4))
 
-        with gzip.open(testsacf) as f:
-            data = np.loadtxt(f)
+        f = gzip.open(testsacf)
+        data = np.loadtxt(f)
+        f.close()
 
         # import matplotlib.pyplot as plt
         # plt.plot(tr.data)
@@ -335,7 +344,10 @@ class InvSimTestCase(unittest.TestCase):
         resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
         with NamedTemporaryFile() as fh:
             tmpfile = fh.name
-            fh.write(gzip.open(resp).read())
+            # no with due to py 2.6
+            f = gzip.open(resp)
+            fh.write(f.read())
+            f.close()
             samprate = 120.0
             nfft = 56328
             args = [1.0 / samprate, nfft, tmpfile,

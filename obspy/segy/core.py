@@ -13,7 +13,6 @@ from __future__ import unicode_literals
 from future.builtins import int
 from future.builtins import open
 from future.builtins import super
-from future.builtins import round
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
