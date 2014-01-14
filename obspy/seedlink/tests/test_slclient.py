@@ -30,7 +30,8 @@ class SLClientTestCase(unittest.TestCase):
         dt = UTCDateTime()
         slClient.begin_time = (dt - 120.0).formatSeedLink()
         slClient.end_time = (dt + 5.0).formatSeedLink()
-        print("SeedLink date-time range:", slClient.begin_time, " -> ", end=' ')
+        print("SeedLink date-time range:", slClient.begin_time, " -> ",
+              end=' ')
         print(slClient.end_time)
         slClient.verbose = 2
         slClient.initialize()
