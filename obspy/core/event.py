@@ -3065,11 +3065,11 @@ class Catalog(object):
             map_ax = fig.add_axes([0.05, 0.05, 0.90, 0.90])
 
         if projection == 'cyl':
-            map = Basemap(resolution=resolution)
+            bmap = Basemap(resolution=resolution)
         elif projection == 'ortho':
-            map = Basemap(projection='ortho', resolution=resolution,
-                          area_thresh=1000.0, lat_0=sum(lats) / len(lats),
-                          lon_0=sum(lons) / len(lons))
+            bmap = Basemap(projection='ortho', resolution=resolution,
+                           area_thresh=1000.0, lat_0=sum(lats) / len(lats),
+                           lon_0=sum(lons) / len(lons))
         elif projection == 'local':
             if min(lons) < -150 and max(lons) > 150:
                 max_lons = max(np.array(lons) % 360)
@@ -3093,9 +3093,9 @@ class Catalog(object):
                 height = 2.0 * deg2m_lat
                 width = 5.0 * deg2m_lon
 
-            map = Basemap(projection='aeqd', resolution=resolution,
-                          area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
-                          width=width, height=height)
+            bmap = Basemap(projection='aeqd', resolution=resolution,
+                           area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
+                           width=width, height=height)
             # not most elegant way to calculate some round lats/lons
 
             def linspace2(val1, val2, N):
@@ -3111,37 +3111,37 @@ class Catalog(object):
                 return np.linspace(new_val1, new_val2, N)
             N1 = int(np.ceil(height / max(width, height) * 8))
             N2 = int(np.ceil(width / max(width, height) * 8))
-            map.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                        lat_0 + height / 2 / deg2m_lat, N1),
-                              labels=[0, 1, 1, 0])
+            bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
+                                         lat_0 + height / 2 / deg2m_lat, N1),
+                               labels=[0, 1, 1, 0])
             if min(lons) < -150 and max(lons) > 150:
                 lon_0 %= 360
             meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
                                   lon_0 + width / 2 / deg2m_lon, N2)
             meridians[meridians > 180] -= 360
-            map.drawmeridians(meridians, labels=[1, 0, 0, 1])
+            bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
         else:
             msg = "Projection %s not supported." % projection
             raise ValueError(msg)
 
         # draw coast lines, country boundaries, fill continents.
-        map.drawcoastlines(color="0.4")
-        map.drawcountries(color="0.75")
-        map.fillcontinents(color=continent_fill_color,
-                           lake_color=water_fill_color)
-        # draw the edge of the map projection region (the projection limb)
-        map.drawmapboundary(fill_color=water_fill_color)
+        bmap.drawcoastlines(color="0.4")
+        bmap.drawcountries(color="0.75")
+        bmap.fillcontinents(color=continent_fill_color,
+                            lake_color=water_fill_color)
+        # draw the edge of the bmap projection region (the projection limb)
+        bmap.drawmapboundary(fill_color=water_fill_color)
         # draw lat/lon grid lines every 30 degrees.
-        map.drawmeridians(np.arange(-180, 180, 30))
-        map.drawparallels(np.arange(-90, 90, 30))
+        bmap.drawmeridians(np.arange(-180, 180, 30))
+        bmap.drawparallels(np.arange(-90, 90, 30))
 
-        # compute the native map projection coordinates for events.
-        x, y = list(map(lons, lats))
+        # compute the native bmap projection coordinates for events.
+        x, y = bmap(lons, lats)
         # plot labels
         if 100 > len(self.events) > 1:
             for name, xpt, ypt, colorpt in zip(labels, x, y, colors):
-                # Check if the point can actually be seen with the current map
-                # projection. The map object will set the coordinates to very
+                # Check if the point can actually be seen with the current bmap
+                # projection. The bmap object will set the coordinates to very
                 # large values if it cannot project a point.
                 if xpt > 1e25:
                     continue
@@ -3160,8 +3160,8 @@ class Catalog(object):
         else:
             magnitude_size = 15.0 ** 2
             colors_plot = "red"
-        map.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
-                    zorder=10)
+        bmap.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
+                     zorder=10)
         times = [event.origins[0].time for event in self.events]
         if len(self.events) > 1:
             plt.title(
