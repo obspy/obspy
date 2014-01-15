@@ -255,8 +255,8 @@ def _read_channel(cha_element, _ns):
     # The sensor.
     calibunits = cha_element.find(_ns("CalibrationUnits"))
     if calibunits is not None:
-        channel.calibration_unit = _tag2obj(calibunits, _ns("Name"), unicode)
-        channel.calibration_unit_description = \
+        channel.calibration_units = _tag2obj(calibunits, _ns("Name"), unicode)
+        channel.calibration_units_description = \
             _tag2obj(calibunits, _ns("Description"), unicode)
     # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
@@ -883,13 +883,13 @@ def _write_channel(parent, channel):
     _write_floattype(channel_elem, channel,
                      "clock_drift_in_seconds_per_sample", "ClockDrift")
 
-    if channel.calibration_unit:
+    if channel.calibration_units:
         cu = etree.SubElement(channel_elem, "CalibrationUnits")
         etree.SubElement(cu, "Name").text = \
-            str(channel.calibration_unit)
-        if channel.calibration_unit_description:
+            str(channel.calibration_units)
+        if channel.calibration_units_description:
             etree.SubElement(cu, "Description").text = \
-                str(channel.calibration_unit_description)
+                str(channel.calibration_units_description)
     _write_equipment(channel_elem, channel.sensor, "Sensor")
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
@@ -930,8 +930,10 @@ def _write_polynomial_common_fields(element, polynomial):
 
 
 def _write_response(parent, resp):
-    parent = etree.SubElement(parent, "Response",
-                              {'resourceId': resp.resource_id})
+    attr = {}
+    if resp.resource_id is not None:
+        attr["resourceId"] = resp.resource_id
+    parent = etree.SubElement(parent, "Response", attr)
     # write instrument sensitivity
     if resp.instrument_sensitivity is not None:
         ins_sens = resp.instrument_sensitivity
@@ -941,12 +943,27 @@ def _write_response(parent, resp):
         etree.SubElement(sub, "Frequency").text = \
             _float_to_str(ins_sens.frequency)
         _write_io_units(sub, ins_sens)
-        etree.SubElement(sub, "FrequencyStart").text = \
-            _float_to_str(ins_sens.frequency_range_start)
-        etree.SubElement(sub, "FrequencyEnd").text = \
-            _float_to_str(ins_sens.frequency_range_end)
-        etree.SubElement(sub, "FrequencyDBVariation").text = \
-            _float_to_str(ins_sens.frequency_range_DB_variation)
+        freq_range_group = [True if getattr(ins_sens, key, None) is not None
+                            else False
+                            for key in ['frequency_range_start',
+                                        'frequency_range_end',
+                                        'frequency_range_DB_variation']]
+        # frequency range group properly described
+        if all(freq_range_group):
+            etree.SubElement(sub, "FrequencyStart").text = \
+                _float_to_str(ins_sens.frequency_range_start)
+            etree.SubElement(sub, "FrequencyEnd").text = \
+                _float_to_str(ins_sens.frequency_range_end)
+            etree.SubElement(sub, "FrequencyDBVariation").text = \
+                _float_to_str(ins_sens.frequency_range_DB_variation)
+        # frequency range group not present
+        elif not any(freq_range_group):
+            pass
+        # frequency range group only partly present
+        else:
+            msg = ("Frequency range group of instrument sensitivity "
+                   "specification invalid")
+            raise Exception(msg)
     # write instrument polynomial
     if resp.instrument_polynomial is not None:
         attribs = {}
@@ -965,9 +982,10 @@ def _write_response(parent, resp):
 
 
 def _write_response_stage(parent, stage):
-    sub = etree.SubElement(parent, "Stage",
-                           {'number': str(stage.stage_sequence_number),
-                            'resourceId': stage.resource_id})
+    attr = {'number': str(stage.stage_sequence_number)}
+    if stage.resource_id is not None:
+        attr["resourceId"] = stage.resource_id
+    sub = etree.SubElement(parent, "Stage", attr)
     # do nothing for gain only response stages
     if type(stage) == ResponseStage:
         pass
@@ -1044,10 +1062,11 @@ def _write_external_reference(parent, ref):
 
 
 def _write_equipment(parent, equipment, tag="Equipment"):
-    if equipment.resource_id is None:
-        attr = {}
-    else:
-        attr = {"resourceId": equipment.resource_id}
+    if equipment is None:
+        return
+    attr = {}
+    if equipment.resource_id is not None:
+        attr["resourceId"] = equipment.resource_id
     equipment_elem = etree.SubElement(parent, tag, attr)
 
     # All tags are optional.

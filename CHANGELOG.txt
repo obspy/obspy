@@ -1,3 +1,7 @@
+dev:
+ - obspy.station:
+   * some bugfixes in the obspy.station object classes (see #710)
+
 0.9.0:
  -  general:
    * Added mock testing library.
