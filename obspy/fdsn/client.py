@@ -46,7 +46,25 @@ class Client(object):
     or client.help() for parameter description of
     all webservices.
 
-    For details see :meth:`__init__`.
+    :type base_url: str
+    :param base_url: Base URL of FDSN web service compatible server
+        (e.g. "http://service.iris.edu") or key string for recognized
+        server (one of %s)
+    :type major_versions: dict
+    :param major_versions: Allows to specify custom major version numbers
+        for individual services (e.g.
+        `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
+        latest version at time of implementation will be used.
+    :type user: str
+    :param user: User name of HTTP Digest Authentication for access to
+        restricted data.
+    :type password: str
+    :param password: Password of HTTP Digest Authentication for access to
+        restricted data.
+    :type user_agent: str
+    :param user_agent: The user agent for all requests.
+    :type debug: bool
+    :param debug: Debug flag.
     """
     def __init__(self, base_url="IRIS", major_versions={}, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False):
@@ -65,25 +83,7 @@ class Client(object):
         or client.help() for parameter description of
         all webservices.
 
-        :type base_url: str
-        :param base_url: Base URL of FDSN web service compatible server
-            (e.g. "http://service.iris.edu") or key string for recognized
-            server (one of %s)
-        :type major_versions: dict
-        :param major_versions: Allows to specify custom major version numbers
-            for individual services (e.g.
-            `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
-            latest version at time of implementation will be used.
-        :type user: str
-        :param user: User name of HTTP Digest Authentication for access to
-            restricted data.
-        :type password: str
-        :param password: Password of HTTP Digest Authentication for access to
-            restricted data.
-        :type user_agent: str
-        :param user_agent: The user agent for all requests.
-        :type debug: bool
-        :param debug: Debug flag.
+        For details see :class:`Client`.
         """
         self.debug = debug
         self.user = user
@@ -374,8 +374,8 @@ class Client(object):
             latitude and longitude parameters.
         :type level: str
         :param level: Specify the level of detail for the results ("network",
-        "station", "channel", "response"), e.g. specify "response" to get full
-            information including instrument response for each channel.
+            "station", "channel", "response"), e.g. specify "response" to get
+            full information including instrument response for each channel.
         :type includerestricted: bool
         :param includerestricted: Specify if results should include information
             for restricted stations.
