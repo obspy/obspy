@@ -318,7 +318,7 @@ then
     cd $BUILD_DIR
     if [ ! -f xz-5.0.5.tar.gz ]
     then
-        wget ...
+        wget http://tukaani.org/xz/xz-5.0.5.tar.gz
     fi
     rm -rf xz-5.0.5
     tar -xzf xz-5.0.5.tar.gz
@@ -333,7 +333,7 @@ then
     cd $BUILD_DIR
     if [ ! -f libxml2-2.9.1.tar.gz ]
     then
-        wget ...
+        wget http://xmlsoft.org/sources/libxml2-2.9.1.tar.gz
     fi
     rm -rf libxml2-2.9.1
     tar -xzf libxml2-2.9.1.tar.gz
@@ -348,7 +348,7 @@ then
     cd $BUILD_DIR
     if [ ! -f libxslt-1.1.28.tar.gz ]
     then
-        wget ...
+        wget http://xmlsoft.org/sources/libxslt-1.1.28.tar.gz
     fi
     rm -rf libxslt-1.1.28
     tar -xzf libxslt-1.1.28.tar.gz
@@ -441,6 +441,12 @@ fi
 if [ ! -d $SITE_PACKAGES/flake8 ]
 then
     $PIP install flake8
+fi
+
+
+if [ ! -d $SITE_PACKAGES/cython ]
+then
+    $PIP install cython
 fi
 
 
