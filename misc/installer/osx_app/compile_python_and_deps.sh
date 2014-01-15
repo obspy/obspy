@@ -32,6 +32,7 @@ export PATH=$(echo ${PATH} | awk -v RS=: -v ORS=: '/X11/ {next} {print}')
 
 mkdir -p $PREFIX/bin
 mkdir -p $PREFIX/lib
+mkdir -p $PREFIX/man/man1
 mkdir -p $BUILD_DIR
 mkdir -p $FRAMEWORK_BIN
 
@@ -447,6 +448,56 @@ if [ ! -d $SITE_PACKAGES/pandas ]
 then
     $PIP install pandas
 fi
+
+if [ ! -d $SITE_PACKAGES/colorama ]
+then
+    $PIP install colorama
+fi
+
+
+if [ ! -f $LIB/libjpeg.dylib ]
+then
+    cd $BUILD_DIR
+    if [ ! -f jpegsrc.v9.tar.gz ]
+    then
+        wget http://www.ijg.org/files/jpegsrc.v9.tar.gz
+    fi
+    rm -rf jpeg-9
+    tar -xzf jpegsrc.v9.tar.gz
+    cd jpeg-9
+    LDFLAGS=-L$LIB CPPFLAGS=-I$INCLUDE ./configure --prefix=$PREFIX
+    make
+    make install
+fi
+
+if [ ! -d $SITE_PACKAGES/PIL ]
+then
+    $PIP install pil --allow-external pil --allow-unverified pil
+fi
+
+
+#################################################################################
+# pyproj including dependencies
+if [ ! -f $LIB/libproj.dylib ]
+then
+    cd $BUILD_DIR
+    if [ ! -f proj-4.8.0.tar.gz ]
+    then
+        wget http://download.osgeo.org/proj/proj-4.8.0.tar.gz
+    fi
+    rm -rf proj-4.8.0
+    tar -xzf proj-4.8.0.tar.gz
+    cd proj-4.8.0
+    LDFLAGS=-L$LIB CPPFLAGS=-I$INCLUDE ./configure --prefix=$PREFIX
+    make
+    make install
+fi
+
+if [ ! -f $SITE_PACKAGES/_pyproj.so ]
+then
+    PROJ_DIR=$PREFIX $PIP install pyproj
+fi
+#################################################################################
 
 
 #################################################################################
