@@ -40,7 +40,6 @@ $FRAMEWORK_BIN/ipython notebook --pylab=inline"
 echo "$LAUNCH_IPYTHON" > $FRAMEWORK_BIN/launch_ipython_notebook
 chmod a+x $FRAMEWORK_BIN/launch_ipython_notebook
 
-
 ################################################################################
 # Use the homebrew gfortran and include its libs
 GFORTRAN_DIR=/usr/local/Cellar/gfortran/4.8.2/gfortran/lib
@@ -63,6 +62,26 @@ done
 
 
 ################################################################################
+# libz is required for different parts and does not appear to be compatible
+# between OSX versions.
+if [ ! -f $LIB/libz.dylib ]
+then
+    cd $BUILD_DIR
+    if [ ! -f zlib-1.2.8.tar.gz ]
+    then
+        wget http://zlib.net/zlib-1.2.8.tar.gz
+    fi
+    rm -rf zlib-1.2.8
+    tar -xzf zlib-1.2.8.tar.gz
+    cd zlib-1.2.8
+    ./configure --prefix=$PREFIX
+    make
+    make install
+fi
+################################################################################
+
+
+################################################################################
 # Latest Python as a framework build.
 if [ ! -f $PYTHON ]
 then
@@ -74,7 +93,7 @@ then
     rm -rf Python-2.7.6
     tar -xzf Python-2.7.6.tgz
     cd Python-2.7.6
-    ./configure --prefix=$PREFIX  --enable-framework=$PREFIX
+    LDFLAGS=-L$LIB CPPFLAGS=-I$INCLUDE ./configure --prefix=$PREFIX  --enable-framework=$PREFIX
     make
     make install
 fi
@@ -357,7 +376,7 @@ then
     rm -rf libpng-1.6.8
     tar -xzf libpng-1.6.8.tar.gz
     cd libpng-1.6.8
-    ./configure --prefix=$PREFIX
+    CPPFLAGS="-I$INCLUDE" LDFLAGS="-L$LIB -lz" ./configure --prefix=$PREFIX
     make
     make install
     cd ..
@@ -428,6 +447,39 @@ if [ ! -d $SITE_PACKAGES/pandas ]
 then
     $PIP install pandas
 fi
+
+
+#################################################################################
+# mlpy including dependencies
+if [ ! -f $LIB/libgsl.dylib ]
+then
+    cd $BUILD_DIR
+    if [ ! -f gsl-1.16.tar.gz ]
+    then
+        wget http://ftp.halifax.rwth-aachen.de/gnu/gsl/gsl-1.16.tar.gz
+    fi
+    rm -rf gsl-1.16
+    tar -xzf gsl-1.16.tar.gz
+    cd gsl-1.16
+    LDFLAGS=-L$LIB CPPFLAGS=-I$INCLUDE ./configure --prefix=$PREFIX
+    make
+    make install
+fi
+
+if [ ! -d $SITE_PACKAGES/mlpy ]
+then
+    cd $BUILD_DIR
+    if [ ! -f mlpy-3.5.0.tar.gz ]
+    then
+        wget http://sourceforge.net/projects/mlpy/files/mlpy%203.5.0/mlpy-3.5.0.tar.gz/download -O mlpy-3.5.0.tar.gz
+    fi
+    rm -rf mlpy-3.5.0
+    tar -xzf mlpy-3.5.0.tar.gz
+    cd mlpy-3.5.0
+    LDFLAGS=-L$LIB CPPFLAGS=-I$INCLUDE $PIP install .
+fi
+#################################################################################
+
 
 
 if [ ! -d $SITE_PACKAGES/obspy ]
