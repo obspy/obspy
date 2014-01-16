@@ -1260,7 +1260,7 @@ class SacIO(object):
         # convert common header types of the ObsPy trace object
         for i, j in convert_dict.items():
             value = self.GetHvalue(i)
-            if isinstance(value, str):
+            if isinstance(value, (str, native_str)):
                 null_term = value.find('\x00')
                 if null_term >= 0:
                     value = value[:null_term]
@@ -1353,7 +1353,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     poles = []
     zeros = []
 
-    if isinstance(paz_file, str):
+    if isinstance(paz_file, (str, native_str)):
         paz_file = open(paz_file, 'r')
 
     while True:

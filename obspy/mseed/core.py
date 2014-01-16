@@ -11,6 +11,7 @@ from future.builtins import open
 from future.builtins import int
 from future.builtins import chr
 from future.builtins import str
+from future.utils import native_str
 
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
     SAMPLETYPE, DATATYPES, \
@@ -224,7 +225,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 'number_of_records': info['number_of_records']}
 
     # If its a filename just read it.
-    if isinstance(mseed_object, str):
+    if isinstance(mseed_object, (str, native_str)):
         # Read to NumPy array which is used as a buffer.
         buffer = np.fromfile(mseed_object, dtype='b')
     elif hasattr(mseed_object, 'read'):
@@ -283,7 +284,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
         if sourcename is not None:
-            if not isinstance(sourcename, str):
+            if not isinstance(sourcename, (str, native_str)):
                 msg = 'sourcename needs to be a string'
                 raise ValueError(msg)
             # libmseed uses underscores as separators and allows filtering
@@ -478,8 +479,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     if encoding is not None:
         if isinstance(encoding, int) and encoding in ENCODINGS:
             pass
-        elif encoding and isinstance(encoding, str) and encoding \
-                in encoding_strings:
+        elif encoding and isinstance(encoding, (str, native_str)) \
+                and encoding in encoding_strings:
             encoding = encoding_strings[encoding]
         else:
             msg = 'Invalid encoding %s. Valid encodings: %s'
@@ -610,7 +611,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # Check if the encoding is valid.
             if isinstance(mseed_encoding, int) and mseed_encoding in ENCODINGS:
                 trace_attr['encoding'] = mseed_encoding
-            elif isinstance(mseed_encoding, str) and \
+            elif isinstance(mseed_encoding, (str, native_str)) and \
                     mseed_encoding in encoding_strings:
                 trace_attr['encoding'] = encoding_strings[mseed_encoding]
             else:

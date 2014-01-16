@@ -2070,7 +2070,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
             inventories = [inventories]
-        elif isinstance(inventories, str):
+        elif isinstance(inventories, (str, native_str)):
             inventories = [read_inventory(inventories)]
         responses = []
         for inv in inventories:

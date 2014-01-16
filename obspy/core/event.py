@@ -164,7 +164,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if value == 0 or isinstance(value, str):
+    if value == 0 or isinstance(value, (str, native_str)):
         return True
     return bool(value)
 
@@ -783,7 +783,7 @@ class ResourceIdentifier(object):
 
     @prefix.setter
     def prefix(self, value):
-        if not isinstance(value, str):
+        if not isinstance(value, (str, native_str)):
             msg = "prefix id needs to be a string."
             raise TypeError(msg)
         self._prefix = value
@@ -2654,7 +2654,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, str):
+        if not isinstance(index, (str, native_str)):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)

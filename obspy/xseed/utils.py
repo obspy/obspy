@@ -13,6 +13,7 @@ from __future__ import unicode_literals
 from future.builtins import range
 from future.builtins import int
 from future.builtins import str
+from future.utils import native_str
 
 from obspy import UTCDateTime
 import sys
@@ -53,7 +54,7 @@ def DateTime2String(dt, compact=False):
     """
     if isinstance(dt, UTCDateTime):
         return dt.formatSEED(compact)
-    elif isinstance(dt, str):
+    elif isinstance(dt, (str, native_str)):
         dt = dt.strip()
     if not dt:
         return ""

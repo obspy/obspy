@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from future import standard_library  # NOQA
 from future.builtins import str
+from future.utils import native_str
 
 from lxml.etree import Element
 from obspy.core import compatibility
@@ -90,7 +91,7 @@ class Blockette(object):
         if isinstance(data, bytes):
             expected_length = len(data)
             data = compatibility.BytesIO(data)
-        elif isinstance(data, str):
+        elif isinstance(data, (str, native_str)):
             raise TypeError("data must be bytes, not string")
         start_pos = data.tell()
         # debug

@@ -14,6 +14,7 @@ from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
+from future.utils import native_str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
 from obspy.core import compatibility
@@ -156,7 +157,7 @@ class Client(object):
         # filename is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
-        elif isinstance(filename, str):
+        elif isinstance(filename, (str, native_str)):
             fh = open(filename, method)
             file_opened = True
         else:

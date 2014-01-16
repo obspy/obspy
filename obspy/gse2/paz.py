@@ -24,6 +24,7 @@ from __future__ import unicode_literals
 from future.builtins import int
 from future.builtins import str
 from future.builtins import open
+from future.utils import native_str
 
 import doctest
 import numpy as np
@@ -57,7 +58,7 @@ def readPaz(paz_file):
     poles = []
     zeros = []
 
-    if isinstance(paz_file, str):
+    if isinstance(paz_file, (str, native_str)):
         paz_file = open(paz_file, 'r')
 
     PAZ = paz_file.readlines()

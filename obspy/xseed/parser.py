@@ -17,6 +17,7 @@ from future.builtins import open
 from future.builtins import int
 from future.builtins import str
 from future.builtins import bytes
+from future.utils import native_str, PY2
 
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy import __version__
@@ -153,7 +154,7 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into StringIO object
-        if isinstance(data, str):
+        if isinstance(data, (str, native_str)):
             if "://" in data:
                 # some URL
                 data = compatibility.urlopen(data).read()
@@ -164,7 +165,10 @@ class Parser(object):
                     data = f.read()
                 data = compatibility.BytesIO(data)
             else:
-                raise IOError("data is neither filename nor valid URL")
+                if PY2:
+                    data = compatibility.BytesIO(data)
+                else:
+                    raise IOError("data is neither filename nor valid URL")
         # but could also be a big string with data
         elif isinstance(data, bytes):
             data = compatibility.BytesIO(data)
@@ -676,7 +680,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, str):
+                    if isinstance(network_id, (str, native_str)):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():

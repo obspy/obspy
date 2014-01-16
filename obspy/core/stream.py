@@ -2745,7 +2745,7 @@ def isPickle(filename):  # @UnusedVariable
     >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, str):
+    if isinstance(filename, (str, native_str)):
         try:
             with open(filename, 'rb') as fp:
                 st = pickle.load(fp)
@@ -2772,7 +2772,7 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
-    if isinstance(filename, str):
+    if isinstance(filename, (str, native_str)):
         with open(filename, 'rb') as fp:
             return pickle.load(fp)
     else:
@@ -2799,7 +2799,7 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, str):
+    if isinstance(filename, (str, native_str)):
         with open(filename, 'wb') as fp:
             pickle.dump(stream, fp, protocol=protocol)
     else:
