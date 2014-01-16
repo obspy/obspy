@@ -88,7 +88,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         return _createExampleCatalog()
-    elif not isinstance(pathname_or_url, str):
+    elif not isinstance(pathname_or_url, (str, native_str)):
         # not a string - we assume a file-like object
         try:
             # first try reading directly
