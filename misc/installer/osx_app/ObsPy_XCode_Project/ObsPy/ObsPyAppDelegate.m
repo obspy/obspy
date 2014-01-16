@@ -48,20 +48,25 @@
 - (IBAction)launchIpython:(id)pId;
 {
     
-    [[NSWorkspace sharedWorkspace] openFile:@"/Applications/ObsPy.app/Contents/MacOS/bin/ipython" withApplication:@"Terminal"];
+    [[NSWorkspace sharedWorkspace] openFile:@"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/ipython" withApplication:@"Terminal"];
 
+}
+
+- (IBAction)launchIpythonNotebook:(id)pId;
+{
+    
+    [[NSWorkspace sharedWorkspace] openFile:@"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/launch_ipython_notebook" withApplication:@"Terminal"];
+    
 }
 
 
 - (IBAction)runQuickTest:(id)pId;
 {
     NSString * path = [[NSBundle mainBundle] pathForResource:@"quick_test" ofType:@"py"];
-    
     emulator = [[TTYEmulation alloc] initWithTextView:OutPut andViewWindow:terminalWindow];
-    [emulator setShowWindow:NO];
-    [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/python" withArguments:[NSArray arrayWithObjects:path, nil]];
-    }
-
+    [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/python" withArguments:[NSArray arrayWithObjects:path, nil]];
+    
+}
 
 - (IBAction)runObsPyTests:(id)pId;
 {
@@ -80,7 +85,7 @@
     if (retcode == NSAlertDefaultReturn)
     {
         emulator = [[TTYEmulation alloc] initWithTextView:OutPut andViewWindow:terminalWindow];
-        [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/obspy-runtests" withArguments:[NSArray arrayWithObjects:@"-r", nil]];
+        [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/obspy-runtests" withArguments:[NSArray arrayWithObjects:@"-r", nil]];
     }
     
     // Cancel button pressed.
@@ -93,7 +98,7 @@
     if (retcode == NSAlertOtherReturn)
     {
         emulator = [[TTYEmulation alloc] initWithTextView:OutPut andViewWindow:terminalWindow];
-        [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/obspy-runtests" withArguments:[NSArray arrayWithObjects:@"-d", nil]];
+        [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/obspy-runtests" withArguments:[NSArray arrayWithObjects:@"-d", nil]];
     }
 }
 
@@ -102,7 +107,7 @@
 {
     NSString * path = [[NSBundle mainBundle] pathForResource:@"numpy_tests" ofType:@"py"];  
     emulator = [[TTYEmulation alloc] initWithTextView:OutPut andViewWindow:terminalWindow];
-    [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/python" withArguments:[NSArray arrayWithObjects:path, nil]];
+    [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/python" withArguments:[NSArray arrayWithObjects:path, nil]];
     
 }
 
@@ -111,7 +116,7 @@
 {
     NSString * path = [[NSBundle mainBundle] pathForResource:@"scipy_tests" ofType:@"py"];
     emulator = [[TTYEmulation alloc] initWithTextView:OutPut andViewWindow:terminalWindow];
-    [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/python" withArguments:[NSArray arrayWithObjects:path, nil]];
+    [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/python" withArguments:[NSArray arrayWithObjects:path, nil]];
     
 }
 
@@ -248,7 +253,7 @@
     
     cmdArray = [[NSMutableArray alloc] init];
     // Create the commands to be executed.
-    NSArray * cmd1 = [[NSArray alloc] initWithObjects: @"/Applications/ObsPy.app/Contents/MacOS/bin/virtualenv", [[NSArray alloc] initWithObjects:@"--distribute", @"--unzip-setuptools", [NSString stringWithFormat: @"--prompt=%@", promptName], [[dataModel virtualEnvPath] path], nil], nil];
+    NSArray * cmd1 = [[NSArray alloc] initWithObjects: @"/Applications/ObsPy.app/Contents/MacOS/Python.framework/Versions/2.7/bin/virtualenv", [[NSArray alloc] initWithObjects:@"--distribute", @"--unzip-setuptools", [NSString stringWithFormat: @"--prompt=%@", promptName], [[dataModel virtualEnvPath] path], nil], nil];
     [cmdArray addObject:cmd1];
     
     if ([[dataModel virtualEnvInstallReadline] boolValue]) {
