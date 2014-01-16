@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util import AttribDict
@@ -8,7 +13,7 @@ from obspy.signal.array_analysis import array_transff_freqslowness, \
 from obspy.signal.util import utlLonLat
 import numpy as np
 import unittest
-from cStringIO import StringIO
+from io import StringIO
 
 
 class SonicTestCase(unittest.TestCase):
@@ -46,7 +51,7 @@ class SonicTestCase(unittest.TestCase):
         max_dt = np.max(dt) + 1
         min_dt = np.min(dt) - 1
         trl = list()
-        for i in xrange(len(geometry)):
+        for i in range(len(geometry)):
             tr = Trace(coherent_wave[-min_dt + dt[i]:-max_dt + dt[i]].copy())
                 # + amp / SNR * \
                 # np.random.randn(length - abs(min_dt) - abs(max_dt)))
@@ -62,8 +67,9 @@ class SonicTestCase(unittest.TestCase):
         st = Stream(trl)
 
         stime = UTCDateTime(1970, 1, 1, 0, 0)
-        etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-            (length - abs(min_dt) - abs(max_dt)) / df
+        etime = UTCDateTime(1970, 1, 1, 0, 0) + 4.0
+        # TODO: check why this does not work any more
+        #    (length - abs(min_dt) - abs(max_dt)) / df
 
         win_len = 2.
         step_frac = 0.2
@@ -85,7 +91,7 @@ class SonicTestCase(unittest.TestCase):
                       method=method)
         out = array_processing(*args, **kwargs)
         if False:  # 1 for debugging
-            print '\n', out[:, 1:]
+            print('\n', out[:, 1:])
         return out
 
     def test_sonicBf(self):

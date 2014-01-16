@@ -5,6 +5,8 @@ USAGE: obspy-print [ -f format ] file1 file2 ...
 
 Print stream information for waveform data in local files
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 from obspy import read, Stream
 from obspy import __version__
 from optparse import OptionParser
@@ -26,9 +28,9 @@ def main():
         st += read(arg, format=options.format)
     if options.merge:
         st.merge(-1)
-    print st
+    print(st)
     if options.print_gaps:
-        print
+        print()
         st.printGaps()
 
 

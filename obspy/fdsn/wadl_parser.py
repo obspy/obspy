@@ -12,7 +12,9 @@ and should be removed once the datacenters are fully standard compliant.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 from obspy import UTCDateTime
+from obspy.core import compatibility
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
@@ -24,7 +26,7 @@ import warnings
 
 class WADLParser(object):
     def __init__(self, wadl_string):
-        doc = etree.fromstring(wadl_string)
+        doc = etree.parse(compatibility.BytesIO(wadl_string)).getroot()
         self.nsmap = doc.nsmap
         self._ns = self.nsmap.get(None, None)
         self.parameters = {}
@@ -73,7 +75,7 @@ class WADLParser(object):
         # that have query in them. If all of that fails but an empty "id"
         # attribute is available, choose that.
         else:
-            for key in all_parameters.iterkeys():
+            for key in all_parameters.keys():
                 if "query" in key and "auth" not in key:
                     parameters = all_parameters[key]
                     break
@@ -95,7 +97,7 @@ class WADLParser(object):
         # Raise a warning if some default parameters are not specified.
         missing_params = []
         for param in self._default_parameters:
-            if param not in self.parameters.keys():
+            if param not in list(self.parameters.keys()):
                 missing_params.append(param)
         if missing_params:
             msg = ("The '%s' service at '%s' cannot deal with the following "

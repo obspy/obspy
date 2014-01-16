@@ -2,6 +2,7 @@
 """
 The obspy.imaging.spectrogram test suite.
 """
+from __future__ import unicode_literals
 
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.util.base import getMatplotlibVersion

@@ -7,14 +7,20 @@
 #
 # Copyright (C) 2008-2012 Lion Krischer
 #---------------------------------------------------------------------
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import str
+from future.builtins import int
+from future.builtins import range
 from copy import copy
 from datetime import datetime
 from obspy import UTCDateTime, Stream, Trace
+from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
     getMatplotlibVersion, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
-import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -154,7 +160,7 @@ class WaveformPlotting(object):
         if self.type == 'dayplot':
             self.color = kwargs.get('color', ('#B2000F', '#004C12', '#847200',
                                               '#0E01FF'))
-            if isinstance(self.color, basestring):
+            if isinstance(self.color, str):
                 self.color = (self.color,)
             self.number_of_ticks = kwargs.get('number_of_ticks', None)
         else:
@@ -211,13 +217,13 @@ class WaveformPlotting(object):
         try:
             if tr.stats.preview:
                 tr_id += 'preview'
-        except KeyError:
+        except AttributeError:
             pass
         # don't merge traces with different processing steps
         try:
             if tr.stats.processing:
                 tr_id += str(tr.stats.processing)
-        except KeyError:
+        except AttributeError:
             pass
         return tr_id
 
@@ -282,7 +288,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = StringIO.StringIO()
+                imgdata = compatibility.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)
@@ -417,7 +423,7 @@ class WaveformPlotting(object):
         x_values[1::2] = aranged_array
         intervals = self.extreme_values.shape[0]
         # Loop over each step.
-        for _i in xrange(intervals):
+        for _i in range(intervals):
             # Create offset array.
             y_values = np.ma.empty(self.width * 2)
             y_values.fill(intervals - (_i + 1))
@@ -458,7 +464,7 @@ class WaveformPlotting(object):
                                      max_datetime=self.endtime,
                                      format="catalog",
                                      min_magnitude=events["min_magnitude"])
-            except Exception, e:
+            except Exception as e:
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
                 warnings.warn(msg)
@@ -1050,7 +1056,7 @@ class WaveformPlotting(object):
             # 15. If a number is not dividable just show 10 units.
             else:
                 count = 10
-                for _i in xrange(15, 1, -1):
+                for _i in range(15, 1, -1):
                     if time_value % _i == 0:
                         count = _i
                         break
@@ -1077,11 +1083,11 @@ class WaveformPlotting(object):
         # Do not display all ticks except if they are five or less steps
         # or if option is set
         if intervals <= 5 or self.one_tick_per_line:
-            tick_steps = range(0, intervals)
+            tick_steps = list(range(0, intervals))
             ticks = np.arange(intervals, 0, -1, dtype=np.float)
             ticks -= 0.5
         else:
-            tick_steps = range(0, intervals, self.repeat)
+            tick_steps = list(range(0, intervals, self.repeat))
             ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
 

@@ -2,6 +2,8 @@
 """
 The obspy.imaging.beachball test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
@@ -90,26 +92,26 @@ class BeachballTestCase(unittest.TestCase):
         fm = [115, 35, 50]
         # PDF
         data = Beachball(fm, format='pdf')
-        self.assertEqual(data[0:4], "%PDF")
+        self.assertEqual(data[0:4], b"%PDF")
         # as file
         # create and compare image
         with NamedTemporaryFile(suffix='.pdf') as tf:
             Beachball(fm, format='pdf', outfile=tf.name)
         # PS
         data = Beachball(fm, format='ps')
-        self.assertEqual(data[0:4], "%!PS")
+        self.assertEqual(data[0:4], b"%!PS")
         # as file
         with NamedTemporaryFile(suffix='.ps') as tf:
             Beachball(fm, format='ps', outfile=tf.name)
         # PNG
         data = Beachball(fm, format='png')
-        self.assertEqual(data[1:4], "PNG")
+        self.assertEqual(data[1:4], b"PNG")
         # as file
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(fm, format='png', outfile=tf.name)
         # SVG
         data = Beachball(fm, format='svg')
-        self.assertEqual(data[0:5], "<?xml")
+        self.assertEqual(data[0:5], b"<?xml")
         # as file
         with NamedTemporaryFile(suffix='.svg') as tf:
             Beachball(fm, format='svg', outfile=tf.name)

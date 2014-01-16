@@ -9,7 +9,14 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from io import BytesIO
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import open
+from future.builtins import str
+from future.builtins import map
+from future.utils import PY2
 from lxml import etree
 import obspy
 from obspy import UTCDateTime, read_inventory
@@ -18,11 +25,10 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
+from obspy.core import compatibility
 
-import Queue
+import queue
 import threading
-import urllib
-import urllib2
 import warnings
 import os
 
@@ -35,7 +41,7 @@ class Client(object):
     FDSN Web service request client.
 
     >>> client = Client("IRIS")
-    >>> print client  # doctest: +SKIP
+    >>> print(client)  # doctest: +SKIP
     FDSN Webservice Client (base url: http://service.iris.edu)
     Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
     'station' (v1.0.7), 'available_event_contributors',
@@ -72,7 +78,7 @@ class Client(object):
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print client  # doctest: +SKIP
+        >>> print(client)  # doctest: +SKIP
         FDSN Webservice Client (base url: http://service.iris.edu)
         Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
         'station' (v1.0.7), 'available_event_contributors',
@@ -98,20 +104,20 @@ class Client(object):
         # Authentication
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib2.build_opener(auth_handler)
+            auth_handler = compatibility.HTTPDigestAuthHandler(password_mgr)
+            opener = compatibility.build_opener(auth_handler)
             # install globally
-            urllib2.install_opener(opener)
+            compatibility.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
 
         if self.debug is True:
-            print "Base URL: %s" % self.base_url
-            print "Request Headers: %s" % str(self.request_headers)
+            print("Base URL: %s" % self.base_url)
+            print("Request Headers: %s" % str(self.request_headers))
 
         self._discover_services()
 
@@ -129,13 +135,13 @@ class Client(object):
 
         >>> client = Client("IRIS")
         >>> cat = client.get_events(eventid=609301)
-        >>> print cat
+        >>> print(cat)
         1 Event(s) in Catalog:
         1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 mw
         >>> t1 = UTCDateTime("2011-01-07T01:00:00")
         >>> t2 = UTCDateTime("2011-01-07T02:00:00")
         >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4)
-        >>> print cat
+        >>> print(cat)
         4 Event(s) in Catalog:
         2011-01-07T01:29:49.760000Z | +49.520, +156.895 | 4.2 mb
         2011-01-07T01:19:16.660000Z | +20.123,  -45.656 | 5.5 MW
@@ -265,10 +271,10 @@ class Client(object):
         >>> client = Client("IRIS")
         >>> inventory = client.get_stations(latitude=-56.1, longitude=-26.7,
         ...                                 maxradius=15)
-        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query?lat...
+                    http://service.iris.edu/fdsnws/station/1/query?...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (3):
@@ -284,10 +290,10 @@ class Client(object):
         >>> inventory = client.get_stations(
         ...     starttime=UTCDateTime("2013-01-01"), network="IU",
         ...     sta="ANMO", level="channel")
-        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query?station=...
+                    http://service.iris.edu/fdsnws/station/1/query?...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (1):
@@ -429,17 +435,17 @@ class Client(object):
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = t1 + 1
         >>> st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         >>> st = client.get_waveforms("IU", "ANMO", "00", "BH*", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.00.BH2 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         >>> st = client.get_waveforms("IU", "A*", "*", "BHZ", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         IU.ADK.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ADK.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
@@ -449,7 +455,7 @@ class Client(object):
         IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
         IU.ANTO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         >>> st = client.get_waveforms("IU", "A??", "?0", "BHZ", t1, t2)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         IU.ADK.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
@@ -597,7 +603,7 @@ class Client(object):
         ...         ("IU", "AFI", "1?", "BHE", t1, t3),
         ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
         >>> st = client.get_waveforms_bulk(bulk)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
         GR.GRA1..BHN   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
@@ -610,7 +616,7 @@ class Client(object):
         ...        'IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n' + \
         ...        'GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n'
         >>> st = client.get_waveforms_bulk(bulk)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -619,7 +625,7 @@ class Client(object):
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
         >>> st = client.get_waveforms_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
-        >>> print st  # doctest: +SKIP
+        >>> print(st)  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -695,13 +701,15 @@ class Client(object):
         locs = locals()
         # if it's an iterable, we build up the query string from it
         # StringIO objects also have __iter__ so check for read as well
-        if hasattr(bulk, "__iter__") and not hasattr(bulk, "read"):
+        if hasattr(bulk, "__iter__") \
+                and not hasattr(bulk, "read") \
+                and not isinstance(bulk, str):
             tmp = ["%s=%s" % (key, convert_to_string(locs[key]))
                    for key in ("quality", "minimumlength", "longestonly")
                    if locs[key] is not None]
             # empty location codes have to be represented by two dashes
             tmp += [" ".join((net, sta, loc or "--", cha,
-                             convert_to_string(t1), convert_to_string(t2)))
+                              convert_to_string(t1), convert_to_string(t2)))
                     for net, sta, loc, cha, t1, t2 in bulk]
             bulk = "\n".join(tmp)
         else:
@@ -713,10 +721,10 @@ class Client(object):
             # if it has a read method, read data from there
             if hasattr(bulk, "read"):
                 bulk = bulk.read()
-            elif isinstance(bulk, basestring):
+            elif isinstance(bulk, str):
                 # check if bulk is a local file
                 if "\n" not in bulk and os.path.isfile(bulk):
-                    with open(bulk) as fh:
+                    with open(bulk, 'r') as fh:
                         tmp = fh.read()
                     bulk = tmp
                 # just use bulk as input data
@@ -729,7 +737,8 @@ class Client(object):
 
         url = self._build_url("dataselect", "query")
 
-        data_stream = self._download(url, data=bulk)
+        data_stream = self._download(url,
+                                     data=bulk.encode('ascii', 'strict'))
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -754,7 +763,7 @@ class Client(object):
         service_params = self.services[service]
         # Get all required parameters and make sure they are available!
         required_parameters = [
-            key for key, value in service_params.iteritems()
+            key for key, value in service_params.items()
             if value["required"] is True]
         for req_param in required_parameters:
             if req_param not in parameters:
@@ -765,7 +774,7 @@ class Client(object):
 
         # Now loop over all parameters, convert them and make sure they are
         # accepted by the service.
-        for key, value in parameters.iteritems():
+        for key, value in parameters.items():
             if key not in service_params:
                 # If it is not in the service but in the default parameters
                 # raise a warning.
@@ -796,7 +805,7 @@ class Client(object):
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 if not value:
                     continue
             final_parameter_set[key] = value
@@ -833,7 +842,7 @@ class Client(object):
             raise ValueError(msg)
 
         if service is None:
-            services = self.services.keys()
+            services = list(self.services.keys())
         elif service in FDSNWS:
             services = [service]
         else:
@@ -867,7 +876,7 @@ class Client(object):
                 else:
                     missing_default_parameters.append(name)
 
-            for name in self.services[service].iterkeys():
+            for name in self.services[service].keys():
                 if name not in SERVICE_DEFAULT:
                     additional_parameters.append(name)
 
@@ -924,7 +933,7 @@ class Client(object):
             if printed_something is False:
                 msg.append("No derivations from standard detected")
 
-        print "\n".join(msg)
+        print("\n".join(msg))
 
     def _download(self, url, return_string=False, data=None):
         code, data = download_url(
@@ -982,7 +991,7 @@ class Client(object):
         urls.append(self._build_url("event", "contributors"))
 
         # Request all in parallel.
-        wadl_queue = Queue.Queue()
+        wadl_queue = queue.Queue()
 
         headers = self.request_headers
         debug = self.debug
@@ -998,7 +1007,7 @@ class Client(object):
                         wadl_queue.put((url, None))
             return ThreadURL()
 
-        threads = map(get_download_thread, urls)
+        threads = list(map(get_download_thread, urls))
         for thread in threads:
             thread.start()
         for thread in threads:
@@ -1013,15 +1022,15 @@ class Client(object):
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print "Discovered dataselect service"
+                    print("Discovered dataselect service")
             elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print "Discovered event service"
+                    print("Discovered event service")
             elif "station" in url:
                 self.services["station"] = WADLParser(wadl).parameters
                 if self.debug is True:
-                    print "Discovered station service"
+                    print("Discovered station service")
             elif "event" in url and "catalogs" in url:
                 try:
                     self.services["available_event_catalogs"] = \
@@ -1057,7 +1066,7 @@ class Client(object):
 
         url = self._build_url(service, "version")
         version = self._download(url, return_string=True)
-        return map(int, version.split("."))
+        return list(map(int, version.split(b".")))
 
     def _get_webservice_versionstring(self, service):
         """
@@ -1087,7 +1096,7 @@ def convert_to_string(value):
     >>> convert_to_string(False)
     'false'
     """
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         return value
     # Boolean test must come before integer check!
     elif isinstance(value, bool):
@@ -1098,6 +1107,10 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, obspy.UTCDateTime):
         return str(value).replace("Z", "")
+    elif PY2 and isinstance(value, bytes):
+        return value
+    else:
+        raise TypeError("Unexpected type %s" % repr(value))
 
 
 def build_url(base_url, service, major_version, resource_type, parameters={}):
@@ -1140,12 +1153,12 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
                     str(major_version), resource_type))
     if parameters:
         # Strip parameters.
-        for key, value in parameters.iteritems():
+        for key, value in parameters.items():
             try:
                 parameters[key] = value.strip()
             except:
                 pass
-        url = "?".join((url, urllib.urlencode(parameters)))
+        url = "?".join((url, compatibility.urlencode(parameters)))
     return url
 
 
@@ -1162,30 +1175,32 @@ def download_url(url, timeout=10, headers={}, debug=False,
     Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
-        print "Downloading %s" % url
+        print("Downloading %s" % url)
 
     try:
-        url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
-                                  timeout=timeout, data=data)
+        url_obj = compatibility.urlopen(
+            compatibility.Request(url=url, headers=headers),
+            timeout=timeout,
+            data=data)
     # Catch HTTP errors.
-    except urllib2.HTTPError as e:
+    except compatibility.HTTPError as e:
         if debug is True:
-            print("HTTP error %i while downloading '%s': %s" %
-                  (e.code, url, e.read()))
+            print(("HTTP error %i while downloading '%s': %s" %
+                  (e.code, url, e.read())))
         return e.code, None
     except Exception as e:
         if debug is True:
-            print "Error while downloading: %s" % url
+            print("Error while downloading: %s" % url)
         return None, None
 
     code = url_obj.getcode()
     if return_string is False:
-        data = BytesIO(url_obj.read())
+        data = compatibility.BytesIO(url_obj.read())
     else:
         data = url_obj.read()
 
     if debug is True:
-        print "Downloaded %s with HTTP code: %i" % (url, code)
+        print("Downloaded %s with HTTP code: %i" % (url, code))
 
     return code, data
 

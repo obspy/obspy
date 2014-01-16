@@ -16,10 +16,15 @@ Half Octave Bands
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
 
 from scipy import fftpack
 import numpy as np
-import util
+from . import util
 
 
 def sonogram(data, fs, fc1, nofb, no_win):
@@ -58,13 +63,13 @@ def sonogram(data, fs, fc1, nofb, no_win):
     z = np.zeros([len(c[:, 1]), nofb])
     z_tot = np.zeros(len(c[:, 1]))
     hob = np.zeros([no_win, nofb])
-    for k in xrange(no_win):
-        for j in xrange(len(c[1, :])):
+    for k in range(no_win):
+        for j in range(len(c[1, :])):
             z_tot[k] = z_tot[k] + pow(np.abs(c[k, j]), 2)
-        for i in xrange(nofb):
+        for i in range(nofb):
             start = int(round(fmin[i] * nfft * 1. / float(fs), 0))
             end = int(round(fmax[i] * nfft * 1. / float(fs), 0)) + 1
-            for j in xrange(start, end):
+            for j in range(start, end):
                 z[k, i] = z[k, i] + pow(np.abs(c[k, j - 1]), 2)
             hob[k, i] = np.log(z[k, i] / z_tot[k])
     return hob

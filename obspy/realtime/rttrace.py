@@ -9,6 +9,13 @@ Module for handling ObsPy RtTrace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import int
+from future.builtins import str
+from future.builtins import range
 from obspy import Trace
 from obspy.core import Stats
 from obspy.realtime import signal
@@ -103,8 +110,8 @@ class RtTrace(Trace):
         >>> print(peak)
         0.136404
         >>> mwp = calculateMwpMag(peak, epicentral_distance)
-        >>> print(mwp)
-        8.78902911791
+        >>> print(mwp)  # doctest: +ELLIPSIS
+        8.78902911791...
     """
     have_appended_data = False
 
@@ -221,9 +228,9 @@ class RtTrace(Trace):
             if verbose:
                 msg = "%s: Overlap/gap of (%g) samples in data: (%s) (%s) " + \
                     "diff=%gs  dt=%gs"
-                print msg % (self.__class__.__name__,
+                print(msg % (self.__class__.__name__,
                              delta, self.stats.endtime, trace.stats.starttime,
-                             diff, self.stats.delta)
+                             diff, self.stats.delta))
             if delta < -0.1:
                 msg = "Overlap of (%g) samples in data: (%s) (%s) diff=%gs" + \
                     "  dt=%gs"
@@ -251,8 +258,9 @@ class RtTrace(Trace):
                 self.stats.starttime = \
                     self.stats.starttime + diff - self.stats.delta
                 if verbose:
-                    print "%s: self.stats.starttime adjusted by: %gs" \
-                        % (self.__class__.__name__, diff - self.stats.delta)
+                    print("%s: self.stats.starttime adjusted by: %gs"
+                          % (self.__class__.__name__, diff -
+                             self.stats.delta))
         # first apply all registered processing to Trace
         for proc in self.processing:
             process_name, options, rtmemory_list = proc

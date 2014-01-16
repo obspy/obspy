@@ -64,7 +64,15 @@ USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 """
-from cStringIO import StringIO
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import str
+from future.builtins import zip
+from future.builtins import int
+from io import StringIO
 import math
 import numpy as np
 import os
@@ -229,7 +237,7 @@ class MomentTensor:
         # set source mechanism to matrix form
 
         if mech is None:
-            print '\n ERROR !! - Please provide a mechanism !!\n'
+            print('\n ERROR !! - Please provide a mechanism !!\n')
             raise MTError(' !! ')
 
         # if some stupid nesting occurs
@@ -304,8 +312,10 @@ class MomentTensor:
         All internal calculations are carried out within the NED space.
         """
         if not self._input_basis in self._list_of_possible_input_bases:
-            print 'provided input basis not implemented - please specify one',
-            print 'of the following bases:', self._list_of_possible_input_bases
+            print('provided input basis not implemented - please specify one',
+                  end=' ')
+            print('of the following bases:',
+                  self._list_of_possible_input_bases)
             raise MTError(' !! ')
 
         NED_2_NED = np.asmatrix(np.diag([1, 1, 1]))
@@ -709,7 +719,7 @@ class MomentTensor:
                 symmetry_around_tension = 1
                 clr = 1
         if (EW3 < 0 and np.trace(self._M) >= 0):
-            print 'Houston, we have had a problem  - check M !!!!!!'
+            print('Houston, we have had a problem  - check M !!!!!!')
             raise MTError(' !! ')
 
         if trace_M == 0:
@@ -958,9 +968,10 @@ class MomentTensor:
         visual control.
         """
         if not system.upper() in self._list_of_possible_output_bases:
-            print '\nprovided output basis not supported - please specify',
-            print 'one of the following bases: (default=NED)\n',
-            print self._list_of_possible_input_bases, '\n'
+            print('\nprovided output basis not supported - please specify',
+                  end=' ')
+            print('one of the following bases: (default=NED)\n', end=' ')
+            print(self._list_of_possible_input_bases, '\n')
             raise MTError(' !! ')
 
         fancy = 0
@@ -1007,9 +1018,10 @@ class MomentTensor:
         interpreted as vectors, otherwise, its transposed is used.
         """
         if not system.upper() in self._list_of_possible_output_bases:
-            print '\n provided output basis not supported - please specify',
-            print 'one of the following bases: (default=NED)\n',
-            print self._list_of_possible_input_bases, '\n'
+            print('\n provided output basis not supported - please specify',
+                  end=' ')
+            print('one of the following bases: (default=NED)\n', end=' ')
+            print(self._list_of_possible_input_bases, '\n')
             raise MTError(' !! ')
 
         fancy = 0
@@ -1022,19 +1034,19 @@ class MomentTensor:
         if type(vectors) == list:
             for vec in vectors:
                 if np.prod(np.shape(vec)) != 3:
-                    print '\n please provide vector(s) from R³ \n '
+                    print('\n please provide vector(s) from R³ \n ')
                     raise MTError(' !! ')
             lo_vectors = vectors
         else:
             if np.prod(np.shape(vectors)) % 3 != 0:
-                print '\n please provide vector(s) from R³ \n '
+                print('\n please provide vector(s) from R³ \n ')
                 raise MTError(' !! ')
 
             if np.shape(vectors)[0] == 3:
-                for ii in xrange(np.shape(vectors)[1]):
+                for ii in range(np.shape(vectors)[1]):
                     lo_vectors.append(vectors[:, ii])
             else:
-                for ii in xrange(np.shape(vectors)[0]):
+                for ii in range(np.shape(vectors)[0]):
                     lo_vectors.append(vectors[:, ii].transpose())
 
         lo_vecs_to_show = []
@@ -1077,7 +1089,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n   Full moment tensor in %s-coordinates: ' % (system)
+            print('\n   Full moment tensor in %s-coordinates: ' % (system))
             return self._matrix_w_style_and_system(self._M, system, style)
         else:
             return self._matrix_w_style_and_system(self._M, system, style)
@@ -1167,7 +1179,7 @@ class MomentTensor:
         Returns the basis system of the input.
         """
         if style == 'f':
-            print '\n Basis system of the input:\n   '
+            print('\n Basis system of the input:\n   ')
         return self._input_basis
 
     def get_output_system(self, style='n', **kwargs):
@@ -1175,19 +1187,19 @@ class MomentTensor:
         Returns the basis system of the input.
         """
         if style == 'f':
-            print '\n Basis system of the output: \n  '
+            print('\n Basis system of the output: \n  ')
         return self._output_basis
 
     def get_decomp_type(self, style='n', **kwargs):
         """
         Returns the decomposition type.
         """
-        decomp_dict = dict(zip(('20', '21', '31'),
+        decomp_dict = dict(list(zip(('20', '21', '31'),
                                ('ISO + DC + CLVD',
                                 'ISO + major DC + minor DC',
-                                'ISO + DC1 + DC2 + DC3')))
+                                'ISO + DC1 + DC2 + DC3'))))
         if style == 'f':
-            print '\n Decomposition type: \n  '
+            print('\n Decomposition type: \n  ')
             return decomp_dict[str(self._decomposition_key)]
 
         return self._decomposition_key
@@ -1201,7 +1213,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n Isotropic part in %s-coordinates: ' % (system)
+            print('\n Isotropic part in %s-coordinates: ' % (system))
         return self._matrix_w_style_and_system(self._isotropic, system, style)
 
     def get_devi(self, system='NED', style='n'):
@@ -1213,7 +1225,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n Deviatoric part in %s-coordinates: ' % (system)
+            print('\n Deviatoric part in %s-coordinates: ' % (system))
         return self._matrix_w_style_and_system(self._deviatoric, system, style)
 
     def get_DC(self, system='NED', style='n'):
@@ -1225,7 +1237,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n Double Couple part in %s-coordinates:' % (system)
+            print('\n Double Couple part in %s-coordinates:' % (system))
         return self._matrix_w_style_and_system(self._DC, system, style)
 
     def get_DC2(self, system='NED', style='n'):
@@ -1237,10 +1249,10 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n second Double Couple part in %s-coordinates:' % (system)
+            print('\n second Double Couple part in %s-coordinates:' % (system))
         if self._DC2 is None:
             if style == 'f':
-                print ' not available in this decomposition type '
+                print(' not available in this decomposition type ')
             return ''
 
         return self._matrix_w_style_and_system(self._DC2, system, style)
@@ -1254,11 +1266,11 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n third Double Couple part in %s-coordinates:' % (system)
+            print('\n third Double Couple part in %s-coordinates:' % (system))
 
         if self._DC3 is None:
             if style == 'f':
-                print ' not available in this decomposition type '
+                print(' not available in this decomposition type ')
             return ''
         return self._matrix_w_style_and_system(self._DC3, system, style)
 
@@ -1270,10 +1282,10 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n CLVD part in %s-coordinates: \n' % (system)
+            print('\n CLVD part in %s-coordinates: \n' % (system))
         if self._CLVD is None:
             if style == 'f':
-                print ' not available in this decomposition type '
+                print(' not available in this decomposition type ')
             return ''
 
         return self._matrix_w_style_and_system(self._CLVD, system, style)
@@ -1284,7 +1296,7 @@ class MomentTensor:
         representation.
         """
         if style == 'f':
-            print '\n Double Couple percentage: \n'
+            print('\n Double Couple percentage: \n')
         return self._DC_percentage
 
     def get_CLVD_percentage(self, system='NED', style='n'):
@@ -1293,10 +1305,10 @@ class MomentTensor:
         representation.
         """
         if style == 'f':
-            print '\n CLVD percentage: \n'
+            print('\n CLVD percentage: \n')
         if self._CLVD is None:
             if style == 'f':
-                print ' not available in this decomposition type '
+                print(' not available in this decomposition type ')
             return ''
         return int(100 - self._DC_percentage - self._iso_percentage)
 
@@ -1306,10 +1318,10 @@ class MomentTensor:
         matrix representation.
         """
         if style == 'f':
-            print "\n second Double Couple's percentage: \n"
+            print("\n second Double Couple's percentage: \n")
         if self._DC2 is None:
             if style == 'f':
-                print ' not available in this decomposition type '
+                print(' not available in this decomposition type ')
             return ''
         return self._DC2_percentage
 
@@ -1319,10 +1331,10 @@ class MomentTensor:
         matrix representation.
         """
         if style == 'f':
-            print "\n third Double Couple percentage: \n"
+            print("\n third Double Couple percentage: \n")
         if self._DC3 is None:
             if style == 'f':
-                print ' not available in this decomposition type '
+                print(' not available in this decomposition type ')
             return ''
         return int(100 - self._DC2_percentage - self._DC_percentage)
 
@@ -1332,7 +1344,7 @@ class MomentTensor:
         matrix representation.
         """
         if style == 'f':
-            print '\n Isotropic percentage: \n'
+            print('\n Isotropic percentage: \n')
         return self._iso_percentage
 
     def get_devi_percentage(self, system='NED', style='n'):
@@ -1341,7 +1353,7 @@ class MomentTensor:
         matrix representation.
         """
         if style == 'f':
-            print '\n Deviatoric percentage: \n'
+            print('\n Deviatoric percentage: \n')
         return int(100 - self._iso_percentage)
 
     def get_moment(self, system='NED', style='n'):
@@ -1349,7 +1361,7 @@ class MomentTensor:
         Returns the seismic moment (in Nm) of the moment tensor.
         """
         if style == 'f':
-            print '\n Seismic moment (in Nm) : \n '
+            print('\n Seismic moment (in Nm) : \n ')
         return self._seismic_moment
 
     def get_mag(self, system='NED', style='n'):
@@ -1357,7 +1369,7 @@ class MomentTensor:
         Returns the  moment magnitude M_w of the moment tensor.
         """
         if style == 'f':
-            print '\n Moment magnitude Mw: \n '
+            print('\n Moment magnitude Mw: \n ')
         return self._moment_magnitude
 
     def get_decomposition_key(self, system='NED', style='n'):
@@ -1365,7 +1377,7 @@ class MomentTensor:
         10 = standard decomposition (Jost & Herrmann)
         """
         if style == 'f':
-            print '\n Decomposition key (standard = 10): \n '
+            print('\n Decomposition key (standard = 10): \n ')
         return self._decomposition_key
 
     def get_eigvals(self, system='NED', style='n', **kwargs):
@@ -1374,9 +1386,9 @@ class MomentTensor:
         """
         if style == 'f':
             if self._plot_clr_order < 0:
-                print '\n    Eigenvalues T N P :\n'
+                print('\n    Eigenvalues T N P :\n')
             else:
-                print '\n    Eigenvalues P N T :\n'
+                print('\n    Eigenvalues P N T :\n')
         # in the order HNS:
         return self._eigenvalues
 
@@ -1390,11 +1402,11 @@ class MomentTensor:
         if style == 'f':
 
             if self._plot_clr_order < 0:
-                print '\n    Eigenvectors T N P (in basis system %s): ' % \
-                    (system)
+                print('\n    Eigenvectors T N P (in basis system %s): ' %
+                      (system))
             else:
-                print '\n    Eigenvectors P N T (in basis system %s): ' % \
-                    (system)
+                print('\n    Eigenvectors P N T (in basis system %s): ' %
+                      (system))
 
         return self._vector_w_style_and_system(self._eigenvectors, system,
                                                style)
@@ -1407,7 +1419,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n Null-axis in %s -coordinates: ' % (system)
+            print('\n Null-axis in %s -coordinates: ' % (system))
         return self._vector_w_style_and_system(self._null_axis, system, style)
 
     def get_t_axis(self, system='NED', style='n'):
@@ -1418,7 +1430,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n Tension-axis in %s -coordinates: ' % (system)
+            print('\n Tension-axis in %s -coordinates: ' % (system))
         return self._vector_w_style_and_system(self._t_axis, system, style)
 
     def get_p_axis(self, system='NED', style='n'):
@@ -1429,7 +1441,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n Pressure-axis in %s -coordinates: ' % (system)
+            print('\n Pressure-axis in %s -coordinates: ' % (system))
         return self._vector_w_style_and_system(self._p_axis, system, style)
 
     def get_transform_matrix(self, system='NED', style='n'):
@@ -1441,7 +1453,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print '\n rotation matrix in %s -coordinates: ' % (system)
+            print('\n rotation matrix in %s -coordinates: ' % (system))
         return self._matrix_w_style_and_system(self._rotation_matrix, system,
                                                style)
 
@@ -1463,7 +1475,7 @@ class MomentTensor:
         """
         style = kwargs.get('style', '0')[0].lower()
         if style == 'f':
-            print '\n Colour order key: '
+            print('\n Colour order key: ')
         return self._plot_clr_order
 
 
@@ -1533,8 +1545,8 @@ def _return_matrix_vector_array(ma_ve_ar, basis_change_matrix):
     """
     if (not np.prod(np.shape(ma_ve_ar)) in [3, 6, 9]) or \
        (not len(np.shape(ma_ve_ar)) in [1, 2]):
-        print '\n wrong input - ',
-        print 'provide either 3x3 matrix or 3-element vector \n'
+        print('\n wrong input - ', end=' ')
+        print('provide either 3x3 matrix or 3-element vector \n')
         raise MTError(' !! ')
 
     if np.prod(np.shape(ma_ve_ar)) == 9:
@@ -1976,7 +1988,7 @@ class BeachBall:
             plotfig.savefig(outfile_abs_name, dpi=self._plot_dpi,
                             transparent=True, format=outfile_format)
         except:
-            print 'ERROR!! -- Saving of plot not possible'
+            print('ERROR!! -- Saving of plot not possible')
             return
         P.close(667)
         del P
@@ -2121,8 +2133,9 @@ class BeachBall:
 
         elif self._GMT_1fp:
             if not int(self._GMT_1fp) in [1, 2]:
-                print 'no fault plane specified for being plotted...continue',
-                print 'without fault plane(s)'
+                print('no fault plane specified for being plotted...continue',
+                      end=' ')
+                print('without fault plane(s)')
                 pass
             else:
                 if int(self._GMT_1fp) == 1:
@@ -2389,7 +2402,7 @@ class BeachBall:
                                 transparent=True,
                                 format=self._plot_outfile_format)
             except:
-                print 'saving of plot not possible'
+                print('saving of plot not possible')
 
         P.show()
 
@@ -2419,7 +2432,7 @@ class BeachBall:
         for i in (np.arange(4) + 1) * 0.2:
             r_steps.append(i)
         r_labels = ['S']
-        for ii in xrange(len(r_steps)):
+        for ii in range(len(r_steps)):
             if (ii + 1) % 2 == 0:
                 r_labels.append(str(r_steps[ii]))
             else:
@@ -2446,7 +2459,7 @@ class BeachBall:
                             transparent=True,
                             format=self._plot_outfile_format)
             except:
-                print 'saving of plot not possible'
+                print('saving of plot not possible')
         P.show()
 
     def _set_standard_attributes(self):
@@ -2531,7 +2544,7 @@ class BeachBall:
         the object, the value is updated. Otherwise, the keyword is
         ignored.
         """
-        for key in kwargs.keys():
+        for key in list(kwargs.keys()):
             if key[0] == '_':
                 kw = key[1:]
             else:
@@ -2642,7 +2655,7 @@ class BeachBall:
                 if go_ccw:
                     obj2cor_in_right_order = \
                         list(obj2cor_in_right_order.transpose())
-                    for kk in xrange(n_edgepoints + 1):
+                    for kk in range(n_edgepoints + 1):
                         current_phi = phi_end - kk * openangle / \
                             (n_edgepoints + 1)
                         current_radius = R_end + kk * radius_interval / \
@@ -2655,7 +2668,7 @@ class BeachBall:
                 else:
                     obj2cor_in_right_order = \
                         list(obj2cor_in_right_order.transpose())
-                    for kk in xrange(n_edgepoints + 1):
+                    for kk in range(n_edgepoints + 1):
                         current_phi = phi_end + kk * openangle / \
                             (n_edgepoints + 1)
                         current_radius = R_end + kk * radius_interval / \
@@ -2732,7 +2745,7 @@ class BeachBall:
 
                     EWs = EWh_tmp.copy()
                     EWh = EWs_tmp.copy()
-                    print 'changed order!!\n'
+                    print('changed order!!\n')
                     EVs_tmp = self.MT._rotation_matrix[:, 2].copy()
                     EVh_tmp = self.MT._rotation_matrix[:, 0].copy()
 
@@ -2793,7 +2806,7 @@ class BeachBall:
         line_tuple_pos = np.zeros((3, n_curve_points))
         line_tuple_neg = np.zeros((3, n_curve_points))
 
-        for ii in xrange(n_curve_points):
+        for ii in range(n_curve_points):
             pos_vec_in_EV_basis = np.array([H_values[ii], N_values[ii],
                                            S_values_positive[ii]]).transpose()
             neg_vec_in_EV_basis = np.array([H_values[ii], N_values[ii],
@@ -2832,7 +2845,7 @@ class BeachBall:
         FP1 = np.zeros((3, n_curve_points))
         FP2 = np.zeros((3, n_curve_points))
 
-        for ii in xrange(midpoint_idx):
+        for ii in range(midpoint_idx):
             FP1_vec = np.array([H_values_FP[ii], N_values_FP[ii],
                                S_values_positive_FP[ii]]).transpose()
             FP2_vec = np.array([H_values_FP[ii], N_values_FP[ii],
@@ -2840,7 +2853,7 @@ class BeachBall:
             FP1[:, ii] = np.dot(chng_basis, FP1_vec)
             FP2[:, ii] = np.dot(chng_basis, FP2_vec)
 
-        for jj in xrange(midpoint_idx):
+        for jj in range(midpoint_idx):
             ii = n_curve_points - jj - 1
 
             FP1_vec = np.array([H_values_FP[ii], N_values_FP[ii],
@@ -3003,7 +3016,7 @@ class BeachBall:
             object2rotate = getattr(self, '_' + obj).transpose()
 
             rotated_thing = object2rotate.copy()
-            for i in xrange(len(object2rotate)):
+            for i in range(len(object2rotate)):
                 rotated_thing[i] = np.dot(self._plot_basis_change,
                                           object2rotate[i])
 
@@ -3021,25 +3034,25 @@ class BeachBall:
         list_of_possible_projections = ['stereo', 'ortho', 'lambert', 'gnom']
 
         if not self._plot_projection in list_of_possible_projections:
-            print 'desired projection not possible - choose from:\n ',
-            print list_of_possible_projections
+            print('desired projection not possible - choose from:\n ', end=' ')
+            print(list_of_possible_projections)
             raise MTError(' !! ')
 
         if self._plot_projection == 'stereo':
             if not self._stereo_vertical():
-                print 'ERROR in stereo_vertical'
+                print('ERROR in stereo_vertical')
                 raise MTError(' !! ')
         elif self._plot_projection == 'ortho':
             if not self._orthographic_vertical():
-                print 'ERROR in stereo_vertical'
+                print('ERROR in stereo_vertical')
                 raise MTError(' !! ')
         elif self._plot_projection == 'lambert':
             if not self._lambert_vertical():
-                print 'ERROR in stereo_vertical'
+                print('ERROR in stereo_vertical')
                 raise MTError(' !! ')
         elif self._plot_projection == 'gnom':
             if not self._gnomonic_vertical():
-                print 'ERROR in stereo_vertical'
+                print('ERROR in stereo_vertical')
                 raise MTError(' !! ')
 
     def _stereo_vertical(self):
@@ -3060,8 +3073,9 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print 'desired plotting projection not possible - choose from :\n',
-            print available_coord_systems
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
+            print(available_coord_systems)
             raise MTError(' !! ')
 
         plot_upper_hem = self._plot_show_upper_hemis
@@ -3074,7 +3088,7 @@ class BeachBall:
             n_points = len(o2proj[0, :])
             stereo_coords = np.zeros((2, n_points))
 
-            for ll in xrange(n_points):
+            for ll in range(n_points):
                 # second component is EAST
                 co_x = coords[1, ll]
                 # first component is NORTH
@@ -3137,8 +3151,9 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print 'desired plotting projection not possible - choose from :\n',
-            print available_coord_systems
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
+            print(available_coord_systems)
             raise MTError(' !! ')
 
         plot_upper_hem = self._plot_show_upper_hemis
@@ -3151,7 +3166,7 @@ class BeachBall:
             n_points = len(o2proj[0, :])
             coords2D = np.zeros((2, n_points))
 
-            for ll in xrange(n_points):
+            for ll in range(n_points):
                 # second component is EAST
                 co_x = coords[1, ll]
                 # first component is NORTH
@@ -3212,8 +3227,9 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print 'desired plotting projection not possible - choose from :\n',
-            print available_coord_systems
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
+            print(available_coord_systems)
             raise MTError(' !! ')
 
         plot_upper_hem = self._plot_show_upper_hemis
@@ -3226,7 +3242,7 @@ class BeachBall:
             n_points = len(o2proj[0, :])
             coords2D = np.zeros((2, n_points))
 
-            for ll in xrange(n_points):
+            for ll in range(n_points):
                 # second component is EAST
                 co_x = coords[1, ll]
                 # first component is NORTH
@@ -3291,8 +3307,9 @@ class BeachBall:
         available_coord_systems = ['NED']
 
         if not self._plot_basis in available_coord_systems:
-            print 'desired plotting projection not possible - choose from :\n',
-            print available_coord_systems
+            print('desired plotting projection not possible - choose from :\n',
+                  end=' ')
+            print(available_coord_systems)
             raise MTError(' !! ')
 
         plot_upper_hem = self._plot_show_upper_hemis
@@ -3305,7 +3322,7 @@ class BeachBall:
             n_points = len(o2proj[0, :])
             coords2D = np.zeros((2, n_points))
 
-            for ll in xrange(n_points):
+            for ll in range(n_points):
                 # second component is EAST
                 co_x = coords[1, ll]
                 # first component is NORTH
@@ -3381,7 +3398,7 @@ class BeachBall:
         sorted_curve = np.zeros((2, len(curve[0, :])))
         # in polar coordinates
         r_phi_curve = np.zeros((len(curve[0, :]), 2))
-        for ii in xrange(curve.shape[1]):
+        for ii in range(curve.shape[1]):
             r_phi_curve[ii, 0] = \
                 math.sqrt(curve[0, ii] ** 2 + curve[1, ii] ** 2)
             r_phi_curve[ii, 1] = \
@@ -3424,13 +3441,13 @@ class BeachBall:
 
         if keep_direction:
             # direction is kept
-            for jj in xrange(curve.shape[1]):
+            for jj in range(curve.shape[1]):
                 running_idx = (start_idx_curve + jj) % len(curve[0, :])
                 sorted_curve[0, jj] = curve[0, running_idx]
                 sorted_curve[1, jj] = curve[1, running_idx]
         else:
             # direction  is reversed
-            for jj in xrange(curve.shape[1]):
+            for jj in range(curve.shape[1]):
                 running_idx = (start_idx_curve - jj) % len(curve[0, :])
                 sorted_curve[0, jj] = curve[0, running_idx]
                 sorted_curve[1, jj] = curve[1, running_idx]
@@ -3711,7 +3728,7 @@ class BeachBall:
                                 transparent=True,
                                 format=self._plot_outfile_format)
             except:
-                print 'saving of plot not possible'
+                print('saving of plot not possible')
         P.show()
         P.close('all')
 
@@ -3839,8 +3856,9 @@ class BeachBall:
 
         elif self._plot_show_1faultplane:
             if not self._plot_show_FP_index in [1, 2]:
-                print 'no fault plane specified for being plotted... ',
-                print 'continue without faultplane'
+                print('no fault plane specified for being plotted... ',
+                      end=' ')
+                print('continue without faultplane')
                 pass
             else:
                 alpha = self._plot_faultplane_alpha * self._plot_total_alpha
@@ -3941,8 +3959,9 @@ def main():
         """
         try:
             call = \
-                dict(zip(('p', 'g', 'c', 'd'),
-                         ('plot', 'gmt', 'convert', 'decompose')))[call_raw[0]]
+                dict(list(zip(('p', 'g', 'c', 'd'),
+                          ('plot', 'gmt', 'convert', 'decompose')))
+                     )[call_raw[0]]
         except:
             call = 'help'
 
@@ -4026,13 +4045,13 @@ def main():
                         MT.get_M(),
                         'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
-                        print '\n  Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['in_system'].upper())
-                        print fancy_matrix(MT.get_M(
-                            system=kwargs_dict['in_system'].upper()))
-                        print
-                        print '\n Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['out_system'].upper())
+                        print('\n  Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['in_system'].upper()))
+                        print(fancy_matrix(MT.get_M(
+                              system=kwargs_dict['in_system'].upper())))
+                        print()
+                        print('\n Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['out_system'].upper()))
                         return fancy_matrix(M_converted)
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
@@ -4042,13 +4061,13 @@ def main():
                     M_converted = _puzzle_basis_transformation(
                         MT.get_M(), 'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
-                        print '\n  Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['in_system'].upper())
-                        print fancy_matrix(MT.get_M(
-                            system=kwargs_dict['in_system'].upper()))
-                        print
-                        print '\n Moment tensor in basis  %s:\n ' % \
-                            (kwargs_dict['out_system'].upper())
+                        print('\n  Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['in_system'].upper()))
+                        print(fancy_matrix(MT.get_M(
+                              system=kwargs_dict['in_system'].upper())))
+                        print()
+                        print('\n Moment tensor in basis  %s:\n ' %
+                              (kwargs_dict['out_system'].upper()))
                         return fancy_matrix(M_converted)
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
@@ -4069,8 +4088,8 @@ def main():
                 M_converted = _puzzle_basis_transformation(
                     MT.get_M(), 'NED', kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
-                    print '\n  Moment tensor in basis  %s: ' % \
-                        (kwargs_dict['out_system'].upper())
+                    print('\n  Moment tensor in basis  %s: ' %
+                          (kwargs_dict['out_system'].upper()))
                     return fancy_matrix(M_converted)
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
@@ -4081,29 +4100,31 @@ def main():
                     _puzzle_basis_transformation(MT.get_M(), 'NED',
                                                  kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
-                    print '\n  Momemnt tensor in basis  %s: ' % \
-                        (kwargs_dict['out_system'].upper())
+                    print('\n  Momemnt tensor in basis  %s: ' %
+                          (kwargs_dict['out_system'].upper()))
                     return fancy_matrix(M_converted)
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
                         M_converted[2, 2], M_converted[0, 1], \
                         M_converted[0, 2], M_converted[1, 2]
             else:
-                print 'this try is meaningless - read the possible',
-                print 'choices!\n(perhaps you want option "-v"(convert a',
-                print 'vector) or "-t"(convert strike, dip, rake to a matrix',
-                print 'and show THAT matrix in another basis system)',
-                print 'instead!?!?)\n'
+                print('this try is meaningless - read the possible', end=' ')
+                print('choices!\n(perhaps you want option "-v"(convert a',
+                      end=' ')
+                print('vector) or "-t"(convert strike, dip, rake to a matrix',
+                      end=' ')
+                print('and show THAT matrix in another basis system)', end=' ')
+                print('instead!?!?)\n')
                 sys.exit(-1)
 
         if kwargs_dict['vector_conversion']:
             if kwargs_dict['fancy_conversion']:
-                print '\n  Vector in basis  %s:\n ' % \
-                    (kwargs_dict['vector_in_system'].upper())
-                print fancy_vector(MT._original_M)
-                print
-                print '\n  Vector in basis  %s:\n ' % \
-                    (kwargs_dict['vector_out_system'].upper())
+                print('\n  Vector in basis  %s:\n ' %
+                      (kwargs_dict['vector_in_system'].upper()))
+                print(fancy_vector(MT._original_M))
+                print()
+                print('\n  Vector in basis  %s:\n ' %
+                      (kwargs_dict['vector_out_system'].upper()))
                 return fancy_vector(_puzzle_basis_transformation(
                     MT._original_M, kwargs_dict['vector_in_system'],
                     kwargs_dict['vector_out_system']))
@@ -4147,7 +4168,7 @@ def main():
         # if total decomposition:
         if kwargs_dict['decomp_out_complete']:
             if kwargs_dict['decomp_out_fancy']:
-                print MT.get_full_decomposition()
+                print(MT.get_full_decomposition())
                 return
             else:
                 return MT.get_decomposition(in_system=kwargs_dict['in_system'],
@@ -4155,35 +4176,35 @@ def main():
         # otherwise:
         else:
             # argument dictionary - setting the appropriate calls
-            do_calls = dict(zip(('in', 'out',
-                                 'type',
-                                 'full', 'm',
-                                 'iso', 'iso_perc',
-                                 'dev', 'devi', 'devi_perc',
-                                 'dc', 'dc_perc',
-                                 'dc2', 'dc2_perc',
-                                 'dc3', 'dc3_perc',
-                                 'clvd', 'clvd_perc',
-                                 'mom', 'mag',
-                                 'eigvals', 'eigvecs',
-                                 't', 'n', 'p',
-                                 'fps', 'faultplanes', 'fp',
-                                 'decomp_key'),
-                                ('input_system', 'output_system',
-                                 'decomp_type',
-                                 'M', 'M',
-                                 'iso', 'iso_percentage',
-                                 'devi', 'devi', 'devi_percentage',
-                                 'DC', 'DC_percentage',
-                                 'DC2', 'DC2_percentage',
-                                 'DC3', 'DC3_percentage',
-                                 'CLVD', 'CLVD_percentage',
-                                 'moment', 'mag',
-                                 'eigvals', 'eigvecs',
-                                 't_axis', 'null_axis', 'p_axis',
-                                 'fps', 'fps', 'fps',
-                                 'decomp_type')
-                                ))
+            do_calls = dict(list(zip(('in', 'out',
+                                      'type',
+                                      'full', 'm',
+                                      'iso', 'iso_perc',
+                                      'dev', 'devi', 'devi_perc',
+                                      'dc', 'dc_perc',
+                                      'dc2', 'dc2_perc',
+                                      'dc3', 'dc3_perc',
+                                      'clvd', 'clvd_perc',
+                                      'mom', 'mag',
+                                      'eigvals', 'eigvecs',
+                                      't', 'n', 'p',
+                                      'fps', 'faultplanes', 'fp',
+                                      'decomp_key'),
+                                     ('input_system', 'output_system',
+                                      'decomp_type',
+                                      'M', 'M',
+                                      'iso', 'iso_percentage',
+                                      'devi', 'devi', 'devi_percentage',
+                                      'DC', 'DC_percentage',
+                                      'DC2', 'DC2_percentage',
+                                      'DC3', 'DC3_percentage',
+                                      'CLVD', 'CLVD_percentage',
+                                      'moment', 'mag',
+                                      'eigvals', 'eigvecs',
+                                      't_axis', 'null_axis', 'p_axis',
+                                      'fps', 'fps', 'fps',
+                                      'decomp_type')
+                                     )))
 
             # build argument for local call within MT object:
             lo_args = kwargs_dict['decomp_out_part']
@@ -4191,8 +4212,8 @@ def main():
             # for single element output:
             if len(lo_args) == 1:
                 if kwargs_dict['decomp_out_fancy']:
-                    print getattr(MT, 'get_' + do_calls[lo_args[0]])(
-                        style='f', system=out_system)
+                    print(getattr(MT, 'get_' + do_calls[lo_args[0]])(
+                        style='f', system=out_system))
                     return
                 else:
                     return getattr(MT, 'get_' + do_calls[lo_args[0]])(
@@ -4202,8 +4223,8 @@ def main():
                 outlist = []
                 for arg in lo_args:
                     if kwargs_dict['decomp_out_fancy']:
-                        print getattr(MT, 'get_' + do_calls[arg])(
-                            style='f', system=out_system)
+                        print(getattr(MT, 'get_' + do_calls[arg])(
+                            style='f', system=out_system))
                     else:
                         outlist.append(getattr(MT, 'get_' + do_calls[arg])(
                             style='n', system=out_system))
@@ -4243,7 +4264,7 @@ def main():
             consistent_kwargs_dict['_GMT_1fp'] = 0
 
         if temp_dict['GMT_string_type'][0].lower() not in ['f', 'l', 'e']:
-            print 'type of desired string not known - taking "fill" instead'
+            print('type of desired string not known - taking "fill" instead')
             consistent_kwargs_dict['_GMT_type'] = 'fill'
 
         else:
@@ -4255,9 +4276,9 @@ def main():
                 consistent_kwargs_dict['_GMT_type'] = 'EVs'
 
         if float(temp_dict['GMT_scaling']) < epsilon:
-            print 'GMT scaling factor must be a factor larger than'
-            print '%f - set to 1, due to obviously stupid input value' % \
-                (epsilon)
+            print('GMT scaling factor must be a factor larger than')
+            print('%f - set to 1, due to obviously stupid input value' %
+                  (epsilon))
             temp_dict['GMT_scaling'] = 1
 
         if temp_dict['plot_viewpoint']:
@@ -4278,14 +4299,14 @@ def main():
 
         if temp_dict['GMT_projection']:
             lo_allowed_projections = ['stereo', 'ortho', 'lambert']  # ,'gnom']
-            do_allowed_projections = dict(zip(('s', 'o', 'l', 'g'),
+            do_allowed_projections = dict(list(zip(('s', 'o', 'l', 'g'),
                                               ('stereo', 'ortho',
-                                               'lambert', 'gnom')))
+                                               'lambert', 'gnom'))))
             try:
                 gmtp = temp_dict['GMT_projection'].lower()
                 if gmtp in lo_allowed_projections:
                     consistent_kwargs_dict['plot_projection'] = gmtp
-                elif gmtp in do_allowed_projections.keys():
+                elif gmtp in list(do_allowed_projections.keys()):
                     consistent_kwargs_dict['plot_projection'] = \
                         do_allowed_projections[gmtp]
                 else:
@@ -4374,8 +4395,9 @@ def main():
             # if only wrong or no arguments are handed over, change to complete
             # decomposition:
             if len(lo_correct_attribs) == 0:
-                print ' no correct attributes for partial decomposition -',
-                print 'returning complete decomposition'
+                print(' no correct attributes for partial decomposition -',
+                      end=' ')
+                print('returning complete decomposition')
                 consistent_kwargs_dict['decomp_out_complete'] = 1
                 consistent_kwargs_dict['decomp_out_part'] = 0
                 if temp_dict['decomp_out_fancy']:
@@ -4428,20 +4450,20 @@ def main():
             consistent_kwargs_dict['out_system'] = 'NED'
 
         if (temp_dict['type_conversion'] and temp_dict['vector_conversion']):
-            print 'decide for ONE option of "-t" OR "-v" '
+            print('decide for ONE option of "-t" OR "-v" ')
             optparser.print_help()
             sys.exit(-1)
 
         if (temp_dict['type_conversion']) and \
            (not temp_dict['type_conversion'].lower() in ['sdr', 't']):
-            print 'argument of -t must be "sdr" or "T" '
+            print('argument of -t must be "sdr" or "T" ')
             optparser.print_help()
             sys.exit(-1)
 
         if (temp_dict['basis_conversion']):
             for arg in temp_dict['basis_conversion']:
                 if not arg.upper() in ['NED', 'XYZ', 'USE', 'NWU']:
-                    print 'arguments of -b must be "NED","USE","XYZ","NWU" '
+                    print('arguments of -b must be "NED","USE","XYZ","NWU" ')
                     optparser.print_help()
                     sys.exit(-1)
             consistent_kwargs_dict['in_system'] = \
@@ -4453,14 +4475,15 @@ def main():
            temp_dict['type_conversion'].lower() == 'sdr':
             if temp_dict['basis_conversion']:
                 if temp_dict['basis_conversion'][1] != 'NED':
-                    print 'output "sdr" from type conversion cannot be',
-                    print 'displayed in another basis system!'
+                    print('output "sdr" from type conversion cannot be',
+                          end=' ')
+                    print('displayed in another basis system!')
                     consistent_kwargs_dict['out_system'] = 'NED'
 
         if (temp_dict['vector_conversion']):
             for arg in temp_dict['vector_conversion']:
                 if not arg.upper() in ['NED', 'XYZ', 'USE', 'NWU']:
-                    print 'arguments of -v must be "NED","USE","XYZ","NWU" '
+                    print('arguments of -v must be "NED","USE","XYZ","NWU" ')
                     optparser.print_help()
                     sys.exit(-1)
             consistent_kwargs_dict['vector_in_system'] = \
@@ -4566,14 +4589,14 @@ def main():
 
         if temp_dict['plot_projection']:
             lo_allowed_projections = ['stereo', 'ortho', 'lambert']  # ,'gnom']
-            do_allowed_projections = dict(zip(('s', 'o', 'l', 'g'),
+            do_allowed_projections = dict(list(zip(('s', 'o', 'l', 'g'),
                                               ('stereo', 'ortho',
-                                               'lambert', 'gnom')))
+                                               'lambert', 'gnom'))))
             try:
                 ppl = temp_dict['plot_projection'].lower()
                 if ppl in lo_allowed_projections:
                     consistent_kwargs_dict['plot_projection'] = ppl
-                elif ppl in do_allowed_projections.keys():
+                elif ppl in list(do_allowed_projections.keys()):
                     consistent_kwargs_dict['plot_projection'] = \
                         do_allowed_projections[ppl]
                 else:
@@ -4866,7 +4889,7 @@ def main():
         # todo
         # check, if arguments do not start with "-" - if so, there is a lack of
         # arguments for the previous option
-        for val2check in options.__dict__.values():
+        for val2check in list(options.__dict__.values()):
             if str(val2check).startswith('-'):
                 try:
                     val2check_split = val2check.split(',')
@@ -5252,7 +5275,7 @@ def main():
         call = 'help'
 
     if call == 'help':
-        print USAGE_STRING
+        print(USAGE_STRING)
         sys.exit()
 
     try:
@@ -5270,15 +5293,15 @@ def main():
         M_raw = [float(xx) for xx in sys.argv[2].split(',')]
 
     if not len(M_raw) in [3, 4, 6, 7, 9]:
-        print '\nERROR!! Provide proper source mechanism\n\n'
+        print('\nERROR!! Provide proper source mechanism\n\n')
         sys.exit()
     if len(M_raw) in [4, 6, 7, 9] and len(np.array(M_raw).nonzero()[0]) == 0:
-        print '\nERROR!! Provide proper source mechanism\n\n'
+        print('\nERROR!! Provide proper source mechanism\n\n')
         sys.exit()
 
     aa = _handle_input(call, M_raw, sys.argv[3:], _build_optparsers()[call])
     if aa is not None:
-        print aa
+        print(aa)
 
 
 if __name__ == '__main__':

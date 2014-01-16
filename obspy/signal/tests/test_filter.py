@@ -3,6 +3,8 @@
 """
 The Filter test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
 
 from obspy.signal import bandpass, lowpass, highpass
 from obspy.signal.filter import envelope, lowpassCheby2

@@ -2,7 +2,8 @@
 """
 The obspy.segy benchmark test suite.
 """
-
+from __future__ import unicode_literals
+from future.builtins import str
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.base import getMatplotlibVersion
@@ -43,8 +44,9 @@ class BenchmarkTestCase(unittest.TestCase):
                 np.seterr(**np_err)
             self.assertEqual(len(w), 1)
             self.assertEqual(w[0].category, RuntimeWarning)
-            self.assertEqual(str(w[0].message),
-                             'underflow encountered in divide')
+            self.assertTrue(str(w[0].message) in
+                            ['underflow encountered in divide',
+                             'underflow encountered in true_divide'])
 
 
 def suite():

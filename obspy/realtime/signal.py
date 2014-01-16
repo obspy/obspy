@@ -21,6 +21,11 @@ in a previous packet, so has to be retrieved from memory see
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import range
 import math
 import sys
 import numpy as np
@@ -76,7 +81,9 @@ def scale(trace, factor=1.0, rtmemory_list=None):  # @UnusedVariable
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
-    trace.data *= factor
+    #XXX not sure how this should be for realtime analysis, here
+    # I assume, we do not want to change the underlying dtype
+    trace.data *= np.array(factor, dtype=trace.data.dtype)
     return trace.data
 
 
@@ -467,7 +474,7 @@ def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
             msg = "Error: Mwp: attempt to access rtmemory.input array of " + \
                 "size=%d at invalid index=%d: this should not happen!" % \
                 (np.size(rtmemory.input), n + np.size(rtmemory.input))
-            print msg
+            print(msg)
             continue  # should never reach here
         disp_amp = amplitude - mwp_amp_at_pick
         # check displacement polarity
@@ -610,7 +617,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     k4_bar_last = rtmemory_k4_bar.input[0]
 
     # do recursive kurtosis
-    for i in xrange(npts):
+    for i in range(npts):
         mu1 = a1 * mu1_last + C1 * sample[i]
         dx2 = (sample[i] - mu1_last) * (sample[i] - mu1_last)
         mu2 = a1 * mu2_last + C2 * dx2

@@ -2,6 +2,8 @@
 """
 The obspy.neries.client test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy import UTCDateTime, read
 from obspy.core.event import Catalog
@@ -111,9 +113,9 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         results = client.getEvents(format="xml", min_depth=-700,
                                    max_datetime=UTCDateTime("2005-01-01"))
-        self.assertTrue(isinstance(results, basestring))
+        self.assertTrue(isinstance(results, bytes))
         # check for origin id
-        self.assertTrue('1347097' in results)
+        self.assertTrue(b'1347097' in results)
 
     def test_getEventsAsCatalog(self):
         """
@@ -134,8 +136,8 @@ class ClientTestCase(unittest.TestCase):
         # EMSC identifier
         # xml
         data = client.getEventDetail("19990817_0000001", format='xml')
-        self.assertTrue(isinstance(data, basestring))
-        self.assertTrue(data.startswith('<?xml'))
+        self.assertTrue(isinstance(data, bytes))
+        self.assertTrue(data.startswith(b'<?xml'))
         # list
         data = client.getEventDetail("19990817_0000001", format='list')
         self.assertTrue(isinstance(data, list))
@@ -146,7 +148,7 @@ class ClientTestCase(unittest.TestCase):
         # xml
         data = client.getEventDetail("quakeml:eu.emsc/event#19990817_0000001",
                                      format='xml')
-        self.assertTrue(data.startswith('<?xml'))
+        self.assertTrue(data.startswith(b'<?xml'))
         # list
         data = client.getEventDetail("quakeml:eu.emsc/event#19990817_0000001",
                                      format='list')
@@ -166,8 +168,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # xml
         data = client.getLatestEvents(5, format='xml')
-        self.assertTrue(isinstance(data, basestring))
-        self.assertTrue(data.startswith('<?xml'))
+        self.assertTrue(isinstance(data, bytes))
+        self.assertTrue(data.startswith(b'<?xml'))
         # list
         data = client.getLatestEvents(5, format='list')
         self.assertTrue(isinstance(data, list))
@@ -214,7 +216,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
-            self.assertNotEqual(open(mseedfile).read(8)[6], "V")
+            with open(mseedfile, 'rb') as fp:
+                self.assertNotEqual(fp.read(8)[6:7], b"V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -229,7 +232,8 @@ class ClientTestCase(unittest.TestCase):
                                 format='FSEED')
             st = read(fseedfile)
             # Full SEED must start with Volume Index Control Headers (V)
-            self.assertEqual(open(fseedfile).read(8)[6], "V")
+            with open(fseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(8)[6:7], b"V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -248,8 +252,8 @@ class ClientTestCase(unittest.TestCase):
         # 1 - XML w/ instruments
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
                                      format='XML')
-        self.assertTrue(result.startswith('<?xml'))
-        self.assertTrue('code="GE"' in result)
+        self.assertTrue(result.startswith(b'<?xml'))
+        self.assertTrue(b'code="GE"' in result)
         # 2 - SUDS object w/o instruments
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
                                      instruments=False)

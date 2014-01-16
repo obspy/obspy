@@ -188,22 +188,25 @@ and the same page in the `Tutorial`_. For automated use see the following
 .. _`Tutorial`: http://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from filter import bandpass, bandstop, lowpass, highpass, remezFIR, \
-    lowpassFIR, envelope, integerDecimation
-from rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, rotate_LQT_ZNE
-from invsim import cosTaper, cornFreq2Paz, pazToFreqResp, seisSim, specInv, \
-    estimateMagnitude
-from cpxtrace import normEnvelope, centroid, instFreq, instBwith
-from util import utlGeoKm, utlLonLat
-from cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
-from freqattributes import cfrequency, bwith, domperiod, logcep
-from hoctavbands import sonogram
-from polarization import eigval
-from spectral_estimation import psd, PPSD
-from konnoohmachismoothing import konnoOhmachiSmoothing
-from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
-    delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
+from obspy.signal.filter import bandpass, bandstop, lowpass, highpass, \
+    remezFIR, lowpassFIR, envelope, integerDecimation
+from obspy.signal.rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
+    rotate_LQT_ZNE
+from obspy.signal.invsim import cosTaper, cornFreq2Paz, pazToFreqResp, \
+    seisSim, specInv, estimateMagnitude
+from obspy.signal.cpxtrace import normEnvelope, centroid, instFreq, instBwith
+from obspy.signal.util import utlGeoKm, utlLonLat
+from obspy.signal.cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
+from obspy.signal.freqattributes import cfrequency, bwith, domperiod, logcep
+from obspy.signal.hoctavbands import sonogram
+from obspy.signal.polarization import eigval
+from obspy.signal.spectral_estimation import psd, PPSD
+from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothing
+from obspy.signal.trigger import recSTALTA, recSTALTAPy, carlSTATrig, \
+    classicSTALTA, delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
     coincidenceTrigger, classicSTALTAPy
 
 

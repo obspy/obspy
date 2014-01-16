@@ -18,6 +18,7 @@ obspy.core.util - Various utilities for ObsPy
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
 # import order matters - NamedTemporaryFile must be one of the first!
 from obspy.core.util.attribdict import AttribDict

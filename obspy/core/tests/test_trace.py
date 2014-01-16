@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
@@ -12,7 +16,6 @@ import mock
 import numpy as np
 import unittest
 import warnings
-
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
@@ -148,7 +151,7 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         self.assertEqual(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
-        np.testing.assert_array_equal(trace.data, tr.data[delta:])
+        np.testing.assert_array_equal(trace.data, tr.data[int(delta):])
         self.assertEqual(tr.stats.endtime, trace.stats.endtime)
         # start time > end time
         tr = deepcopy(trace)
@@ -540,23 +543,23 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.failUnless((bigtrace_sort.data == myArray).all())
+            self.assertTrue((bigtrace_sort.data == myArray).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
             failinfo = fail_pattern % (myTrace, bigtrace_sort)
             failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.failUnless(bigtrace_sort == myTrace, failinfo)
+            self.assertTrue(bigtrace_sort == myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.failUnless((bigtrace.data == myArray).all(), failinfo)
+            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
 
             failinfo = fail_pattern % (myTrace, bigtrace)
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.failUnless(bigtrace == myTrace, failinfo)
+            self.assertTrue(bigtrace == myTrace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
                 failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.failUnless(myArray.dtype == array_.dtype, failinfo)
+                self.assertTrue(myArray.dtype == array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -1351,8 +1354,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(trace, Trace))
         st = trace.split()
         self.assertTrue(isinstance(st, Stream))
-        self.assertEquals(len(st[0]), 1000)
-        self.assertEquals(len(st[1]), 1000)
+        self.assertEqual(len(st[0]), 1000)
+        self.assertEqual(len(st[1]), 1000)
         # check if have no masked arrays
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
@@ -1391,10 +1394,10 @@ class TraceTestCase(unittest.TestCase):
         """
         # fill_value = None
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime - 0.01,
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=None)
-        self.assertEquals(len(tr), 3002)
+        self.assertEqual(len(tr), 3002)
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertTrue(tr.data[0] is np.ma.masked)
         self.assertTrue(tr.data[1] is not np.ma.masked)
@@ -1402,19 +1405,19 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(tr.data[-1] is np.ma.masked)
         # fill_value = 999
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime - 0.01,
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=999)
-        self.assertEquals(len(tr), 3002)
+        self.assertEqual(len(tr), 3002)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
-        self.assertEquals(tr.data[0], 999)
-        self.assertEquals(tr.data[-1], 999)
+        self.assertEqual(tr.data[0], 999)
+        self.assertEqual(tr.data[-1], 999)
         # given fill_value but actually no padding at all
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime,
                 endtime=tr.stats.endtime, pad=True, fill_value=-999)
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
     def test_method_chaining(self):

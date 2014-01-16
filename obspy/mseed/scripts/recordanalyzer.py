@@ -20,6 +20,10 @@ A command-line tool to analyze Mini-SEED records.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import open
 
 from copy import deepcopy
 from obspy import UTCDateTime
@@ -78,7 +82,7 @@ class RecordAnalyser(object):
             return False
         return True
 
-    def next(self):
+    def __next__(self):
         """
         Jumps to the next record and parses the header.
         """
@@ -257,14 +261,14 @@ class RecordAnalyser(object):
                        'Header Endianness: %s\n\n') % \
                       (filename, self.record_offset, endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
-        for key in self.fixed_header.keys():
+        for key in list(self.fixed_header.keys()):
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
         ret_val += '\nBLOCKETTES\n'
-        for key in self.blockettes.keys():
+        for key in list(self.blockettes.keys()):
             ret_val += '\t%i:' % key
             if not len(self.blockettes[key]):
                 ret_val += '\tNOT YET IMPLEMENTED\n'
-            for _i, blkt_key in enumerate(self.blockettes[key].keys()):
+            for _i, blkt_key in enumerate(list(self.blockettes[key].keys())):
                 if _i == 0:
                     tabs = '\t'
                 else:
@@ -292,7 +296,7 @@ def main():
         try:
             while i < options.n:
                 i += 1
-                rec.next()
+                next(rec)
         except:
             pass
         print(rec)

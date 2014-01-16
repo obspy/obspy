@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from obspy.station.util import BaseNode, Equipment, Operator, Person, \
     PhoneNumber, ExternalReference, Comment, Site

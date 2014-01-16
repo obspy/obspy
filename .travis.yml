@@ -2,6 +2,7 @@ language: python
 python:
   - 2.6
   - 2.7
+  - 3.3
 virtualenv:
   system_site_packages: true
 before_install:
@@ -14,11 +15,12 @@ before_install:
   - pip install --upgrade setuptools
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy suds lxml sqlalchemy m2crypto; pip install mock; fi
+  - if [[ ${TRAVIS_PYTHON_VERSION:0:1} == '3' ]]; then SUDS='suds-jurko'; else SUDS='suds'; fi;  if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy ${SUDS} lxml sqlalchemy m2crypto; pip install mock; fi
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
   - pip install --use-mirrors flake8
+  - pip install --use-mirrors future
   - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
@@ -34,7 +36,7 @@ script:
   # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
   - mkdir empty
   - cd empty
-  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
+  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
   - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
 after_success:
   - coveralls

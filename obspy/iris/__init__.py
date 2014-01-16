@@ -45,8 +45,10 @@ IRIS (http://service.iris.edu/irisws/):
 Please see the documentation for each method for further information and
 examples to retrieve various data from the IRIS DMC.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from client import Client
+from .client import Client  # NOQA
 import warnings
 
 msg = ("Development and maintenance efforts will focus on the new obspy.fdsn "

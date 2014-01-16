@@ -2,6 +2,9 @@
 """
 The obspy.signal.trigger test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import int
 from ctypes import ArgumentError
 from obspy import read, Stream, UTCDateTime
 from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
@@ -68,8 +71,8 @@ class TriggerTestCase(unittest.TestCase):
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
                              thr1, thr2, npreset_len, np_dur)
-        self.assertEquals(nptime, 17545)
-        self.assertEquals(pfm, 'IPU0')
+        self.assertEqual(nptime, 17545)
+        self.assertEqual(pfm, 'IPU0')
 
     def test_arPick(self):
         """
@@ -88,7 +91,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
         #self.assertAlmostEqual(stime, 31.2800006866)
-        self.assertEquals(int(stime + 0.5), 31)
+        self.assertEqual(int(stime + 0.5), 31)
 
     def test_triggerOnset(self):
         """

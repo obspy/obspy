@@ -4,11 +4,15 @@
 The obspy.css.core test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import open
 from obspy import read
 from obspy.core import UTCDateTime, Trace, Stream
 from obspy.core.util import NamedTemporaryFile
 from obspy.css.core import readCSS, isCSS
 import os
+import gzip
 import numpy as np
 import unittest
 
@@ -30,7 +34,10 @@ class CoreTestCase(unittest.TestCase):
         header['calper'] = 1.0
         header['_format'] = 'CSS'
         filename = os.path.join(self.path, '201101311155.10.ascii.gz')
-        data = np.loadtxt(filename, dtype='int')
+        # no with due to py 2.6
+        fp = gzip.open(filename, 'rb')
+        data = np.loadtxt(fp, dtype='int')
+        fp.close()
         # traces in the test files are sorted ZEN
         st = Stream()
         for x, cha in zip(data.reshape((3, 4800)), ('HHZ', 'HHE', 'HHN')):

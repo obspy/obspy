@@ -8,11 +8,24 @@ Module containing a UTC-based datetime class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import str
+from future.builtins import range
+from future.builtins import int
+from future.builtins import bytes
+from future.utils import native_str, PY2
 import datetime
 import time
+import math
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1)
+
+# Py3k compat, avoid circular import
+if not PY2:
+    unicode = str
 
 
 class UTCDateTime(object):
@@ -233,7 +246,9 @@ class UTCDateTime(object):
                 dt = datetime.datetime(value.year, value.month, value.day)
                 self._fromDateTime(dt)
                 return
-            elif isinstance(value, basestring):
+            elif isinstance(value, (bytes, str)):
+                if not isinstance(value, str):
+                    value = value.decode()
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
@@ -318,8 +333,9 @@ class UTCDateTime(object):
 
         # check if seconds are given as float value
         if len(args) == 6 and isinstance(args[5], float):
-            kwargs['microsecond'] = int(args[5] % 1 * 1000000)
-            kwargs['second'] = int(args[5])
+            _frac, _sec = math.modf(round(args[5], 6))
+            kwargs['microsecond'] = int(_frac * 1e6)
+            kwargs['second'] = int(_sec)
             args = args[0:5]
         dt = datetime.datetime(*args, **kwargs)
         self._fromDateTime(dt)
@@ -419,7 +435,7 @@ class UTCDateTime(object):
         else:
             delta = 0
         if delta:
-            tz = tz.replace(':', '')
+            tz = tz.replace(':', '')   # XXX: not needed
             while len(tz) < 3:
                 tz += '0'
             delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
@@ -444,7 +460,7 @@ class UTCDateTime(object):
         dt = datetime.datetime.strptime(date + 'T' + time,
                                         date_pattern + 'T' + time_pattern)
         # add microseconds and eventually correct time zone
-        return UTCDateTime(dt) + (delta + ms)
+        return UTCDateTime(dt) + (float(delta) + ms)
 
     def _getTimeStamp(self):
         """
@@ -489,7 +505,12 @@ class UTCDateTime(object):
         >>> dt.datetime
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        return datetime.datetime.utcfromtimestamp(self.timestamp)
+        # we are exact at the border of floating point precision
+        # datetime.utcfromtimestamp will cut off but not round
+        # avoid through adding extra timedelta
+        _fsec, _isec = math.modf(self.timestamp)
+        return datetime.datetime.utcfromtimestamp(_isec) + \
+            datetime.timedelta(seconds=_fsec)
 
     datetime = property(_getDateTime)
 
@@ -905,9 +926,9 @@ class UTCDateTime(object):
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> unicode(dt)
-        u'2008-10-01T12:30:35.045020Z'
+        '2008-10-01T12:30:35.045020Z'
         """
-        return unicode(self.__str__())
+        return str(self.__str__())
 
     def __eq__(self, other):
         """
@@ -1249,7 +1270,7 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self._getDateTime().isoformat(sep=sep)
+        return self._getDateTime().isoformat(sep=native_str(sep))
 
     def formatFissures(self):
         """
@@ -1260,8 +1281,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatFissures()
-        '2008275T123035.0450Z'
+        >>> print(dt.formatFissures())
+        2008275T123035.0450Z
         """
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
             (self.year, self.julday, self.hour, self.minute, self.second,
@@ -1276,8 +1297,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatArcLink()
-        '2008,10,1,12,30,35,45020'
+        >>> print(dt.formatArcLink())
+        2008,10,1,12,30,35,45020
         """
         return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
                                          self.hour, self.minute, self.second,
@@ -1292,8 +1313,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35.45020)
-        >>> dt.formatSeedLink()
-        '2008,10,1,12,30,35'
+        >>> print(dt.formatSeedLink())
+        2008,10,1,12,30,35
         """
         # round seconds down to integer
         seconds = int(float(self.second) + float(self.microsecond) / 1.0e6)
@@ -1313,12 +1334,12 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatSEED()
-        '2008,275,12:30:35.0450'
+        >>> print(dt.formatSEED())
+        2008,275,12:30:35.0450
 
         >>> dt = UTCDateTime(2008, 10, 1, 0, 30, 0, 0)
-        >>> dt.formatSEED(compact=True)
-        '2008,275,00:30'
+        >>> print(dt.formatSEED(compact=True))
+        2008,275,00:30
         """
         if not compact:
             if not self.time:
@@ -1349,8 +1370,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
-        >>> dt.formatIRISWebService()
-        '2008-05-27T12:30:35.045'
+        >>> print(dt.formatIRISWebService())
+        2008-05-27T12:30:35.045
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
             (self.year, self.month, self.day, self.hour, self.minute,

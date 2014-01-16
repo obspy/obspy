@@ -3,6 +3,7 @@
 Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.
 """
+from __future__ import unicode_literals
 
 from obspy.segy import pack, unpack
 

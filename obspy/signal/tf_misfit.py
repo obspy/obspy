@@ -20,6 +20,9 @@ Kristekova et. al. (2009).
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
 
 import numpy as np
 from obspy.signal import util
@@ -49,7 +52,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.zeros((npts / 2, nf), dtype=np.complex)
+    cwt = np.zeros((npts // 2, nf), dtype=np.complex)
 
     if wl == 'morlet':
         psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
@@ -67,7 +70,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
         psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
         psihf = np.fft.fft(psih, n=nfft)
         tminin = int(t[-1] / 2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts / 2] * \
+        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
             (t[1] - t[0])
     return cwt.T
 

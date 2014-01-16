@@ -2,6 +2,7 @@
 """
 The obspy.imaging.backend test suite.
 """
+from __future__ import unicode_literals
 
 import matplotlib
 import unittest

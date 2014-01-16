@@ -19,6 +19,11 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import str
+from future.builtins import open
 
 import doctest
 import numpy as np
@@ -34,8 +39,9 @@ def readPaz(paz_file):
     simulation, the A0_normalization_factor might be set wrongly. Use
     :func:`~obspy.gse2.libgse2.attach_paz` instead.
 
-    >>> import StringIO
-    >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    >>> from obspy.core import compatibility
+    >>> f = compatibility.StringIO(
+    ... """CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
     ... -4.39823 -4.48709
@@ -45,8 +51,8 @@ def readPaz(paz_file):
     ... 0.0 0.0
     ... 0.4""")
     >>> p, z, k = readPaz(f)
-    >>> ['%.4f' % i for i in (p[0].real, z[0].real, k)]
-    ['-4.3982', '0.0000', '0.4000']
+    >>> print('%.4f %.4f %.4f' % (p[0].real, z[0].real, k))
+    -4.3982 0.0000 0.4000
     '''
     poles = []
     zeros = []
@@ -62,7 +68,7 @@ def readPaz(paz_file):
 
     ind = 1
     npoles = int(PAZ[ind])
-    for i in xrange(npoles):
+    for i in range(npoles):
         try:
             poles.append(complex(*[float(n)
                                    for n in PAZ[i + 1 + ind].split()]))
@@ -72,7 +78,7 @@ def readPaz(paz_file):
 
     ind += i + 2
     nzeros = int(PAZ[ind])
-    for i in xrange(nzeros):
+    for i in range(nzeros):
         try:
             zeros.append(complex(*[float(n)
                                    for n in PAZ[i + 1 + ind].split()]))
@@ -103,10 +109,10 @@ def attach_paz(tr, paz_file):
             attributes
     :param paz_file: path to pazfile or file pointer
 
-    >>> from obspy import Trace
+    >>> from obspy.core import Trace, compatibility
     >>> tr = Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
-    >>> import StringIO
-    >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    >>> f = compatibility.StringIO(
+    ... """CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
     ... -4.39823 -4.48709

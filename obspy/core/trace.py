@@ -8,6 +8,14 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import range
+from future.builtins import super
+from future.builtins import str
+from future.builtins import int
+from future.utils import native_str
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
@@ -15,6 +23,7 @@ from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
 from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
     taper_API_change
+from obspy.core import compatibility
 import math
 import numpy as np
 import warnings
@@ -40,11 +49,11 @@ class Stats(AttribDict):
 
     >>> stats = Stats()
     >>> stats.network = 'BW'
-    >>> stats['network']
-    'BW'
+    >>> print(stats['network'])
+    BW
     >>> stats['station'] = 'MANZ'
-    >>> stats.station
-    'MANZ'
+    >>> print(stats.station)
+    MANZ
 
     .. rubric:: _`Default Attributes`
 
@@ -412,10 +421,10 @@ class Trace(object):
 
         >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr / 7
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 429 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z ... | 100.0 Hz, 429 samples
@@ -443,6 +452,9 @@ class Trace(object):
             tend = tstart + (self.stats.delta * packet_length)
         return st
 
+    # Py3k: '/' does not map to __div__ anymore in Python 3
+    __truediv__ = __div__
+
     def __mod__(self, num):
         """
         Splits Trace into new Stream containing Traces with num samples.
@@ -456,10 +468,10 @@ class Trace(object):
 
         >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr % 800
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 800 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 800 samples
@@ -637,7 +649,7 @@ class Trace(object):
             fill_value = (lt.data[-1], rt.data[0])
         sr = self.stats.sampling_rate
         delta = (rt.stats.starttime - lt.stats.endtime) * sr
-        delta = int(round(delta)) - 1
+        delta = int(compatibility.round_away(delta)) - 1
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
         out = self.__class__(header=deepcopy(lt.stats))
@@ -744,10 +756,10 @@ class Trace(object):
 
         >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
         >>> tr = Trace(header=meta)
-        >>> tr.getId()
-        'BW.MANZ..EHZ'
-        >>> tr.id
-        'BW.MANZ..EHZ'
+        >>> print(tr.getId())
+        BW.MANZ..EHZ
+        >>> print(tr.id)
+        BW.MANZ..EHZ
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
@@ -858,16 +870,16 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((starttime - self.stats.starttime) *
-                          self.stats.sampling_rate)
+            delta = compatibility.round_away(
+                (starttime - self.stats.starttime) * self.stats.sampling_rate)
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
             if delta < 0 and pad:
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
                     float(self.stats.sampling_rate)
-                newdelta = round((starttime - newstarttime) *
-                                 self.stats.sampling_rate)
+                newdelta = compatibility.round_away(
+                    (starttime - newstarttime) * self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
@@ -920,13 +932,15 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.starttime) *
-                          self.stats.sampling_rate) - self.stats.npts + 1
+            delta = compatibility.round_away(
+                (endtime - self.stats.starttime) *
+                self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
-            #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
-            #                       self.stats.sampling_rate, 7)))
+            # delta = -1*int(math.floor(compatibility.round_away(
+            #     (self.stats.endtime - endtime) * \
+            #     self.stats.sampling_rate, 7)))
             delta = int(math.floor(round((endtime - self.stats.endtime) *
                                    self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
@@ -1068,7 +1082,7 @@ class Trace(object):
             raise Exception(msg % (self.stats.endtime, self.stats.starttime))
         sr = self.stats.sampling_rate
         if self.stats.starttime != self.stats.endtime:
-            if int(round(delta * sr)) + 1 != len(self.data):
+            if int(compatibility.round_away(delta * sr)) + 1 != len(self.data):
                 msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data len(%d)"
                 raise Exception(msg % (sr, delta, len(self.data)))
             # Check if the endtime fits the starttime, npts and sampling_rate.
@@ -1233,7 +1247,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "seedresp" in kwargs:
             proc_info = ("simulate:seedresp:" +
                          ":".join(["%s=%s" % kv
-                                   for kv in seedresp.iteritems()]))
+                                   for kv in seedresp.items()]))
             self._addProcessingInfo(proc_info)
         return self
 
@@ -1464,7 +1478,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
         # resample
         num = int(self.stats.npts / factor)
-        self.data = resample(self.data, num, window=window)
+        self.data = resample(self.data, num, window=native_str(window))
         self.stats.sampling_rate = sampling_rate
         # add processing information to the stats dictionary
         proc_info = "resample:%d:%s" % (sampling_rate, window)
@@ -1903,15 +1917,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
-        >>> tr.stats.processing
-        ['normalize:9']
+        >>> print(tr.stats.processing[0])
+        normalize:9
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
         >>> tr.normalize()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
-        >>> tr.stats.processing
-        ['normalize:-9.2']
+        >>> print(tr.stats.processing[0])
+        normalize:-9.2
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
@@ -2034,7 +2048,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0]
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
         >>> tr.attach_response(inv)
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tr.stats.response)  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2055,7 +2070,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
             inventories = [inventories]
-        elif isinstance(inventories, basestring):
+        elif isinstance(inventories, str):
             inventories = [read_inventory(inventories)]
         responses = []
         for inv in inventories:
@@ -2117,7 +2132,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr = st[0].copy()
         >>> tr.plot()  # doctest: +SKIP
         >>> # Response object is already attached to example data:
-        >>> print tr.stats.response  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        >>> print(tr.stats.response)  \
+                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Channel Response
             From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
             Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2207,9 +2223,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # assign processed data and store processing information
         self.data = data
         info = ":".join(["remove_response"] +
-                        map(str, [output, water_level, pre_filt,
-                                  zero_mean, taper, taper_fraction]) +
-                        ["%s=%s" % (k, v) for k, v in kwargs.iteritems()])
+                        [str(x) for x in (output, water_level, pre_filt,
+                                          zero_mean, taper, taper_fraction)] +
+                        ["%s=%s" % (k, v) for k, v in kwargs.items()])
         self._addProcessingInfo(info)
         return self
 

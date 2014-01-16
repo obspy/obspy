@@ -17,6 +17,12 @@ Functions for Array Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import range
+from future.builtins import str
 
 import math
 import warnings
@@ -264,7 +270,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     A = np.zeros((N * 3, 6))
     z3t = np.zeros(3)
     # fill up A
-    for i in xrange(N):
+    for i in range(N):
         ss = subarraycoords[(i + 1), :] - subarraycoords[0, :]
         A[(3 * i):(3 * i + 3), :] = np.c_[
             np.r_[ss, z3t], np.r_[z3t, ss],
@@ -279,7 +285,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     II = np.eye(3 * N)
     D = -I3
 
-    for i in xrange(N - 1):
+    for i in range(N - 1):
         D = np.c_[D, -I3]
     D = np.r_[D, II].T
 
@@ -435,12 +441,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     #
     # BEGIN LOOP OVER DATA POINTS IN TIME SERIES==============================
     #
-    for itime in xrange(nt):
+    for itime in range(nt):
         #
         # data vector is differences of stn i displ from stn 1 displ
         # sum the lengths of the displ difference vectors
         sumlen = 0
-        for i in xrange(N):
+        for i in range(N):
             udif[0, i] = ts1[itime, subarray[i + 1]] - ts1[itime, subarray[0]]
             udif[1, i] = ts2[itime, subarray[i + 1]] - ts2[itime, subarray[0]]
             udif[2, i] = ts3[itime, subarray[i + 1]] - ts3[itime, subarray[0]]
@@ -472,7 +478,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         misfit_sq = np.reshape(misfit_sq, (N, 3)).T
         misfit_sumsq = np.empty(N)
         misfit_sumsq.fill(np.NaN)
-        for i in xrange(N):
+        for i in range(N):
             misfit_sumsq[i] = misfit_sq[:, i].sum()
         misfit_len = np.sum(np.sqrt(misfit_sumsq))
         ts_M[itime] = misfit_len / sumlen
@@ -630,7 +636,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         raise TypeError('only Stream or numpy.ndarray allowed')
 
     if verbose:
-        print("coordys = " + coordsys)
+        print(("coordys = " + coordsys))
 
     if coordsys == 'lonlat':
         center_lon = geometry[:, 0].mean()
@@ -750,7 +756,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
         for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
             _sum = 0j
-            for k in xrange(len(coords)):
+            for k in range(len(coords)):
                 _sum += np.exp(complex(0.,
                                coords[k, 0] * kx + coords[k, 1] * ky))
             transff[i, j] = abs(_sum) ** 2
@@ -904,7 +910,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(geometry)
         print("stream contains following traces:")
         print(stream)
-        print("stime = " + str(stime) + ", etime = " + str(etime))
+        print(("stime = " + str(stime) + ", etime = " + str(etime)))
 
     time_shift_table = get_timeshift(geometry, sll_x, sll_y,
                                      sl_s, grdpts_x, grdpts_y)
@@ -951,8 +957,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         abspow_map.fill(0.)
         # computing the covariances of the signal at different receivers
         dpow = 0.
-        for i in xrange(nstat):
-            for j in xrange(i, nstat):
+        for i in range(nstat):
+            for j in range(i, nstat):
                 R[:, i, j] = ft[i, :] * ft[j, :].conj()
                 if method == CAPON:
                     R[:, i, j] /= np.abs(R[:, i, j].sum())
@@ -963,7 +969,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         dpow *= nstat
         if method == CAPON:
             # P(f) = 1/(e.H R(f)^-1 e)
-            for n in xrange(nf):
+            for n in range(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
         errcode = clibsignal.generalizedBeamformer(
@@ -989,7 +995,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
             if verbose:
-                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
+                print((newstart, (newstart + (nsamp / fs)), res[-1][1:]))
         if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep

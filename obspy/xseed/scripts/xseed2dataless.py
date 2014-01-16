@@ -3,6 +3,9 @@
 """
 A command-line program that converts XML-SEED into Dataless SEED files.
 """
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import str
 
 from glob import glob
 from obspy.xseed.parser import Parser
@@ -35,7 +38,7 @@ def xseed2dataless(filename, options):
     for file in files:
         if not os.path.isfile(file):
             continue
-        f = open(file, 'r')
+        f = open(file, 'rb')
         if f.read(1) != '<':
             if options.verbose:
                 msg = 'Skipping file %s' % file
@@ -58,7 +61,7 @@ def xseed2dataless(filename, options):
         try:
             parser = Parser(file, debug=options.debug)
             parser.writeSEED(output)
-        except Exception, e:
+        except Exception as e:
             if options.debug:
                 raise
             msg = '\tError parsing file %s' % file + os.linesep

@@ -2,13 +2,24 @@
 """
 Mini-SEED specific utilities.
 """
-from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import range
+from future.builtins import open
+from future.builtins import int
+from future.builtins import str
+from future.utils import native_str
+from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
+    ENDIAN
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
 import sys
 import ctypes as C
 import numpy as np
+import math
 import warnings
 
 
@@ -44,10 +55,10 @@ def getStartAndEndTime(file_or_file_object):
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
-    And also with a Mini-SEED file stored in a StringIO.
+    And also with a Mini-SEED file stored in a BytesIO
 
-    >>> from StringIO import StringIO
-    >>> file_object = StringIO(f.read())
+    >>> from obspy.core import compatibility
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -56,14 +67,14 @@ def getStartAndEndTime(file_or_file_object):
     If the file pointer does not point to the first record, the start time will
     refer to the record it points to.
 
-    >>> f.seek(512)
+    >>> _ = f.seek(512)
     >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
     The same is valid for a file-like object.
 
-    >>> file_object = StringIO(f.read())
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -131,27 +142,35 @@ def getTimingAndDataQuality(file_or_file_object):
 
     >>> from obspy.core.util import getExampleFile
     >>> filename = getExampleFile("qualityflags.mseed")
-    >>> getTimingAndDataQuality(filename)
-    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+    >>> tq = getTimingAndDataQuality(filename)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    Also works with file pointers and StringIOs.
+    Also works with file pointers and BytesIOs.
 
     >>> f = open(filename, 'rb')
-    >>> getTimingAndDataQuality(f)
-    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+    >>> tq = getTimingAndDataQuality(f)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    >>> from StringIO import StringIO
-    >>> file_object = StringIO(f.read())
+    >>> from obspy.core import compatibility
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> f.close()
-    >>> getTimingAndDataQuality(file_object)
-    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+    >>> tq = getTimingAndDataQuality(file_object)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    If the file pointer or StringIO position does not correspond to the first
+    If the file pointer or BytesIO position does not correspond to the first
     record the omitted records will be skipped.
 
-    >>> file_object.seek(1024, 1)
-    >>> getTimingAndDataQuality(file_object)
-    {'data_quality_flags': [8, 8, 7, 6, 5, 4, 3, 2]}
+    >>> _ = file_object.seek(1024, 1)
+    >>> tq = getTimingAndDataQuality(file_object)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [8, 8, 7, 6, 5, 4, 3, 2]
     >>> file_object.close()
 
     Reading a file with Blockette 1001 will return timing quality statistics.
@@ -159,28 +178,43 @@ def getTimingAndDataQuality(file_or_file_object):
     fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
 
     >>> filename = getExampleFile("timingquality.mseed")
-    >>> getTimingAndDataQuality(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'timing_quality_upper_quantile': 75.0,
-    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
-    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
-    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> tq = getTimingAndDataQuality(filename)
+    >>> for k, v in sorted(tq.items()):
+    ...     print(k, v)
+    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality_average 50.0
+    timing_quality_lower_quantile 25.0
+    timing_quality_max 100.0
+    timing_quality_median 50.0
+    timing_quality_min 0.0
+    timing_quality_upper_quantile 75.0
 
-    Also works with file pointers and StringIOs.
+    Also works with file pointers and BytesIOs.
 
     >>> f = open(filename, 'rb')
-    >>> getTimingAndDataQuality(f)  # doctest: +NORMALIZE_WHITESPACE
-    {'timing_quality_upper_quantile': 75.0,
-    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
-    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
-    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> tq = getTimingAndDataQuality(f)
+    >>> for k, v in sorted(tq.items()):
+    ...     print(k, v)
+    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality_average 50.0
+    timing_quality_lower_quantile 25.0
+    timing_quality_max 100.0
+    timing_quality_median 50.0
+    timing_quality_min 0.0
+    timing_quality_upper_quantile 75.0
 
-    >>> file_object = StringIO(f.read())
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> f.close()
-    >>> getTimingAndDataQuality(file_object)  # doctest: +NORMALIZE_WHITESPACE
-    {'timing_quality_upper_quantile': 75.0,
-    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
-    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
-    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> tq = getTimingAndDataQuality(file_object)
+    >>> for k, v in sorted(tq.items()):
+    ...     print(k, v)
+    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality_average 50.0
+    timing_quality_lower_quantile 25.0
+    timing_quality_max 100.0
+    timing_quality_median 50.0
+    timing_quality_min 0.0
+    timing_quality_upper_quantile 75.0
     >>> file_object.close()
     """
     # Read the first record to get a starting point and.
@@ -198,7 +232,7 @@ def getTimingAndDataQuality(file_or_file_object):
         if 'timing_quality' in this_info:
             timing_quality.append(float(this_info['timing_quality']))
         # Add the value of each bit to the quality_count.
-        for _i in xrange(8):
+        for _i in range(8):
             if (this_info['data_quality_flags'] & (1 << _i)) != 0:
                 quality_count[_i] += 1
         offset += this_info['record_length']
@@ -237,15 +271,24 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
 
     >>> from obspy.core.util import getExampleFile
     >>> filename = getExampleFile("test.mseed")
-    >>> getRecordInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'record_length': 4096, 'data_quality_flags': 0, 'activity_flags': 0,
-     'byteorder': '>', 'encoding': 11, 'samp_rate': 40.0, 'excess_bytes': 0L,
-     'filesize': 8192L,
-     'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400), 'npts': 5980,
-     'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
-     'number_of_records': 2L, 'io_and_clock_flags': 0}
+    >>> ri = getRecordInformation(filename)
+    >>> for k, v in sorted(ri.items()):
+    ...     print(k, v)
+    activity_flags 0
+    byteorder >
+    data_quality_flags 0
+    encoding 11
+    endtime 2003-05-29T02:15:51.518400Z
+    excess_bytes 0
+    filesize 8192
+    io_and_clock_flags 0
+    npts 5980
+    number_of_records 2
+    record_length 4096
+    samp_rate 40.0
+    starttime 2003-05-29T02:13:22.043400Z
     """
-    if isinstance(file_or_file_object, basestring):
+    if isinstance(file_or_file_object, str):
         with open(file_or_file_object, 'rb') as f:
             info = _getRecordInformation(f, offset=offset, endian=endian)
     else:
@@ -278,25 +321,25 @@ def _getRecordInformation(file_object, offset=0, endian=None):
 
     # Get the size of the buffer.
     file_object.seek(0, 2)
-    info['filesize'] = long(file_object.tell() - record_start)
+    info['filesize'] = int(file_object.tell() - record_start)
     file_object.seek(record_start, 0)
 
     # check current position
     if info['filesize'] % 256 != 0:
         # if a multiple of minimal record length 256
         record_start = 0
-    elif file_object.read(8)[6] not in ['D', 'R', 'Q', 'M']:
+    elif file_object.read(8)[6:7] not in [b'D', b'R', b'Q', b'M']:
         # if valid data record start at all starting with D, R, Q or M
         record_start = 0
     file_object.seek(record_start, 0)
 
     # check if full SEED or Mini-SEED
-    if file_object.read(8)[6] == 'V':
+    if file_object.read(8)[6:7] == b'V':
         # found a full SEED record - seek first Mini-SEED record
         # search blockette 005, 008 or 010 which contain the record length
         blockette_id = file_object.read(3)
-        while blockette_id not in ['010', '008', '005']:
-            if not blockette_id.startswith('0'):
+        while blockette_id not in [b'010', b'008', b'005']:
+            if not blockette_id.startswith(b'0'):
                 msg = "SEED Volume Index Control Headers: blockette 0xx" + \
                       " expected, got %s"
                 raise Exception(msg % blockette_id)
@@ -312,7 +355,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         # reset file pointer
         file_object.seek(record_start, 0)
         # cycle through file using record length until first data record found
-        while file_object.read(7)[6] not in ['D', 'R', 'Q', 'M']:
+        while file_object.read(7)[6:7] not in [b'D', b'R', b'Q', b'M']:
             record_start += rec_len
             file_object.seek(record_start, 0)
 
@@ -320,23 +363,24 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
+    fmt = lambda s: native_str('%sHHBBBxHHhhBBBxlxxH' % s)
     if endian is None:
         try:
             endian = ">"
-            values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
+            values = unpack(fmt(endian), data)
             starttime = UTCDateTime(
                 year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
         except:
             endian = "<"
-            values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
+            values = unpack(fmt(endian), data)
             starttime = UTCDateTime(
                 year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
     else:
-        values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
+        values = unpack(fmt(endian), data)
         try:
             starttime = UTCDateTime(
                 year=values[0], julday=values[1],
@@ -367,26 +411,31 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     # if any of those is found.
     while blkt_offset:
         file_object.seek(record_start + blkt_offset, 0)
-        blkt_type, blkt_offset = unpack('%sHH' % endian, file_object.read(4))
+        blkt_type, blkt_offset = unpack(native_str('%sHH' % endian),
+                                        file_object.read(4))
         # Parse in order of likeliness.
         if blkt_type == 1000:
             encoding, word_order, record_length = \
-                unpack('%sBBB' % endian, file_object.read(3))
+                unpack(native_str('%sBBB' % endian),
+                       file_object.read(3))
             if ENDIAN[word_order] != endian:
                 msg = 'Inconsistent word order.'
                 warnings.warn(msg, UserWarning)
             info['encoding'] = encoding
             info['record_length'] = 2 ** record_length
         elif blkt_type == 1001:
-            info['timing_quality'], mu_sec = unpack('%sBb' % endian,
-                                                    file_object.read(2))
+            info['timing_quality'], mu_sec = \
+                unpack(native_str('%sBb' % endian),
+                       file_object.read(2))
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 500:
             file_object.seek(14, 1)
-            mu_sec = unpack('%sb' % endian, file_object.read(1))[0]
+            mu_sec = unpack(native_str('%sb' % endian),
+                            file_object.read(1))[0]
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 100:
-            samp_rate = unpack('%sf' % endian, file_object.read(4))[0]
+            samp_rate = unpack(native_str('%sf' % endian),
+                               file_object.read(4))[0]
 
     # If samprate not set via blockette 100 calculate the sample rate according
     # to the SEED manual.
@@ -410,9 +459,9 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     info['endtime'] = starttime + (npts - 1) / samp_rate
     info['byteorder'] = endian
 
-    info['number_of_records'] = long(info['filesize'] //
-                                     info['record_length'])
-    info['excess_bytes'] = long(info['filesize'] % info['record_length'])
+    info['number_of_records'] = int(info['filesize'] //
+                                    info['record_length'])
+    info['excess_bytes'] = int(info['filesize'] % info['record_length'])
 
     # Reset file pointer.
     file_object.seek(initial_position, 0)
@@ -459,7 +508,8 @@ def _convertDatetimeToMSTime(dt):
 
     :param dt: obspy.util.UTCDateTime object.
     """
-    return int(dt.timestamp * HPTMODULUS)
+    _fsec, _sec = math.modf(dt.timestamp)
+    return int(round(_fsec * HPTMODULUS)) + int(_sec * HPTMODULUS)
 
 
 def _convertMSTimeToDatetime(timestring):
@@ -580,7 +630,7 @@ def shiftTimeOfFile(input_file, output_file, timeshift):
     sys_byteorder = "<" if (sys.byteorder == "little") else ">"
     doSwap = False if (byteorder == sys_byteorder) else True
 
-    # This is in this scenario somewhat easier to use than StringIO because one
+    # This is in this scenario somewhat easier to use than BytesIO because one
     # can directly modify the data array.
     data = np.fromfile(input_file, dtype="uint8")
     array_length = len(data)

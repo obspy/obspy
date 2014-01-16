@@ -8,6 +8,11 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import str
+from future.builtins import int
 from copy import copy
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
@@ -107,7 +112,7 @@ def mergePreviews(stream):
         return Stream()
     # Initialize new Stream object.
     new_stream = Stream()
-    for value in traces.values():
+    for value in list(traces.values()):
         if len(value) == 1:
             new_stream.append(value[0])
             continue
@@ -130,7 +135,7 @@ def mergePreviews(stream):
         # Get the minimum start and maximum endtime for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
-        samples = (max_endtime - min_starttime) / delta + 1
+        samples = int(round((max_endtime - min_starttime) / delta)) + 1
         data = np.empty(samples, dtype=dtype)
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
@@ -210,7 +215,7 @@ def resamplePreview(trace, samples, method='accurate'):
     elif method == 'accurate':
         new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
-        for _i in xrange(samples):
+        for _i in range(samples):
             new_data[_i] = trace.data[int(_i * step):
                                       int((_i + 1) * step)].max()
         trace.data = new_data

@@ -2,6 +2,8 @@
 """
 The obspy.neic.client test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.neic import Client

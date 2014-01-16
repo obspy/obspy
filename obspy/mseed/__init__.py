@@ -34,7 +34,8 @@ Each trace will have a ``stats`` attribute containing the usual information.
 When reading a Mini-SEED file it will have one additional attribute ``mseed``.
 This attribute contains all Mini-SEED specific attributes.
 
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
+>>> stats_mseed = st[0].stats.pop('mseed')
+>>> print(st[0].stats)
          network: NL
          station: HGN
         location: 00
@@ -46,9 +47,14 @@ This attribute contains all Mini-SEED specific attributes.
             npts: 11947
            calib: 1.0
          _format: MSEED
-           mseed: AttribDict({'record_length': 4096, 'encoding': 'STEIM2',
-                              'filesize': 8192L, 'dataquality': 'R',
-                              'number_of_records': 2L, 'byteorder': '>'})
+>>> for k, v in sorted(stats_mseed.items()):
+...     print(k, v)
+byteorder >
+dataquality R
+encoding STEIM2
+filesize 8192
+number_of_records 2
+record_length 4096
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.
@@ -94,6 +100,8 @@ So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 >>> st.write('out.mseed', format='MSEED', reclen=512,  # doctest: +SKIP
 ...          encoding='STEIM1')
 """
+from __future__ import unicode_literals
+from __future__ import print_function
 
 
 if __name__ == '__main__':

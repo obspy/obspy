@@ -10,9 +10,14 @@ Functions to generate benchmark plots from given SU files.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import str
 
 from obspy.segy.segy import SUFile, readSU
-import StringIO
+import io
 import math
 import matplotlib.pylab as plt
 import matplotlib.cm as cm
@@ -282,7 +287,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     if outfile is None:
         # Return an binary imagestring if not outfile but format.
         if format:
-            imgdata = StringIO.StringIO()
+            imgdata = io.StringIO()
             _fig.savefig(imgdata, format=format, dpi=dpi)
             imgdata.seek(0)
             return imgdata.read()

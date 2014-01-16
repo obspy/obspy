@@ -8,6 +8,10 @@ Decorator used in ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import open
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util import getExampleFile
@@ -53,13 +57,13 @@ def deprecated_keywords(keywords):
     :param keywords: old/new keyword names as key/value pairs.
     """
     def fdec(func):
-        fname = func.func_name
+        fname = func.__name__
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
         msg2 = "Deprecated keyword %s in %s() call - ignoring."
 
         @functools.wraps(func)
         def echo_func(*args, **kwargs):
-            for kw in kwargs.keys():
+            for kw in list(kwargs.keys()):
                 if kw in keywords:
                     nkw = keywords[kw]
                     if nkw is None:
@@ -139,7 +143,7 @@ def uncompressFile(func):
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
     def wrapped_func(filename, *args, **kwargs):
-        if not isinstance(filename, basestring):
+        if not isinstance(filename, str):
             return func(filename, *args, **kwargs)
         elif not os.path.exists(filename):
             msg = "File not found '%s'" % (filename)
@@ -178,14 +182,18 @@ def uncompressFile(func):
             # bz2 module
             try:
                 import bz2
-                obj_list.append(bz2.decompress(open(filename, 'rb').read()))
+                with open(filename, 'rb') as fp:
+                    obj_list.append(bz2.decompress(fp.read()))
             except:
                 pass
         elif filename.endswith('.gz'):
             # gzip module
             try:
                 import gzip
-                obj_list.append(gzip.open(filename, 'rb').read())
+                # no with due to py 2.6
+                fp = gzip.open(filename, 'rb')
+                obj_list.append(fp.read())
+                fp.close()
             except:
                 pass
         # handle results
@@ -304,7 +312,7 @@ def taper_API_change():
                 if 'max_percentage' in kwargs:
                     # normal new usage, so do nothing
                     pass
-                elif isinstance(args[0], basestring):
+                elif isinstance(args[0], str):
                     # emulate old behavior with corresponding taper and
                     # tapering over the full trace
                     msg = ("The call 'Trace.taper(type='mytype')' is "
@@ -343,7 +351,7 @@ def map_example_filename(arg_kwarg_name):
             prefix = '/path/to/'
             # check kwargs
             if arg_kwarg_name in kwargs:
-                if isinstance(kwargs[arg_kwarg_name], basestring):
+                if isinstance(kwargs[arg_kwarg_name], str):
                     if kwargs[arg_kwarg_name].startswith(prefix):
                         try:
                             kwargs[arg_kwarg_name] = \
@@ -358,7 +366,7 @@ def map_example_filename(arg_kwarg_name):
                 except ValueError:
                     pass
                 else:
-                    if ind < len(args) and isinstance(args[ind], basestring):
+                    if ind < len(args) and isinstance(args[ind], str):
                         # need to check length of args from inspect
                         if args[ind].startswith(prefix):
                             try:

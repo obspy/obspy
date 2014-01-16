@@ -9,6 +9,9 @@ Various additional utilities for obspy.signal.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
 
 from scipy import signal, fix, fftpack
 import ctypes as C
@@ -212,7 +215,8 @@ def rdct(x, n=0):
     if (n == 0):
         n = m
         a = np.sqrt(2 * n)
-        x = np.append([x[0:n:2, :]], [x[2 * np.fix(n / 2):0:-2, :]], axis=1)
+        x = np.append([x[0:n:2, :]], [x[2 * int(np.fix(n / 2)):0:-2, :]],
+                      axis=1)
         x = x[0, :, :]
         z = np.append(np.sqrt(2.), 2. * np.exp((-0.5j * float(np.pi / n)) *
                       np.arange(1, n)))

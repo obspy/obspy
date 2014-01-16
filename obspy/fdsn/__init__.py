@@ -74,7 +74,7 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
     >>> client = Client()
     >>> inventory = client.get_stations(
     ...     latitude=-56.1, longitude=-26.7, maxradius=15)
-    >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     Inventory created at ...
         Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
                 http://service.iris.edu/fdsnws/station/1/query?latitude=...
@@ -94,15 +94,25 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
 Please see the documentation for each method for further information and
 examples.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import str  # NOQA
+from future.utils import PY2
 
-from client import Client
-from header import URL_MAPPINGS
+from .client import Client  # NOQA
+from .header import URL_MAPPINGS  # NOQA
 
 # insert supported URL mapping list dynamically in docstring
 # we need an if clause because add_doctests() executes the file once again
 if r"%s" in Client.__init__.__doc__:
-    Client.__init__.im_func.func_doc = \
-        Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
+    if PY2:
+        Client.__init__.__func__.__doc__ = \
+            Client.__init__.__doc__ % \
+            str(sorted(URL_MAPPINGS.keys())).strip("[]")
+    else:
+        Client.__init__.__doc__ = \
+            Client.__init__.__doc__ % \
+            str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
 
 if __name__ == '__main__':

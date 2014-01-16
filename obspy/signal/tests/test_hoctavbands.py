@@ -3,6 +3,10 @@
 """
 The hoctavbands.core test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import open
 
 from obspy.signal import hoctavbands, util
 from scipy import signal

@@ -44,7 +44,9 @@ values).
             npts: 100
            calib: 1.0
          _format: SAC
-             sac: AttribDict({'dist': -12345.0, 'isynth': -12345, ...'})
+             sac: AttribDict({...})
+>>> print(st[0].stats.sac.dist)
+-12345.0
 
 The data is stored in the data attribut.
 
@@ -58,8 +60,11 @@ stats and stats['sac'] are written with the following command to a file:
 
 >>> st.write('tmp.sac', format='SAC') #doctest: +SKIP
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from sacio import SacIO, SacError, SacIOError, attach_paz, attach_resp
+from obspy.sac.sacio import SacIO, SacError, SacIOError, attach_paz, \
+    attach_resp
 
 
 if __name__ == '__main__':

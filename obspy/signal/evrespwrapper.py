@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.utils import native_str
 import numpy as np
 import ctypes as C
 from obspy.signal.headers import clibevresp
@@ -199,11 +201,11 @@ clibevresp.calc_resp.argtypes = [
     C.POINTER(channel),
     np.ctypeslib.ndpointer(dtype='float64',  # freqs
                            ndim=1,
-                           flags='C_CONTIGUOUS'),
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     np.ctypeslib.ndpointer(dtype='complex128',  # output
                            ndim=1,
-                           flags='C_CONTIGUOUS'),
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_char_p,
     C.c_int,
     C.c_int,

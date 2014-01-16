@@ -16,12 +16,17 @@ Frequency Attributes
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
 
 from operator import itemgetter
 from scipy import fftpack, signal, sparse
 from obspy.signal.invsim import seisSim, cornFreq2Paz
 import numpy as np
-import util
+from obspy.signal import util
 
 
 def mper(data, win, Nfft, n1=0, n2=0):
@@ -81,7 +86,7 @@ def welch(data, win, Nfft, L=0, over=0):
     n0 = (1. - float(over)) * L
     nsect = 1 + int(np.floor((len(data) - L) / (n0)))
     Px = 0
-    for _i in xrange(nsect):
+    for _i in range(nsect):
         Px = Px + mper(data, win, Nfft, n1, n2) / nsect
         n1 = n1 + n0
         n2 = n2 + n0
@@ -152,9 +157,9 @@ def cfrequency_unwindowed(data, fs):
     """
     nfft = util.nextpow2(len(data))
     freq = np.linspace(0, fs, nfft + 1)
-    freqaxis = freq[0:nfft / 2]
+    freqaxis = freq[0:nfft // 2]
     Px_wm = welch(data, np.hamming(len(data)), nfft)
-    Px = Px_wm[0:len(Px_wm) / 2]
+    Px = Px_wm[0:len(Px_wm) // 2]
     cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
     return cfreq
 
@@ -183,7 +188,7 @@ def bwith(data, fs, smoothie, fk):
     freqaxis = np.linspace(0, fs, nfft + 1)
     bwith = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
-    f_sm = util.smooth(abs(f[:, 0:nfft / 2]), 10)
+    f_sm = util.smooth(abs(f[:, 0:nfft // 2]), 10)
     if np.size(data.shape) > 1:
         i = 0
         for row in f_sm:
@@ -237,7 +242,7 @@ def domperiod(data, fs, smoothie, fk):
     dperiod = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
     #f_sm = util.smooth(abs(f[:,0:nfft/2]),1)
-    f_sm = f[:, 0:nfft / 2]
+    f_sm = f[:, 0:nfft // 2]
     if np.size(data.shape) > 1:
         i = 0
         for row in f_sm:
@@ -336,7 +341,7 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     dataT = np.transpose(data)
     nfft = util.nextpow2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)
-    f = fc[1:len(fc) / 2 + 1, :]
+    f = fc[1:len(fc) // 2 + 1, :]
     m, a, b = logbankm(p, nfft, fs, w)
     pw = np.real(np.multiply(f[a:b, :], np.conj(f[a:b, :])))
     pth = np.max(pw) * 1E-20

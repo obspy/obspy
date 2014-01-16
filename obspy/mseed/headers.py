@@ -2,7 +2,9 @@
 """
 Defines the libmseed structures and blockettes.
 """
-
+from __future__ import unicode_literals
+from future.builtins import str
+from future.utils import native_str
 from distutils import sysconfig
 import ctypes as C
 import numpy as np
@@ -10,13 +12,18 @@ import os
 import platform
 
 
-HPTERROR = -2145916800000000L
+HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
 # Import shared libmseed depending on the platform.
 # create library names
 lib_names = [
+    # python3.3 platform specific library name
+    'libmseed_%s_%s_py%s.cpython-%sm' % (
+        platform.system(), platform.architecture()[0],
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # platform specific library name
     'libmseed_%s_%s_py%s' % (
         platform.system(), platform.architecture()[0],
@@ -31,10 +38,11 @@ for lib_name in lib_names:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                         'lib', lib_name + lib_extension))
         break
-    except Exception, e:
+    except Exception as e:
+        err_msg = str(e)
         pass
 else:
-    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % (e)
+    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % err_msg
     raise ImportError(msg)
 
 
@@ -51,7 +59,9 @@ if hasattr(C.pythonapi, 'Py_InitModule4'):
 elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
     Py_ssize_t = C.c_int64
 else:
-    raise TypeError("Cannot determine type of Py_ssize_t")
+    #XXX: just hard code it for now
+    Py_ssize_t = C.c_int64
+    #raise TypeError("Cannot determine type of Py_ssize_t")
 
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
@@ -59,7 +69,8 @@ MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
 VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS
 
 # expected data types for libmseed id: (numpy, ctypes)
-DATATYPES = {"a": C.c_char, "i": C.c_int32, "f": C.c_float, "d": C.c_double}
+DATATYPES = {b"a": C.c_char, b"i": C.c_int32, b"f": C.c_float,
+             b"d": C.c_double}
 SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 
 # Valid record lengths for Mini-SEED files.
@@ -496,15 +507,19 @@ clibmseed.ms_detect.restype = C.c_int
 
 clibmseed.msr_unpack_steim2.argtypes = [
     C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
 clibmseed.msr_unpack_steim1.argtypes = [
     C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
@@ -527,13 +542,6 @@ clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
                                 C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
-
-PyFile_FromFile = C.pythonapi.PyFile_FromFile
-PyFile_FromFile.argtypes = [
-    Py_ssize_t, C.c_char_p, C.c_char_p, C.CFUNCTYPE(C.c_int, Py_ssize_t)]
-PyFile_FromFile.restype = C.py_object
-
-
 #####################################
 # Define the C structures.
 #####################################
@@ -542,6 +550,7 @@ PyFile_FromFile.restype = C.py_object
 # Container for a continuous trace segment, linkable
 class MSTraceSeg(C.Structure):
     pass
+
 
 MSTraceSeg._fields_ = [
     ('starttime', C.c_longlong),      # Time of first sample
@@ -667,7 +676,8 @@ LinkedIDList._fields_ = [
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='b', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='b', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.POINTER(Selections),
     C.c_int8,
