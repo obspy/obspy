@@ -12,6 +12,7 @@ from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import str
 from future.builtins import open
+from future.utils import native_str
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util import getExampleFile
@@ -143,7 +144,7 @@ def uncompressFile(func):
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
     def wrapped_func(filename, *args, **kwargs):
-        if not isinstance(filename, str):
+        if not isinstance(filename, (str, native_str)):
             return func(filename, *args, **kwargs)
         elif not os.path.exists(filename):
             msg = "File not found '%s'" % (filename)
@@ -312,7 +313,7 @@ def taper_API_change():
                 if 'max_percentage' in kwargs:
                     # normal new usage, so do nothing
                     pass
-                elif isinstance(args[0], str):
+                elif isinstance(args[0], (str, native_str)):
                     # emulate old behavior with corresponding taper and
                     # tapering over the full trace
                     msg = ("The call 'Trace.taper(type='mytype')' is "
@@ -351,7 +352,7 @@ def map_example_filename(arg_kwarg_name):
             prefix = '/path/to/'
             # check kwargs
             if arg_kwarg_name in kwargs:
-                if isinstance(kwargs[arg_kwarg_name], str):
+                if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
                     if kwargs[arg_kwarg_name].startswith(prefix):
                         try:
                             kwargs[arg_kwarg_name] = \
@@ -366,7 +367,8 @@ def map_example_filename(arg_kwarg_name):
                 except ValueError:
                     pass
                 else:
-                    if ind < len(args) and isinstance(args[ind], str):
+                    if ind < len(args) and isinstance(args[ind], (str,
+                                                                  native_str)):
                         # need to check length of args from inspect
                         if args[ind].startswith(prefix):
                             try:
