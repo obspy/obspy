@@ -288,7 +288,7 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
     samp_rate 40.0
     starttime 2003-05-29T02:13:22.043400Z
     """
-    if isinstance(file_or_file_object, str):
+    if isinstance(file_or_file_object, (str, native_str)):
         with open(file_or_file_object, 'rb') as f:
             info = _getRecordInformation(f, offset=offset, endian=endian)
     else:

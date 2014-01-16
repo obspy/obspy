@@ -16,6 +16,7 @@ from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
+from future.utils import native_str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, guessDelta
@@ -763,7 +764,7 @@ class Client(object):
         response = client.service.dataRetrieve(usertoken, request_ids)
         urls = [r.DownloadToken.DownloadURL for r in response.DataItem]
         # create file handler if a file name is given
-        if isinstance(filename, str):
+        if isinstance(filename, (str, native_str)):
             fh = open(filename, "wb")
         elif hasattr(filename, "write"):
             fh = filename
@@ -772,7 +773,7 @@ class Client(object):
             raise TypeError(msg)
         for url in urls:
             fh.write(compatibility.urlopen(url).read())
-        if isinstance(filename, str):
+        if isinstance(filename, (str, native_str)):
             fh.close()
         # clean up
         response = client.service.purgeData(usertoken, request_ids)

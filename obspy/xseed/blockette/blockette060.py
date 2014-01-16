@@ -5,6 +5,7 @@ from future.builtins import super
 from future.builtins import range
 from future.builtins import str
 from future.builtins import int
+from future.utils import native_str
 
 from lxml.etree import Element, SubElement
 from obspy.core import compatibility
@@ -76,7 +77,7 @@ class Blockette060(Blockette):
         if isinstance(data, bytes):
             length = len(data)
             data = compatibility.BytesIO(data)
-        elif isinstance(data, str):
+        elif isinstance(data, (str, native_str)):
             raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
         new_data = new_data[7:]

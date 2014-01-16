@@ -4,6 +4,7 @@ from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import int
 from future.builtins import str
+from future.utils import native_str
 
 import os
 from obspy.core import compatibility
@@ -49,7 +50,7 @@ class Blockette041(Blockette):
         if isinstance(data, bytes):
             expected_length = len(data)
             data = compatibility.BytesIO(data)
-        elif isinstance(data, str):
+        elif isinstance(data, (str, native_str)):
             raise TypeError("Data must be bytes, not string")
         # get current lookup key
         pos = data.tell()

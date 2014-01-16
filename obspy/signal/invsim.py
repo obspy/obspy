@@ -27,6 +27,7 @@ from future.builtins import range
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.detrend import simple as simpleDetrend
@@ -206,7 +207,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
-    if isinstance(filename, str):
+    if isinstance(filename, (str, native_str)):
         with open(filename, 'rb') as fh:
             data = fh.read()
     elif hasattr(filename, 'read'):

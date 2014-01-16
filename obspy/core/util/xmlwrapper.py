@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 from future.builtins import int
 from future.builtins import str
+from future.utils import native_str
 from obspy.core import compatibility
 import warnings
 import os
@@ -73,7 +74,7 @@ class XMLParser:
                 xml_doc = compatibility.BytesIO(xml_doc)
             # parse XML file
             self.xml_doc = etree.parse(xml_doc)
-        elif isinstance(xml_doc, str):
+        elif isinstance(xml_doc, (str, native_str)):
             # filename
             if not os.path.exists(xml_doc):
                 raise IOError("filename %s does not exist" % xml_doc)

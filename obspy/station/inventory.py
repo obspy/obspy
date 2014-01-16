@@ -12,6 +12,7 @@ Provides the Inventory class.
 from __future__ import unicode_literals
 from __future__ import print_function
 from future.builtins import str
+from future.utils import native_str
 from pkg_resources import load_entry_point
 import obspy
 from obspy.core.util.base import ComparingObject
@@ -31,7 +32,7 @@ def read_inventory(path_or_file_object, format=None):
     :param path_or_file_object: Filename or file like object.
     """
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(path_or_file_object, str) and \
+    if isinstance(path_or_file_object, (str, native_str)) and \
        path_or_file_object.startswith('/path/to/'):
         try:
             path_or_file_object = getExampleFile(path_or_file_object[9:])

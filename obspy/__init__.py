@@ -6,7 +6,7 @@
 #           Lion Krischer
 #           Tobias Megies
 #
-# Copyright (C) 2008-2012 Robert Barsch, Moritz Beyreuther, Lion Krischer,
+# Copyright (C) 2008-2014 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
 #------------------------------------------------------------------------------
 """
@@ -29,13 +29,13 @@ for seismology.
 """
 
 # don't change order
-from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _getVersionString
 __version__ = _getVersionString()
-from obspy.core.trace import Trace
+from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents, Catalog
-from obspy.station import read_inventory
+from obspy.station import read_inventory  # NOQA
 
 # insert supported read/write format plugin lists dynamically in docstrings
 from obspy.core.util.base import make_format_plugin_table

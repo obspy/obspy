@@ -13,7 +13,7 @@ from __future__ import unicode_literals
 from future.builtins import open
 from future.builtins import range
 from future.builtins import str
-from future.utils import PY2
+from future.utils import PY2, native_str
 
 from datetime import datetime
 from lxml import objectify
@@ -501,7 +501,7 @@ master/seishub/plugins/seismology/waveform.py
 
         # allow time strings in arguments
         for time in ["starttime", "endtime"]:
-            if isinstance(kwargs[time], str):
+            if isinstance(kwargs[time], (str, native_str)):
                 kwargs[time] = UTCDateTime(kwargs[time])
 
         trim_start = kwargs['starttime']
