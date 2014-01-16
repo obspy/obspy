@@ -53,11 +53,12 @@ do
     cp $brew_name $LIB/$(basename $brew_name)
 done
 
-# Change the dynamic library names.
+# Change the dynamic library names and paths to dependencies.
 for brew_name in $GFORTRAN_FILES
 do
     new_name=$LIB/$(basename $brew_name)
     install_name_tool -change $brew_name $new_name $new_name
+    install_name_tool -id $new_name $new_name
 done
 ################################################################################
 
@@ -544,6 +545,7 @@ then
     $PIP install obspy
 fi
 
+cd $BUILD_DIR
 # Adjust the links to all gfortan libraries so they point to the one in the app folder.
 for file_to_be_modified in $(find $PREFIX -type f -name \*.dylib -o -name \*.so)
 do
