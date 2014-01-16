@@ -1,15 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# ------------------------------------------------------------------
-# Filename: array.py
-#  Purpose: Functions for Array Analysis
-#   Author: Martin van Driel, Moritz Beyreuther
-#    Email: driel@geophysik.uni-muenchen.de
-#
-# Copyright (C) 2010 Martin van Driel, Moritz Beyreuther, Joachim Wassermann
-# --------------------------------------------------------------------
 """
-Functions for Array Analysis
+Function for Array Analysis
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
