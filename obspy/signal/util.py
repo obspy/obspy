@@ -246,7 +246,7 @@ def _npts2nfft(npts, smart=True):
     When encountering bad values with prime factors involved (that can take
     forever to compute) we use the next power of 2 which is robust.
 
-    >>> from obspy.core.util.misc import factorize_int
+    >>> from obspy.core.util.misc import factorize_int  # NOQA
     >>> factorize_int(1800000)
     [2, 2, 2, 2, 2, 2, 3, 3, 5, 5, 5, 5, 5]
     >>> factorize_int(1800001)
@@ -256,9 +256,9 @@ def _npts2nfft(npts, smart=True):
     >>> _npts2nfft(1800000)
     3600000
     >>> _npts2nfft(1800001)
-    4194304
+    3600004
     >>> _npts2nfft(1800002)
-    4194304
+    3600004
     """
     # The number of points for the FFT has to be at least 2 * ndat (in
     # order to prohibit wrap around effects during convolution) cf.
@@ -271,9 +271,20 @@ def _npts2nfft(npts, smart=True):
     else:
         nfft = 2 * npts
 
+    def _good_factorization(x):
+        if max(factorize_int(nfft)) < 500:
+            return True
+        return False
+
     # check if we have a bad factorization with large primes
-    if smart and nfft > 5000:
-        if max(factorize_int(nfft)) > 1000:
+    if smart and nfft > 5000 and not _good_factorization(nfft):
+        # try a few numbers slightly larger for a suitable factorization
+        for i_ in xrange(5):
+            trial = nfft + 2 * i_
+            if _good_factorization(trial):
+                nfft = trial
+                break
+        else:
             nfft = nextpow2(nfft)
 
     return nfft
