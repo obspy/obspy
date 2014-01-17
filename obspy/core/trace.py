@@ -2179,15 +2179,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if taper:
             data *= cosTaper(npts, taper_fraction,
                              sactaper=True, halfcosine=False)
-        # The number of points for the FFT has to be at least 2 * npts (in
-        # order to prohibit wrap around effects during convolution) cf.
-        # evalresp scales directly with nfft, therefore taking the next power
-        # of two has a greater negative performance impact than the slow down
-        # of a not power of two in the FFT
-        if npts & 0x1:  # check if uneven
-            nfft = 2 * (npts + 1)
-        else:
-            nfft = 2 * npts
+        # smart calculation of nfft dodging large primes
+        from obspy.signal.util import _npts2nfft
+        nfft = _npts2nfft(npts)
         # Transform data to Frequency domain
         data = np.fft.rfft(data, n=nfft)
         # calculate and apply frequency response,

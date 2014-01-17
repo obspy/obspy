@@ -15,6 +15,7 @@ import ctypes as C
 import math as M
 import numpy as np
 from obspy.signal.headers import clibsignal
+from obspy.core.util.misc import factorize_int
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
@@ -237,6 +238,45 @@ def az2baz2az(angle):
     else:
         raise ValueError("Input (back)azimuth out of bounds: %s" % angle)
     return new_angle
+
+
+def _npts2nfft(npts, smart=True):
+    """
+    Calculates number of points for fft from number of samples in trace.
+    When encountering bad values with prime factors involved (that can take
+    forever to compute) we use the next power of 2 which is robust.
+
+    >>> from obspy.core.util.misc import factorize_int
+    >>> factorize_int(1800000)
+    [2, 2, 2, 2, 2, 2, 3, 3, 5, 5, 5, 5, 5]
+    >>> factorize_int(1800001)
+    [7, 29, 8867]
+    >>> factorize_int(1800002)
+    [2, 900001]
+    >>> _npts2nfft(1800000)
+    3600000
+    >>> _npts2nfft(1800001)
+    4194304
+    >>> _npts2nfft(1800002)
+    4194304
+    """
+    # The number of points for the FFT has to be at least 2 * ndat (in
+    # order to prohibit wrap around effects during convolution) cf.
+    # Numerical Recipes p. 429 calculate next power of 2.
+    # evalresp scales directly with nfft, therefor taking the next power of
+    # two has a greater negative performance impact than the slow down of a
+    # not power of two in the FFT
+    if npts & 0x1:  # check if uneven
+        nfft = 2 * (npts + 1)
+    else:
+        nfft = 2 * npts
+
+    # check if we have a bad factorization with large primes
+    if smart and nfft > 5000:
+        if max(factorize_int(nfft)) > 1000:
+            nfft = nextpow2(nfft)
+
+    return nfft
 
 
 if __name__ == '__main__':
