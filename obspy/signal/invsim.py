@@ -466,10 +466,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # evalresp scales directly with nfft, therefor taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
-    elif ndat & 0x1:  # check if uneven
-        nfft = 2 * (ndat + 1)
     else:
-        nfft = 2 * ndat
+        from obspy.signal.util import _npts2nfft
+        nfft = _npts2nfft(ndat)
     # Transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
