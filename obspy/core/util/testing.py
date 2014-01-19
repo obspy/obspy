@@ -299,6 +299,7 @@ def get_matplotlib_defaul_tolerance():
 
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
+    "*/lib/*.py",
     ]
 
 try:
