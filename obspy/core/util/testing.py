@@ -299,7 +299,6 @@ def get_matplotlib_defaul_tolerance():
 
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
-    "*/lib/*.py",
     ]
 
 try:
@@ -332,6 +331,14 @@ def check_flake8():
             if os.path.abspath(py_file) in untracked_files:
                 continue
 
+            # exclude *.py files in obspy/lib
+            try:
+                tmp_dir, _ = os.path.split(py_file)
+                _, tmp_dir = os.path.split(tmp_dir)
+                if tmp_dir == "lib":
+                    continue
+            except:
+                pass
             # Check files that do not match any exclusion pattern
             for exclude_pattern in FLAKE8_EXCLUDE_FILES:
                 if fnmatch.fnmatch(py_file, exclude_pattern):
