@@ -17,6 +17,7 @@ import warnings
 import itertools
 import tempfile
 import numpy as np
+import math
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -439,6 +440,33 @@ def CatchOutput():
             os.remove(stderr_filename)
         except OSError:
             pass
+
+
+def factorize_int(x):
+    """
+    Calculate prime factorization of integer.
+
+    Could be done faster but faster algorithm have much more lines of code and
+    this is fast enough for our purposes.
+
+    http://stackoverflow.com/questions/14550794/\
+    python-integer-factorization-into-primes
+
+    >>> factorize_int(1800004)
+    [2, 2, 450001]
+    >>> factorize_int(1800003)
+    [3, 19, 23, 1373]
+    """
+    if x == 1:
+        return [1]
+    factors, limit, check, num = [], int(math.sqrt(x)) + 1, 2, x
+    for check in xrange(2, limit):
+        while num % check == 0:
+            factors.append(check)
+            num /= check
+    if num > 1:
+        factors.append(num)
+    return factors
 
 
 if __name__ == '__main__':

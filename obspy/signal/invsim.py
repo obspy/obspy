@@ -23,6 +23,7 @@ to m/s.
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
+from obspy.signal.util import _npts2nfft
 import ctypes as C
 import math as M
 import numpy as np
@@ -463,13 +464,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # Numerical Recipes p. 429 calculate next power of 2.
     if nfft_pow2:
         nfft = util.nextpow2(2 * ndat)
-    # evalresp scales directly with nfft, therefor taking the next power of
+    # evalresp scales directly with nfft, therefore taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
-    elif ndat & 0x1:  # check if uneven
-        nfft = 2 * (ndat + 1)
     else:
-        nfft = 2 * ndat
+        nfft = _npts2nfft(ndat)
     # Transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction

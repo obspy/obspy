@@ -15,6 +15,7 @@ import ctypes as C
 import math as M
 import numpy as np
 from obspy.signal.headers import clibsignal
+from obspy.core.util.misc import factorize_int
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
@@ -237,6 +238,54 @@ def az2baz2az(angle):
     else:
         raise ValueError("Input (back)azimuth out of bounds: %s" % angle)
     return new_angle
+
+
+def _npts2nfft(npts, smart=True):
+    """
+    Calculates number of points for fft from number of samples in trace.
+    When encountering bad values with prime factors involved (that can take
+    forever to compute) we try a few slightly larger numbers for a good
+    factorization (computation time for factorization is negligible compared to
+    fft/evalsresp/ifft) and if that fails we use the next power of 2 which is
+    not fastest but robust.
+
+    >>> _npts2nfft(1800028)  # good nfft with minimum points
+    3600056
+    >>> _npts2nfft(1800029)  # falls back to next power of 2
+    4194304
+    >>> _npts2nfft(1800031)  # finds suitable nfft close to minimum npts
+    3600082
+    """
+    # The number of points for the FFT has to be at least 2 * ndat (in
+    # order to prohibit wrap around effects during convolution) cf.
+    # Numerical Recipes p. 429 calculate next power of 2.
+    # evalresp scales directly with nfft, therefor taking the next power of
+    # two has a greater negative performance impact than the slow down of a
+    # not power of two in the FFT
+    if npts & 0x1:  # check if uneven
+        nfft = 2 * (npts + 1)
+    else:
+        nfft = 2 * npts
+
+    def _good_factorization(x):
+        if max(factorize_int(x)) < 500:
+            return True
+        return False
+
+    # check if we have a bad factorization with large primes
+    if smart and nfft > 5000 and not _good_factorization(nfft):
+        # try a few numbers slightly larger for a suitable factorization
+        # in most cases after less than 10 tries a suitable nfft number with
+        # good factorization is found
+        for i_ in xrange(1, 11):
+            trial = nfft + 2 * i_
+            if _good_factorization(trial):
+                nfft = trial
+                break
+        else:
+            nfft = nextpow2(nfft)
+
+    return nfft
 
 
 if __name__ == '__main__':
