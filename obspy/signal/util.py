@@ -279,7 +279,7 @@ def _npts2nfft(npts, smart=True):
     # check if we have a bad factorization with large primes
     if smart and nfft > 5000 and not _good_factorization(nfft):
         # try a few numbers slightly larger for a suitable factorization
-        for i_ in xrange(5):
+        for i_ in xrange(1, 11):
             trial = nfft + 2 * i_
             if _good_factorization(trial):
                 nfft = trial
