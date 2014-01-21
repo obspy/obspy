@@ -1158,6 +1158,8 @@ def download_url(url, timeout=10, headers={}, debug=False,
     string.
 
     Will return a touple of Nones if the service could not be found.
+    All encountered exceptions will get raised unless `debug=True` is
+    specified.
 
     Performs a http GET if data=None, otherwise a http POST.
     """
@@ -1172,11 +1174,13 @@ def download_url(url, timeout=10, headers={}, debug=False,
         if debug is True:
             print("HTTP error %i while downloading '%s': %s" %
                   (e.code, url, e.read()))
-        return e.code, None
+            return e.code, None
+        raise
     except Exception as e:
         if debug is True:
             print "Error while downloading: %s" % url
-        return None, None
+            return None, None
+        raise
 
     code = url_obj.getcode()
     if return_string is False:
