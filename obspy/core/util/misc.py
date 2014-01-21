@@ -10,9 +10,7 @@ Various additional utilities for ObsPy.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import str
-from future.builtins import int
-from future.builtins import open
+from future.builtins import str, int, open, range
 from contextlib import contextmanager
 import os
 import sys
@@ -466,12 +464,12 @@ def factorize_int(x):
     if x == 1:
         return [1]
     factors, limit, check, num = [], int(math.sqrt(x)) + 1, 2, x
-    for check in xrange(2, limit):
+    for check in range(2, limit):
         while num % check == 0:
             factors.append(check)
             num /= check
     if num > 1:
-        factors.append(num)
+        factors.append(int(num))
     return factors
 
 
