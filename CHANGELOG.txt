@@ -4,6 +4,9 @@
  - obspy.core:
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
+ - obspy.fdsn:
+   * time out errors get raised properly now. timeout can be specified at
+     Client initialization now. (see #717)
 
 0.9.0:
  -  general:

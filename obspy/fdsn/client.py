@@ -65,9 +65,13 @@ class Client(object):
     :param user_agent: The user agent for all requests.
     :type debug: bool
     :param debug: Debug flag.
+    :type timeout: float
+    :param timeout: Maximum time (in seconds) to wait for a single request to
+        finish (after which an exception is raised).
     """
     def __init__(self, base_url="IRIS", major_versions={}, user=None,
-                 password=None, user_agent=DEFAULT_USER_AGENT, debug=False):
+                 password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
+                 timeout=10):
         """
         Initializes an FDSN Web Service client.
 
@@ -87,6 +91,7 @@ class Client(object):
         """
         self.debug = debug
         self.user = user
+        self.timeout = timeout
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
@@ -929,7 +934,7 @@ class Client(object):
     def _download(self, url, return_string=False, data=None):
         code, data = download_url(
             url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data)
+            return_string=return_string, data=data, timeout=self.timeout)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
