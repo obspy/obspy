@@ -11,7 +11,7 @@ Various additional utilities for obspy.signal.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
+from future.builtins import int, range
 
 from scipy import signal, fix, fftpack
 import ctypes as C
@@ -281,8 +281,8 @@ def _npts2nfft(npts, smart=True):
         # try a few numbers slightly larger for a suitable factorization
         # in most cases after less than 10 tries a suitable nfft number with
         # good factorization is found
-        for i_ in xrange(1, 11):
-            trial = nfft + 2 * i_
+        for i_ in range(1, 11):
+            trial = int(nfft + 2 * i_)
             if _good_factorization(trial):
                 nfft = trial
                 break
