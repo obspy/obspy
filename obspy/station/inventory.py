@@ -224,8 +224,8 @@ class Inventory(ComparingObject):
         network, station, location, channel = seed_id.split(".")
         networks = [net for net in self.networks if net.code == network]
         # XXX: check that this is really correct
-        stations = [sta for sta in networks[-1].stations if sta.code == station
-                    for net in networks]
+        stations = [sta for net in networks
+                    for sta in networks[-1].stations if sta.code == station]
         channels = [cha for sta in stations for cha in sta.channels
                     if cha.code == channel
                     and cha.location_code == location
