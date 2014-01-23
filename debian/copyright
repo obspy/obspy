@@ -6,7 +6,7 @@ this release was taken from:
 git://github.com/obspy/obspy.git
 
 Program Copyright (C) 2009-2012 The ObsPy Development Team <devs@obspy.org>,
-Thomas Lecocq (datamark), Adolfo Inza (datamark), Philippe Lesage (datamark),
+Thomas Lecocq (win), Adolfo Inza (win), Philippe Lesage (win),
 Anthony Lomax (realtime, seedlink), Marcus Walther (css), David Ketchum (neic).
 
 The underlying C code in 'gse2' subpackage was written Stefan Stange.

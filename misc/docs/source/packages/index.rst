@@ -25,7 +25,7 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.css
-   obspy.datamark
+   obspy.win
    obspy.gse2
    obspy.mseed
    obspy.sac

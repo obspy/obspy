@@ -1,4 +1,4 @@
-package obspy.datamark
+package obspy.win
 ==================
 
 Copyright
@@ -13,9 +13,10 @@ Copyright (c) 2012-2013 by:
 
 Overview
 --------
-DataMark read support for ObsPy.
+WIN read support for ObsPy.
 
-This module provides read support for DataMark data format. This module is
+This module provides read support for Win data format (as written by the
+Datamark dataloggers). This module is
 based on the code of Adolfo Inza and Philippe Lesage of the "Géophysique des
 volcans" team of the "Institut des Sciences de la Terre de l'Université de
 Savoie", France.

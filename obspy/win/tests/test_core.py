@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.datamark.core test suite.
+The obspy.win.core test suite.
 """
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.datamark.core import readDATAMARK
+from obspy.win.core import readWIN
 import os
 import unittest
 
 
 class CoreTestCase(unittest.TestCase):
     """
-    Test cases for datamark core interface
+    Test cases for win core interface
     """
     def setUp(self):
         # directory where the test files are located
@@ -40,11 +40,11 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readViaModule(self):
         """
-        Read files via obspy.datamark.core.readDATAMARK function.
+        Read files via obspy.win.core.readWIN function.
         """
         filename = os.path.join(self.path, '10030302.00')
         # 1
-        st = readDATAMARK(filename)
+        st = readWIN(filename)
         st.verify()
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,

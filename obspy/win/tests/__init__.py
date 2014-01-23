@@ -3,7 +3,7 @@
 import unittest
 from obspy.core.util import add_doctests, add_unittests
 
-MODULE_NAME = "obspy.datamark"
+MODULE_NAME = "obspy.win"
 
 
 def suite():

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-obspy.datamark - DataMark read support for ObsPy
+obspy.win - Win read support for ObsPy
 ================================================
-This module provides read support for DataMark waveform data.
+This module provides read support for Win waveform data.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Thomas Lecocq, Adolfo Inza &
