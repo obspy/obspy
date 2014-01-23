@@ -24,22 +24,22 @@ def isWIN(filename,century="20"):  # @UnusedVariable
         pklen = fpin.read(4)
         _truelen = np.fromstring(pklen, '>i')[0]  # equiv to Str4Int
         buff = fpin.read(6)
-        yy = "%s%x" % (century, ord(buff[0]))
+        yy = "%s%02x" % (century, ord(buff[0]))
         mm = "%x" % ord(buff[1])
         dd = "%x" % ord(buff[2])
         hh = "%x" % ord(buff[3])
         mi = "%x" % ord(buff[4])
         sec = "%x" % ord(buff[5])
-
-        _date = UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
+        # This will raise for invalid dates.
+        UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
                            int(sec))
         buff = fpin.read(4)
-        _flag = np.fromstring(buff[0], dtype='b')[0]
-        _chanum = np.fromstring(buff[1], dtype='b')[0]
-        _datawide = np.fromstring(buff[2], dtype='b')[0] >> 4
-        _srate = np.fromstring(buff[3], dtype='b')[0]
+        '%02x' % ord(buff[0])
+        '%02x' % ord(buff[1])
+        int('%x'% (ord(buff[2]) >> 4))
+        ord(buff[3])
         idata00 = fpin.read(4)
-        _idata22 = np.fromstring(idata00, '>i')[0]
+        np.fromstring(idata00, '>i')[0]
     except:
         return False
     return True
@@ -80,7 +80,7 @@ def readWIN(filename, century="20", **kwargs):  # @UnusedVariable
             buff = fpin.read(6)
             leng += 6
 
-            yy = "%s%x" % (century, ord(buff[0]))
+            yy = "%s%02x" % (century, ord(buff[0]))
             mm = "%x" % ord(buff[1])
             dd = "%x" % ord(buff[2])
             hh = "%x" % ord(buff[3])
@@ -95,21 +95,17 @@ def readWIN(filename, century="20", **kwargs):  # @UnusedVariable
                 sdata = None
             while leng < truelen:
                 buff = fpin.read(4)
-                # print leng, truelen, len(buff)
                 leng += 4
-                _flag = '%02x' % ord(buff[0])
+                flag = '%02x' % ord(buff[0])
                 chanum = '%02x' % ord(buff[1])
-                chanum = "%02s%02s"%(_flag,chanum)
+                chanum = "%02s%02s"%(flag,chanum)
                 datawide = int('%x'% (ord(buff[2]) >> 4))
                 srate = ord(buff[3])
-                
-                # print 'flag, chanum, brol, datawide, srate',_flag, chanum, np.fromstring(buff[2], dtype='b')[0], datawide, srate
-
                 xlen = (srate - 1) * datawide
                 if datawide == 0:
                     xlen = srate/2
                     datawide = 0.5
-                # print "xlen:", xlen
+
                 idata00 = fpin.read(4)
                 leng += 4
                 idata22 = np.fromstring(idata00, '>i')[0]
@@ -128,26 +124,14 @@ def readWIN(filename, century="20", **kwargs):  # @UnusedVariable
                     msg = "This shouldn't happen, it's weird..."
                     warnings.warn(msg)
                 
-                # print "len(sdata)", len(sdata)
                 if datawide == 0.5:
-                    # print "TODO"
-                    
                     for i in range(srate/2):
-                        # print i, len(sdata[i:i+1])
                         idata2 = output[chanum][-1] + np.fromstring(sdata[i:i + 1], 'b')[0] >> 4
                         output[chanum].append(idata2)
-                        # print idata2
-                        
                         idata2 = idata2 + (np.fromstring(sdata[i:i + 1], 'b')[0] << 4) >> 4
                         output[chanum].append(idata2)
-                        # print idata2
-                        # for(i=1;i<s_rate;i+=2) {
-                            # abuf[i]=abuf[i-1]+((*(char *)dp)>>4);
-                            # abuf[i+1]=abuf[i]+(((char)(*(dp++)<<4))>>4);
                 elif datawide == 1:
-                    # print "range:", xlen/datawide
                     for i in range((xlen / datawide)):
-                        #abuf[i]=abuf[i-1]+(*(char *)(dp++));
                         idata2 = output[chanum][-1] + np.fromstring(sdata[i:i + 1], 'b')[0]
                         output[chanum].append(idata2)
                 elif datawide == 2:
