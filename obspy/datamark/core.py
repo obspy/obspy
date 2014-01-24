@@ -36,7 +36,7 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
         buff = fpin.read(4)
         '%02x' % ord(buff[0])
         '%02x' % ord(buff[1])
-        int('%x'% (ord(buff[2]) >> 4))
+        int('%x' % (ord(buff[2]) >> 4))
         ord(buff[3])
         idata00 = fpin.read(4)
         np.fromstring(idata00, '>i')[0]
@@ -97,8 +97,8 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                 leng += 4
                 flag = '%02x' % ord(buff[0])
                 chanum = '%02x' % ord(buff[1])
-                chanum = "%02s%02s"%(flag,chanum)
-                datawide = int('%x'% (ord(buff[2]) >> 4))
+                chanum = "%02s%02s" % (flag, chanum)
+                datawide = int('%x' % (ord(buff[2]) >> 4))
                 srate = ord(buff[3])
                 xlen = (srate - 1) * datawide
                 if datawide == 0:
@@ -108,7 +108,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                 idata00 = fpin.read(4)
                 leng += 4
                 idata22 = np.fromstring(idata00, '>i')[0]
-                
+
                 if chanum in output:
                     output[chanum].append(idata22)
                 else:
@@ -122,31 +122,37 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     sdata += fpin.read(xlen - len(sdata))
                     msg = "This shouldn't happen, it's weird..."
                     warnings.warn(msg)
-                
+
                 if datawide == 0.5:
                     for i in range(srate/2):
-                        idata2 = output[chanum][-1] + np.fromstring(sdata[i:i + 1], 'b')[0] >> 4
+                        idata2 = output[chanum][-1] + \
+                            np.fromstring(sdata[i:i + 1], 'b')[0] >> 4
                         output[chanum].append(idata2)
-                        idata2 = idata2 + (np.fromstring(sdata[i:i + 1], 'b')[0] << 4) >> 4
+                        idata2 = idata2 +\
+                            (np.fromstring(sdata[i:i + 1],
+                                           'b')[0] << 4) >> 4
                         output[chanum].append(idata2)
                 elif datawide == 1:
                     for i in range((xlen / datawide)):
-                        idata2 = output[chanum][-1] + np.fromstring(sdata[i:i + 1], 'b')[0]
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[i:i + 1], 'b')[0]
                         output[chanum].append(idata2)
                 elif datawide == 2:
                     for i in range((xlen / datawide)):
-                        idata2 = output[chanum][-1] + np.fromstring(sdata[2 * i:2 * (i + 1)],
-                                           '>h')[0]
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[2 * i:2 * (i + 1)], '>h')[0]
                         output[chanum].append(idata2)
                 elif datawide == 3:
                     for i in range((xlen / datawide)):
-                        idata2 = output[chanum][-1] + np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
-                                           '>i')[0] >> 8
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
+                                          '>i')[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:
                     for i in range((xlen / datawide)):
-                        idata2 = output[chanum][-1] + np.fromstring(sdata[4 * i:4 * (i + 1)],
-                                           '>i')[0]
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[4 * i:4 * (i + 1)],
+                                          '>i')[0]
                         output[chanum].append(idata2)
                 else:
                     msg = "DATAWIDE is %s " % datawide + \
