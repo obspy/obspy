@@ -7,6 +7,10 @@
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
+ - obspy.datamark
+   * bugfix: channel code now correctly read (4 hex char)
+   * bugfix: channels can have different sampling rate
+   * improvement: datawide 0.5 (4 bits) encoding now supported
 
 0.9.0:
  -  general:
