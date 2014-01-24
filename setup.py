@@ -67,7 +67,7 @@ else:
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'DATAMARK', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
@@ -77,7 +77,7 @@ KEYWORDS = [
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'Winston', 'win', 'XML-SEED', 'XSEED']
+    'WaveServerV', 'WebDC', 'web service', 'Winston', 'WIN', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
@@ -108,6 +108,7 @@ ENTRY_POINTS = {
         'SLIST = obspy.core.ascii',
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
+        'DATAMARK = obspy.datamark.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
@@ -142,9 +143,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.css.core:isCSS',
         'readFormat = obspy.css.core:readCSS',
     ],
-    'obspy.plugin.waveform.WIN': [
-        'isFormat = obspy.win.core:isWIN',
-        'readFormat = obspy.win.core:readWIN',
+    'obspy.plugin.waveform.DATAMARK': [
+        'isFormat = obspy.datamark.core:isDATAMARK',
+        'readFormat = obspy.datamark.core:readDATAMARK',
     ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',
@@ -202,6 +203,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.wav.core:isWAV',
         'readFormat = obspy.wav.core:readWAV',
         'writeFormat = obspy.wav.core:writeWAV',
+    ],
+    'obspy.plugin.waveform.WIN': [
+        'isFormat = obspy.win.core:isWIN',
+        'readFormat = obspy.win.core:readWIN',
     ],
     'obspy.plugin.waveform.Y': [
         'isFormat = obspy.y.core:isY',

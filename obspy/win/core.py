@@ -88,7 +88,7 @@ def readWIN(filename, century="20", **kwargs):  # @UnusedVariable
             sec = "%x" % ord(buff[5])
             date = UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
                                int(sec))
-            print "Second Start Date:", date
+            # print "Second Start Date:", date
             if start == 0:
                 start = date
             if status0 == 0:

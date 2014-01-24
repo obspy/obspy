@@ -23,7 +23,7 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'win', 'css', 'y', 'pde', 'station']
+                   'realtime', 'datamark', 'win', 'css', 'y', 'pde', 'station']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -31,7 +31,7 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
-                            'SU', 'SEG2', 'WAV', 'PICKLE', 'WIN', 'CSS']
+                            'SU', 'SEG2', 'WAV', 'PICKLE', 'WIN', 'CSS', 'DATAMARK']
 EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
