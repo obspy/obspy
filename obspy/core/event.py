@@ -1734,6 +1734,38 @@ class Origin(__Origin):
            latitude: 12.0 [confidence_level=95.0]
          depth_type: ...'from location'
     """
+    @property
+    def __geo_interface__(self):
+        """
+        __geo_interface__ method for GeoJSON-type GIS protocol
+
+        :return: dict of valid GeoJSON
+
+        Reference
+        ---------
+        Python geo_interface specifications:
+        https://gist.github.com/sgillies/2217756
+
+        """
+        ts = None
+        update_ts = None
+        # Convert UTCDateTime objects to float timestamps
+        if hasattr(self.time, 'timestamp'):
+            ts = self.time.timestamp
+        if hasattr(self.creation_info, 'creation_time') and \
+           hasattr(self.creation_info.creation_time, 'timestamp'):
+            update_ts = self.creation_info.creation_time.timestamp
+
+        point = {
+            "type": "Point",
+            "coordinates": (self.longitude, self.latitude, self.depth),
+            "id": str(self.resource_id),
+            }
+        props = {
+            "time": ts,
+            "updated": update_ts,
+            }
+        return {"type": "Feature", "properties": props, "geometry": point}
 
 
 __StationMagnitudeContribution = _eventTypeClassFactory(
@@ -2467,6 +2499,39 @@ class Event(__Event):
 
     def __repr__(self):
         return super(Event, self).__str__(force_one_line=True)
+
+    @property
+    def __geo_interface__(self):
+        """
+        __geo_interface__ method for GeoJSON-type GIS protocol
+
+        :return: dict of valid GeoJSON
+
+        Reference
+        ---------
+        Python geo_interface specifications:
+        https://gist.github.com/sgillies/2217756
+
+        Schema loosely based on the USGS GeoJSON format
+        http://earthquake.usgs.gov/earthquakes/feed/v1.0/GeoJSON.php
+
+        """
+        if self.origins:
+            o = self.preferred_origin() or self.origins[0]
+        else:
+            raise ValueError("Event contains no Origins.")
+
+        gj_dict = o.__geo_interface__
+        gj_dict['properties'].update(
+            {"type": self.event_type,
+             "url": str(self.resource_id)})
+
+        if self.magnitudes:
+            m = self.preferred_magnitude() or self.magnitudes[0]
+            gj_dict['properties'].update(
+                {"mag": m.mag,
+                 "magtype": m.magnitude_type})
+        return gj_dict
 
     def preferred_origin(self):
         """

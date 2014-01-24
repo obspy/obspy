@@ -107,9 +107,10 @@ from obspy.core.event import Event, Origin, CreationInfo, UTCDateTime, \
 from obspy.station import Station
 import unittest
 
-Event.__geo_interface__ = property(event__geo_interface__)
-Origin.__geo_interface__ = property(origin__geo_interface__)
-Station.__geo_interface__ = property(station__geo_interface__)
+# DONE
+#Event.__geo_interface__ = property(event__geo_interface__)
+#Origin.__geo_interface__ = property(origin__geo_interface__)
+#Station.__geo_interface__ = property(station__geo_interface__)
 
 
 class GeoTestCase(unittest.TestCase):
