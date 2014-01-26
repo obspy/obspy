@@ -29,21 +29,21 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
         with open(filename, "rb") as fpin:
             fpin.read(4)
             buff = fpin.read(6)
-            yy = "%s%02x" % (century, ord(buff[0]))
-            mm = "%x" % ord(buff[1])
-            dd = "%x" % ord(buff[2])
-            hh = "%x" % ord(buff[3])
-            mi = "%x" % ord(buff[4])
-            sec = "%x" % ord(buff[5])
+            yy = "%s%02x" % (century, ord(buff[0:1]))
+            mm = "%x" % ord(buff[1:2])
+            dd = "%x" % ord(buff[2:3])
+            hh = "%x" % ord(buff[3:4])
+            mi = "%x" % ord(buff[4:5])
+            sec = "%x" % ord(buff[5:6])
 
             # This will raise for invalid dates.
             UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
                         int(sec))
             buff = fpin.read(4)
-            '%02x' % ord(buff[0])
-            '%02x' % ord(buff[1])
-            int('%x' % (ord(buff[2]) >> 4))
-            ord(buff[3])
+            '%02x' % ord(buff[0:1])
+            '%02x' % ord(buff[1:2])
+            int('%x' % (ord(buff[2:3]) >> 4))
+            ord(buff[3:4])
             idata00 = fpin.read(4)
             np.fromstring(idata00, '>i')[0]
     except:
@@ -86,12 +86,12 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             buff = fpin.read(6)
             leng += 6
 
-            yy = "%s%02x" % (century, ord(buff[0]))
-            mm = "%x" % ord(buff[1])
-            dd = "%x" % ord(buff[2])
-            hh = "%x" % ord(buff[3])
-            mi = "%x" % ord(buff[4])
-            sec = "%x" % ord(buff[5])
+            yy = "%s%02x" % (century, ord(buff[0:1]))
+            mm = "%x" % ord(buff[1:2])
+            dd = "%x" % ord(buff[2:3])
+            hh = "%x" % ord(buff[3:4])
+            mi = "%x" % ord(buff[4:5])
+            sec = "%x" % ord(buff[5:6])
 
             date = UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
                                int(sec))
@@ -102,14 +102,14 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             while leng < truelen:
                 buff = fpin.read(4)
                 leng += 4
-                flag = '%02x' % ord(buff[0])
-                chanum = '%02x' % ord(buff[1])
+                flag = '%02x' % ord(buff[0:1])
+                chanum = '%02x' % ord(buff[1:2])
                 chanum = "%02s%02s" % (flag, chanum)
-                datawide = int('%x' % (ord(buff[2]) >> 4))
-                srate = ord(buff[3])
+                datawide = int('%x' % (ord(buff[2:3]) >> 4))
+                srate = ord(buff[3:4])
                 xlen = (srate - 1) * datawide
                 if datawide == 0:
-                    xlen = srate/2
+                    xlen = srate / 2
                     datawide = 0.5
 
                 idata00 = fpin.read(4)
@@ -131,7 +131,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     warnings.warn(msg)
 
                 if datawide == 0.5:
-                    for i in range(srate/2):
+                    for i in range(srate // 2):
                         idata2 = output[chanum][-1] + \
                             np.fromstring(sdata[i:i + 1], 'b')[0] >> 4
                         output[chanum].append(idata2)
@@ -140,23 +140,23 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                                            'b')[0] << 4) >> 4
                         output[chanum].append(idata2)
                 elif datawide == 1:
-                    for i in range((xlen / datawide)):
+                    for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[i:i + 1], 'b')[0]
                         output[chanum].append(idata2)
                 elif datawide == 2:
-                    for i in range((xlen / datawide)):
+                    for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[2 * i:2 * (i + 1)], '>h')[0]
                         output[chanum].append(idata2)
                 elif datawide == 3:
-                    for i in range((xlen / datawide)):
+                    for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
                                           '>i')[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:
-                    for i in range((xlen / datawide)):
+                    for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[4 * i:4 * (i + 1)],
                                           '>i')[0]

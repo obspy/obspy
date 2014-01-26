@@ -28,6 +28,7 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = read(filename)
         st.verify()
+        st.sort(keys=['channel'])
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
@@ -47,6 +48,7 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = readDATAMARK(filename)
         st.verify()
+        st.sort(keys=['channel'])
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
