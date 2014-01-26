@@ -1,4 +1,4 @@
-#d!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Provides the Inventory class.
@@ -213,14 +213,19 @@ class Inventory(ComparingObject):
         :returns: Response for timeseries specified by input arguments.
         """
         network, station, location, channel = seed_id.split(".")
-        networks = [net for net in self.networks if net.code == network]
-        stations = [sta for sta in net.stations if sta.code == station
-                    for net in networks]
-        channels = [cha for sta in stations for cha in sta.channels
-                    if cha.code == channel
-                    and cha.location_code == location
-                    and (cha.start_date is None or cha.start_date <= datetime)
-                    and (cha.end_date is None or cha.end_date >= datetime)]
+        stations = []
+        for net in self.networks:
+            if net.code != network:
+                continue
+            stations += [sta for sta in net.stations if sta.code == station]
+        channels = []
+        for sta in stations:
+            channels += \
+                [cha for cha in sta.channels
+                 if cha.code == channel
+                 and cha.location_code == location
+                 and (cha.start_date is None or cha.start_date <= datetime)
+                 and (cha.end_date is None or cha.end_date >= datetime)]
         responses = [cha.response for cha in channels
                      if cha.response is not None]
         if len(responses) > 1:
