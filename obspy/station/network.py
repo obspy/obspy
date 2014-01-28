@@ -155,7 +155,8 @@ class Network(BaseNode):
             responses = []
         else:
             channels = [cha for sta in self.stations for cha in sta.channels
-                        if cha.code == channel
+                        if sta.code == station
+                        and cha.code == channel
                         and cha.location_code == location
                         and (cha.start_date is None
                              or cha.start_date <= datetime)
