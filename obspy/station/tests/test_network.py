@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Test suite for the inventory class.
+Test suite for the network class.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -11,25 +11,14 @@ Test suite for the inventory class.
 """
 import unittest
 
-from obspy.station import Inventory, Network, Station, Channel, Response
+from obspy.station import Network, Station, Channel, Response
 from obspy import UTCDateTime
 
 
-class InventoryTestCase(unittest.TestCase):
+class NetworkTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.inventory.Inventory` class.
+    Tests the for :class:`~obspy.station.network.Network` class.
     """
-    def test_initialization(self):
-        """
-        Some simple sanity tests.
-        """
-        dt = UTCDateTime()
-        inv = Inventory(source="TEST", networks=[])
-        # If no time is given, the creation time should be set to the current
-        # time. Use a large offset for potentially slow computers and test
-        # runs.
-        self.assertTrue(inv.created - dt <= 10.0)
-
     def test_get_response(self):
         responseN1S1 = Response('RESPN1S1')
         responseN1S2 = Response('RESPN1S2')
@@ -64,29 +53,27 @@ class InventoryTestCase(unittest.TestCase):
                              latitude=0.0,
                              longitude=0.0,
                              elevation=0.0,
-                             channels=channelsN1S2)]
-        stations2 = [Station(code='N2S1',
+                             channels=channelsN1S2),
+                     Station(code='N2S1',
                              latitude=0.0,
                              longitude=0.0,
                              elevation=0.0,
                              channels=channelsN2S1)]
-        networks = [Network('N1', stations=stations1),
-                    Network('N2', stations=stations2)]
-        inv = Inventory(networks=networks, source='TEST')
+        network = Network('N1', stations=stations1)
 
-        response = inv.get_response('N1.N1S1..BHZ',
-                                    UTCDateTime('2010-01-01T12:00'))
+        response = network.get_response('N1.N1S1..BHZ',
+                                        UTCDateTime('2010-01-01T12:00'))
         self.assertEqual(response, responseN1S1)
-        response = inv.get_response('N1.N1S2..BHZ',
-                                    UTCDateTime('2010-01-01T12:00'))
+        response = network.get_response('N1.N1S2..BHZ',
+                                        UTCDateTime('2010-01-01T12:00'))
         self.assertEqual(response, responseN1S2)
-        response = inv.get_response('N2.N2S1..BHZ',
-                                    UTCDateTime('2010-01-01T12:00'))
+        response = network.get_response('N1.N2S1..BHZ',
+                                        UTCDateTime('2010-01-01T12:00'))
         self.assertEqual(response, responseN2S1)
 
 
 def suite():
-    return unittest.makeSuite(InventoryTestCase, 'test')
+    return unittest.makeSuite(NetworkTestCase, 'test')
 
 
 if __name__ == '__main__':
