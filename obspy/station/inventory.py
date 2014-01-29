@@ -221,22 +221,16 @@ class Inventory(ComparingObject):
         :rtype: :class:`~obspy.station.response.Response`
         :returns: Response for timeseries specified by input arguments.
         """
-        network, station, location, channel = seed_id.split(".")
-        stations = []
+        network, _, _, _ = seed_id.split(".")
+
+        responses = []
         for net in self.networks:
             if net.code != network:
                 continue
-            stations += [sta for sta in net.stations if sta.code == station]
-        channels = []
-        for sta in stations:
-            channels += \
-                [cha for cha in sta.channels
-                 if cha.code == channel
-                 and cha.location_code == location
-                 and (cha.start_date is None or cha.start_date <= datetime)
-                 and (cha.end_date is None or cha.end_date >= datetime)]
-        responses = [cha.response for cha in channels
-                     if cha.response is not None]
+            try:
+                responses.append(net.get_response(seed_id, datetime))
+            except:
+                pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Returning first."
             warnings.warn(msg)
