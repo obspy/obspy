@@ -11,7 +11,6 @@ Low-level Earthworm Wave Server tools.
 from __future__ import print_function
 from __future__ import unicode_literals
 from future.builtins import range
-from future.builtins import int
 
 from obspy import Trace, UTCDateTime, Stream
 from obspy.core import Stats

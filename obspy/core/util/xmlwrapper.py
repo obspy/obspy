@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from future import standard_library  # NOQA
-from future.builtins import int
 from future.builtins import str
 from future.utils import native_str
 from obspy.core import compatibility

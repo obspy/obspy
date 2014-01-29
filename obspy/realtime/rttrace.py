@@ -13,7 +13,6 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import super
-from future.builtins import int
 from future.builtins import str
 from future.builtins import range
 from obspy import Trace

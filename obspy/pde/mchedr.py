@@ -18,7 +18,6 @@ from __future__ import print_function
 from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import open
-from future.builtins import int
 from future.builtins import map
 from future.builtins import str
 from future.utils import native_str

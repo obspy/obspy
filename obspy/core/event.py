@@ -13,7 +13,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from future import standard_library  # NOQA
 from future.builtins import zip
-from future.builtins import int
 from future.builtins import super
 from future.builtins import str
 from future.builtins import bytes

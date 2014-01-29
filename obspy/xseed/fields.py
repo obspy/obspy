@@ -13,7 +13,6 @@ from __future__ import unicode_literals
 from future.builtins import str
 from future.builtins import bytes
 from future.builtins import range
-from future.builtins import int
 
 from lxml.etree import Element, SubElement
 from obspy import UTCDateTime

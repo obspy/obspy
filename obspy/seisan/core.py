@@ -12,7 +12,6 @@ from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import range
 from future.builtins import str
-from future.builtins import int
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats

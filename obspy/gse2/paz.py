@@ -21,7 +21,6 @@ The read in PAZ information can be used with
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import str
 from future.builtins import open
 from future.utils import native_str

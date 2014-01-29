@@ -1,7 +1,6 @@
 from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import range
-from future.builtins import int
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy

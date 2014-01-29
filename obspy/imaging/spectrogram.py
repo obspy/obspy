@@ -18,7 +18,6 @@ Plotting spectrogram of seismograms.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import str  # NOQA
 
 from matplotlib import mlab
