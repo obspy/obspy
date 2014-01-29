@@ -12,7 +12,6 @@ Quick and dirty conversion routine from CSS 2.8 to Seismic Handler ASCII format
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import map
 from future.builtins import range
 from future.builtins import str

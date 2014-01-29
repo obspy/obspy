@@ -17,7 +17,6 @@ Low-level module internally used for handling GSE1 files
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future.builtins import int
 
 from obspy import UTCDateTime
 from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum

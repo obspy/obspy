@@ -24,7 +24,6 @@ in a previous packet, so has to be retrieved from memory see
 from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import range
 import math
 import sys

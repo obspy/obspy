@@ -26,7 +26,6 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 from __future__ import division
 from __future__ import unicode_literals
 from __future__ import print_function
-from future.builtins import int
 from future.builtins import str
 from future.builtins import bytes
 from future.utils import native_str

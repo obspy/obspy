@@ -71,7 +71,6 @@ from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import str
 from future.builtins import zip
-from future.builtins import int
 from io import StringIO
 import math
 import numpy as np

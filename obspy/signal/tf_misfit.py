@@ -22,7 +22,6 @@ Kristekova et. al. (2009).
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
 
 import numpy as np
 from obspy.signal import util

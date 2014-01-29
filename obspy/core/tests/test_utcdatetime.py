@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 from future.builtins import str
-from future.builtins import int
 # -*- coding: utf-8 -*-
 
 from obspy import UTCDateTime

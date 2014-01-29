@@ -10,7 +10,6 @@ File dealing with the StationXML format.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import str
 import inspect
 from lxml import etree

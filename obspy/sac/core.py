@@ -10,7 +10,6 @@ SAC bindings to ObsPy core module.
 """
 from __future__ import unicode_literals
 from future.builtins import range
-from future.builtins import int
 from future.builtins import open
 from future.utils import native_str
 from obspy import Trace, Stream

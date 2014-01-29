@@ -13,7 +13,6 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import range
-from future.builtins import int
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats, compatibility

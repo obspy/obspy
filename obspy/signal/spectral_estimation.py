@@ -21,7 +21,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from future.builtins import zip
-from future.builtins import int
 from future.builtins import open
 
 import os
