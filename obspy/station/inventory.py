@@ -212,8 +212,12 @@ class Inventory(ComparingObject):
         :rtype: :class:`~obspy.station.response.Response`
         :returns: Response for timeseries specified by input arguments.
         """
+        network, _, _, _ = seed_id.split(".")
+
         responses = []
         for net in self.networks:
+            if net.code != network:
+                continue
             try:
                 responses.append(net.get_response(seed_id, datetime))
             except:
