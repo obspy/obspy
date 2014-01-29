@@ -13,6 +13,7 @@ import unittest
 
 import obspy
 from obspy.station import Inventory
+from obspy.station.network import Network
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -29,7 +30,6 @@ class InventoryTestCase(unittest.TestCase):
         # time. Use a large offset for potentially slow computers and test
         # runs.
         self.assertTrue(inv.created - dt <= 10.0)
-
 
 def suite():
     return unittest.makeSuite(InventoryTestCase, 'test')
