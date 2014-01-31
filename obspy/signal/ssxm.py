@@ -22,10 +22,11 @@ Spectral Seismic Amplitude/Energy Measurement
 import pandas as pd
 import numpy as np
 from obspy.signal import bandpass
+from scipy.stats import scoreatpercentile
 
 
 def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
-         zerophase=False):
+         zerophase=False, percentiles=None):
     """
     SSxM of a signal.
 
@@ -50,6 +51,8 @@ def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
+    :param percentiles: :class:`~list` containing percentiles to compute in
+        addition to.
     :return: SSxM data in a :class:`~pandas.DataFrame`.
     """
     # Convert input data to a pandas.Series object
@@ -68,10 +71,15 @@ def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
     if bands:
         for band in bands:
             tmp = s.copy()
-            tmp.data = bandpass(tmp, band[0:1], band[1:2], fs, corners=corners,
+            tmp.data = bandpass(tmp, band[0], band[1], fs, corners=corners,
                                 zerophase=zerophase)
             data["SSAM: %s" % str(band)] = tmp.resample(rule, how=ssam)
             data["SSEM: %s" % str(band)] = tmp.resample(rule, how=ssem)
+            if percentiles:
+                for percentile in percentiles:
+                    P = Percentile(percentile=percentile)
+                    data["P%i: %s" % (percentile, str(band))] = \
+                        tmp.resample(rule, how=P.scoreatpercentile)
             del tmp
     del s
     return data
@@ -89,3 +97,11 @@ def ssem(d):
     Computes the SSEM of an given array.
     """
     return np.std(d)
+
+
+class Percentile():
+    def __init__(self, percentile):
+        self.percentile = percentile
+
+    def scoreatpercentile(self, a):
+        return scoreatpercentile(np.abs(a), self.percentile)
