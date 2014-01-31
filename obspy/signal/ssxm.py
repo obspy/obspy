@@ -60,28 +60,38 @@ def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
     delta = 1./fs
     t = pd.date_range(starttime, periods=npts,
                       freq="%ims" % (delta * 1000))
+    t = pd.Index(t, name='timestamp')
     s = pd.Series(data=data, index=t, name=id, dtype=data.dtype)
     del npts, delta
 
-    # Automatically calculating RSAM and RSEM
-    data = pd.DataFrame(s.resample(rule, how=ssam), columns=['RSAM'])
-    data['RSEM'] = s.resample(rule, how=ssem)
+    bands.insert(0, [0, 0])
+    first = True
 
-    # If bands are provided, SSAM and SSEM are calculated
-    if bands:
-        for band in bands:
+    for band in bands:
+        if band != [0, 0]:
             tmp = s.copy()
             tmp.data = bandpass(tmp, band[0], band[1], fs, corners=corners,
                                 zerophase=zerophase)
-            data["SSAM: %s" % str(band)] = tmp.resample(rule, how=ssam)
-            data["SSEM: %s" % str(band)] = tmp.resample(rule, how=ssem)
-            if percentiles:
-                for percentile in percentiles:
-                    P = Percentile(percentile=percentile)
-                    data["P%i: %s" % (percentile, str(band))] = \
-                        tmp.resample(rule, how=P.scoreatpercentile)
-            del tmp
+        else:
+            tmp = s
+
+        df = pd.DataFrame(tmp.resample(rule, how=ssam), columns=['mean'])
+        df['std'] = tmp.resample(rule, how=ssem)
+        df['low'] = band[0]
+        df['high'] = band[1]
+        if percentiles:
+            for perc in percentiles:
+                P = Percentile(percentile=perc)
+                df["p%i" % (perc)] = tmp.resample(rule,
+                                                  how=P.scoreatpercentile)
+        if first:
+            data = df
+            first = False
+        else:
+            data = pd.concat((data, df))
+        del tmp
     del s
+    data.set_index(['low', 'high'], inplace=True, append=True)
     return data
 
 
