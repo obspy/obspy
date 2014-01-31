@@ -14,7 +14,6 @@ A file format description is given by [Pullan1990]_.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from future.builtins import range
-from future.builtins import int
 from future.builtins import open
 from copy import deepcopy
 import numpy as np

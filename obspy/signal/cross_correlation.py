@@ -18,7 +18,6 @@ Signal processing routines based on cross correlation techniques.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
 
 import warnings
 import numpy as np

@@ -4,7 +4,6 @@ The obspy.signal.trigger test suite.
 """
 from __future__ import unicode_literals
 from future.builtins import zip
-from future.builtins import int
 from ctypes import ArgumentError
 from obspy import read, Stream, UTCDateTime
 from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \

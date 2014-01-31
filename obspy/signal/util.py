@@ -11,7 +11,7 @@ Various additional utilities for obspy.signal.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int, range
+from future.builtins import range
 
 from scipy import signal, fix, fftpack
 import ctypes as C

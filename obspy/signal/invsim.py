@@ -25,7 +25,6 @@ from __future__ import unicode_literals
 from future.builtins import zip
 from future.builtins import range
 from future.builtins import open
-from future.builtins import int
 from future.builtins import str
 from future.utils import native_str
 

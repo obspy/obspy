@@ -19,7 +19,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from future import standard_library  # NOQA
 from future.builtins import open
-from future.builtins import int
 from future.builtins import str
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \

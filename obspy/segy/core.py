@@ -10,7 +10,6 @@ SEG Y bindings to ObsPy core module.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import open
 from future.builtins import super
 from obspy import Stream, Trace, UTCDateTime

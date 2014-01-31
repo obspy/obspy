@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 from future.builtins import open
-from future.builtins import int
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------

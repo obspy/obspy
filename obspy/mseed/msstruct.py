@@ -5,7 +5,6 @@ Convenience class for handling MSRecord and MSFileparam.
 from __future__ import division
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import open
 
 from obspy.mseed.headers import clibmseed, MSRecord, MSFileParam, \

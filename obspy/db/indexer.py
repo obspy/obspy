@@ -10,7 +10,6 @@ storing in into a standard SQL database.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future.builtins import int
 from future.builtins import str
 
 from obspy import read

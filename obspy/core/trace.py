@@ -14,7 +14,6 @@ from __future__ import print_function
 from future.builtins import range
 from future.builtins import super
 from future.builtins import str
-from future.builtins import int
 from future.utils import native_str
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
