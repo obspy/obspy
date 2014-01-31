@@ -56,6 +56,7 @@ def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
     :return: SSxM data in a :class:`~pandas.DataFrame`.
     """
     # Convert input data to a pandas.Series object
+    data = data.astype(float)    
     npts = len(data)
     delta = 1./fs
     t = pd.date_range(starttime, periods=npts,
@@ -73,7 +74,7 @@ def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
             tmp.data = bandpass(tmp, band[0], band[1], fs, corners=corners,
                                 zerophase=zerophase)
         else:
-            tmp = s
+            tmp = s.copy()
 
         df = pd.DataFrame(tmp.resample(rule, how=ssam), columns=['mean'])
         df['std'] = tmp.resample(rule, how=ssem)
