@@ -117,6 +117,28 @@ class EventTestCase(unittest.TestCase):
         self.assertTrue(ev.resource_id.getReferredObject() is
                         ev3.resource_id.getReferredObject())
 
+    def test_geo_interface(self):
+        """
+        Test that the geo_interface works.
+        """
+        e = readEvents()[0]
+        m = e.magnitudes[0]
+        d1 = e.__geo_interface__
+        self.assertIsInstance(d1, dict)
+        for gkey in ("type", "properties", "geometry"):
+            self.assertTrue(gkey in d1)
+        for gkey in ("type", "url", "mag", "magtype"):
+            self.assertTrue(gkey in d1['properties'])
+        self.assertEqual(d1['properties']['url'], str(e.resource_id))
+        self.assertEqual(d1['properties']['type'], e.event_type)
+        self.assertEqual(d1['properties']['mag'], m.mag)
+        self.assertEqual(d1['properties']['magtype'], m.magnitude_type)
+        # preferreds are set, unsetting should work
+        e.preferred_origin_id = None
+        e.preferred_magnitude_id = None
+        d2 = e.__geo_interface__
+        self.assertTrue(d1 == d2)
+
 
 class OriginTestCase(unittest.TestCase):
     """
@@ -174,6 +196,28 @@ class OriginTestCase(unittest.TestCase):
         self.assertEqual(origin2.latitude, 13.4)
         self.assertEqual(origin2.latitude_errors.confidence_level, None)
         self.assertEqual(origin2.longitude, None)
+
+    def test_geo_interface(self):
+        """
+        Test that the geo interface works
+        """
+        e = readEvents()[0]
+        o = e.origins[0]
+        lat = o.latitude
+        lon = o.longitude
+        dep = o.depth
+        gj = e.__geo_interface__
+        self.assertIsInstance(gj, dict)
+        for gkey in ("type", "properties", "geometry"):
+            self.assertTrue(gkey in gj)
+        point = gj['geometry']
+        props = gj['properties']
+        self.assertEqual(gj['type'], "Feature")
+        self.assertEqual(point['type'], "Point")
+        self.assertEqual(point['coordinates'], (lon, lat, dep))
+        self.assertEqual(point['id'], str(o.resource_id))
+        self.assertEqual(props['time'], o.time.timestamp)
+        self.assertEqual(props['updated'], None)
 
 
 class CatalogTestCase(unittest.TestCase):
