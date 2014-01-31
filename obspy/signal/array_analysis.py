@@ -625,8 +625,10 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,correct_3dplane=
         'y', 'elevation' (in km) items/attributes. See param ``coordsys``
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
-    :param return_center: Returns the center coordinates as extra tuple
-    :return: Returns the geometry of the stations as 2d :class:`numpy.ndarray`
+    :param return_center: Retruns the center coordinates as extra tuple
+    :param correct_3dplane: applies a 3D best fitting plane to the array.
+           This might be important if the array is located on a inclinde slope (e.g., at a volcano)
+    :return: Returns the geometry of the stations as 2d numpy.ndarray
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
             values of [lat, lon, elev] in km
@@ -679,14 +681,19 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,correct_3dplane=
     if correct_3dplane:
       A = geometry
       u,s,vh = np.linalg.linalg.svd(A)
+      print u
+      print s
+      print vh
       v = vh.conj().transpose()
-      #satisfies the plane equation a*x + b*y + c = z
+      #satisfies the plane equation a*x + b*y + c*z = 0
       result = np.zeros((nstat,3))
       #now we are seeking the station positions on that plane
-      geometry[:,2] += v[2,-1]
-      result[:,0] = geometry[:,0] - v[0,-1] * (v[0,-1]*geometry[:,0] + geometry[:,1]*v[1,-1] - geometry[:,2])/(v[0,-1]*v[0,-1]+v[1,-1]*v[1,-1]+1.)
-      result[:,1] = geometry[:,1] - v[1,-1] * (v[0,-1]*geometry[:,0] + geometry[:,1]*v[1,-1] - geometry[:,2])/(v[0,-1]*v[0,-1]+v[1,-1]*v[1,-1]+1.)
-      result[:,2] = geometry[:,2] + (v[0,-1]*geometry[:,0] + geometry[:,1]*v[1,-1] - geometry[:,2])/(v[0,-1]*v[0,-1]+v[1,-1]*v[1,-1]+1.)
+      #geometry[:,2] += v[2,-1]
+      n = v[:,-1]
+      print n
+      result[:,0] = geometry[:,0] - n[0] * (n[0]*geometry[:,0] + geometry[:,1]*n[1] + n[2]*geometry[:,2])/(n[0]*n[0]+n[1]*n[1]+n[2]*n[2])
+      result[:,1] = geometry[:,1] - n[1] * (n[0]*geometry[:,0] + geometry[:,1]*n[1] + n[2]*geometry[:,2])/(n[0]*n[0]+n[1]*n[1]+n[2]*n[2])
+      result[:,2] = geometry[:,2] - n[2] * (n[0]*geometry[:,0] + geometry[:,1]*n[1] + n[2]*geometry[:,2])/(n[0]*n[0]+n[1]*n[1]+n[2]*n[2])
       geometry = result[:]
       print "Best fitting plane-coordinates :",geometry
 
@@ -698,14 +705,18 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,correct_3dplane=
 
 def get_timeshift_baz(geometry, sll, slm, sls, baze,vel_cor=4.,static_3D=False):
     """
-    Returns timeshift table for given array geometry
+    Returns timeshift table for given array geometry and a pre-definded backazimuth
 
     :param geometry: Nested list containing the arrays geometry, as returned by
             get_group_geometry
     :param sll_x: slowness x min (lower)
     :param slm_y: slowness x max (lower)
     :param sl_s: slowness step
-    :param baz:  backazimuth applied
+    :param baze:  backazimuth applied
+    :param vel_cor: correction velocity (upper layer) in km/s
+    :param static_3D: a correction of the station height is applied using vel_cor
+           the correction is done according to the formula: t = rxy*s - rz*cos(inc)/vel_cor
+           where inc is defined by inv = asin(vel_cor*slow)
     """
     nstat = len(geometry)  # last index are center coordinates
     baz = math.pi*baze/180.
@@ -713,9 +724,14 @@ def get_timeshift_baz(geometry, sll, slm, sls, baze,vel_cor=4.,static_3D=False):
     time_shift_tbl = np.empty((nstat, nbeams), dtype="float32")
     for k in xrange(nbeams):
         sx = sll + k * sls
+        if vel_cor*sx < 1.:
+            inc=np.arcsin(vel_cor*sx)
+        else:
+            inc = np.pi/2.
         time_shift_tbl[:,k] = sx * (geometry[:, 0]*math.sin(baz) + geometry[:,1]*math.cos(baz))
         if static_3D:
-            time_shift_tbl[:,k] -= geometry[:,2]/vel_cor
+            time_shift_tbl[:,k] += geometry[:,2]*np.cos(inc)/vel_cor
+
     return time_shift_tbl
 
 def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y,vel_cor=4.,static_3D=False):
@@ -729,6 +745,10 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y,vel_cor=4.,st
     :param sl_s: slowness step
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
+    :param vel_cor: correction velocity (upper layer) in km/s
+    :param static_3D: a correction of the station height is applied using vel_cor
+           the correction is done according to the formula: t = rxy*s - rz*cos(inc)/vel_cor
+           where inc is defined by inv = asin(vel_cor*slow)
     """
     if static_3D:
         nstat = len(geometry)  # last index are center coordinates
@@ -743,14 +763,11 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y,vel_cor=4.,st
                else:
                   print "Warning correction velocity smaller than aparent velocity"
                   inc = np.pi/2.
-               time_shift_tbl[:,k,l] = sx * geometry[:, 0] + sy * geometry[:,1] - geometry[:,2] * np.cos(inc)/vel_cor
+               time_shift_tbl[:,k,l] = sx * geometry[:, 0] + sy * geometry[:,1] + geometry[:,2] * np.cos(inc)/vel_cor
         return time_shift_tbl
     # optimized version
     else:
        mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
-    # if static_3D:
-    #    mz = np.outer(geometry[:, 2], 1./vel_cor + np.arange(grdpts_x) * 0.)
-    #    mx += mz
        my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
        return np.require(
         mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
@@ -848,7 +865,6 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
 
     return transff.reshape(nkx, nky)
 
-
 def array_transff_freqslowness(stream, slim, sstep, fmin, fmax, fstep,
                                coordsys='lonlat',correct_3dplane=False,static_3D=False,vel_cor=4.):
     """
@@ -916,14 +932,6 @@ def dump(pow_map, apow_map, i):
     np.save('pow_map_%d' % i, pow_map)
     np.save('apow_map_%d' % i, apow_map)
 
-def dump2plot(time_stamp, pow_map, i):
-    """
-    Example function to use with `store` kwarg in
-    :func:`~obspy.signal.array_analysis.array_processing`.
-    """
-    np.savez('pow_map_%d.npz' % i, time_stamp,pow_map)
-
-
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                      sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime,
                      etime, prewhiten, verbose=False, coordsys='lonlat',
@@ -974,6 +982,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         date plotting (see e.g. matplotlib's num2date)
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
+    :param vel_cor: correction velocity (upper layer) in km/s
+    :param static_3D: a correction of the station height is applied using vel_cor
+           the correction is done according to the formula: t = rxy*s - rz*cos(inc)/vel_cor
+           where inc is defined by inv = asin(vel_cor*slow)
     :type store: function
     :param store: A custom function which gets called on each iteration. It is
         called with the relative power map and the time offset as first and
@@ -983,19 +995,21 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: :class:`numpy.ndarray` of timestamp, relative relpow, absolute
         relpow, backazimuth, slowness
     """
+    BF, CAPON = 0, 1
     res = []
     eotr = True
 
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
     if len(stream) != len(stream.select(sampling_rate=fs)):
-        msg = 'in sonic sampling rates of traces in stream are not equal'
+        msg = 'in array-processing sampling rates of traces in stream are not equal'
         raise ValueError(msg)
 
     grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
     geometry = get_geometry(stream, coordsys=coordsys, correct_3dplane=correct_3dplane,verbose=verbose)
+    print geometry
 
     if verbose:
         print("geometry:")
@@ -1008,9 +1022,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                                      sl_s, grdpts_x, grdpts_y,vel_cor=vel_cor,static_3D=static_3D)
     # offset of arrays
     spoint, _epoint = get_spoint(stream, stime, etime)
-    #
+
     # loop with a sliding window over the dat trace array and apply bbfk
-    #
     nstat = len(stream)
     fs = stream[0].stats.sampling_rate
     nsamp = int(win_len * fs)
@@ -1024,8 +1037,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nlow = max(1, nlow)  # avoid using the offset
     nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
-    # to speed up the routine a bit we estimate all steering vectors in advance
-    steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
+
+    # to spead up the routine a bit we estimate all steering vectors in advance
+    steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                          deltaf, time_shift_table, steer)
     _r = np.empty((nf, nstat, nstat), dtype=np.complex128)
@@ -1077,6 +1091,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         if store is not None:
             store(relpow_map, abspow_map, count)
         count += 1
+
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
         slow_y = sll_y + iy * sl_s
@@ -1107,8 +1122,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         raise ValueError(msg)
     return np.array(res)
 
-def beamforming(stream, sll_x, slm_x, sll_y, slm_y,sl_s,frqlow, frqhigh,
-                stime, etime, verbose=False, coordsys='lonlat', timestamp='mlabday',
+def beamforming(stream,sll_x, slm_x, sll_y, slm_y,sl_s,frqlow, frqhigh,
+                stime, etime,   win_len=-1, win_frac=0.5,
+                verbose=False, coordsys='lonlat', timestamp='mlabday',
                 method="DLS", nthroot=1 ,store=None,correct_3dplane=False,static_3D=False,vel_cor=4.):
     """
     Method for Delay and Sum/Phase Weighted Stack/Whitened Slowness Power
@@ -1131,6 +1147,11 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y,sl_s,frqlow, frqhigh,
     :param stime: Starttime of interest
     :type etime: UTCDateTime
     :param etime: Endtime of interest
+    :type win_len: Float
+    :param window length for sliding window analysis, default is -1 which means the whole
+           trace;
+    :type win_frac: Float
+    :param fraction of win_len which is used to 'hop' forward in time
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
     :type timestamp: string
@@ -1151,6 +1172,15 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y,sl_s,frqlow, frqhigh,
         second arguments and the iteration number as third argument. Useful for
         storing or plotting the map for each iteration. For this purpose the
         dump function of this module can be used.
+    :type correct_3dplane: Boolean
+    :param correct_3dplane: if Yes than a best (LSQ) plane will be fitted into the array geometry.
+        Mainly used with small apature arrays at steep flanks
+    :type static_3D: Boolean
+    :param static_3D: if yes the station height of am array station is taken into account accoring the
+       formula: tj = -xj*sxj - yj*syj + zj*cos(inc)/vel_cor; the inc angle is slowness dependend and
+       thus must be estimated for each grid-point: inc = asin(v_cor*slow)
+    :type vel_cor: Float
+    :param vel_cor: Velocity for the upper layer (static correction) in km/s
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness, maximum beam (for DLS)
     """
@@ -1165,6 +1195,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y,sl_s,frqlow, frqhigh,
         raise ValueError(msg)
 
     ndat = int((etime - stime)*fs)
+    # loop with a sliding window over the dat trace array and apply bbfk
 
     grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
@@ -1187,121 +1218,148 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y,sl_s,frqlow, frqhigh,
     maxi = np.max(time_shift_table[:,:,:])
     spoint, _epoint = get_spoint(stream, (stime-mini), (etime-maxi))
 
+
 # recalculate the maximum possible trace length
-    ndat = int(((etime-maxi) - (stime-mini))*fs)
-    beam = np.zeros((ndat), dtype='f8')
+#    ndat = int(((etime-maxi) - (stime-mini))*fs)
+    if(win_len < 0):
+       nsamp = int(((etime-maxi) - (stime-mini))*fs)
+    else:
+       nsamp = int((win_len-np.abs(maxi)-np.abs(mini)) * fs)
+
+    nstep = int(nsamp * win_frac)
 
     stream.detrend()
-    max_beam = 0.
+    newstart = stime
     slow = 0.
+    offset = 0
+    count = 0
+    while eotr:
+          max_beam = 0.
+          if method == 'DLS':
+              for x in xrange(grdpts_x):
+                 for y in xrange(grdpts_y):
+                    singlet = 0.
+                    beam = np.zeros(nsamp,dtype='f8')
+                    for i in xrange(nstat):
+                        s = spoint[i]+int(time_shift_table[i,x,y]*fs+0.5)
+                        try:
+                           shifted = stream[i].data[s+offset:s+nsamp+offset]
+                           singlet += 1./nstat*np.sum(shifted*shifted)
+                           beam += 1./nstat*np.power(np.abs(shifted),1./nthroot) * shifted/np.abs(shifted)
+                        except IndexError:
+                           break
+                    beam = np.power(np.abs(beam),nthroot) * beam/np.abs(beam)
+                    bs = np.sum(beam*beam)
+                    abspow_map[x,y] = bs/singlet
+                    if abspow_map[x,y] > max_beam:
+                         max_beam =  abspow_map[x,y]
+                         beam_max = beam
+          if method == 'PWS':
+              for x in xrange(grdpts_x):
+                 for y in xrange(grdpts_y):
+                    singlet = 0.
+                    beam = np.zeros(nsamp,dtype='f8')
+                    stack = np.zeros(nsamp,dtype='c8')
+                    phase = np.zeros(nsamp,dtype='f8')
+                    coh = np.zeros(nsamp,dtype='f8')
+                    for i in xrange(nstat):
+                        s = spoint[i]+int(time_shift_table[i,x,y]*fs+0.5)
+                        try:
+                           shifted = sp.signal.hilbert(stream[i].data[s+offset:s+nsamp+offset])
+                        except IndexError:
+                           break
+                        phase = np.arctan2(shifted.imag,shifted.real)
+                        stack.real += np.cos(phase)
+                        stack.imag += np.sin(phase)
+                    coh  = 1./nstat * np.abs(stack)
+                    for i in xrange(nstat):
+                        s = spoint[i]+int(time_shift_table[i,x,y]*fs+0.5)
+                        shifted = stream[i].data[s+offset:s+nsamp+offset]
+                        singlet += 1./nstat*np.sum(shifted*shifted)
+                        beam += 1./nstat * shifted * np.power(coh,nthroot)
+                    bs = np.sum(beam*beam)
+                    abspow_map[x,y] = bs/singlet
+                    if abspow_map[x,y] > max_beam:
+                         max_beam =  abspow_map[x,y]
+                         beam_max = beam
+          if method == 'SWP':
+              # generate plan for rfftr
+              nfft = nextpow2(nsamp)
+              deltaf = fs / float(nfft)
+              nlow = int(frqlow / float(deltaf) + 0.5)
+              nhigh = int(frqhigh / float(deltaf) + 0.5)
+              nlow = max(1, nlow)  # avoid using the offset
+              nhigh = min(nfft / 2 - 1, nhigh)  # avoid using nyquist
+              nf = nhigh - nlow + 1  # include upper and lower frequency
 
-
-    if method == 'DLS':
-        for x in xrange(grdpts_x):
-           for y in xrange(grdpts_y):
-              beam = np.zeros(ndat,dtype='f8')
-              singlet = 0.
-              for i in xrange(nstat):
-                  s = spoint[i]+int(time_shift_table[i,x,y]*fs)
-                  shifted = stream[i].data[s:s+ndat]
-                  singlet += 1./nstat*np.sum(shifted*shifted)
-                  beam += 1./nstat*np.power(np.abs(shifted),1./nthroot) * shifted/np.abs(shifted)
-              beam = np.power(np.abs(beam),nthroot) * beam/np.abs(beam)
-              bs = np.sum(beam*beam)
-              abspow_map[x,y] = bs/singlet
-              if abspow_map[x,y] > max_beam:
-                   max_beam =  abspow_map[x,y]
-                   beam_max = beam
-                   slow_x = sll_x + x * sl_s
-                   slow_y = sll_y + y * sl_s
-                   slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
-                   if slow < 1e-8:
-                       slow = 1e-8
-                   azimut = 180 * math.atan2(slow_x,slow_y) / math.pi
-                   baz = azimut % -360 + 180
-    if method == 'PWS':
-        hilbert = np.zeros((nstat,len(stream[0].data)),dtype='c8')
-        for i in xrange(nstat):
-           hilbert[i] = sp.signal.hilbert(stream[i].data)
-        for x in xrange(grdpts_x):
-           for y in xrange(grdpts_y):
-              singlet = 0.
-              beam = np.zeros(ndat,dtype='f8')
-              stack = np.zeros(ndat,dtype='c8')
-              phase = np.zeros(ndat,dtype='f8')
-              coh = np.zeros(ndat,dtype='f8')
-              for i in xrange(nstat):
-                  s = spoint[i]+int(time_shift_table[i,x,y]*fs)
-                  shifted = hilbert[i,s:s+ndat]
-                  phase = np.arctan2(shifted.imag,shifted.real)
-                  stack.real += np.cos(phase)
-                  stack.imag += np.sin(phase)
-              coh  = 1./nstat * np.abs(stack)
-              for i in xrange(nstat):
-                  s = spoint[i]+int(time_shift_table[i,x,y]*fs)
-                  shifted = stream[i].data[s:s+ndat]
-                  singlet += 1./nstat*np.sum(shifted*shifted)
-                  beam += 1./nstat * shifted * np.power(coh,nthroot)
-              bs = np.sum(beam*beam)
-              abspow_map[x,y] = bs/singlet
-              if abspow_map[x,y] > max_beam:
-                   max_beam =  abspow_map[x,y]
-                   beam_max = beam
-                   slow_x = sll_x + x * sl_s
-                   slow_y = sll_y + y * sl_s
-                   slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
-                   if slow < 1e-8:
-                       slow = 1e-8
-                   azimut = 180 * math.atan2(slow_x,slow_y) / math.pi
-                   baz = azimut % -360 + 180
-    if method == 'SWP':
-        # generate plan for rfftr
-        nsamp = len(stream[0].data)
-        nfft = nextpow2(nsamp)
-        deltaf = fs / float(nfft)
-        nlow = int(frqlow / float(deltaf) + 0.5)
-        nhigh = int(frqhigh / float(deltaf) + 0.5)
-        nlow = max(1, nlow)  # avoid using the offset
-        nhigh = min(nfft / 2 - 1, nhigh)  # avoid using nyquist
-        nf = nhigh - nlow + 1  # include upper and lower frequency
-
-        beam = np.zeros((grdpts_x,grdpts_y,nf),dtype='f16')
-        steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
-        spec = np.zeros((nstat,nf),dtype='c16')
-        time_shift_table *= -1.
-        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+              beam = np.zeros((grdpts_x,grdpts_y,nf),dtype='f16')
+              steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
+              spec = np.zeros((nstat,nf),dtype='c16')
+              time_shift_table *= -1.
+              clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                          deltaf, time_shift_table, steer)
-        for i in xrange(nstat):
-           spec[i,:] = np.fft.rfft(stream[i].data[spoint[i]:spoint[i]+ndat],nfft)[nlow:nlow + nf]
+              try:
+                 for i in xrange(nstat):
+                     dat = stream[i].data[spoint[i] + offset:
+                     spoint[i] + offset + nsamp]
+                     dat = (dat - dat.mean()) * tap
+                     spec[i,:] = np.fft.rfft(dat,nfft)[nlow:nlow + nf]
+              except IndexError:
+                 break
 
-        for i in xrange(grdpts_x):
-           for j in xrange(grdpts_y):
-              for k in xrange(nf):
-                  for l in xrange(nstat):
-                     steer[k,i,j,l] *= spec[l,k]
+              for i in xrange(grdpts_x):
+                 for j in xrange(grdpts_y):
+                    for k in xrange(nf):
+                        for l in xrange(nstat):
+                           steer[k,i,j,l] *= spec[l,k]
 
-        beam = np.absolute(np.sum(steer,axis=3))
-        less = np.max(beam,axis=1)
-        max_buffer = np.max(less,axis=1)
+              beam = np.absolute(np.sum(steer,axis=3))
+              less = np.max(beam,axis=1)
+              max_buffer = np.max(less,axis=1)
 
-        for i in xrange(grdpts_x):
-           for j in xrange(grdpts_y):
-              abspow_map[i,j] = np.sum(beam[:,i,j]/max_buffer[:],axis=0)/float(nf)
+              for i in xrange(grdpts_x):
+                 for j in xrange(grdpts_y):
+                    abspow_map[i,j] = np.sum(beam[:,i,j]/max_buffer[:],axis=0)/float(nf)
 
-        import ipdb;ipdb.set_trace()
+              beam_max = stream[0].data[spoint[0]+offset:spoint[0]+nsamp+offest]
 
-        index = np.unravel_index(np.argmax(abspow_map), abspow_map.shape)
-        beam_max = stream[0].data[spoint[0]:spoint[0]+ndat]
-        slow_x = sll_x + index[0] * sl_s
-        slow_y = sll_y + index[1] * sl_s
-        slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
-        if slow < 1e-8:
+          ix, iy = np.unravel_index(abspow_map.argmax(), abspow_map.shape)
+          abspow = abspow_map[ix, iy]
+          if store is not None:
+             store(abspow_map,beam_max, count)
+          count += 1
+          print count
+          # here we compute baz, slow
+          slow_x = sll_x + ix * sl_s
+          slow_y = sll_y + iy * sl_s
+
+          slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
+          if slow < 1e-8:
             slow = 1e-8
-        azimut = 180 * math.atan2(slow_x,slow_y) / math.pi
-        baz = azimut % -360 + 180
+          azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
+          baz = azimut % -360 + 180
+          res.append(np.array([newstart.timestamp, abspow, baz,slow_x,slow_y,
+                                 slow]))
+          if verbose:
+             print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
+          if (newstart + (nsamp + nstep) / fs) > etime:
+             eotr = False
+          offset += nstep
+
+          newstart += nstep / fs
+    res = np.array(res)
+    if timestamp == 'julsec':
+        pass
+    elif timestamp == 'mlabday':
+       # 719162 == hours between 1970 and 0001
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
+    else:
+        msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
+        raise ValueError(msg)
+    return np.array(res)
 
 
-    return(baz,slow,slow_x,slow_y,abspow_map,beam_max)
+#    return(baz,slow,slow_x,slow_y,abspow_map,beam_max)
 
 
 def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False, coordsys='lonlat',
@@ -1395,6 +1453,22 @@ def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False, coord
             if (slow) < 1e-8:
                 slow = 1e-8
     return(slow,beams,beam_max,max_beam)
+
+def shifttrace_freq(stream,t_shift):
+
+    if isinstance(stream, Stream):
+        for i,tr in enumerate(stream):
+              ndat = tr.stats.npts
+              samp = tr.stats.sampling_rate
+              nfft = nextpow2(ndat)
+              nfft *= 2
+              tr1 = np.fft.rfft(tr.data,nfft)
+              for k in xrange(0,nfft/2):
+                  tr1[k] *= np.complex(np.cos((t_shift[i]*samp)*(k/float(nfft))*2.*np.pi), -np.sin((t_shift[i]*samp)*(k/float(nfft))*2.*np.pi))
+
+              tr1 = np.fft.irfft(tr1,nfft)
+              tr.data = tr1[0:ndat]
+
 
 if __name__ == '__main__':
     import doctest
