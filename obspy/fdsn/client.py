@@ -1088,18 +1088,19 @@ def convert_to_string(value):
 
     Will raise a ValueError if the value could not be converted.
 
-    >>> convert_to_string("abcd")
-    'abcd'
-    >>> convert_to_string(1)
-    '1'
-    >>> convert_to_string(1.2)
-    '1.2'
-    >>> convert_to_string(obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
-    '2012-01-02T03:04:05.666666'
-    >>> convert_to_string(True)
-    'true'
-    >>> convert_to_string(False)
-    'false'
+    >>> print(convert_to_string("abcd"))
+    abcd
+    >>> print(convert_to_string(1))
+    1
+    >>> print(convert_to_string(1.2))
+    1.2
+    >>> print(convert_to_string( \
+              obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666)))
+    2012-01-02T03:04:05.666666
+    >>> print(convert_to_string(True))
+    true
+    >>> print(convert_to_string(False))
+    false
     """
     if isinstance(value, (str, native_str)):
         return value
@@ -1124,13 +1125,13 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
 
     Built as a separate function to enhance testability.
 
-    >>> build_url("http://service.iris.edu", "dataselect", 1, \
-                  "application.wadl")
-    'http://service.iris.edu/fdsnws/dataselect/1/application.wadl'
+    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+                        "application.wadl"))
+    http://service.iris.edu/fdsnws/dataselect/1/application.wadl
 
-    >>> build_url("http://service.iris.edu", "dataselect", 1, \
-                  "query", {"cha": "EHE"})
-    'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
+    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+                        "query", {"cha": "EHE"}))
+    http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
     """
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station"]:
