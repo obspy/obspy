@@ -29,6 +29,7 @@ libraries and applications, our build tools and our web sites.
     * Heiner Igel
     * Adolfo Inza
     * Marius Isken
+    * Paul Käufl
     * David Ketchum
     * Andreas Köhler
     * Simon Kremers
