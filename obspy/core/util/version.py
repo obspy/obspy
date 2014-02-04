@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from __future__ import unicode_literals
-from future.builtins import open
 # Author: Douglas Creager <dcreager@dcreager.net>
 # This file is placed into the public domain.
 
@@ -76,14 +75,15 @@ def call_git_describe(abbrev=4):
 
 def read_release_version():
     try:
-        version = open(VERSION_FILE, "r").readlines()[0]
-        return version.strip()
+        version = open(VERSION_FILE, "rb").readlines()[0]
+        return version.strip().decode()
     except:
         return None
 
 
 def write_release_version(version):
-    open(VERSION_FILE, "w").write("%s\n" % version)
+    open(VERSION_FILE, "wb").write(
+        ("%s\n" % version).encode('ascii', 'strict'))
 
 
 def get_git_version(abbrev=4):
