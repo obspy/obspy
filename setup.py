@@ -29,6 +29,13 @@ try:
 except:
     pass
 
+try:
+    import numpy  # @UnusedImport # NOQA
+except:
+    msg = ("No module named numpy. "
+           "Please install numpy first, it is needed before installing ObsPy.")
+    raise ImportError(msg)
+
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
