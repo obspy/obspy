@@ -475,8 +475,10 @@ class Client(object):
 
         .. plot::
 
+            from obspy import UTCDateTime
             from obspy.fdsn import Client
             client = Client("IRIS")
+            t = UTCDateTime("2012-12-14T10:36:01.6Z")
             st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
                                       attach_response=True)
             st.remove_response(output="VEL")
@@ -650,6 +652,7 @@ class Client(object):
 
         .. plot::
 
+            from obspy import UTCDateTime
             from obspy.fdsn import Client
             client = Client("IRIS")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
