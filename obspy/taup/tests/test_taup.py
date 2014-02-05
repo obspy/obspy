@@ -127,6 +127,24 @@ class TauPTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['d2T/dD2'],
                                    float(parts[5].strip()), 2)
 
+    def test_issue_with_global_state(self):
+        """
+        Minimal test case for an issue with global state that results in
+        different results for the same call to getTravelTimes() in some
+        circumstances.
+
+        See #728 for more details.
+        """
+        tt_1 = getTravelTimes(delta=100, depth=0, model="ak135")
+
+        # Some other calculation in between.
+        getTravelTimes(delta=100, depth=200, model="ak135")
+
+        tt_2 = getTravelTimes(delta=100, depth=0, model="ak135")
+
+        # Both should be equal if everything is alright.
+        self.assertEqual(tt_1, tt_2)
+
 
 def suite():
     return unittest.makeSuite(TauPTestCase, 'test')
