@@ -259,6 +259,60 @@ class Enum(object):
         return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
 
 
+class BoundedValueType(type):
+    """
+    Type (metaclass) which enforces limits on a class instance
+    """
+    MINIMUM = float("-inf")
+    MAXIMUM = float("inf")
+
+    @classmethod
+    def set_bounds(cls, lower=None, upper=None):
+        """
+        Return a metaclass with the bounds set
+
+        Bounds set to None default to +-inf floats
+
+        :param lower: Lower bound to enforce on creation (None)
+        :param upper: Upper bound to enforce on creation (None)
+
+        """
+        if lower is not None:
+            cls.MINIMUM = lower
+        else:
+            cls.MINIMUM = float("-inf")
+
+        if upper is not None:
+            cls.MAXIMUM = upper
+        else:
+            cls.MAXIMUM = float("inf")
+
+        return cls
+
+    def __new__(cls, name, bases, dict_):
+        """
+        Return a class type after checking for  _minimum/_maximum attributes
+        """
+        if dict_.get("_minimum") is None:
+            dict_["_minimum"] = cls.MINIMUM
+        if dict_.get("_maximum") is None:
+            dict_["_maximum"] = cls.MAXIMUM
+        return super(BoundedValueType, cls).__new__(cls, name, bases, dict_)
+
+    def __call__(self, *args, **kwargs):
+        """
+        Create instance of a class, raise ValueError if not in bounds.
+        (Any class which supports __le__ should work)
+        """
+        obj = super(BoundedValueType, self).__call__(*args, **kwargs)
+        if obj is not None and not self._minimum <= obj <= self._maximum:
+            msg = "{0} must be in [{1}, {2}]".format(self.__name__,
+                                                     self._minimum,
+                                                     self._maximum)
+            raise ValueError(msg)
+        return obj
+
+
 class CustomComplex(complex):
     """
     Helper class to inherit from and which stores a complex number that is
