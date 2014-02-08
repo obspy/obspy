@@ -958,6 +958,9 @@ class Client(object):
             raise FDSNException("Service responds: Internal server error")
         elif code == 503:
             raise FDSNException("Service temporarily unavailable")
+        # Catch any non 200 codes.
+        elif code != 200:
+            raise FDSNException("Unknown HTTP code: %i" % code)
         return data
 
     def _build_url(self, service, resource_type, parameters={}):
