@@ -1244,7 +1244,8 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
     if(win_len < 0):
         nsamp = int(((etime-maxi) - (stime-mini))*fs)
     else:
-        nsamp = int((win_len-np.abs(maxi)-np.abs(mini)) * fs)
+        #nsamp = int((win_len-np.abs(maxi)-np.abs(mini)) * fs)
+        nsamp = int(win_len * fs)
 
     nstep = int(nsamp * win_frac)
 
