@@ -21,6 +21,11 @@ def main():
                       help="Disable automatic merging of matching channels.")
 
     (options, args) = parser.parse_args()
+
+    if options.outfile is not None:
+        import matplotlib
+        matplotlib.use("agg")
+
     st = Stream()
     for arg in args:
         st += read(arg, format=options.format)
