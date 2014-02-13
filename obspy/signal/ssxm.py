@@ -71,8 +71,8 @@ def ssxm(data, fs, id, starttime, rule='30S', bands=None, corners=4,
     for band in bands:
         if band != [0, 0]:
             tmp = s.copy()
-            tmp.data = bandpass(tmp, band[0], band[1], fs, corners=corners,
-                                zerophase=zerophase)
+            tmp[:] = bandpass(tmp, band[0], band[1], fs, corners=corners,
+                              zerophase=zerophase)
         else:
             tmp = s.copy()
 
