@@ -12,6 +12,7 @@ import mock
 import numpy as np
 import unittest
 import warnings
+import os
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -1538,6 +1539,40 @@ class TraceTestCase(unittest.TestCase):
         # deconvolve from StationXML with remove_response()
         tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         np.testing.assert_array_almost_equal(tr1.data, tr2.data)
+
+    def test_remove_polynomial_response(self):
+        """
+        """
+        from obspy.station import read_inventory
+        path = os.path.dirname(__file__)
+
+        # blockette 62, stage 0
+        tr = read()[0]
+        tr.stats.network = 'IU'
+        tr.stats.station = 'ANTO'
+        tr.stats.location = '30'
+        tr.stats.channel = 'LDO'
+        tr.stats.starttime = UTCDateTime("2010-07-23T00:00:00")
+        # remove response
+        del tr.stats.response
+        filename = os.path.join(path, 'data', 'stationxml_IU.ANTO.30.LDO.xml')
+        inv = read_inventory(filename, format='StationXML')
+        tr.attach_response(inv)
+        tr.remove_response()
+
+        # blockette 62, stage 1 + blockette 58, stage 2
+        tr = read()[0]
+        tr.stats.network = 'BK'
+        tr.stats.station = 'CMB'
+        tr.stats.location = ''
+        tr.stats.channel = 'LKS'
+        tr.stats.starttime = UTCDateTime("2004-06-16T00:00:00")
+        # remove response
+        del tr.stats.response
+        filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
+        inv = read_inventory(filename, format='StationXML')
+        tr.attach_response(inv)
+        tr.remove_response()
 
 
 def suite():

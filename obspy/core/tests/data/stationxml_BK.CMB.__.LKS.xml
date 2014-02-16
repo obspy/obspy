@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?channel=LKS&amp;station=CMB&amp;network=BK&amp;starttime=2004-06-15T00%3A00%3A00.000000&amp;level=response</ModuleURI>
+ <Created>2014-02-16T15:50:00</Created>
+ <Network code="BK" startDate="1980-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Berkeley Digital Seismograph Network</Description>
+  <TotalNumberStations>80</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="CMB" startDate="1996-09-25T19:19:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_GSN-BROADBAND,_US-TA,_GSN,_FDSN,_US-REGIONAL,.UNRESTRICTED,_ANSS,_US-REF,_US-ALL,_ANSS-BB,.EARTHSCOPE,_FDSN-ALL,_US-ALL,_REALTIME,_STS-1">
+   <Latitude>38.03455</Latitude>
+   <Longitude>-120.38651</Longitude>
+   <Elevation>697.0</Elevation>
+   <Site>
+    <Name>Columbia College, Columbia, CA, USA</Name>
+   </Site>
+   <CreationDate>1986-10-25T00:00:00</CreationDate>
+   <TotalNumberChannels>111</TotalNumberChannels>
+   <SelectedNumberChannels>2</SelectedNumberChannels>
+   <Channel locationCode="  " startDate="2004-06-15T00:00:00" restrictedStatus="open" endDate="2010-12-17T00:00:00" code="LKS">
+    <Latitude>38.03455</Latitude>
+    <Longitude>-120.38651</Longitude>
+    <Elevation>697.0</Elevation>
+    <Depth>2.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>1.0E-4</ClockDrift>
+    <CalibrationUnits>
+     <Name>A</Name>
+     <Description>Amperes</Description>
+    </CalibrationUnits>
+    <Sensor>
+     <Type>YSI 44031 Thermistor</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>C</Name>
+       <Description>Degrees Centigrade</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+     <Stage number="1">
+      <Polynomial>
+       <InputUnits>
+        <Name>C</Name>
+        <Description>Degrees Centigrade</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>V</Name>
+        <Description>Volts</Description>
+       </OutputUnits>
+       <ApproximationType>MACLAURIN</ApproximationType>
+       <FrequencyLowerBound>0.0</FrequencyLowerBound>
+       <FrequencyUpperBound>0.016</FrequencyUpperBound>
+       <ApproximationLowerBound>3.4</ApproximationLowerBound>
+       <ApproximationUpperBound>68</ApproximationUpperBound>
+       <MaximumError>.1</MaximumError>
+       <Coefficient number="2">12.5091</Coefficient>
+       <Coefficient number="3">13.8687</Coefficient>
+       <Coefficient number="4">4.31802</Coefficient>
+       <Coefficient number="5">1.44163</Coefficient>
+       <Coefficient number="6">.829113</Coefficient>
+       <Coefficient number="7">.738976</Coefficient>
+       <Coefficient number="8">.41094</Coefficient>
+       <Coefficient number="9">.121068</Coefficient>
+       <Coefficient number="10">.017856</Coefficient>
+       <Coefficient number="11">.001043</Coefficient>
+      </Polynomial>
+     </Stage>
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>
