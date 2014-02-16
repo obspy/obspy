@@ -97,7 +97,8 @@ INSTALL_REQUIRES = [
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose']}
-if sys.version_info.major == 2:
+# PY2
+if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
 ENTRY_POINTS = {
     'console_scripts': [
