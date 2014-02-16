@@ -431,6 +431,7 @@ class SeedLinkConnection(object):
         #print "DEBUG: streamlist:", streamlist
         stacount = 0
         for streamToken in streamlist.split(","):
+            streamToken = streamToken.strip()
             net = None
             station = None
             staselect = None
