@@ -687,7 +687,7 @@ class ParserTestCase(unittest.TestCase):
         Weak test for rotation of arbitrarily rotated components to ZNE.
         """
         st = obspy.read(os.path.join(self.path,
-            "II_COCO_three_channel_borehole.mseed"))
+                        "II_COCO_three_channel_borehole.mseed"))
         # Read the SEED file and rotate the Traces with the information stored
         # in the SEED file.
         p = Parser(os.path.join(self.path, "dataless.seed.II_COCO"))
@@ -712,9 +712,9 @@ class ParserTestCase(unittest.TestCase):
 
         # The total energy should not be different.
         energy_before = np.sum((tr_z.data ** 2) + (tr_1.data ** 2) +
-            (tr_2.data ** 2))
+                               (tr_2.data ** 2))
         energy_after = np.sum((tr_r_z.data ** 2) + (tr_r_n.data ** 2) +
-            (tr_r_e.data ** 2))
+                              (tr_r_e.data ** 2))
         np.testing.assert_allclose(energy_before, energy_after)
 
         # The vertical channel should not have changed at all.

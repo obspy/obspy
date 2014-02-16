@@ -19,15 +19,12 @@ from future.builtins import bytes
 from future.utils import native_str, PY2
 
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
-<<<<<<< HEAD
 import obspy
-=======
 from obspy import __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core import compatibility
 from obspy.core.util import deprecated_keywords
 from obspy.core.util.decorator import map_example_filename
->>>>>>> master
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
 import copy
@@ -36,6 +33,7 @@ import math
 import os
 import warnings
 import zipfile
+import numpy as np
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -1157,35 +1155,20 @@ class Parser(object):
             components need to be described in the Parser object.
         """
         from obspy.signal.rotate import rotate2ZNE
-        import numpy as np
 
         if len(stream) != 3:
             msg = "Stream needs to have three components."
             raise ValueError(msg)
         # Network, station and location need to be identical for all three.
-        seed_ids = [".".join(tr.id.split(".")[:-1]) for tr in stream]
-        # XXX: Replace with proper set() construct once UTCDateTime supports
-        # hashing.
-        times = [tr.stats.starttime for tr in stream]
-        starttimes = []
-        for t in times:
-            if t in starttimes:
-                continue
-            starttimes.append(t)
-        # XXX: Replace with proper set() construct once UTCDateTime supports
-        # hashing.
-        times = [tr.stats.endtime for tr in stream]
-        endtimes = []
-        for t in times:
-            if t in endtimes:
-                continue
-            endtimes.append(t)
-        npts = [tr.stats.npts for tr in stream]
-
-        if (len(set(starttimes)) != 1) or (len(set(endtimes)) != 1) or \
-                (len(set(npts)) != 1) or (len(set(seed_ids)) != 1):
+        is_unique = len(set([(i.stats.starttime.timestamp,
+                              i.stats.endtime.timestamp,
+                              i.stats.npts,
+                              i.stats.network,
+                              i.stats.station,
+                              i.stats.location) for i in stream])) == 1
+        if not is_unique:
             msg = ("All the Traces need to cover the same time span and have "
-                "the same network, station, and location.")
+                   "the same network, station, and location.")
             raise ValueError(msg)
         all_arguments = []
 
@@ -1203,7 +1186,7 @@ class Parser(object):
                 msg = "Dip and azimuth need to be available for every trace."
                 raise ValueError(msg)
             all_arguments.extend([np.asarray(tr.data, dtype=np.float64),
-                azimuth, dip])
+                                  azimuth, dip])
         # Now rotate all three traces.
         z, n, e = rotate2ZNE(*all_arguments)
 

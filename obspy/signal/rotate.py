@@ -17,12 +17,9 @@ Various Seismogram Rotation Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-<<<<<<< HEAD
-=======
 from __future__ import division
 from __future__ import unicode_literals
 
->>>>>>> master
 from math import pi, sin, cos
 import numpy as np
 

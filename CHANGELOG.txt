@@ -117,18 +117,8 @@
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
-<<<<<<< HEAD
    * new function for rotating arbitrarily oriented components to vertical,
      north, and east.
- - obspy.mseed:
-   * new kwarg arguments for reading mseed files: header_byteorder and
-     verbose
- - obspy.xseed:
-   * The parser has a new rotateToZNE() method that is able to read the
-	 orientation of all components from a SEED file and use it to rotate the
-	 components of a Stream object to Z, N, and E. Very useful for borehole
-	 and other sensors.
-=======
    * add PPSD support for segments of arbitrary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.
@@ -149,7 +139,6 @@
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
    * libmseed v2.12
->>>>>>> master
  - obspy.neic:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
