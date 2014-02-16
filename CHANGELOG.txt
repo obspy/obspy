@@ -1,6 +1,9 @@
 0.10.0:
  - general:
    * support for Python 3.3
+ - obspy.imaging:
+   * Maintain beach ball aspect ratio through optional axes argument (see
+     #734)
 
 0.9.1:
  - obspy.core:

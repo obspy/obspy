@@ -244,11 +244,9 @@ class BeachballTestCase(unittest.TestCase):
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
-    def test_aspect_x(self):
+    def collection_aspect(self, axis, filename_width, filename_width_height):
         """
-        Tests to plot beachball into a non-scaled axes with an x-axis larger
-        than y-axis. Use the 'axes' kwarg to make beachballs circular.
+        Common part of the test_collection_aspect_[xy] tests.
         """
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 2, 0]:
@@ -265,9 +263,9 @@ class BeachballTestCase(unittest.TestCase):
         ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
                                 axes=ax))
         # set the x and y limits
-        ax.axis([-10000, 10000, -100, 100])
+        ax.axis(axis)
         # create and compare image
-        with ImageComparison(self.path, 'bb_aspect_x.png',
+        with ImageComparison(self.path, filename_width,
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
@@ -281,11 +279,21 @@ class BeachballTestCase(unittest.TestCase):
         ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
                           axes=ax))
         # set the x and y limits and save the output
-        ax.axis([-10000, 10000, -100, 100])
+        ax.axis(axis)
         # create and compare image
-        with ImageComparison(self.path, 'bb_aspect_x_height.png',
+        with ImageComparison(self.path, filename_width_height,
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_collection_aspect_x(self):
+        """
+        Tests to plot beachball into a non-scaled axes with an x-axis larger
+        than y-axis. Use the 'axes' kwarg to make beachballs circular.
+        """
+        self.collection_aspect(axis=[-10000, 10000, -100, 100],
+                               filename_width='bb_aspect_x.png',
+                               filename_width_height='bb_aspect_x_height.png')
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection_aspect_y(self):
@@ -293,42 +301,9 @@ class BeachballTestCase(unittest.TestCase):
         Tests to plot beachball into a non-scaled axes with a y-axis larger
         than x-axis. Use the 'axes' kwarg to make beachballs circular.
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 2, 0]:
-            reltol = 20
-        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
-
-        # Test passing only a width
-        # Initialize figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        # add the beachball (a collection of two patches) to the axis
-        # give it an axes to keep make the beachballs circular
-        # even though axes are not scaled
-        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
-                          axes=ax))
-        # set the x and y limits and save the output
-        ax.axis([-100, 100, -10000, 10000])
-        # create and compare image
-        with ImageComparison(self.path, 'bb_aspect_y.png',
-                             reltol=reltol) as ic:
-            fig.savefig(ic.name)
-
-        # Test passing a width and height
-        # Initialize figure
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        # add the beachball (a collection of two patches) to the axis
-        # give it an axes to keep make the beachballs circular
-        # even though axes are not scaled
-        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
-                          axes=ax))
-        # set the x and y limits and save the output
-        ax.axis([-100, 100, -10000, 10000])
-        # create and compare image
-        with ImageComparison(self.path, 'bb_aspect_y_height.png',
-                             reltol=reltol) as ic:
-            fig.savefig(ic.name)
+        self.collection_aspect(axis=[-100, 100, -10000, 10000],
+                               filename_width='bb_aspect_y.png',
+                               filename_width_height='bb_aspect_y_height.png')
 
 
 def suite():
