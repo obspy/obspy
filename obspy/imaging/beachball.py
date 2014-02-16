@@ -33,7 +33,7 @@ from future.builtins import zip
 
 from obspy.core import compatibility
 import matplotlib.pyplot as plt
-from matplotlib import patches, collections, path as mplpath
+from matplotlib import patches, collections, transforms, path as mplpath
 import numpy as np
 
 
@@ -44,7 +44,7 @@ EPSILON = 0.00001
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          zorder=100):
+          zorder=100, axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -80,6 +80,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
+    :type axes: :class:`matplotlib.axes.Axes`
+    :param axes: Used to make beach balls circular on non-scaled axes. Also
+        maintains the aspect ratio when resizing the figure. Will not add
+        the returned collection to the axes instance.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -125,6 +129,20 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # Replace color dummies 'b' and 'w' by face and bgcolor
         fc = [facecolor if c == 'b' else bgcolor for c in colors]
         col.set_facecolors(fc)
+
+    # Use the given axes to maintain the aspect ratio of beachballs on figure
+    # resize.
+    if axes is not None:
+        # This is what holds the aspect ratio (but breaks the positioning)
+        col.set_transform(transforms.IdentityTransform())
+        # Next is a dirty hack to fix the positioning:
+        # 1. Need to bring the all patches to the origin (0, 0).
+        for p in col._paths:
+            p.vertices -= xy
+        # 2. Then use the offset property of the collection to position the
+        #    patches
+        col.set_offsets(xy)
+        col._transOffset = axes.transData
 
     col.set_edgecolor(edgecolor)
     col.set_alpha(alpha)

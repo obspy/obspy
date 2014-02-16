@@ -244,6 +244,92 @@ class BeachballTestCase(unittest.TestCase):
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_aspect_x(self):
+        """
+        Tests to plot beachball into a non-scaled axes with an x-axis larger
+        than y-axis. Use the 'axes' kwarg to make beachballs circular.
+        """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
+            reltol = 20
+        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
+
+        # Test passing only a width
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                                axes=ax))
+        # set the x and y limits
+        ax.axis([-10000, 10000, -100, 100])
+        # create and compare image
+        with ImageComparison(self.path, 'bb_aspect_x.png',
+                             reltol=reltol) as ic:
+            fig.savefig(ic.name)
+
+        # Test passing a width and a height
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
+                          axes=ax))
+        # set the x and y limits and save the output
+        ax.axis([-10000, 10000, -100, 100])
+        # create and compare image
+        with ImageComparison(self.path, 'bb_aspect_x_height.png',
+                             reltol=reltol) as ic:
+            fig.savefig(ic.name)
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_collection_aspect_y(self):
+        """
+        Tests to plot beachball into a non-scaled axes with a y-axis larger
+        than x-axis. Use the 'axes' kwarg to make beachballs circular.
+        """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
+            reltol = 20
+        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
+
+        # Test passing only a width
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                          axes=ax))
+        # set the x and y limits and save the output
+        ax.axis([-100, 100, -10000, 10000])
+        # create and compare image
+        with ImageComparison(self.path, 'bb_aspect_y.png',
+                             reltol=reltol) as ic:
+            fig.savefig(ic.name)
+
+        # Test passing a width and height
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
+                          axes=ax))
+        # set the x and y limits and save the output
+        ax.axis([-100, 100, -10000, 10000])
+        # create and compare image
+        with ImageComparison(self.path, 'bb_aspect_y_height.png',
+                             reltol=reltol) as ic:
+            fig.savefig(ic.name)
+
 
 def suite():
     return unittest.makeSuite(BeachballTestCase, 'test')
