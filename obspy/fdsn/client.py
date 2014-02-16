@@ -77,7 +77,7 @@ class Client(object):
     """
     def __init__(self, base_url="IRIS", major_versions={}, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=10):
+                 timeout=120):
         """
         Initializes an FDSN Web Service client.
 
@@ -1199,8 +1199,10 @@ def download_url(url, timeout=10, headers={}, debug=False,
     # Catch HTTP errors.
     except compatibility.HTTPError as e:
         if debug is True:
-            print(("HTTP error %i while downloading '%s': %s" %
-                  (e.code, url, e.read())))
+            msg = "HTTP error %i while downloading '%s': %s" % \
+                  (e.code, url, e.read())
+            msg += "Service error:\n%s" % url_obj.read()
+            print(msg)
             return e.code, None
         raise
     except Exception as e:
