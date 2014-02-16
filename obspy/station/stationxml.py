@@ -1141,11 +1141,7 @@ def _write_phone(parent, phone):
 
 
 def _tag2obj(element, tag, convert):
-    # make sure, only unicode
-    if convert is str:
-        ### XXX: this warning if often raised with python3
-        warnings.warn("overriding 'str' with 'unicode'.")
-        convert = str
+    # we use future.builtins.str and are sure we have unicode here
     try:
         return convert(element.find(tag).text)
     except:
