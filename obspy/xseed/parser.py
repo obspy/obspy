@@ -59,10 +59,7 @@ class Parser(object):
         The SEED file format description can be found at
         http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
 
-        The XML-SEED format was proposed in:
-
-        * http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml
-        * http://www.jamstec.go.jp/pacific21/xmlninja/.
+        The XML-SEED format was proposed in [Tsuboi2004]_.
     """
 
     def __init__(self, data=None, debug=False, strict=False,
