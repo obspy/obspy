@@ -91,9 +91,8 @@ INSTALL_REQUIRES = [
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy']
-    #'suds']
-    #'suds>=0.4.0']
+    'sqlalchemy',
+    'suds-jurko']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose']}
