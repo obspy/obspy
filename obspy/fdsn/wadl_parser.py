@@ -180,8 +180,8 @@ class WADLParser(object):
             "required": required,
             "type": param_type,
             "options": options,
-            "doc_title": doc_title.strip(),
-            "doc": doc.strip(),
+            "doc_title": doc_title and doc_title.strip(),
+            "doc": doc and doc.strip(),
             "default_value": default_value}
 
     @staticmethod

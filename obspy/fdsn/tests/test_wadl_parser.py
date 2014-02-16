@@ -409,6 +409,24 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(sorted(params.keys()), expected)
         self.assertEqual(len(w), 0)
 
+    def test_parsing_current_wadls_seismicportal(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-02-16.
+        """
+        parser, w = \
+            self._parse_wadl_file("2014-02-16_seismicportal_event.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['callback', 'catalog', 'contributor', 'endtime', 'eventid',
+                    'includeallmagnitudes', 'includeallorigins',
+                    'includearrivals', 'latitude', 'limit', 'longitude',
+                    'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
+                    'orderby', 'starttime', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 0)
+
     def test_parsing_current_wadls_resif(self):
         """
         Test parsing real world wadls provided by servers as of 2014-01-07.
