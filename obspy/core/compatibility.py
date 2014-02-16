@@ -18,6 +18,7 @@ if PY2:
     from urllib2 import HTTPError  # NOQA
     from urllib2 import Request  # NOQA
     from httplib import HTTPConnection  # NOQA
+    import mock
 else:
     import urllib.request
     urlopen = urllib.request.urlopen
@@ -31,6 +32,7 @@ else:
     from urllib.request import HTTPError  # NOQA
     from urllib.request import Request  # NOQA
     from http.client import HTTPConnection  # NOQA
+    from unittest import mock
 
 if PY2:
     from StringIO import StringIO

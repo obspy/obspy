@@ -96,8 +96,9 @@ INSTALL_REQUIRES = [
     #'suds>=0.4.0']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose',
-              'mock']}
+              'nose']}
+if sys.version_info.major == 2:
+    EXTRAS_REQUIRE['tests'].append('mock')
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',

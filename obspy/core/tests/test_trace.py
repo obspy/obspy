@@ -1,17 +1,17 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import range
-# -*- coding: utf-8 -*-
 
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
 from obspy.core import Stats
+from obspy.core.compatibility import mock
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 from obspy.xseed import Parser
 import math
-import mock
 import numpy as np
 import unittest
 import warnings
