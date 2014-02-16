@@ -2,6 +2,8 @@
  - obspy.core:
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
+   * extend remove_response for polynomial responses  
+     (thanks to Sebastien/bonaime, see #566)
  - obspy.datamark:
    * bugfix: channel code now correctly read (4 hex char)
    * bugfix: channels can have different sampling rate
