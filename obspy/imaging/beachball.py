@@ -67,8 +67,9 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         (opaque).
     :param xy: Origin position of the beach ball as tuple. Defaults to
         ``(0, 0)``.
-    :type width: int
-    :param width: Symbol size of beach ball. Defaults to ``200``.
+    :type width: int or tuple
+    :param width: Symbol size of beach ball, or tuple for elliptically
+        shaped patches. Defaults to size ``200``.
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
