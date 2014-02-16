@@ -6,6 +6,8 @@ from future.builtins import str
 from future.builtins import open
 
 from lxml import etree
+import numpy as np
+import obspy
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core import compatibility
@@ -679,6 +681,53 @@ class ParserTestCase(unittest.TestCase):
             # the second filename is appended with the timestamp of start
             # period
             os.remove(tempfile + '.1301529600.0.xml')
+
+    def test_rotationToZNE(self):
+        """
+        Weak test for rotation of arbitrarily rotated components to ZNE.
+        """
+        st = obspy.read(os.path.join(self.path,
+                        "II_COCO_three_channel_borehole.mseed"))
+        # Read the SEED file and rotate the Traces with the information stored
+        # in the SEED file.
+        p = Parser(os.path.join(self.path, "dataless.seed.II_COCO"))
+        st_r = p.rotateToZNE(st)
+
+        # Still three channels left.
+        self.assertEqual(len(st_r), 3)
+
+        # Extract the components for easier assertions. This also asserts that
+        # the channel renaming worked.
+        tr_z = st.select(channel="BHZ")[0]
+        tr_1 = st.select(channel="BH1")[0]
+        tr_2 = st.select(channel="BH2")[0]
+        tr_r_z = st_r.select(channel="BHZ")[0]
+        tr_r_n = st_r.select(channel="BHN")[0]
+        tr_r_e = st_r.select(channel="BHE")[0]
+
+        # Convert all components to float for easier assertions.
+        tr_z.data = np.require(tr_z.data, dtype="float64")
+        tr_1.data = np.require(tr_1.data, dtype="float64")
+        tr_2.data = np.require(tr_2.data, dtype="float64")
+
+        # The total energy should not be different.
+        energy_before = np.sum((tr_z.data ** 2) + (tr_1.data ** 2) +
+                               (tr_2.data ** 2))
+        energy_after = np.sum((tr_r_z.data ** 2) + (tr_r_n.data ** 2) +
+                              (tr_r_e.data ** 2))
+        np.testing.assert_allclose(energy_before, energy_after)
+
+        # The vertical channel should not have changed at all.
+        np.testing.assert_array_equal(tr_z.data, tr_r_z.data)
+        # The other two are only rotated by 2 degree so should also not have
+        # changed much but at least a little bit. And the components should be
+        # renamed.
+        np.testing.assert_allclose(tr_1, tr_r_n, rtol=10E-3)
+        # The east channel carries very little energy for this particular
+        # example. Thus it changes quite a lot even for this very subtle
+        # rotation. The energy comparison should still ensure a sensible
+        # result.
+        np.testing.assert_allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0)
 
 
 def suite():

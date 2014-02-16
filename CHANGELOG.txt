@@ -117,6 +117,8 @@
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * new function for rotating arbitrarily oriented components to vertical,
+     north, and east.
    * add PPSD support for segments of arbitrary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.
