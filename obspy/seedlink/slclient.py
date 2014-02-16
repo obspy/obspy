@@ -99,7 +99,6 @@ class SLClient(object):
     COPYRIGHT_YEAR = VERSION_YEAR
     PROGRAM_NAME = "SLClient v" + VERSION
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
-    BANNER = ["SLClient comes with ABSOLUTELY NO WARRANTY"]
 
     def __init__(self, loglevel='DEBUG'):
         """
@@ -120,10 +119,6 @@ class SLClient(object):
         self.begin_time = None
         self.end_time = None
         self.infolevel = None
-
-        ## for-while
-        for line in SLClient.BANNER:
-            print line
         self.slconn = SeedLinkConnection()
 
     def parseCmdLineArgs(self, args):
