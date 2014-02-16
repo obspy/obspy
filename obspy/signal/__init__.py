@@ -46,6 +46,8 @@ Working with the convenience methods implemented on
 works similar:
 
 >>> tr.filter('highpass', freq=1.0, corners=1, zerophase=True)
+... # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 
 .. plot::
 
@@ -96,6 +98,8 @@ Again, there are convenience methods implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`:
 
 >>> tr.simulate(paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
+... # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 
 .. plot::
 
@@ -131,7 +135,8 @@ The following example demonstrates a recursive STA/LTA triggering:
 >>> from obspy.signal.trigger import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
->>> tr.filter("bandpass", freqmin=1, freqmax=20)
+>>> tr.filter("bandpass", freqmin=1, freqmax=20)  # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 >>> sta = 0.5
 >>> lta = 4
 >>> cft = recSTALTA(tr.data, int(sta * tr.stats.sampling_rate),
@@ -161,7 +166,8 @@ It works on and overwrites the traces waveform data and is intended for batch
 processing rather than for interactive determination of triggering parameters.
 But it also means that the trace's built-in methods can be used.
 
->>> tr.trigger("recstalta", sta=0.5, lta=4)
+>>> tr.trigger("recstalta", sta=0.5, lta=4)  # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 >>> tr.plot()  # doctest: +SKIP
 
 .. plot::
@@ -173,31 +179,34 @@ But it also means that the trace's built-in methods can be used.
     tr.trigger("recstalta", sta=0.5, lta=4)
     tr.plot()
 
-For more examples check out the `triggering page`_ in the `Tutorial`_. For
+For more examples check out the `trigger`_ in the `Tutorial`_. For
 network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
 and the same page in the `Tutorial`_. For automated use see the following
 `stalta`_ example scripts.
 
-.. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
+.. _`trigger`: http://tutorial.obspy.org/code_snippets/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from filter import bandpass, bandstop, lowpass, highpass, remezFIR, \
-    lowpassFIR, envelope, integerDecimation
-from rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, rotate_LQT_ZNE
-from invsim import cosTaper, cornFreq2Paz, pazToFreqResp, seisSim, specInv, \
-    estimateMagnitude
-from cpxtrace import normEnvelope, centroid, instFreq, instBwith
-from util import utlGeoKm, utlLonLat
-from cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
-from freqattributes import cfrequency, bwith, domperiod, logcep
-from hoctavbands import sonogram
-from polarization import eigval
-from spectral_estimation import psd, PPSD
-from konnoohmachismoothing import konnoOhmachiSmoothing
-from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
-    delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
+from obspy.signal.filter import bandpass, bandstop, lowpass, highpass, \
+    remezFIR, lowpassFIR, envelope, integerDecimation
+from obspy.signal.rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
+    rotate_LQT_ZNE
+from obspy.signal.invsim import cosTaper, cornFreq2Paz, pazToFreqResp, \
+    seisSim, specInv, estimateMagnitude
+from obspy.signal.cpxtrace import normEnvelope, centroid, instFreq, instBwith
+from obspy.signal.util import utlGeoKm, utlLonLat
+from obspy.signal.cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
+from obspy.signal.freqattributes import cfrequency, bwith, domperiod, logcep
+from obspy.signal.hoctavbands import sonogram
+from obspy.signal.polarization import eigval
+from obspy.signal.spectral_estimation import psd, PPSD
+from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothing
+from obspy.signal.trigger import recSTALTA, recSTALTAPy, carlSTATrig, \
+    classicSTALTA, delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
     coincidenceTrigger, classicSTALTAPy
 
 

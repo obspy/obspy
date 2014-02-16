@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 
 from obspy import Stream, Trace, UTCDateTime

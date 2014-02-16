@@ -11,6 +11,8 @@
 Functions that will all take a file pointer and the sample count and return a
 NumPy array with the unpacked values.
 """
+from __future__ import division
+from __future__ import unicode_literals
 
 import numpy as np
 import sys
@@ -58,8 +60,8 @@ def pack_4byte_IBM(file, data, endian='>'):
     exponent = ((np.log10(data) / LOG2) * 0.25 + 65).astype('uint32')
 
     # Now calculate the fraction using single precision.
-    fraction = np.require(data, 'float32') / \
-                   (16.0 ** (np.require(exponent, 'float32') - 64))
+    fraction = np.require(
+        data, 'float32') / (16.0 ** (np.require(exponent, 'float32') - 64))
 
     # Normalization.
     while True:

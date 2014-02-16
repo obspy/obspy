@@ -9,6 +9,12 @@ Module for handling ObsPy RtTrace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import str
+from future.builtins import range
 from obspy import Trace
 from obspy.core import Stats
 from obspy.realtime import signal
@@ -60,7 +66,6 @@ class RtTrace(Trace):
     1. Read first trace of example SAC data file and extract contained time
        offset and epicentral distance of an earthquake::
 
-        >>> import numpy as np
         >>> from obspy.realtime import RtTrace
         >>> from obspy import read
         >>> from obspy.realtime.signal import calculateMwpMag
@@ -104,8 +109,8 @@ class RtTrace(Trace):
         >>> print(peak)
         0.136404
         >>> mwp = calculateMwpMag(peak, epicentral_distance)
-        >>> print(mwp)
-        8.78902911791
+        >>> print(mwp)  # doctest: +ELLIPSIS
+        8.78902911791...
     """
     have_appended_data = False
 
@@ -222,9 +227,9 @@ class RtTrace(Trace):
             if verbose:
                 msg = "%s: Overlap/gap of (%g) samples in data: (%s) (%s) " + \
                     "diff=%gs  dt=%gs"
-                print msg % (self.__class__.__name__,
+                print(msg % (self.__class__.__name__,
                              delta, self.stats.endtime, trace.stats.starttime,
-                             diff, self.stats.delta)
+                             diff, self.stats.delta))
             if delta < -0.1:
                 msg = "Overlap of (%g) samples in data: (%s) (%s) diff=%gs" + \
                     "  dt=%gs"
@@ -252,13 +257,14 @@ class RtTrace(Trace):
                 self.stats.starttime = \
                     self.stats.starttime + diff - self.stats.delta
                 if verbose:
-                    print "%s: self.stats.starttime adjusted by: %gs" \
-                        % (self.__class__.__name__, diff - self.stats.delta)
+                    print("%s: self.stats.starttime adjusted by: %gs"
+                          % (self.__class__.__name__, diff -
+                             self.stats.delta))
         # first apply all registered processing to Trace
         for proc in self.processing:
             process_name, options, rtmemory_list = proc
             # if gap or overlap, clear memory
-            if gap_or_overlap and rtmemory_list != None:
+            if gap_or_overlap and rtmemory_list is not None:
                 for n in range(len(rtmemory_list)):
                     rtmemory_list[n] = RtMemory()
             # apply processing
@@ -284,16 +290,18 @@ class RtTrace(Trace):
         # fix Trace.__add__ parameters
         # TODO: IMPORTANT? Should check for gaps and overlaps and handle
         # more elegantly
-        sum_trace = Trace.__add__(self, trace, method=0,
-            interpolation_samples=0, fill_value='latest', sanity_checks=True)
+        sum_trace = Trace.__add__(
+            self, trace, method=0, interpolation_samples=0,
+            fill_value='latest', sanity_checks=True)
         # Trace.__add__ returns new Trace, so update to this RtTrace
         self.data = sum_trace.data
         # left trim if data length exceeds max_length
-        if self.max_length != None:
+        if self.max_length is not None:
             max_samples = int(self.max_length * self.stats.sampling_rate + 0.5)
             if np.size(self.data) > max_samples:
-                starttime = self.stats.starttime + (np.size(self.data) - \
-                    max_samples) / self.stats.sampling_rate
+                starttime = self.stats.starttime + \
+                    (np.size(self.data) - max_samples) / \
+                    self.stats.sampling_rate
                 self._ltrim(starttime, pad=False, nearest_sample=True,
                             fill_value=None)
         return trace

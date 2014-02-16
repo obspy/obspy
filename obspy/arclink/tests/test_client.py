@@ -2,15 +2,20 @@
 """
 The obspy.arclink.client test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import str
+from future.builtins import open
 
 from obspy import read
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
+from obspy.core import compatibility
 import numpy as np
 import operator
-import StringIO
 import unittest
 import warnings
 
@@ -99,7 +104,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
                         user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'BW.RJOB..': [{'priority': 1,
                             'start': UTCDateTime(1980, 1, 1, 0, 0),
                             'host': '141.84.11.2', 'end': None,
@@ -107,7 +113,8 @@ class ClientTestCase(unittest.TestCase):
         # 2 - BW network via webdc:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'BW.RJOB..': [{'priority': 1,
                             'start': UTCDateTime(1980, 1, 1, 0, 0),
                             'host': '141.84.11.2',
@@ -116,7 +123,8 @@ class ClientTestCase(unittest.TestCase):
         # 3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'BW.RJOB..': [{'priority': 1,
                             'start': UTCDateTime(1980, 1, 1, 0, 0),
                             'host': '141.84.11.2',
@@ -125,29 +133,33 @@ class ClientTestCase(unittest.TestCase):
         # 4 - IV network via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 5 - IV network via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 6 - GE.APE via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
-        self.assertEqual(results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+        self.assertEqual(
+            results,
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
                         'host': 'eida.gfz-potsdam.de', 'end': None,
                         'port': 18002}]})
         # 7 - GE.APE via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
-        self.assertEqual(results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+        self.assertEqual(
+            results,
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
                         'host': 'eida.gfz-potsdam.de', 'end': None,
                         'port': 18002}]})
         # 8 - unknown network 00 via webdc.eu:18002
@@ -231,18 +243,6 @@ class ClientTestCase(unittest.TestCase):
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
 
-    def test_getInventory2(self):
-        """
-        Bugfix for location and channel codes for new inventory schema
-        """
-        client = Client(user='test@obspy.org')
-        # new schema
-        inventory = client.getInventory('CH', 'GRYON')
-        self.assertTrue('CH.GRYON..EHE' in inventory)
-        # old schema
-        inventory = client.getInventory('BW', 'MANZ')
-        self.assertTrue('BW.MANZ..EHZ' in inventory)
-
     def test_getWaveformWithMetadata(self):
         """
         """
@@ -272,9 +272,9 @@ class ClientTestCase(unittest.TestCase):
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
-                'filesize': 30720L,
+                'filesize': 30720,
                 'dataquality': 'D',
-                'number_of_records': 60L,
+                'number_of_records': 60,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 47.737167,
@@ -314,9 +314,9 @@ class ClientTestCase(unittest.TestCase):
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
-                'filesize': 3584L,
+                'filesize': 3584,
                 'dataquality': 'D',
-                'number_of_records': 7L,
+                'number_of_records': 7,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 49.3084,
@@ -369,7 +369,7 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         result = client.getNetworks(start, end)
-        self.assertTrue('BW' in result.keys())
+        self.assertTrue('BW' in list(result.keys()))
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
 
@@ -407,7 +407,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
-            self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+            with open(mseedfile, 'rb') as fp:
+                self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertTrue(st[0].stats.starttime <= start)
             self.assertTrue(st[0].stats.endtime >= end)
@@ -422,7 +423,8 @@ class ClientTestCase(unittest.TestCase):
                                 format='FSEED')
             st = read(fseedfile)
             # Full SEED must start with Volume Index Control Headers (V)
-            self.assertEqual(open(fseedfile).read(8)[6], "V")
+            with open(fseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertTrue(st[0].stats.starttime <= start)
             self.assertTrue(st[0].stats.endtime >= end)
@@ -462,7 +464,8 @@ class ClientTestCase(unittest.TestCase):
                                 compressed=False)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
-            self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+            with open(mseedfile, 'rb') as fp:
+                self.assertNotEquals(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertEqual(st[0].stats.network, 'GE')
             self.assertEqual(st[0].stats.station, 'APE')
@@ -497,7 +500,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 unpack=False)
             # check if compressed
-            self.assertEqual(open(mseedfile, 'rb').read(2), 'BZ')
+            with open(mseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(2), b'BZ')
             # importing via read should work too
             read(mseedfile)
         # Full SEED
@@ -506,7 +510,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 format="FSEED", unpack=False)
             # check if compressed
-            self.assertEqual(open(fseedfile, 'rb').read(2), 'BZ')
+            with open(fseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(2), b'BZ')
             # importing via read should work too
             read(fseedfile)
 
@@ -563,17 +568,18 @@ class ClientTestCase(unittest.TestCase):
             tempfile = tf.name
             # Dataless SEED
             client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-            self.assertEqual(open(tempfile).read(8), "000001V ")
+            with open(tempfile, 'rb') as fp:
+                self.assertEqual(fp.read(8), b"000001V ")
 
-        # Try again but write to a StringIO instance.
-        file_object = StringIO.StringIO()
+        # Try again but write to a BytesIO instance.
+        file_object = compatibility.BytesIO()
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         # Dataless SEED
         client.saveResponse(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
         file_object.seek(0, 0)
-        self.assertEqual(file_object.read(8), "000001V ")
+        self.assertEqual(file_object.read(8), b"000001V ")
 
     def test_SRL(self):
         """
@@ -595,8 +601,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
-        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ",
-                                    t, t + 30).values()[0]
+        poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
+                                         t, t + 30).values())[0]
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])
@@ -605,8 +611,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual('RJOB', st[0].stats['station'])
         self.assertEqual(200.0, st[0].stats['sampling_rate'])
         self.assertEqual(6001, st[0].stats['npts'])
-        self.assertEqual('2009-08-24T00:20:03.000000Z',
-                          str(st[0].stats['starttime']))
+        self.assertEqual(
+            '2009-08-24T00:20:03.000000Z', str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
 

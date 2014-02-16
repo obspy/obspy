@@ -8,6 +8,10 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import str
 from copy import copy
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
@@ -41,7 +45,7 @@ def createPreview(trace, delta=60):
     if samples_per_slice < 1:
         raise ValueError('samples_per_slice is less than 0 - skipping')
     # minimum and maximum of samples before a static time marker
-    start = (delta - start_time % delta) * int(trace.stats.sampling_rate)
+    start = int((delta - start_time % delta) * int(trace.stats.sampling_rate))
     start_time = start_time - start_time % delta
     if start > (delta / 2) and data[0:start].size:
         first_diff = [data[0:start].max() - data[0:start].min()]
@@ -107,7 +111,7 @@ def mergePreviews(stream):
         return Stream()
     # Initialize new Stream object.
     new_stream = Stream()
-    for value in traces.values():
+    for value in list(traces.values()):
         if len(value) == 1:
             new_stream.append(value[0])
             continue
@@ -130,7 +134,7 @@ def mergePreviews(stream):
         # Get the minimum start and maximum endtime for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
-        samples = (max_endtime - min_starttime) / delta + 1
+        samples = int(round((max_endtime - min_starttime) / delta)) + 1
         data = np.empty(samples, dtype=dtype)
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
@@ -198,9 +202,9 @@ def resamplePreview(trace, samples, method='accurate'):
         return 0
     # Fast method.
     if method == 'fast':
-        trace.data = trace.data[:int(npts / samples) * samples]
-        trace.data = trace.data.reshape(samples, len(trace.data) // samples)
-        trace.data = trace.data.max(axis=1)
+        data = trace.data[:int(npts / samples) * samples]
+        data = data.reshape(samples, len(data) // samples)
+        trace.data = data.max(axis=1)
         # Set new sampling rate.
         trace.stats.delta = (endtime - trace.stats.starttime) / \
             float(samples - 1)
@@ -210,7 +214,7 @@ def resamplePreview(trace, samples, method='accurate'):
     elif method == 'accurate':
         new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
-        for _i in xrange(samples):
+        for _i in range(samples):
             new_data[_i] = trace.data[int(_i * step):
                                       int((_i + 1) * step)].max()
         trace.data = new_data

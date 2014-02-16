@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------
 # Filename: cross_correlation.py
 #   Author: Moritz Beyreuther, Tobias Megies
@@ -15,6 +16,9 @@ Signal processing routines based on cross correlation techniques.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.utils import native_str
 
 import warnings
 import numpy as np
@@ -149,7 +153,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
                       " but got %s." % len(st.select(component=component))
                 raise ValueError(msg)
     ndat = len(streams[0].select(component=components[0])[0])
-    if False in [len(st.select(component=component)[0]) == ndat \
+    if False in [len(st.select(component=component)[0]) == ndat
                  for st in streams for component in components]:
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
@@ -210,9 +214,9 @@ def xcorr_max(fct, abs_max=True):
     return float(shift), float(value)
 
 
-def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
-        t_after, cc_maxlag, filter=None, filter_options={},
-        plot=False, filename=None):
+def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
+                        cc_maxlag, filter=None, filter_options={}, plot=False,
+                        filename=None):
     """
     Calculate the correction for the differential pick time determined by cross
     correlation of the waveforms in narrow windows around the pick times.
@@ -275,7 +279,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     # perform some checks on the traces
     if trace1.stats.sampling_rate != trace2.stats.sampling_rate:
         msg = "Sampling rates do not match: %s != %s" % \
-                (trace1.stats.sampling_rate, trace2.stats.sampling_rate)
+            (trace1.stats.sampling_rate, trace2.stats.sampling_rate)
         raise Exception(msg)
     if trace1.id != trace2.id:
         msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
@@ -311,8 +315,8 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
         slices.append(tr.slice(start, end))
     # cross correlate
     shift_len = int(cc_maxlag * samp_rate)
-    cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
-                                 shift_len, full_xcorr=True)
+    _cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
+                                  shift_len, full_xcorr=True)
     cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
     cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)
     cc_concave = np.ma.masked_where(np.sign(cc_curvature) < 0, cc)
@@ -322,7 +326,6 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
               "Using positive maximum: %.3f" % max(cc)
         warnings.warn(msg)
         cc_max = max(cc)
-        cc_shift = cc.argmax() - (len(cc) / 2)
     if cc_max < 0.8:
         msg = "Maximum of cross correlation lower than 0.8: %s" % cc_max
         warnings.warn(msg)
@@ -353,8 +356,9 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
               "correlation: %s" % num_samples
         warnings.warn(msg)
     # quadratic fit for small subwindow
-    coeffs, residual = scipy.polyfit(cc_t[first_sample:last_sample + 1],
-            cc[first_sample:last_sample + 1], deg=2, full=True)[:2]
+    coeffs, residual = scipy.polyfit(
+        cc_t[first_sample:last_sample + 1],
+        cc[first_sample:last_sample + 1], deg=2, full=True)[:2]
     # check results of fit
     if coeffs[0] >= 0:
         msg = "Fitted parabola opens upwards!"
@@ -375,7 +379,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     dt = -dt
     pick2_corr = dt
     # plot the results if selected
-    if plot == True:
+    if plot is True:
         import matplotlib
         if filename:
             matplotlib.use('agg')
@@ -432,7 +436,8 @@ def templatesMaxSimilarity(st, time, streams_templates):
     template streams should be cut to the portion of the event that should be
     compared. Also see :func:`obspy.signal.trigger.coincidenceTrigger` and the
     corresponding example in the
-    `Tutorial <http://docs.obspy.org/tutorial/trigger_tutorial.html>`_.
+    `Trigger/Picker Tutorial
+    <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     - computes cross correlation on each component (one stream serves as
       template, one as a longer search stream)
@@ -448,7 +453,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     >>> templ = st.copy().slice(t, t+5)
     >>> for tr in templ:
     ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
-    >>> print templatesMaxSimilarity(st, t, [templ])
+    >>> print(templatesMaxSimilarity(st, t, [templ]))
     0.922536411468
 
     :param time: Time around which is checked for a similarity. Cross
@@ -490,7 +495,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
                 data_long = tr2.data
             data_short = (data_short - data_short.mean()) / data_short.std()
             data_long = (data_long - data_long.mean()) / data_long.std()
-            tmp = np.correlate(data_long, data_short, "valid")
+            tmp = np.correlate(data_long, data_short, native_str("valid"))
             try:
                 cc += tmp
             except TypeError:

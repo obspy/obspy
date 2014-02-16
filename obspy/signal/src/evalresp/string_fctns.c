@@ -547,15 +547,16 @@ int check_units(char *line) {
  * We will play with string_match ater if more requests show
  * up for pressure data.
 ********************************************/
-  if (strncasecmp(line, "PA", 2) == 0)
+  if ((strncasecmp(line, "PA", 2) == 0) || (strncasecmp(line, "MBAR", 4) == 0))
 	return(PRESSURE);
+
 
 /* IGD 08/21/06 Added support for TESLA */
   if (strncasecmp(line, "T -", 3) == 0)
         return(TESLA);
 
 
-  if(string_match(line,"^[CNM]?M/S\\*\\*2|^[CNM]?M/SEC\\*\\*2","-r")) {
+  if(string_match(line,"^[CNM]?M/\\(?S\\*\\*2\\)?|^[CNM]?M/\\(?SEC\\*\\*2\\)?","-r")) {
     if(first_flag && !strncmp("NM",line,(size_t)2))
       unitScaleFact = 1.0e9;
     else if(first_flag && !strncmp("MM",line,(size_t)2))

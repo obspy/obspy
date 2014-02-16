@@ -8,22 +8,37 @@ Main module containing XML-SEED parser.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import open
+from future.builtins import str
+from future.builtins import bytes
+from future.utils import native_str, PY2
 
-from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+<<<<<<< HEAD
 import obspy
+=======
+from obspy import __version__
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core import compatibility
+from obspy.core.util import deprecated_keywords
+from obspy.core.util.decorator import map_example_filename
+>>>>>>> master
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
-from obspy.core.util import getExampleFile, deprecated_keywords
+import copy
+import datetime
 import math
 import os
 import warnings
 import zipfile
-import copy
-import urllib2
 
 
-CONTINUE_FROM_LAST_RECORD = '*'
+CONTINUE_FROM_LAST_RECORD = b'*'
 HEADERS = ['V', 'A', 'S']
 # @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
 HEADER_INFO = {
@@ -44,8 +59,7 @@ INDEX_FIELDS = {30: 'data_format_identifier_code',
                 32: 'source_lookup_code',
                 33: 'abbreviation_lookup_code',
                 34: 'unit_lookup_code',
-                35: 'beam_lookup_code'
-}
+                35: 'beam_lookup_code'}
 
 
 class Parser(object):
@@ -57,10 +71,7 @@ class Parser(object):
         The SEED file format description can be found at
         http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
 
-        The XML-SEED format was proposed in:
-
-        * http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml
-        * http://www.jamstec.go.jp/pacific21/xmlninja/.
+        The XML-SEED format was proposed in [Tsuboi2004]_.
     """
 
     def __init__(self, data=None, debug=False, strict=False,
@@ -109,13 +120,13 @@ class Parser(object):
         # Sort alphabetically.
         networks = sorted(inv["networks"], key=lambda x: x["network_code"])
         for network in networks:
-            ret_str += "\t%s (%s)\n" % (network["network_code"],
-                network["network_name"])
+            ret_str += "\t%s (%s)\n" % (
+                network["network_code"], network["network_name"])
         stations = sorted(inv["stations"], key=lambda x: x["station_id"])
         ret_str += "Stations:\n"
         for station in stations:
-            ret_str += "\t%s (%s)\n" % (station["station_id"],
-                station["station_name"])
+            ret_str += "\t%s (%s)\n" % (
+                station["station_id"], station["station_name"])
         channels = sorted(inv["channels"], key=lambda x: x["channel_id"])
         ret_str += "Channels:\n"
         for channel in channels:
@@ -123,13 +134,14 @@ class Parser(object):
                 channel["start_date"] else ""
             end_date = channel["end_date"].strftime("%Y-%m-%d") if \
                 channel["end_date"] else ""
-            ret_str += ("\t%s | %.2f Hz | %s | %s - %s | Lat: %.1f, "
-               "Lng: %.1f\n") % \
-               (channel["channel_id"], channel["sampling_rate"],
-               channel["instrument"], start_date, end_date,
-               channel["latitude"], channel["longitude"])
+            ret_str += (
+                "\t%s | %.2f Hz | %s | %s - %s | Lat: %.1f, Lng: %.1f\n") % \
+                (channel["channel_id"], channel["sampling_rate"],
+                 channel["instrument"], start_date, end_date,
+                 channel["latitude"], channel["longitude"])
         return ret_str.strip()
 
+    @map_example_filename("data")
     def read(self, data):
         """
         General parser method for XML-SEED and Dataless SEED files.
@@ -142,22 +154,24 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into StringIO object
-        if isinstance(data, basestring):
-            # if it starts with /path/to/ try to search in examples
-            if data.startswith('/path/to/'):
-                try:
-                    data = getExampleFile(data[9:])
-                except:
-                    # otherwise just try to read the given /path/to folder
-                    pass
+        if isinstance(data, (str, native_str)):
             if "://" in data:
                 # some URL
-                data = urllib2.urlopen(data).read()
+                data = compatibility.urlopen(data).read()
+                data = compatibility.BytesIO(data)
             elif os.path.isfile(data):
                 # looks like a file - read it
-                data = open(data, 'rb').read()
-            # but could also be a big string with data
-            data = StringIO(data)
+                with open(data, 'rb') as f:
+                    data = f.read()
+                data = compatibility.BytesIO(data)
+            else:
+                if PY2:
+                    data = compatibility.BytesIO(data)
+                else:
+                    raise IOError("data is neither filename nor valid URL")
+        # but could also be a big string with data
+        elif isinstance(data, bytes):
+            data = compatibility.BytesIO(data)
         elif not hasattr(data, "read"):
             raise TypeError
         # check first byte of data StringIO object
@@ -167,12 +181,12 @@ class Parser(object):
             # SEED volumes starts with a number
             self._parseSEED(data)
             self._format = 'SEED'
-        elif first_byte == '<':
+        elif first_byte == b'<':
             # XML files should always starts with an '<'
             self._parseXSEED(data)
             self._format = 'XSEED'
         else:
-            raise IOError
+            raise IOError("First byte of data must be in [0-9<]")
 
     def getXSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
@@ -192,7 +206,7 @@ class Parser(object):
         doc = Element("xseed", version=version)
         # Nothing to write if not all necessary data is available.
         if not self.volume or not self.abbreviations or \
-                    len(self.stations) == 0:
+                len(self.stations) == 0:
             msg = 'No data to be written available.'
             raise SEEDParserException(msg)
         # Check blockettes:
@@ -205,22 +219,22 @@ class Parser(object):
         # Now start actually filling the XML tree.
         # Volume header:
         sub = SubElement(doc, utils.toTag('Volume Index Control Header'))
-        for blockette in self.volume:
-            sub.append(blockette.getXML(xseed_version=version))
+        for blkt in self.volume:
+            sub.append(blkt.getXML(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
         if version == '1.0':
             self._deleteBlockettes11and12()
         # Abbreviations:
-        sub = SubElement(doc,
-                    utils.toTag('Abbreviation Dictionary Control Header'))
-        for blockette in self.abbreviations:
-            sub.append(blockette.getXML(xseed_version=version))
+        sub = SubElement(
+            doc, utils.toTag('Abbreviation Dictionary Control Header'))
+        for blkt in self.abbreviations:
+            sub.append(blkt.getXML(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
                 sub = SubElement(doc, utils.toTag('Station Control Header'))
-                for blockette in station:
-                    sub.append(blockette.getXML(xseed_version=version))
+                for blkt in station:
+                    sub.append(blkt.getXML(xseed_version=version))
             if version == '1.0':
                 # To pass the XSD schema test an empty time span control header
                 # is added to the end of the file.
@@ -236,15 +250,18 @@ class Parser(object):
             for station in self.stations:
                 cdoc = copy.copy(doc)
                 sub = SubElement(cdoc, utils.toTag('Station Control Header'))
-                for blockette in station:
-                    sub.append(blockette.getXML(xseed_version=version))
+                for blkt in station:
+                    sub.append(blkt.getXML(xseed_version=version))
                 if version == '1.0':
                     # To pass the XSD schema test an empty time span control
                     # header is added to the end of the file.
                     SubElement(doc, utils.toTag('Timespan Control Header'))
                     # Also no data is present in all supported SEED files.
                     SubElement(doc, utils.toTag('Data Records'))
-                id = station[0].end_effective_date
+                try:
+                    id = station[0].end_effective_date.datetime
+                except AttributeError:
+                    id = ''
                 result[id] = tostring(cdoc, pretty_print=True,
                                       xml_declaration=True, encoding='UTF-8')
             return result
@@ -254,19 +271,21 @@ class Parser(object):
         Writes a XML-SEED file with given name.
         """
         result = self.getXSEED(*args, **kwargs)
-        if isinstance(result, basestring):
-            open(filename, 'w').write(result)
+        if isinstance(result, bytes):
+            with open(filename, 'wb') as f:
+                f.write(result)
             return
         elif isinstance(result, dict):
-            for key, value in result.iteritems():
-                if key is not '':
+            for key, value in result.items():
+                if isinstance(key, datetime.datetime):
                     # past meta data - append timestamp
                     fn = filename.split('.xml')[0]
-                    fn = "%s.%s.xml" % (filename, key.timestamp)
+                    fn = "%s.%s.xml" % (filename, UTCDateTime(key).timestamp)
                 else:
                     # current meta data - leave original filename
                     fn = filename
-                open(fn, 'w').write(value)
+                with open(fn, 'wb') as f:
+                    f.write(value)
             return
         else:
             raise TypeError
@@ -285,23 +304,25 @@ class Parser(object):
             msg = 'Not all necessary blockettes are available.'
             raise SEEDParserException(msg)
         # String to be written to:
-        seed_string = ''
+        seed_string = b''
         cur_count = 1
         volume, abbreviations, stations = self._createBlockettes11and12()
         # Delete Blockette 11 again.
         self._deleteBlockettes11and12()
         # Finally write the actual SEED String.
+        fmt_seed = lambda cnt, i: \
+            ('%06i' % cnt).encode('ascii', 'strict') + i
         for _i in volume:
-            seed_string += '%06i' % cur_count + _i
+            seed_string += fmt_seed(cur_count, _i)
             cur_count += 1
         for _i in abbreviations:
-            seed_string += '%06i' % cur_count + _i
+            seed_string += fmt_seed(cur_count, _i)
             cur_count += 1
         # Remove name of the stations.
         stations = [_i[1:] for _i in stations]
         for _i in stations:
             for _j in _i:
-                seed_string += '%06i' % cur_count + _j
+                seed_string += fmt_seed(cur_count, _j)
                 cur_count += 1
         return seed_string
 
@@ -328,19 +349,23 @@ class Parser(object):
         resp_list = []
         # Loop over all stations.
         for station in self.stations:
-            resp = StringIO('')
+            resp = compatibility.BytesIO(b'')
             blockettes = []
             # Read the current station information and store it.
             cur_station = station[0].station_call_letters.strip()
             cur_network = station[0].network_code.strip()
             # Loop over all blockettes in that station.
-            for _i in xrange(1, len(station)):
+            for _i in range(1, len(station)):
                 # Catch all blockette 52.
                 if station[_i].id == 52:
                     cur_location = station[_i].location_identifier.strip()
                     cur_channel = station[_i].channel_identifier.strip()
                     # Take old list and send it to the RESP parser.
-                    if resp.len != 0:
+                    _pos = resp.tell()
+                    resp.seek(0, os.SEEK_END)
+                    _len = resp.tell()
+                    resp.seek(_pos)
+                    if _len != 0:
                         # Send the blockettes to the parser and append to list.
                         self._getRESPString(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
@@ -348,18 +373,18 @@ class Parser(object):
                     filename = 'RESP.%s.%s.%s.%s' \
                         % (cur_network, cur_station, cur_location, cur_channel)
                     # Create new StringIO and list.
-                    resp = StringIO('')
+                    resp = compatibility.BytesIO(b'')
                     blockettes = []
                     blockettes.append(station[_i])
                     # Write header and the first two lines to the string.
                     header = \
-                    '#\t\t<< obspy.xseed, Version 0.1.3 >>\n' + \
-                    '#\t\t\n' + \
-                    '#\t\t======== CHANNEL RESPONSE DATA ========\n' + \
-                    'B050F03     Station:     %s\n' % cur_station + \
-                    'B050F16     Network:     %s\n' % cur_network
+                        '#\t\t<< obspy, Version %s >>\n' % __version__ + \
+                        '#\t\t\n' + \
+                        '#\t\t======== CHANNEL RESPONSE DATA ========\n' + \
+                        'B050F03     Station:     %s\n' % cur_station + \
+                        'B050F16     Network:     %s\n' % cur_network
                     # Write to StringIO.
-                    resp.write(header)
+                    resp.write(header.encode('ascii', 'strict'))
                     continue
                 blockettes.append(station[_i])
             # It might happen that no blockette 52 is specified,
@@ -376,7 +401,7 @@ class Parser(object):
             if len(channel_list) == 1:
                 new_resp_list.append(channel_list[0])
             else:
-                for _i in xrange(1, len(channel_list)):
+                for _i in range(1, len(channel_list)):
                     channel_list[_i][1].seek(0, 0)
                     channel_list[0][1].write(channel_list[_i][1].read())
                 new_resp_list.append(channel_list[0])
@@ -413,12 +438,6 @@ class Parser(object):
                         continue
                     if sta is not None and blk.station_call_letters != sta:
                         continue
-                    if datetime is not None:
-                        if blk.start_effective_date > datetime:
-                            continue
-                        if blk.end_effective_date and \
-                           blk.end_effective_date < datetime:
-                            continue
                     station_flag = True
                     tmpb50 = blk
                 elif blk.id == 52 and station_flag:
@@ -470,28 +489,28 @@ class Parser(object):
         """
         blockettes = self._select(seed_id, datetime)
         data = {}
-        for blockette in blockettes:
-            if blockette.id == 58:
-                if blockette.stage_sequence_number == 0:
-                    data['sensitivity'] = blockette.sensitivity_gain
-                elif blockette.stage_sequence_number == 1:
-                    data['seismometer_gain'] = blockette.sensitivity_gain
-                elif blockette.stage_sequence_number == 2:
-                    data['digitizer_gain'] = blockette.sensitivity_gain
-            elif blockette.id == 53 or blockette.id == 60:
-                if blockette.id == 60:
-                    abbreviation = blockette.stages[0][1]
+        for blkt in blockettes:
+            if blkt.id == 58:
+                if blkt.stage_sequence_number == 0:
+                    data['sensitivity'] = blkt.sensitivity_gain
+                elif blkt.stage_sequence_number == 1:
+                    data['seismometer_gain'] = blkt.sensitivity_gain
+                elif blkt.stage_sequence_number == 2:
+                    data['digitizer_gain'] = blkt.sensitivity_gain
+            elif blkt.id == 53 or blkt.id == 60:
+                if blkt.id == 60:
+                    abbreviation = blkt.stages[0][1]
                     data['seismometer_gain'] = \
                         [blk.sensitivity_gain for blk in self.abbreviations
-                         if hasattr(blk, 'response_lookup_key') and \
+                         if hasattr(blk, 'response_lookup_key') and
                             blk.response_lookup_key == abbreviation][0]
-                    abbreviation = blockette.stages[0][0]
+                    abbreviation = blkt.stages[0][0]
                     resp = [blk for blk in self.abbreviations
-                            if hasattr(blk, 'response_lookup_key') and \
-                               blk.response_lookup_key == abbreviation][0]
+                            if hasattr(blk, 'response_lookup_key') and
+                            blk.response_lookup_key == abbreviation][0]
                     label = 'response_type'
                 else:
-                    resp = blockette
+                    resp = blkt
                     label = 'transfer_function_types'
                 # Check if Laplace transform
                 if getattr(resp, label) != "A":
@@ -534,12 +553,12 @@ class Parser(object):
         """
         blockettes = self._select(seed_id, datetime)
         data = {}
-        for blockette in blockettes:
-            if blockette.id == 52:
-                data['latitude'] = blockette.latitude
-                data['longitude'] = blockette.longitude
-                data['elevation'] = blockette.elevation
-                data['local_depth'] = blockette.local_depth
+        for blkt in blockettes:
+            if blkt.id == 52:
+                data['latitude'] = blkt.latitude
+                data['longitude'] = blkt.longitude
+                data['elevation'] = blkt.elevation
+                data['local_depth'] = blkt.local_depth
                 break
         return data
 
@@ -561,15 +580,15 @@ class Parser(object):
             # Write single files.
             for response in new_resp_list:
                 if folder:
-                    file = open(os.path.join(folder, response[0]), 'w')
+                    file = open(os.path.join(folder, response[0]), 'wb')
                 else:
-                    file = open(response[0], 'w')
+                    file = open(response[0], 'wb')
                 response[1].seek(0, 0)
                 file.write(response[1].read())
                 file.close()
         else:
             # Create a ZIP archive.
-            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "w")
+            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "wb")
             for response in new_resp_list:
                 response[1].seek(0, 0)
                 zip_file.writestr(response[0], response[1].read())
@@ -589,14 +608,15 @@ class Parser(object):
         temp = data.read(8)
         # Check whether it starts with record sequence number 1 and a volume
         # index control header.
-        if temp != '000001V ':
+        if temp != b'000001V ':
             raise SEEDParserException("Expecting 000001V ")
         # The first blockette has to be Blockette 10.
         temp = data.read(3)
-        if temp not in ['010', '008', '005']:
+        if temp not in [b'010', b'008', b'005']:
             raise SEEDParserException("Expecting blockette 010, 008 or 005")
         # Skip the next four bytes containing the length of the blockette.
-        data.seek(4, 1)
+        #data.seek(4, 1)
+        data.read(4)
         # Set the version.
         self.version = float(data.read(4))
         # Get the record length.
@@ -604,25 +624,25 @@ class Parser(object):
         # Test record length.
         data.seek(length)
         temp = data.read(6)
-        if temp != '000002':
+        if temp != b'000002':
             msg = "Got an invalid logical record length %d" % length
             raise SEEDParserException(msg)
         self.record_length = length
         if self.debug:
-            print("RECORD LENGTH: %d" % (self.record_length))
+            print(("RECORD LENGTH: %d" % (self.record_length)))
         # Set all temporary attributes.
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Jump back to beginning.
         data.seek(0)
         # Read the first record.
         record = data.read(self.record_length)
-        merged_data = ''
+        merged_data = b''
         record_type = None
         # Loop through file and pass merged records to _parseMergedData.
         while record:
-            record_continuation = (record[7] == CONTINUE_FROM_LAST_RECORD)
-            same_record_type = (record[6] == record_type)
-            if record_type == 'S' and record[8:11] != '050':
+            record_continuation = (record[7:8] == CONTINUE_FROM_LAST_RECORD)
+            same_record_type = (record[6:7].decode() == record_type)
+            if record_type == 'S' and record[8:11] != b'050':
                 record_continuation = True
             if record_continuation and same_record_type:
                 # continued record
@@ -630,7 +650,7 @@ class Parser(object):
             else:
                 self._parseMergedData(merged_data.strip(), record_type)
                 # first or new type of record
-                record_type = record[6]
+                record_type = record[6:7].decode()
                 merged_data = record[8:]
                 if record_type not in HEADERS:
                     # only parse headers, no data
@@ -640,7 +660,7 @@ class Parser(object):
             if self.debug:
                 if not record_continuation:
                     print("========")
-                print(record[0:8])
+                print((record[0:8]))
             record = data.read(self.record_length)
         # Use parse once again.
         self._parseMergedData(merged_data.strip(), record_type)
@@ -660,7 +680,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, basestring):
+                    if isinstance(network_id, (str, native_str)):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():
@@ -668,12 +688,13 @@ class Parser(object):
                         network_id = int(new_id)
                     network_name = self._get_abbreviation(network_id)
                     cur_nw = {"network_code": current_network,
-                        "network_name": network_name}
+                              "network_name": network_name}
                     if cur_nw not in info["networks"]:
                         info["networks"].append(cur_nw)
                     current_station = blkt.station_call_letters.strip()
                     cur_stat = {"station_id": "%s.%s" % (current_network,
-                        current_station), "station_name": blkt.site_name}
+                                                         current_station),
+                                "station_name": blkt.site_name}
                     if cur_stat not in info["stations"]:
                         info["stations"].append(cur_stat)
                     continue
@@ -683,8 +704,8 @@ class Parser(object):
                     chan_info = {}
                     channel = blkt.channel_identifier.strip()
                     location = blkt.location_identifier.strip()
-                    chan_info["channel_id"] = "%s.%s.%s.%s" % (current_network,
-                        current_station, location, channel)
+                    chan_info["channel_id"] = "%s.%s.%s.%s" % (
+                        current_network, current_station, location, channel)
                     chan_info["sampling_rate"] = blkt.sample_rate
                     chan_info["instrument"] = \
                         self._get_abbreviation(blkt.instrument_identifier)
@@ -725,21 +746,21 @@ class Parser(object):
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
-        self.temp['volume'].append(\
+        self.temp['volume'].append(
             self._parseXMLBlockette(headers[0].getchildren()[0], 'V',
                                     xseed_version))
         # Append all abbreviations.
-        for blockette in headers[1].getchildren():
-            self.temp['abbreviations'].append(\
-                self._parseXMLBlockette(blockette, 'A', xseed_version))
+        for blkt in headers[1].getchildren():
+            self.temp['abbreviations'].append(
+                self._parseXMLBlockette(blkt, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
                 continue
             self.temp['stations'].append([])
-            for blockette in control_header.getchildren():
-                self.temp['stations'][-1].append(\
-                    self._parseXMLBlockette(blockette, 'S', xseed_version))
+            for blkt in control_header.getchildren():
+                self.temp['stations'][-1].append(
+                    self._parseXMLBlockette(blkt, 'S', xseed_version))
         # Update internal values.
         self._updateInternalSEEDStructure()
 
@@ -764,36 +785,44 @@ class Parser(object):
         # Convert starttime.
         channel_info['Start date'] = channel_info['Start date'].formatSEED()
         # Write Blockette 52 stuff.
-        resp.write(\
-            'B052F03     Location:    %s\n' % channel_info['Location'] + \
-            'B052F04     Channel:     %s\n' % channel_info['Channel'] + \
-            'B052F22     Start date:  %s\n' % channel_info['Start date'] + \
-            'B052F23     End date:    %s\n' % channel_info['End date'] + \
-            '#\t\t=======================================\n')
-        # Write all other blockettes. Currently now sorting takes place. This
-        # is just an experiment to see how rdseed does it. The Blockettes
-        # might need to be sorted.
-        for blockette in blockettes[1:]:
-            if blockette.id not in RESP_BLOCKETTES:
+        resp.write((
+            'B052F03     Location:    %s\n' % channel_info['Location'] +
+            'B052F04     Channel:     %s\n' % channel_info['Channel'] +
+            'B052F22     Start date:  %s\n' % channel_info['Start date'] +
+            'B052F23     End date:    %s\n' % channel_info['End date'] +
+            '#\t\t=======================================\n'
+            ).encode('ascii', 'strict'))
+        # Write all other blockettes. Sort by stage number (0 at the end) and
+        # the specified blockette id order.
+        order = [53, 54, 55, 56, 60, 61, 62, 57, 58, 59]
+        blockettes = sorted(
+            blockettes[1:],
+            key=lambda x: (x.stage_sequence_number
+                           if (hasattr(x, "stage_sequence_number") and
+                               x.stage_sequence_number)
+                           else float("inf"), order.index(x.id)))
+
+        for blkt in blockettes:
+            if blkt.id not in RESP_BLOCKETTES:
                 continue
             try:
-                resp.write(blockette.getRESP(station, channel_info['Channel'],
-                                             self.abbreviations))
+                resp.write(blkt.getRESP(
+                    station, channel_info['Channel'], self.abbreviations))
             except AttributeError:
                 msg = 'RESP output for blockette %s not implemented yet.'
-                raise AttributeError(msg % blockette.id)
+                raise AttributeError(msg % blkt.id)
 
     def _parseXMLBlockette(self, XML_blockette, record_type, xseed_version):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(XML_blockette.values()[0])
+        blockette_id = int(list(XML_blockette.values())[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
-                raise SEEDParserException('Blockette %d not implemented!' %
-                                              blockette_id)
+                raise SEEDParserException(
+                    'Blockette %d not implemented!' % blockette_id)
             blockette_class = getattr(blockette, class_name)
             blockette_obj = blockette_class(debug=self.debug,
                                             strict=self.strict,
@@ -824,7 +853,7 @@ class Parser(object):
         length = self.record_length - 8
         return_records = []
         # Loop over all blockettes.
-        record = ''
+        record = b''
         for blockette in blockettes:
             blockette.compact = self.compact
             rec_len = len(record)
@@ -832,9 +861,9 @@ class Parser(object):
             # records.
             if rec_len + 7 > length:
                 # Flush the rest of the record if necessary.
-                record += ' ' * (length - rec_len)
+                record += b' ' * (length - rec_len)
                 return_records.append(record)
-                record = ''
+                record = b''
                 rec_len = 0
             blockette_str = blockette.getSEED()
             # Calculate how much of the blockette is too long.
@@ -846,25 +875,28 @@ class Parser(object):
             else:
                 record += blockette_str[:len(blockette_str) - overhead]
                 # The record so far not written.
-                rest_of_the_record = blockette_str[(len(blockette_str) - \
+                rest_of_the_record = blockette_str[(len(blockette_str) -
                                                     overhead):]
                 # Loop over the number of records to be written.
-                for _i in xrange(int(math.ceil(len(rest_of_the_record) / \
-                                                   float(length)))):
+                for _i in range(
+                        int(math.ceil(len(rest_of_the_record) /
+                                      float(length)))):
                     return_records.append(record)
-                    record = ''
+                    record = b''
                     # It doesn't hurt to index a string more than its length.
                     record = record + \
                         rest_of_the_record[_i * length: (_i + 1) * length]
         if len(record) > 0:
             return_records.append(record)
         # Flush last record
-        return_records[-1] = return_records[-1] + ' ' * \
-                                            (length - len(return_records[-1]))
+        return_records[-1] = return_records[-1] + b' ' * \
+            (length - len(return_records[-1]))
         # Add control header and continuation code.
-        return_records[0] = record_type + ' ' + return_records[0]
+        b_record_type = record_type.encode('ascii', 'ignore')
+        return_records[0] = b_record_type + b' ' + return_records[0]
         for _i in range(len(return_records) - 1):
-            return_records[_i + 1] = record_type + '*' + return_records[_i + 1]
+            return_records[_i + 1] = b_record_type + b'*' + \
+                return_records[_i + 1]
         return return_records
 
     def _checkBlockettes(self):
@@ -890,7 +922,7 @@ class Parser(object):
         """
         Compares two blockettes.
         """
-        for key in blkt1.__dict__.keys():
+        for key in list(blkt1.__dict__.keys()):
             # Continue if just some meta data.
             if key in utils.IGNORE_ATTR:
                 continue
@@ -917,7 +949,7 @@ class Parser(object):
             return
         # Check if everything is empty.
         if not self.volume and not self.abbreviations and \
-                    len(self.stations) == 0:
+                len(self.stations) == 0:
             # Delete Blockette 11 and 12.
             self.volume = [i for i in self.temp['volume']
                            if i.id not in [11, 12]]
@@ -945,8 +977,8 @@ class Parser(object):
                     if not self._compareBlockettes(blkt, ex_blkt):
                         continue
                     # Update the current blockette and all abbreviations.
-                    self._updateTemporaryStations(id, getattr(ex_blkt,
-                                                    INDEX_FIELDS[id]))
+                    self._updateTemporaryStations(
+                        id, getattr(ex_blkt, INDEX_FIELDS[id]))
                     break
                 else:
                     self._updateTemporaryStations(id, cur_index)
@@ -994,7 +1026,7 @@ class Parser(object):
         if not data:
             return
         # Create StringIO for easier access.
-        data = StringIO(data)
+        data = compatibility.BytesIO(data)
         # Do not do anything if no data is passed or if a time series header
         # is passed.
         if record_type not in HEADERS:
@@ -1023,15 +1055,15 @@ class Parser(object):
         # Loop over all blockettes in data.
         while blockette_id != 0:
             # remove spaces between blockettes
-            while data.read(1) == ' ':
+            while data.read(1) == b' ':
                 continue
-            data.seek(-1, 1)
+            data.seek(data.tell() - 1)
             try:
                 blockette_id = int(data.read(3))
                 blockette_length = int(data.read(4))
             except:
                 break
-            data.seek(-7, 1)
+            data.seek(data.tell() - 7)
             if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
                 class_name = 'Blockette%03d' % blockette_id
                 if not hasattr(blockette, class_name):
@@ -1051,7 +1083,11 @@ class Parser(object):
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
         # check if everything is parsed
-        if data.len != data.tell():
+        _pos = data.tell()
+        data.seek(0, os.SEEK_END)
+        _len = data.tell()
+        data.seek(_pos)
+        if _pos != _len:
             warnings.warn("There exist unparsed elements!")
 
     def _createBlockettes11and12(self, blockette12=False):

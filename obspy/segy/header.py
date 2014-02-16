@@ -3,6 +3,7 @@
 Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.
 """
+from __future__ import unicode_literals
 
 from obspy.segy import pack, unpack
 
@@ -60,7 +61,7 @@ TRACE_HEADER_FORMAT = [
     [2, 'number_of_horizontally_stacked_traces_yielding_this_trace', False,
      32],
     [2, 'data_use', False, 34],
-    [4, 'distance_from_center_of_the_source_point_to_' + \
+    [4, 'distance_from_center_of_the_source_point_to_' +
      'the_center_of_the_receiver_group', False, 36],
     [4, 'receiver_group_elevation', False, 40],
     [4, 'surface_elevation_at_source', False, 44],

@@ -2,7 +2,8 @@
 """
 The obspy.imaging.mopad test suite.
 """
-
+from __future__ import unicode_literals
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt
@@ -17,10 +18,10 @@ class MopadTestCase(unittest.TestCase):
 
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'output')
+        self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(__name__ != '__main__', 'test must be started manually')
-    def test_Beach(self):
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_collection(self):
         """
         Tests to plot mopad beachballs as collection into an existing axis
         object. The moment tensor values are taken form the
@@ -51,7 +52,7 @@ class MopadTestCase(unittest.TestCase):
               [150, 87, 1]]
 
         # Initialize figure
-        fig = plt.figure(1, figsize=(6, 6), dpi=300)
+        fig = plt.figure(figsize=(6, 6), dpi=300)
         ax = fig.add_subplot(111, aspect='equal')
 
         # Plot the stations or borders
@@ -66,10 +67,11 @@ class MopadTestCase(unittest.TestCase):
             if (i + 1) % 5 == 0:
                 x = -100
                 y += 50
-
-        # Set the x and y limits and save the output
+        # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
-        fig.savefig(os.path.join(self.path, 'mopad_collection.png'))
+        # create and compare image
+        with ImageComparison(self.path, 'mopad_collection.png') as ic:
+            fig.savefig(ic.name)
 
 
 def suite():

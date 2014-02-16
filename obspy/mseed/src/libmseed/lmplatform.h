@@ -1,6 +1,6 @@
 /***************************************************************************
  * lmplatform.h:
- *
+ * 
  * Platform specific headers.  This file provides a basic level of platform
  * portability.
  *
@@ -34,7 +34,7 @@ extern "C" {
      layout exactly as specified, i.e. no padding.
 
      If "ATTRIBUTE_PACKED" is defined at compile time (e.g. -DATTRIBUTE_PACKED)
-     the preprocessor will use the define below to add the "packed" attribute
+     the preprocessor will use the define below to add the "packed" attribute 
      to effected structs.  This attribute is supported by GCC and increasingly
      more compilers.
   */
@@ -67,7 +67,7 @@ extern "C" {
   #include <string.h>
   #include <ctype.h>
   #include <features.h>
-
+  
 #elif defined(__sun__) || defined(__sun)
   #define LMP_SOLARIS 1
 
@@ -82,7 +82,7 @@ extern "C" {
   #include <sys/time.h>
   #include <string.h>
   #include <ctype.h>
-
+  
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
   #define LMP_BSD 1
 
@@ -118,16 +118,10 @@ extern "C" {
     #define fileno _fileno
   #endif
 
-  #if defined(__MINGW32__)
-    #define fstat _fstat32
-    #define stat _stat
-  #endif
-
-  /* The 64bit version is untested. */
-  #if defined(__MINGW64__)
-    #define fstat _fstat64
-    #define stat _stat
-  #endif
+  #if defined(__MINGW32__) 
+    #define fstat _fstat 
+    #define stat _stat 
+  #endif 
 
   typedef signed char int8_t;
   typedef unsigned char uint8_t;
@@ -168,5 +162,5 @@ extern int lmp_fseeko (FILE *stream, off_t offset, int whence);
 #ifdef __cplusplus
 }
 #endif
-
+ 
 #endif /* LMPLATFORM_H */

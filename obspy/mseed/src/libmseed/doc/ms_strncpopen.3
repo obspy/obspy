@@ -1,0 +1,40 @@
+.TH MS_STRNCPCLEAN 3 2004/11/22 "Libmseed API"
+.SH DESCRIPTION
+Non-standard string copying
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_strncpclean\fP ( char *" dest ", const char *" source ", int " length " );"
+
+.BI "int  \fBms_strncpopen\fP ( char *" dest ", const char *" source ", int " length " );"
+.fi
+
+.SH DESCRIPTION
+\fBms_strncpclean\fP copies up to \fIlength\fP characters from
+\fIsource\fP to \fIdest\fP while removing all spaces.  The result is
+left justified and always NULL terminated.  The destination string
+must have enough room for the non-space characters within \fIlength\fP
+and the NULL terminator, a maximum of \fPlength\fP + 1.
+
+\fBms_strncpopen\fP copies \fIlength\fP characters from \fIsource\fP
+to \fIdest\fP padding the right side with spaces if needed and leaves
+the string open-ended (unterminated).  The result will always be
+\fIlength\fP characters and will never be NULL terminated.
+
+These routines are useful for converting to and from known length SEED
+string fields.
+
+.SH RETURN VALUES
+\fBms_strncpclean\fP returns the number of characters (not including
+the terminating NULL) in the destination string.
+
+\fBms_strncpopen\fP returns the number of characters copied from the
+source string.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

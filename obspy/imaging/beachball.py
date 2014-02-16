@@ -25,10 +25,15 @@ Most source code provided here are adopted from
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import zip
 
+from obspy.core import compatibility
 import matplotlib.pyplot as plt
 from matplotlib import patches, collections, path as mplpath
-import StringIO
 import numpy as np
 
 
@@ -67,8 +72,9 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         (opaque).
     :param xy: Origin position of the beach ball as tuple. Defaults to
         ``(0, 0)``.
-    :type width: int
-    :param width: Symbol size of beach ball. Defaults to ``200``.
+    :type width: int or tuple
+    :param width: Symbol size of beach ball, or tuple for elliptically
+        shaped patches. Defaults to size ``200``.
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
@@ -204,7 +210,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
     elif format and not outfile:
-        imgdata = StringIO.StringIO()
+        imgdata = compatibility.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
         return imgdata.read()
@@ -341,9 +347,9 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
 
             xz = can * spd + san * sfi * spb + san * cfi * spm
             xn = can * cpd * cad + san * sfi * cpb * cab + \
-                 san * cfi * cpm * cam
+                san * cfi * cpm * cam
             xe = can * cpd * sad + san * sfi * cpb * sab + \
-                 san * cfi * cpm * sam
+                san * cfi * cpm * sam
 
             if np.fabs(xn) < EPSILON and np.fabs(xe) < EPSILON:
                 takeoff = 0.
@@ -352,7 +358,7 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
                 az = np.arctan2(xe, xn)
                 if az < 0.:
                     az += np.pi * 2.
-                takeoff = np.arccos(xz / float(np.sqrt(xz * xz + xn * xn + \
+                takeoff = np.arccos(xz / float(np.sqrt(xz * xz + xn * xn +
                                                        xe * xe)))
             if takeoff > np.pi / 2.:
                 takeoff = np.pi - takeoff
@@ -576,10 +582,14 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
 
     # arange checked for numerical stablility, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
-    l1 = np.sqrt(np.power(90 - D1, 2) / (np.power(np.sin(phi), 2) + \
-        np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
-    l2 = np.sqrt(np.power(90 - D2, 2) / (np.power(np.sin(phi), 2) + \
-        np.power(np.cos(phi), 2) * np.power(90 - D2, 2) / np.power(90, 2)))
+    l1 = np.sqrt(
+        np.power(90 - D1, 2) / (
+            np.power(np.sin(phi), 2) +
+            np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
+    l2 = np.sqrt(
+        np.power(90 - D2, 2) / (
+            np.power(np.sin(phi), 2) + np.power(np.cos(phi), 2) *
+            np.power(90 - D2, 2) / np.power(90, 2)))
 
     inc = 1
     (X1, Y1) = Pol2Cart(phi + S1 * D2R, l1)
@@ -605,8 +615,8 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         Y2 = Y2[::-1]
         th2 = np.arange(S2, S1, inc)
     (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * np.ones((1, len(th2))))
-    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]), 1)
-    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]), 1)
+    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]))
+    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]))
 
     X = X * D / 90
     Y = Y * D / 90
@@ -629,7 +639,7 @@ def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system
     x = x * res[0] + xy[0]
     y = y * res[1] + xy[1]
-    verts = zip(x.tolist(), y.tolist())
+    verts = list(zip(x.tolist(), y.tolist()))
     codes = [mplpath.Path.MOVETO]
     codes.extend([mplpath.Path.LINETO] * (len(x) - 2))
     codes.append(mplpath.Path.CLOSEPOLY)
@@ -722,8 +732,8 @@ def MT2Plane(mt):
     (d, v) = np.linalg.eig(mt.mt)
     D = np.array([d[1], d[0], d[2]])
     V = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
-               [v[2, 1], -v[2, 0], -v[2, 2]],
-               [-v[0, 1], v[0, 0], v[0, 2]]])
+                 [v[2, 1], -v[2, 0], -v[2, 2]],
+                 [-v[0, 1], v[0, 0], v[0, 2]]])
     IMAX = D.argmax()
     IMIN = D.argmin()
     AE = (V[:, IMAX] + V[:, IMIN]) / np.sqrt(2.0)
@@ -731,7 +741,10 @@ def MT2Plane(mt):
     AER = np.sqrt(np.power(AE[0], 2) + np.power(AE[1], 2) + np.power(AE[2], 2))
     ANR = np.sqrt(np.power(AN[0], 2) + np.power(AN[1], 2) + np.power(AN[2], 2))
     AE = AE / AER
-    AN = AN / ANR
+    if not ANR:
+        AN = np.array([np.nan, np.nan, np.nan])
+    else:
+        AN = AN / ANR
     if AN[2] <= 0.:
         AN1 = AN
         AE1 = AE

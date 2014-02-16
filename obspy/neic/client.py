@@ -8,6 +8,10 @@ NEIC CWB Query service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
 
 from time import sleep
 from obspy import UTCDateTime, read, Stream
@@ -35,30 +39,29 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.neic import Client
-    >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-    >>> st = client.getWaveform("US", "ISCO", "00", "BH?", t, t + 10)
-    >>> print st  # doctest: +ELLIPSIS
+    >>> st = client.getWaveform("IU", "ANMO", "00", "BH?", t, t + 10)
+    >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    >>> st = client.getWaveformNSCL("USISCO BH.00", t, 10)
-    >>> print st  # doctest: +ELLIPSIS
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
+    >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     """
     def __init__(self, host="137.227.224.97", port=2061, timeout=30,
-            debug=False):
+                 debug=False):
         """
         Initializes access to a CWB QueryServer
         """
         if debug:
-            print "int __init__" + host + "/" + str(port) + " timeout=" + \
-                str(timeout)
+            print("int __init__" + host + "/" + str(port) + " timeout=" +
+                  str(timeout))
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -101,15 +104,14 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.neic import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-        >>> st = client.getWaveform("US", "ISCO", "??", "BH?", t, t + 10)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> st = client.getWaveform("IU", "ANMO", "0?", "BH?", t, t + 10)
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
         """
         # padding channel with spaces does not make sense
         if len(channel) < 3 and channel != ".*":
@@ -117,7 +119,7 @@ class Client(object):
                   "(use e.g. 'BHZ', 'BH?', 'BH[Z12]', 'B??')"
             raise Exception(msg)
         seedname = network.ljust(2, " ") + station.ljust(5, " ") + channel + \
-                   location.ljust(2, " ")
+            location.ljust(2, " ")
         # allow UNIX style "?" wildcard
         seedname = seedname.replace("?", ".")
         return self.getWaveformNSCL(seedname, starttime, endtime - starttime)
@@ -132,12 +134,12 @@ class Client(object):
 
         .. rubric:: Notes
 
-         - For detailed information regarding the usage of regular expressions
-           in the query, see also the documentation for CWBQuery
-           ("CWBQuery.doc") available at ftp://hazards.cr.usgs.gov/CWBQuery/
-         - Using ".*" regular expression might or might not work. If the 12
-           character seed name regular expression is less than 12 characters it
-           might get padded with spaces on the server side.
+        For detailed information regarding the usage of regular expressions
+        in the query, see also the documentation for CWBQuery ("CWBQuery.doc")
+        available at ftp://hazards.cr.usgs.gov/CWBQuery/.
+        Using ".*" regular expression might or might not work. If the 12
+        character seed name regular expression is less than 12 characters it
+        might get padded with spaces on the server side.
 
         :type seedname: str
         :param seedname: The 12 character seedname or 12 character regexp
@@ -155,37 +157,31 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-        >>> st = client.getWaveformNSCL("USISCO BH.00", t, 10)
-        >>> print st  # doctest: +ELLIPSIS
+        >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        >>> st = client.getWaveformNSCL("USISCO B.*", t, 10)
-        >>> print st  # doctest: +ELLIPSIS
-        3 Trace(s) in Stream:
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
         line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
             (seedname, start, duration)
         if self.debug:
-            print ascdate() + " " + asctime() + " line=" + line
+            print(ascdate() + " " + asctime() + " line=" + line)
         success = False
         while not success:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 with NamedTemporaryFile() as tf:
                     if self.debug:
-                        print ascdate(), asctime(), "connecting temp file", \
-                              tf.name
+                        print(ascdate(), asctime(), "connecting temp file",
+                              tf.name)
                     s.connect((self.host, self.port))
                     s.setblocking(0)
-                    s.send(line)
+                    s.send(line.encode('ascii', 'strict'))
                     if self.debug:
-                        print ascdate(), asctime(), "Connected - start reads"
+                        print(ascdate(), asctime(), "Connected - start reads")
                     slept = 0
                     maxslept = self.timeout / 0.05
                     totlen = 0
@@ -193,17 +189,17 @@ class Client(object):
                         try:
                             data = s.recv(102400)
                             if self.debug:
-                                print ascdate(), asctime(), "read len", \
-                                    str(len(data)), " total", str(totlen)
-                            if data.find("EOR") >= 0:
+                                print(ascdate(), asctime(), "read len",
+                                      str(len(data)), " total", str(totlen))
+                            if data.find(b"EOR") >= 0:
                                 if self.debug:
-                                    print ascdate(), asctime(), "<EOR> seen"
-                                tf.write(data[0:data.find("<EOR>")])
-                                totlen += len(data[0:data.find("<EOR>")])
+                                    print(ascdate(), asctime(), b"<EOR> seen")
+                                tf.write(data[0:data.find(b"<EOR>")])
+                                totlen += len(data[0:data.find(b"<EOR>")])
                                 tf.seek(0)
                                 try:
                                     st = read(tf.name, 'MSEED')
-                                except Exception, e:
+                                except Exception as e:
                                     st = Stream()
                                 st.trim(starttime, starttime + duration)
                                 s.close()
@@ -215,21 +211,24 @@ class Client(object):
                                 slept = 0
                         except socket.error as e:
                             if slept > maxslept:
-                                print ascdate(), asctime(), \
-                                    "Timeout on connection", \
-                                    "- try to reconnect"
+                                print(ascdate(), asctime(),
+                                      "Timeout on connection",
+                                      "- try to reconnect")
                                 slept = 0
                                 s.close()
                             sleep(0.05)
                             slept += 1
             except socket.error as e:
-                print traceback.format_exc()
-                print "CWB QueryServer at " + self.host + "/" + str(self.port)
+                print(traceback.format_exc())
+                print("CWB QueryServer at " + self.host + "/" + str(self.port))
+                raise
             except Exception as e:
-                print traceback.format_exc()
-                print "**** exception found=" + str(e)
+                print(traceback.format_exc())
+                print("**** exception found=" + str(e))
+                raise
         if self.debug:
-            print ascdate() + " " + asctime() + " success?  len=" + str(totlen)
+            print(ascdate() + " " + asctime() + " success?  len=" +
+                  str(totlen))
         st.merge(-1)
         return st
 

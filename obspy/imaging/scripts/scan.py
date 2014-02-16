@@ -30,6 +30,12 @@ the format is autodetected.
 See also the example in the Tutorial section:
 http://tutorial.obspy.org
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import map
+from future.builtins import zip
 
 import sys
 import os
@@ -72,13 +78,14 @@ def compressStartend(x, stop_iteration):
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, ignore_links=False):
+    from matplotlib.dates import date2num
     if ignore_links and os.path.islink(file):
-        print("Ignoring symlink: %s" % (file))
+        print(("Ignoring symlink: %s" % (file)))
         return counter
     try:
         stream = read(file, format=format, headonly=True)
     except:
-        print("Can not read %s" % (file))
+        print(("Can not read %s" % (file)))
         return counter
     s = "%s %s" % (counter, file)
     if verbose:
@@ -93,15 +100,20 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         data_dict.setdefault(_id, [])
         data_dict[_id].append([date2num(tr.stats.starttime),
                                date2num(tr.stats.endtime)])
-        samp_int_dict.setdefault(_id,
-                                 1.0 / (24 * 3600 * tr.stats.sampling_rate))
+        try:
+            samp_int_dict.setdefault(_id, [])
+            samp_int_dict[_id].\
+                append(1. / (24 * 3600 * tr.stats.sampling_rate))
+        except ZeroDivisionError:
+            print(("Skipping file with zero samlingrate: %s" % (file)))
+            return counter
     return (counter + 1)
 
 
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
                     verbose=False, ignore_links=False):
     if ignore_links and os.path.islink(path):
-        print("Ignoring symlink: %s" % (path))
+        print(("Ignoring symlink: %s" % (path)))
         return counter
     if os.path.isfile(path):
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
@@ -111,20 +123,20 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
             counter = recursive_parse(data_dict, samp_int_dict, file, counter,
                                       format, verbose, ignore_links)
     else:
-        print("Problem with filename/dirname: %s" % (path))
+        print(("Problem with filename/dirname: %s" % (path)))
     return counter
 
 
 def write_npz(file_, data_dict, samp_int_dict):
     npz_dict = data_dict.copy()
-    for key in samp_int_dict.keys():
+    for key in list(samp_int_dict.keys()):
         npz_dict[key + '_SAMP'] = samp_int_dict[key]
     np.savez(file_, **npz_dict)
 
 
 def load_npz(file_, data_dict, samp_int_dict):
     npz_dict = np.load(file_)
-    for key in npz_dict.keys():
+    for key in list(npz_dict.keys()):
         if key.endswith('_SAMP'):
             samp_int_dict[key[:-5]] = npz_dict[key].tolist()
         else:
@@ -133,11 +145,11 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def main():
+def main(option_list=None):
     parser = OptionParser(__doc__.strip())
     parser.add_option("-f", "--format", default=None,
                       type="string", dest="format",
-                      help="Optional, the file format.\n" + \
+                      help="Optional, the file format.\n" +
                       " ".join(__doc__.split('\n')[-4:]))
     parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose",
@@ -150,26 +162,26 @@ def main():
                       help="Optional. Do not follow symbolic links.")
     parser.add_option("--starttime", default=None,
                       type="string", dest="starttime",
-                      help="Optional, a UTCDateTime compatible string. " + \
-                      "Only visualize data after this time and set " + \
+                      help="Optional, a UTCDateTime compatible string. " +
+                      "Only visualize data after this time and set " +
                       "time-axis axis accordingly.")
     parser.add_option("--endtime", default=None,
                       type="string", dest="endtime",
-                      help="Optional, a UTCDateTime compatible string. " + \
-                      "Only visualize data after this time and set " + \
+                      help="Optional, a UTCDateTime compatible string. " +
+                      "Only visualize data after this time and set " +
                       "time-axis axis accordingly.")
     parser.add_option("--ids", default=None,
                       type="string", dest="ids",
-                      help="Optional, a list of SEED channel identifiers " + \
-                      "separated by commas " + \
-                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'. Only these " + \
-                      "channels will not be plotted.")
+                      help="Optional, a list of SEED channel identifiers " +
+                      "separated by commas " +
+                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'). Only these " +
+                      "channels will be plotted.")
     parser.add_option("-t", "--event-times", default=None,
                       type="string", dest="event_times",
-                      help="Optional, a list of UTCDateTime compatible " + \
-                      "strings separated by commas " + \
-                      "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " + \
-                      "These get marked by vertical lines in the plot. " + \
+                      help="Optional, a list of UTCDateTime compatible " +
+                      "strings separated by commas " +
+                      "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " +
+                      "These get marked by vertical lines in the plot. " +
                       "Useful e.g. to mark event origin times.")
     parser.add_option("-w", "--write", default=None,
                       type="string", dest="write",
@@ -187,12 +199,12 @@ def main():
                       help="Optional, Do not plot gaps.")
     parser.add_option("-o", "--output", default=None,
                       type="string", dest="output",
-                      help="Save plot to image file (e.g. out.pdf, " + \
+                      help="Save plot to image file (e.g. out.pdf, " +
                       "out.png) instead of opening a window.")
     parser.add_option("--print-gaps", default=False,
                       action="store_true", dest="print_gaps",
                       help="Optional, prints a list of gaps at the end.")
-    (options, largs) = parser.parse_args()
+    (options, largs) = parser.parse_args(option_list)
 
     # Print help and exit if no arguments are given
     if len(largs) == 0 and options.load is None:
@@ -220,8 +232,8 @@ def main():
     # Plot vertical lines if option 'event_times' was specified
     if options.event_times:
         times = options.event_times.split(',')
-        times = map(UTCDateTime, times)
-        times = map(date2num, times)
+        times = list(map(UTCDateTime, times))
+        times = list(map(date2num, times))
         for time in times:
             ax.axvline(time, color='k')
 
@@ -249,14 +261,14 @@ def main():
         write_npz(options.write, data, samp_int)
 
     # Loop through this dictionary
-    ids = data.keys()
+    ids = list(data.keys())
     # restrict plotting of results to given ids
     if options.ids:
         options.ids = options.ids.split(',')
-        ids = filter(lambda x: x in options.ids, ids)
+        ids = [x for x in ids if x in options.ids]
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
-    print
+    print('\n')
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
         data[_id].sort()
@@ -272,6 +284,10 @@ def main():
             startend = startend[startend[:, 0] < options.endtime]
         if len(startend) == 0:
             continue
+        timerange = startend[:, 1].max() - startend[:, 0].min()
+        if timerange == 0.0:
+            warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
+            continue
 
         startend_compressed = compressStartend(startend, 1000)
 
@@ -284,10 +300,9 @@ def main():
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gapsum = diffs[diffs > 0].sum()
-        timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * samp_int[_id]
+        gap_indices = diffs > 1.8 * np.array(samp_int[_id][:-1])
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
             # dont handle last endtime as start of gap
@@ -303,7 +318,7 @@ def main():
                     start_, end_ = num2date((start_, end_))
                     start_ = UTCDateTime(start_.isoformat())
                     end_ = UTCDateTime(end_.isoformat())
-                    print "%s %s %s %.3f" % (_id, start_, end_, end_ - start_)
+                    print("%s %s %s %.3f" % (_id, start_, end_, end_ - start_))
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)

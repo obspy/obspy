@@ -3,10 +3,13 @@
 The obspy.seg2 test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import zip
 import numpy as np
 from obspy import read
 from obspy.core import AttribDict
 import os
+import gzip
 import unittest
 
 
@@ -74,7 +77,9 @@ class SEG2TestCase(unittest.TestCase):
         # read SEG2 data (in counts, int32)
         st = read(basename + ".seg2.gz")
         # read reference ASCII data (in micrometer/s)
-        results = np.loadtxt(basename + ".DAT.gz").T
+        f = gzip.open(basename + ".DAT.gz", 'rb')
+        results = np.loadtxt(f).T
+        f.close()
         # test all three components
         for tr, result in zip(st, results):
             # convert raw data to micrometer/s (descaling goes to mm/s)

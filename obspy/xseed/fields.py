@@ -8,6 +8,11 @@ Helper module containing xseed fields.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import bytes
+from future.builtins import range
 
 from lxml.etree import Element, SubElement
 from obspy import UTCDateTime
@@ -60,7 +65,10 @@ class Field(object):
         This method is partly adopted from fseed.py, the SEED builder for
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
-        sn = str(s).strip()
+        if isinstance(s, bytes):
+            sn = s.decode('utf-8').strip()
+        else:
+            sn = str(s).strip()
         if self.flags and 'T' in self.flags:
             if not sn and self.default_value:
                 return self.default_value
@@ -90,7 +98,7 @@ class Field(object):
             sn = sn.replace(" ", "_")
         rx = "|".join(rx_list)
         sn = "".join(re.findall(rx, sn))
-        if re.match("(" + rx + ")*$", sn) == None:
+        if re.match("(" + rx + ")*$", sn) is None:
             msg = "Can't convert string %s with flags %s" % (s, self.flags)
             raise SEEDTypeException(msg)
         return sn
@@ -99,8 +107,8 @@ class Field(object):
         """
         """
         try:
-            text = self.read(data, blockette.strict)
-        except Exception, e:
+            text = self.read(data, strict=blockette.strict)
+        except Exception as e:
             if blockette.strict:
                 raise e
             # default value if not set
@@ -116,7 +124,7 @@ class Field(object):
         self.data = text
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, text))
+            print(('  %s: %s' % (self, text)))
 
     def getSEED(self, blockette, pos=0):
         """
@@ -134,8 +142,8 @@ class Field(object):
             result = result[pos]
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, result))
-        return self.write(result)
+            print(('  %s: %s' % (self, result)))
+        return self.write(result, strict=blockette.strict)
 
     def getXML(self, blockette, pos=0):
         """
@@ -174,10 +182,13 @@ class Field(object):
             result = utils.setXPath(self.xpath, result)
         # create XML element
         node = Element(self.field_name)
-        node.text = unicode(result).strip()
+        if isinstance(result, bytes):
+            node.text = result.decode().strip()
+        else:
+            node.text = str(result).strip()
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, [node]))
+            print(('  %s: %s' % (self, [node])))
         return [node]
 
     def parseXML(self, blockette, xml_doc, pos=0):
@@ -206,7 +217,7 @@ class Field(object):
         setattr(blockette, self.attribute_name, self.convert(text))
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, text))
+            print(('  %s: %s' % (self, text)))
 
 
 class Integer(Field):
@@ -234,7 +245,7 @@ class Integer(Field):
         temp = data.read(self.length)
         return self.convert(temp)
 
-    def write(self, data):
+    def write(self, data, strict=False):  # @UnusedVariable
         format_str = "%%0%dd" % self.length
         try:
             temp = int(data)
@@ -246,7 +257,7 @@ class Integer(Field):
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
-        return result
+        return result.encode()
 
 
 class Float(Field):
@@ -277,7 +288,7 @@ class Float(Field):
         temp = data.read(self.length)
         return self.convert(temp)
 
-    def write(self, data):
+    def write(self, data, strict=False):  # @UnusedVariable
         format_str = "%%0%ds" % self.length
         try:
             temp = float(data)
@@ -292,7 +303,7 @@ class Float(Field):
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
-        return result
+        return result.encode()
 
 
 class FixedString(Field):
@@ -308,7 +319,7 @@ class FixedString(Field):
     def read(self, data, strict=False):  # @UnusedVariable
         return self._formatString(data.read(self.length).strip())
 
-    def write(self, data):
+    def write(self, data, strict=False):  # @UnusedVariable
         # Leave fixed length alphanumeric fields left justified (no leading
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
@@ -317,7 +328,7 @@ class FixedString(Field):
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
-        return result
+        return result.encode()
 
 
 class VariableString(Field):
@@ -348,9 +359,9 @@ class VariableString(Field):
             # default value
             if data:
                 # create a full SEED date string
-                temp = "0000,000,00:00:00.0000"
+                temp = b"0000,000,00:00:00.0000"
                 data += temp[len(data):]
-                return UTCDateTime(data)
+                return UTCDateTime(data.decode())
             if self.default_value:
                 return self.default_value
             if self.min_length:
@@ -365,33 +376,48 @@ class VariableString(Field):
                 return data
 
     def _read(self, data):
-        buffer = ''
+        buffer = b''
         if self.min_length:
             buffer = data.read(self.min_length)
-            if '~' in buffer:
-                return buffer.split('~')[0]
-        temp = ''
+            if b'~' in buffer:
+                return buffer.split(b'~')[0]
+        temp = b''
         i = self.min_length
-        while temp != '~':
+        while temp != b'~':
             temp = data.read(1)
-            if temp == '~':
+            if temp == b'~':
                 return buffer
+            elif temp == b'':
+                # raise if EOF is reached
+                raise SEEDTypeException('Variable string has no terminator')
             buffer += temp
             i = i + 1
-            if self.max_length and i > self.max_length:
-                return buffer
         return buffer
 
-    def write(self, data):
-        result = self._formatString(data) + '~'
+    def write(self, data, strict=False):  # @UnusedVariable
+        result = self._formatString(data).encode('utf-8')
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.attribute_name)
-            raise SEEDTypeException(msg)
+                  (len(result), self.max_length, self.attribute_name)
+            if strict:
+                raise SEEDTypeException(msg)
+            msg += ' Reducing to %d chars.' % (self.max_length)
+            warnings.warn(msg, UserWarning)
+            result = result[:self.max_length]
+        # MSEED manual p. 30: Character counts for variable length fields do
+        # not include the tilde terminator - however this is not valid for
+        # minimum sizes - e.g. optional date fields in Blockette 10
+        # so we add here the terminator string, and check minimum size below
+        result += b'~'
         if len(result) < self.min_length:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.attribute_name)
-            raise SEEDTypeException(msg)
+                  (len(result), self.min_length, self.attribute_name)
+            if strict:
+                raise SEEDTypeException(msg)
+            delta = self.min_length - len(result)
+            msg += ' Adding %d space(s).' % (delta)
+            warnings.warn(msg, UserWarning)
+            result = b' ' * delta + result
         return result
 
 
@@ -425,7 +451,7 @@ class Loop(Field):
         debug = blockette.debug
         blockette.debug = False
         temp = []
-        for _i in xrange(0, self.length):
+        for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseSEED(blockette, data)
@@ -434,9 +460,9 @@ class Loop(Field):
         # debug
         if debug:
             if len(temp) > 3:
-                print('  LOOP: ... (%d elements) ' % (len(temp)))
+                print(('  LOOP: ... (%d elements) ' % (len(temp))))
             else:
-                print('  LOOP: %s' % (temp))
+                print(('  LOOP: %s' % (temp)))
             blockette.debug = debug
 
     def getSEED(self, blockette):
@@ -448,8 +474,8 @@ class Loop(Field):
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
-        data = ''
-        for i in xrange(0, self.length):
+        data = b''
+        for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 data += field.getSEED(blockette, i)
@@ -471,7 +497,7 @@ class Loop(Field):
             # parent tag is repeated over every child tag
             # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
             root = Element(self.field_name)
-            for _i in xrange(0, self.length):
+            for _i in range(0, self.length):
                 se = SubElement(root, self.field_name)
                 # loop over data fields within one entry
                 for field in self.data_fields:
@@ -480,7 +506,7 @@ class Loop(Field):
             return root.getchildren()
         # loop over number of entries
         root = Element(self.field_name)
-        for _i in xrange(0, self.length):
+        for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 node = field.getXML(blockette, _i)
@@ -518,7 +544,7 @@ class Loop(Field):
             if not text:
                 return
             # loop over number of entries
-            for _i in xrange(0, self.length):
+            for _i in range(0, self.length):
                 # loop over data fields within one entry
                 for field in self.data_fields:
                     temp = getattr(blockette, field.attribute_name, [])
@@ -539,7 +565,7 @@ class Loop(Field):
             # standard loop
             root = xml_doc.xpath(self.field_name)[pos]
         # loop over number of entries
-        for i in xrange(0, self.length):
+        for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseXML(blockette, root, i)

@@ -1,13 +1,50 @@
-# We pretend to be erlang because we can't use the python support in travis-ci
-# see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
-language: erlang
+language: python
+python:
+  - 2.6
+  - 2.7
+  - 3.3
+virtualenv:
+  system_site_packages: true
 before_install:
-  - lsb_release -a  # get info on the operating system
-  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
-  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
+  - lsb_release -a # get info on the operating system
+  - sudo apt-get update
+  - sudo apt-get install -qq gfortran
+  # numpy is installed anyway, even on py!=2.7 where system site-packages are never available. keep it here for completeness
+  - sudo apt-get install -qq python-numpy
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
+  - pip install wheel
+  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy lxml sqlalchemy m2crypto; pip install mock; fi
+  - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
+  - pip install --use-mirrors geographiclib
+  - pip install --use-mirrors suds-jurko
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
+  - pip install --use-mirrors flake8
+  - pip install --use-mirrors future
+  - pip freeze
 install:
-  - sudo python setup.py -q install
+  - git remote add obspy git://github.com/obspy/obspy.git
+  - git fetch obspy --tags
+  - git fetch origin --tags
+  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done # continue fetching more older commits until git describe is able to reach the last tagged version
+  - git status
+  - pip install --no-deps --use-mirrors .
+  - git status
 script:
-  - sudo obspy-runtests -n travis-ci -r
+  # We change directories to make sure that python won't find the copy
+  # of obspy in the source directory, see
+  # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
+  - mkdir empty
+  - cd empty
+  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
+  - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
+after_success:
+  - coveralls
 notifications:
     email: false
+# Upload any potentially produced diffs and produced images to imgur after a test failure.
+after_failure:
+  - cd
+  - wget "http://imgur.com/tools/imgurbash.sh"
+  - for FILE in `find . -regex '.*/tests/images/testrun/.*png' | sort`; do echo $FILE; bash imgurbash.sh $FILE; done

@@ -1,3 +1,27 @@
+2013.273: 2.12
+	- Add mst_convertsamples() and mstl_convertsamples() to convert sample
+	types.  When converting from float & double types to integer type
+	a simple rounding is employed compensate for machine representation
+	of floating point numbers.
+
+2013.267:
+	- msr_endtime(): Check activity flags in fixed section of data header,
+	if bit 4 is set then a positive leap occurred during the record and
+	the end time should be reduced by one second to properly match the now
+	shifted UTC time.  As long as the next record in the series is
+	properly marked with the correct UTC time no artificial time tear
+	will be generated when reconstructing the time series.
+
+2013.137:
+	- Update docs for transition to 64-bit sample counts done in 2011!
+
+2013.117: 2.11
+	- Initialize internal counters in mst_pack() to avoid their use 
+	in error conditions. Thanks to D. Ketchum and M. Potter for help. 
+	- Add 'const' qualifier to the msfile argument of the file reading and
+	writing family of routines to stop compiler warnings resulting from
+	generated binding functions.  Thanks to M. Bach for reporting.
+
 2013.056: 2.10
 	- Add more sanity checks to msr_unpack_data() to catch bad/corrupted
 	data records and avoid crashes due to impossible pointer construction.

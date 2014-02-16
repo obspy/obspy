@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
@@ -18,17 +19,25 @@ to m/s.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import range
+from future.builtins import open
+from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated_keywords
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
+from obspy.signal.util import _npts2nfft
 import ctypes as C
 import math as M
 import numpy as np
 import os
 import scipy.signal
-import util
+from obspy.signal import util
 import warnings
 
 
@@ -75,7 +84,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     >>> npts = 100
     >>> p = 0.1
     >>> tap3 = cosTaper(npts, p)
-    >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
+    >>> (tap3[int(npts*p/2):int(npts*(1-p/2))]==np.ones(int(npts*(1-p)))).all()
     True
     """
     if p < 0 or p > 1:
@@ -116,17 +125,21 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     if halfcosine:
         #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
-        cos_win[idx1:idx2 + 1] = 0.5 * (1.0 - np.cos((np.pi * \
-            (np.arange(idx1, idx2 + 1) - idx1) / (idx2 - idx1))))
+        cos_win[idx1:idx2 + 1] = 0.5 * (
+            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /
+                          (idx2 - idx1))))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = 0.5 * (1.0 + np.cos((np.pi * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3))))
+        cos_win[idx3:idx4 + 1] = 0.5 * (
+            1.0 + np.cos((np.pi * (float(idx3) - np.arange(idx3, idx4 + 1)) /
+                          (idx4 - idx3))))
     else:
-        cos_win[idx1:idx2 + 1] = np.cos(-(np.pi / 2.0 * \
-               (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+        cos_win[idx1:idx2 + 1] = np.cos(-(
+            np.pi / 2.0 * (float(idx2) -
+                           np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = np.cos((np.pi / 2.0 * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+        cos_win[idx3:idx4 + 1] = np.cos((
+            np.pi / 2.0 * (float(idx3) -
+                           np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win
@@ -137,7 +150,14 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     return cos_win
 
 
-def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
+def c_sac_taper(freqs, flimit):
+    """
+    Generate frequency domain taper similar to sac.
+
+    :param freqs: frequency vector to use
+    :param flimit: sequence containing the 4  frequency limits
+    :returns: taper
+    """
     twopi = 6.283185307179586
     dblepi = 0.5 * twopi
     fl1, fl2, fl3, fl4 = flimit
@@ -155,7 +175,6 @@ def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
     return np.array(taper)
 
 
-@deprecated_keywords({'pitsa': None})
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
              debug=False):
@@ -167,8 +186,10 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :type filename: str
-    :param filename: SEED RESP-filename or content of RESP file
+    :type filename: str (or open file like object)
+    :param filename: SEED RESP-filename or open file like object with RESP
+        information. Any object that provides a read() method will be
+        considered to be a file like object.
     :type date: UTCDateTime
     :param date: Date of interest
     :type station: str
@@ -186,11 +207,15 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
+    if isinstance(filename, (str, native_str)):
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+    elif hasattr(filename, 'read'):
+        data = filename.read()
     # evalresp needs files with correct line separators depending on OS
-    data = open(filename, 'rb').read()
     with NamedTemporaryFile() as fh:
         tempfile = fh.name
-        fh.write(os.linesep.join(data.splitlines()))
+        fh.write(os.linesep.encode('ascii', 'strict').join(data.splitlines()))
         fh.close()
 
         fy = 1 / (t_samp * 2.0)
@@ -199,18 +224,19 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         start_stage = C.c_int(-1)
         stop_stage = C.c_int(0)
         stdio_flag = C.c_int(0)
-        sta = C.create_string_buffer(station)
-        cha = C.create_string_buffer(channel)
-        net = C.create_string_buffer(network)
-        locid = C.create_string_buffer(locid)
-        unts = C.create_string_buffer(units)
+        sta = C.create_string_buffer(station.encode('ascii', 'strict'))
+        cha = C.create_string_buffer(channel.encode('ascii', 'strict'))
+        net = C.create_string_buffer(network.encode('ascii', 'strict'))
+        locid = C.create_string_buffer(locid.encode('ascii', 'strict'))
+        unts = C.create_string_buffer(units.encode('ascii', 'strict'))
         if debug:
-            vbs = C.create_string_buffer("-v")
+            vbs = C.create_string_buffer(b"-v")
         else:
-            vbs = C.create_string_buffer("")
-        rtyp = C.create_string_buffer("CS")
-        datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
-        fn = C.create_string_buffer(tempfile)
+            vbs = C.create_string_buffer(b"")
+        rtyp = C.create_string_buffer(b"CS")
+        datime = C.create_string_buffer(
+            date.formatSEED().encode('ascii', 'strict'))
+        fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
         nfreqs = C.c_int(freqs.shape[0])
         res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                                 freqs, nfreqs, rtyp, vbs, start_stage,
@@ -220,7 +246,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
         h = np.empty(nfreqs, dtype='complex128')
         f = np.empty(nfreqs, dtype='float64')
-        for i in xrange(nfreqs):
+        for i in range(nfreqs):
             h[i] = rvec[i].real + rvec[i].imag * 1j
             f[i] = rfreqs[i]
         clibevresp.free_response(res)
@@ -244,7 +270,6 @@ def cornFreq2Paz(fc, damp=0.707):
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
-@deprecated_keywords({'pitsa': None})
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output
@@ -378,9 +403,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type seedresp: Dictionary, None
     :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
         'filename' is the path to a RESP-file generated from a dataless SEED
-        volume;
+        volume (or a file like object with RESP information);
         'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
-        that the response function should be extracted for;
+        that the response function should be extracted for (can be omitted when
+        calling simulate() on Trace/Stream. the Trace's starttime will then be
+        used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
     :type nfft_pow2: Boolean
@@ -448,13 +475,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # Numerical Recipes p. 429 calculate next power of 2.
     if nfft_pow2:
         nfft = util.nextpow2(2 * ndat)
-    # evalresp scales directly with nfft, therefor taking the next power of
+    # evalresp scales directly with nfft, therefore taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
-    elif ndat & 0x1:  # check if uneven
-        nfft = 2 * (ndat + 1)
     else:
-        nfft = 2 * ndat
+        nfft = _npts2nfft(ndat)
     # Transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
@@ -466,7 +491,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if seedresp:
         freq_response, freqs = evalresp(delta, nfft, seedresp['filename'],
                                         seedresp['date'],
-                                        units=seedresp['units'], freq=True)
+                                        units=seedresp['units'], freq=True,
+                                        network=seedresp['network'],
+                                        station=seedresp['station'],
+                                        locid=seedresp['location'],
+                                        channel=seedresp['channel'])
         if not remove_sensitivity:
             msg = "remove_sensitivity is set to False, but since seedresp " + \
                   "is selected the overall sensitivity will be corrected " + \
@@ -477,8 +506,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             # make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
             if sacsim:
-                cos_win = c_sac_taper(freqs.size, freqs=freqs,
-                                      flimit=(fl1, fl2, fl3, fl4))
+                cos_win = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
             else:
                 cos_win = cosTaper(freqs.size, freqs=freqs,
                                    flimit=(fl1, fl2, fl3, fl4))
@@ -488,8 +516,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         del freq_response
     # Forward filtering = Instrument simulation
     if paz_simulate:
-        data *= pazToFreqResp(paz_simulate['poles'],
-                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft)
+        data *= pazToFreqResp(paz_simulate['poles'], paz_simulate['zeros'],
+                              paz_simulate['gain'], delta, nfft)
 
     data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain
@@ -583,7 +611,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     # mean of input amplitudes (if more than one) should be used in final
     # magnitude estimation (usually N and E components)
     magnitude = np.log10(wa_ampl_mean) + np.log10(h_dist / 100.0) + \
-                0.00301 * (h_dist - 100.0) + 3.0
+        0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
 
 
@@ -605,7 +633,7 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
-            WOODANDERSON['sensitivity']
+        WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
     return wa_ampl
 

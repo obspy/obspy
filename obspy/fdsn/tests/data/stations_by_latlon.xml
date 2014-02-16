@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.8</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?latitude=-56.1&amp;maxradius=15.0&amp;longitude=-26.7</ModuleURI>
+ <Created>2013-12-29T07:42:44</Created>
+ <Network code="AI" startDate="1992-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Antarctic Seismographic Argentinean Italian Network (ASAIN)</Description>
+  <TotalNumberStations>4</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="ORCD" startDate="1997-03-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>-60.738098</Latitude>
+   <Longitude>-44.736099</Longitude>
+   <Elevation>20.0</Elevation>
+   <Site>
+    <Name>ORCADAS, SOUTH ORKNEY ISLANDS</Name>
+   </Site>
+   <CreationDate>1997-03-01T00:00:00</CreationDate>
+   <TotalNumberChannels>3</TotalNumberChannels>
+   <SelectedNumberChannels>0</SelectedNumberChannels>
+  </Station>
+ </Network>
+ <Network code="II" startDate="1986-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Global Seismograph Network (GSN - IRIS/IDA)</Description>
+  <TotalNumberStations>50</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Comment>
+    <Value>Day contains positive leap second (86401 s/day).</Value>
+    <BeginEffectiveTime>1998-12-31T00:00:00</BeginEffectiveTime>
+    <EndEffectiveTime>1999-01-01T00:00:00</EndEffectiveTime>
+   </Comment>
+   <Latitude>-54.2836</Latitude>
+   <Longitude>-36.4879</Longitude>
+   <Elevation>20.0</Elevation>
+   <Site>
+    <Name>Hope Point, South Georgia Island</Name>
+   </Site>
+   <CreationDate>1996-12-10T00:00:00</CreationDate>
+   <TotalNumberChannels>140</TotalNumberChannels>
+   <SelectedNumberChannels>0</SelectedNumberChannels>
+  </Station>
+ </Network>
+ <Network code="SY" startDate="1900-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Synthetic Seismograms</Description>
+  <TotalNumberStations>3957</TotalNumberStations>
+  <SelectedNumberStations>2</SelectedNumberStations>
+  <Station code="HOPE" startDate="1900-01-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>-54.2836</Latitude>
+   <Longitude>-36.4879</Longitude>
+   <Elevation>20.0</Elevation>
+   <Site>
+    <Name>HOPE synthetic</Name>
+   </Site>
+   <CreationDate>1900-01-01T00:00:00</CreationDate>
+   <TotalNumberChannels>6</TotalNumberChannels>
+   <SelectedNumberChannels>0</SelectedNumberChannels>
+  </Station>
+  <Station code="ORCD" startDate="1900-01-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>-60.738098</Latitude>
+   <Longitude>-44.736099</Longitude>
+   <Elevation>20.0</Elevation>
+   <Site>
+    <Name>ORCD synthetic</Name>
+   </Site>
+   <CreationDate>1900-01-01T00:00:00</CreationDate>
+   <TotalNumberChannels>6</TotalNumberChannels>
+   <SelectedNumberChannels>0</SelectedNumberChannels>
+  </Station>
+ </Network>
+</FDSNStationXML>

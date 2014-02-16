@@ -8,6 +8,7 @@ Optional feature generators for ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
 from obspy.core.util import scoreatpercentile
 

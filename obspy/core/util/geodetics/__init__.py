@@ -9,9 +9,10 @@ obspy.core.util.geodetics - Various geodetic utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
 from obspy.core.util.geodetics.base import calcVincentyInverse, \
-        gps2DistAzimuth, kilometer2degrees, locations2degrees
+    gps2DistAzimuth, kilometer2degrees, locations2degrees
 from obspy.core.util.geodetics.flinnengdahl import FlinnEngdahl
 
 

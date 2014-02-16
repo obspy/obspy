@@ -2,6 +2,8 @@
 """
 The obspy.neic.client test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.neic import Client
@@ -20,12 +22,12 @@ class ClientTestCase(unittest.TestCase):
         # now - 5 hours
         t = UTCDateTime() - 5 * 60 * 60
         duration = 1.0
-        st = client.getWaveformNSCL("USISCO BH.00", t, duration)
+        st = client.getWaveformNSCL("IUANMO BH.00", t, duration)
         # try a series of requests, compare against getWaveformNSCL
-        args = [["US", "ISCO", "00", "BH."],
-                ["??", "ISCO", "??", "BH[Z21]"],
-                ["US", "ISC.*", "00", "B??"],
-                ["US", "ISCO", ".*", "BH."],
+        args = [["IU", "ANMO", "00", "BH."],
+                ["??", "ANMO", "0?", "BH[Z21]"],
+                ["IU", "ANM.*", "00", "B??"],
+                ["IU", "ANMO", "0*", "BH."],
                 ]
         for args_ in args:
             st2 = client.getWaveform(*args_, starttime=t, endtime=t + duration)
@@ -42,46 +44,47 @@ class ClientTestCase(unittest.TestCase):
         duration = 1.0
         components = ["1", "2", "Z"]
         # try one longer request to see if fetching multiple blocks works
-        st = client.getWaveformNSCL("USISCO BH.00", t, duration_long)
+        st = client.getWaveformNSCL("IUANMO BH.00", t, duration_long)
         # merge to avoid failing tests simply due to gaps
         st.merge()
         st.sort()
         self.assertTrue(len(st) == 3)
         for tr, component in zip(st, components):
             stats = tr.stats
-            self.assertTrue(stats.station == "ISCO")
-            self.assertTrue(stats.network == "US")
+            self.assertTrue(stats.station == "ANMO")
+            self.assertTrue(stats.network == "IU")
             self.assertTrue(stats.location == "00")
             self.assertTrue(stats.channel == "BH" + component)
             self.assertTrue(stats.endtime - stats.starttime == duration_long)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertTrue(stats.sampling_rate == 40)
-            self.assertTrue(len(tr) == 144001)
+            self.assertTrue(stats.sampling_rate == 20.0)
+            self.assertTrue(len(tr) == 72001)
         # now use shorter piece, this is faster and less error prone (gaps etc)
-        st = client.getWaveformNSCL("USISCO BH.00", t, duration)
+        st = client.getWaveformNSCL("IUANMO BH.00", t, duration)
         st.sort()
         # test returned stream
         self.assertTrue(len(st) == 3)
         for tr, component in zip(st, components):
             stats = tr.stats
-            self.assertTrue(stats.station == "ISCO")
-            self.assertTrue(stats.network == "US")
+            self.assertTrue(stats.station == "ANMO")
+            self.assertTrue(stats.network == "IU")
             self.assertTrue(stats.location == "00")
             self.assertTrue(stats.channel == "BH" + component)
             self.assertTrue(stats.endtime - stats.starttime == duration)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertTrue(stats.sampling_rate == 40)
-            self.assertTrue(len(tr) == 41)
+            self.assertTrue(stats.sampling_rate == 20.0)
+            self.assertTrue(len(tr) == 21)
 
         # try a series of regex patterns that should return the same data
-        patterns = ["USISCO BH...",
-                    "USISCO BH.*",
-                    "USISCO BH[Z12].*",
-                    "USISCO BH[Z12]..",
-                    "USISCO B.*",
-                    "..ISCO B.*"]
+        st = client.getWaveformNSCL("IUANMO BH", t, duration)
+        patterns = ["IUANMO BH...",
+                    "IUANMO BH.*",
+                    "IUANMO BH[Z12].*",
+                    "IUANMO BH[Z12]..",
+                    "IUANMO B.*",
+                    "..ANMO B.*"]
         for pattern in patterns:
             st2 = client.getWaveformNSCL(pattern, t, duration)
             self.assertTrue(st == st2)

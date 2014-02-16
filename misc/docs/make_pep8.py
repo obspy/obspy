@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from pep8 import input_file, input_dir, get_statistics, get_count, \
-    process_options
 import obspy
+from obspy.core.util.testing import check_flake8
 import os
-import sys
-from StringIO import StringIO
 from shutil import copyfile
 
 
@@ -22,9 +19,12 @@ try:
 except:
     pass
 
+report, message = check_flake8()
+statistics = report.get_statistics()
+error_count = report.get_count()
+
 # write index.rst
-fh = open(os.path.join('source', 'pep8', 'index.rst'), 'wt')
-fh.write("""
+head = ("""
 .. _pep8-index:
 
 ====
@@ -42,47 +42,32 @@ Here are the results of the automatic PEP 8 syntax checker:
 
 """)
 
+with open(os.path.join('source', 'pep8', 'index.rst'), 'wt') as fh:
+    fh.write(head)
 
-# backup stdout
-stdout = sys.stdout
-sys.stdout = StringIO()
+    if error_count == 0:
+        fh.write("The PEP 8 checker didn't find any issues.\n")
+    else:
+        table_border = \
+            "=" * 7 + " " + "=" * (max([len(x) for x in statistics]) - 8)
+        fh.write("\n")
+        fh.write(".. rubric:: Statistic\n")
+        fh.write("\n")
+        fh.write(table_border + "\n")
+        fh.write("Count   PEP 8 message string\n")
+        fh.write(table_border + "\n")
+        fh.write("\n".join(statistics) + "\n")
+        fh.write(table_border + "\n")
+        fh.write("\n")
 
-# clean up runner options
-options, args = process_options()
-options.repeat = True
-input_dir(path, runner=input_file)
-sys.stdout.seek(0)
-data = sys.stdout.read()
-statistic = get_statistics('')
-count = get_count()
+        fh.write(".. rubric:: Warnings\n")
+        fh.write("\n")
+        fh.write("::\n")
+        fh.write("\n")
 
-if count == 0:
-    fh.write("The PEP 8 checker didn't find any issues.\n")
-else:
-    fh.write("\n")
-    fh.write(".. rubric:: Statistic\n")
-    fh.write("\n")
-    fh.write("======= =====================================================\n")
-    fh.write("Count   PEP 8 message string                                 \n")
-    fh.write("======= =====================================================\n")
-    for stat in statistic:
-        fh.write(stat + "\n")
-    fh.write("======= =====================================================\n")
-    fh.write("\n")
-
-    fh.write(".. rubric:: Warnings\n")
-    fh.write("\n")
-    fh.write("::\n")
-    fh.write("\n")
-
-    data = data.replace(path, '    obspy')
-    fh.write(data)
-    fh.write("\n")
-
-    fh.close()
-
-# restore stdout
-sys.stdout = stdout
+        message = message.replace(path, '    obspy')
+        fh.write(message)
+        fh.write("\n")
 
 # remove any old image
 try:
@@ -90,7 +75,7 @@ try:
 except:
     pass
 # copy correct pep8 image
-if count > 0:
+if error_count > 0:
     copyfile(PEP8_FAIL_IMAGE, PEP8_IMAGE)
 else:
     copyfile(PEP8_PASS_IMAGE, PEP8_IMAGE)

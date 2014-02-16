@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
@@ -6,7 +8,7 @@ The paz test suite.
 
 from obspy.gse2 import paz
 import unittest
-import StringIO
+import io
 
 
 class PAZTestCase(unittest.TestCase):
@@ -17,7 +19,7 @@ class PAZTestCase(unittest.TestCase):
         """
         Reading PAZ files where PAZ are separated by spaces.
         """
-        f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
         2
         -4.39823 4.48709
         -4.39823 -4.48709
@@ -41,7 +43,7 @@ class PAZTestCase(unittest.TestCase):
 
         Tests uses unrealistic PAZ information.
         """
-        f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
 2
 -4.3982340.48709
 -4.39823-4.48709

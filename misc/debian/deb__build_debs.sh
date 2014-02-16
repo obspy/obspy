@@ -37,10 +37,10 @@ GITDIR=$BUILDDIR/git
 # deactivate, else each time all packages are removed
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
-git clone https://github.com/${GITFORK}/obspy.git $GITDIR
+git clone git://github.com/${GITFORK}/obspy.git $GITDIR
 if [ "$GITFORK" != "obspy" ]
 then
-    git remote add upstream https://github.com/obspy/obspy.git
+    git remote add upstream git://github.com/obspy/obspy.git
     git fetch upstream
 fi
 
@@ -66,18 +66,19 @@ VERSION=`python -c "\
 import sys
 import os
 UTIL_PATH = os.path.abspath(os.path.join('$GITDIR', 'obspy', 'core', 'util'))
-sys.path.append(UTIL_PATH)
-from base import _getVersionString
-print _getVersionString()"`
+sys.path.insert(0, UTIL_PATH)
+from version import get_git_version
+print get_git_version()"`
 # our package is not really dirty, just minor changes for packaging applied
 VERSION=${VERSION//-dirty/}
+VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}
 # the commented code shows how to update the changelog
 # information, however we do not do it as it hard to
 # automatize it for all packages in common
 # dch --newversion ${VERSION}-$DEBVERSION "New release" 
 # just write a changelog template with only updated version info
 cat > debian/changelog << EOF
-python-obspy (${VERSION}-${DEBVERSION}~${CODENAME}) unstable; urgency=low
+python-obspy (${VERSION_COMPLETE}) unstable; urgency=low
 
 EOF
 sed "s/^/  /" CHANGELOG.txt >> debian/changelog
@@ -103,8 +104,14 @@ elif [ $CODENAME = "squeeze" ]
     echo "8" > ./debian/compat
 fi
 # build the package
+export FFLAGS="$FFLAGS -fPIC"  # needed for gfortran
+export LDFLAGS="$LDFLAGS -shared"  # needed for gfortran
 fakeroot ./debian/rules clean build binary
-mv ../python-obspy_*.deb $PACKAGEDIR/
+# generate changes file
+DEBARCH=`dpkg-architecture -qDEB_HOST_ARCH`
+dpkg-genchanges -b > ../python-obspy_${VERSION_COMPLETE}_${DEBARCH}.changes
+# move deb and changes files
+mv ../python-obspy_*.deb ../python-obspy_*.changes $PACKAGEDIR/
 
 # run lintian to verify the packages
 for PACKAGE in `ls $PACKAGEDIR/python-obspy_*.deb`; do

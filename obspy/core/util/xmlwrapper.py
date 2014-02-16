@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
-import StringIO
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import str
+from future.utils import native_str
+from obspy.core import compatibility
 import warnings
+import os
 try:
     # try using lxml as it is faster
     from lxml import etree
     from lxml.etree import register_namespace
+    LXML_ETREE = True
 except ImportError:
+    LXML_ETREE = False
     from xml.etree import ElementTree as etree  # @UnusedImport
     try:
         from xml.etree import register_namespace  # @UnusedImport
@@ -35,15 +42,16 @@ def tostring(element, xml_declaration=True, encoding="utf-8",
     try:
         # use lxml
         return __etree.tostring(element, xml_declaration=xml_declaration,
-                              method="xml", encoding=encoding,
-                              pretty_print=pretty_print)
+                                method="xml", encoding=encoding,
+                                pretty_print=pretty_print)
     except:
         pass
     # use xml
     out = __etree.tostring(element, encoding=encoding)
     if xml_declaration:
-        out = "<?xml version='1.0' encoding='%s'?>\n%s" % (encoding, out)
-    return out
+        out = "<?xml version='1.0' encoding='%s'?>\n%s" % (encoding,
+                                                           out.decode())
+    return out.encode()
 
 
 class XMLParser:
@@ -59,11 +67,16 @@ class XMLParser:
         :type namespace: str, optional
         :param namespace: Document-wide default namespace. Defaults to ``''``.
         """
-        if isinstance(xml_doc, basestring):
+        if isinstance(xml_doc, bytes):
             # some string - check if it starts with <?xml
-            if xml_doc.strip()[0:5].upper().startswith('<?XML'):
-                xml_doc = StringIO.StringIO(xml_doc)
+            if xml_doc.strip()[0:5].upper().startswith(b'<?XML'):
+                xml_doc = compatibility.BytesIO(xml_doc)
             # parse XML file
+            self.xml_doc = etree.parse(xml_doc)
+        elif isinstance(xml_doc, (str, native_str)):
+            # filename
+            if not os.path.exists(xml_doc):
+                raise IOError("filename %s does not exist" % xml_doc)
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):
             # some file-based content
@@ -189,7 +202,7 @@ class XMLParser:
         if element is None:
             element = self.xml_root
         try:
-            element = element.getchildren()[0]
+            element = element[0]
         except:
             return None
         return self._getElementNamespace(element)

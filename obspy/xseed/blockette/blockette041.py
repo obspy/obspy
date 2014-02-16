@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import str
+from future.utils import native_str
 
-from StringIO import StringIO
+import os
+from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
     Loop
@@ -40,16 +46,18 @@ class Blockette041(Blockette):
         response lookup key is expected - this is checked here.
         """
         # convert to stream for test issues
-        if isinstance(data, basestring):
+        if isinstance(data, bytes):
             expected_length = len(data)
-            data = StringIO(data)
+            data = compatibility.BytesIO(data)
+        elif isinstance(data, (str, native_str)):
+            raise TypeError("Data must be bytes, not string")
         # get current lookup key
         pos = data.tell()
         data.read(7)
         global_lookup_key = int(data.read(4))
         data.seek(pos)
         # read first blockette
-        temp = StringIO()
+        temp = compatibility.BytesIO()
         temp.write(data.read(expected_length))
         # check next blockettes
         while True:
@@ -80,8 +88,10 @@ class Blockette041(Blockette):
         # reposition file pointer
         data.seek(pos)
         # parse new combined temporary blockette
+        temp.seek(0, os.SEEK_END)
+        _len = temp.tell()
         temp.seek(0)
-        Blockette.parseSEED(self, temp, expected_length=temp.len)
+        Blockette.parseSEED(self, temp, expected_length=_len)
 
     def parseXML(self, xml_doc, *args, **kwargs):
         if self.xseed_version == '1.0':
@@ -99,37 +109,38 @@ class Blockette041(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                     +--------------------------------+' + \
-        '                      +\n' + \
-        '#\t\t+                     |   FIR response,' + \
-        '%6s ch %s   |                      +\n' % (station, channel) + \
-        '#\t\t+                     +--------------------------------+' + \
-        '                      +\n' + \
-        '#\t\t\n' + \
-        'B041F05     Symmetry type:                         %s\n' \
-                % self.symmetry_code + \
-        'B041F06     Response in units lookup:              %s - %s\n'\
+            '#\t\t+                     +--------------------------------+' + \
+            '                      +\n' + \
+            '#\t\t+                     |   FIR response,' + \
+            '%6s ch %s   |                      +\n' % (station, channel) + \
+            '#\t\t+                     +--------------------------------+' + \
+            '                      +\n' + \
+            '#\t\t\n' + \
+            'B041F05     Symmetry type:                         %s\n' \
+            % self.symmetry_code + \
+            'B041F06     Response in units lookup:              %s - %s\n'\
+            % (LookupCode(abbreviations, 34, 'unit_name',
+                          'unit_lookup_code', self.signal_in_units),
+               LookupCode(abbreviations, 34, 'unit_description',
+                          'unit_lookup_code', self.signal_in_units)) + \
+            'B041F07     Response out units lookup:             %s - %s\n'\
             % (LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         self.signal_in_units),
-              LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', self.signal_in_units)) + \
-        'B041F07     Response out units lookup:             %s - %s\n'\
-            % (LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         self.signal_out_units),
-              LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', self.signal_out_units)) + \
-        'B041F08     Number of numerators:                  %s\n' \
-                % self.number_of_factors
+                          self.signal_out_units),
+               LookupCode(abbreviations, 34, 'unit_description',
+                          'unit_lookup_code', self.signal_out_units)) + \
+            'B041F08     Number of numerators:                  %s\n' \
+            % self.number_of_factors
+
         if self.number_of_factors > 1:
             string += '#\t\tNumerator coefficients:\n' + \
-                       '#\t\t  i, coefficient\n'
-            for _i in xrange(self.number_of_factors):
+                      '#\t\t  i, coefficient\n'
+            for _i in range(self.number_of_factors):
                 string += 'B041F09    %4s %13s\n' \
-                            % (_i, formatRESP(self.FIR_coefficient[_i], 6))
+                    % (_i, formatRESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_factors == 1:
             string += '#\t\tNumerator coefficients:\n' + \
-                       '#\t\t  i, coefficient\n'
+                '#\t\t  i, coefficient\n'
             string += 'B041F09    %4s %13s\n' \
-                            % (0, formatRESP(self.FIR_coefficient, 6))
+                % (0, formatRESP(self.FIR_coefficient, 6))
         string += '#\t\t\n'
         return string

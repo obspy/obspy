@@ -17,9 +17,9 @@ Basic Usage
     Seismic Network <http://www.pnsn.org/>`_ (``"UW"``).
 
     >>> from obspy.earthworm import Client
-    >>> client = Client("pele.ess.washington.edu", 16017)
+    >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
     >>> response = client.availability("UW", "TUCA", channel="BHZ")
-    >>> print response  # doctest: #SKIP
+    >>> print response  # doctest: +SKIP
     [('UW',
       'TUCA',
       '--',
@@ -40,8 +40,10 @@ Basic Usage
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

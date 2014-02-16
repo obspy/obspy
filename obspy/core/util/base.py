@@ -8,13 +8,15 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import map
+from future.builtins import range
+from future.utils import native_str
 from obspy.core.util.misc import toIntOrZero
-from obspy.core.util.types import OrderedDict
+from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
-import ctypes as C
 import doctest
-import glob
 import inspect
 import numpy as np
 import os
@@ -25,34 +27,26 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css']
+                   'realtime', 'datamark', 'css', 'y', 'pde', 'station']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink', 'neic']
+                   'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
-                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
+                            'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
-# C file pointer/ descriptor class
-class FILE(C.Structure):  # Never directly used
-    """
-    C file pointer class for type checking with argtypes
-    """
-    pass
-c_file_p = C.POINTER(FILE)
-
-
-def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
+class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This function is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str
@@ -62,42 +56,41 @@ def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
     :param suffix: The temporary file name will end with that suffix. Defaults
         to ``'.tmp'``.
 
-    .. warning::
-        Caller is responsible for deleting the file when done with it.
-
     .. rubric:: Example
 
-    >>> ntf = NamedTemporaryFile()
-    >>> ntf._fileobj  # doctest: +ELLIPSIS
-    <open file '<fdopen>', mode 'w+b' at 0x...>
-    >>> ntf._fileobj.close()
-    >>> os.remove(ntf.name)
+    >>> with NamedTemporaryFile() as tf:
+    ...     _ = tf.write(b"test")
+    ...     os.path.exists(tf.name)
+    True
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
 
-    >>> filename = NamedTemporaryFile().name
-    >>> fh = open(filename, 'wb')
-    >>> fh.write("test")
-    >>> fh.close()
-    >>> os.remove(filename)
+    >>> with NamedTemporaryFile() as tf:
+    ...     filename = tf.name
+    ...     with open(filename, 'wb') as fh:
+    ...         _ = fh.write(b"just a test")
+    ...     with open(filename, 'r') as fh:
+    ...         print(fh.read())
+    just a test
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
     """
 
-    class NamedTemporaryFile(object):
+    def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
+        fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
+        self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-        def __init__(self, fd, fname):
-            self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
-            self.name = fname
+    def __getattr__(self, attr):
+        return getattr(self._fileobj, attr)
 
-        def __getattr__(self, attr):
-            return getattr(self._fileobj, attr)
+    def __enter__(self):
+        return self
 
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            self.close()
-            os.remove(self.name)
-
-    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, prefix=prefix,
-                                                suffix=suffix))
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        self.close()
+        os.remove(self.name)
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):
@@ -162,97 +155,20 @@ def getExampleFile(filename):
     >>> getExampleFile('does.not.exists')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    IOError: Could not find file does.not.exists ...
+    OSError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
-        mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        try:
+            mod = __import__("obspy.%s.tests" % module,
+                             fromlist=[native_str("obspy")])
+        except ImportError:
+            continue
         file = os.path.join(mod.__path__[0], "data", filename)
         if os.path.isfile(file):
             return file
     msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
-    raise IOError(msg)
-
-
-def add_doctests(testsuite, module_name):
-    """
-    Function to add all available doctests of the module with given name
-    (e.g. "obspy.core") to the given unittest TestSuite.
-    All submodules in the module's root directory are added.
-    Occurring errors are shown as warnings.
-
-    :type testsuite: unittest.TestSuite
-    :param testsuite: testsuite to which the tests should be added
-    :type module_name: str
-    :param module_name: name of the module of which the tests should be added
-
-    .. rubric:: Example
-
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_doctests(suite, "obspy.core")
-    """
-    MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist="obspy")
-    MODULE_PATH = MODULE.__path__[0]
-    MODULE_PATH_LEN = len(MODULE_PATH)
-
-    for root, _dirs, files in os.walk(MODULE_PATH):
-        # skip directories without __init__.py
-        if not '__init__.py' in files:
-            continue
-        # skip tests directories
-        if root.endswith('tests'):
-            continue
-        # skip scripts directories
-        if root.endswith('scripts'):
-            continue
-        # skip lib directories
-        if root.endswith('lib'):
-            continue
-        # loop over all files
-        for file in files:
-            # skip if not python source file
-            if not file.endswith('.py'):
-                continue
-            # get module name
-            parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
-            module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
-            try:
-                module = __import__(module_name, fromlist="obspy")
-                testsuite.addTest(doctest.DocTestSuite(module))
-            except ValueError:
-                pass
-
-
-def add_unittests(testsuite, module_name):
-    """
-    Function to add all available unittests of the module with given name
-    (e.g. "obspy.core") to the given unittest TestSuite.
-    All submodules in the "tests" directory whose names are starting with
-    ``test_`` are added.
-
-    :type testsuite: unittest.TestSuite
-    :param testsuite: testsuite to which the tests should be added
-    :type module_name: str
-    :param module_name: name of the module of which the tests should be added
-
-    .. rubric:: Example
-
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_unittests(suite, "obspy.core")
-    """
-    MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
-
-    filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
-    files = glob.glob(filename_pattern)
-    names = (os.path.basename(file).split(".")[0] for file in files)
-    module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
-    for module_name in module_names:
-        module = __import__(module_name, fromlist="obspy")
-        testsuite.addTest(module.suite())
+    raise OSError(msg)
 
 
 def _getEntryPoints(group, subgroup=None):
@@ -310,10 +226,14 @@ ENTRY_POINTS = {
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
-    'waveform_write': _getOrderedEntryPoints('obspy.plugin.waveform',
-                                      'writeFormat', WAVEFORM_PREFERRED_ORDER),
+    'waveform_write': _getOrderedEntryPoints(
+        'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
+    'event_write': _getEntryPoints('obspy.plugin.event', 'writeFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
+    'inventory': _getEntryPoints('obspy.plugin.inventory', 'readFormat'),
+    'inventory_write': _getEntryPoints('obspy.plugin.inventory',
+                                       'writeFormat'),
 }
 
 
@@ -340,7 +260,7 @@ def _getFunctionFromEntryPoint(group, type):
             entry_point = ep_dict[type]
         else:
             # search using lower cases only
-            entry_point = [v for k, v in ep_dict.items()
+            entry_point = [v for k, v in list(ep_dict.items())
                            if k.lower() == type.lower()][0]
     except (KeyError, IndexError):
         # check if any entry points are available at all
@@ -355,8 +275,8 @@ def _getFunctionFromEntryPoint(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key,
-            'obspy.plugin.%s' % (group), entry_point.name)
+    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
+                            entry_point.name)
     return func
 
 
@@ -376,7 +296,7 @@ def getMatplotlibVersion():
         import matplotlib
         version = matplotlib.__version__
         version = version.split("~rc")[0]
-        version = map(toIntOrZero, version.split("."))
+        version = list(map(toIntOrZero, version.split(".")))
     except ImportError:
         version = None
     return version
@@ -391,9 +311,10 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in EPS.values():
+        for format_ep in list(EPS.values()):
             # search isFormat for given entry point
-            isFormat = load_entry_point(format_ep.dist.key,
+            isFormat = load_entry_point(
+                format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # check format
@@ -406,13 +327,14 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         format = format.upper()
         try:
             format_ep = EPS[format]
-        except IndexError:
+        except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EPS)))
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        readFormat = load_entry_point(format_ep.dist.key,
+        readFormat = load_entry_point(
+            format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
@@ -429,6 +351,81 @@ def getScriptDirName():
     """
     return os.path.abspath(os.path.dirname(inspect.getfile(
         inspect.currentframe())))
+
+
+def make_format_plugin_table(group="waveform", method="read", numspaces=4,
+                             unindent_first_line=True):
+    """
+    Returns a markdown formatted table with read waveform plugins to insert
+    in docstrings.
+
+    >>> table = make_format_plugin_table("event", "write", 4, True)
+    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
+    ======= ================= =======================================
+        Format  Required Module   _`Linked Function Call`
+        ======= ================= =======================================
+        JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
+        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
+        ======= ================= =======================================
+
+    :type group: str
+    :param group: Plugin group to search (e.g. "waveform" or "event").
+    :type method: str
+    :param method: Either 'read' or 'write' to select plugins based on either
+        read or write capability.
+    :type numspaces: int
+    :param numspaces: Number of spaces prepended to each line (for indentation
+        in docstrings).
+    :type unindent_first_line: bool
+    :param unindent_first_line: Determines if first line should start with
+        prepended spaces or not.
+    """
+    method = method.lower()
+    if method not in ("read", "write"):
+        raise ValueError("no valid type: %s" % method)
+
+    method += "Format"
+    eps = _getOrderedEntryPoints("obspy.plugin.%s" % group, method,
+                                 WAVEFORM_PREFERRED_ORDER)
+    mod_list = []
+    for name, ep in eps.items():
+        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
+        func = load_entry_point(ep.dist.key,
+                                "obspy.plugin.%s.%s" % (group, name), method)
+        func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))
+        mod_list.append((name, module_short, func_str))
+
+    mod_list = sorted(mod_list)
+    headers = ["Format", "Required Module", "_`Linked Function Call`"]
+    maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
+               max([len(x[1]) for x in mod_list] + [len(headers[1])]),
+               max([len(x[2]) for x in mod_list] + [len(headers[2])])]
+
+    info_str = [" ".join(["=" * x for x in maxlens])]
+    info_str.append(
+        " ".join([headers[i].ljust(maxlens[i]) for i in range(3)]))
+    info_str.append(info_str[0])
+
+    for mod_infos in mod_list:
+        info_str.append(
+            " ".join([mod_infos[i].ljust(maxlens[i]) for i in range(3)]))
+    info_str.append(info_str[0])
+
+    ret = " " * numspaces + ("\n" + " " * numspaces).join(info_str)
+    if unindent_first_line:
+        ret = ret[numspaces:]
+    return ret
+
+
+class ComparingObject(object):
+    """
+    Simple base class that implements == and != based on self.__dict__
+    """
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 if __name__ == '__main__':

@@ -11,6 +11,8 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import range
 
 from obspy.seedlink.seedlinkexception import SeedLinkException
 from obspy.seedlink.slpacket import SLPacket
@@ -134,9 +136,9 @@ class SLState(object):
         if self.recptr - self.sendptr < len(SLPacket.ERRORSIGNATURE):
             msg = "not enough bytes to determine packet type"
             raise SeedLinkException(msg)
-        return self.databuf[self.sendptr: self.sendptr + \
+        return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ERRORSIGNATURE)].lower() == \
-                            SLPacket.ERRORSIGNATURE.lower()
+            SLPacket.ERRORSIGNATURE.lower()
 
     def isEnd(self):
         """
@@ -149,9 +151,9 @@ class SLState(object):
         if self.recptr - self.sendptr < len(SLPacket.ENDSIGNATURE):
             msg = "not enough bytes to determine packet type"
             raise SeedLinkException(msg)
-        return self.databuf[self.sendptr: self.sendptr + \
+        return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ENDSIGNATURE)].lower() == \
-                            SLPacket.ENDSIGNATURE.lower()
+            SLPacket.ENDSIGNATURE.lower()
 
     def packetIsInfo(self):
         """
@@ -165,9 +167,9 @@ class SLState(object):
         if self.recptr - self.sendptr < len(SLPacket.INFOSIGNATURE):
             msg = "not enough bytes to determine packet type"
             raise SeedLinkException(msg)
-        return self.databuf[self.sendptr: self.sendptr + \
+        return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.INFOSIGNATURE)].lower() == \
-                            SLPacket.INFOSIGNATURE.lower()
+            SLPacket.INFOSIGNATURE.lower()
 
     def incrementSendPointer(self):
         """

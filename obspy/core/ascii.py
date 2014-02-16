@@ -31,10 +31,13 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from StringIO import StringIO
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import open
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
+from obspy.core.compatibility import StringIO
 import numpy as np
 
 
@@ -56,7 +59,8 @@ def isSLIST(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, 'rt') as f:
+            temp = f.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -81,7 +85,8 @@ def isTSPAIR(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, 'rt') as f:
+            temp = f.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -112,28 +117,27 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
-    fh = open(filename, 'rt')
-    # read file and split text into channels
-    headers = {}
-    key = None
-    for line in fh:
-        if line.isspace():
-            # blank line
-            continue
-        elif line.startswith('TIMESERIES'):
-            # new header line
-            key = line
-            headers[key] = StringIO()
-        elif headonly:
-            # skip data for option headonly
-            continue
-        elif key:
-            # data entry - may be written in multiple columns
-            headers[key].write(line.strip() + ' ')
-    fh.close()
+    with open(filename, 'rt') as fh:
+        # read file and split text into channels
+        buf = []
+        key = False
+        for line in fh:
+            if line.isspace():
+                # blank line
+                continue
+            elif line.startswith('TIMESERIES'):
+                # new header line
+                key = True
+                buf.append((line, StringIO()))
+            elif headonly:
+                # skip data for option headonly
+                continue
+            elif key:
+                # data entry - may be written in multiple columns
+                buf[-1][1].write(line.strip() + ' ')
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in buf:
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
@@ -178,28 +182,27 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
-    fh = open(filename, 'rt')
-    # read file and split text into channels
-    headers = {}
-    key = None
-    for line in fh:
-        if line.isspace():
-            # blank line
-            continue
-        elif line.startswith('TIMESERIES'):
-            # new header line
-            key = line
-            headers[key] = StringIO()
-        elif headonly:
-            # skip data for option headonly
-            continue
-        elif key:
-            # data entry - may be written in multiple columns
-            headers[key].write(line.strip().split()[-1] + ' ')
-    fh.close()
+    with open(filename, 'rt') as fh:
+        # read file and split text into channels
+        buf = []
+        key = False
+        for line in fh:
+            if line.isspace():
+                # blank line
+                continue
+            elif line.startswith('TIMESERIES'):
+                # new header line
+                key = True
+                buf.append((line, StringIO()))
+            elif headonly:
+                # skip data for option headonly
+                continue
+            elif key:
+                # data entry - may be written in multiple columns
+                buf[-1][1].write(line.strip().split()[-1] + ' ')
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in buf:
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
@@ -285,45 +288,46 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
         2776        2766        2759        2760        2765        2767
         ...
     """
-    fh = open(filename, 'wt')
-    for trace in stream:
-        stats = trace.stats
-        # quality code
-        try:
-            dataquality = stats.mseed.dataquality
-        except:
-            dataquality = ''
-        # sample type
-        if trace.data.dtype.name.startswith('int'):
-            dtype = 'INTEGER'
-            fmt = '%d'
-        elif trace.data.dtype.name.startswith('float'):
-            dtype = 'FLOAT'
-            fmt = '%f'
-        else:
-            raise NotImplementedError
-        # unit
-        try:
-            unit = stats.ascii.unit
-        except:
-            unit = ''
-        # write trace header
-        header = HEADER % (stats.network, stats.station, stats.location,
-                           stats.channel, dataquality, stats.npts,
-                           stats.sampling_rate, stats.starttime, 'SLIST',
-                           dtype, unit)
-        fh.write(header)
-        # write data
-        rest = stats.npts % 6
-        if rest:
-            data = trace.data[:-rest]
-        else:
-            data = trace.data
-        data = data.reshape((-1, 6))
-        np.savetxt(fh, data, fmt=fmt, delimiter='\t')
-        if rest:
-            fh.write('\t'.join([fmt % d for d in trace.data[-rest:]]) + '\n')
-    fh.close()
+    with open(filename, 'wb') as fh:
+        for trace in stream:
+            stats = trace.stats
+            # quality code
+            try:
+                dataquality = stats.mseed.dataquality
+            except:
+                dataquality = ''
+            # sample type
+            if trace.data.dtype.name.startswith('int'):
+                dtype = 'INTEGER'
+                fmt = '%d'
+            elif trace.data.dtype.name.startswith('float'):
+                dtype = 'FLOAT'
+                fmt = '%f'
+            else:
+                raise NotImplementedError
+            # unit
+            try:
+                unit = stats.ascii.unit
+            except:
+                unit = ''
+            # write trace header
+            header = HEADER % (stats.network, stats.station, stats.location,
+                               stats.channel, dataquality, stats.npts,
+                               stats.sampling_rate, stats.starttime, 'SLIST',
+                               dtype, unit)
+            fh.write(header.encode('ascii', 'strict'))
+            # write data
+            rest = stats.npts % 6
+            if rest:
+                data = trace.data[:-rest]
+            else:
+                data = trace.data
+            data = data.reshape((-1, 6))
+            np.savetxt(fh, data, delimiter='\t',
+                       fmt=fmt.encode('ascii', 'strict'))
+            if rest:
+                fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
+                         '\n').encode('ascii', 'strict'))
 
 
 def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
@@ -395,42 +399,42 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
         2003-05-29T02:13:22.318400  2767
         ...
     """
-    fh = open(filename, 'wt')
-    for trace in stream:
-        stats = trace.stats
-        # quality code
-        try:
-            dataquality = stats.mseed.dataquality
-        except:
-            dataquality = ''
-        # sample type
-        if trace.data.dtype.name.startswith('int'):
-            dtype = 'INTEGER'
-            fmt = '%d'
-        elif trace.data.dtype.name.startswith('float'):
-            dtype = 'FLOAT'
-            fmt = '%f'
-        else:
-            raise NotImplementedError
-        # unit
-        try:
-            unit = stats.ascii.unit
-        except:
-            unit = ''
-        # write trace header
-        header = HEADER % (stats.network, stats.station, stats.location,
-                           stats.channel, dataquality, stats.npts,
-                           stats.sampling_rate, stats.starttime, 'TSPAIR',
-                           dtype, unit)
-        fh.write(header)
-        # write data
-        times = np.linspace(stats.starttime.timestamp, stats.endtime.timestamp,
-                            stats.npts)
-        times = [UTCDateTime(t) for t in times]
-        data = np.vstack((times, trace.data)).T
-        # .26s cuts the Z from the time string
-        np.savetxt(fh, data, fmt="%.26s  " + fmt)
-    fh.close()
+    with open(filename, 'wb') as fh:
+        for trace in stream:
+            stats = trace.stats
+            # quality code
+            try:
+                dataquality = stats.mseed.dataquality
+            except:
+                dataquality = ''
+            # sample type
+            if trace.data.dtype.name.startswith('int'):
+                dtype = 'INTEGER'
+                fmt = '%d'
+            elif trace.data.dtype.name.startswith('float'):
+                dtype = 'FLOAT'
+                fmt = '%f'
+            else:
+                raise NotImplementedError
+            # unit
+            try:
+                unit = stats.ascii.unit
+            except:
+                unit = ''
+            # write trace header
+            header = HEADER % (stats.network, stats.station, stats.location,
+                               stats.channel, dataquality, stats.npts,
+                               stats.sampling_rate, stats.starttime, 'TSPAIR',
+                               dtype, unit)
+            fh.write(header.encode('ascii', 'strict'))
+            # write data
+            times = np.linspace(stats.starttime.timestamp,
+                                stats.endtime.timestamp, stats.npts)
+            times = [UTCDateTime(t) for t in times]
+            data = np.vstack((times, trace.data)).T
+            # .26s cuts the Z from the time string
+            np.savetxt(fh, data,
+                       fmt=("%.26s  " + fmt).encode('ascii', 'strict'))
 
 
 def _parse_data(data, data_type):
@@ -454,8 +458,9 @@ def _parse_data(data, data_type):
     data.seek(0)
     # Data will always be a StringIO. Avoid to send empty StringIOs to
     # numpy.readtxt() which raises a warning.
-    if not data.buf:
+    if len(data.read(1)) == 0:
         return np.array([], dtype=dtype)
+    data.seek(0)
     return loadtxt(data, dtype=dtype, ndlim=1)
 
 

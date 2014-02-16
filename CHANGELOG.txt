@@ -1,15 +1,88 @@
-dev:
+0.10.0:
+ - general:
+   * support for Python 3.3
+
+0.9.1:
+ - obspy.core:
+   * fixing very slow response removal for some magic bad values of npts
+     (see #715)
+ - obspy.datamark:
+   * bugfix: channel code now correctly read (4 hex char)
+   * bugfix: channels can have different sampling rate
+   * improvement: datawide 0.5 (4 bits) encoding now supported
+ - obspy.fdsn:
+   * time out errors get raised properly now. timeout can be specified at
+     Client initialization now. (see #717)
+ - obspy.station:
+   * some bugfixes in the obspy.station object classes (see #710)
+ - obspy.taup:
+   * bugfix: avoid a bug that caused multiple calls to taup to result in
+     spurious unexpected results (see #728)
+
+0.9.0:
+ -  general:
+   * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
  - obspy.core:
+   * Stream/Trace.attach_response(): convenience method to attach response to
+     traces from inventories.
+   * new method Stream/Trace.remove_response() to remove instrument response
+     from Response object attached to trace(s), e.g. after parsing a
+     StationXML file. Similar to Stream/Trace.simulate(seedresp=...) for
+     using a Parser object (from dataless or xseed) or RESP file, but less
+     cluttered parameters and without the simulating a different instrument
+     part.
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
    * The writeQuakeML() function, also accessible through
-     Catalog.write(..., format="quakeml"), now has an optional kwarg
-	 'validate'. If True, the resulting QuakeML file will be validated against
-	 the QuakeML schema before being written. An AssertionError will be raised
-	 in case the validation fails.
-   * validation of QuakeML against offical schema working now
+     Catalog.write(..., format="quakeml"), now has an optional keyword
+     argument 'validate'. If True, the resulting QuakeML file will be
+     validated against the QuakeML schema before being written. An
+     AssertionError will be raised in case the validation fails.
+   * validation of QuakeML against official schema working now
+   * renamed obspy.core.util.types into obspy.core.util.obspy_types (#595)
+   * new parameter replace for Enums which allows definition of replaceable
+     keywords (fixes #531)
+   * Trace.split() will return a stream object containing traces with unmasked
+     arrays
+   * trim(pad=True, fill_value=xxx) will return a NumPy ndarray as stated in
+     the API documentation (#540)
+   * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
+   * new options for Stream/Trace.taper() to control the length of the
+     tapering for all windowing functions and perform one-sided tapering
+   * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
+   * when using Stream/Trace.simulate(seedresp={...})) parameter "date" can
+     now be omitted, start time of each trace is used for response lookup then
+   * when using Stream/Trace.simulate(seedresp={...})) for parameter
+     "filename" instead of the path to a local file now also can be provided
+     either a file-like object with RESP information or an obspy.xseed.Parser
+     object (e.g. created reading a dataless SEED file).
+   * fix Stream.select() when using values like "" or 0, e.g.
+     Stream.select(location="") or when filtering by component with a channel
+     code less than 3 characters long (now these traces will be omitted from
+     the result when filtering by component).
+   * fix a bug when merging valid data into a masked trace (see #638)
+   * event.ResourceIdentifier objects are now initialized with a QuakeML
+     conform string by default, i.e. if no custom prefix is provided during
+     initialization.
+   * event.ResourceIdentifier.resource_id attribute was renamed to
+     event.ResourceIdentifier.id
+   * event.ResourceIdentifier now was has a method regenerate_uuid() that
+     allows the random hash part to be regenerated for resource identifiers
+     with no fixed id string (can be useful to generate a new hash if the
+     referred object changes).
+   * added a new test that asserts that the whole codebase is valid according
+     to the flake8 tool.
+   * inverse filtering of catalogs.
+   * bugfix: Trace.simulate() now passes the SEED network, station, location,
+     and channel identifiers to evalresp.
+   * added command line script "obspy-print" to print information on local
+     waveform files
+   * check if ndim == 1 when setting Trace.data and raise if necessary,
+     see #695
+   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
+     WaveformStreamID as specified in QuakeML docs (#633)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -17,17 +90,34 @@ dev:
    * obspy-indexer script uses from now on hash symbols (#) instead
      of pipe (|) for features because pipe has a special meaning on
      most operating systems
+ - obspy.fdsn:
+   * new client module to access servers based on the FDSN web service
+     definition (http://www.fdsn.org/webservices/)
+ - obspy.gse2:
+   * read/write STA2 header line which is officialy mandatory but in pratice
+     often not used
  - obspy.imaging:
    * more options to customize day plots
+   * dayplot now plots matching picks (station, network, location) if a list
+     of event objects is provided using the `events` kwarg.
    * obspy-scan: new option --print-gaps
+   * added plotting of record sections
+   * automatic merging can be disabled for obspy-plot
+ - obspy.pde:
+   * new module for reading NEIC PDE bulletin files into an obspy catalog
+     object. Only the "mchedr" format (file format revision of February 24,
+     2004) is supported.
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
    * adding read support for SEG2 data format code 1 and 2
      (signed 16bit/32bit integer)
+ - obspy.segy:
+   * fix a bug in plotting (see #689)
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+<<<<<<< HEAD
    * new function for rotating arbitrarily oriented components to vertical,
      north, and east.
  - obspy.mseed:
@@ -38,9 +128,43 @@ dev:
 	 orientation of all components from a SEED file and use it to rotate the
 	 components of a Stream object to Z, N, and E. Very useful for borehole
 	 and other sensors.
+=======
+   * add PPSD support for segments of arbitrary length
+   * default bin width of PPSD is changed to 1dB. This is the value used by
+     McNamara and Buland 2004.
+   * fix a bug when using evalresp with RESP files with very short epochs.
+     see #631.
+   * for seisSim(seedresp={...})) for parameter "filename" instead of the
+     path to a local file now also can be provided either a file-like
+     object with RESP information or an obspy.xseed.Parser object
+     (e.g. created reading a dataless SEED file).
+   * seisSim(seedresp={...}): the seedresp dictionary now requires network,
+     station, location, and channel keys.
+   * removed deprecated psd module - use spectral_estimation module instead
+   * removed deprecated sonic function - use array_processing function instead
+   * corrected function signature of c_sac_taper
+ - obspy.station:
+   * adding support for FDSN StationXML
+ - obspy.mseed:
+   * new kwarg arguments for reading mseed files: header_byteorder and
+     verbose
+   * libmseed v2.12
+>>>>>>> master
  - obspy.neic:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
+ - obspy.y:
+   * adding read support for Nanometrics Y file format
+ - scripts:
+   * obspy-plot: new option "-o" to output plot to file instead of opening
+     a window
+
+0.8.4
+ - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases
+ - critical bugfixes for the waveform plotting and the xml wrapper
+ - bugfix so that copy.deepcopy() works with the obspy.core.stream.Stream
+   class
+ - fixing some imports
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
@@ -79,8 +203,10 @@ dev:
    * obspy-scan: adding options to control start/endtime and channels, adding
      options to not plot gaps and reducing file size for plots considerably.
  - obspy.iris:
-   * output format 'bulk' for Client.availability has been deprecated, use
-     'bulkdataselect' instead (#419)
+   * many services have been discontinued on the server side. Use obspy.fdsn
+     instead for discontinued services.
+   * still existing services now are distinguished by a major version of the
+     particular service (like obspy.fdsn).
  - obspy.mseed:
    * Bugfix writing traces containing one or two samples only
    * writeMSEED emits an UserWarning while writing an empty trace
@@ -123,6 +249,8 @@ dev:
    * added getInventory() method to the Parser object. Returns a dictionary
      about the contents of the Parser object. This is also integrated in the
      string representation and makes it more informative.
+   * allow parsing of oversized VariableString from SEED, but warn and cut
+     string to max_length at writing SEED (#701)
  - obspy.mseed:
    * adding experimental details option, which extracts timing quality and
      info on the calibration

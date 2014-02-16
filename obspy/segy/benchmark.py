@@ -10,9 +10,14 @@ Functions to generate benchmark plots from given SU files.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import str
 
 from obspy.segy.segy import SUFile, readSU
-import StringIO
+import io
 import math
 import matplotlib.pylab as plt
 import matplotlib.cm as cm
@@ -33,7 +38,7 @@ def _calcOffset(trace):
     if scalco < 10 and scalco != 1:
         scalco = pow(10, scalco)
     offset = 1.0 / scalco * \
-        math.sqrt(pow(th.group_coordinate_x - th.source_coordinate_x, 2) + \
+        math.sqrt(pow(th.group_coordinate_x - th.source_coordinate_x, 2) +
                   pow(th.group_coordinate_y - th.source_coordinate_y, 2))
     return offset
 
@@ -169,7 +174,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     for st in streams:
         if normalize == 'stream':
             data_range = max([_i.data.max() for _i in st.traces]) - \
-                         min([_i.data.min() for _i in st.traces])
+                min([_i.data.min() for _i in st.traces])
         for tr in st.traces:
             if normalize == 'traces':
                 data_range = tr.data.max() - tr.data.min()
@@ -282,7 +287,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     if outfile is None:
         # Return an binary imagestring if not outfile but format.
         if format:
-            imgdata = StringIO.StringIO()
+            imgdata = io.StringIO()
             _fig.savefig(imgdata, format=format, dpi=dpi)
             imgdata.seek(0)
             return imgdata.read()

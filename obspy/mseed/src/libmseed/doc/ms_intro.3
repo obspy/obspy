@@ -1,4 +1,4 @@
-.TH MS_INTRO 3 2011/05/24
+.TH MS_INTRO 3 2013/07/17
 .SH NAME
 Introduction to libmseed
 
@@ -519,7 +519,7 @@ static void record_handler (char *record, int reclen, void *srcname) {
 }
 
 main() {
-  int psamples;
+  int64_t psamples;
   int precords;
   MSTrace *mst;
   char srcname[50];
@@ -546,7 +546,8 @@ main() {
   precords = mst_pack (mst, &record_handler, srcname, 4096, DE_STEIM2,
                        1, &psamples, 1, verbose, NULL);
 
-  ms_log (0, "Packed %d samples into %d records\n", psamples, precords);
+  ms_log (0, "Packed %lld samples into %d records\n",
+             (long long int)psamples, precords);
 
   /* Disconnect datasamples pointer, otherwise mst_free() will free it */
   mst->datasamples = NULL;

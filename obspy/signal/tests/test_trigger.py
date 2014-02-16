@@ -2,6 +2,8 @@
 """
 The obspy.signal.trigger test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 from ctypes import ArgumentError
 from obspy import read, Stream, UTCDateTime
 from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
@@ -68,8 +70,8 @@ class TriggerTestCase(unittest.TestCase):
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
                              thr1, thr2, npreset_len, np_dur)
-        self.assertEquals(nptime, 17545)
-        self.assertEquals(pfm, 'IPU0')
+        self.assertEqual(nptime, 17545)
+        self.assertEqual(pfm, 'IPU0')
 
     def test_arPick(self):
         """
@@ -82,13 +84,13 @@ class TriggerTestCase(unittest.TestCase):
             data.append(np.loadtxt(file, dtype='float32'))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
-                200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
+            200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
         ptime, stime = arPick(data[0], data[1], data[2], samp_rate, f1, f2,
                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
         #self.assertAlmostEqual(stime, 31.2800006866)
-        self.assertEquals(int(stime + 0.5), 31)
+        self.assertEqual(int(stime + 0.5), 31)
 
     def test_triggerOnset(self):
         """
@@ -108,7 +110,7 @@ class TriggerTestCase(unittest.TestCase):
         np.testing.assert_array_equal(picks_del, on_of[np.array([0, 1, 5, 6])])
         #
         # set True for visual understanding the tests
-        if False:
+        if False:  # pragma: no cover
             import matplotlib.pyplot as plt
             plt.plot(cft)
             plt.hlines([1.5, 1.0], 0, len(cft))
@@ -175,7 +177,7 @@ class TriggerTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
-                                     trace_ids=trace_ids, sta=0.5, lta=10)
+                                    trace_ids=trace_ids, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -216,8 +218,8 @@ class TriggerTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.2,
-                                     trace_ids=trace_ids,
-                                     max_trigger_length=0.13, sta=0.5, lta=10)
+                                    trace_ids=trace_ids,
+                                    max_trigger_length=0.13, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -358,10 +360,17 @@ class TriggerTestCase(unittest.TestCase):
                      "BW.UH3..SHZ": 1,
                      "BW.UH4..EHZ": 1}
         similarity_thresholds = {"UH1": 0.8, "UH3": 0.7}
-        trig = coincidenceTrigger("classicstalta", 5, 1, st.copy(), 4, sta=0.5,
-                                  lta=10, trace_ids=trace_ids,
-                                  event_templates=templ,
-                                  similarity_threshold=similarity_thresholds)
+        with warnings.catch_warnings(record=True) as w:
+            # avoid getting influenced by the warning filters getting set up
+            # differently in obspy-runtests.
+            # (e.g. depending on options "-v" and "-q")
+            warnings.resetwarnings()
+            trig = coincidenceTrigger(
+                "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
+                trace_ids=trace_ids, event_templates=templ,
+                similarity_threshold=similarity_thresholds)
+            # two warnings get raised
+            self.assertEqual(len(w), 2)
         # check floats in resulting dictionary separately
         self.assertAlmostEqual(trig[0].pop('duration'), 3.9600000381469727)
         self.assertAlmostEqual(trig[1].pop('duration'), 1.9900000095367432)

@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The cross correlation test suite.
 """
+from __future__ import unicode_literals
 
 import os
 import unittest
@@ -39,9 +39,9 @@ class CrossCorrelationTestCase(unittest.TestCase):
         dt, coeff = xcorrPickCorrection(t2, tr2, t1, tr1, 0.05, 0.2, 0.1)
         self.assertAlmostEqual(dt, 0.014459080288833711)
         self.assertAlmostEqual(coeff, 0.91542878457939791)
-        dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1,
-                filter="bandpass",
-                filter_options={'freqmin': 1, 'freqmax': 10})
+        dt, coeff = xcorrPickCorrection(
+            t1, tr1, t2, tr2, 0.05, 0.2, 0.1, filter="bandpass",
+            filter_options={'freqmin': 1, 'freqmax': 10})
         self.assertAlmostEqual(dt, -0.013025086360067755)
         self.assertAlmostEqual(coeff, 0.98279277273758803)
 

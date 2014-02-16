@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: rotate.py
 #  Purpose: Various Seismogram Rotation Functions
@@ -16,6 +17,12 @@ Various Seismogram Rotation Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+<<<<<<< HEAD
+=======
+from __future__ import division
+from __future__ import unicode_literals
+
+>>>>>>> master
 from math import pi, sin, cos
 import numpy as np
 

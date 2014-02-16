@@ -4,6 +4,9 @@
 The gse2.core test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import open
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2.libgse2 import ChksumError
@@ -39,9 +42,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('hang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
-        self.assertEqual(tr.stats.gse2.get('instype'), '      ')
+        self.assertEqual(tr.stats.gse2.get('instype'), '')
         self.assertAlmostEqual(tr.stats.starttime.timestamp,
-                               1125455629.849998, 6)
+                               1125455629.850, 6)
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
     def test_readHeadViaObsPy(self):
@@ -60,7 +63,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
         self.assertAlmostEqual(tr.stats.starttime.timestamp,
-                               1125455629.849998, 6)
+                               1125455629.850, 6)
         self.assertEqual(str(tr.data), '[]')
 
     def test_readAndWriteViaObsPy(self):
@@ -109,16 +112,13 @@ class CoreTestCase(unittest.TestCase):
         files = [os.path.join(self.path, 'data', 'loc_RNON20040609200559.z'),
                  os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        # setup test
+        # write test file containing multiple GSE2 parts
         with NamedTemporaryFile() as tf:
-            tmpfile1 = tf.name
-            # write test file containing multiple GSE2 parts
-            with open(tmpfile1, 'wb') as f:
-                for i in xrange(2):
-                    with open(files[i], 'rb') as f1:
-                        f.write(f1.read())
-            # read
-            st1 = read(tmpfile1)
+            for filename in files:
+                with open(filename, 'rb') as f1:
+                    tf.write(f1.read())
+            tf.flush()
+            st1 = read(tf.name)
         st1.verify()
         self.assertEqual(len(st1), 2)
         tr11 = st1[0]
@@ -202,7 +202,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data',
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # should not fail
-        _st = read(gse2file, verify_chksum=False)
+        read(gse2file, verify_chksum=False)
         # should fail
         self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
 
@@ -214,7 +214,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data',
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # add wrong starttime flag of mseed, should also not fail
-        _st = read(gse2file, verify_chksum=False, starttime=None)
+        read(gse2file, verify_chksum=False, starttime=None)
 
     def test_readGSE1ViaObsPy(self):
         """

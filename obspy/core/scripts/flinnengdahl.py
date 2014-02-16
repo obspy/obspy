@@ -5,6 +5,8 @@ USAGE: %prog longitude latitude
 
 Get Flinn-Engahl region name from longitude and latitude
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 import sys
 from optparse import OptionParser
 from obspy import __version__
@@ -13,7 +15,7 @@ from obspy.core.util import FlinnEngdahl
 
 def main():
     parser = OptionParser(__doc__.strip(), version="%prog " + __version__)
-    (options, args) = parser.parse_args()
+    (_options, args) = parser.parse_args()
 
     if len(args) != 2:
         parser.print_help()
@@ -23,7 +25,7 @@ def main():
     latitude = float(args[1])
 
     flinn_engdahl = FlinnEngdahl()
-    print flinn_engdahl.get_region(longitude, latitude)
+    print(flinn_engdahl.get_region(longitude, latitude))
 
 
 if __name__ == '__main__':

@@ -1,0 +1,1687 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.8</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?location=00&amp;station=A%2A&amp;network=IU&amp;starttime=2013-01-01T00%3A00%3A00.000000&amp;level=channel</ModuleURI>
+ <Created>2013-12-29T07:44:01</Created>
+ <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+  <TotalNumberStations>258</TotalNumberStations>
+  <SelectedNumberStations>4</SelectedNumberStations>
+  <Station code="ADK" startDate="2009-07-19T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>51.8823</Latitude>
+   <Longitude>-176.6842</Longitude>
+   <Elevation>130.0</Elevation>
+   <Site>
+    <Name>Adak, Aleutian Islands, Alaska</Name>
+   </Site>
+   <CreationDate>1993-09-21T00:00:00</CreationDate>
+   <TotalNumberChannels>47</TotalNumberChannels>
+   <SelectedNumberChannels>12</SelectedNumberChannels>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH1">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.45297E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH2">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.46001E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.28092E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH1">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.45297E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH2">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.46001E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LHZ">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.28092E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH1">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.45297E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH2">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.46001E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VHZ">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.28092E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM1">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM2">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2009-07-19T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VMZ">
+    <Latitude>51.8823</Latitude>
+    <Longitude>-176.6842</Longitude>
+    <Elevation>130.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+  </Station>
+  <Station code="AFI" startDate="2010-02-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>-13.9093</Latitude>
+   <Longitude>-171.7773</Longitude>
+   <Elevation>706.0</Elevation>
+   <Site>
+    <Name>Afiamalu, Samoa</Name>
+   </Site>
+   <CreationDate>1993-08-24T00:00:00</CreationDate>
+   <TotalNumberChannels>83</TotalNumberChannels>
+   <SelectedNumberChannels>21</SelectedNumberChannels>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.68034E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.61177E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>5.48564E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.68034E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.61177E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LHZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>5.48564E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.68034E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.61177E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2013-08-02T09:15:59" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VHZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>5.48564E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-12-23T19:10:59" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="BH1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.68034E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-12-23T19:10:59" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="BHZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>5.48564E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-12-23T19:10:59" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="LH1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.68034E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-12-23T19:10:59" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="LHZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>5.48564E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-12-23T19:10:59" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="VH1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.68034E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-12-23T19:10:59" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="VHZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>5.48564E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-02-23T00:00:00" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="BH2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.61177E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-02-23T00:00:00" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="LH2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.61177E9</Value>
+      <Frequency>0.05</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-02-23T00:00:00" restrictedStatus="open" endDate="2013-08-02T09:15:59" code="VH2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>4.61177E9</Value>
+      <Frequency>0.01</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-02-23T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM1">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-02-23T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM2">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-02-23T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VMZ">
+    <Latitude>-13.9093</Latitude>
+    <Longitude>-171.7773</Longitude>
+    <Elevation>705.0</Elevation>
+    <Depth>1.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Streckeisen STS-1VBB w/E300</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+  </Station>
+  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>34.94591</Latitude>
+   <Longitude>-106.4572</Longitude>
+   <Elevation>1820.0</Elevation>
+   <Site>
+    <Name>Albuquerque, New Mexico, USA</Name>
+   </Site>
+   <CreationDate>1989-08-29T00:00:00</CreationDate>
+   <TotalNumberChannels>123</TotalNumberChannels>
+   <SelectedNumberChannels>12</SelectedNumberChannels>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH1">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>328.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.45661E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH2">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>58.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.34437E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.27508E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH1">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>328.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.45661E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH2">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>58.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.34437E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LHZ">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.27508E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH1">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>328.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.45661E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH2">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>58.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.34437E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VHZ">
+    <Latitude>34.945981</Latitude>
+    <Longitude>-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.27508E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2008-06-30T20:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM1">
+    <Latitude>34.94591</Latitude>
+    <Longitude>-106.4572</Longitude>
+    <Elevation>1675.7</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2008-06-30T20:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM2">
+    <Latitude>34.94591</Latitude>
+    <Longitude>-106.4572</Longitude>
+    <Elevation>1675.7</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2008-06-30T20:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VMZ">
+    <Latitude>34.94591</Latitude>
+    <Longitude>-106.4572</Longitude>
+    <Elevation>1675.7</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+  </Station>
+  <Station code="ANTO" startDate="2010-07-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>39.868</Latitude>
+   <Longitude>32.7934</Longitude>
+   <Elevation>1090.0</Elevation>
+   <Site>
+    <Name>Ankara, Turkey</Name>
+   </Site>
+   <CreationDate>1992-09-25T00:00:00</CreationDate>
+   <TotalNumberChannels>60</TotalNumberChannels>
+   <SelectedNumberChannels>12</SelectedNumberChannels>
+   <Channel locationCode="00" startDate="2011-06-20T12:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH2">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>1.93609E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2011-06-20T12:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH2">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>1.93609E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2011-06-20T12:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH2">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>90.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>1.93609E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-11-10T21:42:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH1">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.91915E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-11-10T21:42:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>20.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.88895E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-11-10T21:42:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LH1">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.91915E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-11-10T21:42:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LHZ">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.88895E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-11-10T21:42:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VH1">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.91915E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-11-10T21:42:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VHZ">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.88895E9</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-07-23T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM1">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-07-23T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VM2">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="00" startDate="2010-07-23T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="VMZ">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>895.0</Elevation>
+    <Depth>195.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>0.1</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-36000-I Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <InputUnits>
+       <Name>V</Name>
+       <Description>Volts</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>

@@ -8,18 +8,23 @@ ArcLink/WebDC client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import open
+from future.builtins import str
+from future.utils import native_str
 
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy import read, UTCDateTime
 from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
+from obspy.core import compatibility
 from telnetlib import Telnet
 import os
-import StringIO
 import time
 import warnings
-
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
 MAX_REQUESTS = 50
@@ -83,13 +88,19 @@ class Client(object):
 
     .. rubric:: Notes
 
-    The following ArcLink servers may be accessed via ObsPy (partly restricted
-    access only):
+    The following ArcLink servers may be accessed (also see
+    http://www.orfeus-eu.org/eida/eida_advanced_users.html;
+    maybe partly restricted access only):
 
-    * WebDC servers: webdc.eu:18001, webdc.eu:18002
-    * ODC Server:  bhlsa03.knmi.nl:18001
-    * INGV Server: eida.rm.ingv.it:18001
-    * IPGP Server: geosrt2.ipgp.fr:18001
+    * WebDC: webdc.eu:18001, webdc.eu:18002
+    * ODC:   eida.knmi.nl:18002
+    * GFZ:   eida.gfz-potsdam.de:18001
+    * RESIF: eida.resif.fr:18001
+    * INGV:  --
+    * ETHZ:  eida.ethz.ch:18001
+    * BGR:   eida.bgr.de:18001
+    * IPGP:  eida.ipgp.fr:18001
+    * USP:   seisrequest.iag.usp.br:18001
     """
     #: Delay in seconds between each status request
     status_delay = 0.5
@@ -131,50 +142,66 @@ class Client(object):
             dcid_key_file = DCID_KEY_FILE
         # parse dcid_key_file
         try:
-            lines = open(dcid_key_file, 'rt').readlines()
+            with open(dcid_key_file, 'rt') as fp:
+                lines = fp.readlines()
         except:
             pass
         else:
             for line in lines:
-                key, value = line.split('=', 1)
+                line = line.strip()
+                # skip empty lines
+                if not line:
+                    continue
+                # skip comments
+                if line.startswith('#'):
+                    continue
+                if ' ' in line:
+                    key, value = line.split(' ', 1)
+                else:
+                    key, value = line.split('=', 1)
                 key = key.strip()
                 # ensure that dcid_keys set via parameters are not overwritten
                 if key not in self.dcid_keys:
                     self.dcid_keys[key] = value.strip()
 
     def _reconnect(self):
-        self._client.open(self._client.host, self._client.port,
+        self._client.close()
+        self._client.open(native_str(self._client.host),
+                          self._client.port,
                           self._client.timeout)
 
     def _writeln(self, buffer):
+        # Py3k: might be confusing, _writeln accepts str
+        # readln accepts bytes (but was smalles change like that)
         if self.command_delay:
             time.sleep(self.command_delay)
-        self._client.write(buffer + '\r\n')
+        b_buffer = (buffer + '\r\n').encode()
+        self._client.write(b_buffer)
         if self.debug:
-            print('>>> ' + buffer)
+            print((b'>>> ' + b_buffer))
 
-    def _readln(self, value=''):
-        line = self._client.read_until(value + '\r\n', self.timeout)
+    def _readln(self, value=b''):
+        line = self._client.read_until(value + b'\r\n', self.timeout)
         line = line.strip()
         if value not in line:
             msg = "Timeout waiting for expected %s, got %s"
-            raise ArcLinkException(msg % (value, line))
+            raise ArcLinkException(msg % (value, line.decode()))
         if self.debug:
-            print('... ' + line)
+            print((b'... ' + line))
         return line
 
     def _hello(self):
         self._reconnect()
         self._writeln('HELLO')
-        self.version = self._readln(')')
+        self.version = self._readln(b')')
         self.node = self._readln()
         if self.password:
             self._writeln('USER %s %s' % (self.user, self.password))
         else:
             self._writeln('USER %s' % self.user)
-        self._readln('OK')
+        self._readln(b'OK')
         self._writeln('INSTITUTION %s' % self.institution)
-        self._readln('OK')
+        self._readln(b'OK')
 
     def _bye(self):
         self._writeln('BYE')
@@ -205,7 +232,12 @@ class Client(object):
                     print('\nRequesting %s:%d' % (self._client.host,
                                                   self._client.port))
                 return self._fetch(request_type, request_data, route)
-            msg = 'Could not find route to %s.%s'
+            msg = 'Could not find route to %s.%s. If you think the data ' + \
+                  'should be there, you might want to retry ' + \
+                  'with manually connecting to a different ArcLink node ' + \
+                  '(see docstring of Client) to see if there is a problem ' + \
+                  'with a routing table at a specific ArcLink node (and ' + \
+                  'contact the ArcLink node operators).'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
         # we got a routing table
         for item in table:
@@ -240,7 +272,7 @@ class Client(object):
         out += ' '.join([str(i) for i in request_data[2:]])
         self._writeln(out)
         self._writeln('END')
-        self._readln('OK')
+        self._readln(b'OK')
         # get status id
         while True:
             status = self._readln()
@@ -258,8 +290,8 @@ class Client(object):
         _old_xml_doc = None
         while True:
             self._writeln('STATUS %d' % req_id)
-            xml_doc = self._readln('END')
-            if 'ready="true"' in xml_doc:
+            xml_doc = self._readln(b'END')
+            if b'ready="true"' in xml_doc:
                 break
             # check if status messages changes over time
             if _old_xml_doc == xml_doc:
@@ -275,9 +307,9 @@ class Client(object):
             # wait a bit
             time.sleep(self.status_delay)
         # check for errors
-        for err_code in ['DENIED', 'CANCELLED', 'CANCEL', 'ERROR', 'RETRY',
-                         'WARN', 'UNSET']:
-            err_str = 'status="%s"' % (err_code)
+        for err_code in (b'DENIED', b'CANCELLED', b'CANCEL', b'ERROR',
+                         b'RETRY', b'WARN', b'UNSET'):
+            err_str = b'status="' + err_code + b'"'
             if err_str in xml_doc:
                 # cleanup
                 self._writeln('PURGE %d' % req_id)
@@ -286,19 +318,19 @@ class Client(object):
                 xml_doc = objectify.fromstring(xml_doc[:-3])
                 msg = xml_doc.request.volume.line.get('message')
                 raise ArcLinkException("%s %s" % (err_code, msg))
-        if 'status="NODATA"' in xml_doc:
+        if b'status="NODATA"' in xml_doc:
             # cleanup
             self._writeln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No data available')
-        elif 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
+        elif b'id="NODATA"' in xml_doc or b'id="ERROR"' in xml_doc:
             # cleanup
             self._writeln('PURGE %d' % req_id)
             self._bye()
             # parse XML for error message
             xml_doc = objectify.fromstring(xml_doc[:-3])
             raise ArcLinkException(xml_doc.request.volume.line.get('message'))
-        elif '<line content' not in xml_doc:
+        elif b'<line content' not in xml_doc:
             # safeguard for not covered status messages
             self._writeln('PURGE %d' % req_id)
             self._bye()
@@ -306,25 +338,25 @@ class Client(object):
             raise ArcLinkException(msg)
         self._writeln('DOWNLOAD %d' % req_id)
         try:
-            fd = self._client.get_socket().makefile('rb+')
+            fd = self._client.get_socket().makefile('rb')
             length = int(fd.readline(100).strip())
-            data = ''
+            data = b''
             while len(data) < length:
                 buf = fd.read(min(4096, length - len(data)))
                 data += buf
             buf = fd.readline(100).strip()
-            if buf != "END" or len(data) != length:
+            if buf != b"END" or len(data) != length:
                 raise Exception('Wrong length!')
             if self.debug:
-                if data.startswith('<?xml'):
+                if data.startswith(b'<?xml'):
                     print(data)
                 else:
-                    print("%d bytes of data read" % len(data))
+                    print(("%d bytes of data read" % len(data)))
         finally:
             self._writeln('PURGE %d' % req_id)
             self._bye()
         # check for encryption
-        if 'encrypted="true"' in xml_doc:
+        if b'encrypted="true"' in xml_doc:
             # extract dcid
             xml_doc = objectify.fromstring(xml_doc[:-3])
             dcid = xml_doc.request.volume.get('dcid')
@@ -399,7 +431,7 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        file_stream = StringIO.StringIO()
+        file_stream = compatibility.BytesIO()
         self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)
@@ -502,10 +534,10 @@ class Client(object):
         format = format.upper()
         if format not in ["MSEED", "FSEED"]:
             msg = ("'%s' is not a valid format. Choose either 'MSEED' or "
-                "'FSEED'")
+                   "'FSEED'")
             raise ArcLinkException(msg)
         # check parameters
-        is_name = isinstance(filename, basestring)
+        is_name = isinstance(filename, (str, native_str))
         if not is_name and not hasattr(filename, "write"):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
@@ -523,7 +555,7 @@ class Client(object):
         # fetch waveform
         data = self._fetch(rtype, rdata, route=route)
         # check if data is still encrypted
-        if data.startswith('Salted__'):
+        if data.startswith(b'Salted__'):
             # set "good" filenames
             if is_name:
                 if compressed and not filename.endswith('.bz2.openssl'):
@@ -581,9 +613,9 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _ROUTING_NS_1_0 in xml_doc.nsmap.values():
+        if _ROUTING_NS_1_0 in list(xml_doc.nsmap.values()):
             xml_ns = _ROUTING_NS_1_0
-        elif _ROUTING_NS_0_1 in xml_doc.nsmap.values():
+        elif _ROUTING_NS_0_1 in list(xml_doc.nsmap.values()):
             xml_ns = _ROUTING_NS_0_1
         else:
             msg = "Unknown routing namespace %s"
@@ -650,8 +682,7 @@ class Client(object):
             else:
                 out.extend(temp)
         # sort by priority
-        out.sort(lambda x, y: cmp(x.get('priority', 1000),
-                                  y.get('priority', 1000)))
+        out = sorted(out, key=lambda x: x.get('priority', 1000))
         return out
 
     def getQC(self, network, station, location, channel, starttime,
@@ -983,8 +1014,8 @@ class Client(object):
         if hasattr(filename, "write") and hasattr(filename.write, "__call__"):
             filename.write(data)
         else:
-            with open(filename, "wb") as open_file:
-                open_file.write(data)
+            with open(filename, "wb") as fp:
+                fp.write(data)
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
@@ -1088,14 +1119,14 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
+        if _INVENTORY_NS_1_0 in list(xml_doc.nsmap.values()):
             xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'
             component_ns = 'stream'
             seismometer_ns = 'sensor'
             name_ns = 'publicID'
             resp_paz_ns = 'responsePAZ'
-        elif _INVENTORY_NS_0_2 in xml_doc.nsmap.values():
+        elif _INVENTORY_NS_0_2 in list(xml_doc.nsmap.values()):
             xml_ns = _INVENTORY_NS_0_2
             stream_ns = 'seis_stream'
             component_ns = 'component'
@@ -1138,8 +1169,8 @@ class Client(object):
                 net.end = None
             # remark
             try:
-                net.remark = network.xpath('ns:remark',
-                    namespaces={'ns': xml_ns})[0].text or ''
+                net.remark = network.xpath(
+                    'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
             except:
                 net.remark = ''
             # write network entries
@@ -1174,8 +1205,8 @@ class Client(object):
                     sta.end = None
                 # remark
                 try:
-                    sta.remark = station.xpath('ns:remark',
-                        namespaces={'ns': xml_ns})[0].text or ''
+                    sta.remark = station.xpath(
+                        'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
                 except:
                     sta.remark = ''
                 # write station entry
@@ -1183,23 +1214,23 @@ class Client(object):
                 # instruments
                 for stream in station.xpath('ns:' + stream_ns,
                                             namespaces={'ns': xml_ns}):
-                    # date / times
-                    try:
-                        start = UTCDateTime(stream.get('start'))
-                    except:
-                        start = None
-                    try:
-                        end = UTCDateTime(stream.get('end'))
-                    except:
-                        end = None
-                    # check date/time boundaries
-                    if start > endtime:
-                        continue
-                    if end and starttime > end:
-                        continue
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
                                              namespaces={'ns': xml_ns}):
+                        # date / times
+                        try:
+                            start = UTCDateTime(comp.get('start'))
+                        except:
+                            start = None
+                        try:
+                            end = UTCDateTime(comp.get('end'))
+                        except:
+                            end = None
+                        # check date/time boundaries
+                        if start > endtime:
+                            continue
+                        if end and starttime > end:
+                            continue
                         if xml_ns == _INVENTORY_NS_0_2:
                             seismometer_id = stream.get(seismometer_ns, None)
                         else:
@@ -1321,7 +1352,7 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in data.items()
+        stations = [value for key, value in list(data.items())
                     if key.startswith(network + '.')
                     and "code" in value]
         return stations

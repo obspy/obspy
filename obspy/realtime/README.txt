@@ -5,7 +5,7 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2011-2012 by:
+Copyright (c) 2011-2013 by:
     * Anthony Lomax
 
 The obspy.realtime development has been supported by the NERA project ["Network

@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
-from StringIO import StringIO
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import open
 from obspy import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import compatibility
 import numpy as np
 import os
 import random
@@ -38,12 +41,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
             1313131313: UTCDateTime(2011, 8, 12, 6, 41, 53),
             100000: UTCDateTime(1970, 1, 2, 3, 46, 40),
             100000.111112: UTCDateTime(1970, 1, 2, 3, 46, 40, 111112),
-            200000000: UTCDateTime(1976, 5, 3, 19, 33, 20)
+            200000000: UTCDateTime(1976, 5, 3, 19, 33, 20),
+            # test rounding of 7th digit of microseconds
+            1388479508.871572: UTCDateTime(1388479508.8715718),
         }
         # Loop over timesdict.
-        for ts, dt in timesdict.iteritems():
-            self.assertEqual(dt, util._convertMSTimeToDatetime(ts * 1000000L))
-            self.assertEqual(ts * 1000000L, util._convertDatetimeToMSTime(dt))
+        for ts, dt in timesdict.items():
+            self.assertEqual(dt, util._convertMSTimeToDatetime(ts * 1000000))
+            self.assertEqual(ts * 1000000, util._convertDatetimeToMSTime(dt))
         # Additional sanity tests.
         # Today.
         now = UTCDateTime()
@@ -70,19 +75,17 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Now with an open file. This should work regardless of the current
         # value of the file pointer and it should also not change the file
         # pointer.
-        open_file = open(filename, 'rb')
-        open_file.seek(1234)
-        info = util.getRecordInformation(open_file)
-        self.assertEqual(info['filesize'], 5120 - 1234)
-        self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 7)
-        self.assertEqual(info['excess_bytes'], 302)
-        self.assertEqual(open_file.tell(), 1234)
-        open_file.close()
-        # Now test with a StringIO with the first ten percent.
-        open_file = open(filename, 'rb')
-        open_file_string = StringIO(open_file.read())
-        open_file.close()
+        with open(filename, 'rb') as open_file:
+            open_file.seek(1234)
+            info = util.getRecordInformation(open_file)
+            self.assertEqual(info['filesize'], 5120 - 1234)
+            self.assertEqual(info['record_length'], 512)
+            self.assertEqual(info['number_of_records'], 7)
+            self.assertEqual(info['excess_bytes'], 302)
+            self.assertEqual(open_file.tell(), 1234)
+        # Now test with a BytesIO with the first ten percent.
+        with open(filename, 'rb') as open_file:
+            open_file_string = compatibility.BytesIO(open_file.read())
         open_file_string.seek(111)
         info = util.getRecordInformation(open_file_string)
         self.assertEqual(info['filesize'], 5120 - 111)
@@ -178,9 +181,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
         steim1_file = os.path.join(self.path, 'data',
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         # 64 Bytes header.
-        data_string = open(steim1_file, 'rb').read()[64:]
+        with open(steim1_file, 'rb') as fp:
+            data_string = fp.read()[64:]
         data = util._unpackSteim1(data_string, 412, swapflag=self.swap,
-            verbose=0)
+                                  verbose=0)
         data_record = readMSEED(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
@@ -191,9 +195,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         steim2_file = os.path.join(self.path, 'data', 'steim2.mseed')
         # 128 Bytes header.
-        data_string = open(steim2_file, 'rb').read()[128:]
+        with open(steim2_file, 'rb') as fp:
+            data_string = fp.read()[128:]
         data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
-           verbose=0)
+                                  verbose=0)
         data_record = readMSEED(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
@@ -204,7 +209,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             output_filename = tf.name
             # Test a normal file first.
-            filename = os.path.join(self.path, 'data',
+            filename = os.path.join(
+                self.path, 'data',
                 "BW.BGLD.__.EHE.D.2008.001.first_10_records")
             # Shift by one second.
             util.shiftTimeOfFile(filename, output_filename, 10000)
@@ -227,8 +233,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
             # Test a special case with the time correction applied flag set but
             # no actual time correction in the field.
-            filename = os.path.join(self.path, 'data',
-                    "one_record_time_corr_applied_but_time_corr_is_zero.mseed")
+            filename = os.path.join(
+                self.path, 'data',
+                "one_record_time_corr_applied_but_time_corr_is_zero.mseed")
             # Positive shift.
             util.shiftTimeOfFile(filename, output_filename, 22000)
             st_before = readMSEED(filename)
@@ -251,7 +258,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             output_filename = tf.name
             # This file was created only for testing purposes.
-            filename = os.path.join(self.path, 'data',
+            filename = os.path.join(
+                self.path, 'data',
                 "one_record_already_applied_time_correction.mseed")
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)

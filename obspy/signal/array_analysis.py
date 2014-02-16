@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: array.py
 #  Purpose: Functions for Array Analysis
@@ -16,6 +17,11 @@ Functions for Array Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import str
 
 import math
 import warnings
@@ -23,7 +29,6 @@ import numpy as np
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream
-from obspy.core.util.decorator import deprecated
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 
@@ -264,11 +269,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     A = np.zeros((N * 3, 6))
     z3t = np.zeros(3)
     # fill up A
-    for i in xrange(N):
+    for i in range(N):
         ss = subarraycoords[(i + 1), :] - subarraycoords[0, :]
-        A[(3 * i):(3 * i + 3), :] = np.c_[np.r_[ss, z3t], np.r_[z3t, ss], \
-            np.array([-eta * ss[2], \
-            0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
+        A[(3 * i):(3 * i + 3), :] = np.c_[
+            np.r_[ss, z3t], np.r_[z3t, ss],
+            np.array([-eta * ss[2],
+                     0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
 
     #------------------------------------------------------
     # define data covariance matrix Cd.
@@ -278,7 +284,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     II = np.eye(3 * N)
     D = -I3
 
-    for i in xrange(N - 1):
+    for i in range(N - 1):
         D = np.c_[D, -I3]
     D = np.r_[D, II].T
 
@@ -296,8 +302,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         junk = (np.c_[sigmau, sigmau, sigmau]) ** 2  # matrix of variances
         Cu = np.diag(np.reshape(junk[subarray, :], (3 * Nplus1)))
     elif sigmau.shape == (Na, 3):
-        Cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(), \
-                (3 * Nplus1)))
+        Cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(),
+                     (3 * Nplus1)))
     else:
         raise ValueError('sigmau has the wrong dimensions')
 
@@ -334,7 +340,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     for array in (ts_wmag, ts_w1, ts_w2, ts_w3, ts_tilt, ts_dh, ts_sh, ts_s,
                   ts_pred, ts_misfit, ts_M, ts_data, ts_ptilde):
         array.fill(np.NaN)
-    ts_e = np.NaN * np.empty((nt, 3, 3))
+    ts_e = np.empty((nt, 3, 3))
+    ts_e.fill(np.NaN)
 
     # other matrices
     udif = np.empty((3, N))
@@ -433,12 +440,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     #
     # BEGIN LOOP OVER DATA POINTS IN TIME SERIES==============================
     #
-    for itime in xrange(nt):
+    for itime in range(nt):
         #
         # data vector is differences of stn i displ from stn 1 displ
         # sum the lengths of the displ difference vectors
         sumlen = 0
-        for i in xrange(N):
+        for i in range(N):
             udif[0, i] = ts1[itime, subarray[i + 1]] - ts1[itime, subarray[0]]
             udif[1, i] = ts2[itime, subarray[i + 1]] - ts2[itime, subarray[0]]
             udif[2, i] = ts3[itime, subarray[i + 1]] - ts3[itime, subarray[0]]
@@ -470,7 +477,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         misfit_sq = np.reshape(misfit_sq, (N, 3)).T
         misfit_sumsq = np.empty(N)
         misfit_sumsq.fill(np.NaN)
-        for i in xrange(N):
+        for i in range(N):
             misfit_sumsq[i] = misfit_sq[:, i].sum()
         misfit_len = np.sum(np.sqrt(misfit_sumsq))
         ts_M[itime] = misfit_len / sumlen
@@ -587,19 +594,6 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
-@deprecated
-def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='mlabday'):
-    """
-    DEPRECATED: Please use ``obspy.signal.array_processing()``
-    """
-    return array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y,
-        slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
-        prewhiten, verbose=False, coordsys='lonlat', timestamp='mlabday',
-        method=0)
-
-
 def get_geometry(stream, coordsys='lonlat', return_center=False,
                  verbose=False):
     """
@@ -641,7 +635,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         raise TypeError('only Stream or numpy.ndarray allowed')
 
     if verbose:
-        print("coordys = " + coordsys)
+        print(("coordys = " + coordsys))
 
     if coordsys == 'lonlat':
         center_lon = geometry[:, 0].mean()
@@ -693,50 +687,35 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     # optimized version
     mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
     my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
-    return np.require( \
-        mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) + \
+    return np.require(
+        mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
         my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
         dtype='float32')
 
 
 def get_spoint(stream, stime, etime):
     """
+    Calculates start and end offsets relative to stime and etime for each
+    trace in stream in samples.
+
     :param stime: UTCDateTime to start
     :param etime: UTCDateTime to end
+    :returns: start and end sample offset arrays
     """
-    slatest = stream[0].stats.starttime
-    eearliest = stream[0].stats.endtime
-    for tr in stream:
-        if tr.stats.starttime >= slatest:
-            slatest = tr.stats.starttime
-        if tr.stats.endtime <= eearliest:
-            eearliest = tr.stats.endtime
-
-    nostat = len(stream)
-    spoint = np.empty(nostat, dtype="int32", order="C")
-    epoint = np.empty(nostat, dtype="int32", order="C")
-    # now we have to adjust to the beginning of real start time
-    if slatest > stime:
-        msg = "Specified start-time is smaller than starttime in stream"
-        raise ValueError(msg)
-    if eearliest < etime:
-        msg = "Specified end-time bigger is than endtime in stream"
-        raise ValueError(msg)
-    for i in xrange(nostat):
-        offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
-        negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
-        diffstart = slatest - stream[i].stats.starttime
-        frac, ddummy = math.modf(diffstart)
-        spoint[i] = int(ddummy)
-        if frac > stream[i].stats.delta * 0.25:
-            msg = "Difference in start times exceeds 25% of samp rate"
-            warnings.warn(msg)
-        spoint[i] += offset
-        diffend = stream[i].stats.endtime - eearliest
-        frac, ddummy = math.modf(diffend)
-        epoint[i] = int(ddummy)
-        epoint[i] += negoffset
-
+    spoint = np.empty(len(stream), dtype="int32", order="C")
+    epoint = np.empty(len(stream), dtype="int32", order="C")
+    for i, tr in enumerate(stream):
+        if tr.stats.starttime > stime:
+            msg = "Specified stime %s is smaller than starttime %s in stream"
+            raise ValueError(msg % (stime, tr.stats.starttime))
+        if tr.stats.endtime < etime:
+            msg = "Specified etime %s is bigger than endtime %s in stream"
+            raise ValueError(msg % (etime, tr.stats.endtime))
+        # now we have to adjust to the beginning of real start time
+        spoint[i] = int((stime - tr.stats.starttime) *
+                        tr.stats.sampling_rate + .5)
+        epoint[i] = int((tr.stats.endtime - etime) *
+                        tr.stats.sampling_rate + .5)
     return spoint, epoint
 
 
@@ -768,17 +747,17 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     else:
         raise TypeError('klim must either be a float or a tuple of length 4')
 
-    nkx = np.ceil((kxmax + kstep / 10. - kxmin) / kstep)
-    nky = np.ceil((kymax + kstep / 10. - kymin) / kstep)
+    nkx = int(np.ceil((kxmax + kstep / 10. - kxmin) / kstep))
+    nky = int(np.ceil((kymax + kstep / 10. - kymin) / kstep))
 
     transff = np.empty((nkx, nky))
 
     for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
         for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
             _sum = 0j
-            for k in xrange(len(coords)):
+            for k in range(len(coords)):
                 _sum += np.exp(complex(0.,
-                        coords[k, 0] * kx + coords[k, 1] * ky))
+                               coords[k, 0] * kx + coords[k, 1] * ky))
             transff[i, j] = abs(_sum) ** 2
 
     transff /= transff.max()
@@ -821,9 +800,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     else:
         raise TypeError('slim must either be a float or a tuple of length 4')
 
-    nsx = np.ceil((sxmax + sstep / 10. - sxmin) / sstep)
-    nsy = np.ceil((symax + sstep / 10. - symin) / sstep)
-    nf = np.ceil((fmax + fstep / 10. - fmin) / fstep)
+    nsx = int(np.ceil((sxmax + sstep / 10. - sxmin) / sstep))
+    nsy = int(np.ceil((symax + sstep / 10. - symin) / sstep))
+    nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
 
     transff = np.empty((nsx, nsy))
     buff = np.zeros(nf)
@@ -833,8 +812,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
                 _sum = 0j
                 for l in np.arange(len(coords)):
-                    _sum += np.exp(complex(0., (coords[l, 0] * sx
-                        + coords[l, 1] * sy) * 2 * np.pi * f))
+                    _sum += np.exp(
+                        complex(0., (coords[l, 0] * sx + coords[l, 1] * sy) *
+                                2 * np.pi * f))
                 buff[k] = abs(_sum) ** 2
             transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
 
@@ -852,9 +832,9 @@ def dump(pow_map, apow_map, i):
 
 
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
-    sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-    verbose=False, coordsys='lonlat', timestamp='mlabday', method=0,
-    store=None):
+                     sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime,
+                     etime, prewhiten, verbose=False, coordsys='lonlat',
+                     timestamp='mlabday', method=0, store=None):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
@@ -909,7 +889,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
-    BF, CAPON = 0, 1
+    _BF, CAPON = 0, 1
     res = []
     eotr = True
 
@@ -929,7 +909,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(geometry)
         print("stream contains following traces:")
         print(stream)
-        print("stime = " + str(stime) + ", etime = " + str(etime))
+        print(("stime = " + str(stime) + ", etime = " + str(etime)))
 
     time_shift_table = get_timeshift(geometry, sll_x, sll_y,
                                      sl_s, grdpts_x, grdpts_y)
@@ -954,7 +934,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     # to spead up the routine a bit we estimate all steering vectors in advance
     steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-        deltaf, time_shift_table, steer)
+                         deltaf, time_shift_table, steer)
     R = np.empty((nf, nstat, nstat), dtype='c16')
     ft = np.empty((nstat, nf), dtype='c16')
     newstart = stime
@@ -966,7 +946,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         try:
             for i, tr in enumerate(stream):
                 dat = tr.data[spoint[i] + offset:
-                    spoint[i] + offset + nsamp]
+                              spoint[i] + offset + nsamp]
                 dat = (dat - dat.mean()) * tap
                 ft[i, :] = np.fft.rfft(dat, nfft)[nlow:nlow + nf]
         except IndexError:
@@ -976,8 +956,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         abspow_map.fill(0.)
         # computing the covariances of the signal at different receivers
         dpow = 0.
-        for i in xrange(nstat):
-            for j in xrange(i, nstat):
+        for i in range(nstat):
+            for j in range(i, nstat):
                 R[:, i, j] = ft[i, :] * ft[j, :].conj()
                 if method == CAPON:
                     R[:, i, j] /= np.abs(R[:, i, j].sum())
@@ -988,12 +968,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         dpow *= nstat
         if method == CAPON:
             # P(f) = 1/(e.H R(f)^-1 e)
-            for n in xrange(nf):
+            for n in range(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
-        errcode = clibsignal.generalizedBeamformer(relpow_map, abspow_map,
-            steer, R, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf,
-            dpow, method)
+        errcode = clibsignal.generalizedBeamformer(
+            relpow_map, abspow_map, steer, R, nsamp, nstat, prewhiten,
+            grdpts_x, grdpts_y, nfft, nf, dpow, method)
         if errcode != 0:
             msg = 'generalizedBeamforming exited with error %d'
             raise Exception(msg % errcode)
@@ -1009,12 +989,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         if slow < 1e-8:
             slow = 1e-8
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
-        baz = azimut - np.sign(azimut) * 180
+        baz = azimut % -360 + 180
         if relpow > semb_thres and 1. / slow > vel_thres:
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
             if verbose:
-                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
+                print((newstart, (newstart + (nsamp / fs)), res[-1][1:]))
         if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep

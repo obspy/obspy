@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.10"
-#define LIBMSEED_RELEASE "2013.056"
+#define LIBMSEED_VERSION "2.12"
+#define LIBMSEED_RELEASE "2013.273"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -575,6 +575,7 @@ extern MSTrace*      mst_addmsrtogroup (MSTraceGroup *mstg, MSRecord *msr, flag 
 extern MSTrace*      mst_addtracetogroup (MSTraceGroup *mstg, MSTrace *mst);
 extern int           mst_groupheal (MSTraceGroup *mstg, double timetol, double sampratetol);
 extern int           mst_groupsort (MSTraceGroup *mstg, flag quality);
+extern int           mst_convertsamples (MSTrace *mst, char type, flag truncate);
 extern char *        mst_srcname (MSTrace *mst, char *srcname, flag quality);
 extern void          mst_printtracelist (MSTraceGroup *mstg, flag timeformat,
 					 flag details, flag gaps);
@@ -595,6 +596,7 @@ extern MSTraceList * mstl_init ( MSTraceList *mstl );
 extern void          mstl_free ( MSTraceList **ppmstl, flag freeprvtptr );
 extern MSTraceSeg *  mstl_addmsr ( MSTraceList *mstl, MSRecord *msr, flag dataquality,
 				   flag autoheal, double timetol, double sampratetol );
+extern int           mstl_convertsamples ( MSTraceSeg *seg, char type, flag truncate );
 extern void          mstl_printtracelist ( MSTraceList *mstl, flag timeformat,
 					   flag details, flag gaps );
 extern void          mstl_printsynclist ( MSTraceList *mstl, char *dccid, flag subsecond );
@@ -616,30 +618,30 @@ typedef struct MSFileParam_s
   int   recordcount;
 } MSFileParam;
 
-extern int      ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *fpos, int *last,
+extern int      ms_readmsr (MSRecord **ppmsr, const char *msfile, int reclen, off_t *fpos, int *last,
 			    flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile, int reclen,
+extern int      ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile, int reclen,
 			      off_t *fpos, int *last, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile, int reclen,
+extern int      ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile, int reclen,
 				 off_t *fpos, int *last, flag skipnotdata, flag dataflag, Selections *selections, flag verbose);
-extern int      ms_readtraces (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtraces (MSTraceGroup **ppmstg, const char *msfile, int reclen, double timetol, double sampratetol,
 			       flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtraces_timewin (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtraces_timewin (MSTraceGroup **ppmstg, const char *msfile, int reclen, double timetol, double sampratetol,
 				       hptime_t starttime, hptime_t endtime, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtraces_selection (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtraces_selection (MSTraceGroup **ppmstg, const char *msfile, int reclen, double timetol, double sampratetol,
 					 Selections *selections, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtracelist (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtracelist (MSTraceList **ppmstl, const char *msfile, int reclen, double timetol, double sampratetol,
 				  flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtracelist_timewin (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtracelist_timewin (MSTraceList **ppmstl, const char *msfile, int reclen, double timetol, double sampratetol,
 					  hptime_t starttime, hptime_t endtime, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtracelist_selection (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtracelist_selection (MSTraceList **ppmstl, const char *msfile, int reclen, double timetol, double sampratetol,
 					    Selections *selections, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
 
-extern int      msr_writemseed ( MSRecord *msr, char *msfile, flag overwrite, int reclen,
+extern int      msr_writemseed ( MSRecord *msr, const char *msfile, flag overwrite, int reclen,
 				 flag encoding, flag byteorder, flag verbose );
-extern int      mst_writemseed ( MSTrace *mst, char *msfile, flag overwrite, int reclen,
+extern int      mst_writemseed ( MSTrace *mst, const char *msfile, flag overwrite, int reclen,
 				 flag encoding, flag byteorder, flag verbose );
-extern int      mst_writemseedgroup ( MSTraceGroup *mstg, char *msfile, flag overwrite,
+extern int      mst_writemseedgroup ( MSTraceGroup *mstg, const char *msfile, flag overwrite,
 				      int reclen, flag encoding, flag byteorder, flag verbose );
 
 /* General use functions */
