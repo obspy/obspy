@@ -165,8 +165,8 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
     dip_rotation_matrix = np.cos(dip) * \
         np.matrix(((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))) + \
         (1 - np.cos(dip)) * np.matrix(((c1 * c1, c1 * c2, c1 * c3),
-                                         (c2 * c1, c2 * c2, c2 * c3),
-                                         (c3 * c1, c3 * c2, c3 * c3))) + \
+                                       (c2 * c1, c2 * c2, c2 * c3),
+                                       (c3 * c1, c3 * c2, c3 * c3))) + \
         np.sin(dip) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
     # Do the same for the azimuth.
     c1 = -1.0
@@ -175,8 +175,8 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
     azimuth_rotation_matrix = np.cos(azimuth) * \
         np.matrix(((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))) + \
         (1 - np.cos(azimuth)) * np.matrix(((c1 * c1, c1 * c2, c1 * c3),
-                                         (c2 * c1, c2 * c2, c2 * c3),
-                                         (c3 * c1, c3 * c2, c3 * c3))) + \
+                                           (c2 * c1, c2 * c2, c2 * c3),
+                                           (c3 * c1, c3 * c2, c3 * c3))) + \
         np.sin(azimuth) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
 
     # Now simply rotate a north pointing unit vector with both matrixes.
@@ -185,7 +185,7 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
 
 
 def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
-        azimuth_3, dip_3):
+               azimuth_3, dip_3):
     """
     Rotates an arbitrarily oriented three-component vector to ZNE.
 
