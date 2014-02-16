@@ -805,6 +805,10 @@ class PPSD():
         :param show_percentiles: Enable/disable plotting of approximated
                 percentiles. These are calculated from the binned histogram and
                 are not the exact percentiles.
+        :type show_histogram: bool (optional)
+        :param show_histogram: Enable/disable plotting of histogram. This
+                can be set ``False`` e.g. to make a plot with only percentiles
+                plotted. Defaults to ``True``.
         :type percentiles: list of ints
         :param percentiles: percentiles to show if plotting of percentiles is
                 selected.
