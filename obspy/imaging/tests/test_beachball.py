@@ -245,172 +245,88 @@ class BeachballTestCase(unittest.TestCase):
             fig.savefig(ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
-    def test_collection_aspect_x(self):
+    def test_aspect_x(self):
         """
-        Tests to plot beachballs as collection into a non-scaled axes in x
-        with an x-axis larger than y-axis. Use the 'axes' kwarg to make
-        beachballs circular. The moment tensor values are taken form the
-        test_Beachball unit test. See that test for more information about
-        the parameters.
+        Tests to plot beachball into a non-scaled axes with an x-axis larger
+        than y-axis. Use the 'axes' kwarg to make beachballs circular.
         """
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 2, 0]:
             reltol = 20
-        mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
-              [274, 13, 55],
-              [130, 79, 98],
-              [264.98, 45.00, -159.99],
-              [160.55, 76.00, -46.78],
-              [1.45, -6.60, 5.14, -2.67, -3.16, 1.36],
-              [235, 80, 35],
-              [138, 56, 168],
-              [1, 1, 1, 0, 0, 0],
-              [-1, -1, -1, 0, 0, 0],
-              [1, -2, 1, 0, 0, 0],
-              [1, -1, 0, 0, 0, 0],
-              [1, -1, 0, 0, 0, -1],
-              [179, 55, -78],
-              [10, 42.5, 90],
-              [10, 42.5, 92],
-              [150, 87, 1],
-              [0.99, -2.00, 1.01, 0.92, 0.48, 0.15],
-              [5.24, -6.77, 1.53, 0.81, 1.49, -0.05],
-              [16.578, -7.987, -8.592, -5.515, -29.732, 7.517],
-              [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
-              [150, 87, 1]]
+        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
         # Test passing only a width
         # Initialize figure
-        fig = plt.figure(figsize=(6, 6), dpi=300)
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-        # Plot the stations or borders
-        ax.plot([-10000, -10000, 10000, 10000], [-100, 100, -100, 100], 'rv')
-        x = -10000
-        y = -100
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            # give it an axes to keep make the beachballs circular
-            # even though axes are not scaled
-            ax.add_collection(Beach(t, width=60, xy=(x, y), linewidth=.6,
-                              axes=ax))
-            x += 5000
-            if (i + 1) % 5 == 0:
-                x = -10000
-                y += 50
-        # set the x and y limits and save the output
-        ax.axis([-12000, 12000, -120, 120])
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                                axes=ax))
+        # set the x and y limits
+        ax.axis([-10000, 10000, -100, 100])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection_aspect_x.png',
+        with ImageComparison(self.path, 'bb_aspect_x.png',
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
         # Test passing a width and a height
         # Initialize figure
-        fig = plt.figure(figsize=(6, 6), dpi=300)
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-        # Plot the stations or borders
-        ax.plot([-10000, -10000, 10000, 10000], [-100, 100, -100, 100], 'rv')
-        x = -10000
-        y = -100
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            # give it an axes to keep make the beachballs circular
-            # even though axes are not scaled
-            ax.add_collection(Beach(t, width=(60, 30), xy=(x, y), linewidth=.6,
-                              axes=ax))
-            x += 5000
-            if (i + 1) % 5 == 0:
-                x = -10000
-                y += 50
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
+                          axes=ax))
         # set the x and y limits and save the output
-        ax.axis([-12000, 12000, -120, 120])
+        ax.axis([-10000, 10000, -100, 100])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection_aspect_x_height.png',
+        with ImageComparison(self.path, 'bb_aspect_x_height.png',
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection_aspect_y(self):
         """
-        Tests to plot beachballs as collection into a non-scaled axes in y
-        with a y-axis larger than x-axis. Use the 'axes' kwarg to make
-        beachballs circular. The moment tensor values are taken form the
-        test_Beachball unit test. See that test for more information about
-        the parameters.
+        Tests to plot beachball into a non-scaled axes with a y-axis larger
+        than x-axis. Use the 'axes' kwarg to make beachballs circular.
         """
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 2, 0]:
             reltol = 20
-        mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
-              [274, 13, 55],
-              [130, 79, 98],
-              [264.98, 45.00, -159.99],
-              [160.55, 76.00, -46.78],
-              [1.45, -6.60, 5.14, -2.67, -3.16, 1.36],
-              [235, 80, 35],
-              [138, 56, 168],
-              [1, 1, 1, 0, 0, 0],
-              [-1, -1, -1, 0, 0, 0],
-              [1, -2, 1, 0, 0, 0],
-              [1, -1, 0, 0, 0, 0],
-              [1, -1, 0, 0, 0, -1],
-              [179, 55, -78],
-              [10, 42.5, 90],
-              [10, 42.5, 92],
-              [150, 87, 1],
-              [0.99, -2.00, 1.01, 0.92, 0.48, 0.15],
-              [5.24, -6.77, 1.53, 0.81, 1.49, -0.05],
-              [16.578, -7.987, -8.592, -5.515, -29.732, 7.517],
-              [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
-              [150, 87, 1]]
+        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
         # Test passing only a width
         # Initialize figure
-        fig = plt.figure(figsize=(6, 6), dpi=300)
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-        # Plot the stations or borders
-        ax.plot([-100, -100, 100, 100], [-10000, 10000, -10000, 10000], 'rv')
-        x = -100
-        y = -10000
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            # give it an axes to keep make the beachballs circular
-            # even though axes are not scaled
-            ax.add_collection(Beach(t, width=60, xy=(x, y), linewidth=.6,
-                              axes=ax))
-            x += 50
-            if (i + 1) % 5 == 0:
-                x = -100
-                y += 5000
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                          axes=ax))
         # set the x and y limits and save the output
-        ax.axis([-120, 120, -12000, 12000])
+        ax.axis([-100, 100, -10000, 10000])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection_aspect_y.png',
+        with ImageComparison(self.path, 'bb_aspect_y.png',
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
         # Test passing a width and height
         # Initialize figure
-        fig = plt.figure(figsize=(6, 6), dpi=300)
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-        # Plot the stations or borders
-        ax.plot([-100, -100, 100, 100], [-10000, 10000, -10000, 10000], 'rv')
-        x = -100
-        y = -10000
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            # give it an axes to keep make the beachballs circular
-            # even though axes are not scaled
-            ax.add_collection(Beach(t, width=(60, 30), xy=(x, y), linewidth=.6,
-                              axes=ax))
-            x += 50
-            if (i + 1) % 5 == 0:
-                x = -100
-                y += 5000
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
+                          axes=ax))
         # set the x and y limits and save the output
-        ax.axis([-120, 120, -12000, 12000])
+        ax.axis([-100, 100, -10000, 10000])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection_aspect_y_height.png',
+        with ImageComparison(self.path, 'bb_aspect_y_height.png',
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
