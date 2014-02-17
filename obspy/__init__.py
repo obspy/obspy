@@ -43,6 +43,7 @@ read.__doc__ = \
     read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
 readEvents.__doc__ = \
     readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
+
 from future.utils import PY2
 if PY2:
     Stream.write.im_func.func_doc = \
@@ -58,6 +59,10 @@ else:
     Catalog.write.__doc__ = \
         Catalog.write.__doc__ % make_format_plugin_table("event", "write",
                                                          numspaces=8)
+
+__all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
+           "readEvents", "Catalog", "read_inventory"]
+
 
 if __name__ == '__main__':
     import doctest
