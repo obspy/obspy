@@ -104,6 +104,8 @@ if r"%s" in Client.__init__.__doc__:
     Client.__init__.im_func.func_doc = \
         Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
+__all__ = ["Client"]
+
 
 if __name__ == '__main__':
     import doctest

@@ -50,6 +50,8 @@ Catalog.write.im_func.func_doc = \
     Catalog.write.__doc__ % make_format_plugin_table("event", "write",
                                                      numspaces=8)
 
+__all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
+           "readEvents", "Catalog", "read_inventory"]
 
 if __name__ == '__main__':
     import doctest

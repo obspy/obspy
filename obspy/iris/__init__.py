@@ -54,6 +54,8 @@ msg = ("Development and maintenance efforts will focus on the new obspy.fdsn "
        "using obspy.fdsn.")
 warnings.warn(msg, DeprecationWarning)
 
+__all__ = ["Client"]
+
 
 if __name__ == '__main__':
     import doctest
