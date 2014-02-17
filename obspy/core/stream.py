@@ -1864,6 +1864,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
         return self
 
+    def correct_polynomial_response(self, dataless_file=file, **kwargs):
+        """
+        Correct for polynomial instrument response using the input dataless'
+        ' file'
+        :param dataless_file:  Dataless SEED file.
+        """
+        for tr in self:
+            tr.correct_polynomial_response(dataless_file=dataless_file, **kwargs)
+        return
+
     def filter(self, type, **options):
         """
         Filters the data of all traces in the Stream.

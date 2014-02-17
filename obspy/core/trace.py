@@ -1250,6 +1250,49 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self._addProcessingInfo(proc_info)
         return self
 
+    def correct_polynomial_response(self, dataless_file=None, **kwargs):
+        """
+        Correct polynomial response using blockette 62 stage 1
+        and blockette 58 stage 2 of the input Dataless SEED file
+        :param dataless_file:  Dataless SEED file.
+        """
+        # Checking the types
+        if not dataless_file:
+            msg = "No DATALESS FILE specified."
+            raise TypeError(msg)
+
+        from obspy.xseed import Parser
+
+        dataless_parser = Parser()
+        dataless_parser.read(data=dataless_file)
+
+        seed_id = ".".join((self.stats.network, self.stats.station,
+                            self.stats.location, self.stats.channel))
+
+        blockettes = dataless_parser._select(seed_id, self.stats.starttime)
+
+        b62_s1, b58_s2 = False, False
+
+        for blockette in blockettes:
+            if blockette.id == 62:
+                if blockette.stage_sequence_number == 1:
+                    polynomial_coef = blockette.polynomial_coefficient
+                    b62_s1 = True
+
+            if blockette.id == 58:
+                if blockette.stage_sequence_number == 2:
+                    sensitivity_gain = blockette.sensitivity_gain
+                    b58_s2 = True
+
+        if b58_s2 and b62_s1:
+            for x in range(len(polynomial_coef)):
+                polynomial_coef[x] = polynomial_coef[x]/math.pow(sensitivity_gain, x)
+            poly_response = np.poly1d(polynomial_coef[::-1])
+            self.data = poly_response(self.data)
+        else:
+            print 'correct_polynomial_response needs blockette 62 stage 1'
+            'and blockette 58 stage 2'
+
     def filter(self, type, **options):
         """
         Filters the data of the current trace.
