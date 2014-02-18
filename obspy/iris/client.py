@@ -8,14 +8,17 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import open
+from future.builtins import str
+from future.utils import native_str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
-from urllib2 import HTTPError
-import StringIO
+from obspy.core import compatibility
 import json
 import platform
-import urllib
-import urllib2
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -41,7 +44,7 @@ class Client(object):
 
     :type base_url: str, optional
     :param base_url: Base URL of the IRIS Web service (default
-        is ``'http://www.iris.edu/ws'``).
+        is ``'http://service.iris.edu/irisws'``).
     :type user: str, optional
     :param user: The user name used for authentication with the Web
         service (default an empty string).
@@ -93,12 +96,12 @@ class Client(object):
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib2.build_opener(auth_handler)
+        auth_handler = compatibility.HTTPBasicAuthHandler(password_mgr)
+        opener = compatibility.build_opener(auth_handler)
         # install globally
-        urllib2.install_opener(opener)
+        compatibility.install_opener(opener)
 
     def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
@@ -119,13 +122,13 @@ class Client(object):
         if params:
             if options:
                 options += '&'
-            options += urllib.urlencode(params)
+            options += compatibility.urlencode(params)
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
-            print('\nRequesting %s' % (remoteaddr))
-        req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
-        response = urllib2.urlopen(req, timeout=self.timeout)
+            print(('\nRequesting %s' % (remoteaddr)))
+        req = compatibility.Request(url=remoteaddr, data=data, headers=headers)
+        response = compatibility.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -153,7 +156,7 @@ class Client(object):
         # filename is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
-        elif isinstance(filename, basestring):
+        elif isinstance(filename, (str, native_str)):
             fh = open(filename, method)
             file_opened = True
         else:
@@ -176,8 +179,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
 
@@ -190,8 +193,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
 
@@ -204,8 +207,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
 
@@ -217,8 +220,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
 
@@ -227,7 +230,8 @@ class Client(object):
                    output='miniseed', **kwargs):
         """
         Low-level interface for `timeseries` Web service of IRIS
-        (http://www.iris.edu/ws/timeseries/)- release 1.3.5 (2012-06-07).
+        (http://service.iris.edu/irisws/timeseries/)- release 1.3.5
+        (2012-06-07).
 
         This method fetches segments of seismic data and returns data formatted
         in either MiniSEED, ASCII or SAC. It can optionally filter the data.
@@ -387,7 +391,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("timeseries", param_list=filter, **kwargs)
-        except HTTPError, e:
+        except compatibility.HTTPError as e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -409,7 +413,7 @@ class Client(object):
              starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `resp` Web service of IRIS
-        (http://www.iris.edu/ws/resp/) - 1.4.1 (2011-04-14).
+        (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
         `RESP <http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F>`_
@@ -453,7 +457,7 @@ class Client(object):
         >>> client = Client()
         >>> dt = UTCDateTime("2010-02-27T06:30:00.000")
         >>> data = client.resp("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(data)  # doctest: +ELLIPSIS
+        >>> print(data.decode())  # doctest: +ELLIPSIS
         #
         ####################################################################...
         #
@@ -490,7 +494,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("resp", **kwargs)
-        except HTTPError, e:
+        except compatibility.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -506,8 +510,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
 
@@ -520,8 +524,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
 
@@ -553,8 +557,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
 
@@ -562,7 +566,7 @@ class Client(object):
               starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `sacpz` Web service of IRIS
-        (http://www.iris.edu/ws/sacpz/) - release 1.1.1 (2012-1-9).
+        (http://service.iris.edu/irisws/sacpz/) - release 1.1.1 (2012-1-9).
 
         This method provides access to instrument response information
         (per-channel) as poles and zeros in the ASCII format used by SAC and
@@ -597,7 +601,7 @@ class Client(object):
         >>> client = Client()
         >>> dt = UTCDateTime("2005-01-01")
         >>> sacpz = client.sacpz("IU", "ANMO", "00", "BHZ", dt)
-        >>> print(sacpz)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(sacpz.decode())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         * **********************************
         * NETWORK   (KNETWK): IU
         * STATION    (KSTNM): ANMO
@@ -666,7 +670,7 @@ class Client(object):
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
         Low-level interface for `distaz` Web service of IRIS
-        (http://www.iris.edu/ws/distaz/) - release 1.0.1 (2010).
+        (http://service.iris.edu/irisws/distaz/) - release 1.0.1 (2010).
 
         This method will calculate the great-circle angular distance, azimuth,
         and backazimuth between two geographic coordinate pairs. All results
@@ -710,11 +714,11 @@ class Client(object):
         try:
             data = self._fetch("distaz", headers=headers, stalat=stalat,
                                stalon=stalon, evtlat=evtlat, evtlon=evtlon)
-        except HTTPError, e:
+        except compatibility.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        data = json.loads(data)
+        data = json.loads(data.decode())
         results = {}
         results['distance'] = data['distance']
         results['backazimuth'] = data['backAzimuth']
@@ -724,7 +728,8 @@ class Client(object):
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
         Low-level interface for `flinnengdahl` Web service of IRIS
-        (http://www.iris.edu/ws/flinnengdahl/) - release 1.1 (2011-06-08).
+        (http://service.iris.edu/irisws/flinnengdahl/) - release 1.1
+        (2011-06-08).
 
         This method converts a latitude, longitude pair into either a
         `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
@@ -747,11 +752,12 @@ class Client(object):
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         683
 
-        >>> client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
-        'OREGON'
+        >>> print(client.flinnengdahl(lat=42, lon=-122.24, rtype="region"))
+        OREGON
 
-        >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
-        (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
+        >>> code, region = client.flinnengdahl(lat=-20.5, lon=-100.6)
+        >>> print(code, region)
+        683 SOUTHEAST CENTRAL PACIFIC OCEAN
         """
         service = 'flinnengdahl'
         # check rtype
@@ -763,7 +769,8 @@ class Client(object):
             elif rtype == 'region':
                 param_list = ["output=%s" % rtype, "lat=%s" % lat,
                               "lon=%s" % lon]
-                return self._fetch(service, param_list=param_list).strip()
+                return self._fetch(service,
+                                   param_list=param_list).strip().decode()
             else:
                 param_list = ["output=code", "lat=%s" % lat,
                               "lon=%s" % lon]
@@ -771,8 +778,8 @@ class Client(object):
                 param_list = ["output=region", "lat=%s" % lat,
                               "lon=%s" % lon]
                 region = self._fetch(service, param_list=param_list).strip()
-                return (code, region)
-        except HTTPError, e:
+                return (code, region.decode())
+        except compatibility.HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -783,7 +790,8 @@ class Client(object):
                    mintimeonly=False, filename=None):
         """
         Low-level interface for `traveltime` Web service of IRIS
-        (http://www.iris.edu/ws/traveltime/) - release 1.1.1 (2012-05-15).
+        (http://service.iris.edu/irisws/traveltime/) - release 1.1.1
+        (2012-05-15).
 
         This method will calculates travel-times for seismic phases using a 1-D
         spherical earth model.
@@ -863,7 +871,7 @@ class Client(object):
         >>> result = client.traveltime(evloc=(-36.122,-72.898),
         ...     staloc=[(-33.45,-70.67),(47.61,-122.33),(35.69,139.69)],
         ...     evdepth=22.9)
-        >>> print(result)  # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
+        >>> print(result.decode())  # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
         Model: iasp91
         Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident ...
           (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   ...
@@ -912,7 +920,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("traveltime", **kwargs)
-        except HTTPError, e:
+        except compatibility.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -924,7 +932,8 @@ class Client(object):
                  filename=None, **kwargs):
         """
         Low-level interface for `evalresp` Web service of IRIS
-        (http://www.iris.edu/ws/evalresp/) - release 1.0.0 (2011-08-11).
+        (http://service.iris.edu/irisws/evalresp/) - release 1.0.0
+        (2011-08-11).
 
         This method evaluates instrument response information stored at the
         IRIS DMC and outputs ASCII data or
@@ -1089,7 +1098,7 @@ class Client(object):
                     tf.write(data)
                     # force matplotlib to use internal PNG reader. image.imread
                     # will use PIL if available
-                    img = image._png.read_png(tf.name)
+                    img = image._png.read_png(native_str(tf.name))
                 # add image to axis
                 ax.imshow(img)
                 # hide axes
@@ -1101,9 +1110,9 @@ class Client(object):
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(StringIO.StringIO(data), ndlim=1)
+                return loadtxt(compatibility.BytesIO(data), ndlim=1)
             else:
-                return self._toFileOrData(filename, data)
+                return self._toFileOrData(filename, data, binary=True)
 
     def event(self, filename=None, **kwargs):
         """
@@ -1113,8 +1122,8 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
 

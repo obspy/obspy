@@ -9,16 +9,15 @@ Test suite for the response handling.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 import inspect
-import obspy
+import numpy as np
+from obspy import UTCDateTime
 from obspy.signal.invsim import evalresp
 from obspy.station import read_inventory
 from obspy.xseed import Parser
 import os
 import unittest
-
-
-import numpy as np
 
 
 class ResponseTest(unittest.TestCase):
@@ -39,32 +38,51 @@ class ResponseTest(unittest.TestCase):
         """
         t_samp = 0.05
         nfft = 16384
-        date = obspy.UTCDateTime(2013, 1, 1)
-        network = "IU"
-        station = "ANMO"
-        locid = "10"
-        channel = "BHZ"
-        units = "VEL"
 
-        seed_file = os.path.join(self.data_dir,
-                                 "IRIS_single_channel_with_response.seed")
-        p = Parser(seed_file)
+        # Test for different output units.
+        units = ["DISP", "VEL", "ACC"]
+        filenames = ["IRIS_single_channel_with_response", "XM.05", "AU.MEEK"]
 
-        filename = p.getRESP()[0][-1]
-        filename.seek(0, 0)
+        for filename in filenames:
+            xml_filename = os.path.join(self.data_dir,
+                                        filename + os.path.extsep + "xml")
+            seed_filename = os.path.join(self.data_dir,
+                                         filename + os.path.extsep + "seed")
 
-        seed_response, seed_freq = evalresp(t_samp, nfft, filename, date=date,
-                                            station=station, channel=channel,
-                                            network=network, locid=locid,
-                                            units=units, freq=True)
+            p = Parser(seed_filename)
 
-        inv = read_inventory(os.path.join(
-            self.data_dir, "IRIS_single_channel_with_response.xml"))
-        xml_response, xml_freq = \
-            inv[0][0][0].response.get_evalresp_response(t_samp, nfft)
+            # older systems don't like an end date in the year 2599
+            t_ = UTCDateTime(2030, 1, 1)
+            if p.blockettes[50][0].end_effective_date > t_:
+                p.blockettes[50][0].end_effective_date = None
+            if p.blockettes[52][0].end_date > t_:
+                p.blockettes[52][0].end_date = None
 
-        np.testing.assert_allclose(seed_freq, xml_freq, rtol=1E-5)
-        np.testing.assert_allclose(seed_response, xml_response, rtol=1E-5)
+            resp_filename = p.getRESP()[0][-1]
+
+            inv = read_inventory(xml_filename)
+
+            network = inv[0].code
+            station = inv[0][0].code
+            location = inv[0][0][0].location_code
+            channel = inv[0][0][0].code
+            date = inv[0][0][0].start_date
+
+            for unit in units:
+                resp_filename.seek(0, 0)
+
+                seed_response, seed_freq = evalresp(
+                    t_samp, nfft, resp_filename, date=date, station=station,
+                    channel=channel, network=network, locid=location,
+                    units=unit, freq=True)
+
+                xml_response, xml_freq = \
+                    inv[0][0][0].response.get_evalresp_response(t_samp, nfft,
+                                                                output=unit)
+
+                self.assertTrue(np.allclose(seed_freq, xml_freq, rtol=1E-5))
+                self.assertTrue(np.allclose(seed_response, xml_response,
+                                            rtol=1E-5))
 
 
 def suite():

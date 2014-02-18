@@ -3,6 +3,9 @@
 """
 The array_analysis test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
 
 import unittest
 import numpy as np
@@ -54,8 +57,8 @@ class ArrayTestCase(unittest.TestCase):
         rotz = 0.00001 * np.exp(-1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-10 * np.pi, 10 * np.pi, 1000))
 
-        for stat in xrange(7):
-            for t in xrange(1000):
+        for stat in range(7):
+            for t in range(1000):
                 ts1[t, stat] = -1. * array_coords[stat, 1] * rotz[t]
                 ts2[t, stat] = array_coords[stat, 0] * rotz[t]
                 ts3[t, stat] = array_coords[stat, 1] * rotx[t] - \
@@ -92,8 +95,8 @@ class ArrayTestCase(unittest.TestCase):
             -1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-40 * np.pi, 40 * np.pi, 1000))
 
-        for stat in xrange(7):
-            for t in xrange(1000):
+        for stat in range(7):
+            for t in range(1000):
                 ts1[t, stat] = array_coords[stat, 0] * dilation[t]
                 ts2[t, stat] = array_coords[stat, 1] * dilation[t]
                 ts3[t, stat] = array_coords[stat, 2] * dilation[t]
@@ -137,8 +140,8 @@ class ArrayTestCase(unittest.TestCase):
 
         ts3 = np.zeros((1000, 7))
 
-        for stat in xrange(7):
-            for t in xrange(1000):
+        for stat in range(7):
+            for t in range(1000):
                 ts1[t, stat] = array_coords[stat, 1] * shear_strainh[t]
                 ts2[t, stat] = array_coords[stat, 0] * shear_strainh[t]
 

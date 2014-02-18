@@ -12,7 +12,7 @@
 #
 # The command line image creation requires the paid version of "DMG Canvas" by
 # the Araelium Group.
-# 
+#
 # The result of this script is a finalized DMG image called ObsPy.dmg.
 
 rm -rf temp
@@ -22,8 +22,8 @@ cp -pPR ~/Library/Developer/Xcode/DerivedData/ObsPy-*/Build/Products/Debug/ObsPy
 cp -pPR /Applications/ObsPy.app/Contents/MacOS/bin temp/ObsPy.app/Contents/MacOS/
 cp -pPR /Applications/ObsPy.app/Contents/MacOS/include temp/ObsPy.app/Contents/MacOS/
 cp -pPR /Applications/ObsPy.app/Contents/MacOS/lib temp/ObsPy.app/Contents/MacOS/
-cp -pPR /Applications/ObsPy.app/Contents/MacOS/man temp/ObsPy.app/Contents/MacOS/
 cp -pPR /Applications/ObsPy.app/Contents/MacOS/share temp/ObsPy.app/Contents/MacOS/
+cp -pPR /Applications/ObsPy.app/Contents/MacOS/Python.framework temp/ObsPy.app/Contents/MacOS/
 
 # Create the dmg image.
 dmgcanvas ObsPy.dmgCanvas ObsPy.dmg -v ObsPy App

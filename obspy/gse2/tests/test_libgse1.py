@@ -4,6 +4,8 @@
 The libgse1 test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import str  # NOQA
 from obspy.gse2 import libgse1
 from obspy.gse2.libgse2 import ChksumError
 import os

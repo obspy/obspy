@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
 
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
 from obspy.core import Stats
+from obspy.core.compatibility import mock
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
+from obspy.xseed import Parser
 import math
-import mock
 import numpy as np
 import unittest
 import warnings
-
+import os
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
@@ -147,7 +151,7 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         self.assertEqual(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
-        np.testing.assert_array_equal(trace.data, tr.data[delta:])
+        np.testing.assert_array_equal(trace.data, tr.data[int(delta):])
         self.assertEqual(tr.stats.endtime, trace.stats.endtime)
         # start time > end time
         tr = deepcopy(trace)
@@ -539,23 +543,23 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.failUnless((bigtrace_sort.data == myArray).all())
+            self.assertTrue((bigtrace_sort.data == myArray).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
             failinfo = fail_pattern % (myTrace, bigtrace_sort)
             failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.failUnless(bigtrace_sort == myTrace, failinfo)
+            self.assertTrue(bigtrace_sort == myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.failUnless((bigtrace.data == myArray).all(), failinfo)
+            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
 
             failinfo = fail_pattern % (myTrace, bigtrace)
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.failUnless(bigtrace == myTrace, failinfo)
+            self.assertTrue(bigtrace == myTrace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
                 failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.failUnless(myArray.dtype == array_.dtype, failinfo)
+                self.assertTrue(myArray.dtype == array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -1350,8 +1354,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(trace, Trace))
         st = trace.split()
         self.assertTrue(isinstance(st, Stream))
-        self.assertEquals(len(st[0]), 1000)
-        self.assertEquals(len(st[1]), 1000)
+        self.assertEqual(len(st[0]), 1000)
+        self.assertEqual(len(st[1]), 1000)
         # check if have no masked arrays
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
@@ -1390,10 +1394,10 @@ class TraceTestCase(unittest.TestCase):
         """
         # fill_value = None
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime - 0.01,
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=None)
-        self.assertEquals(len(tr), 3002)
+        self.assertEqual(len(tr), 3002)
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertTrue(tr.data[0] is np.ma.masked)
         self.assertTrue(tr.data[1] is not np.ma.masked)
@@ -1401,19 +1405,19 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(tr.data[-1] is np.ma.masked)
         # fill_value = 999
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime - 0.01,
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=999)
-        self.assertEquals(len(tr), 3002)
+        self.assertEqual(len(tr), 3002)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
-        self.assertEquals(tr.data[0], 999)
-        self.assertEquals(tr.data[-1], 999)
+        self.assertEqual(tr.data[0], 999)
+        self.assertEqual(tr.data[-1], 999)
         # given fill_value but actually no padding at all
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime,
                 endtime=tr.stats.endtime, pad=True, fill_value=-999)
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
     def test_method_chaining(self):
@@ -1519,6 +1523,58 @@ class TraceTestCase(unittest.TestCase):
                 ]
         for d in data:
             self.assertRaises(ValueError, Trace, data=d)
+
+    def test_remove_response(self):
+        """
+        Test remove_response() method against simulate() with equivalent
+        parameters to check response removal from Response object read from
+        StationXML against pure evalresp providing an external RESP file.
+        """
+        tr1 = read()[0]
+        tr2 = tr1.copy()
+        # deconvolve from dataless with simulate() via Parser from
+        # dataless/RESP
+        parser = Parser("/path/to/dataless.seed.BW_RJOB")
+        tr1.simulate(seedresp={"filename": parser, "units": "VEL"},
+                     water_level=60, pre_filt=(0.1, 0.5, 30, 50), sacsim=True,
+                     pitsasim=False)
+        # deconvolve from StationXML with remove_response()
+        tr2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
+        np.testing.assert_array_almost_equal(tr1.data, tr2.data)
+
+    def test_remove_polynomial_response(self):
+        """
+        """
+        from obspy.station import read_inventory
+        path = os.path.dirname(__file__)
+
+        # blockette 62, stage 0
+        tr = read()[0]
+        tr.stats.network = 'IU'
+        tr.stats.station = 'ANTO'
+        tr.stats.location = '30'
+        tr.stats.channel = 'LDO'
+        tr.stats.starttime = UTCDateTime("2010-07-23T00:00:00")
+        # remove response
+        del tr.stats.response
+        filename = os.path.join(path, 'data', 'stationxml_IU.ANTO.30.LDO.xml')
+        inv = read_inventory(filename, format='StationXML')
+        tr.attach_response(inv)
+        tr.remove_response()
+
+        # blockette 62, stage 1 + blockette 58, stage 2
+        tr = read()[0]
+        tr.stats.network = 'BK'
+        tr.stats.station = 'CMB'
+        tr.stats.location = ''
+        tr.stats.channel = 'LKS'
+        tr.stats.starttime = UTCDateTime("2004-06-16T00:00:00")
+        # remove response
+        del tr.stats.response
+        filename = os.path.join(path, 'data', 'stationxml_BK.CMB.__.LKS.xml')
+        inv = read_inventory(filename, format='StationXML')
+        tr.attach_response(inv)
+        tr.remove_response()
 
 
 def suite():

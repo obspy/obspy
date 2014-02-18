@@ -1,0 +1,45 @@
+.TH MSR_SAMPRATE 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Determine sample rate from an MSRecord structure
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "double  \fBmsr_samprate\fP ( MSRecord *" msr " );
+
+.BI "double  \fBmsr_nomsamprate\fP ( MSRecord *" msr " );
+.fi
+
+.SH DESCRIPTION
+\fBmsr_samprate\fP will calculate a double precision sample rate in
+samples per second using the header values in the specified MSRecord.
+If a Blockette 100 is included, the "Actual sample rate" (field 3)
+will be returned, otherwise a nominal sample rate will be calculated
+from the sample rate factor and multiplier in the fixed section data
+header.
+
+NOTE: The sample rate for a MSRecord structure is available directly
+at MSRecord.samplerate.  libmseed based programs should use that
+sample rate whenever possible (\fBmsr_unpack\fP uses
+\fBmsr_samprate\fP to set MSRecord.samplerate).
+
+\fBmsr_nomsamprate\fP will calculate a double precision sample rate in
+samples per second using the sample rate factor and multiplier in the
+fixed section data header.
+
+.SH RETURN VALUES
+\fBmsr_samprate\fP returns a double precision sample rate on success
+and -1.0 on error.
+
+\fBmsr_nomsamprate\fP returns a double precision sample rate on
+success and -1.0 on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP and \fBmsr_unpack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

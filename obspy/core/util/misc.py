@@ -8,6 +8,9 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str, int, open, range
 from contextlib import contextmanager
 import os
 import sys
@@ -17,6 +20,7 @@ import warnings
 import itertools
 import tempfile
 import numpy as np
+import math
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -211,7 +215,7 @@ except TypeError:
         # lets get the data
         try:
             data = np.loadtxt(*args, **kwargs)
-        except IOError, e:
+        except IOError as e:
             # raises in older versions if no data could be read
             if 'reached before encountering data' in str(e):
                 # return empty array
@@ -244,6 +248,7 @@ def get_untracked_files_from_git():
                   cwd=dir_, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         stdout = p.stdout.readlines()
+        p.stdout.close()
         files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
                  for line in stdout
                  if line.startswith("??")]
@@ -283,32 +288,32 @@ def wrap_long_string(string, line_length=79, prefix="",
 
     >>> string = ("Retrieve an event based on the unique origin "
     ...           "ID numbers assigned by the IRIS DMC")
-    >>> print wrap_long_string(string, prefix="\t*\t > ",
-    ...                        line_length=50)  # doctest: +SKIP
+    >>> print(wrap_long_string(string, prefix="\t*\t > ",
+    ...                        line_length=50))  # doctest: +SKIP
             *        > Retrieve an event based on
             *        > the unique origin ID numbers
             *        > assigned by the IRIS DMC
-    >>> print wrap_long_string(string, prefix="\t* ",
-    ...                        line_length=70)  # doctest: +SKIP
+    >>> print(wrap_long_string(string, prefix="\t* ",
+    ...                        line_length=70))  # doctest: +SKIP
             * Retrieve an event based on the unique origin ID
             * numbers assigned by the IRIS DMC
-    >>> print wrap_long_string(string, prefix="\t \t  > ",
+    >>> print(wrap_long_string(string, prefix="\t \t  > ",
     ...                        special_first_prefix="\t*\t",
-    ...                        line_length=50)  # doctest: +SKIP
+    ...                        line_length=50))  # doctest: +SKIP
             *        Retrieve an event based on
                      > the unique origin ID numbers
                      > assigned by the IRIS DMC
     >>> problem_string = ("Retrieve_an_event_based_on_the_unique "
     ...                   "origin ID numbers assigned by the IRIS DMC")
-    >>> print wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40, sloppy=True)  # doctest: +SKIP
+    >>> print(wrap_long_string(problem_string, prefix="\t\t",
+    ...                        line_length=40, sloppy=True))  # doctest: +SKIP
                     Retrieve_an_event_based_on_the_unique
                     origin ID
                     numbers
                     assigned by
                     the IRIS DMC
-    >>> print wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40)  # doctest: +SKIP
+    >>> print(wrap_long_string(problem_string, prefix="\t\t",
+    ...                        line_length=40))  # doctest: +SKIP
                     Retrieve_an_event_base\
                     d_on_the_unique origin
                     ID numbers assigned by
@@ -372,9 +377,9 @@ def CatchOutput():
     >>> with CatchOutput() as out:  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
-    >>> print out.stdout  # doctest: +SKIP
+    >>> print(out.stdout)  # doctest: +SKIP
     mystdout
-    >>> print out.stderr  # doctest: +SKIP
+    >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
     stdout_file, stdout_filename = tempfile.mkstemp(prefix="obspy-")
@@ -439,6 +444,33 @@ def CatchOutput():
             os.remove(stderr_filename)
         except OSError:
             pass
+
+
+def factorize_int(x):
+    """
+    Calculate prime factorization of integer.
+
+    Could be done faster but faster algorithm have much more lines of code and
+    this is fast enough for our purposes.
+
+    http://stackoverflow.com/questions/14550794/\
+    python-integer-factorization-into-primes
+
+    >>> factorize_int(1800004)
+    [2, 2, 450001]
+    >>> factorize_int(1800003)
+    [3, 19, 23, 1373]
+    """
+    if x == 1:
+        return [1]
+    factors, limit, check, num = [], int(math.sqrt(x)) + 1, 2, x
+    for check in range(2, limit):
+        while num % check == 0:
+            factors.append(check)
+            num /= check
+    if num > 1:
+        factors.append(int(num))
+    return factors
 
 
 if __name__ == '__main__':

@@ -2,6 +2,9 @@
 """
 obspy.taup - Travel time calculation tool
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
 import inspect
 import numpy as np
 import os
@@ -112,7 +115,8 @@ def getTravelTimes(delta, depth, model='iasp91'):
     phases = []
     for _i, phase in enumerate(phase_names):
         # An empty returned string will contain "\x00".
-        phase_name = phase.tostring().strip().replace("\x00", "")
+        phase_name = phase.tostring().strip().\
+            replace(b"\x00", b"").decode()
         if not phase_name:
             break
         time_dict = {
@@ -187,7 +191,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
                     data[phase][1].append(np.NaN)
                     data[phase][0].append(degree)
     # Plot and some formatting.
-    for key, value in data.iteritems():
+    for key, value in data.items():
         plt.plot(value[0], value[1], '.', label=key)
     plt.grid()
     plt.xlabel('Distance (degrees)')

@@ -3,6 +3,10 @@
 """
 The freqattributes.core test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import open
 
 from obspy.signal import freqattributes, util
 from scipy import signal

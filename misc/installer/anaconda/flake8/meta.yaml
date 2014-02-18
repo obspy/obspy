@@ -1,0 +1,69 @@
+package:
+  name: flake8
+  version: !!str 2.1.0
+
+source:
+  fn: flake8-2.1.0.tar.gz
+  url: https://pypi.python.org/packages/source/f/flake8/flake8-2.1.0.tar.gz
+  md5: cf326cfb88a1db6c5b29a3a6d9efb257
+#  patches:
+   # List any patch files here
+   # - fix.patch
+
+build:
+  #preserve_egg_dir: True
+  entry_points:
+    # Put any entry points (scripts to be generated automatically) here. The
+    # syntax is module:function.  For example
+    #
+    # - flake8 = flake8:main
+    #
+    # Would create an entry point called flake8 that calls flake8.main()
+
+    - flake8 = flake8.main:main
+
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  # number: 1
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - pyflakes
+    - pep8
+    - mccabe
+
+  run:
+    - python
+    - pyflakes
+    - pep8
+    - mccabe
+    - setuptools
+
+test:
+  # Python imports
+  imports:
+    - flake8.tests
+    - flake8
+
+  commands:
+    # You can put test commands to be run here.  Use this to test that the
+    # entry points work.
+
+    - flake8 --help
+
+  # You can also put a file called run_test.py in the recipe that will be run
+  # at test time.
+
+  # requires:
+    # Put any additional test requirements here.  For example
+    # - nose
+
+about:
+  home: http://bitbucket.org/tarek/flake8
+  license: MIT License
+
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml

@@ -3,6 +3,7 @@
 """
 The polarization.core test suite.
 """
+from __future__ import unicode_literals
 
 from obspy.signal import konnoOhmachiSmoothing
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \

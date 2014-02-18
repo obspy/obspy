@@ -9,6 +9,9 @@ Provides the Channel class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import str
 from obspy.station import BaseNode
 from obspy.station.util import Longitude, Latitude
 
@@ -149,6 +152,7 @@ class Channel(BaseNode):
     def __str__(self):
         ret = (
             "Channel '{id}', Location '{location}' {description}\n"
+            "\tTimerange: {start_date} - {end_date}\n"
             "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
             "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
             "{azimuth}"
@@ -161,6 +165,8 @@ class Channel(BaseNode):
                 id=self.code, location=self.location_code,
                 description="(%s)" % self.description
                 if self.description else "",
+                start_date=str(self.start_date),
+                end_date=str(self.end_date) if self.end_date else "--",
                 latitude=self.latitude, longitude=self.longitude,
                 elevation=self.elevation, depth=self.depth,
                 azimuth="\tAzimuth: %.2f degrees from north, clockwise\n" %

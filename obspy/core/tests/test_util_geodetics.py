@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.geodetics import kilometer2degrees, locations2degrees, \

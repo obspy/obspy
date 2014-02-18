@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import range
+from future.builtins import str  # NOQA
 
 from glob import iglob
-from lxml import etree
-from obspy.xseed.blockette import Blockette054, Blockette060
+from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
 from obspy.xseed.blockette.blockette import BlocketteLengthException
+from obspy.xseed.fields import SEEDTypeException
 import os
 import sys
 import unittest
+import warnings
+
+from lxml import etree
 
 
 class BlocketteTestCase(unittest.TestCase):
@@ -22,7 +29,7 @@ class BlocketteTestCase(unittest.TestCase):
         A wrong blockette length should raise an exception.
         """
         # create a blockette 054 which is way to long
-        b054 = "0540240A0400300300000020" + ("+1.58748E-03" * 40)
+        b054 = b"0540240A0400300300000020" + (b"+1.58748E-03" * 40)
         blockette = Blockette054(strict=True)
         self.assertRaises(BlocketteLengthException, blockette.parseSEED, b054)
 
@@ -33,7 +40,7 @@ class BlocketteTestCase(unittest.TestCase):
         # Create a new empty list to store all information of the test in it.
         test_examples = []
         # Now read the corresponding file and parse it.
-        file = open(blkt_file, 'r')
+        file = open(blkt_file, 'rb')
         # Helper variable to parse the file. Might be a little bit slow but its
         # just for tests.
         cur_stat = None
@@ -83,7 +90,7 @@ class BlocketteTestCase(unittest.TestCase):
                 raise Exception(msg)
             # Some other stuff is not tested! Please be careful and adhere to
             # the format rules for writing blockette tests.
-            for _i in xrange(len(example)):
+            for _i in range(len(example)):
                 ex_type = example[_i]
                 # Loop over each type in the example and differentiate between
                 # SEED and not SEED types.
@@ -107,7 +114,7 @@ class BlocketteTestCase(unittest.TestCase):
                 ex_type[1] = ex_type[1].replace('PLACEHOLDER', ' ')
                 example[_i] = ex_type[0:2]
         # Now create a dictionary for each example.
-        for _i in xrange(len(examples)):
+        for _i in range(len(examples)):
             ex_dict = {}
             for part in examples[_i]:
                 ex_dict[part[0]] = part[1]
@@ -134,7 +141,7 @@ class BlocketteTestCase(unittest.TestCase):
             versions['SEED']['blkt'].parseSEED(example['SEED'])
 
             # prepare XSEED
-            for key, data in example.iteritems():
+            for key, data in example.items():
                 if not 'XSEED' in key:
                     continue
                 if key == 'XSEED':
@@ -146,17 +153,17 @@ class BlocketteTestCase(unittest.TestCase):
                 versions[key]['data'] = data
             # loop over all combinations
             errmsg = 'Blockette %s - Getting %s from %s\n%s\n!=\n%s'
-            for key1, blkt1 in versions.iteritems():
+            for key1, blkt1 in versions.items():
                 # conversion to SEED
                 seed = blkt1['blkt'].getSEED()
                 self.assertEqual(seed, versions['SEED']['data'],
                                  errmsg % (blkt_number, 'SEED', key1,
                                            seed, versions['SEED']['data']))
-                for key2, blkt2 in versions.iteritems():
+                for key2, blkt2 in versions.items():
                     if key2 == 'SEED':
                         continue
                     xseed = etree.tostring(blkt1['blkt'].getXML(
-                        xseed_version=blkt2['version']))
+                        xseed_version=blkt2['version'])).decode()
                     self.assertEqual(xseed, versions[key2]['data'],
                                      errmsg % (blkt_number, 'XSEED', key2,
                                                xseed, blkt2['data']))
@@ -190,6 +197,43 @@ class BlocketteTestCase(unittest.TestCase):
         blkt = Blockette060()
         self.assertEqual(blkt.blockette_id, "060")
         self.assertEqual(blkt.id, 60)
+
+    def test_issue701(self):
+        """
+        Testing an oversized site name.
+        """
+
+        b050_orig = "0500168ANTF +43.564000  +7.123000  +54.0   6  0" + \
+            "Antibes - 06004 - Alpes-Maritimes - Provence-Alpes-Côte d'" + \
+            "Azur - France~ 363210102003,211,11:18:00~2004,146,08:52:00~NFR"
+        b050_cut = "0500166ANTF +43.564000  +7.123000  +54.00006000" + \
+            "Antibes - 06004 - Alpes-Maritimes - Provence-Alpes-Côte d'A~" + \
+            "0363210102003,211,11:18:00.0000~2004,146,08:52:00.0000~NFR"
+        # reading should work but without issues
+        blockette = Blockette050()
+        # utf-8 only needed for PY2
+        blockette.parseSEED(b050_orig.encode('utf-8'))
+        # utf-8 only needed for PY2
+        self.assertEqual(len(blockette.site_name.encode('utf-8')), 72)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, blockette.getSEED)
+            # Now ignore the warnings and test the default values.
+            warnings.simplefilter('ignore', UserWarning)
+            # writing should cut to 60 chars
+            out = blockette.getSEED()
+            # utf-8 only needed for PY2
+            self.assertEqual(out.decode('utf-8'), b050_cut)
+            # reading it again should have cut length
+            blockette = Blockette050()
+            blockette.parseSEED(out)
+            # utf-8 only needed for PY2
+            self.assertEqual(len(blockette.site_name.encode('utf-8')), 60)
+        # writing with strict=True will raise
+        blockette = Blockette050(strict=True)
+        # utf-8 only needed for PY2
+        blockette.parseSEED(b050_orig.encode('utf-8'))
+        self.assertRaises(SEEDTypeException, blockette.getSEED)
 
 
 def suite():

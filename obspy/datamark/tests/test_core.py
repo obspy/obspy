@@ -3,6 +3,7 @@
 """
 The obspy.datamark.core test suite.
 """
+from __future__ import unicode_literals
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
@@ -27,6 +28,7 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = read(filename)
         st.verify()
+        st.sort(keys=['channel'])
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
@@ -36,7 +38,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
         self.assertEqual(len(st[0]), 6000)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
-        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.channel, 'a100')
 
     def test_readViaModule(self):
         """
@@ -46,6 +48,7 @@ class CoreTestCase(unittest.TestCase):
         # 1
         st = readDATAMARK(filename)
         st.verify()
+        st.sort(keys=['channel'])
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
@@ -55,7 +58,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
         self.assertEqual(len(st[0]), 6000)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
-        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.channel, 'a100')
 
 
 def suite():

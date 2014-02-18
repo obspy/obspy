@@ -1,4 +1,4 @@
-#d!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Provides the Inventory class.
@@ -9,6 +9,10 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import str
+from future.utils import native_str
 from pkg_resources import load_entry_point
 import obspy
 from obspy.core.util.base import ComparingObject
@@ -28,7 +32,7 @@ def read_inventory(path_or_file_object, format=None):
     :param path_or_file_object: Filename or file like object.
     """
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(path_or_file_object, basestring) and \
+    if isinstance(path_or_file_object, (str, native_str)) and \
        path_or_file_object.startswith('/path/to/'):
         try:
             path_or_file_object = getExampleFile(path_or_file_object[9:])
@@ -108,10 +112,15 @@ class Inventory(ComparingObject):
         Example
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
-        >>> inventory.get_contents()  # doctest: +NORMALIZE_WHITESPACE
-        {'channels': ['IU.ANMO.10.BHZ'],
-         'networks': ['IU'],
-         'stations': [u'IU.ANMO (Albuquerque, New Mexico, USA)']}
+        >>> inventory.get_contents()  \
+                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        {...}
+        >>> for k, v in sorted(inventory.get_contents().items()):  \
+                    # doctest: +NORMALIZE_WHITESPACE
+        ...     print(k, v[0])
+        channels IU.ANMO.10.BHZ
+        networks IU
+        stations IU.ANMO (Albuquerque, New Mexico, USA)
         """
         content_dict = {
             "networks": [],
@@ -119,7 +128,7 @@ class Inventory(ComparingObject):
             "channels": []}
         for network in self.networks:
             content_dict['networks'].append(network.code)
-            for key, value in network.get_contents().iteritems():
+            for key, value in network.get_contents().items():
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()
@@ -195,7 +204,7 @@ class Inventory(ComparingObject):
         >>> inventory = read_inventory("/path/to/BW_RJOB.xml")
         >>> datetime = UTCDateTime("2009-08-24T00:20:00")
         >>> response = inventory.get_response("BW.RJOB..EHZ", datetime)
-        >>> print response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -212,17 +221,16 @@ class Inventory(ComparingObject):
         :rtype: :class:`~obspy.station.response.Response`
         :returns: Response for timeseries specified by input arguments.
         """
-        network, station, location, channel = seed_id.split(".")
-        networks = [net for net in self.networks if net.code == network]
-        stations = [sta for sta in net.stations if sta.code == station
-                    for net in networks]
-        channels = [cha for sta in stations for cha in sta.channels
-                    if cha.code == channel
-                    and cha.location_code == location
-                    and (cha.start_date is None or cha.start_date <= datetime)
-                    and (cha.end_date is None or cha.end_date >= datetime)]
-        responses = [cha.response for cha in channels
-                     if cha.response is not None]
+        network, _, _, _ = seed_id.split(".")
+
+        responses = []
+        for net in self.networks:
+            if net.code != network:
+                continue
+            try:
+                responses.append(net.get_response(seed_id, datetime))
+            except:
+                pass
         if len(responses) > 1:
             msg = "Found more than one matching response. Returning first."
             warnings.warn(msg)

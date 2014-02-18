@@ -2,6 +2,8 @@
 """
 The obspy.imaging.beachball test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
@@ -90,26 +92,26 @@ class BeachballTestCase(unittest.TestCase):
         fm = [115, 35, 50]
         # PDF
         data = Beachball(fm, format='pdf')
-        self.assertEqual(data[0:4], "%PDF")
+        self.assertEqual(data[0:4], b"%PDF")
         # as file
         # create and compare image
         with NamedTemporaryFile(suffix='.pdf') as tf:
             Beachball(fm, format='pdf', outfile=tf.name)
         # PS
         data = Beachball(fm, format='ps')
-        self.assertEqual(data[0:4], "%!PS")
+        self.assertEqual(data[0:4], b"%!PS")
         # as file
         with NamedTemporaryFile(suffix='.ps') as tf:
             Beachball(fm, format='ps', outfile=tf.name)
         # PNG
         data = Beachball(fm, format='png')
-        self.assertEqual(data[1:4], "PNG")
+        self.assertEqual(data[1:4], b"PNG")
         # as file
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(fm, format='png', outfile=tf.name)
         # SVG
         data = Beachball(fm, format='svg')
-        self.assertEqual(data[0:5], "<?xml")
+        self.assertEqual(data[0:5], b"<?xml")
         # as file
         with NamedTemporaryFile(suffix='.svg') as tf:
             Beachball(fm, format='svg', outfile=tf.name)
@@ -241,6 +243,67 @@ class BeachballTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'bb_collection.png',
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
+
+    def collection_aspect(self, axis, filename_width, filename_width_height):
+        """
+        Common part of the test_collection_aspect_[xy] tests.
+        """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
+            reltol = 20
+        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
+
+        # Test passing only a width
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
+                                axes=ax))
+        # set the x and y limits
+        ax.axis(axis)
+        # create and compare image
+        with ImageComparison(self.path, filename_width,
+                             reltol=reltol) as ic:
+            fig.savefig(ic.name)
+
+        # Test passing a width and a height
+        # Initialize figure
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        # add the beachball (a collection of two patches) to the axis
+        # give it an axes to keep make the beachballs circular
+        # even though axes are not scaled
+        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
+                          axes=ax))
+        # set the x and y limits and save the output
+        ax.axis(axis)
+        # create and compare image
+        with ImageComparison(self.path, filename_width_height,
+                             reltol=reltol) as ic:
+            fig.savefig(ic.name)
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_collection_aspect_x(self):
+        """
+        Tests to plot beachball into a non-scaled axes with an x-axis larger
+        than y-axis. Use the 'axes' kwarg to make beachballs circular.
+        """
+        self.collection_aspect(axis=[-10000, 10000, -100, 100],
+                               filename_width='bb_aspect_x.png',
+                               filename_width_height='bb_aspect_x_height.png')
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_collection_aspect_y(self):
+        """
+        Tests to plot beachball into a non-scaled axes with a y-axis larger
+        than x-axis. Use the 'axes' kwarg to make beachballs circular.
+        """
+        self.collection_aspect(axis=[-100, 100, -10000, 10000],
+                               filename_width='bb_aspect_y.png',
+                               filename_width_height='bb_aspect_y_height.png')
 
 
 def suite():

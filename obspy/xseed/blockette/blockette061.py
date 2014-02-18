@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import range
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, VariableString, \
@@ -69,7 +71,7 @@ class Blockette061(Blockette):
         if self.number_of_coefficients > 1:
             out += '#\t\tNumerator coefficients:\n'
             out += '#\t\t  i, coefficient\n'
-            for _i in xrange(self.number_of_coefficients):
+            for _i in range(self.number_of_coefficients):
                 out += 'B061F09    %4s %13s\n' % \
                     (_i, formatRESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_coefficients == 1:
@@ -78,4 +80,4 @@ class Blockette061(Blockette):
             out += 'B061F09    %4s %13s\n' % \
                 (0, formatRESP(self.FIR_coefficient, 6))
         out += '#\t\t\n'
-        return out
+        return out.encode()

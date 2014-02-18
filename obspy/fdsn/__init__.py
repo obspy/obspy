@@ -17,19 +17,19 @@ Basic Usage
 All examples make use of the FDSN Web Service at IRIS. Other FDSN Web Service
 providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
 
-(1) :meth:`~obspy.fdsn.client.Client.get_waveform()`: The following example
+(1) :meth:`~obspy.fdsn.client.Client.get_waveforms()`: The following example
     illustrates how to request and plot 60 minutes of the ``"BHZ"`` channel of
     station Albuquerque, New Mexico (``"ANMO"``) of the Global Seismograph
     Network (``"IU"``) for an seismic event around 2010-02-27 06:45 (UTC).
     Results are returned as a :class:`~obspy.core.stream.Stream` object.
     For how to send multiple requests simultaneously (avoiding network
-    overhead) see :meth:`~obspy.fdsn.client.Client.get_waveform_bulk()`
+    overhead) see :meth:`~obspy.fdsn.client.Client.get_waveforms_bulk()`
 
     >>> from obspy.fdsn import Client
     >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t = UTCDateTime("2010-02-27T06:45:00.000")
-    >>> st = client.get_waveform("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
+    >>> st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
     >>> st.plot()  # doctest: +SKIP
 
     .. plot::
@@ -38,7 +38,7 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
         from obspy.fdsn import Client
         client = Client()
         t = UTCDateTime("2010-02-27T06:45:00.000")
-        st = client.get_waveform("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
+        st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
         st.plot()
 
 (2) :meth:`~obspy.fdsn.client.Client.get_events()`: Retrieves event data from
@@ -74,7 +74,7 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
     >>> client = Client()
     >>> inventory = client.get_stations(
     ...     latitude=-56.1, longitude=-26.7, maxradius=15)
-    >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     Inventory created at ...
         Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
                 http://service.iris.edu/fdsnws/station/1/query?latitude=...
@@ -94,8 +94,27 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
 Please see the documentation for each method for further information and
 examples.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import str  # NOQA
+from future.utils import PY2
 
-from client import Client
+from .client import Client  # NOQA
+from .header import URL_MAPPINGS  # NOQA
+
+# insert supported URL mapping list dynamically in docstring
+# we need an if clause because add_doctests() executes the file once again
+if r"%s" in Client.__init__.__doc__:
+    if PY2:
+        Client.__init__.__func__.__doc__ = \
+            Client.__init__.__doc__ % \
+            str(sorted(URL_MAPPINGS.keys())).strip("[]")
+    else:
+        Client.__init__.__doc__ = \
+            Client.__init__.__doc__ % \
+            str(sorted(URL_MAPPINGS.keys())).strip("[]")
+
+__all__ = ["Client"]
 
 
 if __name__ == '__main__':

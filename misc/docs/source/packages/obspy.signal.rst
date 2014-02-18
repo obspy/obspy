@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       ~array_analysis.array_processing
        ~array_analysis.array_rotation_strain
        ~trigger.arPick
        ~filter.bandpass
@@ -31,7 +32,6 @@
        ~trigger.recSTALTA
        ~rotate.rotate_NE_RT
        ~invsim.seisSim
-       ~array_analysis.sonic
        ~util.utlGeoKm
        ~util.utlLonLat
        ~cross_correlation.xcorr

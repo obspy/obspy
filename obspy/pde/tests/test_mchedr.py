@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import str
 
 from obspy.core.event import ResourceIdentifier, readEvents
 from obspy.pde.mchedr import readMchedr
@@ -156,8 +158,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             mag.resource_id,
             ResourceIdentifier(
-                id=
-                'quakeml:us.anss.org/magnitude/20120101052755.98/mb'))
+                id='quakeml:us.anss.org/magnitude/20120101052755.98/mb'))
         self.assertEqual(mag.mag, 6.2)
         self.assertEqual(mag.mag_errors.uncertainty, None)
         self.assertEqual(mag.magnitude_type, 'Mb')
@@ -246,11 +247,10 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             fm.resource_id,
             ResourceIdentifier(
-                id=
-                'quakeml:us.anss.org/focalmechanism/'
-                '20120101052755.98/ucmt/mwc'))
+                id='quakeml:us.anss.org/focalmechanism/'
+                   '20120101052755.98/ucmt/mwc'))
         # general
-        self.assertEqual(fm.waveform_id, None)
+        self.assertEqual(fm.waveform_id, [])
         self.assertEqual(fm.triggering_origin_id, None)
         self.assertEqual(fm.azimuthal_gap, None)
         self.assertEqual(fm.station_polarity_count, None)
@@ -292,9 +292,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             mt.resource_id,
             ResourceIdentifier(
-                id=
-                'quakeml:us.anss.org/momenttensor/'
-                '20120101052755.98/ucmt/mwc'))
+                id='quakeml:us.anss.org/momenttensor/'
+                   '20120101052755.98/ucmt/mwc'))
         self.assertAlmostEqual(mt.scalar_moment, 1.9e+19)
         self.assertAlmostEqual(mt.tensor.m_rr, -3.4e+18)
         self.assertAlmostEqual(mt.tensor.m_tt, -8e+17)

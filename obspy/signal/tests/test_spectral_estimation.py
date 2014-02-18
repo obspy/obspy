@@ -3,6 +3,8 @@
 """
 The psd test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
@@ -10,6 +12,7 @@ from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
 import numpy as np
 import os
+import gzip
 import unittest
 import warnings
 
@@ -94,7 +97,10 @@ class PsdTestCase(unittest.TestCase):
         file_binning = os.path.join(
             self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
-        data = np.loadtxt(file_data)
+        # no with due to py 2.6
+        f = gzip.open(file_data)
+        data = np.loadtxt(f)
+        f.close()
         stats = {'_format': 'MSEED',
                  'calib': 1.0,
                  'channel': 'EHZ',

@@ -8,6 +8,14 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import zip
+from future.builtins import range
+from future.builtins import open
+from future.builtins import str
+from future.utils import native_str
 from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
@@ -16,14 +24,14 @@ from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
+from obspy.core import compatibility
 from pkg_resources import load_entry_point
-import cPickle
+import pickle
 import copy
 import fnmatch
 import math
 import numpy as np
 import os
-import urllib2
 import warnings
 
 
@@ -45,7 +53,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or io.BytesIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
@@ -161,10 +169,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from StringIO import StringIO
-        >>> import urllib2
+        >>> from obspy.core.compatibility import BytesIO, urlopen
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = StringIO(urllib2.urlopen(example_url).read())
+        >>> stringio_obj = BytesIO(urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -189,7 +196,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
         st = _createExampleStream(headonly=headonly)
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, (str, native_str)):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
@@ -209,7 +216,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib2.urlopen(pathname_or_url).read())
+            fh.write(compatibility.urlopen(pathname_or_url).read())
             st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
         # some file name
@@ -297,6 +304,8 @@ def _createExampleStream(headonly=False):
             st.append(Trace(data=data[channel], header=header))
         else:
             st.append(Trace(header=header))
+    from obspy.station import read_inventory
+    st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
     return st
 
 
@@ -742,12 +751,13 @@ class Stream(object):
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
         >>> st[0].trim(endtime=t)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
-        >>> tr.trim(starttime=t+1)  # doctest: +ELLIPSIS
+        >>> tr.trim(starttime=t + 1)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
-        >>> st.getGaps()  # doctest: +ELLIPSIS
-        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        >>> st.getGaps()[0]  # doctest: +SKIP
+        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13),
+          UTCDateTime(2009, 8, 24, 0, 20, 14), 1.0, 99]]
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
@@ -757,7 +767,7 @@ class Stream(object):
         copied_traces = copy.copy(self.traces)
         self.sort()
         gap_list = []
-        for _i in xrange(len(self.traces) - 1):
+        for _i in range(len(self.traces) - 1):
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue
@@ -782,7 +792,8 @@ class Stream(object):
             if max_gap and delta > max_gap:
                 continue
             # Number of missing samples
-            nsamples = int(round(math.fabs(delta) * stats['sampling_rate']))
+            nsamples = int(compatibility.round_away(math.fabs(delta) *
+                                                    stats['sampling_rate']))
             # skip if is equal to delta (1 / sampling rate)
             if flag and nsamples == 1:
                 continue
@@ -813,7 +824,7 @@ class Stream(object):
                     msg = 'Trace object or a list of Trace objects expected!'
                     raise TypeError(msg)
             # Insert each item of the list.
-            for _i in xrange(len(object)):
+            for _i in range(len(object)):
                 self.traces.insert(position + _i, object[_i])
         elif isinstance(object, Stream):
             self.insert(position, object.traces)
@@ -1142,7 +1153,7 @@ class Stream(object):
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
-        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        [[..., UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
@@ -1161,16 +1172,16 @@ class Stream(object):
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
-        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        [[...'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
         Total: 0 gap(s) and 1 overlap(s)
         """
         result = self.getGaps(min_gap, max_gap)
-        print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
-                                                'Next Sample', 'Delta',
-                                                'Samples'))
+        print(("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
+                                                 'Next Sample', 'Delta',
+                                                 'Samples')))
         gaps = 0
         overlaps = 0
         for r in result:
@@ -1248,8 +1259,9 @@ class Stream(object):
         :param keys: List containing the values according to which the traces
              will be sorted. They will be sorted by the first item first and
              then by the second item and so on.
-             Available items: 'network', 'station', 'channel', 'location',
-             'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'
+             Always available items: 'network', 'station', 'channel',
+             'location', 'starttime', 'endtime', 'sampling_rate', 'npts',
+             'dataquality'
              Defaults to ['network', 'station', 'location', 'channel',
              'starttime', 'endtime'].
         :type reverse: bool
@@ -1272,19 +1284,12 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
-        # Check the list and all items.
-        msg = "keys must be a list of item strings. Available items to " + \
-              "sort after: \n'network', 'station', 'channel', 'location', " + \
-              "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
+        # check if list
+        msg = "keys must be a list of strings. Always available items to " + \
+            "sort after: \n'network', 'station', 'channel', 'location', " + \
+            "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
         if not isinstance(keys, list):
             raise TypeError(msg)
-        items = ['network', 'station', 'channel', 'location', 'starttime',
-                 'endtime', 'sampling_rate', 'npts', 'dataquality']
-        for _i in keys:
-            try:
-                items.index(_i)
-            except:
-                raise TypeError(msg)
         # Loop over all keys in reversed order.
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
@@ -1408,12 +1413,12 @@ class Stream(object):
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
-                delta = round((starttime - tr.stats.starttime) *
-                              tr.stats.sampling_rate)
+                delta = compatibility.round_away(
+                    (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
-                delta = round((endtime - tr.stats.endtime) *
-                              tr.stats.sampling_rate)
+                delta = compatibility.round_away(
+                    (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
@@ -1741,10 +1746,10 @@ class Stream(object):
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for _id in traces_dict.keys():
+        for _id in list(traces_dict.keys()):
             cur_trace = traces_dict[_id].pop(0)
             # loop through traces of same id
-            for _i in xrange(len(traces_dict[_id])):
+            for _i in range(len(traces_dict[_id])):
                 trace = traces_dict[_id].pop(0)
                 # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(
@@ -1825,7 +1830,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> from obspy import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
-        >>> st.plot()  # doctest: +SKIP
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
         ...                       -131.04-467.29j, -131.04+467.29j],
@@ -1843,7 +1847,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             from obspy import read
             from obspy.signal import cornFreq2Paz
             st = read()
-            st.plot()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
                                   -131.04-467.29j, -131.04+467.29j],
@@ -2042,8 +2045,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
         """
         for tr in self:
-            tr.resample(sampling_rate, window=window, no_filter=no_filter,
-                        strict_length=strict_length)
+            tr.resample(sampling_rate, window=native_str(window),
+                        no_filter=no_filter, strict_length=strict_length)
         return self
 
     def decimate(self, factor, no_filter=False, strict_length=False):
@@ -2296,12 +2299,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
-        >>> st[0].stats.processing
-        ['normalize:9']
+        >>> print(st[0].stats.processing[0])
+        normalize:9
         >>> st[1].data
         array([ 0.375, -0.625, -1.   ,  0.5  ,  0.375])
-        >>> st[1].stats.processing
-        ['normalize:-0.8']
+        >>> print(st[1].stats.processing[0])
+        normalize:-0.8
 
         Now let's do it again normalize all traces to the stream's global
         maximum:
@@ -2314,12 +2317,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
-        >>> st[0].stats.processing
-        ['normalize:9']
+        >>> print(st[0].stats.processing[0])
+        normalize:9
         >>> st[1].data  # doctest: +ELLIPSIS
         array([ 0.03333333, -0.05555556, -0.08888889,  0.04444444,  ...])
-        >>> st[1].stats.processing
-        ['normalize:9']
+        >>> print(st[1].stats.processing[0])
+        normalize:9
         """
         # use the same value for normalization on all traces?
         if global_max:
@@ -2566,7 +2569,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # check sampling rates and dtypes
         try:
             self._mergeChecks()
-        except Exception, e:
+        except Exception as e:
             if "Can't merge traces with same ids but" in str(e):
                 msg = "Incompatible traces (sampling_rate, dtype, ...) " + \
                       "with same id detected. Doing nothing."
@@ -2592,7 +2595,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for id in traces_dict.keys():
+        for id in list(traces_dict.keys()):
             trace_list = traces_dict[id]
             cur_trace = trace_list.pop(0)
             # work through all traces of same id
@@ -2642,27 +2645,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         trace.stats.response. Does not raise an exception but shows a warning
         if response information can not be found for all traces. Returns a
         list of traces for which no response could be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Stream.remove_response`.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
         >>> st.attach_response(inv)
         []
-        >>> tr = st[1]
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-        >>> st = read()
-        >>> st.attach_response("/path/to/BW_RJOB.xml")
-        []
-        >>> tr = st[1]
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> tr = st[0]
+        >>> print(tr.stats.response)  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
@@ -2693,6 +2686,49 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise
         return skipped_traces
 
+    def remove_response(self, *args, **kwargs):
+        """
+        Method to deconvolve instrument response for all Traces in Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.remove_response` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> # Response object is already attached to example data:
+        >>> resp = st[0].stats.response
+        >>> print(resp)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        Channel Response
+            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+            4 stages:
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+        >>> st.remove_response()  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
+        >>> st.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            st = read()
+            st.remove_response()
+            st.plot()
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.remove_response(*args, **kwargs)
+        return self
+
 
 def isPickle(filename):  # @UnusedVariable
     """
@@ -2708,14 +2744,15 @@ def isPickle(filename):  # @UnusedVariable
     >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, (str, native_str)):
         try:
-            st = cPickle.load(open(filename, 'rb'))
+            with open(filename, 'rb') as fp:
+                st = pickle.load(fp)
         except:
             return False
     else:
         try:
-            st = cPickle.load(filename)
+            st = pickle.load(filename)
         except:
             return False
     return isinstance(st, Stream)
@@ -2734,10 +2771,11 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
-    if isinstance(filename, basestring):
-        return cPickle.load(open(filename, 'rb'))
+    if isinstance(filename, (str, native_str)):
+        with open(filename, 'rb') as fp:
+            return pickle.load(fp)
     else:
-        return cPickle.load(filename)
+        return pickle.load(filename)
 
 
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
@@ -2760,10 +2798,11 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, basestring):
-        cPickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+    if isinstance(filename, (str, native_str)):
+        with open(filename, 'wb') as fp:
+            pickle.dump(stream, fp, protocol=protocol)
     else:
-        cPickle.dump(stream, filename, protocol=protocol)
+        pickle.dump(stream, filename, protocol=protocol)
 
 
 if __name__ == '__main__':

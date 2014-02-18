@@ -9,13 +9,19 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import readEvents, UTCDateTime, read
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import zip
+from future.builtins import str
+from future.builtins import open
+from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core import compatibility
+from obspy.station import Response
 import os
-from StringIO import StringIO
 import sys
 import unittest
 from difflib import Differ
@@ -34,7 +40,7 @@ def failmsg(got, expected, ignore_lines=[]):
     For diffs, lines that contain any string given in ignore_lines will be
     excluded from the comparison.
     """
-    if isinstance(got, str) and isinstance(expected, str):
+    if isinstance(got, bytes) and isinstance(expected, bytes):
         got = [l for l in got.splitlines(True)
                if all([x not in l for x in ignore_lines])]
         expected = [l for l in expected.splitlines(True)
@@ -52,8 +58,13 @@ def failmsg(got, expected, ignore_lines=[]):
 def normalize_version_number(string):
     """
     Returns imput string with version numbers normalized for testing purposes.
+
+    Due to Py3k arbitrary dictionary ordering it also sorts word wise the
+    input string, independent of commas and newlines.
     """
-    return re.sub('[0-9]\.[0-9]\.[0-9]', "vX.X.X", string)
+    repl = re.sub('[0-9]\.[0-9]\.[0-9]', "", string).replace(",", "")
+    return " ".join(
+        sorted(s.strip() for l in repl.splitlines() for s in l.split(" ")))
 
 
 class ClientTestCase(unittest.TestCase):
@@ -275,13 +286,12 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
-    def test_IRIS_example_queries(self):
+    def test_IRIS_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
         client = self.client
 
-        # event example queries
         queries = [
             dict(eventid=609301),
             dict(starttime=UTCDateTime("2011-01-07T01:00:00"),
@@ -300,19 +310,24 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             got = client.get_events(**query)
             file_ = os.path.join(self.datapath, filename)
-            #got.write(file_, "QUAKEML")
+            # got.write(file_, "QUAKEML")
             expected = readEvents(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_events(filename=tf.name, **query)
-                with open(tf.name) as fh:
+                with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_) as fh:
+                with open(file_, 'rb') as fh:
                     expected = fh.read()
             self.assertEqual(got, expected, failmsg(got, expected))
 
-        # station example queries
+    def test_IRIS_example_queries_station(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage.
+        """
+        client = self.client
+
         queries = [
             dict(latitude=-56.1, longitude=-26.7, maxradius=15),
             dict(startafter=UTCDateTime("2003-01-07"),
@@ -331,24 +346,37 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             got = client.get_stations(**query)
             file_ = os.path.join(self.datapath, filename)
-            #with open(file_, "wt") as fh:
+            # with open(file_, "wt") as fh:
             #    fh.write(got)
-            with open(file_) as fh:
-                expected = fh.read()
-            ignore_lines = ['<Created>', '<TotalNumberStations>']
-            msg = failmsg(got, expected, ignore_lines=ignore_lines)
-            self.assertEqual(msg, "", msg)
+            expected = read_inventory(file_, format="STATIONXML")
+            # delete both creating times and modules before comparing objects.
+            got.created = None
+            expected.created = None
+            got.module = None
+            expected.module = None
+
+            # XXX Py3k: the objects differ in direct comparision, however,
+            # the strings of them are equal
+            self.assertEqual(str(got), str(expected), failmsg(got, expected))
+
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_stations(filename=tf.name, **query)
-                with open(tf.name) as fh:
+                with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_) as fh:
+                with open(file_, 'rb') as fh:
                     expected = fh.read()
+            ignore_lines = [b'<Created>', b'<TotalNumberStations>',
+                            b'<Module>', b'<ModuleURI>']
             msg = failmsg(got, expected, ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
-        # dataselect example queries
+    def test_IRIS_example_queries_dataselect(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage.
+        """
+        client = self.client
+
         queries = [
             ("IU", "ANMO", "00", "BHZ",
              UTCDateTime("2010-02-27T06:30:00.000"),
@@ -366,16 +394,16 @@ class ClientTestCase(unittest.TestCase):
                         ]
         for query, filename in zip(queries, result_files):
             # test output to stream
-            got = client.get_waveform(*query)
+            got = client.get_waveforms(*query)
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
-                client.get_waveform(*query, filename=tf.name)
-                with open(tf.name) as fh:
+                client.get_waveforms(*query, filename=tf.name)
+                with open(tf.name, 'rb') as fh:
                     got = fh.read()
-                with open(file_) as fh:
+                with open(file_, 'rb') as fh:
                     expected = fh.read()
             self.assertEqual(got, expected, failmsg(got, expected))
 
@@ -389,7 +417,7 @@ class ClientTestCase(unittest.TestCase):
                  UTCDateTime("2010-02-27T06:30:00.000"),
                  UTCDateTime("2010-02-27T06:40:00.000"))
         filename = "dataselect_example.mseed"
-        got = client.get_waveform(*query)
+        got = client.get_waveforms(*query)
         file_ = os.path.join(self.datapath, filename)
         expected = read(file_)
         self.assertEqual(got, expected, failmsg(got, expected))
@@ -409,12 +437,12 @@ class ClientTestCase(unittest.TestCase):
         """
         try:
             client = self.client
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
             client.help()
             sys.stdout.close()
 
             # Capture output
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
 
             client.help("event")
             got = sys.stdout.getvalue()
@@ -442,7 +470,7 @@ class ClientTestCase(unittest.TestCase):
 
             # Reset. Creating a new one is faster then clearing the old one.
             sys.stdout.close()
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
 
             client.help("station")
             got = sys.stdout.getvalue()
@@ -460,7 +488,7 @@ class ClientTestCase(unittest.TestCase):
 
             # Reset.
             sys.stdout.close()
-            sys.stdout = StringIO()
+            sys.stdout = compatibility.StringIO()
 
             client.help("dataselect")
             got = sys.stdout.getvalue()
@@ -526,17 +554,17 @@ class ClientTestCase(unittest.TestCase):
         params2 = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
             # test output to stream
-            got = client.get_waveform_bulk(bulk1)
+            got = client.get_waveforms_bulk(bulk1)
             self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveform_bulk(bulk2, **params2)
+            got = client.get_waveforms_bulk(bulk2, **params2)
             self.assertEqual(got, expected2, failmsg(got, expected2))
             # test output to file
             with NamedTemporaryFile() as tf:
-                client.get_waveform_bulk(bulk1, filename=tf.name)
+                client.get_waveforms_bulk(bulk1, filename=tf.name)
                 got = read(tf.name)
             self.assertEqual(got, expected1, failmsg(got, expected1))
             with NamedTemporaryFile() as tf:
-                client.get_waveform_bulk(bulk2, filename=tf.name, **params2)
+                client.get_waveforms_bulk(bulk2, filename=tf.name, **params2)
                 got = read(tf.name)
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a request string
@@ -552,37 +580,58 @@ class ClientTestCase(unittest.TestCase):
                  "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
         for client in clients:
             # test output to stream
-            got = client.get_waveform_bulk(bulk1)
+            got = client.get_waveforms_bulk(bulk1)
             self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveform_bulk(bulk2)
+            got = client.get_waveforms_bulk(bulk2)
             self.assertEqual(got, expected2, failmsg(got, expected2))
             # test output to file
             with NamedTemporaryFile() as tf:
-                client.get_waveform_bulk(bulk1, filename=tf.name)
+                client.get_waveforms_bulk(bulk1, filename=tf.name)
                 got = read(tf.name)
             self.assertEqual(got, expected1, failmsg(got, expected1))
             with NamedTemporaryFile() as tf:
-                client.get_waveform_bulk(bulk2, filename=tf.name)
+                client.get_waveforms_bulk(bulk2, filename=tf.name)
                 got = read(tf.name)
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a filename
         for client in clients:
             with NamedTemporaryFile() as tf:
-                with open(tf.name, "wb") as fh:
+                with open(tf.name, "wt") as fh:
                     fh.write(bulk1)
-                got = client.get_waveform_bulk(bulk1)
+                got = client.get_waveforms_bulk(bulk1)
             self.assertEqual(got, expected1, failmsg(got, expected1))
             with NamedTemporaryFile() as tf:
-                with open(tf.name, "wb") as fh:
+                with open(tf.name, "wt") as fh:
                     fh.write(bulk2)
-                got = client.get_waveform_bulk(bulk2)
+                got = client.get_waveforms_bulk(bulk2)
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a file-like object
         for client in clients:
-            got = client.get_waveform_bulk(StringIO(bulk1))
+            got = client.get_waveforms_bulk(compatibility.StringIO(bulk1))
             self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveform_bulk(StringIO(bulk2))
+            got = client.get_waveforms_bulk(compatibility.StringIO(bulk2))
             self.assertEqual(got, expected2, failmsg(got, expected2))
+
+    def test_get_waveform_attach_response(self):
+        """
+        minimal test for automatic attaching of metadata
+        """
+        client = self.client
+
+        bulk = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                "IU ANMO * BH? 2010-03-25 2010-03-25T00:00:08\n"
+                "IU ANMO 10 HHZ 2010-05-25T00:00:00 2010-05-25T00:00:04\n"
+                "II KURK 00 BHN 2010-03-25T00:00:00 2010-03-25T00:00:04\n")
+        st = client.get_waveforms_bulk(bulk, attach_response=True)
+        for tr in st:
+            self.assertTrue(isinstance(tr.stats.get("response"), Response))
+
+        st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
+                                  UTCDateTime("2010-02-27T06:30:00.000"),
+                                  UTCDateTime("2010-02-27T06:40:00.000"),
+                                  attach_response=True)
+        for tr in st:
+            self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
 
 def suite():

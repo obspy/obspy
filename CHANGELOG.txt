@@ -1,14 +1,43 @@
-dev:
- - obspy.core:
-   * check if ndim == 1 when setting Trace.data and raise if necessary,
-     see #695
+0.10.0:
+ - general:
+   * support for Python 3.3
+ - obspy.imaging:
+   * Maintain beach ball aspect ratio through optional axes argument (see
+     #734)
 
-0.9.0rc1:
+0.9.1:
+ - obspy.core:
+   * fixing very slow response removal for some magic bad values of npts
+     (see #715)
+   * extend remove_response for polynomial responses  
+     (thanks to Sebastien/bonaime, see #566)
+ - obspy.datamark:
+   * bugfix: channel code now correctly read (4 hex char)
+   * bugfix: channels can have different sampling rate
+   * improvement: datawide 0.5 (4 bits) encoding now supported
+ - obspy.fdsn:
+   * time out errors get raised properly now. timeout can be specified at
+     Client initialization now. (see #717)
+ - obspy.station:
+   * some bugfixes in the obspy.station object classes (see #710)
+ - obspy.taup:
+   * bugfix: avoid a bug that caused multiple calls to taup to result in
+     spurious unexpected results (see #728)
+
+0.9.0:
  -  general:
    * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
  - obspy.core:
+   * Stream/Trace.attach_response(): convenience method to attach response to
+     traces from inventories.
+   * new method Stream/Trace.remove_response() to remove instrument response
+     from Response object attached to trace(s), e.g. after parsing a
+     StationXML file. Similar to Stream/Trace.simulate(seedresp=...) for
+     using a Parser object (from dataless or xseed) or RESP file, but less
+     cluttered parameters and without the simulating a different instrument
+     part.
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
    * The writeQuakeML() function, also accessible through
@@ -53,10 +82,12 @@ dev:
    * inverse filtering of catalogs.
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
-   * Stream/Trace.attach_response(): convenience method to attach response to
-     traces from inventories.
    * added command line script "obspy-print" to print information on local
      waveform files
+   * check if ndim == 1 when setting Trace.data and raise if necessary,
+     see #695
+   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
+     WaveformStreamID as specified in QuakeML docs (#633)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -91,6 +122,8 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * new function for rotating arbitrarily oriented components to vertical,
+     north, and east.
    * add PPSD support for segments of arbitrary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.
@@ -110,6 +143,7 @@ dev:
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
+   * libmseed v2.12
  - obspy.neic:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
@@ -209,6 +243,8 @@ dev:
    * added getInventory() method to the Parser object. Returns a dictionary
      about the contents of the Parser object. This is also integrated in the
      string representation and makes it more informative.
+   * allow parsing of oversized VariableString from SEED, but warn and cut
+     string to max_length at writing SEED (#701)
  - obspy.mseed:
    * adding experimental details option, which extracts timing quality and
      info on the calibration

@@ -3,12 +3,12 @@
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.8</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?location=00&amp;station=A%2A&amp;network=IU&amp;starttime=2013-01-01T00%3A00%3A00.000000&amp;level=channel</ModuleURI>
- <Created>2013-10-03T21:30:18</Created>
+ <Created>2013-12-29T07:44:01</Created>
  <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
-  <TotalNumberStations>256</TotalNumberStations>
+  <TotalNumberStations>258</TotalNumberStations>
   <SelectedNumberStations>4</SelectedNumberStations>
   <Station code="ADK" startDate="2009-07-19T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
    <Latitude>51.8823</Latitude>

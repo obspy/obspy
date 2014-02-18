@@ -9,6 +9,7 @@ Header files for the FDSN webservice.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 from obspy import __version__, UTCDateTime
 
 import platform
@@ -21,7 +22,10 @@ class FDSNException(Exception):
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USGS": "http://comcat.cr.usgs.gov",
                 "RESIF": "http://ws.resif.fr",
-                "NCEDC": "http://service.ncedc.org"
+                "NCEDC": "http://service.ncedc.org",
+                "USP": "http://sismo.iag.usp.br",
+                "GFZ": "http://geofon.gfz-potsdam.de",
+                "NERIES": "http://www.seismicportal.eu",
                 }
 
 FDSNWS = ("dataselect", "event", "station")

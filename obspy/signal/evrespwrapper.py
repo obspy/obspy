@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.utils import native_str
 import numpy as np
 import ctypes as C
 from obspy.signal.headers import clibevresp
@@ -121,7 +123,8 @@ class blkt_info_union(C.Union):
         ("pole_zero", pole_zeroType),
         ("fir", firType),
         ("decimation", decimationType),
-        ("gain", gainType)
+        ("gain", gainType),
+        ("coeff", coeffType)
     ]
 
 
@@ -198,11 +201,11 @@ clibevresp.calc_resp.argtypes = [
     C.POINTER(channel),
     np.ctypeslib.ndpointer(dtype='float64',  # freqs
                            ndim=1,
-                           flags='C_CONTIGUOUS'),
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     np.ctypeslib.ndpointer(dtype='complex128',  # output
                            ndim=1,
-                           flags='C_CONTIGUOUS'),
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_char_p,
     C.c_int,
     C.c_int,
@@ -218,3 +221,13 @@ clibevresp.check_channel.restype = C.c_void_p
 #void norm_resp(struct channel *chan, int start_stage, int stop_stage)
 clibevresp.norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
 clibevresp.norm_resp.restype = C.c_void_p
+
+
+# Only useful for debugging thus not officially included as every import of
+# this file results in the function pointer being created thus slowing it down.
+# void print_chan(struct channel *chan, int start_stage, int stop_stage,
+#                 int stdio_flag, int listinterp_out_flag,
+#                 int listinterp_in_flag, int useTotalSensitivityFlag)
+#clibevresp.print_chan.argtypes = [C.POINTER(channel), C.c_int, C.c_int,
+                                  #C.c_int, C.c_int, C.c_int, C.c_int]
+#clibevresp.print_chan.restype = C.c_void_p

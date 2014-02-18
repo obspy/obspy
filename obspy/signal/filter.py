@@ -17,6 +17,8 @@ Various Seismogram Filtering Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
 
 import warnings
 from numpy import array, where, fft
@@ -35,8 +37,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / orders.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -74,8 +75,7 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :param freqmin: Stop band low corner frequency.
     :param freqmax: Stop band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / orders.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -112,8 +112,7 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / orders.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -146,8 +145,7 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / orders.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import open
 # -*- coding: utf-8 -*-
 
 from obspy import UTCDateTime, read, Trace
@@ -291,8 +294,10 @@ class ASCIITestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(stream[0].data, data,
                                                  decimal=2)
             # compare raw header
-            lines_orig = open(testfile, 'rt').readlines()
-            lines_new = open(tmpfile, 'rt').readlines()
+            with open(testfile, 'rt') as f:
+                lines_orig = f.readlines()
+            with open(tmpfile, 'rt') as f:
+                lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
     def test_writeTSPAIRFileMultipleTraces(self):
@@ -306,7 +311,8 @@ class ASCIITestCase(unittest.TestCase):
             # write
             writeTSPAIR(stream_orig, tmpfile)
             # look at the raw data
-            lines = open(tmpfile, 'rt').readlines()
+            with open(tmpfile, 'rt') as f:
+                lines = f.readlines()
             self.assertTrue(lines[0].startswith('TIMESERIES'))
             self.assertTrue('TSPAIR' in lines[0])
             self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185\n')
@@ -363,7 +369,8 @@ class ASCIITestCase(unittest.TestCase):
             # write
             writeSLIST(stream_orig, tmpfile)
             # look at the raw data
-            lines = open(tmpfile, 'rt').readlines()
+            with open(tmpfile, 'rt') as f:
+                lines = f.readlines()
             self.assertEqual(
                 lines[0].strip(),
                 'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' +
@@ -390,8 +397,10 @@ class ASCIITestCase(unittest.TestCase):
             np.testing.assert_array_almost_equal(stream[0].data, data,
                                                  decimal=2)
             # compare raw header
-            lines_orig = open(testfile, 'rt').readlines()
-            lines_new = open(tmpfile, 'rt').readlines()
+            with open(testfile, 'rt') as f:
+                lines_orig = f.readlines()
+            with open(tmpfile, 'rt') as f:
+                lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
     def test_writeSLISTFileMultipleTraces(self):
@@ -405,7 +414,8 @@ class ASCIITestCase(unittest.TestCase):
             # write
             writeSLIST(stream_orig, tmpfile)
             # look at the raw data
-            lines = open(tmpfile, 'rt').readlines()
+            with open(tmpfile, 'rt') as f:
+                lines = f.readlines()
             self.assertTrue(lines[0].startswith('TIMESERIES'))
             self.assertTrue('SLIST' in lines[0])
             self.assertEqual(lines[1].strip(), '185\t181\t185\t189\t194\t205')

@@ -25,10 +25,15 @@ Most source code provided here are adopted from
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import range
+from future.builtins import zip
 
+from obspy.core import compatibility
 import matplotlib.pyplot as plt
-from matplotlib import patches, collections, path as mplpath
-import StringIO
+from matplotlib import patches, collections, transforms, path as mplpath
 import numpy as np
 
 
@@ -39,7 +44,7 @@ EPSILON = 0.00001
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          zorder=100):
+          zorder=100, axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -67,13 +72,18 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         (opaque).
     :param xy: Origin position of the beach ball as tuple. Defaults to
         ``(0, 0)``.
-    :type width: int
-    :param width: Symbol size of beach ball. Defaults to ``200``.
+    :type width: int or tuple
+    :param width: Symbol size of beach ball, or tuple for elliptically
+        shaped patches. Defaults to size ``200``.
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
+    :type axes: :class:`matplotlib.axes.Axes`
+    :param axes: Used to make beach balls circular on non-scaled axes. Also
+        maintains the aspect ratio when resizing the figure. Will not add
+        the returned collection to the axes instance.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -119,6 +129,20 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # Replace color dummies 'b' and 'w' by face and bgcolor
         fc = [facecolor if c == 'b' else bgcolor for c in colors]
         col.set_facecolors(fc)
+
+    # Use the given axes to maintain the aspect ratio of beachballs on figure
+    # resize.
+    if axes is not None:
+        # This is what holds the aspect ratio (but breaks the positioning)
+        col.set_transform(transforms.IdentityTransform())
+        # Next is a dirty hack to fix the positioning:
+        # 1. Need to bring the all patches to the origin (0, 0).
+        for p in col._paths:
+            p.vertices -= xy
+        # 2. Then use the offset property of the collection to position the
+        #    patches
+        col.set_offsets(xy)
+        col._transOffset = axes.transData
 
     col.set_edgecolor(edgecolor)
     col.set_alpha(alpha)
@@ -204,7 +228,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
     elif format and not outfile:
-        imgdata = StringIO.StringIO()
+        imgdata = compatibility.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
         return imgdata.read()
@@ -633,7 +657,7 @@ def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system
     x = x * res[0] + xy[0]
     y = y * res[1] + xy[1]
-    verts = zip(x.tolist(), y.tolist())
+    verts = list(zip(x.tolist(), y.tolist()))
     codes = [mplpath.Path.MOVETO]
     codes.extend([mplpath.Path.LINETO] * (len(x) - 2))
     codes.append(mplpath.Path.CLOSEPOLY)

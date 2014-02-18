@@ -40,8 +40,10 @@ Basic Usage
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

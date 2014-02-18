@@ -1,0 +1,38 @@
+.TH MS_GSWAP 3 2006/12/20 "Libmseed API"
+.SH DESCRIPTION
+Generalized, in-place byte swapping routines
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "void  \fBms_gswap2\fP ( void *" data2 " );"
+
+.BI "void  \fBms_gswap3\fP ( void *" data3 " );"
+
+.BI "void  \fBms_gswap4\fP ( void *" data4 " );"
+
+.BI "void  \fBms_gswap8\fP ( void *" data8 " );"
+
+.BI "void  \fBms_gswap2a\fP ( void *" data2 " );"
+
+.BI "void  \fBms_gswap4a\fP ( void *" data4 " );"
+
+.BI "void  \fBms_gswap8a\fP ( void *" data8 " );"
+.fi
+
+.SH DESCRIPTION
+These routines swap between LSBF (little-endian) and MSBF (big-endian)
+byte orders.  The specified quantities are swapped in-place.  There
+are two versions of most routines: a generic one that works on
+quantities regardless of memory alignment (ms_gswap#) and one that works
+on memory aligned quantities (ms_gswap#a).  The versions for memory
+aligned quantities are much faster than their generic versions, but
+the memory *must* be aligned.  You have been warned. There is only a
+generic version for 3-byte quantities.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

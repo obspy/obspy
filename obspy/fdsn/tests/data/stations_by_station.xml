@@ -3,12 +3,12 @@
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.9</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=ANMO&amp;network=IU&amp;starttime=2013-01-01T00%3A00%3A00.000000&amp;level=channel</ModuleURI>
- <Created>2013-10-03T21:30:17</Created>
+ <Created>2014-01-08T16:00:15</Created>
  <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
-  <TotalNumberStations>256</TotalNumberStations>
+  <TotalNumberStations>258</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
   <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
    <Latitude>34.94591</Latitude>
@@ -210,14 +210,6 @@
     </Sensor>
     <Response>
      <InstrumentPolynomial>
-      <InputUnits>
-       <Name>PA</Name>
-       <Description>Pressure in Pascals</Description>
-      </InputUnits>
-      <OutputUnits>
-       <Name>COUNTS</Name>
-       <Description>Digital Counts</Description>
-      </OutputUnits>
       <ApproximationType>MACLAURIN</ApproximationType>
       <FrequencyLowerBound>0.0</FrequencyLowerBound>
       <FrequencyUpperBound>0.5</FrequencyUpperBound>
@@ -1621,14 +1613,6 @@
     </Sensor>
     <Response>
      <InstrumentPolynomial>
-      <InputUnits>
-       <Name>PA</Name>
-       <Description>Pressure in Pascals</Description>
-      </InputUnits>
-      <OutputUnits>
-       <Name>COUNTS</Name>
-       <Description>Digital Counts</Description>
-      </OutputUnits>
       <ApproximationType>MACLAURIN</ApproximationType>
       <FrequencyLowerBound>0.0</FrequencyLowerBound>
       <FrequencyUpperBound>0.5</FrequencyUpperBound>

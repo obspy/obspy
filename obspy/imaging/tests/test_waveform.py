@@ -2,6 +2,9 @@
 """
 The obspy.imaging.waveform test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
@@ -36,9 +39,9 @@ class WaveformTestCase(unittest.TestCase):
         :return: Stream object
         """
         time_delta = endtime - starttime
-        number_of_samples = time_delta * sampling_rate + 1
+        number_of_samples = int(time_delta * sampling_rate) + 1
         # Calculate first sine wave.
-        curve = np.linspace(0, 2 * np.pi, int(number_of_samples // 2))
+        curve = np.linspace(0, 2 * np.pi, number_of_samples // 2)
         # Superimpose it with a smaller but shorter wavelength sine wave.
         curve = np.sin(curve) + 0.2 * np.sin(10 * curve)
         # To get a thick curve alternate between two curves.

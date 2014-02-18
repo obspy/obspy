@@ -9,19 +9,21 @@ File dealing with the StationXML format.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import str
 import inspect
-from io import BytesIO
 from lxml import etree
 import os
 import warnings
 
 import obspy
+from obspy.core import compatibility
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
     CoefficientsTypeResponseStage, ResponseListResponseStage, \
     FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
-    CoefficientWithUncertainties
+    CoefficientWithUncertainties, ResponseStage
 from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
     ComplexWithUncertainties
 
@@ -94,9 +96,9 @@ def read_StationXML(path_or_file_object):
     created = obspy.UTCDateTime(root.find(_ns("Created")).text)
 
     # These are optional
-    sender = _tag2obj(root, _ns("Sender"), unicode)
-    module = _tag2obj(root, _ns("Module"), unicode)
-    module_uri = _tag2obj(root, _ns("ModuleURI"), unicode)
+    sender = _tag2obj(root, _ns("Sender"), str)
+    module = _tag2obj(root, _ns("Module"), str)
+    module_uri = _tag2obj(root, _ns("ModuleURI"), str)
 
     networks = []
     for network in root.findall(_ns("Network")):
@@ -120,13 +122,13 @@ def _read_base_node(element, object_to_write_to, _ns):
     object_to_write_to.end_date = \
         _attr2obj(element, "endDate", obspy.UTCDateTime)
     object_to_write_to.restricted_status = \
-        _attr2obj(element, "restrictedStatus", unicode)
+        _attr2obj(element, "restrictedStatus", str)
     object_to_write_to.alternate_code = \
-        _attr2obj(element, "alternateCode", unicode)
+        _attr2obj(element, "alternateCode", str)
     object_to_write_to.historical_code = \
-        _attr2obj(element, "historicalCode", unicode)
+        _attr2obj(element, "historicalCode", str)
     object_to_write_to.description = \
-        _tag2obj(element, _ns("Description"), unicode)
+        _tag2obj(element, _ns("Description"), str)
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
         object_to_write_to.comments.append(_read_comment(comment, _ns))
@@ -158,8 +160,8 @@ def _read_station(sta_element, _ns):
                                     elevation=elevation)
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
-    station.vault = _tag2obj(sta_element, _ns("Vault"), unicode)
-    station.geology = _tag2obj(sta_element, _ns("Geology"), unicode)
+    station.vault = _tag2obj(sta_element, _ns("Vault"), str)
+    station.geology = _tag2obj(sta_element, _ns("Geology"), str)
     for equipment in sta_element.findall(_ns("Equipment")):
         station.equipments.append(_read_equipment(equipment, _ns))
     for operator in sta_element.findall(_ns("Operator")):
@@ -191,7 +193,7 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
         obj.datum = elem.attrib.get("datum")
     obj.lower_uncertainty = elem.attrib.get("minusError")
     obj.upper_uncertainty = elem.attrib.get("plusError")
-    for key1, key2 in additional_mapping.iteritems():
+    for key1, key2 in additional_mapping.items():
         setattr(obj, key1, elem.attrib.get(key2))
     return obj
 
@@ -208,7 +210,7 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
             obj.datum = elem.attrib.get("datum")
         obj.lower_uncertainty = elem.attrib.get("minusError")
         obj.upper_uncertainty = elem.attrib.get("plusError")
-        for key1, key2 in additional_mapping.iteritems():
+        for key1, key2 in additional_mapping.items():
             setattr(obj, key2, elem.attrib.get(key1))
         objs.append(obj)
     return objs
@@ -241,13 +243,13 @@ def _read_channel(cha_element, _ns):
                                           SampleRate)
     # Parse the optional sample rate ratio.
     sample_rate_ratio = cha_element.find(_ns("SampleRateRatio"))
-    if sample_rate_ratio:
+    if sample_rate_ratio is not None:
         channel.sample_rate_ratio_number_samples = \
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
         channel.sample_rate_ratio_number_seconds = \
             _tag2obj(sample_rate_ratio, _ns("NumberSeconds"), int)
     channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"),
-                                      unicode)
+                                      str)
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
     channel.clock_drift_in_seconds_per_sample = \
@@ -255,9 +257,9 @@ def _read_channel(cha_element, _ns):
     # The sensor.
     calibunits = cha_element.find(_ns("CalibrationUnits"))
     if calibunits is not None:
-        channel.calibration_unit = _tag2obj(calibunits, _ns("Name"), unicode)
-        channel.calibration_unit_description = \
-            _tag2obj(calibunits, _ns("Description"), unicode)
+        channel.calibration_units = _tag2obj(calibunits, _ns("Name"), str)
+        channel.calibration_units_description = \
+            _tag2obj(calibunits, _ns("Description"), str)
     # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
     if sensor is not None:
@@ -285,7 +287,7 @@ def _read_response(resp_element, _ns):
     response = obspy.station.response.Response()
     response.resource_id = resp_element.attrib.get('resourceId')
     if response.resource_id is not None:
-        response.resource_id = unicode(response.resource_id)
+        response.resource_id = str(response.resource_id)
     instrument_sensitivity = resp_element.find(_ns("InstrumentSensitivity"))
     if instrument_sensitivity is not None:
         response.instrument_sensitivity = \
@@ -296,6 +298,8 @@ def _read_response(resp_element, _ns):
             _read_instrument_polynomial(instrument_polynomial, _ns)
     # Now read all the stages.
     for stage in resp_element.findall(_ns("Stage")):
+        if not len(stage):
+            continue
         response.response_stages.append(_read_response_stage(stage, _ns))
     return response
 
@@ -309,7 +313,7 @@ def _read_response_stage(stage_elem, _ns):
     stage_sequence_number = int(stage_elem.get("number"))
     resource_id = stage_elem.attrib.get('resourceId')
     if resource_id is not None:
-        resource_id = unicode(resource_id)
+        resource_id = str(resource_id)
     # All stages contain a stage gain and potentially a decimation.
     gain_elem = stage_elem.find(_ns("StageGain"))
     stage_gain = _tag2obj(gain_elem, _ns("Value"), float)
@@ -350,26 +354,34 @@ def _read_response_stage(stage_elem, _ns):
         if elem is not None:
             break
     else:
+        # Nothing more to parse for gain only blockettes, create minimal
+        # ResponseStage and return
+        if stage_gain is not None and stage_gain_frequency is not None:
+            return obspy.station.ResponseStage(
+                stage_sequence_number=stage_sequence_number,
+                stage_gain=stage_gain,
+                stage_gain_frequency=stage_gain_frequency,
+                resource_id=resource_id, input_units=None, output_units=None)
         # Raise if none of the previous ones has been found.
         msg = "Could not find a valid Response Stage Type."
         raise ValueError(msg)
 
     # Now parse all elements the different stages share.
     input_units_ = elem.find(_ns("InputUnits"))
-    input_units = _tag2obj(input_units_, _ns("Name"), unicode)
+    input_units = _tag2obj(input_units_, _ns("Name"), str)
     input_units_description = _tag2obj(input_units_, _ns("Description"),
-                                       unicode)
+                                       str)
     output_units_ = elem.find(_ns("OutputUnits"))
-    output_units = _tag2obj(output_units_, _ns("Name"), unicode)
+    output_units = _tag2obj(output_units_, _ns("Name"), str)
     output_units_description = _tag2obj(output_units_, _ns("Description"),
-                                        unicode)
-    description = _tag2obj(elem, _ns("Description"), unicode)
+                                        str)
+    description = _tag2obj(elem, _ns("Description"), str)
     name = elem.attrib.get("name")
     if name is not None:
-        name = unicode(name)
+        name = str(name)
     resource_id2 = elem.attrib.get('resourceId')
     if resource_id2 is not None:
-        resource_id2 = unicode(resource_id2)
+        resource_id2 = str(resource_id2)
 
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
@@ -391,7 +403,7 @@ def _read_response_stage(stage_elem, _ns):
     # Handle Poles and Zeros Response Stage Type.
     if elem is poles_zeros_elem:
         pz_transfer_function_type = \
-            _tag2obj(elem, _ns("PzTransferFunctionType"), unicode)
+            _tag2obj(elem, _ns("PzTransferFunctionType"), str)
         normalization_factor = \
             _tag2obj(elem, _ns("NormalizationFactor"), float)
         normalization_frequency = \
@@ -433,7 +445,7 @@ def _read_response_stage(stage_elem, _ns):
     # Handle the coefficients Response Stage Type.
     elif elem is coefficients_elem:
         cf_transfer_function_type = \
-            _tag2obj(elem, _ns("CfTransferFunctionType"), unicode)
+            _tag2obj(elem, _ns("CfTransferFunctionType"), str)
         numerator = \
             _read_floattype_list(elem, _ns("Numerator"),
                                  FloatWithUncertaintiesAndUnit, unit=True)
@@ -459,7 +471,7 @@ def _read_response_stage(stage_elem, _ns):
 
     # Handle the FIR response stage type.
     elif elem is FIR_elem:
-        symmetry = _tag2obj(elem, _ns("Symmetry"), unicode)
+        symmetry = _tag2obj(elem, _ns("Symmetry"), str)
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
                                       FilterCoefficient,
                                       additional_mapping={'i': "number"})
@@ -468,7 +480,7 @@ def _read_response_stage(stage_elem, _ns):
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
-        appr_type = _tag2obj(elem, _ns("ApproximationType"), unicode)
+        appr_type = _tag2obj(elem, _ns("ApproximationType"), str)
         f_low = _read_floattype(elem, _ns("FrequencyLowerBound"), Frequency)
         f_high = _read_floattype(elem, _ns("FrequencyUpperBound"), Frequency)
         appr_low = _tag2obj(elem, _ns("ApproximationLowerBound"), float)
@@ -491,12 +503,12 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
     output_units_ = sensitivity_element.find(_ns("OutputUnits"))
     sensitivity = obspy.station.response.InstrumentSensitivity(
         value=value, frequency=frequency,
-        input_units=_tag2obj(input_units_, _ns("Name"), unicode),
-        output_units=_tag2obj(output_units_, _ns("Name"), unicode))
+        input_units=_tag2obj(input_units_, _ns("Name"), str),
+        output_units=_tag2obj(output_units_, _ns("Name"), str))
     sensitivity.input_units_description = \
-        _tag2obj(input_units_, _ns("Description"), unicode)
+        _tag2obj(input_units_, _ns("Description"), str)
     sensitivity.output_units_description = \
-        _tag2obj(output_units_, _ns("Description"), unicode)
+        _tag2obj(output_units_, _ns("Description"), str)
     sensitivity.frequency_range_start = \
         _tag2obj(sensitivity_element, _ns("FrequencyStart"), float)
     sensitivity.frequency_range_end = \
@@ -509,17 +521,17 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
 def _read_instrument_polynomial(element, _ns):
     # XXX duplicated code, see reading of PolynomialResponseStage
     input_units_ = element.find(_ns("InputUnits"))
-    input_units = _tag2obj(input_units_, _ns("Name"), unicode)
+    input_units = _tag2obj(input_units_, _ns("Name"), str)
     input_units_description = _tag2obj(input_units_, _ns("Description"),
-                                       unicode)
+                                       str)
     output_units_ = element.find(_ns("OutputUnits"))
-    output_units = _tag2obj(output_units_, _ns("Name"), unicode)
+    output_units = _tag2obj(output_units_, _ns("Name"), str)
     output_units_description = _tag2obj(output_units_, _ns("Description"),
-                                        unicode)
-    description = _tag2obj(element, _ns("Description"), unicode)
+                                        str)
+    description = _tag2obj(element, _ns("Description"), str)
     resource_id = element.attrib.get("resourceId", None)
     name = element.attrib.get("name", None)
-    appr_type = _tag2obj(element, _ns("ApproximationType"), unicode)
+    appr_type = _tag2obj(element, _ns("ApproximationType"), str)
     f_low = _read_floattype(element, _ns("FrequencyLowerBound"), Frequency)
     f_high = _read_floattype(element, _ns("FrequencyUpperBound"), Frequency)
     appr_low = _tag2obj(element, _ns("ApproximationLowerBound"), float)
@@ -540,8 +552,8 @@ def _read_instrument_polynomial(element, _ns):
 
 
 def _read_external_reference(ref_element, _ns):
-    uri = _tag2obj(ref_element, _ns("URI"), unicode)
-    description = _tag2obj(ref_element, _ns("Description"), unicode)
+    uri = _tag2obj(ref_element, _ns("URI"), str)
+    description = _tag2obj(ref_element, _ns("Description"), str)
     return obspy.station.ExternalReference(uri=uri, description=description)
 
 
@@ -550,19 +562,19 @@ def _read_operator(operator_element, _ns):
     contacts = []
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
-    website = _tag2obj(operator_element, _ns("WebSite"), unicode)
+    website = _tag2obj(operator_element, _ns("WebSite"), str)
     return obspy.station.Operator(agencies=agencies, contacts=contacts,
                                   website=website)
 
 
 def _read_equipment(equip_element, _ns):
     resource_id = equip_element.get("resourceId")
-    type = _tag2obj(equip_element, _ns("Type"), unicode)
-    description = _tag2obj(equip_element, _ns("Description"), unicode)
-    manufacturer = _tag2obj(equip_element, _ns("Manufacturer"), unicode)
-    vendor = _tag2obj(equip_element, _ns("Vendor"), unicode)
-    model = _tag2obj(equip_element, _ns("Model"), unicode)
-    serial_number = _tag2obj(equip_element, _ns("SerialNumber"), unicode)
+    type = _tag2obj(equip_element, _ns("Type"), str)
+    description = _tag2obj(equip_element, _ns("Description"), str)
+    manufacturer = _tag2obj(equip_element, _ns("Manufacturer"), str)
+    vendor = _tag2obj(equip_element, _ns("Vendor"), str)
+    model = _tag2obj(equip_element, _ns("Model"), str)
+    serial_number = _tag2obj(equip_element, _ns("SerialNumber"), str)
     installation_date = \
         _tag2obj(equip_element, _ns("InstallationDate"), obspy.UTCDateTime)
     removal_date = \
@@ -578,18 +590,18 @@ def _read_equipment(equip_element, _ns):
 
 
 def _read_site(site_element, _ns):
-    name = _tag2obj(site_element, _ns("Name"), unicode)
-    description = _tag2obj(site_element, _ns("Description"), unicode)
-    town = _tag2obj(site_element, _ns("Town"), unicode)
-    county = _tag2obj(site_element, _ns("County"), unicode)
-    region = _tag2obj(site_element, _ns("Region"), unicode)
-    country = _tag2obj(site_element, _ns("Country"), unicode)
+    name = _tag2obj(site_element, _ns("Name"), str)
+    description = _tag2obj(site_element, _ns("Description"), str)
+    town = _tag2obj(site_element, _ns("Town"), str)
+    county = _tag2obj(site_element, _ns("County"), str)
+    region = _tag2obj(site_element, _ns("Region"), str)
+    country = _tag2obj(site_element, _ns("Country"), str)
     return obspy.station.Site(name=name, description=description, town=town,
                               county=county, region=region, country=country)
 
 
 def _read_comment(comment_element, _ns):
-    value = _tag2obj(comment_element, _ns("Value"), unicode)
+    value = _tag2obj(comment_element, _ns("Value"), str)
     begin_effective_time = \
         _tag2obj(comment_element, _ns("BeginEffectiveTime"), obspy.UTCDateTime)
     end_effective_time = \
@@ -604,9 +616,9 @@ def _read_comment(comment_element, _ns):
 
 
 def _read_person(person_element, _ns):
-    names = _tags2obj(person_element, _ns("Name"), unicode)
-    agencies = _tags2obj(person_element, _ns("Agency"), unicode)
-    emails = _tags2obj(person_element, _ns("Email"), unicode)
+    names = _tags2obj(person_element, _ns("Name"), str)
+    agencies = _tags2obj(person_element, _ns("Agency"), str)
+    emails = _tags2obj(person_element, _ns("Email"), str)
     phones = []
     for phone in person_element.findall(_ns("Phone")):
         phones.append(_read_phone(phone, _ns))
@@ -617,7 +629,7 @@ def _read_person(person_element, _ns):
 def _read_phone(phone_element, _ns):
     country_code = _tag2obj(phone_element, _ns("CountryCode"), int)
     area_code = _tag2obj(phone_element, _ns("AreaCode"), int)
-    phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), unicode)
+    phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), str)
     description = phone_element.get("description")
     return obspy.station.PhoneNumber(
         country_code=country_code, area_code=area_code,
@@ -664,7 +676,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
     if validate is True:
-        buf = BytesIO()
+        buf = compatibility.BytesIO()
         tree.write(buf)
         buf.seek(0)
         validates, errors = validate_StationXML(buf)
@@ -730,9 +742,9 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
         attribs["unit"] = obj_.unit
     attribs["minusError"] = obj_.lower_uncertainty
     attribs["plusError"] = obj_.upper_uncertainty
-    for key1, key2 in additional_mapping.iteritems():
+    for key1, key2 in additional_mapping.items():
         attribs[key1] = getattr(obj_, key2)
-    attribs = dict([(k, str(v)) for k, v in attribs.iteritems()
+    attribs = dict([(k, str(v)) for k, v in attribs.items()
                     if v is not None])
     etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
@@ -746,9 +758,9 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
             attribs["unit"] = obj_.unit
         attribs["minusError"] = obj_.lower_uncertainty
         attribs["plusError"] = obj_.upper_uncertainty
-        for key1, key2 in additional_mapping.iteritems():
+        for key1, key2 in additional_mapping.items():
             attribs[key2] = getattr(obj_, key1)
-        attribs = dict([(k, str(v)) for k, v in attribs.iteritems()
+        attribs = dict([(k, str(v)) for k, v in attribs.items()
                         if v is not None])
         etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
@@ -873,13 +885,13 @@ def _write_channel(parent, channel):
     _write_floattype(channel_elem, channel,
                      "clock_drift_in_seconds_per_sample", "ClockDrift")
 
-    if channel.calibration_unit:
+    if channel.calibration_units:
         cu = etree.SubElement(channel_elem, "CalibrationUnits")
         etree.SubElement(cu, "Name").text = \
-            str(channel.calibration_unit)
-        if channel.calibration_unit_description:
+            str(channel.calibration_units)
+        if channel.calibration_units_description:
             etree.SubElement(cu, "Description").text = \
-                str(channel.calibration_unit_description)
+                str(channel.calibration_units_description)
     _write_equipment(channel_elem, channel.sensor, "Sensor")
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
@@ -920,8 +932,10 @@ def _write_polynomial_common_fields(element, polynomial):
 
 
 def _write_response(parent, resp):
-    parent = etree.SubElement(parent, "Response",
-                              {'resourceId': resp.resource_id})
+    attr = {}
+    if resp.resource_id is not None:
+        attr["resourceId"] = resp.resource_id
+    parent = etree.SubElement(parent, "Response", attr)
     # write instrument sensitivity
     if resp.instrument_sensitivity is not None:
         ins_sens = resp.instrument_sensitivity
@@ -931,12 +945,27 @@ def _write_response(parent, resp):
         etree.SubElement(sub, "Frequency").text = \
             _float_to_str(ins_sens.frequency)
         _write_io_units(sub, ins_sens)
-        etree.SubElement(sub, "FrequencyStart").text = \
-            _float_to_str(ins_sens.frequency_range_start)
-        etree.SubElement(sub, "FrequencyEnd").text = \
-            _float_to_str(ins_sens.frequency_range_end)
-        etree.SubElement(sub, "FrequencyDBVariation").text = \
-            _float_to_str(ins_sens.frequency_range_DB_variation)
+        freq_range_group = [True if getattr(ins_sens, key, None) is not None
+                            else False
+                            for key in ['frequency_range_start',
+                                        'frequency_range_end',
+                                        'frequency_range_DB_variation']]
+        # frequency range group properly described
+        if all(freq_range_group):
+            etree.SubElement(sub, "FrequencyStart").text = \
+                _float_to_str(ins_sens.frequency_range_start)
+            etree.SubElement(sub, "FrequencyEnd").text = \
+                _float_to_str(ins_sens.frequency_range_end)
+            etree.SubElement(sub, "FrequencyDBVariation").text = \
+                _float_to_str(ins_sens.frequency_range_DB_variation)
+        # frequency range group not present
+        elif not any(freq_range_group):
+            pass
+        # frequency range group only partly present
+        else:
+            msg = ("Frequency range group of instrument sensitivity "
+                   "specification invalid")
+            raise Exception(msg)
     # write instrument polynomial
     if resp.instrument_polynomial is not None:
         attribs = {}
@@ -955,65 +984,73 @@ def _write_response(parent, resp):
 
 
 def _write_response_stage(parent, stage):
-    sub = etree.SubElement(parent, "Stage",
-                           {'number': str(stage.stage_sequence_number),
-                            'resourceId': stage.resource_id})
-    # create tag for stage type
-    tagname_map = {PolesZerosResponseStage: "PolesZeros",
-                   CoefficientsTypeResponseStage: "Coefficients",
-                   ResponseListResponseStage: "ResponseList",
-                   FIRResponseStage: "FIR",
-                   PolynomialResponseStage: "Polynomial"}
-    sub_ = etree.SubElement(sub, tagname_map[type(stage)],
-                            {'name': str(stage.name),
-                             'resourceId': stage.resource_id2})
-    # write operations common to all stage types
-    _obj2tag(sub_, "Description", stage.description)
-    sub__ = etree.SubElement(sub_, "InputUnits")
-    _obj2tag(sub__, "Name", stage.input_units)
-    _obj2tag(sub__, "Description", stage.input_units_description)
-    sub__ = etree.SubElement(sub_, "OutputUnits")
-    _obj2tag(sub__, "Name", stage.output_units)
-    _obj2tag(sub__, "Description", stage.output_units_description)
+    attr = {'number': str(stage.stage_sequence_number)}
+    if stage.resource_id is not None:
+        attr["resourceId"] = stage.resource_id
+    sub = etree.SubElement(parent, "Stage", attr)
+    # do nothing for gain only response stages
+    if type(stage) == ResponseStage:
+        pass
+    else:
+        # create tag for stage type
+        tagname_map = {PolesZerosResponseStage: "PolesZeros",
+                       CoefficientsTypeResponseStage: "Coefficients",
+                       ResponseListResponseStage: "ResponseList",
+                       FIRResponseStage: "FIR",
+                       PolynomialResponseStage: "Polynomial"}
+        sub_ = etree.SubElement(sub, tagname_map[type(stage)],
+                                {'name': str(stage.name),
+                                 'resourceId': stage.resource_id2})
+        # write operations common to all stage types
+        _obj2tag(sub_, "Description", stage.description)
+        sub__ = etree.SubElement(sub_, "InputUnits")
+        _obj2tag(sub__, "Name", stage.input_units)
+        _obj2tag(sub__, "Description", stage.input_units_description)
+        sub__ = etree.SubElement(sub_, "OutputUnits")
+        _obj2tag(sub__, "Name", stage.output_units)
+        _obj2tag(sub__, "Description", stage.output_units_description)
 
-    # write custom fields of respective stage type
-    if isinstance(stage, PolesZerosResponseStage):
-        _obj2tag(sub_, "PzTransferFunctionType",
-                 stage.pz_transfer_function_type)
-        _obj2tag(sub_, "NormalizationFactor",
-                 stage.normalization_factor)
-        _write_floattype(sub_, stage, "normalization_frequency",
-                         "NormalizationFrequency")
-        _write_polezero_list(sub_, stage)
-    elif isinstance(stage, CoefficientsTypeResponseStage):
-        _obj2tag(sub_, "CfTransferFunctionType",
-                 stage.cf_transfer_function_type)
-        _write_floattype_list(sub_, stage,
-                              "numerator", "Numerator")
-        _write_floattype_list(sub_, stage,
-                              "denominator", "Denominator")
-    elif isinstance(stage, ResponseListResponseStage):
-        for rlelem in stage.response_list_elements:
-            sub__ = etree.SubElement(sub_, "ResponseListElement")
-            _write_floattype(sub__, rlelem, "frequency", "Frequency")
-            _write_floattype(sub__, rlelem, "amplitude", "Amplitude")
-            _write_floattype(sub__, rlelem, "phase", "Phase")
-    elif isinstance(stage, FIRResponseStage):
-        _obj2tag(sub_, "Symmetry", stage.symmetry)
-        _write_floattype_list(sub_, stage, "coefficients",
-                              "NumeratorCoefficient",
-                              additional_mapping={'number': 'i'})
-    elif isinstance(stage, PolynomialResponseStage):
-        _write_polynomial_common_fields(sub_, stage)
+        # write custom fields of respective stage type
+        if type(stage) == ResponseStage:
+            pass
+        elif isinstance(stage, PolesZerosResponseStage):
+            _obj2tag(sub_, "PzTransferFunctionType",
+                     stage.pz_transfer_function_type)
+            _obj2tag(sub_, "NormalizationFactor",
+                     stage.normalization_factor)
+            _write_floattype(sub_, stage, "normalization_frequency",
+                             "NormalizationFrequency")
+            _write_polezero_list(sub_, stage)
+        elif isinstance(stage, CoefficientsTypeResponseStage):
+            _obj2tag(sub_, "CfTransferFunctionType",
+                     stage.cf_transfer_function_type)
+            _write_floattype_list(sub_, stage,
+                                  "numerator", "Numerator")
+            _write_floattype_list(sub_, stage,
+                                  "denominator", "Denominator")
+        elif isinstance(stage, ResponseListResponseStage):
+            for rlelem in stage.response_list_elements:
+                sub__ = etree.SubElement(sub_, "ResponseListElement")
+                _write_floattype(sub__, rlelem, "frequency", "Frequency")
+                _write_floattype(sub__, rlelem, "amplitude", "Amplitude")
+                _write_floattype(sub__, rlelem, "phase", "Phase")
+        elif isinstance(stage, FIRResponseStage):
+            _obj2tag(sub_, "Symmetry", stage.symmetry)
+            _write_floattype_list(sub_, stage, "coefficients",
+                                  "NumeratorCoefficient",
+                                  additional_mapping={'number': 'i'})
+        elif isinstance(stage, PolynomialResponseStage):
+            _write_polynomial_common_fields(sub_, stage)
 
     # write decimation
-    sub_ = etree.SubElement(sub, "Decimation")
-    _write_floattype(sub_, stage, "decimation_input_sample_rate",
-                     "InputSampleRate")
-    _obj2tag(sub_, "Factor", stage.decimation_factor)
-    _obj2tag(sub_, "Offset", stage.decimation_offset)
-    _write_floattype(sub_, stage, "decimation_delay", "Delay")
-    _write_floattype(sub_, stage, "decimation_correction", "Correction")
+    if stage.decimation_input_sample_rate is not None:
+        sub_ = etree.SubElement(sub, "Decimation")
+        _write_floattype(sub_, stage, "decimation_input_sample_rate",
+                         "InputSampleRate")
+        _obj2tag(sub_, "Factor", stage.decimation_factor)
+        _obj2tag(sub_, "Offset", stage.decimation_offset)
+        _write_floattype(sub_, stage, "decimation_delay", "Delay")
+        _write_floattype(sub_, stage, "decimation_correction", "Correction")
     # write gain
     sub_ = etree.SubElement(sub, "StageGain")
     _obj2tag(sub_, "Value", stage.stage_gain)
@@ -1027,10 +1064,11 @@ def _write_external_reference(parent, ref):
 
 
 def _write_equipment(parent, equipment, tag="Equipment"):
-    if equipment.resource_id is None:
-        attr = {}
-    else:
-        attr = {"resourceId": equipment.resource_id}
+    if equipment is None:
+        return
+    attr = {}
+    if equipment.resource_id is not None:
+        attr["resourceId"] = equipment.resource_id
     equipment_elem = etree.SubElement(parent, tag, attr)
 
     # All tags are optional.
@@ -1103,10 +1141,7 @@ def _write_phone(parent, phone):
 
 
 def _tag2obj(element, tag, convert):
-    # make sure, only unicode
-    if convert is str:
-        warnings.warn("overriding 'str' with 'unicode'.")
-        convert = unicode
+    # we use future.builtins.str and are sure we have unicode here
     try:
         return convert(element.find(tag).text)
     except:
@@ -1117,8 +1152,9 @@ def _tags2obj(element, tag, convert):
     values = []
     # make sure, only unicode
     if convert is str:
+        ### XXX: this warning if raised with python3
         warnings.warn("overriding 'str' with 'unicode'.")
-        convert = unicode
+        convert = str
     for elem in element.findall(tag):
         values.append(convert(elem.text))
     return values

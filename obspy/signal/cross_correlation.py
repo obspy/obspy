@@ -16,6 +16,9 @@ Signal processing routines based on cross correlation techniques.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.utils import native_str
 
 import warnings
 import numpy as np
@@ -450,7 +453,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     >>> templ = st.copy().slice(t, t+5)
     >>> for tr in templ:
     ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
-    >>> print templatesMaxSimilarity(st, t, [templ])
+    >>> print(templatesMaxSimilarity(st, t, [templ]))
     0.922536411468
 
     :param time: Time around which is checked for a similarity. Cross
@@ -492,7 +495,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
                 data_long = tr2.data
             data_short = (data_short - data_short.mean()) / data_short.std()
             data_long = (data_long - data_long.mean()) / data_long.std()
-            tmp = np.correlate(data_long, data_short, "valid")
+            tmp = np.correlate(data_long, data_short, native_str("valid"))
             try:
                 cc += tmp
             except TypeError:

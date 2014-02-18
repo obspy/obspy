@@ -39,7 +39,7 @@ Basic Usage
     >>> from obspy.neries import Client
     >>> client = Client(user='test@obspy.org')
     >>> events = client.getLatestEvents(num=5, format='list')
-    >>> len(events)
+    >>> len(events)  #doctest: +SKIP
     5
     >>> events[0]  #doctest: +SKIP
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
@@ -96,8 +96,10 @@ Basic Usage
     >>> result[0] # doctest: +SKIP
     {'P': 356981.13561726053, 'S': 646841.5619481194}
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

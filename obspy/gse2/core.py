@@ -3,6 +3,7 @@
 GSE2/GSE1 bindings to ObsPy core module.
 """
 
+from __future__ import unicode_literals
 from obspy import Trace, Stream
 from obspy.gse2 import libgse2, libgse1
 import numpy as np
@@ -19,7 +20,7 @@ def isGSE2(filename):
     """
     # Open file.
     try:
-        with open(filename) as f:
+        with open(filename, 'rb') as f:
             libgse2.isGse2(f)
     except:
         return False
@@ -117,12 +118,12 @@ def isGSE1(filename):
     :return: ``True`` if a GSE1 file.
     """
     # Open file.
-    with open(filename) as f:
+    with open(filename, 'rb') as f:
         try:
             data = f.readline()
         except:
             return False
-    if data.startswith('WID1') or data.startswith('XW01'):
+    if data.startswith(b'WID1') or data.startswith(b'XW01'):
         return True
     return False
 

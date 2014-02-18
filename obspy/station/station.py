@@ -9,6 +9,10 @@ Provides the Station class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import super
+from future.builtins import str
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
 from obspy.station.util import Longitude, Latitude
@@ -146,9 +150,12 @@ class Station(BaseNode):
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
         >>> station = inventory.networks[0].stations[0]
-        >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE
-        {'channels': ['ANMO.10.BHZ'],
-         'stations': [u'ANMO (Albuquerque, New Mexico, USA)']}
+        >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        {...}
+        >>> for (k, v) in sorted(station.get_contents().items()):
+        ...     print(k, v[0])
+        channels ANMO.10.BHZ
+        stations ANMO (Albuquerque, New Mexico, USA)
         """
         site_name = None
         if self.site and self.site.name:

@@ -2,6 +2,7 @@
 """
 The obspy.earthworm.client test suite.
 """
+from __future__ import unicode_literals
 
 from numpy import array
 from obspy import read
