@@ -1002,6 +1002,7 @@ class Trace(object):
         self.data = self.data[:total]
         return self
 
+    @_add_processing_info
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
         """
@@ -1069,6 +1070,7 @@ class Trace(object):
                 pass
         return self
 
+    @_add_processing_info
     def slice(self, starttime=None, endtime=None):
         """
         Returns a new Trace object with data going from start to end time.
@@ -1993,6 +1995,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
 
+    @_add_processing_info
     def split(self):
         """
         Splits Trace object containing gaps using a NumPy masked array into
@@ -2088,6 +2091,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise Exception(msg)
         self.stats.response = responses[0]
 
+    @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
                         zero_mean=True, taper=True, taper_fraction=0.05,
                         **kwargs):
