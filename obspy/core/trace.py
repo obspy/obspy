@@ -219,10 +219,14 @@ def _add_processing_info(func):
         kwargs_ = callargs.pop("kwargs", {})
         from obspy import __version__
         info = ["ObsPy", __version__, func.__name__]
-        info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
-                 "%s='%s'" % (k, v) for k, v in callargs.iteritems()]
-        info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
-                 "%s='%s'" % (k, v) for k, v in kwargs_.iteritems()]
+        additional_info = []
+        additional_info += \
+            ["%s=%s" % (k, v) if not isinstance(v, basestring)  else
+             "%s='%s'" % (k, v) for k, v in callargs.iteritems()]
+        additional_info += \
+            ["%s=%s" % (k, v) if not isinstance(v, basestring) else
+             "%s='%s'" % (k, v) for k, v in kwargs_.iteritems()]
+        info.extend(sorted(additional_info))
         self = args[0]
         result = func(*args, **kwargs)
         # Attach after executing the function to avoid having it attached
