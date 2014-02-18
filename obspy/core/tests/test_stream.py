@@ -1997,7 +1997,7 @@ class StreamTestCase(unittest.TestCase):
             .merge()\
             .cutout(st[0].stats.starttime + 2, st[0].stats.starttime + 2)\
             .detrend()\
-            .taper()\
+            .taper(max_percentage=0.05, type="cosine")\
             .normalize()\
             .verify()\
             .trigger(type="zdetect", nsta=20)\
@@ -2007,16 +2007,16 @@ class StreamTestCase(unittest.TestCase):
         # cutout(), verify(), and rotate() methods do not have an entry in the
         # processing chain.
         pr = st[0].stats.processing
-        self.assertTrue(pr[0].startswith("downsample"))
-        self.assertTrue(pr[1].startswith("resample"))
-        self.assertTrue(pr[2].startswith("simulate"))
-        self.assertTrue(pr[3].startswith("filter:lowpass"))
-        self.assertTrue(pr[4].startswith("differentiate"))
-        self.assertTrue(pr[5].startswith("integrate"))
-        self.assertTrue(pr[6].startswith("detrend"))
-        self.assertTrue(pr[7].startswith("taper"))
-        self.assertTrue(pr[8].startswith("normalize"))
-        self.assertTrue(pr[9].startswith("trigger"))
+        self.assertTrue("decimate" in pr[0])
+        self.assertTrue("resample" in pr[1])
+        self.assertTrue("simulate" in pr[2])
+        self.assertTrue("filter" in pr[3] and "lowpass" in pr[3])
+        self.assertTrue("differentiate" in pr[4])
+        self.assertTrue("integrate" in pr[5])
+        self.assertTrue("detrend" in pr[6])
+        self.assertTrue("taper" in pr[7])
+        self.assertTrue("normalize" in pr[8])
+        self.assertTrue("trigger" in pr[9])
 
         self.assertTrue(temp is st)
         # Cutout duplicates the number of traces.

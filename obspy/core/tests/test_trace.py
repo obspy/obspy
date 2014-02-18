@@ -1453,16 +1453,16 @@ class TraceTestCase(unittest.TestCase):
         # Use the processing chain to check the results. The trim() methods
         # does not have an entry in the processing chain.
         pr = tr.stats.processing
-        self.assertTrue(pr[0].startswith("filter:lowpass"))
-        self.assertTrue(pr[1].startswith("simulate"))
-        self.assertTrue(pr[2].startswith("trigger"))
-        self.assertTrue(pr[3].startswith("downsample"))
-        self.assertTrue(pr[4].startswith("resample"))
-        self.assertTrue(pr[5].startswith("differentiate"))
-        self.assertTrue(pr[6].startswith("integrate"))
-        self.assertTrue(pr[7].startswith("detrend"))
-        self.assertTrue(pr[8].startswith("taper"))
-        self.assertTrue(pr[9].startswith("normalize"))
+        self.assertTrue("filter" in pr[0] and "lowpass" in pr[0])
+        self.assertTrue("simulate" in pr[1])
+        self.assertTrue("trigger" in pr[2])
+        self.assertTrue("decimate" in pr[3])
+        self.assertTrue("resample" in pr[4])
+        self.assertTrue("differentiate" in pr[5])
+        self.assertTrue("integrate" in pr[6])
+        self.assertTrue("detrend" in pr[7])
+        self.assertTrue("taper" in pr[8])
+        self.assertTrue("normalize" in pr[9])
 
     def test_skip_empty_trace(self):
         tr = read()[0]

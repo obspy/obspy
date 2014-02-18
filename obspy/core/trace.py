@@ -218,7 +218,7 @@ def _add_processing_info(func):
         callargs.pop("self")
         kwargs_ = callargs.pop("kwargs", {})
         from obspy import __version__
-        info = [__version__, func.__name__]
+        info = ["ObsPy", __version__, func.__name__]
         info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
                  "%s='%s'" % (k, v) for k, v in callargs.iteritems()]
         info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
@@ -1914,15 +1914,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
-        >>> print(tr.stats.processing[0])
-        normalize:9
+        >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy:...:normalize:norm=None
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
         >>> tr.normalize()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
-        >>> print(tr.stats.processing[0])
-        normalize:-9.2
+        >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy:...:normalize:norm=None
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
