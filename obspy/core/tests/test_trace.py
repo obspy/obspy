@@ -5,7 +5,7 @@ from future.builtins import range
 
 from copy import deepcopy
 from numpy.ma import is_masked
-from obspy import UTCDateTime, Trace, read, Stream
+from obspy import UTCDateTime, Trace, read, Stream, __version__
 from obspy.core import Stats
 from obspy.core.compatibility import mock
 from obspy.core.util.base import getMatplotlibVersion
@@ -1581,7 +1581,8 @@ class TraceTestCase(unittest.TestCase):
         Test case for the automatic processing information.
         """
         tr = read()[0]
-        tr.trim(tr.stats.starttime + 1)
+        trimming_starttime = tr.stats.starttime + 1
+        tr.trim(trimming_starttime)
         tr.filter("lowpass", freq=2.0)
         tr.simulate(paz_remove={
             'poles': [-0.037004 + 0.037016j, - 0.037004 - 0.037016j,
@@ -1601,6 +1602,11 @@ class TraceTestCase(unittest.TestCase):
         pr = tr.stats.processing
 
         self.assertTrue("trim" in pr[0])
+        self.assertEqual(
+            "ObsPy:%s:trim:endtime=None:fill_value=None:nearest_sample=True:"
+            "pad=False:starttime=%s" % (__version__,
+                                        str(trimming_starttime)),
+            pr[0])
         self.assertTrue("filter" in pr[1])
         self.assertTrue("simulate" in pr[2])
         self.assertTrue("trigger" in pr[3])
