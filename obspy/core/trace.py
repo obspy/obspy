@@ -221,7 +221,7 @@ def _add_processing_info(func):
         info = ["ObsPy", __version__, func.__name__]
         additional_info = []
         additional_info += \
-            ["%s=%s" % (k, v) if not isinstance(v, basestring)  else
+            ["%s=%s" % (k, v) if not isinstance(v, basestring) else
              "%s='%s'" % (k, v) for k, v in callargs.iteritems()]
         additional_info += \
             ["%s=%s" % (k, v) if not isinstance(v, basestring) else
