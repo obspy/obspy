@@ -87,10 +87,8 @@ def round_away(number):
         return int(np.round(number))
 
 
-vi = sys.version_info
-
 # If not Python 2.6 return the getcallargs function.
-if not (vi.major == 2 and vi.minor == 6):
+if not (sys.version_info[0] == 2 and sys.version_info[1] == 6):
     getcallargs = inspect.getcallargs
 else:
     # Otherwise redefine it here. This is a copy from the Python 2.7 stdlib
