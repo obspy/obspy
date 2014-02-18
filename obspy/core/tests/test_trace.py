@@ -1576,6 +1576,30 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
+    def test_no_processing_info_for_failed_operations(self):
+        """
+        If an operation fails, no processing information should be attached
+        to the Trace object.
+        """
+        # create test Trace
+        tr = Trace(data=np.arange(20))
+        self.assertFalse("processing" in tr.stats)
+        # This decimation by a factor of 7 in this case would change the
+        # endtime of the time series. Therefore it fails.
+        self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
+        # No processing should be applied yet.
+        self.assertFalse("processing" in tr.stats)
+
+        # Test the same but this time with an already existing processing
+        # information.
+        tr = Trace(data=np.arange(20))
+        tr.detrend()
+        self.assertEqual(len(tr.stats.processing), 1)
+        info = tr.stats.processing[0]
+
+        self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
+        self.assertEqual(tr.stats.processing, [info])
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
