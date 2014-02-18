@@ -575,6 +575,15 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data[2:9].ctypes.data, tr1.data.ctypes.data)
         self.assertEqual(tr1.data.ctypes.data - 8, mempos)
 
+        # Test the processing information for the slicing. The sliced trace
+        # should have a processing information showing that it has been
+        # trimmed. The original trace should have nothing.
+        tr = Trace(data=np.arange(10, dtype='int32'))
+        tr2 = tr.slice(tr.stats.starttime)
+        self.assertTrue("processing" not in tr.stats)
+        self.assertTrue("processing" in tr2.stats)
+        self.assertTrue("trim" in tr2.stats.processing[0])
+
     def test_slice_noStarttimeOrEndtime(self):
         """
         Tests the slicing of trace objects with no starttime or endtime
