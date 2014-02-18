@@ -217,20 +217,23 @@ def _add_processing_info(func):
         callargs.pop("self")
         kwargs_ = callargs.pop("kwargs", {})
         from obspy import __version__
-        info = ["ObsPy", __version__, func.__name__]
-        additional_info = []
-        additional_info += \
+        info = "ObsPy {version}: {function}(%s)".format(
+            version=__version__,
+            function=func.__name__)
+        arguments = []
+        arguments += \
             ["%s=%s" % (k, v) if not isinstance(v, native_str) else
              "%s='%s'" % (k, v) for k, v in callargs.items()]
-        additional_info += \
+        arguments += \
             ["%s=%s" % (k, v) if not isinstance(v, native_str) else
              "%s='%s'" % (k, v) for k, v in kwargs_.items()]
-        info.extend(sorted(additional_info))
+        arguments.sort()
+        info = info % ", ".join(arguments)
         self = args[0]
         result = func(*args, **kwargs)
         # Attach after executing the function to avoid having it attached
         # while the operation failed.
-        self._addProcessingInfo(":".join(info))
+        self._addProcessingInfo(info)
         return result
 
     new_func.__name__ = func.__name__
@@ -1922,14 +1925,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
         >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
-        ObsPy:...:normalize:norm=None
+        ObsPy ...: normalize(norm=None)
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
         >>> tr.normalize()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
         >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
-        ObsPy:...:normalize:norm=None
+        ObsPy ...: normalize(norm=None)
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
