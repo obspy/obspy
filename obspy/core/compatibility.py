@@ -174,7 +174,7 @@ else:
             assign(varkw, named)
         elif named:
             unexpected = next(iter(named))
-            if isinstance(unexpected, unicode):
+            if isinstance(unexpected, str):
                 unexpected = unexpected.encode(sys.getdefaultencoding(),
                                                'replace')
             raise TypeError("%s() got an unexpected keyword argument '%s'" %

@@ -220,11 +220,11 @@ def _add_processing_info(func):
         info = ["ObsPy", __version__, func.__name__]
         additional_info = []
         additional_info += \
-            ["%s=%s" % (k, v) if not isinstance(v, basestring) else
-             "%s='%s'" % (k, v) for k, v in callargs.iteritems()]
+            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+             "%s='%s'" % (k, v) for k, v in callargs.items()]
         additional_info += \
-            ["%s=%s" % (k, v) if not isinstance(v, basestring) else
-             "%s='%s'" % (k, v) for k, v in kwargs_.iteritems()]
+            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+             "%s='%s'" % (k, v) for k, v in kwargs_.items()]
         info.extend(sorted(additional_info))
         self = args[0]
         result = func(*args, **kwargs)
