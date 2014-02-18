@@ -24,6 +24,17 @@ class TraceTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.trace.Trace.
     """
+    @staticmethod
+    def __remove_processing(tr):
+        """
+        Removes all processing information in the trace object.
+
+        Useful for testing.
+        """
+        if "processing" not in tr.stats:
+            return
+        del tr.stats.processing
+
     def test_init(self):
         """
         Tests the __init__ method of the Trace class.
@@ -596,38 +607,86 @@ class TraceTestCase(unittest.TestCase):
         t2 = tr.stats.starttime + 2
         t3 = tr.stats.endtime - 3
         t4 = tr.stats.endtime + 2
+
         # test 1: only removing data at left side
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t2)
         self.assertEqual(tr_trim, tr.slice(starttime=t2))
-        self.assertEqual(tr_trim, tr.slice(starttime=t2, endtime=t4))
+        tr2 = tr.slice(starttime=t2, endtime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         # test 2: only removing data at right side
         tr_trim = tr_orig.copy()
         tr_trim.trim(endtime=t3)
         self.assertEqual(tr_trim, tr.slice(endtime=t3))
-        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t3))
+        tr2 = tr.slice(starttime=t1, endtime=t3)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         # test 3: not removing data at all
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t1, endtime=t4)
-        self.assertEqual(tr_trim, tr.slice())
-        self.assertEqual(tr_trim, tr.slice(starttime=t1))
-        self.assertEqual(tr_trim, tr.slice(endtime=t4))
-        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t4))
+        tr2 = tr.slice()
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(endtime=t4)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1, endtime=t4)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         tr_trim.trim()
-        self.assertEqual(tr_trim, tr.slice())
-        self.assertEqual(tr_trim, tr.slice(starttime=t1))
-        self.assertEqual(tr_trim, tr.slice(endtime=t4))
-        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t4))
+        tr2 = tr.slice()
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(endtime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1, endtime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         # test 4: removing data at left and right side
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t2, endtime=t3)
         self.assertEqual(tr_trim, tr.slice(t2, t3))
         self.assertEqual(tr_trim, tr.slice(starttime=t2, endtime=t3))
+
         # test 5: no data left after operation
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t4)
-        self.assertEqual(tr_trim, tr.slice(starttime=t4))
-        self.assertEqual(tr_trim, tr.slice(starttime=t4, endtime=t4 + 1))
+
+        tr2 = tr.slice(starttime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t4, endtime=t4 + 1)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
 
     def test_trimFloatingPoint(self):
         """
@@ -1462,16 +1521,17 @@ class TraceTestCase(unittest.TestCase):
         # Use the processing chain to check the results. The trim() methods
         # does not have an entry in the processing chain.
         pr = tr.stats.processing
-        self.assertTrue("filter" in pr[0] and "lowpass" in pr[0])
-        self.assertTrue("simulate" in pr[1])
-        self.assertTrue("trigger" in pr[2])
-        self.assertTrue("decimate" in pr[3])
-        self.assertTrue("resample" in pr[4])
-        self.assertTrue("differentiate" in pr[5])
-        self.assertTrue("integrate" in pr[6])
-        self.assertTrue("detrend" in pr[7])
-        self.assertTrue("taper" in pr[8])
-        self.assertTrue("normalize" in pr[9])
+        self.assertTrue("trim" in pr[0])
+        self.assertTrue("filter" in pr[1] and "lowpass" in pr[1])
+        self.assertTrue("simulate" in pr[2])
+        self.assertTrue("trigger" in pr[3])
+        self.assertTrue("decimate" in pr[4])
+        self.assertTrue("resample" in pr[5])
+        self.assertTrue("differentiate" in pr[6])
+        self.assertTrue("integrate" in pr[7])
+        self.assertTrue("detrend" in pr[8])
+        self.assertTrue("taper" in pr[9])
+        self.assertTrue("normalize" in pr[10])
 
     def test_skip_empty_trace(self):
         tr = read()[0]
@@ -1626,7 +1686,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue("detrend" in pr[8])
         self.assertTrue("taper" in pr[9])
         self.assertTrue("normalize" in pr[10])
-
 
     def test_no_processing_info_for_failed_operations(self):
         """
