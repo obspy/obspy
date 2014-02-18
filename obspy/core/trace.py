@@ -224,8 +224,11 @@ def _add_processing_info(func):
         info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
                  "%s='%s'" % (k, v) for k, v in kwargs_.iteritems()]
         self = args[0]
+        result = func(*args, **kwargs)
+        # Attach after executing the function to avoid having it attached
+        # while the operation failed.
         self._addProcessingInfo(":".join(info))
-        return func(*args, **kwargs)
+        return result
 
     new_func.__name__ = func.__name__
     new_func.__doc__ = func.__doc__
