@@ -1576,6 +1576,43 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
+    def test_processing_information(self):
+        """
+        Test case for the automatic processing information.
+        """
+        tr = read()[0]
+        tr.trim(tr.stats.starttime + 1)
+        tr.filter("lowpass", freq=2.0)
+        tr.simulate(paz_remove={
+            'poles': [-0.037004 + 0.037016j, - 0.037004 - 0.037016j,
+                      - 251.33 + 0j],
+            'zeros': [0j, 0j],
+            'gain': 60077000.0,
+            'sensitivity': 2516778400.0})
+        tr.trigger(type="zdetect", nsta=20)
+        tr.decimate(factor=2, no_filter=True)
+        tr.resample(tr.stats.sampling_rate / 2.0)
+        tr.differentiate()
+        tr.integrate()
+        tr.detrend()
+        tr.taper(max_percentage=0.05, type='cosine')
+        tr.normalize()
+
+        pr = tr.stats.processing
+
+        self.assertTrue("trim" in pr[0])
+        self.assertTrue("filter" in pr[1])
+        self.assertTrue("simulate" in pr[2])
+        self.assertTrue("trigger" in pr[3])
+        self.assertTrue("decimate" in pr[4])
+        self.assertTrue("resample" in pr[5])
+        self.assertTrue("differentiate" in pr[6])
+        self.assertTrue("integrate" in pr[7])
+        self.assertTrue("detrend" in pr[8])
+        self.assertTrue("taper" in pr[9])
+        self.assertTrue("normalize" in pr[10])
+
+
     def test_no_processing_info_for_failed_operations(self):
         """
         If an operation fails, no processing information should be attached
