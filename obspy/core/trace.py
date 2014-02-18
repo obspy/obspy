@@ -26,7 +26,6 @@ from obspy.core.util.misc import flatnotmaskedContiguous
 import math
 import numpy as np
 import warnings
-from inspect import getcallargs
 import functools
 
 
@@ -214,7 +213,7 @@ def _add_processing_info(func):
     """
     @functools.wraps(func)
     def new_func(*args, **kwargs):
-        callargs = getcallargs(func, *args, **kwargs)
+        callargs = compatibility.getcallargs(func, *args, **kwargs)
         callargs.pop("self")
         kwargs_ = callargs.pop("kwargs", {})
         from obspy import __version__
@@ -1070,7 +1069,6 @@ class Trace(object):
                 pass
         return self
 
-    @_add_processing_info
     def slice(self, starttime=None, endtime=None):
         """
         Returns a new Trace object with data going from start to end time.
