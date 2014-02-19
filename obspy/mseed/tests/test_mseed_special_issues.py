@@ -456,13 +456,19 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # 2 - select full time window
         st2 = read(filename, starttime=t1, endtime=t2)
         self.assertEqual(len(st2), 3)
+        for tr in st2:
+            del tr.stats.processing
         self.assertEqual(st, st2)
         # 3 - use selection
         st2 = read(filename, starttime=t1, endtime=t2, sourcename='*.*.*.*')
         self.assertEqual(len(st2), 3)
+        for tr in st2:
+            del tr.stats.processing
         self.assertEqual(st, st2)
         st2 = read(filename, starttime=t1, endtime=t2, sourcename='*')
         self.assertEqual(len(st2), 3)
+        for tr in st2:
+            del tr.stats.processing
         self.assertEqual(st, st2)
         # 4 - selection without times
         st2 = read(filename, sourcename='*.*.*.*')

@@ -1,6 +1,7 @@
 0.10.0:
  - general:
    * support for Python 3.3
+   * More generic processing history for most Stream and Trace methods.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
@@ -9,7 +10,7 @@
  - obspy.core:
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
-   * extend remove_response for polynomial responses  
+   * extend remove_response for polynomial responses
      (thanks to Sebastien/bonaime, see #566)
  - obspy.datamark:
    * bugfix: channel code now correctly read (4 hex char)
