@@ -105,7 +105,7 @@ class WaveformPlotting(object):
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
         # Whether to use straight plotting or the fast minmax method.
-        self.plotting_method = kwargs.get('method', 'fast')
+        self.plotting_method = kwargs.get('method', 'full')
         # Below that value the data points will be plotted normally. Above it
         # the data will be plotted using a different approach (details see
         # below). Can be overwritten by the above self.plotting_method kwarg.
@@ -186,7 +186,7 @@ class WaveformPlotting(object):
         self.x_labels_size = kwargs.get('x_labels_size', 8)
         self.y_labels_size = kwargs.get('y_labels_size', 8)
         self.title_size = kwargs.get('title_size', 10)
-        self.linewidth = kwargs.get('linewidth', 0.4)
+        self.linewidth = kwargs.get('linewidth', 1)
         self.linestyle = kwargs.get('linestyle', '-')
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
@@ -699,12 +699,6 @@ class WaveformPlotting(object):
         ax.plot(
             trace.data, color=self.color, linewidth=self.linewidth,
             linestyle=self.linestyle)
-        ax.xaxis.grid(
-            color=self.grid_color, linestyle=self.grid_linestyle,
-            linewidth=self.grid_linewidth)
-        ax.yaxis.grid(
-            color=self.grid_color, linestyle=self.grid_linestyle,
-            linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
