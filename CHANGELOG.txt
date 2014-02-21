@@ -2,7 +2,7 @@
  - obspy.core:
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
-   * extend remove_response for polynomial responses  
+   * extend remove_response for polynomial responses
      (thanks to Sebastien/bonaime, see #566)
  - obspy.datamark:
    * bugfix: channel code now correctly read (4 hex char)
@@ -11,6 +11,8 @@
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
+ - obspy.imaging:
+   * Fixing waveform plotting.
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
  - obspy.taup:
