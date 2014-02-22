@@ -1030,6 +1030,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                                      grdpts_y, vel_cor=vel_cor,
                                      static_3D=static_3D)
     # offset of arrays
+    mini = np.min(time_shift_table[:, :, :])
+    maxi = np.max(time_shift_table[:, :, :])
+
     spoint, _epoint = get_spoint(stream, stime, etime)
 
     # loop with a sliding window over the dat trace array and apply bbfk
@@ -1238,14 +1241,21 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
     mini = np.min(time_shift_table[:, :, :])
     maxi = np.max(time_shift_table[:, :, :])
     spoint, _epoint = get_spoint(stream, (stime-mini), (etime-maxi))
+    minend = np.min(_epoint)
+    maxstart = np.max(spoint)
 
     # recalculate the maximum possible trace length
     #    ndat = int(((etime-maxi) - (stime-mini))*fs)
     if(win_len < 0):
-        nsamp = int(((etime-maxi) - (stime-mini))*fs)
+            nsamp = int(((etime-maxi) - (stime-mini))*fs)
     else:
         #nsamp = int((win_len-np.abs(maxi)-np.abs(mini)) * fs)
         nsamp = int(win_len * fs)
+
+    if nsamp <= 0:
+        print 'Data window too small for slowness grid'
+        print 'Must exit'
+        quit()
 
     nstep = int(nsamp * win_frac)
 
@@ -1261,19 +1271,18 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                 for y in xrange(grdpts_y):
                     singlet = 0.
                     beam = np.zeros(nsamp, dtype='f8')
+                    shifted = np.zeros(nsamp, dtype='f8')
                     for i in xrange(nstat):
                         s = spoint[i]+int(time_shift_table[i, x, y] * fs + 0.5)
                         try:
-                            shifted = stream[i].data[
-                                s + offset:s + nsamp + offset]
+                            shifted = stream[i].data[s + offset:s + nsamp + offset]
+                            if len(shifted) < nsamp:
+                                shifted = np.pad(shifted,(0,nsamp-len(shifted)),'constant',constant_values=(0,1))
                             singlet += 1./nstat*np.sum(shifted*shifted)
-                            beam += 1. / nstat * np.power(
-                                np.abs(shifted), 1. / nthroot) * shifted / \
-                                np.abs(shifted)
+                            beam += 1. / nstat * np.power(np.abs(shifted), 1. / nthroot) * shifted/np.abs(shifted)
                         except IndexError:
                             break
-                    beam = np.power(np.abs(beam), nthroot) * beam / \
-                        np.abs(beam)
+                    beam = np.power(np.abs(beam), nthroot) * beam / np.abs(beam)
                     bs = np.sum(beam*beam)
                     abspow_map[x, y] = bs / singlet
                     if abspow_map[x, y] > max_beam:
@@ -1286,6 +1295,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                     beam = np.zeros(nsamp, dtype='f8')
                     stack = np.zeros(nsamp, dtype='c8')
                     phase = np.zeros(nsamp, dtype='f8')
+                    shifted = np.zeros(nsamp, dtype='f8')
                     coh = np.zeros(nsamp, dtype='f8')
                     for i in xrange(nstat):
                         s = spoint[i] + int(time_shift_table[i, x, y] * fs +
@@ -1293,6 +1303,8 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                         try:
                             shifted = sp.signal.hilbert(stream[i].data[
                                 s + offset: s + nsamp + offset])
+                            if len(shifted) < nsamp:
+                                shifted = np.pad(shifted,(0,nsamp-len(shifted)),'constant',constant_values=(0,1))
                         except IndexError:
                             break
                         phase = np.arctan2(shifted.imag, shifted.real)
@@ -1371,7 +1383,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                              slow]))
         if verbose:
             print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
-        if (newstart + (nsamp + nstep) / fs) > etime:
+        if (newstart + (nsamp + nstep)/fs ) > etime:
             eotr = False
         offset += nstep
 
