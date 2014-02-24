@@ -2171,7 +2171,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                    "(but is of type %s).") % type(self.stats.response)
             raise TypeError(msg)
 
-
         response = self.stats.response
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:
