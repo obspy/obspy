@@ -23,6 +23,7 @@
    * Fixing waveform plotting.
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
+   * add get_coordinates method to inventory and network objects (see #740)
  - obspy.taup:
    * bugfix: avoid a bug that caused multiple calls to taup to result in
      spurious unexpected results (see #728)

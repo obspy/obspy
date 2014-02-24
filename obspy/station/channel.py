@@ -138,6 +138,7 @@ class Channel(BaseNode):
         self.clock_drift_in_seconds_per_sample = \
             clock_drift_in_seconds_per_sample
         self.calibration_units = calibration_units
+        self.calibration_units_description = calibration_units_description
         self.sensor = sensor
         self.pre_amplifier = pre_amplifier
         self.data_logger = data_logger

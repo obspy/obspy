@@ -239,6 +239,36 @@ class Inventory(ComparingObject):
             raise Exception(msg)
         return responses[0]
 
+    def get_coordinates(self, seed_id, datetime=None):
+        """
+        Return coordinates for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get coordinates for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get coordinates for.
+        :rtype: dict
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation)
+        """
+        network, _, _, _ = seed_id.split(".")
+
+        coordinates = []
+        for net in self.networks:
+            if net.code != network:
+                continue
+            try:
+                coordinates.append(net.get_coordinates(seed_id, datetime))
+            except:
+                pass
+        if len(coordinates) > 1:
+            msg = "Found more than one matching coordinates. Returning first."
+            warnings.warn(msg)
+        elif len(coordinates) < 1:
+            msg = "No matching coordinates found."
+            raise Exception(msg)
+        return coordinates[0]
+
 
 if __name__ == '__main__':
     import doctest
