@@ -261,7 +261,8 @@ class ImageComparison(NamedTemporaryFile):
         if os.stat(self.name).st_size == 0:
             msg = "Empty output image file."
             raise ImageComparisonException(msg)
-        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
+        msg = compare_images(native_str(self.baseline_image),
+                             native_str(self.name), tol=self.tol)
         if msg:
             raise ImageComparisonException(msg)
 
