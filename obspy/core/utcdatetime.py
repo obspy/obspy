@@ -434,7 +434,6 @@ class UTCDateTime(object):
         else:
             delta = 0
         if delta:
-            tz = tz.replace(':', '')   # XXX: not needed
             while len(tz) < 3:
                 tz += '0'
             delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
