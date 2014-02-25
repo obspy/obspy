@@ -3092,6 +3092,7 @@ class Catalog(object):
                 new_val2 = np.floor(val2 / delta) * delta
                 N = (new_val2 - new_val1) / delta + 1
                 return np.linspace(new_val1, new_val2, N)
+
             N1 = int(np.ceil(height / max(width, height) * 8))
             N2 = int(np.ceil(width / max(width, height) * 8))
             map.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
@@ -3129,20 +3130,23 @@ class Catalog(object):
                 if xpt > 1e25:
                     continue
                 plt.text(xpt, ypt, name, weight="heavy",
-                         color=scal_map.to_rgba(colorpt))
+                         color=scal_map.to_rgba(colorpt), zorder=100)
         elif len(self.events) == 1:
             plt.text(x[0], y[0], labels[0], weight="heavy", color="red")
+
         min_size = 2
         max_size = 30
-        min_mag = min(mags)
-        max_mag = max(mags)
+        min_mag = min(mags) - 1
+        max_mag = max(mags) + 1
         if len(self.events) > 1:
-            frac = [(_i - min_mag) / (max_mag - min_mag) for _i in mags]
+            frac = [(0.2 + (_i - min_mag)) / (max_mag - min_mag)
+                    for _i in mags]
             magnitude_size = [(_i * (max_size - min_size)) ** 2 for _i in frac]
             colors_plot = [scal_map.to_rgba(c) for c in colors]
         else:
             magnitude_size = 15.0 ** 2
             colors_plot = "red"
+
         map.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
                     zorder=10)
         times = [event.origins[0].time for event in self.events]
