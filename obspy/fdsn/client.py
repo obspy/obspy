@@ -1207,7 +1207,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
     except compatibility.HTTPError as e:
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
-                  (e.code, e.reason, url, e.read())
+                  (e.code, str(e.reason), url, e.read())
             print(msg)
             return e.code, None
         raise
