@@ -228,7 +228,7 @@ def _add_processing_info(func):
             ["%s=%s" % (k, v) if not isinstance(v, native_str) else
              "%s='%s'" % (k, v) for k, v in kwargs_.items()]
         arguments.sort()
-        info = info % ", ".join(arguments)
+        info = info % "::".join(arguments)
         self = args[0]
         result = func(*args, **kwargs)
         # Attach after executing the function to avoid having it attached

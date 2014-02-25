@@ -1691,8 +1691,8 @@ class TraceTestCase(unittest.TestCase):
 
         self.assertTrue("trim" in pr[0])
         self.assertEqual(
-            "ObsPy %s: trim(endtime=None, fill_value=None, "
-            "nearest_sample=True, pad=False, starttime=%s)" % (
+            "ObsPy %s: trim(endtime=None::fill_value=None::"
+            "nearest_sample=True::pad=False::starttime=%s)" % (
                 __version__, str(trimming_starttime)),
             pr[0])
         self.assertTrue("filter" in pr[1])
