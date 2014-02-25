@@ -1018,7 +1018,7 @@ class Client(object):
                             wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
-                    except urllib2.HTTPError as e:
+                    except compatibility.HTTPError as e:
                         if e.code == 404:
                             wadl_queue.put((url, None))
                         else:
