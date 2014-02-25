@@ -1493,16 +1493,19 @@ class TraceTestCase(unittest.TestCase):
         Tests the resampling of traces.
         """
         tr = read()[0]
-        assert tr.stats.sampling_rate == 100.0
-        assert tr.stats.npts == 3000
+
+        self.assertEqual(tr.stats.sampling_rate, 100.0)
+        self.assertEqual(tr.stats.npts, 3000)
 
         tr_2 = tr.copy().resample(sampling_rate=50.0)
-        assert tr_2.stats.endtime == tr.stats.endtime
-        assert tr_2.stats.sampling_rate == 50.0
+        self.assertEqual(tr_2.stats.endtime, tr.stats.endtime - 1.0 / 100.0)
+        self.assertEqual(tr_2.stats.sampling_rate, 50.0)
+        self.assertEqual(tr_2.stats.starttime, tr.stats.starttime)
 
         tr_3 = tr.copy().resample(sampling_rate=10.0)
-        assert tr_3.stats.endtime == tr.stats.endtime
-        assert tr_3.stats.sampling_rate == 10.0
+        self.assertEqual(tr_3.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
+        self.assertEqual(tr_3.stats.sampling_rate, 10.0)
+        self.assertEqual(tr_3.stats.starttime, tr.stats.starttime)
 
     def test_method_chaining(self):
         """
