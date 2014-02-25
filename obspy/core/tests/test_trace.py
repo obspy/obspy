@@ -1488,6 +1488,22 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
+    def test_resample(self):
+        """
+        Tests the resampling of traces.
+        """
+        tr = read()[0]
+        assert tr.stats.sampling_rate == 100.0
+        assert tr.stats.npts == 3000
+
+        tr_2 = tr.copy().resample(sampling_rate=50.0)
+        assert tr_2.stats.endtime == tr.stats.endtime
+        assert tr_2.stats.sampling_rate == 50.0
+
+        tr_3 = tr.copy().resample(sampling_rate=10.0)
+        assert tr_3.stats.endtime == tr.stats.endtime
+        assert tr_3.stats.sampling_rate == 10.0
+
     def test_method_chaining(self):
         """
         Tests that method chaining works for all methods on the Trace object
