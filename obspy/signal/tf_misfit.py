@@ -9,10 +9,8 @@
 # Copyright (C) 2012 Martin van Driel
 #---------------------------------------------------------------------
 """
-Various Time Frequency Misfit Functions based on Kristekova et. al. (2006) and
-Kristekova et. al. (2009).
-
-.. seealso:: [Kristekova2006]_ and [Kristekova2009]_
+Various Time Frequency Misfit Functions based on [Kristekova2006]_ and
+[Kristekova2009]_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

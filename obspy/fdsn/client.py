@@ -1010,12 +1010,19 @@ class Client(object):
         def get_download_thread(url):
             class ThreadURL(threading.Thread):
                 def run(self):
-                    code, data = download_url(url, headers=headers,
-                                              debug=debug)
-                    if code == 200:
-                        wadl_queue.put((url, data))
-                    else:
-                        wadl_queue.put((url, None))
+                    # Catch 404s.
+                    try:
+                        code, data = download_url(url, headers=headers,
+                                                  debug=debug)
+                        if code == 200:
+                            wadl_queue.put((url, data))
+                        else:
+                            wadl_queue.put((url, None))
+                    except urllib2.HTTPError as e:
+                        if e.code == 404:
+                            wadl_queue.put((url, None))
+                        else:
+                            raise
             return ThreadURL()
 
         threads = list(map(get_download_thread, urls))
