@@ -186,6 +186,8 @@ def _read_station(sta_element, _ns):
 def _read_floattype(parent, tag, cls, unit=False, datum=False,
                     additional_mapping={}):
     elem = parent.find(tag)
+    if elem is None:
+        return None
     obj = cls(float(elem.text))
     if unit:
         obj.unit = elem.attrib.get("unit")
@@ -738,7 +740,6 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     attribs = {}
     obj_ = getattr(obj, attr_name)
     if obj_ is None:
-        etree.SubElement(parent, tag)
         return
     attribs["datum"] = obj_.__dict__.get("datum")
     if hasattr(obj_, "unit"):
