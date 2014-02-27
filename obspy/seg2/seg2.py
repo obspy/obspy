@@ -259,7 +259,7 @@ class SEG2(object):
             return c in ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN'
                          'OPQRSTUVWXYZ!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
 
-        strings = [filter(is_good_char,_i) for _i in strings if len(_i) >= 3]
+        strings = [filter(is_good_char, _i) for _i in strings if len(_i) >= 3]
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
         for string in strings:
