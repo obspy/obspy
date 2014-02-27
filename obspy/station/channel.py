@@ -13,7 +13,9 @@ from __future__ import unicode_literals
 from future.builtins import super
 from future.builtins import str
 from obspy.station import BaseNode
-from obspy.station.util import Longitude, Latitude
+from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
+    ClockDrift
+from obspy.core.util.obspy_types import FloatWithUncertainties
 
 
 class Channel(BaseNode):
@@ -210,6 +212,80 @@ class Channel(BaseNode):
             self._latitude = value
         else:
             self._latitude = Latitude(value)
+
+    @property
+    def elevation(self):
+        return self._elevation
+
+    @elevation.setter
+    def elevation(self, value):
+        if isinstance(value, Distance):
+            self._elevation = value
+        else:
+            self._elevation = Distance(value)
+
+    @property
+    def depth(self):
+        return self._depth
+
+    @depth.setter
+    def depth(self, value):
+        if isinstance(value, Distance):
+            self._depth = value
+        else:
+            self._depth = Distance(value)
+
+    @property
+    def azimuth(self):
+        return self._azimuth
+
+    @azimuth.setter
+    def azimuth(self, value):
+        if value is None:
+            self._azimuth = None
+        elif isinstance(value, Azimuth):
+            self._azimuth = value
+        else:
+            self._azimuth = Azimuth(value)
+
+    @property
+    def dip(self):
+        return self._dip
+
+    @dip.setter
+    def dip(self, value):
+        if value is None:
+            self._dip = None
+        elif isinstance(value, Dip):
+            self._dip = value
+        else:
+            self._dip = Dip(value)
+
+    @property
+    def sample_rate(self):
+        return self._sample_rate
+
+    @sample_rate.setter
+    def sample_rate(self, value):
+        if value is None:
+            self._sample_rate = None
+        elif isinstance(value, FloatWithUncertainties):
+            self._sample_rate = value
+        else:
+            self._sample_rate = FloatWithUncertainties(value)
+
+    @property
+    def clock_drift_in_seconds_per_sample(self):
+        return self._clock_drift_in_seconds_per_sample
+
+    @clock_drift_in_seconds_per_sample.setter
+    def clock_drift_in_seconds_per_sample(self, value):
+        if value is None:
+            self._clock_drift_in_seconds_per_sample = None
+        elif isinstance(value, ClockDrift):
+            self._clock_drift_in_seconds_per_sample = value
+        else:
+            self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
 
 if __name__ == '__main__':
