@@ -17,16 +17,110 @@ import warnings
 
 import numpy as np
 import scipy as sp
+from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream
 from obspy.core.util.decorator import deprecated
 from scipy.integrate import cumtrapz
+from obspy.signal.invsim import cosTaper
+import warnings
 
-from obspy.core import Stream
-from obspy.signal.headers import clibsignal
-from obspy.signal.invsim import cosine_taper
-from obspy.signal.util import next_pow_2, util_geo_km
+import cartopy
+import matplotlib.pyplot as plt
+
+
+class SeismicArray(object):
+    """
+    Class representing a seismic array.
+    """
+    def __init__(self, name=u""):
+        self.name = name
+        self.inventory = None
+        self.event = None
+
+    def add_inventory(self, inv):
+        if self.inventory is not None:
+            raise NotImplementedError
+        self.inventory = inv
+
+    def _get_geometry(self):
+        if not self.inventory:
+            return {}
+
+        geo = {}
+        for network in self.inventory:
+            for station in network:
+                station_code = "{n}.{s}".format(n=network.code,
+                                                s=station.code)
+                for channel in station:
+                    this_coordinates = \
+                        {"latitude": channel.latitude,
+                         "longitude": channel.longitude,
+                         "elevation": channel.elevation,
+                         "local_depth": channel.depth}
+                    if station_code in geo and \
+                            this_coordinates not in geo.values():
+                        msg = ("Different coordinates for station '{n}.{s}' "
+                               "in the inventory. The first ones encountered "
+                               "will be chosen.".format(n=network.code,
+                                                        s=station.code))
+                        warnings.warn(msg)
+                        continue
+                    geo[station_code] = this_coordinates
+        return geo
+
+    @property
+    def geometry(self):
+        return self._get_geometry()
+
+    @property
+    def aperture(self):
+        """
+        The aperture of the array in kilometers.
+        """
+        distances = []
+        geo = self.geometry
+        for station, coordinates in geo.items():
+            for other_station, other_coordinates in geo.items():
+                if station == other_station:
+                    continue
+                distances.append(gps2DistAzimuth(
+                    coordinates["latitude"], coordinates["longitude"],
+                    other_coordinates["latitude"],
+                    other_coordinates["longitude"])[0] / 1000.0)
+
+        return max(distances)
+
+    @property
+    def extend(self):
+        geo = self.geometry
+        lats, lngs = [], []
+        for coordinates in geo.values():
+            lats.append(coordinates["latitude"])
+            lngs.append(coordinates["longitude"])
+
+        return {"min_latitude": min(lats), "max_latitude": max(lats),
+                "min_lonitude": min(lngs), "max_lonitude": max(lngs)}
+
+    def __unicode__(self):
+        """
+        Pretty representation of the array.
+        """
+        ret_str = u"Seismic Array '{name}'\n".format(name=self.name)
+        ret_str += u"\t{count} Stations\n".format(count=len(self.geometry))
+        ret_str += u"\tAperture: {aperture:.2f} km".format(
+            aperture=self.aperture)
+        return ret_str
+
+    def __str__(self):
+        """
+        Stub calling the unicode method.
+
+        See here:
+        http://stackoverflow.com/questions/1307014/python-str-versus-unicode
+        """
+        return unicode(self).encode("utf-8")
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
