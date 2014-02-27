@@ -677,15 +677,15 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         result[:, 0] = (geometry[:, 0] - n[0] * (
             n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
             geometry[:, 2]) / (
-            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         result[:, 1] = (geometry[:, 1] - n[1] * (
             n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
             geometry[:, 2]) / (
-            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         result[:, 2] = (geometry[:, 2] - n[2] * (
             n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
             geometry[:, 2]) / (
-            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         geometry = result[:]
         print "Best fitting plane-coordinates :", geometry
 
@@ -1271,18 +1271,23 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                 for y in xrange(grdpts_y):
                     singlet = 0.
                     beam = np.zeros(nsamp, dtype='f8')
-                    shifted = np.zeros(nsamp, dtype='f8')
                     for i in xrange(nstat):
                         s = spoint[i]+int(time_shift_table[i, x, y] * fs + 0.5)
                         try:
-                            shifted = stream[i].data[s + offset:s + nsamp + offset]
+                            shifted = stream[i].data[s + offset:
+                                                     s + nsamp + offset]
                             if len(shifted) < nsamp:
-                                shifted = np.pad(shifted,(0,nsamp-len(shifted)),'constant',constant_values=(0,1))
+                                shifted = np.pad(
+                                    shifted, (0, nsamp-len(shifted)),
+                                    'constant', constant_values=(0, 1))
                             singlet += 1./nstat*np.sum(shifted*shifted)
-                            beam += 1. / nstat * np.power(np.abs(shifted), 1. / nthroot) * shifted/np.abs(shifted)
+                            beam += 1. / nstat * np.power(
+                                np.abs(shifted), 1. / nthroot) * \
+                                shifted / np.abs(shifted)
                         except IndexError:
                             break
-                    beam = np.power(np.abs(beam), nthroot) * beam / np.abs(beam)
+                    beam = np.power(np.abs(beam), nthroot) * \
+                        beam / np.abs(beam)
                     bs = np.sum(beam*beam)
                     abspow_map[x, y] = bs / singlet
                     if abspow_map[x, y] > max_beam:
@@ -1294,9 +1299,6 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                     singlet = 0.
                     beam = np.zeros(nsamp, dtype='f8')
                     stack = np.zeros(nsamp, dtype='c8')
-                    phase = np.zeros(nsamp, dtype='f8')
-                    shifted = np.zeros(nsamp, dtype='f8')
-                    coh = np.zeros(nsamp, dtype='f8')
                     for i in xrange(nstat):
                         s = spoint[i] + int(time_shift_table[i, x, y] * fs +
                                             0.5)
@@ -1304,7 +1306,9 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                             shifted = sp.signal.hilbert(stream[i].data[
                                 s + offset: s + nsamp + offset])
                             if len(shifted) < nsamp:
-                                shifted = np.pad(shifted,(0,nsamp-len(shifted)),'constant',constant_values=(0,1))
+                                shifted = np.pad(
+                                    shifted, (0, nsamp-len(shifted)),
+                                    'constant', constant_values=(0, 1))
                         except IndexError:
                             break
                         phase = np.arctan2(shifted.imag, shifted.real)
@@ -1383,7 +1387,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                              slow]))
         if verbose:
             print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
-        if (newstart + (nsamp + nstep)/fs ) > etime:
+        if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep
 
@@ -1404,9 +1408,8 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
 
 
 def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False,
-                  coordsys='lonlat', timestamp='mlabday', method="DLS",nthroot=1,
-                  store=None, correct_3dplane=False, static_3D=False,
-                  vel_cor=4.):
+                  coordsys='lonlat', method="DLS", nthroot=1,
+                  correct_3dplane=False, static_3D=False, vel_cor=4.):
     """
     Estimating the azimuth or slowness vespagram
 
@@ -1485,7 +1488,8 @@ def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False,
                 s = spoint[i]+int(time_shift_table[i, x]*fs + 0.5)
                 shifted = stream[i].data[s: s + ndat]
                 singlet += 1. / nstat * np.sum(shifted * shifted)
-                beams[x] += 1. / nstat * np.power(np.abs(shifted), 1. / nthroot) \
+                beams[x] += 1. / nstat * np.power(np.abs(shifted),
+                                                  1. / nthroot) \
                     * shifted / np.abs(shifted)
             beams[x] = np.power(np.abs(beams[x]), nthroot) * beams[x] / \
                 np.abs(beams[x])
@@ -1499,33 +1503,32 @@ def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False,
                 if (slow) < 1e-8:
                     slow = 1e-8
         if method == 'PWS':
-           stack = np.zeros(ndat, dtype='c8')
-           phase = np.zeros(ndat, dtype='f8')
-           coh = np.zeros(ndat, dtype='f8')
-           for i in xrange(nstat):
-               s = spoint[i] + int(time_shift_table[i, x] * fs +0.5)
-               try:
-                  shifted = sp.signal.hilbert(stream[i].data[s : s + ndat])
-               except IndexError:
-                  break
-               phase = np.arctan2(shifted.imag, shifted.real)
-               stack.real += np.cos(phase)
-               stack.imag += np.sin(phase)
-           coh = 1. / nstat * np.abs(stack)
-           for i in xrange(nstat):
-               s = spoint[i]+int(time_shift_table[i, x] * fs + 0.5)
-               shifted = stream[i].data[s: s + ndat]
-               singlet += 1. / nstat * np.sum(shifted * shifted)
-               beams[x] += 1. / nstat * shifted * np.power(coh, nthroot)
-           bs = np.sum(beams[x]*beams[x])
-           bs = bs / singlet
-           if bs > max_beam:
-              max_beam = bs
-              beam_max = x
-              slow = np.abs(sll + x * sls)
-              if (slow) < 1e-8:
-                  slow = 1e-8
-
+            stack = np.zeros(ndat, dtype='c8')
+            phase = np.zeros(ndat, dtype='f8')
+            coh = np.zeros(ndat, dtype='f8')
+            for i in xrange(nstat):
+                s = spoint[i] + int(time_shift_table[i, x] * fs + 0.5)
+                try:
+                    shifted = sp.signal.hilbert(stream[i].data[s:s + ndat])
+                except IndexError:
+                    break
+                phase = np.arctan2(shifted.imag, shifted.real)
+                stack.real += np.cos(phase)
+                stack.imag += np.sin(phase)
+            coh = 1. / nstat * np.abs(stack)
+            for i in xrange(nstat):
+                s = spoint[i]+int(time_shift_table[i, x] * fs + 0.5)
+                shifted = stream[i].data[s: s + ndat]
+                singlet += 1. / nstat * np.sum(shifted * shifted)
+                beams[x] += 1. / nstat * shifted * np.power(coh, nthroot)
+            bs = np.sum(beams[x]*beams[x])
+            bs = bs / singlet
+            if bs > max_beam:
+                max_beam = bs
+                beam_max = x
+                slow = np.abs(sll + x * sls)
+                if (slow) < 1e-8:
+                    slow = 1e-8
 
     return(slow, beams, beam_max, max_beam)
 
