@@ -184,6 +184,8 @@ def _read_station(sta_element, _ns):
 def _read_floattype(parent, tag, cls, unit=False, datum=False,
                     additional_mapping={}):
     elem = parent.find(tag)
+    if elem is None:
+        return None
     obj = cls(float(elem.text))
     if unit:
         obj.unit = elem.attrib.get("unit")
