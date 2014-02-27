@@ -735,6 +735,9 @@ def _write_network(parent, network):
 def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     attribs = {}
     obj_ = getattr(obj, attr_name)
+    if obj_ is None:
+        etree.SubElement(parent, tag)
+        return
     attribs["datum"] = obj_.__dict__.get("datum")
     if hasattr(obj_, "unit"):
         attribs["unit"] = obj_.unit
