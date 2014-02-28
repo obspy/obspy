@@ -199,8 +199,7 @@ char *argv[];
       if((++i) < argc && *argv[i] != '-') {
         fldlen = strlen(argv[i]);
         if(fldlen >= TODAYSIZE) {
-	    void *a;
-            a = realloc(t_o_day,(fldlen+1));
+            t_o_day = realloc(t_o_day,(fldlen+1));
         }
         strcpy(t_o_day, argv[i]);
       }
