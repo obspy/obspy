@@ -874,7 +874,7 @@ c300  format(/(1x,i5,4f12.6))
       shm=-.375d0*tau(4,j)/tau(3,j)
       hm=shm*shm
       if(shm.le.0d0.or.(hm.le.pe1.or.hm.ge.pe0)) go to 4
- 7    thm=tau(2,j)+shm*(2d0*shm*tau(3,j)+1.5d0*tau(4,j))
+      thm=tau(2,j)+shm*(2d0*shm*tau(3,j)+1.5d0*tau(4,j))
       xlim(1,j)=dmin1(xlim(1,j),thm)
       xlim(2,j)=dmax1(xlim(2,j),thm)
       if(thm.ge.dmn) go to 6
@@ -999,7 +999,7 @@ c
  3    m=k+2
       k=i-1
       axm=1d10
- 7    xm=xm+dx*idint((x-xm-dx2)/dx+rnd)
+      xm=xm+dx*idint((x-xm-dx2)/dx+rnd)
  2    if(dabs(x-xm).ge.axm) go to 1
       axm=dabs(x-xm)
       k=i-1
@@ -1867,7 +1867,7 @@ C 22   print *,'Enter desired branch control list at the prompts:'
       no=no+1
 C      read 100,phlst(no)
       phlst(no) = 'all'
- 100  format(a)
+C 100  format(a)
 c   Terminate the list of tokens with a blank entry.
       if(phlst(no).ne.' ') go to 21
       no=no-1
@@ -1989,7 +1989,7 @@ C     if(.not.fnd) print *,'Brnset:  the following phases have '//
 C    1 'been selected -'
 C     fnd=.true.
 C     print 102,i,(segcd(j),j=j1,j2)
- 102  format(10x,i5,5(2x,a))
+C 102  format(10x,i5,5(2x,a))
  16   continue
       return
       end
@@ -2091,7 +2091,7 @@ c   R. Buland.
 c
       character*(*) ia
 C      write(*,100)ia(1:n)
- 100  format(a,$)
+C 100  format(a,$)
       return
       end
       subroutine dasign(lu,mode,ia,len)
