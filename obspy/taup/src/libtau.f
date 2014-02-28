@@ -1,7 +1,7 @@
 C+
-C	libtau.f is from Buland's 1996 Feb. libtau.src.
-C	Added references to my lenc routine for calculating lengths
-C	  of character strings up to first blank or null (jas/vt)
+C     libtau.f is from Buland's 1996 Feb. libtau.src.
+C     Added references to my lenc routine for calculating lengths
+C       of character strings up to first blank or null (jas/vt)
 C
 C
 C
@@ -59,7 +59,7 @@ c++
       read(nin) coef
       call retrns(nin)
 c
-	nb = lenc(modnam)
+      nb = lenc(modnam)
       filename = modnam(1:nb)//'.tbl'
       call dasign(nin,-1,filename,nasgr)
 c
@@ -275,8 +275,8 @@ c   Find where the source slowness falls in the ray parameter array.
       k2=n1
       if(pu(n1,nph).eq.umin) go to 50
 c     call abort('Source slowness too large.')
-	write(*,*) 'Source slowness too large.'
-	call exit(0) 
+      write(*,*) 'Source slowness too large.'
+      call exit(0)
  4    k2=i
 c50   write(10,*)'k2 umin',k2,sngl(umin)
 c
@@ -624,8 +624,8 @@ c
       write(6,100)dep
  100  format('Source depth (',f6.1,') too deep.')
 c     call abort(msg)
-	write(*,*)msg
-	call exit(0)
+      write(*,*)msg
+      call exit(0)
  2    if(dabs(zs-zm(i,nph)).le.dtol.and.dabs(zm(i,nph)-zm(i+1,nph)).le.
      1 dtol) go to 3
       j=i-1
@@ -1424,7 +1424,7 @@ c   IargcX emulates the UNIX command iargc using the MSDOS
 c   nargs equivalent.
 c
 c     i=nargs()-1
-	i=iargc()-1
+      i=iargc()-1
       iargcX=i
       return
       end
@@ -1455,7 +1455,7 @@ c
  100  format(a)
 c
  2    nb=lenc(ib)
- 	filename = ib(1:nb)//'.hed'
+      filename = ib(1:nb)//'.hed'
       call assign(lu,mode,filename)
       return
       end
@@ -2139,22 +2139,22 @@ c
       call exit(ierr)
       end
 C+
-	function lenc(string)
+      function lenc(string)
 C
-C	Returns length of character variable STRING excluding right-hand
-C	  most blanks or nulls
+C     Returns length of character variable STRING excluding right-hand
+C       most blanks or nulls
 C-
-	character*(*) string
-	length = len(string)	! total length
-	if (length .eq. 0) then
-	  lenc = 0
-	  return
-	end if
-	if(ichar(string(length:length)).eq.0)string(length:length) = ' '
-	do j=length,1,-1
-	  lenc = j
-	  if (string(j:j).ne.' ' .and. ichar(string(j:j)).ne.0) return
-	end do
-	lenc = 0
-	return
-	end
+      character*(*) string
+      length = len(string)    ! total length
+      if (length .eq. 0) then
+        lenc = 0
+        return
+      end if
+      if(ichar(string(length:length)).eq.0)string(length:length) = ' '
+      do j=length,1,-1
+        lenc = j
+        if (string(j:j).ne.' ' .and. ichar(string(j:j)).ne.0) return
+      end do
+      lenc = 0
+      return
+      end
