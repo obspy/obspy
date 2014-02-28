@@ -432,7 +432,6 @@ int parse_delim_field(char *line, int fld_no, char *delim, char *return_field) {
       lcl_ptr = tmp_ptr + 1;
   }
 
-  memset(return_field, 0, sizeof(return_field));
   if(tmp_ptr)
     strncpy(return_field, lcl_ptr, (tmp_ptr-lcl_ptr));
   else
