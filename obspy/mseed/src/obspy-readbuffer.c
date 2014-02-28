@@ -249,7 +249,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         msr = msr_init(NULL);
         if ( msr == NULL ) {
             ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
-            return -1;
+            return NULL;
         }
         if (verbose > 1) {
             ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
