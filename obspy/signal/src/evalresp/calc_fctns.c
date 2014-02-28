@@ -191,7 +191,7 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
  * Convert response to velocity first, then to specified units
  *=================================================================*/
 void convert_to_units(int inp, char *out_units, struct complex *data, double w) {
-  int out, l;
+  int out = VEL, l;
   struct complex scale_val;
 
   /* if default units were specified by the user, no conversion is made,

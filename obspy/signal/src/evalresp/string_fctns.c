@@ -409,7 +409,7 @@ int parse_field(char *line, int fld_no, char *return_field) {
                  field exists with that number */
 
 int parse_delim_field(char *line, int fld_no, char *delim, char *return_field) {
-  char *lcl_ptr, *tmp_ptr;
+  char *lcl_ptr, *tmp_ptr = NULL;
   int nfields,  i;
 
   nfields = count_delim_fields(line, delim);
