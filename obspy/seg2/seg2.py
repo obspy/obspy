@@ -260,7 +260,13 @@ class SEG2(object):
         # 'random offset byte'
         # Therefore every string has to be at least 3 bytes wide to be
         # acceptable after being split at the string terminator.
-        strings = [_i.decode() for _i in strings if len(_i) >= 3]
+
+        def is_good_char(c):
+            return c in ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN'
+                         'OPQRSTUVWXYZ!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
+
+        strings = [filter(is_good_char, _i).decode() for _i in strings
+                   if len(_i) >= 3]
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
         for string in strings:
