@@ -28,7 +28,7 @@ import zipfile
 
 CONTINUE_FROM_LAST_RECORD = '*'
 HEADERS = ['V', 'A', 'S']
-# @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
+# @see: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
 HEADER_INFO = {
     'V': {'name': 'Volume Index Control Header',
           'blockettes': [10, 11, 12]},
@@ -57,7 +57,7 @@ class Parser(object):
     .. seealso::
 
         The SEED file format description can be found at
-        http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
+        http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
     """
