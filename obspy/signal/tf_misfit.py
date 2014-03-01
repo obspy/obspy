@@ -25,7 +25,7 @@ import numpy as np
 from obspy.signal import util
 
 
-def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
+def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     """
     Continuous Wavelet Transformation in the Frequency Domain.
 
@@ -1454,7 +1454,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     else:
         nfft = util.nextpow2(npts) * fft_zero_pad_fac
 
-    f_lin = np.linspace(0, 0.5 / dt, nfft / 2 + 1)
+    f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
 
     if cmap is None:
         CDICT_TFR = {'red': ((0.0, 1.0, 1.0),
@@ -1486,13 +1486,13 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         W[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
-        spec = np.zeros((1, nfft / 2 + 1), dtype=np.complex)
+        spec = np.zeros((1, nfft // 2 + 1), dtype=np.complex)
         spec[0] = np.fft.rfft(st, n=nfft) * dt
 
         st = st.reshape((1, npts))
     else:
         W = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
-        spec = np.zeros((st.shape[0], nfft / 2 + 1), dtype=np.complex)
+        spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=np.complex)
 
         for i in np.arange(st.shape[0]):
             W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
