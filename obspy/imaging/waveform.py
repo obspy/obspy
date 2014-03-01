@@ -695,7 +695,7 @@ class WaveformPlotting(object):
             trace.data = np.ma.concatenate(concat)
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
-        trace.data *= calib
+        trace.data = np.require(trace.data, 'float64') * calib
         ax.plot(
             trace.data, color=self.color, linewidth=self.linewidth,
             linestyle=self.linestyle)
