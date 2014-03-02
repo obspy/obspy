@@ -1074,6 +1074,83 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
+    def plot(self, sampling_rate, df, output="VEL", start_stage=None,
+             end_stage=None, label=None, axes=None):
+        """
+        Show bode plot of instrument response.
+
+        :type sampling_rate: float
+        :param sampling_rate: Sampling rate of time series. Does not influence
+            the spectra calculation, if it is not known, just provide the
+            highest frequency that should be plotted times two.
+        :type df: float
+        :param df: Frequency resolution of plot (also the lowest frequency that
+            is plotted).
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement), "VEL"
+            (velocity) or "ACC" (acceleration).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
+        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        """
+        import matplotlib.pyplot as plt
+
+        t_samp = 1.0 / sampling_rate
+        nyquist = sampling_rate / 2.0
+        nfft = sampling_rate / df
+
+        h, f = self.get_evalresp_response(
+            t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
+            end_stage=end_stage)
+
+        if axes:
+            ax1, ax2 = axes
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        label_kwarg = {}
+        if label is not None:
+            label_kwarg['label'] = label
+
+        # plot amplitude response
+        ax1.loglog(f, abs(h), **label_kwarg)
+        if self.instrument_sensitivity:
+            ax1.axvline(self.instrument_sensitivity.frequency, ls="-.")
+            ax1.axhline(self.instrument_sensitivity.value, ls="-.")
+        ax1.set_ylabel('Amplitude')
+        ax1.grid()
+
+        #take negative of imaginary part
+        phase = np.unwrap(np.arctan2(-h.imag, h.real))
+        ax2.semilogx(f, phase)
+        ax2.set_xlabel('Frequency [Hz]')
+        ax2.set_ylabel('Phase [radian]')
+        ax2.grid()
+
+        # plot nyquist frequency
+        for ax in (ax1, ax2):
+            ax.axvline(nyquist, ls=":")
+
+        # only do adjustments if we initialized the figure in here
+        if not axes:
+            # make more room in between subplots for the ylabel of right plot
+            fig.subplots_adjust(hspace=0.02)
+            ax1.legend(loc="lower center", ncol=3, fontsize='small')
+            plt.setp(ax1.get_xticklabels(), visible=False)
+            plt.setp(ax2.get_yticklabels()[-1], visible=False)
+            plt.show()
+
 
 class InstrumentSensitivity(ComparingObject):
     """

@@ -265,6 +265,42 @@ class Station(BaseNode):
         else:
             self._elevation = Distance(value)
 
+    def plot(self, type, df, fig=None, **kwargs):
+        """
+        """
+        import warnings
+        warnings.warn("not fixed yet")
+        import matplotlib.pyplot as plt
+
+        if type == "response":
+            # use `fig` for figure coming from outside
+            # use `fig_` for figure created in here
+            # in both cases `ax1`, `ax2` are the axes
+            if fig:
+                ax1 = fig.axes[0]
+                ax2 = fig.axes[1]
+            else:
+                fig_ = plt.figure()
+                ax1 = fig_.add_subplot(211)
+                ax2 = fig_.add_subplot(212, sharex=ax1)
+            for cha in self.channels:
+                cha.plot(df=df, axes=(ax1, ax2),
+                         label=".".join((self.code, cha.code)))
+            # final adjustments to plot if we created the figure in here
+            if not fig:
+                fig_.subplots_adjust(hspace=0.02)
+                ax1.legend(loc="lower center", ncol=3, fontsize='small')
+                plt.setp(ax1.get_xticklabels(), visible=False)
+                plt.setp(ax2.get_yticklabels()[-1], visible=False)
+                plt.show()
+
+        elif type == "location":
+            raise NotImplementedError()
+        elif type == "both":
+            raise NotImplementedError()
+        else:
+            raise ValueError()
+
 
 if __name__ == '__main__':
     import doctest
