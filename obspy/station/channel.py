@@ -288,7 +288,7 @@ class Channel(BaseNode):
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
     def plot(self, df, output="VEL", start_stage=None, end_stage=None,
-             axes=None):
+             label=None, axes=None):
         """
         Show bode plot of the channel's instrument response.
 
@@ -305,6 +305,8 @@ class Channel(BaseNode):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
@@ -318,7 +320,8 @@ class Channel(BaseNode):
 
         self.response.plot(
             sampling_rate=self.sample_rate, df=df, output=output,
-            start_stage=start_stage, end_stage=end_stage, axes=axes)
+            start_stage=start_stage, end_stage=end_stage, label=label,
+            axes=axes)
 
 
 if __name__ == '__main__':
