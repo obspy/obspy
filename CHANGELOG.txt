@@ -5,6 +5,9 @@
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
+ - obspy.station:
+   * add plotting methods (response/bode, location maps) to
+     Inventory/Station/Channel/Response objects (see #749)
 
 0.9.1:
  - obspy.core:
