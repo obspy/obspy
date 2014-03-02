@@ -1084,6 +1084,9 @@ class Response(ComparingObject):
         fig = plt.figure()
         ax1 = fig.add_subplot(211)
         ax1.loglog(f, abs(h))
+        if self.instrument_sensitivity:
+            ax1.axvline(self.instrument_sensitivity.frequency, ls="-.")
+            ax1.axhline(self.instrument_sensitivity.value, ls="-.")
         ax1.set_ylabel('Amplitude')
         ax1.grid()
 
