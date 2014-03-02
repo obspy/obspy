@@ -283,6 +283,39 @@ class Channel(BaseNode):
         else:
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
+    def plot(self, df, output="VEL", start_stage=None, end_stage=None,
+             axes=None):
+        """
+        Show bode plot of the channel's instrument response.
+
+        :type df: float
+        :param df: Frequency resolution of plot (also the lowest frequency that
+            is plotted).
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        """
+        if self.sample_rate is None:
+            msg = ("Bode plots for channels that have no sampling rate "
+                   "specified are not supported. Contact developers if this "
+                   "causes problems.")
+            raise NotImplementedError(msg)
+
+        self.response.plot(
+            sampling_rate=self.sample_rate, df=df, output=output,
+            start_stage=start_stage, end_stage=end_stage, axes=axes)
+
 
 if __name__ == '__main__':
     import doctest
