@@ -1075,7 +1075,7 @@ class Response(ComparingObject):
         return ret
 
     def plot(self, sampling_rate, df, output="VEL", start_stage=None,
-             end_stage=None, axes=None):
+             end_stage=None, label=None, axes=None):
         """
         Show bode plot of instrument response.
 
@@ -1095,6 +1095,8 @@ class Response(ComparingObject):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
@@ -1117,8 +1119,12 @@ class Response(ComparingObject):
             ax1 = fig.add_subplot(211)
             ax2 = fig.add_subplot(212, sharex=ax1)
 
+        label_kwarg = {}
+        if label is not None:
+            label_kwarg['label'] = label
+
         # plot amplitude response
-        ax1.loglog(f, abs(h))
+        ax1.loglog(f, abs(h), **label_kwarg)
         if self.instrument_sensitivity:
             ax1.axvline(self.instrument_sensitivity.frequency, ls="-.")
             ax1.axhline(self.instrument_sensitivity.value, ls="-.")
@@ -1140,6 +1146,7 @@ class Response(ComparingObject):
         if not axes:
             # make more room in between subplots for the ylabel of right plot
             fig.subplots_adjust(hspace=0.02)
+            ax1.legend(loc="lower center", ncol=3, fontsize='small')
             plt.setp(ax1.get_xticklabels(), visible=False)
             plt.setp(ax2.get_yticklabels()[-1], visible=False)
             plt.show()
