@@ -1074,6 +1074,33 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
+    def plot(self, t_samp=0.005, nfft=2**14, output="VEL", start_stage=None,
+             end_stage=None):
+        h, f = self.get_evalresp_response(t_samp=t_samp, nfft=nfft,
+                                          output=output, start_stage=
+                                          start_stage, end_stage=end_stage)
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        ax1 = fig.add_subplot(211)
+        ax1.loglog(f, abs(h))
+        ax1.set_ylabel('Amplitude')
+        ax1.grid()
+
+        ax2 = fig.add_subplot(212, sharex=ax1)
+        #take negative of imaginary part
+        phase = np.unwrap(np.arctan2(-h.imag, h.real))
+        ax2.semilogx(f, phase)
+        ax2.set_xlabel('Frequency [Hz]')
+        ax2.set_ylabel('Phase [radian]')
+        ax2.grid()
+
+        # make more room in between subplots for the ylabel of right plot
+        fig.subplots_adjust(hspace=0.02)
+        plt.setp(ax1.get_xticklabels(), visible=False)
+        plt.setp(ax2.get_yticklabels()[-1], visible=False)
+        plt.show()
+
 
 class InstrumentSensitivity(ComparingObject):
     """
