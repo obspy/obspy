@@ -1147,14 +1147,14 @@ class Response(ComparingObject):
             ax1.axvline(self.instrument_sensitivity.frequency, ls="-.")
             ax1.axhline(self.instrument_sensitivity.value, ls="-.")
         ax1.set_ylabel('Amplitude')
-        ax1.grid()
+        ax1.grid(True)
 
         #take negative of imaginary part
         phase = np.unwrap(np.arctan2(-h.imag, h.real))
         ax2.semilogx(f, phase)
         ax2.set_xlabel('Frequency [Hz]')
         ax2.set_ylabel('Phase [radian]')
-        ax2.grid()
+        ax2.grid(True)
 
         # plot nyquist frequency
         for ax in (ax1, ax2):
