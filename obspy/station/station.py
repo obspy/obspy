@@ -17,6 +17,7 @@ from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
 from obspy.station.util import Longitude, Latitude, Distance
 import textwrap
+import fnmatch
 
 
 class Station(BaseNode):
@@ -273,9 +274,10 @@ class Station(BaseNode):
             self._elevation = Distance(value)
 
     def plot(self, df, output="VEL", start_stage=None, end_stage=None,
-             label=None, axes=None):
+             axes=None, channel="*", location="*"):
         """
-        Show bode plot of instrument response of all the station's channels.
+        Show bode plot of instrument response of all (or a subset of) the
+        station's channels.
 
         :type df: float
         :param df: Frequency resolution of plot (also the lowest frequency that
@@ -290,12 +292,18 @@ class Station(BaseNode):
         :type end_stage: int, optional
         :param end_stage: Stage sequence number of last stage that will be
             used (disregarding all later stages).
-        :type label: str
-        :param label: Label string for legend.
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :python:`~fnmatch.fnmatch`)
+        :type location: str
+        :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :python:`~fnmatch.fnmatch`)
         """
         import matplotlib.pyplot as plt
 
@@ -307,8 +315,14 @@ class Station(BaseNode):
             ax2 = fig.add_subplot(212, sharex=ax1)
 
         for cha in self.channels:
+            # skip non-matching channels
+            if not fnmatch.fnmatch(cha.code.upper(), channel.upper()):
+                continue
+            if not fnmatch.fnmatch(cha.location_code.upper(),
+                                   location.upper()):
+                continue
             cha.plot(df=df, axes=(ax1, ax2),
-                     label=".".join((self.code, cha.code)))
+                     label=".".join((self.code, cha.location_code, cha.code)))
 
         # final adjustments to plot if we created the figure in here
         if not axes:
