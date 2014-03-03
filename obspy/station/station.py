@@ -273,8 +273,7 @@ class Station(BaseNode):
         else:
             self._elevation = Distance(value)
 
-    def plot(self, df, output="VEL", start_stage=None, end_stage=None,
-             axes=None, channel="*", location="*"):
+    def plot(self, df, output="VEL", channel="*", location="*", axes=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
@@ -286,16 +285,6 @@ class Station(BaseNode):
         :param output: Output units. One of "DISP" (displacement, output unit
             is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
             (acceleration, output unit is meters/second**2).
-        :type start_stage: int, optional
-        :param start_stage: Stage sequence number of first stage that will be
-            used (disregarding all earlier stages).
-        :type end_stage: int, optional
-        :param end_stage: Stage sequence number of last stage that will be
-            used (disregarding all later stages).
-        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
-        :param axes: List/tuple of two axes instances to plot the
-            amplitude/phase spectrum into. If not specified, a new figure is
-            opened.
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
@@ -304,6 +293,10 @@ class Station(BaseNode):
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
             :python:`~fnmatch.fnmatch`)
+        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
 
         .. rubric:: Basic Usage
 
