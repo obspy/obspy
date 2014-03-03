@@ -311,6 +311,18 @@ class Channel(BaseNode):
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> cha = read_inventory()[0][0][0]
+        >>> cha.plot(0.001, output="VEL")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            cha = read_inventory()[0][0][0]
+            cha.plot(0.001, output="VEL")
         """
         if self.sample_rate is None:
             msg = ("Bode plots for channels that have no sampling rate "

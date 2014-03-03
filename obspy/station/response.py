@@ -1107,6 +1107,18 @@ class Response(ComparingObject):
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> resp = read_inventory()[0][0][0].response
+        >>> resp.plot(100, 0.001, output="VEL")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            resp = read_inventory()[0][0][0].response
+            resp.plot(100, 0.001, output="VEL")
         """
         import matplotlib.pyplot as plt
 

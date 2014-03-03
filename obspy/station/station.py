@@ -304,6 +304,18 @@ class Station(BaseNode):
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
             :python:`~fnmatch.fnmatch`)
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> sta = read_inventory()[0][0]
+        >>> sta.plot(df=0.001, output="VEL", channel="*Z")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            sta = read_inventory()[0][0]
+            sta.plot(df=0.001, output="VEL", channel="*Z")
         """
         import matplotlib.pyplot as plt
 
