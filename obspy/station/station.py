@@ -272,41 +272,51 @@ class Station(BaseNode):
         else:
             self._elevation = Distance(value)
 
-    def plot(self, type, df, fig=None, **kwargs):
+    def plot(self, df, output="VEL", start_stage=None, end_stage=None,
+             label=None, axes=None):
         """
+        Show bode plot of instrument response of all the station's channels.
+
+        :type df: float
+        :param df: Frequency resolution of plot (also the lowest frequency that
+            is plotted).
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
+        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
         """
-        import warnings
-        warnings.warn("not fixed yet")
         import matplotlib.pyplot as plt
 
-        if type == "response":
-            # use `fig` for figure coming from outside
-            # use `fig_` for figure created in here
-            # in both cases `ax1`, `ax2` are the axes
-            if fig:
-                ax1 = fig.axes[0]
-                ax2 = fig.axes[1]
-            else:
-                fig_ = plt.figure()
-                ax1 = fig_.add_subplot(211)
-                ax2 = fig_.add_subplot(212, sharex=ax1)
-            for cha in self.channels:
-                cha.plot(df=df, axes=(ax1, ax2),
-                         label=".".join((self.code, cha.code)))
-            # final adjustments to plot if we created the figure in here
-            if not fig:
-                fig_.subplots_adjust(hspace=0.02)
-                ax1.legend(loc="lower center", ncol=3, fontsize='small')
-                plt.setp(ax1.get_xticklabels(), visible=False)
-                plt.setp(ax2.get_yticklabels()[-1], visible=False)
-                plt.show()
-
-        elif type == "location":
-            raise NotImplementedError()
-        elif type == "both":
-            raise NotImplementedError()
+        if axes:
+            ax1, ax2 = axes
         else:
-            raise ValueError()
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        for cha in self.channels:
+            cha.plot(df=df, axes=(ax1, ax2),
+                     label=".".join((self.code, cha.code)))
+
+        # final adjustments to plot if we created the figure in here
+        if not axes:
+            fig.subplots_adjust(hspace=0.02)
+            ax1.legend(loc="lower center", ncol=3, fontsize='small')
+            plt.setp(ax1.get_xticklabels(), visible=False)
+            plt.setp(ax2.get_yticklabels()[-1], visible=False)
+            plt.show()
 
 
 if __name__ == '__main__':
