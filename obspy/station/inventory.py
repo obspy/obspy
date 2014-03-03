@@ -24,15 +24,27 @@ import warnings
 from copy import deepcopy
 
 
+def _createExampleInventory():
+    """
+    Create an example inventory.
+    """
+    return read_inventory('/path/to/BW_GR_misc.xml.gz', format="STATIONXML")
+
+
 @map_example_filename("path_or_file_object")
-def read_inventory(path_or_file_object, format=None):
+def read_inventory(path_or_file_object=None, format=None):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: Filename or file like object.
+    :param path_or_file_object: Filename or file like object. If this
+        attribute is omitted, an example :class:`Inventory`
+        object will be returned.
     :type format: str, optional
     :param format: Format of the file to read (e.g. ``"STATIONXML"``).
     """
+    if path_or_file_object is None:
+        # if no pathname or URL specified, return example catalog
+        return _createExampleInventory()
     return _readFromPlugin("inventory", path_or_file_object, format=format)[0]
 
 
