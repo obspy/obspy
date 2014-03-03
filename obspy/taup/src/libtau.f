@@ -2093,6 +2093,9 @@ c   on the same line).  Programmed on 17 September 1980 by
 c   R. Buland.
 c
       character*(*) ia
+C     No warnings:
+      n=n
+      ia=ia
 C      write(*,100)ia(1:n)
 C 100  format(a,$)
       return
