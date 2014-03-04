@@ -32,14 +32,16 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     Butterworth-Bandpass Filter.
 
     Filter data from ``freqmin`` to ``freqmax`` using ``corners`` corners.
+    The filter uses scipy.signal iirfilter (for design) and lfilter (for applying the filter).
+
 
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners / orders.
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
-        This results in twice the number of corners but zero phase shift in
+        This results in twice the filter order but zero phase shift in
         the resulting filtered trace.
     :return: Filtered data.
     """
