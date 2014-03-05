@@ -2992,10 +2992,14 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> cat = readEvents( \
-            "http://www.seismicportal.eu/services/event/search?magMin=8.0") \
-            # doctest:+SKIP
+        >>> cat = readEvents()
         >>> cat.plot()  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import readEvents
+            cat = readEvents()
+            cat.plot()
         """
         from mpl_toolkits.basemap import Basemap
         import matplotlib.pyplot as plt
