@@ -29,6 +29,13 @@ try:
 except:
     pass
 
+try:
+    import numpy  # @UnusedImport # NOQA
+except:
+    msg = ("No module named numpy. "
+           "Please install numpy first, it is needed before installing ObsPy.")
+    raise ImportError(msg)
+
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
@@ -84,13 +91,14 @@ INSTALL_REQUIRES = [
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy']
-    #'suds']
-    #'suds>=0.4.0']
+    'sqlalchemy',
+    'suds-jurko']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose',
-              'mock']}
+              'nose']}
+# PY2
+if sys.version_info[0] == 2:
+    EXTRAS_REQUIRE['tests'].append('mock')
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',

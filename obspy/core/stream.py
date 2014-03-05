@@ -2299,12 +2299,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
-        >>> print(st[0].stats.processing[0])
-        normalize:9
+        >>> print(st[0].stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ... normalize(norm=None)
         >>> st[1].data
         array([ 0.375, -0.625, -1.   ,  0.5  ,  0.375])
-        >>> print(st[1].stats.processing[0])
-        normalize:-0.8
+        >>> print(st[1].stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=None)
 
         Now let's do it again normalize all traces to the stream's global
         maximum:
@@ -2317,12 +2317,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
-        >>> print(st[0].stats.processing[0])
-        normalize:9
+        >>> print(st[0].stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=9)
         >>> st[1].data  # doctest: +ELLIPSIS
         array([ 0.03333333, -0.05555556, -0.08888889,  0.04444444,  ...])
-        >>> print(st[1].stats.processing[0])
-        normalize:9
+        >>> print(st[1].stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=9)
         """
         # use the same value for normalization on all traces?
         if global_max:

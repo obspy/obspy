@@ -1098,7 +1098,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                     tf.write(data)
                     # force matplotlib to use internal PNG reader. image.imread
                     # will use PIL if available
-                    img = image._png.read_png(tf.name)
+                    img = image._png.read_png(native_str(tf.name))
                 # add image to axis
                 ax.imshow(img)
                 # hide axes

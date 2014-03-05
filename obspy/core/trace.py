@@ -19,13 +19,14 @@ from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
-from obspy.core.util.misc import flatnotmaskedContiguous
 from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
     taper_API_change
 from obspy.core import compatibility
+from obspy.core.util.misc import flatnotmaskedContiguous
 import math
 import numpy as np
 import warnings
+import functools
 
 
 class Stats(AttribDict):
@@ -203,6 +204,42 @@ class Stats(AttribDict):
                           'starttime', 'endtime', 'sampling_rate', 'delta',
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
+
+
+def _add_processing_info(func):
+    """
+    This is a decorator that attaches information about a processing call as a
+    string to the Trace.stats.processing list.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        callargs = compatibility.getcallargs(func, *args, **kwargs)
+        callargs.pop("self")
+        kwargs_ = callargs.pop("kwargs", {})
+        from obspy import __version__
+        info = "ObsPy {version}: {function}(%s)".format(
+            version=__version__,
+            function=func.__name__)
+        arguments = []
+        arguments += \
+            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+             "%s='%s'" % (k, v) for k, v in callargs.items()]
+        arguments += \
+            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+             "%s='%s'" % (k, v) for k, v in kwargs_.items()]
+        arguments.sort()
+        info = info % "::".join(arguments)
+        self = args[0]
+        result = func(*args, **kwargs)
+        # Attach after executing the function to avoid having it attached
+        # while the operation failed.
+        self._addProcessingInfo(info)
+        return result
+
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
 
 
 class Trace(object):
@@ -967,6 +1004,7 @@ class Trace(object):
         self.data = self.data[:total]
         return self
 
+    @_add_processing_info
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
         """
@@ -1102,6 +1140,7 @@ class Trace(object):
             raise Exception(msg)
         return self
 
+    @_add_processing_info
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
         """
@@ -1234,22 +1273,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
             simulate_sensitivity=simulate_sensitivity, **kwargs)
 
-        # add processing information to the stats dictionary
-        if paz_remove:
-            proc_info = "simulate:inverse:%s:sensitivity=%s" % \
-                (paz_remove, remove_sensitivity)
-            self._addProcessingInfo(proc_info)
-        if paz_simulate:
-            proc_info = "simulate:forward:%s:sensitivity=%s" % \
-                (paz_simulate, simulate_sensitivity)
-            self._addProcessingInfo(proc_info)
-        if "seedresp" in kwargs:
-            proc_info = ("simulate:seedresp:" +
-                         ":".join(["%s=%s" % kv
-                                   for kv in seedresp.items()]))
-            self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def filter(self, type, **options):
         """
         Filters the data of the current trace.
@@ -1319,11 +1345,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
         self.data = func(self.data, df=self.stats.sampling_rate, **options)
-        # add processing information to the stats dictionary
-        proc_info = "filter:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def trigger(self, type, **options):
         """
         Runs a triggering algorithm on the data of the current trace.
@@ -1407,12 +1431,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the trigger_functions dictionary
         self.data = func(self.data, **options)
-        # add processing information to the stats dictionary
-        proc_info = "trigger:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
+    @_add_processing_info
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1479,11 +1501,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         num = int(self.stats.npts / factor)
         self.data = resample(self.data, num, window=native_str(window))
         self.stats.sampling_rate = sampling_rate
-        # add processing information to the stats dictionary
-        proc_info = "resample:%d:%s" % (sampling_rate, window)
-        self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
         Downsample trace data by an integer factor.
@@ -1556,10 +1576,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         from obspy.signal import integerDecimation
         self.data = integerDecimation(self.data, factor)
         self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
-
-        # add processing information to the stats dictionary
-        proc_info = "downsample:integerDecimation:%s" % factor
-        self._addProcessingInfo(proc_info)
         return self
 
     def max(self):
@@ -1607,6 +1623,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self.data.std()
 
     @skipIfNoData
+    @_add_processing_info
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1638,12 +1655,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('differentiate', type)
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
-        # add processing information to the stats dictionary
-        proc_info = "differentiate:%s" % type
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
+    @_add_processing_info
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1694,13 +1709,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             args = [self.data, self.stats.delta]
         # integrating
         self.data = func(*args, **options)
-        # add processing information to the stats dictionary
-        proc_info = "integrate:%s" % (type)
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
     @raiseIfMasked
+    @_add_processing_info
     def detrend(self, type='simple', **options):
         """
         Method to remove a linear trend from the trace.
@@ -1743,13 +1756,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             options['type'] = type
         # detrending
         self.data = func(self.data, **options)
-        # add processing information to the stats dictionary
-        proc_info = "detrend:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
     @taper_API_change()
+    @_add_processing_info
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
         """
@@ -1882,12 +1893,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
                                taper_sides[len(taper_sides) - wlen:]))
         self.data = self.data * taper
-        # add processing information to the stats dictionary
-        proc_info = "taper:%s:%s:%s:%s:%s" % (type, str(max_percentage),
-                                              str(max_length), side, kwargs)
-        self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def normalize(self, norm=None):
         """
         Method to normalize the trace to its absolute maximum.
@@ -1916,15 +1924,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
-        >>> print(tr.stats.processing[0])
-        normalize:9
+        >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=None)
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
         >>> tr.normalize()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
-        >>> print(tr.stats.processing[0])
-        normalize:-9.2
+        >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=None)
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
@@ -1939,9 +1947,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = self.data.astype("float64")
         self.data /= abs(norm)
 
-        # add processing information to the stats dictionary
-        proc_info = "normalize:%s" % norm
-        self._addProcessingInfo(proc_info)
         return self
 
     def copy(self):
@@ -1991,6 +1996,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
 
+    @_add_processing_info
     def split(self):
         """
         Splits Trace object containing gaps using a NumPy masked array into
@@ -2086,6 +2092,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise Exception(msg)
         self.stats.response = responses[0]
 
+    @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
                         zero_mean=True, taper=True, taper_fraction=0.05,
                         **kwargs):
@@ -2174,7 +2181,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type taper_fraction: float
         :param taper_fraction: Taper fraction of cosine taper to use.
         """
-        from obspy.station import Response
+        from obspy.station import Response, PolynomialResponseStage
         from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
 
         if "response" not in self.stats:
@@ -2186,6 +2193,30 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                    "(but is of type %s).") % type(self.stats.response)
             raise TypeError(msg)
 
+        response = self.stats.response
+        # polynomial response using blockette 62 stage 0
+        if not response.response_stages and response.instrument_polynomial:
+            coefficients = response.instrument_polynomial.coefficients
+            self.data = np.poly1d(coefficients[::-1])(self.data)
+            return self
+
+        # polynomial response using blockette 62 stage 1 and no other stages
+        if len(response.response_stages) == 1 and \
+           isinstance(response.response_stages[0], PolynomialResponseStage):
+            # check for gain
+            if response.response_stages[0].stage_gain is None:
+                msg = 'Stage gain not defined for %s - setting it to 1.0'
+                warnings.warn(msg % self.id)
+                gain = 1
+            else:
+                gain = response.response_stages[0].stage_gain
+            coefficients = response.response_stages[0].coefficients[:]
+            for i in range(len(coefficients)):
+                coefficients[i] /= math.pow(gain, i)
+            self.data = np.poly1d(coefficients[::-1])(self.data)
+            return self
+
+        # use evalresp
         data = self.data.astype("float64")
         npts = len(data)
         # time domain pre-processing

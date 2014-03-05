@@ -42,7 +42,8 @@ except ImportError:
             dtdh = np.zeros(60, 'float32', flags)
             dddp = np.zeros(60, 'float32', flags)
 
-            libtau.ttimes_(C.byref(delta), C.byref(depth), modnam, phase_names,
+            libtau.ttimes_(C.byref(delta), C.byref(depth),
+                           modnam.encode('ascii'), phase_names,
                            tt.ctypes.data_as(C.POINTER(C.c_float)),
                            toang.ctypes.data_as(C.POINTER(C.c_float)),
                            dtdd.ctypes.data_as(C.POINTER(C.c_float)),

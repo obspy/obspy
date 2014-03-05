@@ -36,7 +36,7 @@ class Network(BaseNode):
         :type code: String
         :type code: The SEED network code.
         :type total_number_of_stations: int
-        :param  total_number_of_stations: The total number of stations
+        :param total_number_of_stations: The total number of stations
             contained in this networkork, including inactive or terminated
             stations.
         :param selected_number_of_stations: The total number of stations in
@@ -177,6 +177,70 @@ class Network(BaseNode):
             msg = "No matching response information found."
             raise Exception(msg)
         return responses[0]
+
+    def get_coordinates(self, seed_id, datetime=None):
+        """
+        Return coordinates for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get coordinates for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get coordinates for.
+        :rtype: dict
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation)
+        """
+        network, station, location, channel = seed_id.split(".")
+        coordinates = []
+        if self.code != network:
+            pass
+        elif self.start_date and self.start_date > datetime:
+            pass
+        elif self.end_date and self.end_date < datetime:
+            pass
+        else:
+            for sta in self.stations:
+                # skip wrong station
+                if sta.code != station:
+                    continue
+                # check datetime only if given
+                if datetime:
+                    # skip if start date before given datetime
+                    if sta.start_date and sta.start_date > datetime:
+                        continue
+                    # skip if end date before given datetime
+                    if sta.end_date and sta.end_date < datetime:
+                        continue
+                for cha in sta.channels:
+                    # skip wrong channel
+                    if cha.code != channel:
+                        continue
+                    # skip wrong location
+                    if cha.location_code != location:
+                        continue
+                    # check datetime only if given
+                    if datetime:
+                        # skip if start date before given datetime
+                        if cha.start_date and cha.start_date > datetime:
+                            continue
+                        # skip if end date before given datetime
+                        if cha.end_date and cha.end_date < datetime:
+                            continue
+                    # prepare coordinates
+                    data = {}
+                    # if channel latitude or longitude is not given use station
+                    data['latitude'] = cha.latitude or sta.latitude
+                    data['longitude'] = cha.longitude or sta.longitude
+                    data['elevation'] = cha.elevation
+                    data['local_depth'] = cha.depth
+                    coordinates.append(data)
+        if len(coordinates) > 1:
+            msg = "Found more than one matching coordinates. Returning first."
+            warnings.warn(msg)
+        elif len(coordinates) < 1:
+            msg = "No matching coordinates found."
+            raise Exception(msg)
+        return coordinates[0]
 
 
 if __name__ == '__main__':

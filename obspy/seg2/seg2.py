@@ -15,6 +15,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from future.builtins import range
 from future.builtins import open
+from future.utils import PY2
 from copy import deepcopy
 import numpy as np
 from struct import unpack
@@ -260,7 +261,24 @@ class SEG2(object):
         # 'random offset byte'
         # Therefore every string has to be at least 3 bytes wide to be
         # acceptable after being split at the string terminator.
-        strings = [_i.decode() for _i in strings if len(_i) >= 3]
+
+        def is_good_char(c):
+            return c in (b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN'
+                         b'OPQRSTUVWXYZ!"#$%&\'()*+,-./:; <=>?@[\\]^_`{|}~ ')
+
+        # A loop over a bytestring in Python 3 returns integers. This can be
+        # solved with a number of imports from the python-future module and
+        # all kinds of subtle changes throughout this file. Separating the
+        # handling for Python 2 and 3 seems the cleaner and simpler approach.
+        if PY2:
+            strings = [filter(is_good_char, _i)
+                       for _i in strings
+                       if len(_i) >= 3]
+        else:
+            strings = ["".join(map(chr, filter(is_good_char, _i)))
+                       for _i in strings
+                       if len(_i) >= 3]
+
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
         for string in strings:

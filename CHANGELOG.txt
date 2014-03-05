@@ -1,20 +1,32 @@
 0.10.0:
  - general:
    * support for Python 3.3
+   * More generic processing history for most Stream and Trace methods.
+ - obspy.imaging:
+   * Maintain beach ball aspect ratio through optional axes argument (see
+     #734)
 
 0.9.1:
- - obspy.station:
-   * some bugfixes in the obspy.station object classes (see #710)
  - obspy.core:
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
- - obspy.fdsn:
-   * time out errors get raised properly now. timeout can be specified at
-     Client initialization now. (see #717)
- - obspy.datamark
+   * extend remove_response for polynomial responses
+     (thanks to Sebastien/bonaime, see #566)
+ - obspy.datamark:
    * bugfix: channel code now correctly read (4 hex char)
    * bugfix: channels can have different sampling rate
    * improvement: datawide 0.5 (4 bits) encoding now supported
+ - obspy.fdsn:
+   * time out errors get raised properly now. timeout can be specified at
+     Client initialization now. (see #717)
+ - obspy.imaging:
+   * Fixing waveform plotting.
+ - obspy.station:
+   * some bugfixes in the obspy.station object classes (see #710)
+   * add get_coordinates method to inventory and network objects (see #740)
+ - obspy.taup:
+   * bugfix: avoid a bug that caused multiple calls to taup to result in
+     spurious unexpected results (see #728)
 
 0.9.0:
  -  general:
@@ -114,6 +126,8 @@
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * new function for rotating arbitrarily oriented components to vertical,
+     north, and east.
    * add PPSD support for segments of arbitrary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.

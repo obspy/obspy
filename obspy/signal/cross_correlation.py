@@ -18,6 +18,7 @@ Signal processing routines based on cross correlation techniques.
 """
 from __future__ import division
 from __future__ import unicode_literals
+from future.utils import native_str
 
 import warnings
 import numpy as np
@@ -494,7 +495,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
                 data_long = tr2.data
             data_short = (data_short - data_short.mean()) / data_short.std()
             data_long = (data_long - data_long.mean()) / data_long.std()
-            tmp = np.correlate(data_long, data_short, "valid")
+            tmp = np.correlate(data_long, data_short, native_str("valid"))
             try:
                 cc += tmp
             except TypeError:

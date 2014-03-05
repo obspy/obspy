@@ -33,6 +33,8 @@ c
      5 jidx(jbrn),kk(jseg)
       common/pcdc/phcd(jbrn)
       data tauc,xc/jtsm*0d0,jxsm*0d0/
+      tauu = 0d0
+      xu = 0d0
 
 c
       nin=in

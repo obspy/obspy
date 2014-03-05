@@ -186,6 +186,8 @@ def _read_station(sta_element, _ns):
 def _read_floattype(parent, tag, cls, unit=False, datum=False,
                     additional_mapping={}):
     elem = parent.find(tag)
+    if elem is None:
+        return None
     obj = cls(float(elem.text))
     if unit:
         obj.unit = elem.attrib.get("unit")
@@ -737,6 +739,8 @@ def _write_network(parent, network):
 def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     attribs = {}
     obj_ = getattr(obj, attr_name)
+    if obj_ is None:
+        return
     attribs["datum"] = obj_.__dict__.get("datum")
     if hasattr(obj_, "unit"):
         attribs["unit"] = obj_.unit
@@ -1141,11 +1145,7 @@ def _write_phone(parent, phone):
 
 
 def _tag2obj(element, tag, convert):
-    # make sure, only unicode
-    if convert is str:
-        ### XXX: this warning if often raised with python3
-        warnings.warn("overriding 'str' with 'unicode'.")
-        convert = str
+    # we use future.builtins.str and are sure we have unicode here
     try:
         return convert(element.find(tag).text)
     except:

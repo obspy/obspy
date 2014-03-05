@@ -77,7 +77,7 @@ class Client(object):
     """
     def __init__(self, base_url="IRIS", major_versions={}, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=10):
+                 timeout=120):
         """
         Initializes an FDSN Web Service client.
 
@@ -475,8 +475,10 @@ class Client(object):
 
         .. plot::
 
+            from obspy import UTCDateTime
             from obspy.fdsn import Client
             client = Client("IRIS")
+            t = UTCDateTime("2012-12-14T10:36:01.6Z")
             st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
                                       attach_response=True)
             st.remove_response(output="VEL")
@@ -650,6 +652,7 @@ class Client(object):
 
         .. plot::
 
+            from obspy import UTCDateTime
             from obspy.fdsn import Client
             client = Client("IRIS")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
@@ -967,6 +970,9 @@ class Client(object):
             raise FDSNException("Service responds: Internal server error")
         elif code == 503:
             raise FDSNException("Service temporarily unavailable")
+        # Catch any non 200 codes.
+        elif code != 200:
+            raise FDSNException("Unknown HTTP code: %i" % code)
         return data
 
     def _build_url(self, service, resource_type, parameters={}):
@@ -1004,12 +1010,19 @@ class Client(object):
         def get_download_thread(url):
             class ThreadURL(threading.Thread):
                 def run(self):
-                    code, data = download_url(url, headers=headers,
-                                              debug=debug)
-                    if code == 200:
-                        wadl_queue.put((url, data))
-                    else:
-                        wadl_queue.put((url, None))
+                    # Catch 404s.
+                    try:
+                        code, data = download_url(url, headers=headers,
+                                                  debug=debug)
+                        if code == 200:
+                            wadl_queue.put((url, data))
+                        else:
+                            wadl_queue.put((url, None))
+                    except compatibility.HTTPError as e:
+                        if e.code == 404:
+                            wadl_queue.put((url, None))
+                        else:
+                            raise
             return ThreadURL()
 
         threads = list(map(get_download_thread, urls))
@@ -1088,18 +1101,19 @@ def convert_to_string(value):
 
     Will raise a ValueError if the value could not be converted.
 
-    >>> convert_to_string("abcd")
-    'abcd'
-    >>> convert_to_string(1)
-    '1'
-    >>> convert_to_string(1.2)
-    '1.2'
-    >>> convert_to_string(obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
-    '2012-01-02T03:04:05.666666'
-    >>> convert_to_string(True)
-    'true'
-    >>> convert_to_string(False)
-    'false'
+    >>> print(convert_to_string("abcd"))
+    abcd
+    >>> print(convert_to_string(1))
+    1
+    >>> print(convert_to_string(1.2))
+    1.2
+    >>> print(convert_to_string( \
+              obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666)))
+    2012-01-02T03:04:05.666666
+    >>> print(convert_to_string(True))
+    true
+    >>> print(convert_to_string(False))
+    false
     """
     if isinstance(value, (str, native_str)):
         return value
@@ -1124,13 +1138,13 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
 
     Built as a separate function to enhance testability.
 
-    >>> build_url("http://service.iris.edu", "dataselect", 1, \
-                  "application.wadl")
-    'http://service.iris.edu/fdsnws/dataselect/1/application.wadl'
+    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+                        "application.wadl"))
+    http://service.iris.edu/fdsnws/dataselect/1/application.wadl
 
-    >>> build_url("http://service.iris.edu", "dataselect", 1, \
-                  "query", {"cha": "EHE"})
-    'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
+    >>> print(build_url("http://service.iris.edu", "dataselect", 1, \
+                        "query", {"cha": "EHE"}))
+    http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
     """
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station"]:
@@ -1192,8 +1206,9 @@ def download_url(url, timeout=10, headers={}, debug=False,
     # Catch HTTP errors.
     except compatibility.HTTPError as e:
         if debug is True:
-            print(("HTTP error %i while downloading '%s': %s" %
-                  (e.code, url, e.read())))
+            msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
+                  (e.code, str(e.reason), url, e.read())
+            print(msg)
             return e.code, None
         raise
     except Exception as e:

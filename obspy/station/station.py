@@ -15,7 +15,7 @@ from future.builtins import super
 from future.builtins import str
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
-from obspy.station.util import Longitude, Latitude
+from obspy.station.util import Longitude, Latitude, Distance
 import textwrap
 
 
@@ -291,6 +291,17 @@ class Station(BaseNode):
             self._latitude = value
         else:
             self._latitude = Latitude(value)
+
+    @property
+    def elevation(self):
+        return self._elevation
+
+    @elevation.setter
+    def elevation(self, value):
+        if isinstance(value, Distance):
+            self._elevation = value
+        else:
+            self._elevation = Distance(value)
 
 
 if __name__ == '__main__':

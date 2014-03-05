@@ -49,6 +49,7 @@ class UtilMiscTestCase(unittest.TestCase):
                     "\t\tID numbers assigned by\n"
                     "\t\tthe IRIS DMC")
 
+    @unittest.skipIf(not PY2, 'Solely test related Py3k issue')
     def test_CatchOutput(self):
         """
         """
@@ -71,6 +72,9 @@ class UtilMiscTestCase(unittest.TestCase):
                 self.assertEqual(out.stderr, "123\n456\n")
         else:
             # XXX: cannot catch the printf call to def in Py3k
+            # XXX: Introduces special characters on MAC OSX which
+            #      avoid test report to be sent (see #743). Therefore
+            #      test is skipped
             if platform.system() == "Windows":
                 self.assertEqual(out.stdout, '"abc"\nghi\njkl\n')
                 self.assertEqual(out.stderr, '"123" \n456\n')

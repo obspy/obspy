@@ -58,6 +58,19 @@ class StreamTestCase(unittest.TestCase):
             header=header)
         self.gse2_stream = Stream(traces=[trace])
 
+    @staticmethod
+    def __remove_processing(st):
+        """
+        Helper method removing the processing information from all traces
+        within a Stream object.
+
+        Useful for testing.
+        """
+        for tr in st:
+            if "processing" not in tr.stats:
+                continue
+            del tr.stats.processing
+
     def test_init(self):
         """
         Tests the __init__ method of the Stream object.
@@ -431,19 +444,25 @@ class StreamTestCase(unittest.TestCase):
         st_cut = read()
         ###
         st_cut.cutout(t4, t4 + 10)
+        self.__remove_processing(st_cut)
         self.assertEqual(st, st_cut)
         ###
         st_cut.cutout(t1 - 10, t1)
+        self.__remove_processing(st_cut)
         self.assertEqual(st, st_cut)
         ###
         st_cut.cutout(t1, t2)
         st.trim(starttime=t2, nearest_sample=True)
+        self.__remove_processing(st_cut)
+        self.__remove_processing(st)
         self.assertEqual(st, st_cut)
         ###
         st = read()
         st_cut = read()
         st_cut.cutout(t3, t4)
         st.trim(endtime=t3, nearest_sample=True)
+        self.__remove_processing(st_cut)
+        self.__remove_processing(st)
         self.assertEqual(st, st_cut)
         ###
         st = read()
@@ -453,6 +472,8 @@ class StreamTestCase(unittest.TestCase):
         st += tmp
         st_cut = read()
         st_cut.cutout(t2, t3)
+        self.__remove_processing(st_cut)
+        self.__remove_processing(st)
         self.assertEqual(st, st_cut)
 
     def test_pop2(self):
@@ -1564,6 +1585,10 @@ class StreamTestCase(unittest.TestCase):
         trO2.trim(endtime=end - 2 * delta)
         trO2.data = np.concatenate([np.arange(5), trO2.data])
         trO2.stats.starttime -= 5 * delta
+
+        for _i in [tr1, tr2, tr3, tr4, tr5, tr6, trO1, trO2]:
+            if "processing" in _i.stats:
+                del _i.stats.processing
         # test mergeable traces (contained ones)
         for trB in [tr2, tr3, tr4]:
             trA = tr1.copy()
@@ -1997,7 +2022,7 @@ class StreamTestCase(unittest.TestCase):
             .merge()\
             .cutout(st[0].stats.starttime + 2, st[0].stats.starttime + 2)\
             .detrend()\
-            .taper()\
+            .taper(max_percentage=0.05, type="cosine")\
             .normalize()\
             .verify()\
             .trigger(type="zdetect", nsta=20)\
@@ -2007,16 +2032,18 @@ class StreamTestCase(unittest.TestCase):
         # cutout(), verify(), and rotate() methods do not have an entry in the
         # processing chain.
         pr = st[0].stats.processing
-        self.assertTrue(pr[0].startswith("downsample"))
-        self.assertTrue(pr[1].startswith("resample"))
-        self.assertTrue(pr[2].startswith("simulate"))
-        self.assertTrue(pr[3].startswith("filter:lowpass"))
-        self.assertTrue(pr[4].startswith("differentiate"))
-        self.assertTrue(pr[5].startswith("integrate"))
-        self.assertTrue(pr[6].startswith("detrend"))
-        self.assertTrue(pr[7].startswith("taper"))
-        self.assertTrue(pr[8].startswith("normalize"))
-        self.assertTrue(pr[9].startswith("trigger"))
+
+        self.assertTrue("decimate" in pr[1])
+        self.assertTrue("resample" in pr[2])
+        self.assertTrue("simulate" in pr[3])
+        self.assertTrue("filter" in pr[4] and "lowpass" in pr[4])
+        self.assertTrue("differentiate" in pr[5])
+        self.assertTrue("integrate" in pr[6])
+        self.assertTrue("trim" in pr[7])
+        self.assertTrue("detrend" in pr[8])
+        self.assertTrue("taper" in pr[9])
+        self.assertTrue("normalize" in pr[10])
+        self.assertTrue("trigger" in pr[11])
 
         self.assertTrue(temp is st)
         # Cutout duplicates the number of traces.

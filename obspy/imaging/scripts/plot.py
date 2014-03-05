@@ -28,6 +28,10 @@ def main():
         parser.print_help()
         raise SystemExit()
 
+    if options.outfile is not None:
+        import matplotlib
+        matplotlib.use("agg")
+
     st = Stream()
     for arg in args:
         st += read(arg, format=options.format)

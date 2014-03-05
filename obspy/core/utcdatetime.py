@@ -299,11 +299,8 @@ class UTCDateTime(object):
                         ms = float('.' + parts[1].strip())
                     except:
                         pass
-                # The module copy.deepcopy passes a (binary) string to
-                # UTCDateTime which contains the class specifications. If
-                # argument is not a digit by now, it must be a binary string
-                # and we pass it to datetime.datetime,
-                # XXX: can't reproduce: not sure this is still needed
+                # all parts should be digits now - here we filter unknown
+                # patterns and pass it directly to Python's  datetime.datetime
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
                     self._fromDateTime(dt)
@@ -434,7 +431,6 @@ class UTCDateTime(object):
         else:
             delta = 0
         if delta:
-            tz = tz.replace(':', '')   # XXX: not needed
             while len(tz) < 3:
                 tz += '0'
             delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)

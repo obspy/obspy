@@ -19,6 +19,7 @@ from future.builtins import bytes
 from future.utils import native_str, PY2
 
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+import obspy
 from obspy import __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core import compatibility
@@ -32,11 +33,12 @@ import math
 import os
 import warnings
 import zipfile
+import numpy as np
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
 HEADERS = ['V', 'A', 'S']
-# @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
+# @see: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
 HEADER_INFO = {
     'V': {'name': 'Volume Index Control Header',
           'blockettes': [10, 11, 12]},
@@ -65,12 +67,9 @@ class Parser(object):
     .. seealso::
 
         The SEED file format description can be found at
-        http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
+        http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
 
-        The XML-SEED format was proposed in:
-
-        * http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml
-        * http://www.jamstec.go.jp/pacific21/xmlninja/.
+        The XML-SEED format was proposed in [Tsuboi2004]_.
     """
 
     def __init__(self, data=None, debug=False, strict=False,
@@ -1141,3 +1140,72 @@ class Parser(object):
         Deletes blockette 11 and 12.
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
+
+    def rotateToZNE(self, stream):
+        """
+        Rotates the three components of a Stream to ZNE.
+
+        Currently limited to rotating exactly three components covering exactly
+        the same time span. The components can have arbitrary orientation and
+        need not be orthogonal to each other. The output will be a new Stream
+        object containing vertical, north, and east channels.
+
+        :param stream: The stream object to rotate. Needs to have exactly three
+            components, all the same length and timespan. Furthermore all
+            components need to be described in the Parser object.
+        """
+        from obspy.signal.rotate import rotate2ZNE
+
+        if len(stream) != 3:
+            msg = "Stream needs to have three components."
+            raise ValueError(msg)
+        # Network, station and location need to be identical for all three.
+        is_unique = len(set([(i.stats.starttime.timestamp,
+                              i.stats.endtime.timestamp,
+                              i.stats.npts,
+                              i.stats.network,
+                              i.stats.station,
+                              i.stats.location) for i in stream])) == 1
+        if not is_unique:
+            msg = ("All the Traces need to cover the same time span and have "
+                   "the same network, station, and location.")
+            raise ValueError(msg)
+        all_arguments = []
+
+        for tr in stream:
+            dip = None
+            azimuth = None
+            blockettes = self._select(tr.id, tr.stats.starttime)
+            for blockette in blockettes:
+                if blockette.id != 52:
+                    continue
+                dip = blockette.dip
+                azimuth = blockette.azimuth
+                break
+            if dip is None or azimuth is None:
+                msg = "Dip and azimuth need to be available for every trace."
+                raise ValueError(msg)
+            all_arguments.extend([np.asarray(tr.data, dtype=np.float64),
+                                  azimuth, dip])
+        # Now rotate all three traces.
+        z, n, e = rotate2ZNE(*all_arguments)
+
+        # Assemble a new Stream object.
+        common_header = {
+            "network": stream[0].stats.network,
+            "station": stream[0].stats.station,
+            "location": stream[0].stats.location,
+            "channel": stream[0].stats.channel[0:2],
+            "starttime": stream[0].stats.starttime,
+            "sampling_rate": stream[0].stats.sampling_rate}
+
+        tr_z = obspy.Trace(data=z, header=common_header)
+        tr_n = obspy.Trace(data=n, header=common_header)
+        tr_e = obspy.Trace(data=e, header=common_header)
+
+        # Fix the channel_codes
+        tr_z.stats.channel += "Z"
+        tr_n.stats.channel += "N"
+        tr_e.stats.channel += "E"
+
+        return obspy.Stream(traces=[tr_z, tr_n, tr_e])

@@ -12,6 +12,7 @@ libraries and applications, our build tools and our web sites.
     :columns: 3
 
     * Charles J. Ammon
+    * Elliott Sales de Andrade
     * Ólafur St. Arnarsson
     * Robert Barsch
     * Yannik Behr
@@ -29,6 +30,7 @@ libraries and applications, our build tools and our web sites.
     * Heiner Igel
     * Adolfo Inza
     * Marius Isken
+    * Paul Käufl
     * David Ketchum
     * Andreas Köhler
     * Simon Kremers
@@ -52,6 +54,7 @@ libraries and applications, our build tools and our web sites.
     * Arthur Snoke
     * Stefan Stange
     * Chad Trabant
+    * Leonardo Uieda
     * Marcus Walther
     * Joachim Wassermann
 
