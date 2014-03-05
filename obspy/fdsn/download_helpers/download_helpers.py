@@ -10,7 +10,15 @@ Download helpers.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from collections import namedtuple
-from obspy.fdsn.header import URL_MAPPINGS
+import logging
+from multiprocessing.pool import ThreadPool
+from obspy.fdsn.header import URL_MAPPINGS, FDSNException
+from obspy.fdsn import Client
+import warnings
+
+FORMAT = "[%(asctime)s] %(levelname)s: %(message)s"
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+logger = logging.getLogger("obspy.fdsn.download_helpers")
 
 
 domain = namedtuple("domain", [
@@ -72,3 +80,47 @@ class CircularDomain(Domain):
 class GlobalDomain(Domain):
     def get_query_parameters(self):
         return domain(None, None, None, None, None, None, None, None)
+
+
+class DownloadHelper(object):
+    def __init__(self, clients=None):
+        if clients is None:
+            clients = URL_MAPPINGS.keys()
+        self.clients = []
+        self.clients.extend(clients)
+
+        self._initialized_clients = {}
+
+        self.__initialize_clients()
+
+    def __initialize_clients(self):
+        """
+        Initialize all clients.
+        """
+        def _get_client(client):
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                try:
+                    this_client = Client(client)
+                except FDSNException:
+                    logger.warn("Failed to initialize client '%s'." % client)
+                    return (client, None)
+                for warning in w:
+                    logger.warn(("Client '%s': " % client) +
+                                str(warning.message))
+            logger.info("Successfully intialized client '%s'. Available "
+                        "services: %s" % (
+                        client, ", ".join(sorted(
+                            this_client.services.keys()))))
+            return client, this_client
+
+        p = ThreadPool(len(self.clients))
+        clients = p.map(_get_client, self.clients)
+        p.close()
+
+        for c in clients:
+            self._initialized_clients[c[0]] = c[1]
+
+
+if __name__ == "__main__":
+    DownloadHelper()
