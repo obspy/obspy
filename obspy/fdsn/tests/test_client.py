@@ -713,6 +713,64 @@ class ClientTestCase(unittest.TestCase):
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
 
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_setting_service_provider_mappings(self, download_url_mock):
+        """
+        Tests the setting of per service endpoints
+        """
+        base_url = "http://example.com"
+
+        # Replace all.
+        download_url_mock.return_value = (404, None)
+        # Some custom urls
+        base_url_event = "http://other_url.com/beta/event_service/11"
+        base_url_station = "http://some_url.com/beta2/stat_serv/7"
+        base_url_ds = "http://new.com/beta3/waveforms/8"
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, service_mappings={
+                "event": base_url_event,
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/contributors" % base_url_event,
+            "%s/catalogs" % base_url_event,
+            "%s/application.wadl" % base_url_event,
+            "%s/application.wadl" % base_url_station,
+            "%s/application.wadl" % base_url_ds,
+            ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+        # Replace only two. The others keep the default mapping.
+        download_url_mock.reset_mock()
+        download_url_mock.return_value = (404, None)
+        # Some custom urls
+        base_url_station = "http://some_url.com/beta2/stat_serv/7"
+        base_url_ds = "http://new.com/beta3/waveforms/8"
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, service_mappings={
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+                })
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/1/contributors" % base_url,
+            "%s/fdsnws/event/1/catalogs" % base_url,
+            "%s/fdsnws/event/1/application.wadl" % base_url,
+            "%s/application.wadl" % base_url_station,
+            "%s/application.wadl" % base_url_ds,
+            ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

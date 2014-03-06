@@ -68,10 +68,18 @@ class Client(object):
     :type timeout: float
     :param timeout: Maximum time (in seconds) to wait for a single request to
         finish (after which an exception is raised).
+    :type service_mappings: dict
+    :param service_mapping.: For advanced use only. Allows the direct
+        setting of the endpoints of the different services. (e.g.
+        ``service_mapping={'station': 'http://example.com/test/stat/1'}``)
+        Valid keys are ``event``, ``station``, and ``dataselect``. This will
+        overwrite the ``base_url`` and ``major_versions`` arguments. For all
+        services not specified, the default default locations indicated by
+        ``base_url`` and ``major_versions`` will be used.
     """
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120):
+                 timeout=120, service_mappings=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -117,6 +125,11 @@ class Client(object):
         # Make a copy to avoid overwriting the default service versions.
         self.major_versions = DEFAULT_SERVICE_VERSIONS.copy()
         self.major_versions.update(major_versions)
+
+        # Avoid mutable kwarg.
+        if service_mappings is None:
+            service_mappings = {}
+        self._service_mappings = service_mappings
 
         if self.debug is True:
             print "Base URL: %s" % self.base_url
@@ -979,7 +992,8 @@ class Client(object):
             if service == "dataselect" and resource_type == "query":
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
-                         resource_type, parameters)
+                         resource_type, parameters,
+                         service_mappings=self._service_mappings)
 
     def _discover_services(self):
         """
@@ -1119,7 +1133,8 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, service, major_version, resource_type, parameters={}):
+def build_url(base_url, service, major_version, resource_type,
+              parameters=None, service_mappings=None):
     """
     URL builder for the FDSN webservices.
 
@@ -1133,6 +1148,12 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
                   "query", {"cha": "EHE"})
     'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
     """
+    # Avoid mutable kwargs.
+    if parameters is None:
+        parameters = {}
+    if service_mappings is None:
+        service_mappings = {}
+
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station"]:
         msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
@@ -1155,8 +1176,13 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
         loc = loc.replace(",,", ",--,")
         parameters["location"] = loc
 
-    url = "/".join((base_url, "fdsnws", service,
-                    str(major_version), resource_type))
+    # Apply per-service mappings if any.
+    if service in service_mappings:
+        url = "/".join((service_mappings[service], resource_type))
+    else:
+        url = "/".join((base_url, "fdsnws", service,
+                        str(major_version), resource_type))
+
     if parameters:
         # Strip parameters.
         for key, value in parameters.iteritems():
