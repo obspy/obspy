@@ -1,4 +1,5 @@
-from obspy.iris import Client
+from obspy.fdsn import Client as FDSN_Client
+from obspy.iris import Client as OldIris_Client
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 import matplotlib.pyplot as plt
@@ -8,14 +9,17 @@ import numpy as np
 t1 = UTCDateTime("2010-09-3T16:30:00.000")
 t2 = UTCDateTime("2010-09-3T17:00:00.000")
 
-# Fetch waveform from IRIS web service into a ObsPy stream object
-client = Client()
-st = client.getWaveform('NZ', 'BFZ', '10', 'HHZ', t1, t2)
+# Fetch waveform from IRIS FDSN web service into a ObsPy stream object
+fdsn_client = FDSN_Client("IRIS")
+st = fdsn_client.get_waveforms('NZ', 'BFZ', '10', 'HHZ', t1, t2)
 
 # Download and save instrument response file into a temporary file
 with NamedTemporaryFile() as tf:
     respf = tf.name
-    client.saveResponse(respf, 'NZ', 'BFZ', '10', 'HHZ', t1, t2, format="RESP")
+    old_iris_client = OldIris_Client()
+    # fetch RESP information from "old" IRIS web service, see obspy.fdsn
+    # for accessing the new IRIS FDSN web services
+    old_iris_client.resp('NZ', 'BFZ', '10', 'HHZ', t1, t2, filename=respf)
 
     # make a copy to keep our original data
     st_orig = st.copy()

@@ -21,7 +21,10 @@ before_install:
   - pip install --use-mirrors suds-jurko
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
   - pip install --use-mirrors flake8
-  - pip install --use-mirrors future
+  # Future 0.11.3 has some issues and essentially does not work under Python 2.x. Older
+  # versions have some other issues. The master more or less resolves them.
+  # XXX: Replace once a new future version has been released!
+  - pip install --use-mirrors https://github.com/PythonCharmers/python-future/archive/master.zip
   - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
