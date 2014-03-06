@@ -69,7 +69,7 @@ class Client(object):
     :param timeout: Maximum time (in seconds) to wait for a single request to
         finish (after which an exception is raised).
     """
-    def __init__(self, base_url="IRIS", major_versions={}, user=None,
+    def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120):
         """
@@ -111,7 +111,11 @@ class Client(object):
             urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
-        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        # Avoid mutable kwarg.
+        if major_versions is None:
+            major_versions = {}
+        # Make a copy to avoid overwriting the default service versions.
+        self.major_versions = DEFAULT_SERVICE_VERSIONS.copy()
         self.major_versions.update(major_versions)
 
         if self.debug is True:

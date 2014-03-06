@@ -9,6 +9,7 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import mock
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
@@ -374,7 +375,7 @@ class ClientTestCase(unittest.TestCase):
             ("IU", "A??", "*0", "BHZ",
              UTCDateTime("2010-02-27T06:30:00.000"),
              UTCDateTime("2010-02-27T06:31:00.000")),
-            ]
+        ]
         result_files = ["dataselect_example.mseed",
                         "dataselect_example_wildcards.mseed",
                         "dataselect_example_mixed_wildcards.mseed",
@@ -619,6 +620,98 @@ class ClientTestCase(unittest.TestCase):
                                   attach_response=True)
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
+
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_default_requested_urls(self, download_url_mock):
+        """
+        Five request should be sent upon initializing a client. Test these.
+        """
+        download_url_mock.return_value = (404, None)
+        base_url = "http://example.com"
+
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url)
+        except FDSNException:
+            pass
+
+        expected_urls = sorted([
+            "%s/fdsnws/event/1/contributors" % base_url,
+            "%s/fdsnws/event/1/catalogs" % base_url,
+            "%s/fdsnws/event/1/application.wadl" % base_url,
+            "%s/fdsnws/station/1/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+
+        self.assertEqual(expected_urls, got_urls)
+
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_setting_service_major_version(self, download_url_mock):
+        """
+        Test the setting of custom major versions.
+        """
+        download_url_mock.return_value = (404, None)
+        base_url = "http://example.com"
+
+        # Passing an empty dictionary results in the default urls.
+        major_versions = {}
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, major_versions=major_versions)
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/1/contributors" % base_url,
+            "%s/fdsnws/event/1/catalogs" % base_url,
+            "%s/fdsnws/event/1/application.wadl" % base_url,
+            "%s/fdsnws/station/1/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+        # Replace all
+        download_url_mock.reset_mock()
+        download_url_mock.return_value = (404, None)
+        major_versions = {"event": 7, "station": 8, "dataselect": 9}
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, major_versions=major_versions)
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/7/contributors" % base_url,
+            "%s/fdsnws/event/7/catalogs" % base_url,
+            "%s/fdsnws/event/7/application.wadl" % base_url,
+            "%s/fdsnws/station/8/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/9/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+        # Replace only some
+        download_url_mock.reset_mock()
+        download_url_mock.return_value = (404, None)
+        major_versions = {"event": 7, "station": 8}
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, major_versions=major_versions)
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/7/contributors" % base_url,
+            "%s/fdsnws/event/7/catalogs" % base_url,
+            "%s/fdsnws/event/7/application.wadl" % base_url,
+            "%s/fdsnws/station/8/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
 
 
 def suite():
