@@ -25,7 +25,7 @@ import numpy as np
 from obspy.signal import util
 
 
-def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
+def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     """
     Continuous Wavelet Transformation in the Frequency Domain.
 
@@ -1010,10 +1010,13 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         # plot TFEM
         ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
-        img_TFEM = ax_TFEM.imshow(TFEM[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
-                                  aspect='auto', origin='lower')
-        ax_TFEM.set_yscale('log')
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           TFEM[itr].shape[0]))
+        img_TFEM = ax_TFEM.pcolormesh(x, y, TFEM[itr], cmap=cmap)
+        ax_TFEM.set_yscale("log")
+        ax_TFEM.set_ylim(fmin, fmax)
 
         # plot FEM
         ax_FEM = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
@@ -1026,10 +1029,11 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
         # plot TFPM
         ax_TFPM = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
-        img_TFPM = ax_TFPM.imshow(TFPM[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
-                                  aspect='auto', origin='lower')
-        ax_TFPM.set_yscale('log')
+
+        x, y = np.meshgrid(t, f)
+        img_TFPM = ax_TFPM.pcolormesh(x, y, TFPM[itr], cmap=cmap)
+        ax_TFPM.set_yscale("log")
+        ax_TFPM.set_ylim(f[0], f[-1])
 
         # add colorbars
         ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
@@ -1282,10 +1286,13 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         # plot TFEG
         ax_TFEG = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
-        img_TFEG = ax_TFEG.imshow(TFEG[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
-                                  aspect='auto', origin='lower')
-        ax_TFEG.set_yscale('log')
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           TFEG[itr].shape[0]))
+        img_TFEG = ax_TFEG.pcolormesh(x, y, TFEG[itr], cmap=cmap)
+        ax_TFEG.set_yscale("log")
+        ax_TFEG.set_ylim(fmin, fmax)
 
         # plot FEG
         ax_FEG = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
@@ -1298,10 +1305,11 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
         # plot TFPG
         ax_TFPG = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
-        img_TFPG = ax_TFPG.imshow(TFPG[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
-                                  aspect='auto', origin='lower')
-        ax_TFPG.set_yscale('log')
+
+        x, y = np.meshgrid(t, f)
+        img_TFPG = ax_TFPG.pcolormesh(x, y, TFPG[itr], cmap=cmap)
+        ax_TFPG.set_yscale("log")
+        ax_TFPG.set_ylim(f[0], f[-1])
 
         # add colorbars
         ax_cb_TFPG = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
@@ -1454,7 +1462,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     else:
         nfft = util.nextpow2(npts) * fft_zero_pad_fac
 
-    f_lin = np.linspace(0, 0.5 / dt, nfft / 2 + 1)
+    f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
 
     if cmap is None:
         CDICT_TFR = {'red': ((0.0, 1.0, 1.0),
@@ -1486,13 +1494,13 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         W[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
-        spec = np.zeros((1, nfft / 2 + 1), dtype=np.complex)
+        spec = np.zeros((1, nfft // 2 + 1), dtype=np.complex)
         spec[0] = np.fft.rfft(st, n=nfft) * dt
 
         st = st.reshape((1, npts))
     else:
         W = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
-        spec = np.zeros((st.shape[0], nfft / 2 + 1), dtype=np.complex)
+        spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=np.complex)
 
         for i in np.arange(st.shape[0]):
             W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
@@ -1520,10 +1528,13 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
         # plot TFR
         ax_TFR = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
-        img_TFR = ax_TFR.imshow(TFR[itr], interpolation='nearest',
-                                cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
-                                aspect='auto', origin='lower')
-        ax_TFR.set_yscale('log')
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           TFR[itr].shape[0]))
+        img_TFR = ax_TFR.pcolormesh(x, y, TFR[itr], cmap=cmap)
+        ax_TFR.set_yscale("log")
+        ax_TFR.set_ylim(fmin, fmax)
 
         # plot spectrum
         ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
