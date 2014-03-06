@@ -1011,7 +1011,12 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_TFEM = ax_TFEM.imshow(TFEM[itr], interpolation='nearest',
                                   cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
                                   aspect='auto', origin='lower')
-        ax_TFEM.set_yscale('log')
+        # Hackish way to overlay a logarithmic scale over a linearly scaled
+        # image.
+        twin_ax_TFEM = ax_TFEM.twinx()
+        twin_ax_TFEM.set_yscale('log')
+        twin_ax_TFEM.set_xlim(t[0], t[-1])
+        twin_ax_TFEM.set_ylim(fmin, fmax)
 
         # plot FEM
         ax_FEM = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
@@ -1027,7 +1032,12 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_TFPM = ax_TFPM.imshow(TFPM[itr], interpolation='nearest',
                                   cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
                                   aspect='auto', origin='lower')
-        ax_TFPM.set_yscale('log')
+        # Hackish way to overlay a logarithmic scale over a linearly scaled
+        # image.
+        twin_ax_TFPM = ax_TFPM.twinx()
+        twin_ax_TFPM.set_yscale('log')
+        twin_ax_TFPM.set_xlim(t[0], t[-1])
+        twin_ax_TFPM.set_ylim(f[0], f[-1])
 
         # add colorbars
         ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
@@ -1101,6 +1111,11 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_sig.xaxis.set_major_formatter(NullFormatter())
         ax_TFPM.yaxis.set_major_formatter(NullFormatter())
         ax_TFEM.yaxis.set_major_formatter(NullFormatter())
+
+        twin_ax_TFEM.yaxis.set_major_formatter(NullFormatter())
+        twin_ax_TFEM.yaxis.set_major_formatter(NullFormatter())
+        twin_ax_TFPM.yaxis.set_major_formatter(NullFormatter())
+        twin_ax_TFPM.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
@@ -1283,7 +1298,12 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_TFEG = ax_TFEG.imshow(TFEG[itr], interpolation='nearest',
                                   cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
                                   aspect='auto', origin='lower')
-        ax_TFEG.set_yscale('log')
+        # Hackish way to overlay a logarithmic scale over a linearly scaled
+        # image.
+        twin_ax_TFEG = ax_TFEG.twinx()
+        twin_ax_TFEG.set_yscale('log')
+        twin_ax_TFEG.set_xlim(t[0], t[-1])
+        twin_ax_TFEG.set_ylim(fmin, fmax)
 
         # plot FEG
         ax_FEG = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
@@ -1299,7 +1319,12 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         img_TFPG = ax_TFPG.imshow(TFPG[itr], interpolation='nearest',
                                   cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
                                   aspect='auto', origin='lower')
-        ax_TFPG.set_yscale('log')
+        # Hackish way to overlay a logarithmic scale over a linearly scaled
+        # image.
+        twin_ax_TFPG = ax_TFPG.twinx()
+        twin_ax_TFPG.set_yscale('log')
+        twin_ax_TFPG.set_xlim(t[0], t[-1])
+        twin_ax_TFPG.set_ylim(f[0], f[-1])
 
         # add colorbars
         ax_cb_TFPG = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
@@ -1373,6 +1398,9 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_sig.xaxis.set_major_formatter(NullFormatter())
         ax_TFPG.yaxis.set_major_formatter(NullFormatter())
         ax_TFEG.yaxis.set_major_formatter(NullFormatter())
+
+        twin_ax_TFEG.xaxis.set_major_formatter(NullFormatter())
+        twin_ax_TFEG.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
@@ -1521,7 +1549,12 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         img_TFR = ax_TFR.imshow(TFR[itr], interpolation='nearest',
                                 cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
                                 aspect='auto', origin='lower')
-        ax_TFR.set_yscale('log')
+        # Hackish way to overlay a logarithmic scale over a linearly scaled
+        # image.
+        twin_ax_TFR = ax_TFR.twinx()
+        twin_ax_TFR.set_yscale('log')
+        twin_ax_TFR.set_xlim(t[0], t[-1])
+        twin_ax_TFR.set_ylim(fmin, fmax)
 
         # plot spectrum
         ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
@@ -1552,6 +1585,8 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         # remove axis labels
         ax_TFR.xaxis.set_major_formatter(NullFormatter())
         ax_TFR.yaxis.set_major_formatter(NullFormatter())
+        twin_ax_TFR.xaxis.set_major_formatter(NullFormatter())
+        twin_ax_TFR.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
