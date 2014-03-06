@@ -11,6 +11,8 @@
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
+   * for advanced users: endpoints of any particular service can now be
+     specified explicitely (see #754)
  - obspy.imaging:
    * Fixing waveform plotting.
  - obspy.station:
