@@ -55,7 +55,7 @@ def normalize_version_number(string):
     """
     Returns imput string with version numbers normalized for testing purposes.
     """
-    return re.sub('[0-9]\.[0-9]\.[0-9]', "vX.X.X", string)
+    return re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string)
 
 
 class ClientTestCase(unittest.TestCase):
@@ -221,7 +221,7 @@ class ClientTestCase(unittest.TestCase):
                  "minlongitude", "maxlongitude", "latitude", "longitude",
                  "maxradius", "minradius", "mindepth", "maxdepth",
                  "minmagnitude", "maxmagnitude",
-                 "magtype",  # XXX: Change once fixed.
+                 "magnitudetype",
                  "catalog", "contributor", "limit", "offset", "orderby",
                  "updatedafter", "includeallorigins", "includeallmagnitudes",
                  "includearrivals", "eventid",
@@ -299,9 +299,9 @@ class ClientTestCase(unittest.TestCase):
                         "events_by_misc.xml",
                         ]
         for query, filename in zip(queries, result_files):
-            got = client.get_events(**query)
             file_ = os.path.join(self.datapath, filename)
-            # got.write(file_, "QUAKEML")
+            # query["filename"] = file_
+            got = client.get_events(**query)
             expected = readEvents(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
@@ -335,10 +335,9 @@ class ClientTestCase(unittest.TestCase):
                         "stations_by_station_wildcard.xml",
                         ]
         for query, filename in zip(queries, result_files):
-            got = client.get_stations(**query)
             file_ = os.path.join(self.datapath, filename)
-            # with open(file_, "wt") as fh:
-            #    fh.write(got)
+            # query["filename"] = file_
+            got = client.get_stations(**query)
             expected = read_inventory(file_, format="STATIONXML")
             # delete both creating times and modules before comparing objects.
             got.created = None
@@ -434,19 +433,16 @@ class ClientTestCase(unittest.TestCase):
 
             client.help("event")
             got = sys.stdout.getvalue()
+            sys.stdout.close()
+            sys.stdout = sys.__stdout__
             expected = (
                 "Parameter description for the 'event' service (v1.0.6) of "
                 "'http://service.iris.edu':\n"
                 "The service offers the following non-standard parameters:\n"
-                "    magtype (str)\n"
-                "        type of Magnitude used to test minimum and maximum "
-                "limits (case\n        insensitive)\n"
                 "    originid (int)\n"
                 "        Retrieve an event based on the unique origin ID "
                 "numbers assigned by\n"
                 "        the IRIS DMC\n"
-                "WARNING: The service does not offer the following standard "
-                "parameters: magnitudetype\n"
                 "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
                 "Available contributors: NEIC PDE-W, ANF, University of "
                 "Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, "
@@ -454,14 +450,16 @@ class ClientTestCase(unittest.TestCase):
             # allow for changes in version number..
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
-                             failmsg(got, expected))
+                             failmsg(normalize_version_number(got),
+                                     normalize_version_number(expected)))
 
             # Reset. Creating a new one is faster then clearing the old one.
-            sys.stdout.close()
             sys.stdout = StringIO()
 
             client.help("station")
             got = sys.stdout.getvalue()
+            sys.stdout.close()
+            sys.stdout = sys.__stdout__
             expected = (
                 "Parameter description for the 'station' service (v1.0.7) of "
                 "'http://service.iris.edu':\n"
@@ -472,10 +470,10 @@ class ClientTestCase(unittest.TestCase):
                 "        an IRIS extension to the FDSN specification\n")
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
-                             failmsg(got, expected))
+                             failmsg(normalize_version_number(got),
+                                     normalize_version_number(expected)))
 
             # Reset.
-            sys.stdout.close()
             sys.stdout = StringIO()
 
             client.help("dataselect")
@@ -486,7 +484,8 @@ class ClientTestCase(unittest.TestCase):
                 "No derivations from standard detected\n")
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
-                             failmsg(got, expected))
+                             failmsg(normalize_version_number(got),
+                                     normalize_version_number(expected)))
 
             sys.stdout.close()
         finally:
@@ -505,7 +504,8 @@ class ClientTestCase(unittest.TestCase):
             "all webservices.")
         self.assertEqual(normalize_version_number(got),
                          normalize_version_number(expected),
-                         failmsg(got, expected))
+                         failmsg(normalize_version_number(got),
+                                 normalize_version_number(expected)))
 
     def test_bulk(self):
         """
