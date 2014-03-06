@@ -5,6 +5,7 @@ from future.utils import PY2
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
+from obspy.core.util.decorator import skipIf
 import os
 import platform
 import sys
@@ -49,7 +50,7 @@ class UtilMiscTestCase(unittest.TestCase):
                     "\t\tID numbers assigned by\n"
                     "\t\tthe IRIS DMC")
 
-    @unittest.skipIf(not PY2, 'Solely test related Py3k issue')
+    @skipIf(not PY2, 'Solely test related Py3k issue')
     def test_CatchOutput(self):
         """
         """
