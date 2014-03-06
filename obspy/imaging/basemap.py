@@ -15,7 +15,6 @@ from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import str
 from future.utils import native_str
-from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.colorbar import Colorbar
@@ -27,7 +26,15 @@ from matplotlib.dates import date2num, AutoDateLocator, \
 import matplotlib.patheffects as PathEffects
 import datetime
 import numpy as np
+import warnings
 from obspy import UTCDateTime
+
+try:
+    from mpl_toolkits.basemap import Basemap
+    HAS_BASEMAP = True
+except ImportError:
+    warnings.warn("basemap not installed.")
+    HAS_BASEMAP = False
 
 
 def plot_basemap(lons, lats, size, color, labels=None,
