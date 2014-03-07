@@ -771,6 +771,15 @@ class ClientTestCase(unittest.TestCase):
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
 
+    def test_manually_deactivate_single_service(self):
+        """
+        Test manually deactivating a single service.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        service_mappings={"event": None})
+        self.assertEqual(sorted(client.services.keys()),
+                         ['dataselect', 'station'])
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

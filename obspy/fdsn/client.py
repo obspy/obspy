@@ -69,13 +69,15 @@ class Client(object):
     :param timeout: Maximum time (in seconds) to wait for a single request to
         finish (after which an exception is raised).
     :type service_mappings: dict
-    :param service_mapping.: For advanced use only. Allows the direct
+    :param service_mappings: For advanced use only. Allows the direct
         setting of the endpoints of the different services. (e.g.
-        ``service_mapping={'station': 'http://example.com/test/stat/1'}``)
+        ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
         Valid keys are ``event``, ``station``, and ``dataselect``. This will
         overwrite the ``base_url`` and ``major_versions`` arguments. For all
         services not specified, the default default locations indicated by
-        ``base_url`` and ``major_versions`` will be used.
+        ``base_url`` and ``major_versions`` will be used. Any service that is
+        manually specified as ``None`` (e.g.
+        ``service_mappings={'event': None}``) will be deactivated.
     """
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
@@ -1002,10 +1004,16 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
+        services = ["dataselect", "event", "station"]
+        # omit manually deactivated services
+        for service, custom_target in self._service_mappings.iteritems():
+            if custom_target is None:
+                services.remove(service)
         urls = [self._build_url(service, "application.wadl")
-                for service in ("dataselect", "event", "station")]
-        urls.append(self._build_url("event", "catalogs"))
-        urls.append(self._build_url("event", "contributors"))
+                for service in services]
+        if "event" in services:
+            urls.append(self._build_url("event", "catalogs"))
+            urls.append(self._build_url("event", "contributors"))
 
         # Request all in parallel.
         wadl_queue = Queue.Queue()
