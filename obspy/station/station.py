@@ -181,10 +181,10 @@ class Station(BaseNode):
         https://gist.github.com/sgillies/2217756
 
         """
-        # Convert UTCDateTime objects to float timestamps
-        times = dict([(a, getattr(self, a).timestamp) for a in ('start_date',
+        # Convert UTCDateTime objects to str
+        times = dict([(a, str(getattr(self, a))) for a in ('start_date',
                      'end_date', 'creation_date', 'termination_date')
-                     if hasattr(getattr(self, a), 'timestamp')])
+                     if getattr(self, a) is not None])
 
         point = {
             "type": "Point",
@@ -192,10 +192,10 @@ class Station(BaseNode):
             "id": self.code,
             }
         props = {
-            "start_time": times.get('start_date'),
-            "end_time": times.get('end_date'),
-            "creation_time": times.get('creation_date'),
-            "termination_time": times.get('termination_date'),
+            "start_date": times.get('start_date'),
+            "end_date": times.get('end_date'),
+            "creation_date": times.get('creation_date'),
+            "termination_date": times.get('termination_date'),
             }
         return {"type": "Feature", "properties": props, "geometry": point}
 

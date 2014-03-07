@@ -1746,23 +1746,27 @@ class Origin(__Origin):
         https://gist.github.com/sgillies/2217756
 
         """
-        ts = None
-        update_ts = None
-        # Convert UTCDateTime objects to float timestamps
-        if hasattr(self.time, 'timestamp'):
-            ts = self.time.timestamp
-        if hasattr(self.creation_info, 'creation_time') and \
-           hasattr(self.creation_info.creation_time, 'timestamp'):
-            update_ts = self.creation_info.creation_time.timestamp
+        time = None
+        update_time = None
+
+        coords = [self.longitude, self.latitude]
+        if self.depth is not None:
+            coords.append(self.depth)
+        if isinstance(self.time, UTCDateTime):
+            time = str(self.time)
+            coords.append(self.time.timestamp)
+
+        if self.creation_info and self.creation_info.creation_time is not None:
+            update_time = str(self.creation_info.creation_time)
 
         point = {
             "type": "Point",
-            "coordinates": (self.longitude, self.latitude, self.depth),
+            "coordinates": coords,
             "id": str(self.resource_id),
             }
         props = {
-            "time": ts,
-            "updated": update_ts,
+            "time": time,
+            "updated": update_time,
             }
         return {"type": "Feature", "properties": props, "geometry": point}
 
