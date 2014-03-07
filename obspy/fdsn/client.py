@@ -68,10 +68,20 @@ class Client(object):
     :type timeout: float
     :param timeout: Maximum time (in seconds) to wait for a single request to
         finish (after which an exception is raised).
+    :type service_mappings: dict
+    :param service_mappings: For advanced use only. Allows the direct
+        setting of the endpoints of the different services. (e.g.
+        ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
+        Valid keys are ``event``, ``station``, and ``dataselect``. This will
+        overwrite the ``base_url`` and ``major_versions`` arguments. For all
+        services not specified, the default default locations indicated by
+        ``base_url`` and ``major_versions`` will be used. Any service that is
+        manually specified as ``None`` (e.g.
+        ``service_mappings={'event': None}``) will be deactivated.
     """
-    def __init__(self, base_url="IRIS", major_versions={}, user=None,
+    def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120):
+                 timeout=120, service_mappings=None):
         """
         Initializes an FDSN Web Service client.
 
@@ -111,11 +121,24 @@ class Client(object):
             urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
-        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        # Avoid mutable kwarg.
+        if major_versions is None:
+            major_versions = {}
+        # Make a copy to avoid overwriting the default service versions.
+        self.major_versions = DEFAULT_SERVICE_VERSIONS.copy()
         self.major_versions.update(major_versions)
+
+        # Avoid mutable kwarg.
+        if service_mappings is None:
+            service_mappings = {}
+        self._service_mappings = service_mappings
 
         if self.debug is True:
             print "Base URL: %s" % self.base_url
+            if self._service_mappings:
+                print "Custom service mappings:"
+                for key, value in self._service_mappings.items():
+                    print "\t%s: '%s'" % (key, value)
             print "Request Headers: %s" % str(self.request_headers)
 
         self._discover_services()
@@ -975,7 +998,8 @@ class Client(object):
             if service == "dataselect" and resource_type == "query":
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
-                         resource_type, parameters)
+                         resource_type, parameters,
+                         service_mappings=self._service_mappings)
 
     def _discover_services(self):
         """
@@ -984,10 +1008,16 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
+        services = ["dataselect", "event", "station"]
+        # omit manually deactivated services
+        for service, custom_target in self._service_mappings.iteritems():
+            if custom_target is None:
+                services.remove(service)
         urls = [self._build_url(service, "application.wadl")
-                for service in ("dataselect", "event", "station")]
-        urls.append(self._build_url("event", "catalogs"))
-        urls.append(self._build_url("event", "contributors"))
+                for service in services]
+        if "event" in services:
+            urls.append(self._build_url("event", "catalogs"))
+            urls.append(self._build_url("event", "contributors"))
 
         # Request all in parallel.
         wadl_queue = Queue.Queue()
@@ -1042,7 +1072,7 @@ class Client(object):
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
                 except ValueError:
-                    msg = "Could not parse the catalogs at '%s'."
+                    msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
 
             elif "event" in url and "contributors" in url:
@@ -1050,7 +1080,7 @@ class Client(object):
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
                 except ValueError:
-                    msg = "Could not parse the contributors at '%s'."
+                    msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
             msg = ("No FDSN services could be discoverd at '%s'. This could "
@@ -1115,7 +1145,8 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, service, major_version, resource_type, parameters={}):
+def build_url(base_url, service, major_version, resource_type,
+              parameters=None, service_mappings=None):
     """
     URL builder for the FDSN webservices.
 
@@ -1129,6 +1160,12 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
                   "query", {"cha": "EHE"})
     'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
     """
+    # Avoid mutable kwargs.
+    if parameters is None:
+        parameters = {}
+    if service_mappings is None:
+        service_mappings = {}
+
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station"]:
         msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
@@ -1151,8 +1188,13 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
         loc = loc.replace(",,", ",--,")
         parameters["location"] = loc
 
-    url = "/".join((base_url, "fdsnws", service,
-                    str(major_version), resource_type))
+    # Apply per-service mappings if any.
+    if service in service_mappings:
+        url = "/".join((service_mappings[service], resource_type))
+    else:
+        url = "/".join((base_url, "fdsnws", service,
+                        str(major_version), resource_type))
+
     if parameters:
         # Strip parameters.
         for key, value in parameters.iteritems():
