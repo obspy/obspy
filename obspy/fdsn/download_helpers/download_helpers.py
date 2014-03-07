@@ -13,6 +13,9 @@ from collections import namedtuple
 import fnmatch
 import logging
 from multiprocessing.pool import ThreadPool
+import collections
+import itertools
+import obspy
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 import warnings
@@ -40,9 +43,9 @@ def _filter_channel_priority(channels, priorities=["HH[Z,N,E]", "BH[Z,N,E]",
     This function takes a dictionary containing channels keys and returns a new
     one filtered with the given priorities list.
 
-    For each station all channels matching the first pattern in the list will
-    be retrieved. If one or more channels are found it stops. Otherwise it will
-    attempt to retrieve channels matching the next pattern. And so on.
+    All channels matching the first pattern in the list will be retrieved. If
+    one or more channels are found it stops. Otherwise it will attempt to
+    retrieve channels matching the next pattern. And so on.
 
     :type channels: list
     :param channels: A list containing channel names.
@@ -132,10 +135,15 @@ def get_availability(client, client_name, restrictions, domain):
                 if domain.is_in_domain(station.latitude,
                                        station.longitude) is False:
                     continue
-            channels = []
+
+            # Filter each location's channels.
+            locations = collections.defaultdict(list)
             for channel in station:
-                channels.append("{0}.{1}".format(channel.location_code,
-                                                 channel.code))
+                locations[channel.location_code].append(channel.code)
+            for key, value in locations.items():
+                locations[key] = _filter_channel_priority(value)
+            channels = itertools.chain(locations.values())
+
             availability["{0}.{1}".format(network.code, station.code)] = {
                 "latitude": station.latitude,
                 "longitude": station.longitude,
@@ -143,6 +151,7 @@ def get_availability(client, client_name, restrictions, domain):
                 "channels": channels
             }
 
+    logger.info("Found %i matching channels from client '%s'." % client_name)
     return availability
 
 
@@ -230,4 +239,27 @@ class DownloadHelper(object):
 
 
 if __name__ == "__main__":
-    DownloadHelper()
+    # Setup the domain.
+    domain = RectangularDomain(
+        min_latitude=40,
+        max_longitude=50,
+        min_latitude=10,
+        max_latitude=20)
+
+    # Some more restrictions.
+    restrictions = Restrictions(
+        network="*",
+        station="*",
+        location="*",
+        # Channels are a priority list.
+        channel=["BH[E,N,Z]", "EH[E,N,Z"],
+        starttime=obspy.UTCDateTime(2012, 1, 1),
+        endtime=obspy.UTCDateTime(2012, 1, 1, 1),
+        interval=None
+    )
+
+    # Initialize the download helper.
+    helper = DownloadHelper()
+
+    # Start the actual download.
+    helper.download(domain, restrictions)
