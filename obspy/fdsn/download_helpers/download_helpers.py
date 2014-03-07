@@ -10,6 +10,7 @@ Download helpers.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from collections import namedtuple
+import fnmatch
 import logging
 from multiprocessing.pool import ThreadPool
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
@@ -30,6 +31,37 @@ Restrictions = namedtuple("Restrictions", [
     "starttime",
     "endtime"
 ])
+
+
+def _filter_channel_priority(channels, priorities=["HH[Z,N,E]", "BH[Z,N,E]",
+                                                   "MH[Z,N,E]", "EH[Z,N,E]",
+                                                   "LH[Z,N,E]"]):
+    """
+    This function takes a dictionary containing channels keys and returns a new
+    one filtered with the given priorities list.
+
+    For each station all channels matching the first pattern in the list will
+    be retrieved. If one or more channels are found it stops. Otherwise it will
+    attempt to retrieve channels matching the next pattern. And so on.
+
+    :type channels: list
+    :param channels: A list containing channel names.
+    :type priorities: list of unicode
+    :param priorities: The desired channels with descending priority. Channels
+        will be matched by fnmatch.fnmatch() so wildcards and sequences are
+        supported. The advisable form to request the three standard components
+        of a channel is "HH[Z,N,E]" to avoid getting e.g. rotated components.
+    :returns: A new list containing only the filtered channels.
+    """
+    filtered_channels = []
+    for pattern in priorities:
+        if filtered_channels:
+            break
+        for channel in channels:
+            if fnmatch.fnmatch(channel, pattern):
+                filtered_channels.append(channel)
+                continue
+    return filtered_channels
 
 
 def get_availability(client, client_name, restrictions, domain):
