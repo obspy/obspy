@@ -62,12 +62,13 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.fdsn.client.Client.
     """
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # directory where the test files are located
-        self.path = os.path.dirname(__file__)
-        self.datapath = os.path.join(self.path, "data")
-        self.client = Client(base_url="IRIS", user_agent=USER_AGENT)
-        self.client_auth = \
+        cls.path = os.path.dirname(__file__)
+        cls.datapath = os.path.join(cls.path, "data")
+        cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
 
