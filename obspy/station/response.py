@@ -18,6 +18,7 @@ from future.builtins import str
 import warnings
 import ctypes as C
 import numpy as np
+from math import pi
 from collections import defaultdict
 
 from obspy.core.util.base import ComparingObject
@@ -1123,7 +1124,9 @@ class Response(ComparingObject):
             resp.plot(0.001, output="VEL")
         """
         import matplotlib.pyplot as plt
+        from matplotlib.transforms import blended_transform_factory
 
+        # detect sampling rate from response stages
         if sampling_rate is None:
             for stage in self.response_stages[::-1]:
                 if (stage.decimation_input_sample_rate is not None
@@ -1157,32 +1160,41 @@ class Response(ComparingObject):
             label_kwarg['label'] = label
 
         # plot amplitude response
-        ax1.loglog(f, abs(h), **label_kwarg)
+        lw = 1.5
+        lines = ax1.loglog(f, abs(h), lw=lw, **label_kwarg)
+        color = lines[0].get_color()
         if self.instrument_sensitivity:
-            ax1.axvline(self.instrument_sensitivity.frequency, ls="-.")
-            ax1.axhline(self.instrument_sensitivity.value, ls="-.")
-        ax1.set_ylabel('Amplitude')
-        ax1.grid(True)
+            trans_above = blended_transform_factory(ax1.transData,
+                                                    ax1.transAxes)
+            trans_right = blended_transform_factory(ax1.transAxes,
+                                                    ax1.transData)
+            arrowprops = dict(
+                arrowstyle="wedge,tail_width=1.4,shrink_factor=0.8", fc=color)
+            bbox = dict(boxstyle="round", fc="w")
+            ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
+                         (self.instrument_sensitivity.frequency, 1.0),
+                         xytext=(self.instrument_sensitivity.frequency, 1.1),
+                         xycoords=trans_above, textcoords=trans_above,
+                         ha="center", va="bottom",
+                         arrowprops=arrowprops, bbox=bbox)
+            ax1.annotate("%.1e" % self.instrument_sensitivity.value,
+                         (1.0, self.instrument_sensitivity.value),
+                         xytext=(1.05, self.instrument_sensitivity.value),
+                         xycoords=trans_right, textcoords=trans_right,
+                         ha="left", va="center",
+                         arrowprops=arrowprops, bbox=bbox)
 
         #take negative of imaginary part
         phase = np.unwrap(np.arctan2(-h.imag, h.real))
-        ax2.semilogx(f, phase)
-        ax2.set_xlabel('Frequency [Hz]')
-        ax2.set_ylabel('Phase [radian]')
-        ax2.grid(True)
+        ax2.semilogx(f, phase, color=color, lw=lw)
 
         # plot nyquist frequency
         for ax in (ax1, ax2):
-            ax.axvline(nyquist, ls=":")
+            ax.axvline(nyquist, ls="--", color=color, lw=lw)
 
         # only do adjustments if we initialized the figure in here
         if not axes:
-            # make more room in between subplots for the ylabel of right plot
-            fig.subplots_adjust(hspace=0.02)
-            ax1.legend(loc="lower center", ncol=3, fontsize='small')
-            plt.setp(ax1.get_xticklabels(), visible=False)
-            plt.setp(ax2.get_yticklabels()[-1], visible=False)
-            plt.show()
+            _adjust_bode_plot_figure(fig)
 
 
 class InstrumentSensitivity(ComparingObject):
@@ -1414,6 +1426,29 @@ class CoefficientWithUncertainties(FloatWithUncertainties):
         if value is not None:
             value = int(value)
         self._number = value
+
+
+def _adjust_bode_plot_figure(fig, grid=True, show=True):
+    """
+    Helper function to do final adjustments to Bode plot figure.
+    """
+    import matplotlib.pyplot as plt
+    # make more room in between subplots for the ylabel of right plot
+    fig.subplots_adjust(hspace=0.02, top=0.87, right=0.82)
+    ax1, ax2 = fig.axes[:2]
+    ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    plt.setp(ax2.get_yticklabels()[-1], visible=False)
+    ax1.set_ylabel('Amplitude')
+    ax1.grid(True)
+    ax2.set_xlabel('Frequency [Hz]')
+    ax2.set_ylabel('Phase [rad]')
+    ax2.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    ax2.set_yticklabels([r"$-\pi$", r"$-\frac{\pi}{2}$", r"$0$",
+                         r"$\frac{\pi}{2}$", r"$\pi$"])
+    ax2.grid(True)
+    if show:
+        plt.show()
 
 
 if __name__ == '__main__':

@@ -331,11 +331,8 @@ class Station(BaseNode):
 
         # final adjustments to plot if we created the figure in here
         if not axes:
-            fig.subplots_adjust(hspace=0.02)
-            ax1.legend(loc="lower center", ncol=3, fontsize='small')
-            plt.setp(ax1.get_xticklabels(), visible=False)
-            plt.setp(ax2.get_yticklabels()[-1], visible=False)
-            plt.show()
+            from obspy.station.response import _adjust_bode_plot_figure
+            _adjust_bode_plot_figure(fig)
 
 
 if __name__ == '__main__':
