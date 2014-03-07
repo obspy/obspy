@@ -2999,7 +2999,7 @@ class Catalog(object):
             cat = readEvents()
             cat.plot()
         """
-        from obspy.imaging.basemap import plot_basemap
+        from obspy.imaging.maps import plot_basemap
         import matplotlib.pyplot as plt
 
         if color not in ('date', 'depth'):
