@@ -21,6 +21,7 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger("obspy.fdsn.download_helpers")
 
 
+
 domain = namedtuple("domain", [
     "min_latitude",
     "max_latitude",
@@ -31,6 +32,53 @@ domain = namedtuple("domain", [
     "longitude",
     "mi_nradius",
     "max_radius"])
+
+
+restrictions = namedtuple("restrictions", [
+    "network",
+    "station",
+    "location",
+    "channel",
+    "starttime",
+    "endtime"
+])
+
+point = namedtuple("Point", ["latitude", "longitude", "elevation",
+                             "local_depth_in_m"])
+
+
+def _get_availability(client, restrictions, domain):
+    """
+     {"network.station": {
+         "code": "BW.FURT",
+         "latitude": 1.0,
+         "longitude": 2.0,
+         "elevation_in_m": 10.0,
+         "channels": [".BHE", ".BHN", ".BHZ", "00.LHE", "00.LHE", ...]},
+      "network.station": {...}, ...
+     }
+    """
+    # Check if stations needs to be filtered after downloading or if the
+    # restrictions one can impose with the FDSN webservices are enough.
+    needs_filtering = True
+    if domain.is_in_domain(0, 0) is None:
+        needs_filtering = False
+
+    arguments = {
+
+    }
+    get_stations(network=restrictions.network,
+                        station=restrictions.station,
+                        location=restrictions.location,
+                        channel=None
+
+    client.get_stations(network=restrictions.network,
+                        station=restrictions.station,
+                        location=restrictions.location,
+                         channel=Noned
+                        )
+
+
 
 
 class Domain(object):
@@ -82,12 +130,12 @@ class GlobalDomain(Domain):
         return domain(None, None, None, None, None, None, None, None)
 
 
+
 class DownloadHelper(object):
     def __init__(self, clients=None):
         if clients is None:
             clients = URL_MAPPINGS.keys()
-        self.clients = []
-        self.clients.extend(clients)
+        self.clients = clients[:]
 
         self._initialized_clients = {}
 
