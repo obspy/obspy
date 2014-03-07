@@ -1184,8 +1184,7 @@ class Response(ComparingObject):
                          ha="left", va="center",
                          arrowprops=arrowprops, bbox=bbox)
 
-        #take negative of imaginary part
-        phase = np.unwrap(np.arctan2(-h.imag, h.real))
+        phase = np.unwrap(np.angle(h))
         ax2.semilogx(f, phase, color=color, lw=lw)
 
         # plot nyquist frequency
@@ -1440,6 +1439,8 @@ def _adjust_bode_plot_figure(fig, grid=True, show=True):
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.setp(ax2.get_yticklabels()[-1], visible=False)
     ax1.set_ylabel('Amplitude')
+    minmax = ax1.get_ylim()
+    ax1.set_ylim(top=minmax[1] * 5)
     ax1.grid(True)
     ax2.set_xlabel('Frequency [Hz]')
     ax2.set_ylabel('Phase [rad]')
