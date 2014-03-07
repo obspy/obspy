@@ -1080,15 +1080,11 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
-    def plot(self, sampling_rate, df, output="VEL", start_stage=None,
-             end_stage=None, label=None, axes=None):
+    def plot(self, df, output="VEL", start_stage=None,
+             end_stage=None, label=None, axes=None, sampling_rate=None):
         """
         Show bode plot of instrument response.
 
-        :type sampling_rate: float
-        :param sampling_rate: Sampling rate of time series. Does not influence
-            the spectra calculation, if it is not known, just provide the
-            highest frequency that should be plotted times two.
         :type df: float
         :param df: Frequency resolution of plot (also the lowest frequency that
             is plotted).
@@ -1107,20 +1103,39 @@ class Response(ComparingObject):
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
+        :type sampling_rate: float
+        :param sampling_rate: Manually specify sampling rate of time series.
+            If not given it is attempted to determine it from the information
+            in the individual response stages.  Does not influence the spectra
+            calculation, if it is not known, just provide the highest frequency
+            that should be plotted times two.
 
         .. rubric:: Basic Usage
 
         >>> from obspy import read_inventory
         >>> resp = read_inventory()[0][0][0].response
-        >>> resp.plot(100, 0.001, output="VEL")  # doctest: +SKIP
+        >>> resp.plot(0.001, output="VEL")  # doctest: +SKIP
 
         .. plot::
 
             from obspy import read_inventory
             resp = read_inventory()[0][0][0].response
-            resp.plot(100, 0.001, output="VEL")
+            resp.plot(0.001, output="VEL")
         """
         import matplotlib.pyplot as plt
+
+        if sampling_rate is None:
+            for stage in self.response_stages[::-1]:
+                if (stage.decimation_input_sample_rate is not None
+                        and stage.decimation_factor is not None):
+                    sampling_rate = (stage.decimation_input_sample_rate /
+                                     stage.decimation_factor)
+                    break
+            else:
+                msg = ("Failed to autodetect sampling rate of channel from "
+                       "response stages. Please manually specify parameter "
+                       "`sampling_rate`")
+                raise Exception(msg)
 
         t_samp = 1.0 / sampling_rate
         nyquist = sampling_rate / 2.0
