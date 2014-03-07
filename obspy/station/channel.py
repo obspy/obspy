@@ -287,14 +287,13 @@ class Channel(BaseNode):
         else:
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
-    def plot(self, df, output="VEL", start_stage=None, end_stage=None,
+    def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
              label=None, axes=None):
         """
         Show bode plot of the channel's instrument response.
 
-        :type df: float
-        :param df: Frequency resolution of plot (also the lowest frequency that
-            is plotted).
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
         :type output: str
         :param output: Output units. One of "DISP" (displacement, output unit
             is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
@@ -324,16 +323,10 @@ class Channel(BaseNode):
             cha = read_inventory()[0][0][0]
             cha.plot(0.001, output="VEL")
         """
-        if self.sample_rate is None:
-            msg = ("Bode plots for channels that have no sampling rate "
-                   "specified are not supported. Contact developers if this "
-                   "causes problems.")
-            raise NotImplementedError(msg)
-
         self.response.plot(
-            sampling_rate=self.sample_rate, df=df, output=output,
+            min_freq=min_freq, output=output,
             start_stage=start_stage, end_stage=end_stage, label=label,
-            axes=axes)
+            axes=axes, sampling_rate=self.sample_rate)
 
 
 if __name__ == '__main__':

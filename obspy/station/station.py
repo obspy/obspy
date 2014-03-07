@@ -273,14 +273,14 @@ class Station(BaseNode):
         else:
             self._elevation = Distance(value)
 
-    def plot(self, df, output="VEL", channel="*", location="*", axes=None):
+    def plot(self, min_freq, output="VEL", channel="*", location="*",
+             axes=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
 
-        :type df: float
-        :param df: Frequency resolution of plot (also the lowest frequency that
-            is plotted).
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
         :type output: str
         :param output: Output units. One of "DISP" (displacement, output unit
             is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
@@ -302,13 +302,13 @@ class Station(BaseNode):
 
         >>> from obspy import read_inventory
         >>> sta = read_inventory()[0][0]
-        >>> sta.plot(df=0.001, output="VEL", channel="*Z")  # doctest: +SKIP
+        >>> sta.plot(0.001, output="VEL", channel="*Z")  # doctest: +SKIP
 
         .. plot::
 
             from obspy import read_inventory
             sta = read_inventory()[0][0]
-            sta.plot(df=0.001, output="VEL", channel="*Z")
+            sta.plot(0.001, output="VEL", channel="*Z")
         """
         import matplotlib.pyplot as plt
 
@@ -326,7 +326,7 @@ class Station(BaseNode):
             if not fnmatch.fnmatch(cha.location_code.upper(),
                                    location.upper()):
                 continue
-            cha.plot(df=df, axes=(ax1, ax2),
+            cha.plot(min_freq=min_freq, axes=(ax1, ax2),
                      label=".".join((self.code, cha.location_code, cha.code)))
 
         # final adjustments to plot if we created the figure in here

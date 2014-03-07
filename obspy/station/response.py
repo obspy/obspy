@@ -1081,14 +1081,13 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
-    def plot(self, df, output="VEL", start_stage=None,
+    def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None):
         """
         Show bode plot of instrument response.
 
-        :type df: float
-        :param df: Frequency resolution of plot (also the lowest frequency that
-            is plotted).
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
         :type output: str
         :param output: Output units. One of "DISP" (displacement), "VEL"
             (velocity) or "ACC" (acceleration).
@@ -1142,9 +1141,9 @@ class Response(ComparingObject):
 
         t_samp = 1.0 / sampling_rate
         nyquist = sampling_rate / 2.0
-        nfft = sampling_rate / df
+        nfft = sampling_rate / min_freq
 
-        h, f = self.get_evalresp_response(
+        cpx_response, freq = self.get_evalresp_response(
             t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
             end_stage=end_stage)
 
@@ -1161,7 +1160,7 @@ class Response(ComparingObject):
 
         # plot amplitude response
         lw = 1.5
-        lines = ax1.loglog(f, abs(h), lw=lw, **label_kwarg)
+        lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
         color = lines[0].get_color()
         if self.instrument_sensitivity:
             trans_above = blended_transform_factory(ax1.transData,
@@ -1184,8 +1183,9 @@ class Response(ComparingObject):
                          ha="left", va="center",
                          arrowprops=arrowprops, bbox=bbox)
 
-        phase = np.unwrap(np.angle(h))
-        ax2.semilogx(f, phase, color=color, lw=lw)
+        # plot phase response
+        ax2.semilogx(freq, np.unwrap(np.angle(cpx_response)),
+                     color=color, lw=lw)
 
         # plot nyquist frequency
         for ax in (ax1, ax2):
