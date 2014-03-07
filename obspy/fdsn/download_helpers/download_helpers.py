@@ -16,25 +16,13 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 import warnings
 
+# Setup the logger.
 FORMAT = "[%(asctime)s] %(levelname)s: %(message)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger("obspy.fdsn.download_helpers")
 
-
-
-domain = namedtuple("domain", [
-    "min_latitude",
-    "max_latitude",
-    "min_longitude",
-    "max_longitude",
-    # For ciruclar requests.
-    "latitude",
-    "longitude",
-    "mi_nradius",
-    "max_radius"])
-
-
-restrictions = namedtuple("restrictions", [
+# Namedtuple containing some query restrictions.
+Restrictions = namedtuple("Restrictions", [
     "network",
     "station",
     "location",
@@ -43,20 +31,34 @@ restrictions = namedtuple("restrictions", [
     "endtime"
 ])
 
-point = namedtuple("Point", ["latitude", "longitude", "elevation",
-                             "local_depth_in_m"])
 
-
-def _get_availability(client, restrictions, domain):
+def get_availability(client, client_name, restrictions, domain):
     """
-     {"network.station": {
-         "code": "BW.FURT",
-         "latitude": 1.0,
-         "longitude": 2.0,
-         "elevation_in_m": 10.0,
-         "channels": [".BHE", ".BHN", ".BHZ", "00.LHE", "00.LHE", ...]},
-      "network.station": {...}, ...
-     }
+    Returns availability information from an initialized FDSN client.
+
+    :type client: :class:`obspy.fdsn.client.Client`
+    :param client: An initialized FDSN client.
+    :type client_name: str
+    :param client_name: The name of the client. Only used for logging.
+    :type restrictions: :class:`obspy.fdsn.download_helpers.Restrictions`
+    :param restrictions: The non-domain related restrictions for the query.
+    :type domain: :class:`obspy.fdsn.download_helpers.Domain` subclass
+    :param domain: The domain related restrictions.
+    :rtype: dict
+
+    Return a dictionary akin to the following containing information about
+    all available channels according to the webservice.
+
+    .. code-block:: python
+
+         {"NET.STA1": {
+             "latitude": 1.0,
+             "longitude": 2.0,
+             "elevation_in_m": 10.0,
+             "channels": [".BHE", ".BHN", ".BHZ", "00.LHE", "00.LHE", ...]},
+          "NET.STA2": {...},
+          ...
+         }
     """
     # Check if stations needs to be filtered after downloading or if the
     # restrictions one can impose with the FDSN webservices are enough.
@@ -65,20 +67,51 @@ def _get_availability(client, restrictions, domain):
         needs_filtering = False
 
     arguments = {
-
+        "network": restrictions.network,
+        "station": restrictions.station,
+        "location": restrictions.location,
+        # Channels work by setting priority lists.
+        "channel": None,
+        "starttime": restrictions.starttime,
+        "endtime": restrictions.endtime,
+        # Request at the channel level.
+        "level": "channel"
     }
-    get_stations(network=restrictions.network,
-                        station=restrictions.station,
-                        location=restrictions.location,
-                        channel=None
+    # Add the domain specific query parameters.
+    arguments.update(domain.get_query_parameters())
 
-    client.get_stations(network=restrictions.network,
-                        station=restrictions.station,
-                        location=restrictions.location,
-                         channel=Noned
-                        )
+    logger.info("Requesting availability from client '%s'" % client_name)
+    try:
+        inv = client.get_stations(**arguments)
+    except FDSNException as e:
+        logger.exception(
+            "Failed getting availability for client '{0}': %s".format(
+                client_name), e)
+        return
+    logger.info("Successfully requested availability from client '%s'" %
+                client_name)
 
+    availability = {}
 
+    for network in inv:
+        for station in network:
+            # Skip the station if it is not in the desired domain.
+            if needs_filtering is True:
+                if domain.is_in_domain(station.latitude,
+                                       station.longitude) is False:
+                    continue
+            channels = []
+            for channel in station:
+                channels.append("{0}.{1}".format(channel.location_code,
+                                                 channel.code))
+            availability["{0}.{1}".format(network.code, station.code)] = {
+                "latitude": station.latitude,
+                "longitude": station.longitude,
+                "elevation_in_m": station.elevation,
+                "channels": channels
+            }
+
+    return availability
 
 
 class Domain(object):
@@ -98,15 +131,11 @@ class RectangularDomain(Domain):
         self.max_longitude = max_longitude
 
     def get_query_parameters(self):
-        return domain(
-            self.min_latitude,
-            self.max_latitude,
-            self.min_longitude,
-            self.max_longitude,
-            None,
-            None,
-            None,
-            None)
+        return {
+            "min_latitude": self.min_latitude,
+            "max_latitude": self.max_latitude,
+            "min_longitude": self.min_longitude,
+            "max_longitude": self.max_longitude}
 
 
 class CircularDomain(Domain):
@@ -117,18 +146,16 @@ class CircularDomain(Domain):
         self.max_radius = max_radius
 
     def get_query_parameters(self):
-        return domain(
-            None, None, None, None,
-            self.latitude,
-            self.longitude,
-            self.min_radius,
-            self.max_radius)
+        return {
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "min_radius": self.min_radius,
+            "max_radius": self.max_radius}
 
 
 class GlobalDomain(Domain):
     def get_query_parameters(self):
-        return domain(None, None, None, None, None, None, None, None)
-
+        return {}
 
 
 class DownloadHelper(object):
