@@ -293,7 +293,7 @@ class ClientTestCase(unittest.TestCase):
                  maxlatitude=40, minlongitude=-170, maxlongitude=170,
                  includeallmagnitudes=True, minmagnitude=4,
                  orderby="magnitude"),
-            ]
+        ]
         result_files = ["events_by_eventid.xml",
                         "events_by_time.xml",
                         "events_by_misc.xml",
@@ -328,7 +328,7 @@ class ClientTestCase(unittest.TestCase):
                  sta="ANMO", level="channel"),
             dict(starttime=UTCDateTime("2013-01-01"), network="IU", sta="A*",
                  location="00", level="channel", format="text"),
-            ]
+        ]
         result_files = ["stations_by_latlon.xml",
                         "stations_by_misc.xml",
                         "stations_by_station.xml",
@@ -741,7 +741,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/application.wadl" % base_url_event,
             "%s/application.wadl" % base_url_station,
             "%s/application.wadl" % base_url_ds,
-            ])
+        ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
@@ -757,7 +757,7 @@ class ClientTestCase(unittest.TestCase):
             Client(base_url=base_url, service_mappings={
                 "station": base_url_station,
                 "dataselect": base_url_ds,
-                })
+            })
         except FDSNException:
             pass
         expected_urls = sorted([
@@ -766,7 +766,7 @@ class ClientTestCase(unittest.TestCase):
             "%s/fdsnws/event/1/application.wadl" % base_url,
             "%s/application.wadl" % base_url_station,
             "%s/application.wadl" % base_url_ds,
-            ])
+        ])
         got_urls = sorted([_i[0][0] for _i in
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
@@ -792,16 +792,18 @@ class ClientTestCase(unittest.TestCase):
             if "version" in args[0]:
                 return 200, "1.0.200"
             elif "event" in args[0]:
-                with open(os.path.join(self.datapath,
-                                       "2014-01-07_iris_event.wadl")) as fh:
+                with open(os.path.join(
+                        self.datapath, "2014-01-07_iris_event.wadl")) as fh:
                     return 200, fh.read()
             elif "station" in args[0]:
                 with open(os.path.join(
-                    self.datapath, "2014-01-07_iris_station.wadl")) as fh:
+                        self.datapath,
+                        "2014-01-07_iris_station.wadl")) as fh:
                     return 200, fh.read()
             elif "dataselect" in args[0]:
                 with open(os.path.join(
-                    self.datapath, "2014-01-07_iris_dataselect.wadl")) as fh:
+                        self.datapath,
+                        "2014-01-07_iris_dataselect.wadl")) as fh:
                     return 200, fh.read()
             return 404, None
 
@@ -851,7 +853,6 @@ class ClientTestCase(unittest.TestCase):
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
->>>>>>> Added test for actually downloading things with custom mappings.
 
 
 def suite():
