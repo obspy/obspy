@@ -135,6 +135,10 @@ class Client(object):
 
         if self.debug is True:
             print "Base URL: %s" % self.base_url
+            if self._service_mappings:
+                print "Custom service mappings:"
+                for key, value in self._service_mappings.items():
+                    print "\t%s: '%s'" % (key, value)
             print "Request Headers: %s" % str(self.request_headers)
 
         self._discover_services()
@@ -1068,7 +1072,7 @@ class Client(object):
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
                 except ValueError:
-                    msg = "Could not parse the catalogs at '%s'."
+                    msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
 
             elif "event" in url and "contributors" in url:
@@ -1076,7 +1080,7 @@ class Client(object):
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
                 except ValueError:
-                    msg = "Could not parse the contributors at '%s'."
+                    msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
             msg = ("No FDSN services could be discoverd at '%s'. This could "

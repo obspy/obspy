@@ -780,6 +780,79 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(sorted(client.services.keys()),
                          ['dataselect', 'station'])
 
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_download_urls_for_custom_mapping(self, download_url_mock):
+        """
+        Tests the downloading of data with custom mappings.
+        """
+        base_url = "http://example.com"
+
+        # More extensive mock setup simulation service discovery.
+        def custom_side_effects(*args, **kwargs):
+            if "version" in args[0]:
+                return 200, "1.0.200"
+            elif "event" in args[0]:
+                with open(os.path.join(self.datapath,
+                                       "2014-01-07_iris_event.wadl")) as fh:
+                    return 200, fh.read()
+            elif "station" in args[0]:
+                with open(os.path.join(
+                    self.datapath, "2014-01-07_iris_station.wadl")) as fh:
+                    return 200, fh.read()
+            elif "dataselect" in args[0]:
+                with open(os.path.join(
+                    self.datapath, "2014-01-07_iris_dataselect.wadl")) as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = custom_side_effects
+
+        # Some custom urls
+        base_url_event = "http://other_url.com/beta/event_service/11"
+        base_url_station = "http://some_url.com/beta2/station/7"
+        base_url_ds = "http://new.com/beta3/dataselect/8"
+        # An exception will be raised if not actual WADLs are returned.
+        c = Client(base_url=base_url, service_mappings={
+            "event": base_url_event,
+            "station": base_url_station,
+            "dataselect": base_url_ds,
+        })
+
+        # Test the dataselect downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
+                            UTCDateTime())
+        except:
+            pass
+        self.assertTrue(
+            base_url_ds in download_url_mock.call_args_list[0][0][0])
+
+        # Test the station downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_stations()
+        except:
+            pass
+        self.assertTrue(
+            base_url_station in download_url_mock.call_args_list[0][0][0])
+
+        # Test the event downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_events()
+        except:
+            pass
+        self.assertTrue(
+            base_url_event in download_url_mock.call_args_list[0][0][0])
+>>>>>>> Added test for actually downloading things with custom mappings.
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
