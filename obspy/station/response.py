@@ -1082,7 +1082,8 @@ class Response(ComparingObject):
         return ret
 
     def plot(self, min_freq, output="VEL", start_stage=None,
-             end_stage=None, label=None, axes=None, sampling_rate=None):
+             end_stage=None, label=None, axes=None, sampling_rate=None,
+             unwrap_phase=False):
         """
         Show bode plot of instrument response.
 
@@ -1109,6 +1110,8 @@ class Response(ComparingObject):
             in the individual response stages.  Does not influence the spectra
             calculation, if it is not known, just provide the highest frequency
             that should be plotted times two.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
 
         .. rubric:: Basic Usage
 
@@ -1184,8 +1187,10 @@ class Response(ComparingObject):
                          arrowprops=arrowprops, bbox=bbox)
 
         # plot phase response
-        ax2.semilogx(freq, np.unwrap(np.angle(cpx_response)),
-                     color=color, lw=lw)
+        phase = np.angle(cpx_response)
+        if unwrap_phase:
+            phase = np.unwrap(phase)
+        ax2.semilogx(freq, phase, color=color, lw=lw)
 
         # plot nyquist frequency
         for ax in (ax1, ax2):
@@ -1439,17 +1444,45 @@ def _adjust_bode_plot_figure(fig, grid=True, show=True):
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.setp(ax2.get_yticklabels()[-1], visible=False)
     ax1.set_ylabel('Amplitude')
-    minmax = ax1.get_ylim()
-    ax1.set_ylim(top=minmax[1] * 5)
+    minmax1 = ax1.get_ylim()
+    ax1.set_ylim(top=minmax1[1] * 5)
     ax1.grid(True)
     ax2.set_xlabel('Frequency [Hz]')
     ax2.set_ylabel('Phase [rad]')
-    ax2.set_yticks([-pi, -pi/2, 0, pi/2, pi])
-    ax2.set_yticklabels([r"$-\pi$", r"$-\frac{\pi}{2}$", r"$0$",
-                         r"$\frac{\pi}{2}$", r"$\pi$"])
+    minmax2 = ax2.yaxis.get_data_interval()
+    yticks2 = np.arange(minmax2[0] - minmax2[0] % (pi / 2),
+                        minmax2[1] - minmax2[1] % (pi / 2) + pi, pi / 2)
+    ax2.set_yticks(yticks2)
+    ax2.set_yticklabels([_pitick2latex(x) for x in yticks2])
     ax2.grid(True)
     if show:
         plt.show()
+
+
+def _pitick2latex(x):
+    """
+    Helper function to convert a float that is a multiple of pi/2
+    to a latex string.
+    """
+    # safety check, if no multiple of pi/2 return normal representation
+    if x % (pi / 2) != 0:
+        return "%.3g" % x
+    string = "$"
+    if x < 0:
+        string += "-"
+    if x / pi % 1 == 0:
+        x = abs(int(x / pi))
+        if x == 0:
+            return "$0$"
+        elif x == 1:
+            x = ""
+        string += r"%s\pi$" % x
+    else:
+        x = abs(int(2 * x / pi))
+        if x == 1:
+            x = ""
+        string += r"\frac{%s\pi}{2}$" % x
+    return string
 
 
 if __name__ == '__main__':

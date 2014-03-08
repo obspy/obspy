@@ -288,7 +288,7 @@ class Channel(BaseNode):
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
     def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
-             label=None, axes=None):
+             label=None, axes=None, unwrap_phase=False):
         """
         Show bode plot of the channel's instrument response.
 
@@ -310,6 +310,8 @@ class Channel(BaseNode):
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
 
         .. rubric:: Basic Usage
 
@@ -326,7 +328,8 @@ class Channel(BaseNode):
         self.response.plot(
             min_freq=min_freq, output=output,
             start_stage=start_stage, end_stage=end_stage, label=label,
-            axes=axes, sampling_rate=self.sample_rate)
+            axes=axes, sampling_rate=self.sample_rate,
+            unwrap_phase=unwrap_phase)
 
 
 if __name__ == '__main__':

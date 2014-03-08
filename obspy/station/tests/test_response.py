@@ -12,10 +12,12 @@ Test suite for the response handling.
 from __future__ import unicode_literals
 import inspect
 import numpy as np
+from math import pi
 from obspy import UTCDateTime
 from obspy.signal.invsim import evalresp
 from obspy.station import read_inventory
 from obspy.xseed import Parser
+from obspy.station.response import _pitick2latex
 import os
 import unittest
 
@@ -83,6 +85,17 @@ class ResponseTest(unittest.TestCase):
                 self.assertTrue(np.allclose(seed_freq, xml_freq, rtol=1E-5))
                 self.assertTrue(np.allclose(seed_response, xml_response,
                                             rtol=1E-5))
+
+    def test_pitick2latex(self):
+        self.assertEqual(_pitick2latex(3 * pi / 2), r'$\frac{3\pi}{2}$')
+        self.assertEqual(_pitick2latex(2 * pi / 2), r'$\pi$')
+        self.assertEqual(_pitick2latex(1 * pi / 2), r'$\frac{\pi}{2}$')
+        self.assertEqual(_pitick2latex(0 * pi / 2), r'$0$')
+        self.assertEqual(_pitick2latex(-1 * pi / 2), r'$-\frac{\pi}{2}$')
+        self.assertEqual(_pitick2latex(-2 * pi / 2), r'$-\pi$')
+        self.assertEqual(_pitick2latex(0.5), r'0.5')
+        self.assertEqual(_pitick2latex(300 * pi + 0.01), r'9.4e+02')
+        self.assertEqual(_pitick2latex(3000 * pi + 0.01), r'9.4e+03')
 
 
 def suite():

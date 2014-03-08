@@ -274,7 +274,7 @@ class Station(BaseNode):
             self._elevation = Distance(value)
 
     def plot(self, min_freq, output="VEL", channel="*", location="*",
-             axes=None):
+             axes=None, unwrap_phase=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
@@ -297,6 +297,8 @@ class Station(BaseNode):
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
 
         .. rubric:: Basic Usage
 
@@ -326,8 +328,9 @@ class Station(BaseNode):
             if not fnmatch.fnmatch(cha.location_code.upper(),
                                    location.upper()):
                 continue
-            cha.plot(min_freq=min_freq, axes=(ax1, ax2),
-                     label=".".join((self.code, cha.location_code, cha.code)))
+            cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                     label=".".join((self.code, cha.location_code, cha.code)),
+                     unwrap_phase=unwrap_phase)
 
         # final adjustments to plot if we created the figure in here
         if not axes:
