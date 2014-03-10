@@ -17,6 +17,7 @@ from obspy.station.util import BaseNode
 from obspy.station.station import Station
 import textwrap
 import warnings
+import fnmatch
 
 
 class Network(BaseNode):
@@ -241,6 +242,102 @@ class Network(BaseNode):
             msg = "No matching coordinates found."
             raise Exception(msg)
         return coordinates[0]
+
+    def plot(self, type, **kwargs):
+        """
+        Show preview plot of network.
+
+        :type type: str
+        :param type: Type of preview plot (one of "response", "location",
+            "both")
+        :param kwargs: Additional kwargs necessary/optional for performing the
+            requested plot, see :meth:`plot_response` and :meth:`plot_map` for
+            details)
+        """
+        types = ("response", "location", "both")
+        if type not in types:
+            msg = ("`type` must be one of '%s'" % "', '".join(types))
+            raise ValueError(msg)
+        if type == "response":
+            return self.plot_response(**kwargs)
+        if type == "location":
+            raise NotImplementedError()
+            return self.plot_location(**kwargs)
+        if type == "both":
+            raise NotImplementedError()
+
+    def plot_response(self, min_freq, output="VEL", station="*", channel="*",
+                      location="*", axes=None, unwrap_phase=False):
+        """
+        Show bode plot of instrument response of all (or a subset of) the
+        network's channels.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type station: str
+        :param station: Only plot matching stations. Accepts UNIX style
+            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
+            :python:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :python:`~fnmatch.fnmatch`)
+        :type location: str
+        :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :python:`~fnmatch.fnmatch`)
+        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> net = read_inventory()[0]
+        >>> net.plot_response(0.001, station="FUR")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot_response(0.001, station="FUR")
+        """
+        import matplotlib.pyplot as plt
+
+        if axes:
+            ax1, ax2 = axes
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        for sta in self.stations:
+            # skip non-matching stations
+            if not fnmatch.fnmatch(sta.code.upper(), station.upper()):
+                continue
+            for cha in sta.channels:
+                # skip non-matching channels
+                if not fnmatch.fnmatch(cha.code.upper(), channel.upper()):
+                    continue
+                if not fnmatch.fnmatch(cha.location_code.upper(),
+                                       location.upper()):
+                    continue
+                cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                         label=".".join((self.code, sta.code,
+                                         cha.location_code, cha.code)),
+                         unwrap_phase=unwrap_phase)
+
+        # final adjustments to plot if we created the figure in here
+        if not axes:
+            from obspy.station.response import _adjust_bode_plot_figure
+            _adjust_bode_plot_figure(fig)
 
 
 if __name__ == '__main__':
