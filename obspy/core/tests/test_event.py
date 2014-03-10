@@ -467,7 +467,7 @@ class CatalogTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, "catalog3.png") as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name, projection="local",
-                     resolution="i", land_fill_color="0.3",
+                     resolution="i", continent_fill_color="0.3",
                      color="date", colormap="gist_heat")
 
 
