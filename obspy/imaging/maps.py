@@ -119,12 +119,17 @@ def plot_basemap(lons, lats, size, color, labels=None,
     else:
         show_colorbar = False
 
+    if projection == "local":
+        ax_x0, ax_width = 0.10, 0.80
+    else:
+        ax_x0, ax_width = 0.05, 0.90
+
     if show_colorbar:
-        map_ax = fig.add_axes([0.03, 0.13, 0.94, 0.82])
-        cm_ax = fig.add_axes([0.03, 0.05, 0.94, 0.05])
+        map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
+        cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
         plt.sca(map_ax)
     else:
-        map_ax = fig.add_axes([0.05, 0.05, 0.90, 0.90])
+        map_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.85])
 
     if projection == 'cyl':
         bmap = Basemap(resolution=resolution)
@@ -223,7 +228,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
                            zorder=10, cmap=colormap)
 
     if title:
-        plt.title(title)
+        plt.suptitle(title)
 
     # Only show the colorbar for more than one event.
     if show_colorbar:
