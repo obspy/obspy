@@ -7,10 +7,23 @@ import copy
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.decorator import skipIf
 import os
 import sys
 import unittest
 import warnings
+
+# checking for matplotlib/basemap
+try:
+    import matplotlib
+    import mpl_toolkits.basemap
+    # avoid flake8 complaining about unused import
+    matplotlib
+    mpl_toolkits.basemap
+    HAS_BASEMAP = True
+except ImportError:
+    HAS_BASEMAP = False
 
 
 class EventTestCase(unittest.TestCase):
@@ -183,6 +196,7 @@ class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         path = os.path.join(os.path.dirname(__file__), 'data')
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
         # Clear the Resource Identifier dict for the tests. NEVER do this
@@ -413,6 +427,48 @@ class CatalogTestCase(unittest.TestCase):
         """
         cat = readEvents(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_catalog_plot_cylindrical(self):
+        """
+        Tests the catalog preview plot, default parameters.
+        """
+        cat = readEvents()
+        from matplotlib import rcParams
+        with ImageComparison(self.image_dir, "catalog1.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(outfile=ic.name)
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_catalog_plot_ortho(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters.
+        """
+        cat = readEvents()
+        from matplotlib import rcParams
+        with ImageComparison(self.image_dir, "catalog2.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(outfile=ic.name, projection="ortho",
+                     resolution="c",
+                     water_fill_color="b", label=None)
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_catalog_plot_local(self):
+        """
+        Tests the catalog preview plot, local projection, some more non-default
+        parameters.
+        """
+        cat = readEvents()
+        from matplotlib import rcParams
+        with ImageComparison(self.image_dir, "catalog3.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(outfile=ic.name, projection="local",
+                     resolution="i", land_fill_color="0.3",
+                     color="date", colormap="gist_heat")
 
 
 class WaveformStreamIDTestCase(unittest.TestCase):

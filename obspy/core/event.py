@@ -12,7 +12,6 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import print_function
 from future import standard_library  # NOQA
-from future.builtins import zip
 from future.builtins import super
 from future.builtins import str
 from future.builtins import bytes
@@ -37,7 +36,6 @@ import collections
 import copy
 import glob
 import inspect
-import numpy as np
 import os
 import re
 import warnings
@@ -2940,10 +2938,11 @@ class Catalog(object):
     @deprecated_keywords({'date_colormap': 'colormap'})
     def plot(self, projection='cyl', resolution='l',
              continent_fill_color='0.9',
-             water_fill_color='white',
+             water_fill_color='1.0',
              label='magnitude',
              color='depth',
-             colormap=None, **kwargs):  # @UnusedVariable
+             colormap=None, show=True, outfile=None,
+             **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
 
@@ -2989,8 +2988,20 @@ class Catalog(object):
             Defaults to None which will use the default colormap for the date
             encoding and a colormap going from green over yellow to red for the
             depth encoding.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
 
         .. rubric:: Example
+
+        Cylindrical projection for global overview:
 
         >>> cat = readEvents()
         >>> cat.plot()  # doctest:+SKIP
@@ -3000,12 +3011,29 @@ class Catalog(object):
             from obspy import readEvents
             cat = readEvents()
             cat.plot()
+
+        Orthographic projection:
+
+        >>> cat.plot(projection="ortho")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import readEvents
+            cat = readEvents()
+            cat.plot(projection="ortho")
+
+        Local (azimuthal equidistant) projection:
+
+        >>> cat.plot(projection="local")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import readEvents
+            cat = readEvents()
+            cat.plot(projection="local")
         """
-        from mpl_toolkits.basemap import Basemap
+        from obspy.imaging.maps import plot_basemap
         import matplotlib.pyplot as plt
-        from matplotlib.colors import Normalize
-        from matplotlib.cm import ScalarMappable
-        import matplotlib as mpl
 
         if color not in ('date', 'depth'):
             raise ValueError('Events can be color coded by date or depth. '
@@ -3021,6 +3049,7 @@ class Catalog(object):
         labels = []
         mags = []
         colors = []
+        times = []
         for event in self:
             if not event.origins:
                 msg = ("Event '%s' does not have an origin and will not be "
@@ -3035,142 +3064,24 @@ class Catalog(object):
             origin = event.preferred_origin() or event.origins[0]
             lats.append(origin.latitude)
             lons.append(origin.longitude)
+            times.append(origin.time)
             magnitude = event.preferred_magnitude() or event.magnitudes[0]
             mag = magnitude.mag
             mags.append(mag)
-            labels.append(('    %.1f' % mag) if mag and label == 'magnitude'
+            labels.append(('  %.1f' % mag) if mag and label == 'magnitude'
                           else '')
-            colors.append(event.origins[0].get('time' if color == 'date' else
-                                               'depth'))
-        min_color = min(colors)
-        max_color = max(colors)
+            if color == 'date':
+                c_ = event.origins[0].get('time')
+            else:
+                c_ = event.origins[0].get('depth') / 1e3
+            colors.append(c_)
 
         # Create the colormap for date based plotting.
         if colormap is None:
-            if color == "date":
-                colormap = plt.get_cmap()
-            else:
-                # Choose green->yellow->red for the depth encoding.
-                colormap = plt.get_cmap("RdYlGn_r")
+            colormap = plt.get_cmap("RdYlGn_r")
 
-        scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
-                                  cmap=colormap)
-        scal_map.set_array(np.linspace(0, 1, 1))
-
-        fig = plt.figure()
-        # The colorbar should only be plotted if more then one event is
-        # present.
-        if len(self.events) > 1:
-            map_ax = fig.add_axes([0.03, 0.13, 0.94, 0.82])
-            cm_ax = fig.add_axes([0.03, 0.05, 0.94, 0.05])
-            plt.sca(map_ax)
-        else:
-            map_ax = fig.add_axes([0.05, 0.05, 0.90, 0.90])
-
-        if projection == 'cyl':
-            bmap = Basemap(resolution=resolution)
-        elif projection == 'ortho':
-            bmap = Basemap(projection='ortho', resolution=resolution,
-                           area_thresh=1000.0, lat_0=sum(lats) / len(lats),
-                           lon_0=sum(lons) / len(lons))
-        elif projection == 'local':
-            if min(lons) < -150 and max(lons) > 150:
-                max_lons = max(np.array(lons) % 360)
-                min_lons = min(np.array(lons) % 360)
-            else:
-                max_lons = max(lons)
-                min_lons = min(lons)
-            lat_0 = (max(lats) + min(lats)) / 2.
-            lon_0 = (max_lons + min_lons) / 2.
-            if lon_0 > 180:
-                lon_0 -= 360
-            deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
-            deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
-            if len(lats) > 1:
-                height = (max(lats) - min(lats)) * deg2m_lat
-                width = (max_lons - min_lons) * deg2m_lon
-                margin = 0.2 * (width + height)
-                height += margin
-                width += margin
-            else:
-                height = 2.0 * deg2m_lat
-                width = 5.0 * deg2m_lon
-
-            bmap = Basemap(projection='aeqd', resolution=resolution,
-                           area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
-                           width=width, height=height)
-            # not most elegant way to calculate some round lats/lons
-
-            def linspace2(val1, val2, N):
-                """
-                returns around N 'nice' values between val1 and val2
-                """
-                dval = val2 - val1
-                round_pos = int(round(-np.log10(1. * dval / N)))
-                delta = round(2. * dval / N, round_pos) / 2
-                new_val1 = np.ceil(val1 / delta) * delta
-                new_val2 = np.floor(val2 / delta) * delta
-                N = (new_val2 - new_val1) / delta + 1
-                return np.linspace(new_val1, new_val2, N)
-
-            N1 = int(np.ceil(height / max(width, height) * 8))
-            N2 = int(np.ceil(width / max(width, height) * 8))
-            bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                         lat_0 + height / 2 / deg2m_lat, N1),
-                               labels=[0, 1, 1, 0])
-            if min(lons) < -150 and max(lons) > 150:
-                lon_0 %= 360
-            meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
-                                  lon_0 + width / 2 / deg2m_lon, N2)
-            meridians[meridians > 180] -= 360
-            bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
-        else:
-            msg = "Projection %s not supported." % projection
-            raise ValueError(msg)
-
-        # draw coast lines, country boundaries, fill continents.
-        bmap.drawcoastlines(color="0.4")
-        bmap.drawcountries(color="0.75")
-        bmap.fillcontinents(color=continent_fill_color,
-                            lake_color=water_fill_color)
-        # draw the edge of the bmap projection region (the projection limb)
-        bmap.drawmapboundary(fill_color=water_fill_color)
-        # draw lat/lon grid lines every 30 degrees.
-        bmap.drawmeridians(np.arange(-180, 180, 30))
-        bmap.drawparallels(np.arange(-90, 90, 30))
-
-        # compute the native bmap projection coordinates for events.
-        x, y = bmap(lons, lats)
-        # plot labels
-        if 100 > len(self.events) > 1:
-            for name, xpt, ypt, colorpt in zip(labels, x, y, colors):
-                # Check if the point can actually be seen with the current bmap
-                # projection. The bmap object will set the coordinates to very
-                # large values if it cannot project a point.
-                if xpt > 1e25:
-                    continue
-                plt.text(xpt, ypt, name, weight="heavy",
-                         color=scal_map.to_rgba(colorpt), zorder=100)
-        elif len(self.events) == 1:
-            plt.text(x[0], y[0], labels[0], weight="heavy", color="red")
-
-        min_size = 2
-        max_size = 30
-        min_mag = min(mags) - 1
-        max_mag = max(mags) + 1
-        if len(self.events) > 1:
-            frac = [(0.2 + (_i - min_mag)) / (max_mag - min_mag)
-                    for _i in mags]
-            magnitude_size = [(_i * (max_size - min_size)) ** 2 for _i in frac]
-            colors_plot = [scal_map.to_rgba(c) for c in colors]
-        else:
-            magnitude_size = 15.0 ** 2
-            colors_plot = "red"
-        bmap.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
-                     zorder=10)
-        times = [event.origins[0].time for event in self.events]
-        if len(self.events) > 1:
-            plt.title(
+        if len(lons) > 1:
+            title = (
                 "{event_count} events ({start} to {end}) "
                 "- Color codes {colorcode}, size the magnitude".format(
                     event_count=len(self.events),
@@ -3178,22 +3089,37 @@ class Catalog(object):
                     end=max(times).strftime("%Y-%m-%d"),
                     colorcode="origin time" if color == "date" else "depth"))
         else:
-            plt.title("Event at %s" % times[0].strftime("%Y-%m-%d"))
+            title = "Event at %s" % times[0].strftime("%Y-%m-%d")
 
-        # Only show the colorbar for more than one event.
-        if len(self.events) > 1:
-            cb = mpl.colorbar.ColorbarBase(ax=cm_ax, cmap=colormap,
-                                           orientation='horizontal')
-            cb.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
-            color_range = max_color - min_color
-            cb.set_ticklabels([
-                _i.strftime('%Y-%b-%d') if color == "date" else '%.1fkm' %
-                (_i / 1000.0)
-                for _i in [min_color, min_color + color_range * 0.25,
-                           min_color + color_range * 0.50,
-                           min_color + color_range * 0.75, max_color]])
+        if color not in ("date", "depth"):
+            msg = "Invalid option for 'color' parameter (%s)." % color
+            raise ValueError(msg)
 
-        plt.show()
+        min_size = 2
+        max_size = 30
+        min_size_ = min(mags) - 1
+        max_size_ = max(mags) + 1
+        if len(lons) > 1:
+            frac = [(0.2 + (_i - min_size_)) / (max_size_ - min_size_)
+                    for _i in mags]
+            size_plot = [(_i * (max_size - min_size)) ** 2 for _i in frac]
+        else:
+            size_plot = 15.0 ** 2
+
+        fig = plot_basemap(lons, lats, size_plot, colors, labels,
+                           projection=projection, resolution=resolution,
+                           continent_fill_color=continent_fill_color,
+                           water_fill_color=water_fill_color,
+                           colormap=colormap, marker="o", title=title,
+                           show=False, **kwargs)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
 
 
 if __name__ == '__main__':
