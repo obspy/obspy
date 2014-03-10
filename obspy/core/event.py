@@ -2941,7 +2941,8 @@ class Catalog(object):
              water_fill_color='1.0',
              label='magnitude',
              color='depth',
-             colormap=None, **kwargs):  # @UnusedVariable
+             colormap=None, show=True, outfile=None,
+             **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
 
@@ -2987,6 +2988,16 @@ class Catalog(object):
             Defaults to None which will use the default colormap for the date
             encoding and a colormap going from green over yellow to red for the
             depth encoding.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
 
         .. rubric:: Example
 
@@ -3078,7 +3089,14 @@ class Catalog(object):
                            continent_fill_color=continent_fill_color,
                            water_fill_color=water_fill_color,
                            colormap=colormap, marker="o", title=title,
-                           **kwargs)
+                           show=False, **kwargs)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
         return fig
 
 
