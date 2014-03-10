@@ -3001,6 +3001,8 @@ class Catalog(object):
 
         .. rubric:: Example
 
+        Cylindrical projection for global overview:
+
         >>> cat = readEvents()
         >>> cat.plot()  # doctest:+SKIP
 
@@ -3009,6 +3011,26 @@ class Catalog(object):
             from obspy import readEvents
             cat = readEvents()
             cat.plot()
+
+        Orthographic projection:
+
+        >>> cat.plot(projection="ortho")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import readEvents
+            cat = readEvents()
+            cat.plot(projection="ortho")
+
+        Local (azimuthal equidistant) projection:
+
+        >>> cat.plot(projection="local")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import readEvents
+            cat = readEvents()
+            cat.plot(projection="local")
         """
         from obspy.imaging.maps import plot_basemap
         import matplotlib.pyplot as plt
