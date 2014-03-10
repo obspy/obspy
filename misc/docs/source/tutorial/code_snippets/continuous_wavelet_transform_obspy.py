@@ -15,9 +15,14 @@ scalogram = cwt(tr.data, dt, 8, f_min, f_max)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.imshow(np.abs(scalogram)[-1::-1], extent=[t[0], t[-1], f_min, f_max],
-          aspect='auto', interpolation="nearest")
+
+x, y = np.meshgrid(
+    t,
+    np.logspace(np.log10(f_min), np.log10(f_max), scalogram.shape[0]))
+
+ax.pcolormesh(x, y, np.abs(scalogram))
 ax.set_xlabel("Time after %s [s]" % tr.stats.starttime)
 ax.set_ylabel("Frequency [Hz]")
 ax.set_yscale('log')
+ax.set_ylim(f_min, f_max)
 plt.show()
