@@ -52,7 +52,7 @@ class StationTest(unittest.TestCase):
             warnings.simplefilter("ignore")
             with ImageComparison(self.image_dir, "station_response.png") as ic:
                 rcParams['savefig.dpi'] = 72
-                sta.plot(0.05, channel="[LH]*[NE]", outfile=ic.name)
+                sta.plot(0.05, channel="*[NE]", outfile=ic.name)
 
 
 def suite():
