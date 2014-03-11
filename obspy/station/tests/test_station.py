@@ -12,7 +12,9 @@ Test suite for the station handling.
 from __future__ import unicode_literals
 from obspy.station import read_inventory
 import os
+import numpy as np
 import unittest
+import warnings
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 
@@ -33,6 +35,11 @@ class StationTest(unittest.TestCase):
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
@@ -41,9 +48,11 @@ class StationTest(unittest.TestCase):
         Tests the response plot.
         """
         sta = read_inventory()[0][0]
-        with ImageComparison(self.image_dir, "station_response.png") as ic:
-            rcParams['savefig.dpi'] = 72
-            sta.plot(0.05, channel="*[NE]", outfile=ic.name)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            with ImageComparison(self.image_dir, "station_response.png") as ic:
+                rcParams['savefig.dpi'] = 72
+                sta.plot(0.05, channel="[LH]*[NE]", outfile=ic.name)
 
 
 def suite():

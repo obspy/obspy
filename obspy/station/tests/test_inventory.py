@@ -12,11 +12,13 @@ Test suite for the inventory class.
 from __future__ import unicode_literals
 import unittest
 import os
+import numpy as np
 
 from obspy.station import Inventory, Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
+import warnings
 
 # checking for matplotlib/basemap
 try:
@@ -35,6 +37,11 @@ class InventoryTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     def test_initialization(self):
         """
@@ -181,10 +188,13 @@ class InventoryTestCase(unittest.TestCase):
         """
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
-        with ImageComparison(self.image_dir, "inventory_response.png") as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot_response(0.01, output="ACC", channel="*N",
-                              station="[WR]*", time=t, outfile=ic.name)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            with ImageComparison(self.image_dir, "inventory_response.png") \
+                    as ic:
+                rcParams['savefig.dpi'] = 72
+                inv.plot_response(0.01, output="ACC", channel="*N",
+                                  station="[WR]*", time=t, outfile=ic.name)
 
 
 def suite():

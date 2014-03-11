@@ -11,6 +11,8 @@ Test suite for the network class.
 """
 import unittest
 import os
+import warnings
+import numpy as np
 
 from obspy.station import Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
@@ -34,6 +36,11 @@ class NetworkTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     def test_get_response(self):
         responseN1S1 = Response('RESPN1S1')
@@ -164,10 +171,12 @@ class NetworkTestCase(unittest.TestCase):
         """
         net = read_inventory()[0]
         t = UTCDateTime(2008, 7, 1)
-        with ImageComparison(self.image_dir, "network_response.png") as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot_response(0.002, output="DISP", channel="B*E",
-                              time=t, outfile=ic.name)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            with ImageComparison(self.image_dir, "network_response.png") as ic:
+                rcParams['savefig.dpi'] = 72
+                net.plot_response(0.002, output="DISP", channel="B*E",
+                                  time=t, outfile=ic.name)
 
 
 def suite():

@@ -13,9 +13,11 @@ from __future__ import unicode_literals
 import inspect
 from obspy.station import read_inventory
 import os
+import numpy as np
 import unittest
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
+import warnings
 
 # checking for matplotlib/basemap
 try:
@@ -37,6 +39,11 @@ class ChannelTest(unittest.TestCase):
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
@@ -45,9 +52,11 @@ class ChannelTest(unittest.TestCase):
         Tests the response plot.
         """
         cha = read_inventory()[0][0][0]
-        with ImageComparison(self.image_dir, "channel_response.png") as ic:
-            rcParams['savefig.dpi'] = 72
-            cha.plot(0.005, outfile=ic.name)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            with ImageComparison(self.image_dir, "channel_response.png") as ic:
+                rcParams['savefig.dpi'] = 72
+                cha.plot(0.005, outfile=ic.name)
 
 
 def suite():
