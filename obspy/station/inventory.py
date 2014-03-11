@@ -345,7 +345,7 @@ class Inventory(ComparingObject):
         for net in self.networks:
             # skip if any given criterion is not matched
             if network is not None:
-                if not fnmatch.fnmatch(network.code.upper(),
+                if not fnmatch.fnmatch(net.code.upper(),
                                        network.upper()):
                     continue
             if any([t is not None for t in (time, starttime, endtime)]):
