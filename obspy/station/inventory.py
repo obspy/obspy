@@ -300,7 +300,7 @@ class Inventory(ComparingObject):
             raise NotImplementedError()
 
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
-                      channel="*", location="*", axes=None,
+                      location="*", channel="*", axes=None,
                       unwrap_phase=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
@@ -320,12 +320,12 @@ class Inventory(ComparingObject):
         :param station: Only plot matching stations. Accepts UNIX style
             patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
             :python:`~fnmatch.fnmatch`)
-        :type channel: str
-        :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :python:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
             :python:`~fnmatch.fnmatch`)
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`

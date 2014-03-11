@@ -273,7 +273,7 @@ class Station(BaseNode):
         else:
             self._elevation = Distance(value)
 
-    def plot(self, min_freq, output="VEL", channel="*", location="*",
+    def plot(self, min_freq, output="VEL", location="*", channel="*",
              axes=None, unwrap_phase=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
@@ -285,12 +285,12 @@ class Station(BaseNode):
         :param output: Output units. One of "DISP" (displacement, output unit
             is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
             (acceleration, output unit is meters/second**2).
-        :type channel: str
-        :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :python:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
             :python:`~fnmatch.fnmatch`)
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
