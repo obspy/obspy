@@ -446,35 +446,19 @@ class Inventory(ComparingObject):
 
         if axes:
             ax1, ax2 = axes
+            fig = ax1.figure
         else:
             fig = plt.figure()
             ax1 = fig.add_subplot(211)
             ax2 = fig.add_subplot(212, sharex=ax1)
 
-        for net in self.networks:
-            # skip non-matching networks
-            if not fnmatch.fnmatch(net.code.upper(), network.upper()):
-                continue
-            if not net.is_active(time=time, starttime=starttime,
-                                 endtime=endtime):
-                continue
+        matching = self.select(network=network, station=station,
+                               location=location, channel=channel, time=time,
+                               starttime=starttime, endtime=endtime)
+
+        for net in matching.networks:
             for sta in net.stations:
-                # skip non-matching stations
-                if not fnmatch.fnmatch(sta.code.upper(), station.upper()):
-                    continue
-                if not sta.is_active(time=time, starttime=starttime,
-                                     endtime=endtime):
-                    continue
                 for cha in sta.channels:
-                    # skip non-matching channels
-                    if not fnmatch.fnmatch(cha.code.upper(), channel.upper()):
-                        continue
-                    if not fnmatch.fnmatch(cha.location_code.upper(),
-                                           location.upper()):
-                        continue
-                    if not cha.is_active(time=time, starttime=starttime,
-                                         endtime=endtime):
-                        continue
                     cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                              label=".".join((net.code, sta.code,
                                              cha.location_code, cha.code)),
@@ -484,6 +468,7 @@ class Inventory(ComparingObject):
         if not axes:
             from obspy.station.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig)
+        return fig
 
 
 if __name__ == '__main__':

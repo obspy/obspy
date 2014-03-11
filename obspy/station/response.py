@@ -1152,6 +1152,7 @@ class Response(ComparingObject):
 
         if axes:
             ax1, ax2 = axes
+            fig = ax1.figure
         else:
             fig = plt.figure()
             ax1 = fig.add_subplot(211)
@@ -1199,6 +1200,7 @@ class Response(ComparingObject):
         # only do adjustments if we initialized the figure in here
         if not axes:
             _adjust_bode_plot_figure(fig)
+        return fig
 
 
 class InstrumentSensitivity(ComparingObject):

@@ -325,7 +325,7 @@ class Channel(BaseNode):
             cha = read_inventory()[0][0][0]
             cha.plot(0.001, output="VEL")
         """
-        self.response.plot(
+        return self.response.plot(
             min_freq=min_freq, output=output,
             start_stage=start_stage, end_stage=end_stage, label=label,
             axes=axes, sampling_rate=self.sample_rate,

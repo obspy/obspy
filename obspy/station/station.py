@@ -403,21 +403,16 @@ class Station(BaseNode):
 
         if axes:
             ax1, ax2 = axes
+            fig = ax1.figure
         else:
             fig = plt.figure()
             ax1 = fig.add_subplot(211)
             ax2 = fig.add_subplot(212, sharex=ax1)
 
-        for cha in self.channels:
-            # skip non-matching channels
-            if not fnmatch.fnmatch(cha.code.upper(), channel.upper()):
-                continue
-            if not fnmatch.fnmatch(cha.location_code.upper(),
-                                   location.upper()):
-                continue
-            if not cha.is_active(time=time, starttime=starttime,
-                                 endtime=endtime):
-                continue
+        matching = self.select(location=location, channel=channel, time=time,
+                               starttime=starttime, endtime=endtime)
+
+        for cha in matching.channels:
             cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                      label=".".join((self.code, cha.location_code, cha.code)),
                      unwrap_phase=unwrap_phase)
@@ -426,6 +421,7 @@ class Station(BaseNode):
         if not axes:
             from obspy.station.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig)
+        return fig
 
 
 if __name__ == '__main__':
