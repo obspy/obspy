@@ -353,7 +353,8 @@ class Station(BaseNode):
         return sta
 
     def plot(self, min_freq, output="VEL", location="*", channel="*",
-             axes=None, unwrap_phase=False):
+             time=None, starttime=None, endtime=None, axes=None,
+             unwrap_phase=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
@@ -372,6 +373,13 @@ class Station(BaseNode):
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
             :python:`~fnmatch.fnmatch`)
+        :param time: Only show channels active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only show channels active at or after given point in
+            time (i.e. channels ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only show channels active before or at given point in
+            time (i.e. channels starting after given time will not be shown).
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
@@ -406,6 +414,9 @@ class Station(BaseNode):
                 continue
             if not fnmatch.fnmatch(cha.location_code.upper(),
                                    location.upper()):
+                continue
+            if not cha.is_active(time=time, starttime=starttime,
+                                 endtime=endtime):
                 continue
             cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                      label=".".join((self.code, cha.location_code, cha.code)),

@@ -350,7 +350,8 @@ class Network(BaseNode):
             raise NotImplementedError()
 
     def plot_response(self, min_freq, output="VEL", station="*", location="*",
-                      channel="*", axes=None, unwrap_phase=False):
+                      channel="*", time=None, starttime=None, endtime=None,
+                      axes=None, unwrap_phase=False):
         """
         Show bode plot of instrument response of all (or a subset of) the
         network's channels.
@@ -373,6 +374,14 @@ class Network(BaseNode):
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
             :python:`~fnmatch.fnmatch`)
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only regard stations active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only regard stations active at or after given point
+            in time (i.e. stations ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only regard stations active before or at given point in
+            time (i.e. stations starting after given time will not be shown).
         :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
@@ -405,12 +414,18 @@ class Network(BaseNode):
             # skip non-matching stations
             if not fnmatch.fnmatch(sta.code.upper(), station.upper()):
                 continue
+            if not sta.is_active(time=time, starttime=starttime,
+                                 endtime=endtime):
+                continue
             for cha in sta.channels:
                 # skip non-matching channels
                 if not fnmatch.fnmatch(cha.code.upper(), channel.upper()):
                     continue
                 if not fnmatch.fnmatch(cha.location_code.upper(),
                                        location.upper()):
+                    continue
+                if not cha.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
                     continue
                 cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                          label=".".join((self.code, sta.code,
