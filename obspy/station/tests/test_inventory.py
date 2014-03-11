@@ -11,15 +11,31 @@ Test suite for the inventory class.
 """
 from __future__ import unicode_literals
 import unittest
+import os
 
 from obspy.station import Inventory, Network, Station, Channel, Response
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read_inventory
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.decorator import skipIf
+
+# checking for matplotlib/basemap
+try:
+    from matplotlib import rcParams
+    import mpl_toolkits.basemap
+    # avoid flake8 complaining about unused import
+    mpl_toolkits.basemap
+    HAS_BASEMAP = True
+except ImportError:
+    HAS_BASEMAP = False
 
 
 class InventoryTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.inventory.Inventory` class.
     """
+    def setUp(self):
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+
     def test_initialization(self):
         """
         Some simple sanity tests.
@@ -116,6 +132,46 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(sorted(coordinates.items()), sorted(expected.items()))
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_location_plot_cylindrical(self):
+        """
+        Tests the inventory location preview plot, default parameters.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir, "inventory_location1.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot_location(outfile=ic.name)
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_location_plot_ortho(self):
+        """
+        Tests the inventory location preview plot, ortho projection, some
+        non-default parameters.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir, "inventory_location2.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot_location(projection="ortho", resolution="c",
+                              continent_fill_color="0.3", marker="D",
+                              label=False, outfile=ic.name, colormap="hsv",
+                              color_per_network=True)
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_location_plot_local(self):
+        """
+        Tests the inventory location preview plot, local projection, some more
+        non-default parameters.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir, "inventory_location3.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot_location(projection="local", resolution="i", size=20**2,
+                              color_per_network={"GR": "b", "BW": "green"},
+                              outfile=ic.name)
 
 
 def suite():

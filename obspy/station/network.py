@@ -348,6 +348,123 @@ class Network(BaseNode):
             msg = ("`type` must be one of 'response', 'location', 'both'")
             raise ValueError(msg)
 
+    def plot_location(self, projection='cyl', resolution='l',
+                      continent_fill_color='0.9', water_fill_color='1.0',
+                      marker="v", size=15**2, label=True, color='blue',
+                      time=None, show=True, outfile=None,
+                      **kwargs):  # @UnusedVariable
+        """
+        Creates a preview map of all stations in current network object.
+
+        :type projection: str, optional
+        :param projection: The map projection. Currently supported are
+            * ``"cyl"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+            Defaults to "cyl"
+        :type resolution: str, optional
+        :param resolution: Resolution of the boundary database to use. Will be
+            based directly to the basemap module. Possible values are
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+            Defaults to ``"l"``
+        :type continent_fill_color: Valid matplotlib color, optional
+        :param continent_fill_color:  Color of the continents. Defaults to
+            ``"0.9"`` which is a light gray.
+        :type water_fill_color: Valid matplotlib color, optional
+        :param water_fill_color: Color of all water bodies.
+            Defaults to ``"white"``.
+        :type marker: str
+        :param marker: Marker symbol (see
+            :matplotlib:func:`matplotlib.pyplot.scatter`).
+        :type label: bool
+        :param label: Whether to label stations with "network.station" or not.
+        :type color: str
+        :param color: Face color of marker symbol (see
+            :matplotlib:func:`matplotlib.pyplot.scatter`).
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only plot stations available at given point in time.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Example
+
+        Cylindrical projection for global overview:
+
+        >>> from obspy import read_inventory
+        >>> net = read_inventory()[0]
+        >>> net.plot()  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot()
+
+        Orthographic projection:
+
+        >>> net.plot(projection="ortho")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot(projection="ortho")
+
+        Local (azimuthal equidistant) projection:
+
+        >>> net.plot(projection="local")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot(projection="local")
+        """
+        from obspy.imaging.maps import plot_basemap
+        import matplotlib.pyplot as plt
+
+        # lat/lon coordinates, magnitudes, dates
+        lats = []
+        lons = []
+        labels = []
+        for sta in self.select(time=time).stations:
+            label = "   " + ".".join((self.code, sta.code))
+            if sta.latitude is None or sta.longitude is None:
+                msg = ("Station '%s' does not have latitude/longitude "
+                       "information and will not be plotted." % label)
+                warnings.warn(msg)
+                continue
+            lats.append(sta.latitude)
+            lons.append(sta.longitude)
+            labels.append(label)
+
+        fig = plot_basemap(lons, lats, size, color, labels,
+                           projection=projection, resolution=resolution,
+                           continent_fill_color=continent_fill_color,
+                           water_fill_color=water_fill_color,
+                           colormap=None, marker=marker, title=None,
+                           show=False, **kwargs)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
+
     def plot_response(self, min_freq, output="VEL", station="*", location="*",
                       channel="*", time=None, starttime=None, endtime=None,
                       axes=None, unwrap_phase=False):

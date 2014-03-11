@@ -10,15 +10,31 @@ Test suite for the network class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import unittest
+import os
 
 from obspy.station import Network, Station, Channel, Response
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read_inventory
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.decorator import skipIf
+
+# checking for matplotlib/basemap
+try:
+    from matplotlib import rcParams
+    import mpl_toolkits.basemap
+    # avoid flake8 complaining about unused import
+    mpl_toolkits.basemap
+    HAS_BASEMAP = True
+except ImportError:
+    HAS_BASEMAP = False
 
 
 class NetworkTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.network.Network` class.
     """
+    def setUp(self):
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+
     def test_get_response(self):
         responseN1S1 = Response('RESPN1S1')
         responseN1S2 = Response('RESPN1S2')
@@ -101,6 +117,44 @@ class NetworkTestCase(unittest.TestCase):
         self.assertEqual(sorted(coordinates.items()), sorted(expected.items()))
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, network.get_coordinates, 'BW.RJOB..XXX')
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_location_plot_cylindrical(self):
+        """
+        Tests the network location preview plot, default parameters.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir, "network_location1.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot_location(outfile=ic.name)
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_location_plot_ortho(self):
+        """
+        Tests the network location preview plot, ortho projection, some
+        non-default parameters.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir, "network_location2.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot_location(projection="ortho", resolution="c",
+                              continent_fill_color="0.5", marker="d",
+                              color="yellow", label=False, outfile=ic.name)
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_location_plot_local(self):
+        """
+        Tests the network location preview plot, local projection, some more
+        non-default parameters.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir, "network_location3.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot_location(projection="local", resolution="i", size=13**2,
+                              outfile=ic.name)
 
 
 def suite():

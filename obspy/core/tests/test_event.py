@@ -16,10 +16,9 @@ import warnings
 
 # checking for matplotlib/basemap
 try:
-    import matplotlib
+    from matplotlib import rcParams
     import mpl_toolkits.basemap
     # avoid flake8 complaining about unused import
-    matplotlib
     mpl_toolkits.basemap
     HAS_BASEMAP = True
 except ImportError:
@@ -435,7 +434,6 @@ class CatalogTestCase(unittest.TestCase):
         Tests the catalog preview plot, default parameters.
         """
         cat = readEvents()
-        from matplotlib import rcParams
         with ImageComparison(self.image_dir, "catalog1.png") as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
@@ -448,7 +446,6 @@ class CatalogTestCase(unittest.TestCase):
         parameters.
         """
         cat = readEvents()
-        from matplotlib import rcParams
         with ImageComparison(self.image_dir, "catalog2.png") as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name, projection="ortho",
@@ -463,7 +460,6 @@ class CatalogTestCase(unittest.TestCase):
         parameters.
         """
         cat = readEvents()
-        from matplotlib import rcParams
         with ImageComparison(self.image_dir, "catalog3.png") as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name, projection="local",
