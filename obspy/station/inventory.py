@@ -299,18 +299,21 @@ class Inventory(ComparingObject):
         >>> from obspy import read_inventory, UTCDateTime
         >>> inv = read_inventory()
         >>> t = UTCDateTime(2007, 7, 1, 12)
-        >>> inv = inv.select(channel="*Z", time=t)
+        >>> inv = inv.select(channel="*Z", station="[RW]*", time=t)
         >>> print(inv)  # doctest: +NORMALIZE_WHITESPACE
-        Network GR (GRSN)
-            Station Count: None/None (Selected/Total)
-            None -
-            Access: None
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
             Contains:
+                Networks (2):
+                    GR
+                    BW
                 Stations (2):
-                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    BW.RJOB (Jochberg, Bavaria, BW-Net)
                     GR.WET (Wettzell, Bavaria, GR-Net)
                 Channels (4):
-                    GR.FUR..BHZ, GR.FUR..LHZ, GR.WET..BHZ, GR.WET..LHZ
+                    BW.RJOB..EHZ, GR.WET..BHZ, GR.WET..HHZ, GR.WET..LHZ
 
         The `network`, `station`, `location` and `channel` selection criteria
         may also contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
@@ -355,7 +358,7 @@ class Inventory(ComparingObject):
                 sampling_rate=sampling_rate, keep_empty=keep_empty)
             if not keep_empty and not net_.stations:
                 continue
-            networks.append(net)
+            networks.append(net_)
         inv = copy.copy(self)
         inv.networks = networks
         return inv
