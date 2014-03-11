@@ -326,33 +326,10 @@ class Network(BaseNode):
         net.stations = stations
         return net
 
-    def plot(self, type, **kwargs):
-        """
-        Show preview plot of network.
-
-        :type type: str
-        :param type: Type of preview plot (one of "response", "location",
-            "both")
-        :param kwargs: Additional kwargs necessary/optional for performing the
-            requested plot, see :meth:`plot_response` and :meth:`plot_map` for
-            details)
-        """
-        if type == "response":
-            return self.plot_response(**kwargs)
-        elif type == "location":
-            raise NotImplementedError()
-            return self.plot_location(**kwargs)
-        elif type == "both":
-            raise NotImplementedError()
-        else:
-            msg = ("`type` must be one of 'response', 'location', 'both'")
-            raise ValueError(msg)
-
-    def plot_location(self, projection='cyl', resolution='l',
-                      continent_fill_color='0.9', water_fill_color='1.0',
-                      marker="v", size=15**2, label=True, color='blue',
-                      time=None, show=True, outfile=None,
-                      **kwargs):  # @UnusedVariable
+    def plot(self, projection='cyl', resolution='l',
+             continent_fill_color='0.9', water_fill_color='1.0', marker="v",
+             size=15**2, label=True, color='blue', time=None, show=True,
+             outfile=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all stations in current network object.
 

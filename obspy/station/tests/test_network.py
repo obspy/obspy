@@ -134,7 +134,7 @@ class NetworkTestCase(unittest.TestCase):
         net = read_inventory()[0]
         with ImageComparison(self.image_dir, "network_location1.png") as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot_location(outfile=ic.name)
+            net.plot(outfile=ic.name)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
@@ -146,9 +146,9 @@ class NetworkTestCase(unittest.TestCase):
         net = read_inventory()[0]
         with ImageComparison(self.image_dir, "network_location2.png") as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot_location(projection="ortho", resolution="c",
-                              continent_fill_color="0.5", marker="d",
-                              color="yellow", label=False, outfile=ic.name)
+            net.plot(projection="ortho", resolution="c",
+                     continent_fill_color="0.5", marker="d",
+                     color="yellow", label=False, outfile=ic.name)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
@@ -160,8 +160,8 @@ class NetworkTestCase(unittest.TestCase):
         net = read_inventory()[0]
         with ImageComparison(self.image_dir, "network_location3.png") as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot_location(projection="local", resolution="i", size=13**2,
-                              outfile=ic.name)
+            net.plot(projection="local", resolution="i", size=13**2,
+                     outfile=ic.name)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')

@@ -364,35 +364,11 @@ class Inventory(ComparingObject):
         inv.networks = networks
         return inv
 
-    def plot(self, type, **kwargs):
-        """
-        Show preview plot of inventory.
-
-        :type type: str
-        :param type: Type of preview plot (one of "response", "location",
-            "both")
-        :param kwargs: Additional kwargs necessary/optional for performing the
-            requested plot, see :meth:`plot_response` and :meth:`plot_map` for
-            details)
-        """
-        types = ("response", "location", "both")
-        if type not in types:
-            msg = ("`type` must be one of '%s'" % "', '".join(types))
-            raise ValueError(msg)
-        if type == "response":
-            return self.plot_response(**kwargs)
-        if type == "location":
-            raise NotImplementedError()
-            return self.plot_location(**kwargs)
-        if type == "both":
-            raise NotImplementedError()
-
-    def plot_location(self, projection='cyl', resolution='l',
-                      continent_fill_color='0.9', water_fill_color='1.0',
-                      marker="v", size=15**2, label=True,
-                      color='blue', color_per_network=False, colormap="jet",
-                      time=None, show=True, outfile=None,
-                      **kwargs):  # @UnusedVariable
+    def plot(self, projection='cyl', resolution='l',
+             continent_fill_color='0.9', water_fill_color='1.0', marker="v",
+             size=15**2, label=True, color='blue', color_per_network=False,
+             colormap="jet", time=None, show=True, outfile=None,
+             **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all networks/stations in current inventory
         object.

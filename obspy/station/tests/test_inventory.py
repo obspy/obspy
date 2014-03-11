@@ -149,7 +149,7 @@ class InventoryTestCase(unittest.TestCase):
         inv = read_inventory()
         with ImageComparison(self.image_dir, "inventory_location1.png") as ic:
             rcParams['savefig.dpi'] = 72
-            inv.plot_location(outfile=ic.name)
+            inv.plot(outfile=ic.name)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
@@ -161,10 +161,10 @@ class InventoryTestCase(unittest.TestCase):
         inv = read_inventory()
         with ImageComparison(self.image_dir, "inventory_location2.png") as ic:
             rcParams['savefig.dpi'] = 72
-            inv.plot_location(projection="ortho", resolution="c",
-                              continent_fill_color="0.3", marker="D",
-                              label=False, outfile=ic.name, colormap="hsv",
-                              color_per_network=True)
+            inv.plot(projection="ortho", resolution="c",
+                     continent_fill_color="0.3", marker="D",
+                     label=False, outfile=ic.name, colormap="hsv",
+                     color_per_network=True)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
@@ -176,9 +176,9 @@ class InventoryTestCase(unittest.TestCase):
         inv = read_inventory()
         with ImageComparison(self.image_dir, "inventory_location3.png") as ic:
             rcParams['savefig.dpi'] = 72
-            inv.plot_location(projection="local", resolution="i", size=20**2,
-                              color_per_network={"GR": "b", "BW": "green"},
-                              outfile=ic.name)
+            inv.plot(projection="local", resolution="i", size=20**2,
+                     color_per_network={"GR": "b", "BW": "green"},
+                     outfile=ic.name)
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
