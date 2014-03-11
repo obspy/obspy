@@ -129,7 +129,11 @@ def plot_basemap(lons, lats, size, color, labels=None,
         cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
         plt.sca(map_ax)
     else:
-        map_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.85])
+        ax_y0, ax_height = 0.05, 0.85
+        if projection == "local":
+            ax_y0 += 0.05
+            ax_height -= 0.05
+        map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
     if projection == 'cyl':
         bmap = Basemap(resolution=resolution)
@@ -159,6 +163,16 @@ def plot_basemap(lons, lats, size, color, labels=None,
         else:
             height = 2.0 * deg2m_lat
             width = 5.0 * deg2m_lon
+        # do intelligent aspect calculation for local projection
+        # adjust to figure dimensions
+        w, h = fig.get_size_inches()
+        aspect = w / h
+        if show_colorbar:
+            aspect *= 1.2
+        if width / height < aspect:
+            width = height * aspect
+        else:
+            height = width / aspect
 
         bmap = Basemap(projection='aeqd', resolution=resolution,
                        area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
