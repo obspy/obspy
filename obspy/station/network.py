@@ -337,17 +337,16 @@ class Network(BaseNode):
             requested plot, see :meth:`plot_response` and :meth:`plot_map` for
             details)
         """
-        types = ("response", "location", "both")
-        if type not in types:
-            msg = ("`type` must be one of '%s'" % "', '".join(types))
-            raise ValueError(msg)
         if type == "response":
             return self.plot_response(**kwargs)
-        if type == "location":
+        elif type == "location":
             raise NotImplementedError()
             return self.plot_location(**kwargs)
-        if type == "both":
+        elif type == "both":
             raise NotImplementedError()
+        else:
+            msg = ("`type` must be one of 'response', 'location', 'both'")
+            raise ValueError(msg)
 
     def plot_response(self, min_freq, output="VEL", station="*", location="*",
                       channel="*", time=None, starttime=None, endtime=None,
@@ -365,15 +364,15 @@ class Network(BaseNode):
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
             patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard stations active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`

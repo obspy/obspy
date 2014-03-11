@@ -399,19 +399,19 @@ class Inventory(ComparingObject):
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style
             patterns and wildcards (e.g. "G*", "*[ER]"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
             patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:`~fnmatch.fnmatch`)
+            :python:func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard networks/stations/channels active at given
             point in time.
