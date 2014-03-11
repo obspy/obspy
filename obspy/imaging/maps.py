@@ -39,8 +39,8 @@ except ImportError:
 
 def plot_basemap(lons, lats, size, color, labels=None,
                  projection='cyl', resolution='l', continent_fill_color='0.8',
-                 water_fill_color='1.0', colormap=None, marker="o",
-                 title=None, colorbar_ticklabel_format=None,
+                 water_fill_color='1.0', colormap=None, colorbar=None,
+                 marker="o", title=None, colorbar_ticklabel_format=None,
                  show=True, **kwargs):  # @UnusedVariable
     """
     Creates a basemap plot with a data point scatter plot.
@@ -86,6 +86,10 @@ def plot_basemap(lons, lats, size, color, labels=None,
         Defaults to None which will use the default colormap for the date
         encoding and a colormap going from green over yellow to red for the
         depth encoding.
+    :type colorbar: bool, optional
+    :param colorbar: When left `None`, a colorbar is plotted if more than one
+        object is plotted. Using `True`/`False` the colorbar can be forced
+        on/off.
     :type title: str
     :param title: Title above plot.
     :type colorbar_ticklabel_format: str or func or
@@ -113,11 +117,14 @@ def plot_basemap(lons, lats, size, color, labels=None,
     # The colorbar should only be plotted if more then one event is
     # present.
 
-    if len(lons) > 1 and hasattr(color, "__len__") and \
-            not isinstance(color, (str, native_str)):
-        show_colorbar = True
+    if colorbar is not None:
+        show_colorbar = colorbar
     else:
-        show_colorbar = False
+        if len(lons) > 1 and hasattr(color, "__len__") and \
+                not isinstance(color, (str, native_str)):
+            show_colorbar = True
+        else:
+            show_colorbar = False
 
     if projection == "local":
         ax_x0, ax_width = 0.10, 0.80
