@@ -354,7 +354,7 @@ class Station(BaseNode):
 
     def plot(self, min_freq, output="VEL", location="*", channel="*",
              time=None, starttime=None, endtime=None, axes=None,
-             unwrap_phase=False):
+             unwrap_phase=False, show=True, outfile=None):
         """
         Show bode plot of instrument response of all (or a subset of) the
         station's channels.
@@ -386,6 +386,16 @@ class Station(BaseNode):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
 
         .. rubric:: Basic Usage
 
@@ -415,12 +425,19 @@ class Station(BaseNode):
         for cha in matching.channels:
             cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
                      label=".".join((self.code, cha.location_code, cha.code)),
-                     unwrap_phase=unwrap_phase)
+                     unwrap_phase=unwrap_phase, show=False, outfile=None)
 
         # final adjustments to plot if we created the figure in here
         if not axes:
             from obspy.station.response import _adjust_bode_plot_figure
-            _adjust_bode_plot_figure(fig)
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
         return fig
 
 

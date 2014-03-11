@@ -288,7 +288,8 @@ class Channel(BaseNode):
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
     def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
-             label=None, axes=None, unwrap_phase=False):
+             label=None, axes=None, unwrap_phase=False, show=True,
+             outfile=None):
         """
         Show bode plot of the channel's instrument response.
 
@@ -312,6 +313,16 @@ class Channel(BaseNode):
             opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
 
         .. rubric:: Basic Usage
 
@@ -329,7 +340,7 @@ class Channel(BaseNode):
             min_freq=min_freq, output=output,
             start_stage=start_stage, end_stage=end_stage, label=label,
             axes=axes, sampling_rate=self.sample_rate,
-            unwrap_phase=unwrap_phase)
+            unwrap_phase=unwrap_phase, show=show, outfile=outfile)
 
 
 if __name__ == '__main__':

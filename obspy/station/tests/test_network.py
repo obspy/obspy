@@ -156,6 +156,19 @@ class NetworkTestCase(unittest.TestCase):
             net.plot_location(projection="local", resolution="i", size=13**2,
                               outfile=ic.name)
 
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_response_plot(self):
+        """
+        Tests the response plot.
+        """
+        net = read_inventory()[0]
+        t = UTCDateTime(2008, 7, 1)
+        with ImageComparison(self.image_dir, "network_response.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot_response(0.002, output="DISP", channel="B*E",
+                              time=t, outfile=ic.name)
+
 
 def suite():
     return unittest.makeSuite(NetworkTestCase, 'test')

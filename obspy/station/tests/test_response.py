@@ -20,16 +20,29 @@ from obspy.xseed import Parser
 from obspy.station.response import _pitick2latex
 import os
 import unittest
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.decorator import skipIf
+
+# checking for matplotlib/basemap
+try:
+    from matplotlib import rcParams
+    import mpl_toolkits.basemap
+    # avoid flake8 complaining about unused import
+    mpl_toolkits.basemap
+    HAS_BASEMAP = True
+except ImportError:
+    HAS_BASEMAP = False
 
 
 class ResponseTest(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.inventory.Inventory` class.
+    Tests the for :class:`~obspy.station.response.Response` class.
     """
     def setUp(self):
         # Most generic way to get the actual data directory.
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_evalresp_with_output_from_seed(self):
         """
@@ -96,6 +109,18 @@ class ResponseTest(unittest.TestCase):
         self.assertEqual(_pitick2latex(0.5), r'0.5')
         self.assertEqual(_pitick2latex(300 * pi + 0.01), r'9.4e+02')
         self.assertEqual(_pitick2latex(3000 * pi + 0.01), r'9.4e+03')
+
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_response_plot(self):
+        """
+        Tests the response plot.
+        """
+        resp = read_inventory()[0][0][0].response
+        with ImageComparison(self.image_dir, "response_response.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
+                      outfile=ic.name)
 
 
 def suite():

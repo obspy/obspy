@@ -173,6 +173,19 @@ class InventoryTestCase(unittest.TestCase):
                               color_per_network={"GR": "b", "BW": "green"},
                               outfile=ic.name)
 
+    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
+            'nose not installed, matplotlib too old or basemap not installed')
+    def test_response_plot(self):
+        """
+        Tests the response plot.
+        """
+        inv = read_inventory()
+        t = UTCDateTime(2008, 7, 1)
+        with ImageComparison(self.image_dir, "inventory_response.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot_response(0.01, output="ACC", channel="*N",
+                              station="[WR]*", time=t, outfile=ic.name)
+
 
 def suite():
     return unittest.makeSuite(InventoryTestCase, 'test')

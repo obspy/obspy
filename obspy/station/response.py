@@ -1083,7 +1083,7 @@ class Response(ComparingObject):
 
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
-             unwrap_phase=False):
+             unwrap_phase=False, show=True, outfile=None):
         """
         Show bode plot of instrument response.
 
@@ -1112,6 +1112,16 @@ class Response(ComparingObject):
             that should be plotted times two.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
 
         .. rubric:: Basic Usage
 
@@ -1199,7 +1209,14 @@ class Response(ComparingObject):
 
         # only do adjustments if we initialized the figure in here
         if not axes:
-            _adjust_bode_plot_figure(fig)
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
         return fig
 
 
