@@ -18,6 +18,7 @@ from obspy.station.station import Station
 import textwrap
 import warnings
 import fnmatch
+import copy
 
 
 class Network(BaseNode):
@@ -242,6 +243,88 @@ class Network(BaseNode):
             msg = "No matching coordinates found."
             raise Exception(msg)
         return coordinates[0]
+
+    def select(self, station=None, location=None, channel=None, time=None,
+               starttime=None, endtime=None, sampling_rate=None,
+               keep_empty=False):
+        """
+        Returns the :class:`Network` object only with these
+        :class:`~obspy.station.station.Station`s /
+        :class:`~obspy.station.channel.Channel`s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see http://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Examples
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> net = read_inventory()[0]
+        >>> t = UTCDateTime(2008, 7, 1, 12)
+        >>> net = net.select(channel="[LB]HZ", time=t)
+        >>> print(net)  # doctest: +NORMALIZE_WHITESPACE
+        Network GR (GRSN)
+            Station Count: None/None (Selected/Total)
+            None -
+            Access: None
+            Contains:
+                Stations (2):
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (4):
+                    GR.FUR..BHZ, GR.FUR..LHZ, GR.WET..BHZ, GR.WET..LHZ
+
+        The `station`, `location` and `channel` selection criteria  may also
+        contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
+        :python:func:`~fnmatch.fnmatch`).
+
+        :type station: str
+        :type location: str
+        :type channel: str
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include stations/channels active at given point in
+            time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include stations/channels active at or after
+            given point in time (i.e. channels ending before given time will
+            not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include stations/channels active before or at
+            given point in time (i.e. channels starting after given time will
+            not be shown).
+        :type sampling_rate: float
+        :type keep_empty: bool
+        :param keep_empty: If set to `True`, networks/stations that match
+            themselves but have no matching child elements (stations/channels)
+            will be included in the result.
+        """
+        stations = []
+        for sta in self.stations:
+            # skip if any given criterion is not matched
+            if station is not None:
+                if not fnmatch.fnmatch(sta.code.upper(),
+                                       station.upper()):
+                    continue
+            if any([t is not None for t in (time, starttime, endtime)]):
+                if not sta.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
+                    continue
+
+            sta_ = sta.select(
+                location=location, channel=channel, time=time,
+                starttime=starttime, endtime=endtime,
+                sampling_rate=sampling_rate)
+            if not keep_empty and not sta_.channels:
+                continue
+            stations.append(sta_)
+        net = copy.copy(self)
+        net.stations = stations
+        return net
 
     def plot(self, type, **kwargs):
         """

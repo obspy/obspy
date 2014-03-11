@@ -18,6 +18,8 @@ from obspy.station import BaseNode, Equipment, Operator
 from obspy.station.util import Longitude, Latitude, Distance
 import textwrap
 import fnmatch
+import warnings
+import copy
 
 
 class Station(BaseNode):
@@ -272,6 +274,83 @@ class Station(BaseNode):
             self._elevation = value
         else:
             self._elevation = Distance(value)
+
+    def select(self, location=None, channel=None, time=None, starttime=None,
+               endtime=None, sampling_rate=None):
+        """
+        Returns the :class:`Station` object only with these
+        :class:`~obspy.station.channel.Channel`s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see http://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Examples
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> sta = read_inventory()[0][0]
+        >>> t = UTCDateTime(2008, 7, 1, 12)
+        >>> sta = sta.select(channel="[LB]HZ", time=t)
+        >>> print(sta)  # doctest: +NORMALIZE_WHITESPACE
+        Station FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+            Station Code: FUR
+            Channel Count: None/None (Selected/Total)
+            2006-12-16T00:00:00.000000Z -
+            Access: None
+            Latitude: 48.16, Longitude: 11.28, Elevation: 565.0 m
+            Available Channels:
+                FUR..BHZ, FUR..LHZ
+
+        The `location` and `channel` selection criteria  may also contain UNIX
+        style wildcards (e.g. ``*``, ``?``, ...; see
+        :python:func:`~fnmatch.fnmatch`).
+
+        :type location: str
+        :type channel: str
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include channels active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include channels active at or after given point
+            in time (i.e. channels ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include channels active before or at given point
+            in time (i.e. channels starting after given time will not be
+            shown).
+        :type sampling_rate: float
+        """
+        channels = []
+        for cha in self.channels:
+            # skip if any given criterion is not matched
+            if location is not None:
+                if not fnmatch.fnmatch(cha.location_code.upper(),
+                                       location.upper()):
+                    continue
+            if channel is not None:
+                if not fnmatch.fnmatch(cha.code.upper(),
+                                       channel.upper()):
+                    continue
+            if sampling_rate is not None:
+                if not cha.sample_rate:
+                    msg = ("Omitting channel that has no sampling rate "
+                           "specified.")
+                    warnings.warn(msg)
+                    continue
+                if float(sampling_rate) != cha.sample_rate:
+                    continue
+            if any([t is not None for t in (time, starttime, endtime)]):
+                if not cha.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
+                    continue
+
+            channels.append(cha)
+        sta = copy.copy(self)
+        sta.channels = channels
+        return sta
 
     def plot(self, min_freq, output="VEL", location="*", channel="*",
              axes=None, unwrap_phase=False):
