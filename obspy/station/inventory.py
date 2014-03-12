@@ -318,7 +318,7 @@ class Inventory(ComparingObject):
 
         The `network`, `station`, `location` and `channel` selection criteria
         may also contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
-        :python:func:`~fnmatch.fnmatch`).
+        :func:`~fnmatch.fnmatch`).
 
         :type network: str
         :type station: str
@@ -395,16 +395,14 @@ class Inventory(ComparingObject):
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type marker: str
-        :param marker: Marker symbol (see
-            :matplotlib:func:`matplotlib.pyplot.scatter`).
+        :param marker: Marker symbol (see :func:`matplotlib.pyplot.scatter`).
         :type size: float
-        :param size: Marker size (see
-            :matplotlib:func:`matplotlib.pyplot.scatter`).
+        :param size: Marker size (see :func:`matplotlib.pyplot.scatter`).
         :type label: bool
         :param label: Whether to label stations with "network.station" or not.
         :type color: str
         :param color: Face color of marker symbol (see
-            :matplotlib:func:`matplotlib.pyplot.scatter`).
+            :func:`matplotlib.pyplot.scatter`).
         :type color_per_network: bool (or dict)
         :param color_per_network: If set to `True`, each network will be drawn
             in a different color. A dictionary can be provided that maps
@@ -533,19 +531,19 @@ class Inventory(ComparingObject):
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style
             patterns and wildcards (e.g. "G*", "*[ER]"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
             patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard networks/stations/channels active at given
             point in time.
@@ -557,7 +555,7 @@ class Inventory(ComparingObject):
         :param endtime: Only regard networks/stations/channels active before or
             at given point in time (i.e. networks starting after given time
             will not be shown).
-        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.

@@ -1100,7 +1100,7 @@ class Response(ComparingObject):
             used (disregarding all later stages).
         :type label: str
         :param label: Label string for legend.
-        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.

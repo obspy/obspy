@@ -308,7 +308,7 @@ class Station(BaseNode):
 
         The `location` and `channel` selection criteria  may also contain UNIX
         style wildcards (e.g. ``*``, ``?``, ...; see
-        :python:func:`~fnmatch.fnmatch`).
+        :func:`~fnmatch.fnmatch`).
 
         :type location: str
         :type channel: str
@@ -368,11 +368,11 @@ class Station(BaseNode):
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :param time: Only show channels active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Only show channels active at or after given point in
@@ -380,7 +380,7 @@ class Station(BaseNode):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Only show channels active before or at given point in
             time (i.e. channels starting after given time will not be shown).
-        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.

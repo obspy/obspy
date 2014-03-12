@@ -281,7 +281,7 @@ class Network(BaseNode):
 
         The `station`, `location` and `channel` selection criteria  may also
         contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
-        :python:func:`~fnmatch.fnmatch`).
+        :func:`~fnmatch.fnmatch`).
 
         :type station: str
         :type location: str
@@ -355,13 +355,12 @@ class Network(BaseNode):
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type marker: str
-        :param marker: Marker symbol (see
-            :matplotlib:func:`matplotlib.pyplot.scatter`).
+        :param marker: Marker symbol (see :func:`matplotlib.pyplot.scatter`).
         :type label: bool
         :param label: Whether to label stations with "network.station" or not.
         :type color: str
         :param color: Face color of marker symbol (see
-            :matplotlib:func:`matplotlib.pyplot.scatter`).
+            :func:`matplotlib.pyplot.scatter`).
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only plot stations available at given point in time.
         :type show: bool
@@ -458,15 +457,15 @@ class Network(BaseNode):
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
             patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
             patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :python:func:`~fnmatch.fnmatch`)
+            :func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard stations active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -475,7 +474,7 @@ class Network(BaseNode):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Only regard stations active before or at given point in
             time (i.e. stations starting after given time will not be shown).
-        :type axes: list of 2 :matplotlib:`matplotlib.axes._axes.Axes`
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
         :param axes: List/tuple of two axes instances to plot the
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.

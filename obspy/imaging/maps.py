@@ -93,7 +93,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :type title: str
     :param title: Title above plot.
     :type colorbar_ticklabel_format: str or func or
-        subclass of :matplotlib:`matplotlib.ticker.Formatter`
+        subclass of :class:`matplotlib.ticker.Formatter`
     :param colorbar_ticklabel_format: Format string or Formatter used to format
         colorbar tick labels.
     :type show: bool
