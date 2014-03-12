@@ -367,8 +367,8 @@ class Inventory(ComparingObject):
     def plot(self, projection='cyl', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', color_per_network=False,
-             colormap="jet", time=None, show=True, outfile=None,
-             **kwargs):  # @UnusedVariable
+             colormap="jet", legend="upper left", time=None, show=True,
+             outfile=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all networks/stations in current inventory
         object.
@@ -411,6 +411,11 @@ class Inventory(ComparingObject):
         :type colormap: str, optional, any matplotlib colormap
         :param colormap: Only ued if `color_per_network=True`. Specifies which
             colormap is used to draw the colors for the individual networks.
+        :type legend: str or `None`
+        :param legend: Location string for legend, if networks are plotted in
+            different colors (i.e. option `color_per_network` in use). See
+            :func:`matplotlib.pyplot.legend` for possible values for
+            legend location string. To disable legend set to `None`.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only plot stations available at given point in time.
         :type show: bool
@@ -438,15 +443,16 @@ class Inventory(ComparingObject):
             inv = read_inventory()
             inv.plot(label=False)
 
-        Orthographic projection:
+        Orthographic projection, automatic colors per network:
 
-        >>> inv.plot(projection="ortho")  # doctest:+SKIP
+        >>> inv.plot(projection="ortho", label=False,
+        ...          color_per_network=True)  # doctest:+SKIP
 
         .. plot::
 
             from obspy import read_inventory
             inv = read_inventory()
-            inv.plot(projection="ortho")
+            inv.plot(projection="ortho", label=False, color_per_network=True)
 
         Local (azimuthal equidistant) projection, with custom colors:
 
@@ -477,7 +483,7 @@ class Inventory(ComparingObject):
             from matplotlib.cm import get_cmap
             cmap = get_cmap(name=colormap)
             codes = set([n.code for n in inv])
-            nums = np.linspace(0, 1, endpoint=True, num=len(codes))
+            nums = np.linspace(0, 1, endpoint=False, num=len(codes))
             color_per_network = dict([(code, cmap(n))
                                       for code, n in zip(codes, nums)])
 
@@ -489,15 +495,18 @@ class Inventory(ComparingObject):
                     warnings.warn(msg)
                     continue
                 if color_per_network:
-                    label = "   %s" % sta.code
+                    label_ = "   %s" % sta.code
                     color_ = color_per_network.get(net.code, "k")
                 else:
-                    label = "   " + ".".join((net.code, sta.code))
+                    label_ = "   " + ".".join((net.code, sta.code))
                     color_ = color
                 lats.append(sta.latitude)
                 lons.append(sta.longitude)
-                labels.append(label)
+                labels.append(label_)
                 colors.append(color_)
+
+        if not label:
+            labels = None
 
         fig = plot_basemap(lons, lats, size, colors, labels,
                            projection=projection, resolution=resolution,
@@ -505,6 +514,16 @@ class Inventory(ComparingObject):
                            water_fill_color=water_fill_color,
                            colormap=None, colorbar=False, marker=marker,
                            title=None, show=False, **kwargs)
+
+        if legend is not None and color_per_network:
+            ax = fig.axes[0]
+            count = len(ax.collections)
+            for code, color in color_per_network.items():
+                ax.scatter([0], [0], size, color, label=code, marker=marker)
+            ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                      fontsize="medium", markerscale=0.8, handletextpad=0.1)
+            # remove collections again solely created for legend handles
+            ax.collections = ax.collections[:count]
 
         if outfile:
             fig.savefig(outfile)

@@ -380,13 +380,13 @@ class Network(BaseNode):
 
         >>> from obspy import read_inventory
         >>> net = read_inventory()[0]
-        >>> net.plot()  # doctest:+SKIP
+        >>> net.plot(label=False)  # doctest:+SKIP
 
         .. plot::
 
             from obspy import read_inventory
             net = read_inventory()[0]
-            net.plot()
+            net.plot(label=False)
 
         Orthographic projection:
 
@@ -416,7 +416,7 @@ class Network(BaseNode):
         lons = []
         labels = []
         for sta in self.select(time=time).stations:
-            label = "   " + ".".join((self.code, sta.code))
+            label_ = "   " + ".".join((self.code, sta.code))
             if sta.latitude is None or sta.longitude is None:
                 msg = ("Station '%s' does not have latitude/longitude "
                        "information and will not be plotted." % label)
@@ -424,7 +424,10 @@ class Network(BaseNode):
                 continue
             lats.append(sta.latitude)
             lons.append(sta.longitude)
-            labels.append(label)
+            labels.append(label_)
+
+        if not label:
+            labels = None
 
         fig = plot_basemap(lons, lats, size, color, labels,
                            projection=projection, resolution=resolution,
