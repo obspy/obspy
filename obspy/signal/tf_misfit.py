@@ -1440,7 +1440,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     >>> from obspy import read
     >>> tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
     >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
-    ...         fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
+    ...         fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
 
     .. plot::
 
@@ -1448,7 +1448,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         from obspy import read
         tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
         plotTfr(tr.data, dt=tr.stats.delta, fmin=.01,
-                fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
+                fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
     """
     import matplotlib.pyplot as plt
     from matplotlib.ticker import NullFormatter
