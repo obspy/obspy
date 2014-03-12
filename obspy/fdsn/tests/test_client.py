@@ -14,6 +14,7 @@ from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import str
 from future.builtins import open
+import mock
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
@@ -62,7 +63,7 @@ def normalize_version_number(string):
     Due to Py3k arbitrary dictionary ordering it also sorts word wise the
     input string, independent of commas and newlines.
     """
-    repl = re.sub('[0-9]\.[0-9]\.[0-9]', "", string).replace(",", "")
+    repl = re.sub('v[0-9]+\.[0-9]+\.[0-9]+', "vX.X.X", string).replace(",", "")
     return " ".join(
         sorted(s.strip() for l in repl.splitlines() for s in l.split(" ")))
 
@@ -71,12 +72,13 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.fdsn.client.Client.
     """
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # directory where the test files are located
-        self.path = os.path.dirname(__file__)
-        self.datapath = os.path.join(self.path, "data")
-        self.client = Client(base_url="IRIS", user_agent=USER_AGENT)
-        self.client_auth = \
+        cls.path = os.path.dirname(__file__)
+        cls.datapath = os.path.join(cls.path, "data")
+        cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
 
@@ -230,7 +232,7 @@ class ClientTestCase(unittest.TestCase):
                  "minlongitude", "maxlongitude", "latitude", "longitude",
                  "maxradius", "minradius", "mindepth", "maxdepth",
                  "minmagnitude", "maxmagnitude",
-                 "magtype",  # XXX: Change once fixed.
+                 "magnitudetype",
                  "catalog", "contributor", "limit", "offset", "orderby",
                  "updatedafter", "includeallorigins", "includeallmagnitudes",
                  "includearrivals", "eventid",
@@ -302,15 +304,15 @@ class ClientTestCase(unittest.TestCase):
                  maxlatitude=40, minlongitude=-170, maxlongitude=170,
                  includeallmagnitudes=True, minmagnitude=4,
                  orderby="magnitude"),
-            ]
+        ]
         result_files = ["events_by_eventid.xml",
                         "events_by_time.xml",
                         "events_by_misc.xml",
                         ]
         for query, filename in zip(queries, result_files):
-            got = client.get_events(**query)
             file_ = os.path.join(self.datapath, filename)
-            # got.write(file_, "QUAKEML")
+            # query["filename"] = file_
+            got = client.get_events(**query)
             expected = readEvents(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
@@ -337,17 +339,16 @@ class ClientTestCase(unittest.TestCase):
                  sta="ANMO", level="channel"),
             dict(starttime=UTCDateTime("2013-01-01"), network="IU", sta="A*",
                  location="00", level="channel", format="text"),
-            ]
+        ]
         result_files = ["stations_by_latlon.xml",
                         "stations_by_misc.xml",
                         "stations_by_station.xml",
                         "stations_by_station_wildcard.xml",
                         ]
         for query, filename in zip(queries, result_files):
-            got = client.get_stations(**query)
             file_ = os.path.join(self.datapath, filename)
-            # with open(file_, "wt") as fh:
-            #    fh.write(got)
+            # query["filename"] = file_
+            got = client.get_stations(**query)
             expected = read_inventory(file_, format="STATIONXML")
             # delete both creating times and modules before comparing objects.
             got.created = None
@@ -387,7 +388,7 @@ class ClientTestCase(unittest.TestCase):
             ("IU", "A??", "*0", "BHZ",
              UTCDateTime("2010-02-27T06:30:00.000"),
              UTCDateTime("2010-02-27T06:31:00.000")),
-            ]
+        ]
         result_files = ["dataselect_example.mseed",
                         "dataselect_example_wildcards.mseed",
                         "dataselect_example_mixed_wildcards.mseed",
@@ -446,19 +447,16 @@ class ClientTestCase(unittest.TestCase):
 
             client.help("event")
             got = sys.stdout.getvalue()
+            sys.stdout.close()
+            sys.stdout = sys.__stdout__
             expected = (
                 "Parameter description for the 'event' service (v1.0.6) of "
                 "'http://service.iris.edu':\n"
                 "The service offers the following non-standard parameters:\n"
-                "    magtype (str)\n"
-                "        type of Magnitude used to test minimum and maximum "
-                "limits (case\n        insensitive)\n"
                 "    originid (int)\n"
                 "        Retrieve an event based on the unique origin ID "
                 "numbers assigned by\n"
                 "        the IRIS DMC\n"
-                "WARNING: The service does not offer the following standard "
-                "parameters: magnitudetype\n"
                 "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
                 "Available contributors: NEIC PDE-W, ANF, University of "
                 "Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, "
@@ -466,7 +464,8 @@ class ClientTestCase(unittest.TestCase):
             # allow for changes in version number..
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
-                             failmsg(got, expected))
+                             failmsg(normalize_version_number(got),
+                                     normalize_version_number(expected)))
 
             # Reset. Creating a new one is faster then clearing the old one.
             sys.stdout.close()
@@ -474,6 +473,8 @@ class ClientTestCase(unittest.TestCase):
 
             client.help("station")
             got = sys.stdout.getvalue()
+            sys.stdout.close()
+            sys.stdout = sys.__stdout__
             expected = (
                 "Parameter description for the 'station' service (v1.0.7) of "
                 "'http://service.iris.edu':\n"
@@ -484,7 +485,8 @@ class ClientTestCase(unittest.TestCase):
                 "        an IRIS extension to the FDSN specification\n")
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
-                             failmsg(got, expected))
+                             failmsg(normalize_version_number(got),
+                                     normalize_version_number(expected)))
 
             # Reset.
             sys.stdout.close()
@@ -498,7 +500,8 @@ class ClientTestCase(unittest.TestCase):
                 "No derivations from standard detected\n")
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
-                             failmsg(got, expected))
+                             failmsg(normalize_version_number(got),
+                                     normalize_version_number(expected)))
 
             sys.stdout.close()
         finally:
@@ -517,7 +520,8 @@ class ClientTestCase(unittest.TestCase):
             "all webservices.")
         self.assertEqual(normalize_version_number(got),
                          normalize_version_number(expected),
-                         failmsg(got, expected))
+                         failmsg(normalize_version_number(got),
+                                 normalize_version_number(expected)))
 
     def test_bulk(self):
         """
@@ -632,6 +636,239 @@ class ClientTestCase(unittest.TestCase):
                                   attach_response=True)
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
+
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_default_requested_urls(self, download_url_mock):
+        """
+        Five request should be sent upon initializing a client. Test these.
+        """
+        download_url_mock.return_value = (404, None)
+        base_url = "http://example.com"
+
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url)
+        except FDSNException:
+            pass
+
+        expected_urls = sorted([
+            "%s/fdsnws/event/1/contributors" % base_url,
+            "%s/fdsnws/event/1/catalogs" % base_url,
+            "%s/fdsnws/event/1/application.wadl" % base_url,
+            "%s/fdsnws/station/1/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+
+        self.assertEqual(expected_urls, got_urls)
+
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_setting_service_major_version(self, download_url_mock):
+        """
+        Test the setting of custom major versions.
+        """
+        download_url_mock.return_value = (404, None)
+        base_url = "http://example.com"
+
+        # Passing an empty dictionary results in the default urls.
+        major_versions = {}
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, major_versions=major_versions)
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/1/contributors" % base_url,
+            "%s/fdsnws/event/1/catalogs" % base_url,
+            "%s/fdsnws/event/1/application.wadl" % base_url,
+            "%s/fdsnws/station/1/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+        # Replace all
+        download_url_mock.reset_mock()
+        download_url_mock.return_value = (404, None)
+        major_versions = {"event": 7, "station": 8, "dataselect": 9}
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, major_versions=major_versions)
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/7/contributors" % base_url,
+            "%s/fdsnws/event/7/catalogs" % base_url,
+            "%s/fdsnws/event/7/application.wadl" % base_url,
+            "%s/fdsnws/station/8/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/9/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+        # Replace only some
+        download_url_mock.reset_mock()
+        download_url_mock.return_value = (404, None)
+        major_versions = {"event": 7, "station": 8}
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, major_versions=major_versions)
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/7/contributors" % base_url,
+            "%s/fdsnws/event/7/catalogs" % base_url,
+            "%s/fdsnws/event/7/application.wadl" % base_url,
+            "%s/fdsnws/station/8/application.wadl" % base_url,
+            "%s/fdsnws/dataselect/1/application.wadl" % base_url,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_setting_service_provider_mappings(self, download_url_mock):
+        """
+        Tests the setting of per service endpoints
+        """
+        base_url = "http://example.com"
+
+        # Replace all.
+        download_url_mock.return_value = (404, None)
+        # Some custom urls
+        base_url_event = "http://other_url.com/beta/event_service/11"
+        base_url_station = "http://some_url.com/beta2/stat_serv/7"
+        base_url_ds = "http://new.com/beta3/waveforms/8"
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, service_mappings={
+                "event": base_url_event,
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/contributors" % base_url_event,
+            "%s/catalogs" % base_url_event,
+            "%s/application.wadl" % base_url_event,
+            "%s/application.wadl" % base_url_station,
+            "%s/application.wadl" % base_url_ds,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+        # Replace only two. The others keep the default mapping.
+        download_url_mock.reset_mock()
+        download_url_mock.return_value = (404, None)
+        # Some custom urls
+        base_url_station = "http://some_url.com/beta2/stat_serv/7"
+        base_url_ds = "http://new.com/beta3/waveforms/8"
+        # An exception will be raised if not actual WADLs are returned.
+        try:
+            Client(base_url=base_url, service_mappings={
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        except FDSNException:
+            pass
+        expected_urls = sorted([
+            "%s/fdsnws/event/1/contributors" % base_url,
+            "%s/fdsnws/event/1/catalogs" % base_url,
+            "%s/fdsnws/event/1/application.wadl" % base_url,
+            "%s/application.wadl" % base_url_station,
+            "%s/application.wadl" % base_url_ds,
+        ])
+        got_urls = sorted([_i[0][0] for _i in
+                           download_url_mock.call_args_list])
+        self.assertEqual(expected_urls, got_urls)
+
+    def test_manually_deactivate_single_service(self):
+        """
+        Test manually deactivating a single service.
+        """
+        client = Client(base_url="IRIS", user_agent=USER_AGENT,
+                        service_mappings={"event": None})
+        self.assertEqual(sorted(client.services.keys()),
+                         ['dataselect', 'station'])
+
+    @mock.patch("obspy.fdsn.client.download_url")
+    def test_download_urls_for_custom_mapping(self, download_url_mock):
+        """
+        Tests the downloading of data with custom mappings.
+        """
+        base_url = "http://example.com"
+
+        # More extensive mock setup simulation service discovery.
+        def custom_side_effects(*args, **kwargs):
+            if "version" in args[0]:
+                return 200, "1.0.200"
+            elif "event" in args[0]:
+                with open(os.path.join(
+                        self.datapath, "2014-01-07_iris_event.wadl")) as fh:
+                    return 200, fh.read()
+            elif "station" in args[0]:
+                with open(os.path.join(
+                        self.datapath,
+                        "2014-01-07_iris_station.wadl")) as fh:
+                    return 200, fh.read()
+            elif "dataselect" in args[0]:
+                with open(os.path.join(
+                        self.datapath,
+                        "2014-01-07_iris_dataselect.wadl")) as fh:
+                    return 200, fh.read()
+            return 404, None
+
+        download_url_mock.side_effect = custom_side_effects
+
+        # Some custom urls
+        base_url_event = "http://other_url.com/beta/event_service/11"
+        base_url_station = "http://some_url.com/beta2/station/7"
+        base_url_ds = "http://new.com/beta3/dataselect/8"
+        # An exception will be raised if not actual WADLs are returned.
+        c = Client(base_url=base_url, service_mappings={
+            "event": base_url_event,
+            "station": base_url_station,
+            "dataselect": base_url_ds,
+        })
+
+        # Test the dataselect downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_waveforms("A", "B", "C", "D", UTCDateTime() - 100,
+                            UTCDateTime())
+        except:
+            pass
+        self.assertTrue(
+            base_url_ds in download_url_mock.call_args_list[0][0][0])
+
+        # Test the station downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_stations()
+        except:
+            pass
+        self.assertTrue(
+            base_url_station in download_url_mock.call_args_list[0][0][0])
+
+        # Test the event downloading.
+        download_url_mock.reset_mock()
+        download_url_mock.side_effect = None
+        download_url_mock.return_value = 404, None
+        try:
+            c.get_events()
+        except:
+            pass
+        self.assertTrue(
+            base_url_event in download_url_mock.call_args_list[0][0][0])
 
 
 def suite():

@@ -3,14 +3,14 @@
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.8</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?location=00&amp;station=A%2A&amp;network=IU&amp;starttime=2013-01-01T00%3A00%3A00.000000&amp;level=channel</ModuleURI>
- <Created>2013-12-29T07:44:01</Created>
+ <Created>2014-03-06T22:12:09</Created>
  <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
-  <TotalNumberStations>258</TotalNumberStations>
+  <TotalNumberStations>259</TotalNumberStations>
   <SelectedNumberStations>4</SelectedNumberStations>
-  <Station code="ADK" startDate="2009-07-19T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+  <Station code="ADK" startDate="2009-07-19T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_FDSN,_STS-1,.UNRESTRICTED,_ANSS,_US-REF,_GSN-BROADBAND,_ANSS-BB,_FDSN-ALL,_US-ALL,_GSN,_REALTIME">
    <Latitude>51.8823</Latitude>
    <Longitude>-176.6842</Longitude>
    <Elevation>130.0</Elevation>
@@ -363,7 +363,7 @@
     </Response>
    </Channel>
   </Station>
-  <Station code="AFI" startDate="2010-02-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+  <Station code="AFI" startDate="2010-02-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes="_GSN,_GSN-BROADBAND,_FDSN,_STS-1,.UNRESTRICTED,_FDSN-ALL,_SPACIFIC,_REALTIME,.SPACIFIC">
    <Latitude>-13.9093</Latitude>
    <Longitude>-171.7773</Longitude>
    <Elevation>706.0</Elevation>
@@ -977,7 +977,7 @@
     </Response>
    </Channel>
   </Station>
-  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_FDSN,_GSN-BROADBAND,_US-TA,.UNRESTRICTED,_ANSS,.TEST,_CARIBE-EWS,_US-REF,_GSN,_ANSS-BB,_US-ALL,_FDSN-ALL,.EARTHSCOPE,_US-ALL,_REALTIME">
    <Latitude>34.94591</Latitude>
    <Longitude>-106.4572</Longitude>
    <Elevation>1820.0</Elevation>
@@ -985,7 +985,7 @@
     <Name>Albuquerque, New Mexico, USA</Name>
    </Site>
    <CreationDate>1989-08-29T00:00:00</CreationDate>
-   <TotalNumberChannels>123</TotalNumberChannels>
+   <TotalNumberChannels>126</TotalNumberChannels>
    <SelectedNumberChannels>12</SelectedNumberChannels>
    <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH1">
     <Latitude>34.945981</Latitude>
@@ -1330,7 +1330,7 @@
     </Response>
    </Channel>
   </Station>
-  <Station code="ANTO" startDate="2010-07-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+  <Station code="ANTO" startDate="2010-07-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes="_GSN,.UNRESTRICTED,_FDSN-ALL,_FDSN,_GSN-BROADBAND,_CARIBE-EWS,_REALTIME">
    <Latitude>39.868</Latitude>
    <Longitude>32.7934</Longitude>
    <Elevation>1090.0</Elevation>

@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?><q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:iris="http://service.iris.edu/fdsnws/event/1/" xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance" xsi:schemaLocation="http://quakeml.org/schema/xsd http://quakeml.org/schema/xsd/QuakeML-1.2.xsd"><eventParameters publicID="smi:service.iris.edu/fdsnws/event/1/query"><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
+<?xml version="1.0" encoding="UTF-8"?><q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:iris="http://service.iris.edu/fdsnws/event/1/" xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance" xsi:schemaLocation="http://quakeml.org/schema/xsd http://quakeml.org/schema/xsd/QuakeML-1.2.xsd"><eventParameters publicID="smi:service.iris.edu/fdsnws/event/1/query"><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
     <type>earthquake</type>
-    <description iris:FEcode="348">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="348">
         <type>Flinn-Engdahl region</type>
         <text>NORTHERN IRAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421382</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
         <time>
             <value>2011-01-07T23:53:01.0100</value>
         </time>
@@ -223,15 +223,15 @@
             <author>IDC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420629</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -258,15 +258,15 @@
             <author>BJI</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
     <type>earthquake</type>
-    <description iris:FEcode="348">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="348">
         <type>Flinn-Engdahl region</type>
         <text>NORTHERN IRAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421360</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
         <time>
             <value>2011-01-07T23:53:01.0100</value>
         </time>
@@ -303,15 +303,15 @@
             <author>ISC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
     <type>earthquake</type>
-    <description iris:FEcode="228">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="228">
         <type>Flinn-Engdahl region</type>
         <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420794</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749661</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
         <time>
             <value>2011-01-07T17:45:16.8500</value>
         </time>
@@ -348,15 +348,15 @@
             <author>MOS</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420628</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -393,15 +393,15 @@
             <author>IDC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
     <type>earthquake</type>
-    <description iris:FEcode="348">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="348">
         <type>Flinn-Engdahl region</type>
         <text>NORTHERN IRAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421384</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
         <time>
             <value>2011-01-07T23:53:01.0100</value>
         </time>
@@ -438,15 +438,15 @@
             <author>ISCJB</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420630</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -473,15 +473,15 @@
             <author>NIED</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
     <type>earthquake</type>
-    <description iris:FEcode="348">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="348">
         <type>Flinn-Engdahl region</type>
         <text>NORTHERN IRAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421376</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
         <time>
             <value>2011-01-07T23:53:01.0100</value>
         </time>
@@ -518,15 +518,15 @@
             <author>IDC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
     <type>earthquake</type>
-    <description iris:FEcode="228">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="228">
         <type>Flinn-Engdahl region</type>
         <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420792</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749661</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
         <time>
             <value>2011-01-07T17:45:16.8500</value>
         </time>
@@ -573,15 +573,15 @@
             <author>ISC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420627</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -608,15 +608,15 @@
             <author>MOS</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
     <type>earthquake</type>
-    <description iris:FEcode="228">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="228">
         <type>Flinn-Engdahl region</type>
         <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420795</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749661</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
         <time>
             <value>2011-01-07T17:45:16.8500</value>
         </time>
@@ -663,15 +663,15 @@
             <author>IDC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420620</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -698,15 +698,15 @@
             <author>ISC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
     <type>earthquake</type>
-    <description iris:FEcode="48">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="48">
         <type>Flinn-Engdahl region</type>
         <text>BAJA CALIFORNIA, MEXICO</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421089</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749870</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765722" iris:contributorEventId="1136741">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765722" iris:contributorEventId="1136741">
         <time>
             <value>2011-01-07T21:17:22.7600</value>
         </time>
@@ -733,15 +733,15 @@
             <author>ECX</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
     <type>earthquake</type>
-    <description iris:FEcode="48">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="48">
         <type>Flinn-Engdahl region</type>
         <text>BAJA CALIFORNIA, MEXICO</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421093</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749875</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765723" iris:contributorEventId="1136742">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765723" iris:contributorEventId="1136742">
         <time>
             <value>2011-01-07T21:19:20.4700</value>
         </time>
@@ -768,15 +768,15 @@
             <author>ECX</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420626</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -803,15 +803,15 @@
             <author>ISCJB</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
     <type>earthquake</type>
-    <description iris:FEcode="48">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="48">
         <type>Flinn-Engdahl region</type>
         <text>BAJA CALIFORNIA, MEXICO</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421088</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749870</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765722" iris:contributorEventId="1136741">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765722" iris:contributorEventId="1136741">
         <time>
             <value>2011-01-07T21:17:22.7600</value>
         </time>
@@ -838,15 +838,15 @@
             <author>ECX</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
     <type>earthquake</type>
-    <description iris:FEcode="48">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="48">
         <type>Flinn-Engdahl region</type>
         <text>BAJA CALIFORNIA, MEXICO</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421092</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749875</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765723" iris:contributorEventId="1136742">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765723" iris:contributorEventId="1136742">
         <time>
             <value>2011-01-07T21:19:20.4700</value>
         </time>
@@ -873,15 +873,15 @@
             <author>ECX</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
     <type>earthquake</type>
-    <description iris:FEcode="348">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="348">
         <type>Flinn-Engdahl region</type>
         <text>NORTHERN IRAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421378</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765748" iris:contributorEventId="15909048">
         <time>
             <value>2011-01-07T23:53:01.0100</value>
         </time>
@@ -908,15 +908,15 @@
             <author>IDC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
     <type>earthquake</type>
-    <description iris:FEcode="230">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="230">
         <type>Flinn-Engdahl region</type>
         <text>NEAR S. COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420622</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765689" iris:contributorEventId="15916110">
         <time>
             <value>2011-01-07T15:22:54.6900</value>
         </time>
@@ -972,15 +972,15 @@
             <author>IDC</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
     <type>earthquake</type>
-    <description iris:FEcode="228">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="228">
         <type>Flinn-Engdahl region</type>
         <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420793</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749661</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765698" iris:contributorEventId="16021265">
         <time>
             <value>2011-01-07T17:45:16.8500</value>
         </time>
@@ -1066,15 +1066,15 @@
             <author>JMA</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
     <type>earthquake</type>
-    <description iris:FEcode="48">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="48">
         <type>Flinn-Engdahl region</type>
         <text>BAJA CALIFORNIA, MEXICO</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421087</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749870</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765722" iris:contributorEventId="1136741">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765722" iris:contributorEventId="1136741">
         <time>
             <value>2011-01-07T21:17:22.7600</value>
         </time>
@@ -1101,15 +1101,15 @@
             <author>MEX</author>
         </creationInfo>
     </magnitude>
-</event><event xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
     <type>earthquake</type>
-    <description iris:FEcode="48">
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="48">
         <type>Flinn-Engdahl region</type>
         <text>BAJA CALIFORNIA, MEXICO</text>
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421091</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749875</preferredOriginID>
-    <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765723" iris:contributorEventId="1136742">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="01765723" iris:contributorEventId="1136742">
         <time>
             <value>2011-01-07T21:19:20.4700</value>
         </time>
