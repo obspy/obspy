@@ -3,14 +3,14 @@
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.9</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=ANMO&amp;network=IU&amp;starttime=2013-01-01T00%3A00%3A00.000000&amp;level=channel</ModuleURI>
- <Created>2014-01-08T16:00:15</Created>
+ <Created>2014-03-06T22:12:08</Created>
  <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
-  <TotalNumberStations>258</TotalNumberStations>
+  <TotalNumberStations>259</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_FDSN,_GSN-BROADBAND,_US-TA,.UNRESTRICTED,_ANSS,.TEST,_CARIBE-EWS,_US-REF,_GSN,_ANSS-BB,_US-ALL,_FDSN-ALL,.EARTHSCOPE,_US-ALL,_REALTIME">
    <Latitude>34.94591</Latitude>
    <Longitude>-106.4572</Longitude>
    <Elevation>1820.0</Elevation>
@@ -18,8 +18,95 @@
     <Name>Albuquerque, New Mexico, USA</Name>
    </Site>
    <CreationDate>1989-08-29T00:00:00</CreationDate>
-   <TotalNumberChannels>123</TotalNumberChannels>
-   <SelectedNumberChannels>57</SelectedNumberChannels>
+   <TotalNumberChannels>126</TotalNumberChannels>
+   <SelectedNumberChannels>60</SelectedNumberChannels>
+   <Channel locationCode="40" startDate="2014-01-08T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LF1">
+    <Latitude>34.94591</Latitude>
+    <Longitude>-106.4572</Longitude>
+    <Elevation>1820.7</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>8.8</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Bartington 3-Axis Fluxgate Sensor</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>167.772</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>NT</Name>
+       <Description>Magnetic Flux Density in nanoTeslas</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="40" startDate="2014-01-08T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LF2">
+    <Latitude>34.94591</Latitude>
+    <Longitude>-106.4572</Longitude>
+    <Elevation>1820.7</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>98.8</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Bartington 3-Axis Fluxgate Sensor</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>167.772</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>NT</Name>
+       <Description>Magnetic Flux Density in nanoTeslas</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+   <Channel locationCode="40" startDate="2014-01-08T00:00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="LFZ">
+    <Latitude>34.94591</Latitude>
+    <Longitude>-106.4572</Longitude>
+    <Elevation>1820.7</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>HEALTH</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Bartington 3-Axis Fluxgate Sensor</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>167.772</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>NT</Name>
+       <Description>Magnetic Flux Density in nanoTeslas</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
    <Channel locationCode="20" startDate="2013-06-20T16:30:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="HN1">
     <Latitude>34.94591</Latitude>
     <Longitude>-106.4572</Longitude>
