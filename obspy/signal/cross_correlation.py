@@ -466,7 +466,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     :param streams_templates: List of streams with template events to check for
         waveform similarity. Each template has to include data for all
         channels present in stream to check.
-    :type streams_templates: list of :class:`~obspy.core.stream.Stream`s
+    :type streams_templates: list of :class:`~obspy.core.stream.Stream`
     :returns: Best correlation coefficient obtained by the comparison against
         all template events (0 to 1).
     """

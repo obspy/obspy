@@ -2073,8 +2073,8 @@ class Axis(__Axis):
 
     :type azimuth: float
     :param azimuth: Azimuth of eigenvector of moment tensor expressed in
-    principal-axes system. Measured clockwise from South-North direction at
-    epicenter. Unit: deg
+        principal-axes system. Measured clockwise from South-North direction at
+        epicenter. Unit: deg
     :type azimuth_errors: :class:`~obspy.core.util.AttribDict`
     :param azimuth_errors: AttribDict containing error quantities.
     :type plunge: float
