@@ -17,7 +17,7 @@ Basic Usage
     Seismic Network <http://www.pnsn.org/>`_ (``"UW"``).
 
     >>> from obspy.earthworm import Client
-    >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
+    >>> client = Client("pele.ess.washington.edu", 16017)
     >>> response = client.availability("UW", "TUCA", channel="BHZ")
     >>> print response  # doctest: +SKIP
     [('UW',
@@ -34,7 +34,7 @@ Basic Usage
 
         from obspy.earthworm import Client
         from obspy import UTCDateTime
-        client = Client("pele.ess.washington.edu", 16017)
+        client = Client("pele.ess.washington.edu", 16017, timeout=5)
         response = client.availability("UW", "TUCA", channel="BHZ")
         t = response[0][4]
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
