@@ -1754,14 +1754,14 @@ class Origin(__Origin):
             coords.append(self.depth)
         if isinstance(self.time, UTCDateTime):
             time = str(self.time)
-            coords.append(self.time.timestamp)
+            #coords.append(self.time.timestamp)  # float time as 4th coord
 
         if self.creation_info and self.creation_info.creation_time is not None:
             update_time = str(self.creation_info.creation_time)
 
         point = {
             "type": "Point",
-            "coordinates": coords,
+            "coordinates": tuple(coords),
             "id": str(self.resource_id),
             }
         props = {
@@ -2749,6 +2749,21 @@ class Catalog(object):
             out += "\nTo see all events call " + \
                    "'print CatalogObject.__str__(print_all=True)'"
         return out
+
+    @property
+    def __geo_interface__(self):
+        """
+        __geo_interface__ method for GeoJSON-type GIS protocol
+
+        :return: dict of valid GeoJSON
+
+        Reference
+        ---------
+        Python geo_interface specifications:
+        https://gist.github.com/sgillies/2217756
+        """
+        features = [e.__geo_interface__ for e in self.events]
+        return {"type": "FeatureCollection", "features": features}
 
     def append(self, event):
         """

@@ -103,6 +103,21 @@ class Network(BaseNode):
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret
 
+    @property
+    def __geo_interface__(self):
+        """
+        __geo_interface__ method for GeoJSON-type GIS protocol
+
+        :return: dict of valid GeoJSON
+
+        Reference
+        ---------
+        Python geo_interface specifications:
+        https://gist.github.com/sgillies/2217756
+        """
+        features = [s.__geo_interface__ for s in self.stations]
+        return {"type": "FeatureCollection", "features": features}
+
     def get_contents(self):
         """
         Returns a dictionary containing the contents of the object.
