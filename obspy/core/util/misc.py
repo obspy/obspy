@@ -8,6 +8,7 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 from contextlib import contextmanager
 import os
 import sys
@@ -19,6 +20,8 @@ import tempfile
 import numpy as np
 import math
 import re
+import platform
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -489,6 +492,17 @@ def cleanse_pymodule_filename(filename):
     filename = re.sub(r'^[^a-zA-Z_]', "_", filename)
     filename = re.sub(r'[^a-zA-Z0-9_]', "_", filename)
     return filename
+
+
+def _get_lib_name(lib):
+    """
+    Helper function to get an architecture and Python version specific library
+    filename.
+    """
+    libname = "lib%s_%s_%s_py%s" % (
+        lib, platform.system(), platform.architecture()[0], "".join(
+            [str(i) for i in platform.python_version_tuple()[:2]]))
+    return cleanse_pymodule_filename(libname)
 
 
 if __name__ == '__main__':
