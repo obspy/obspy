@@ -83,6 +83,29 @@ class UtilMiscTestCase(unittest.TestCase):
                 self.assertEqual(out.stdout, "abc\nghi\njkl\n")
                 self.assertEqual(out.stderr, "123\n456\n")
 
+    def test_no_obspy_imports(self):
+        """
+        Check files that are used at install time for obspy imports.
+        """
+        from obspy.core import util
+        files = ["misc.py", "version.py"]
+
+        for file_ in files:
+            file_ = os.path.join(os.path.dirname(util.__file__), file_)
+            msg = ("File %s seems to contain an import 'from obspy' "
+                   "(line %%i: '%%s').") % file_
+            with open(file_, "rb") as fh:
+                lines = fh.readlines()
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if line.startswith("#"):
+                    continue
+                if "from obspy" in line:
+                    if " import " in line:
+                        self.fail(msg % (i, line))
+                if "import obspy" in line:
+                    self.fail(msg % (i, line))
+
 
 def suite():
     return unittest.makeSuite(UtilMiscTestCase, 'test')
