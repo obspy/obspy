@@ -8,6 +8,7 @@ import ctypes as C
 import numpy as np
 import os
 import platform
+from obspy.core.util.misc import cleanse_pymodule_filename
 
 
 # Import shared libsignal depending on the platform.
@@ -19,6 +20,7 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # fallback for pre-packaged libraries
     'libsignal']
+lib_names = [cleanse_pymodule_filename(s) for s in lib_names]
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
@@ -42,6 +44,7 @@ erlib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # fallback for pre-packaged libraries
     'libevresp']
+erlib_names = [cleanse_pymodule_filename(s) for s in erlib_names]
 # initialize library
 for erlib_name in erlib_names:
     try:
