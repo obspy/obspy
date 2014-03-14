@@ -46,6 +46,7 @@ import fnmatch
 import os
 import platform
 import sys
+import re
 
 
 # Directory of the current file in the (hopefully) most reliable way
@@ -324,10 +325,15 @@ def _get_lib_name(lib):
     """
     Helper function to get an architecture and Python version specific library
     filename.
+
+    See #755 and :func:`obspy.core.util.misc.cleanse_pymodule_filename`.
     """
-    return "lib%s_%s_%s_py%s" % (
+    libname = "lib%s_%s_%s_py%s" % (
         lib, platform.system(), platform.architecture()[0], "".join(
             [str(i) for i in platform.python_version_tuple()[:2]]))
+    libname = re.sub(r'^[^a-zA-Z_]', "_", libname)
+    libname = re.sub(r'[^a-zA-Z0-9_]', "_", libname)
+    return libname
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:

@@ -32,6 +32,7 @@ from future.utils import native_str
 
 from distutils import sysconfig
 from obspy import UTCDateTime
+from obspy.core.util.misc import cleanse_pymodule_filename
 import ctypes as C
 import doctest
 import numpy as np
@@ -53,6 +54,7 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # fallback for pre-packaged libraries
     'libgse2']
+lib_names = [cleanse_pymodule_filename(s) for s in lib_names]
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library

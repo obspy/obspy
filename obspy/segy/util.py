@@ -7,6 +7,7 @@ from struct import unpack
 import ctypes as C
 import os
 import platform
+from obspy.core.util.misc import cleanse_pymodule_filename
 
 # Import shared libsegy depending on the platform.
 # create library names
@@ -22,6 +23,7 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # fallback for pre-packaged libraries
     'libsegy']
+lib_names = [cleanse_pymodule_filename(s) for s in lib_names]
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library

@@ -10,6 +10,7 @@ import ctypes as C
 import numpy as np
 import os
 import platform
+from obspy.core.util.misc import cleanse_pymodule_filename
 
 
 HPTERROR = -2145916800000000
@@ -30,6 +31,7 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # fallback for pre-packaged libraries
     'libmseed']
+lib_names = [cleanse_pymodule_filename(s) for s in lib_names]
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
