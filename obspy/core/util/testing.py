@@ -170,6 +170,9 @@ class ImageComparison(NamedTemporaryFile):
         environment variable. Created images and diffs for failing tests are
         then stored in a subfolder "testrun" under the baseline image's
         directory.
+        To only keep failed images and the corresponding diff image,
+        additionally set environment variable `OBSPY_KEEP_ONLY_FAILED_IMAGES`
+        to any value before executing the test.
 
     .. rubric:: Example
 
@@ -186,6 +189,7 @@ class ImageComparison(NamedTemporaryFile):
         self.image_name = image_name
         self.baseline_image = os.path.join(image_path, image_name)
         self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
+        self.keep_only_failed = "OBSPY_KEEP_ONLY_FAILED_IMAGES" in os.environ
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
         self.tol = get_matplotlib_defaul_tolerance() * reltol
@@ -241,12 +245,18 @@ class ImageComparison(NamedTemporaryFile):
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:
                 self.compare()
+        except:
+            failed = True
+            raise
+        else:
+            failed = False
         finally:
             import matplotlib.pyplot as plt
             self.close()
             plt.close()
             if self.keep_output:
-                self._copy_tempfiles()
+                if not (self.keep_only_failed and not failed):
+                    self._copy_tempfiles()
             os.remove(self.name)
             if os.path.exists(self.diff_filename):
                 os.remove(self.diff_filename)
