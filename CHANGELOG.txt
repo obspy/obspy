@@ -7,7 +7,7 @@
      #734)
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
-     Inventory/Station/Channel/Response objects (see #749)
+     Inventory/Station/Channel/Response objects (see #750)
 
 0.9.1:
  - obspy.core:
