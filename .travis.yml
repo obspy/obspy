@@ -35,7 +35,7 @@ script:
   - mkdir empty
   - cd empty
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
-  - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
+  - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images --keep-only-failed-images
 after_success:
   - coveralls
 notifications:
