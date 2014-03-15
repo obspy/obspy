@@ -1485,7 +1485,7 @@ def _pitick2latex(x):
     """
     # safety check, if no multiple of pi/2 return normal representation
     if x % (pi / 2) != 0:
-        return "%.3g" % x
+        return "%#.3g" % x
     string = "$"
     if x < 0:
         string += "-"

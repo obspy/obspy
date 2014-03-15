@@ -112,9 +112,11 @@ class ResponseTest(unittest.TestCase):
         self.assertEqual(_pitick2latex(0 * pi / 2), r'$0$')
         self.assertEqual(_pitick2latex(-1 * pi / 2), r'$-\frac{\pi}{2}$')
         self.assertEqual(_pitick2latex(-2 * pi / 2), r'$-\pi$')
-        self.assertEqual(_pitick2latex(0.5), r'0.5')
-        self.assertEqual(_pitick2latex(300 * pi + 0.01), r'9.4e+02')
-        self.assertEqual(_pitick2latex(3000 * pi + 0.01), r'9.4e+03')
+        self.assertEqual(_pitick2latex(0.5), r'0.500')
+        self.assertEqual(_pitick2latex(3 * pi + 0.01), r'9.43')
+        self.assertEqual(_pitick2latex(30 * pi + 0.01), r'94.3')
+        self.assertEqual(_pitick2latex(300 * pi + 0.01), r'942.')
+        self.assertEqual(_pitick2latex(3000 * pi + 0.01), r'9.42e+03')
 
     @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
             'nose not installed, matplotlib too old or basemap not installed')
