@@ -518,7 +518,7 @@ class Inventory(ComparingObject):
         if legend is not None and color_per_network:
             ax = fig.axes[0]
             count = len(ax.collections)
-            for code, color in color_per_network.items():
+            for code, color in sorted(color_per_network.items()):
                 ax.scatter([0], [0], size, color, label=code, marker=marker)
             ax.legend(loc=legend, fancybox=True, scatterpoints=1,
                       fontsize="medium", markerscale=0.8, handletextpad=0.1)
