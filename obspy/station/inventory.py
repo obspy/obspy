@@ -485,7 +485,7 @@ class Inventory(ComparingObject):
             codes = set([n.code for n in inv])
             nums = np.linspace(0, 1, endpoint=False, num=len(codes))
             color_per_network = dict([(code, cmap(n))
-                                      for code, n in zip(codes, nums)])
+                                      for code, n in zip(sorted(codes), nums)])
 
         for net in inv:
             for sta in net:
