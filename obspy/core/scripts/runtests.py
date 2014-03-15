@@ -564,6 +564,12 @@ def run(interactive=True):
                       dest="keep_images", action="store_true",
                       help="store images created during image comparison "
                            "tests in subfolders of baseline images")
+    report.add_option("--keep-only-failed-images", default=False,
+                      dest="keep_only_failed_images", action="store_true",
+                      help="when storing images created during testing, only "
+                           "store failed images and the corresponding diff "
+                           "images (but not images that passed the "
+                           "corresponding test).")
     report.add_option("--no-flake8", default=False,
                       dest="no_flake8", action="store_true",
                       help="skip code formatting test")
@@ -601,6 +607,8 @@ def run(interactive=True):
         interactive = False
     if options.keep_images:
         os.environ['OBSPY_KEEP_IMAGES'] = ""
+    if options.keep_only_failed_images:
+        os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
     if options.no_flake8:
         os.environ['OBSPY_NO_FLAKE8'] = ""
     return runTests(
