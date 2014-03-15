@@ -460,7 +460,13 @@ class CatalogTestCase(unittest.TestCase):
         parameters.
         """
         cat = readEvents()
-        with ImageComparison(self.image_dir, "catalog3.png") as ic:
+        reltol = 1
+        # some ticklabels are slightly offset on py 3.3.3 in travis..
+        # e.g. see http://tests.obspy.org/13309/#1
+        if (sys.version_info.major, sys.version_info.minor) == (3, 3):
+            reltol = 5
+        with ImageComparison(self.image_dir, "catalog3.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name, projection="local",
                      resolution="i", continent_fill_color="0.3",
