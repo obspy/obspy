@@ -811,7 +811,7 @@ class SeedLinkConnection(object):
                     self.connect()
                     self.state.state = SLState.SL_UP
                 except Exception as e:
-                    logger.error(e.value)
+                    logger.error(str(e))
                     #traceback.print_exc()
                 self.state.netto_trig = -1
                 self.state.netdly_trig = -1
