@@ -54,6 +54,7 @@ libraries and applications, our build tools and our web sites.
     * Arthur Snoke
     * Stefan Stange
     * Chad Trabant
+    * Tommaso Fabbri
     * Leonardo Uieda
     * Marcus Walther
     * Joachim Wassermann
