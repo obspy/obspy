@@ -811,7 +811,10 @@ class SeedLinkConnection(object):
                     self.connect()
                     self.state.state = SLState.SL_UP
                 except Exception as e:
-                    logger.error(e.value)
+                    try:
+                    	logger.error(e.value)
+                    except AttributeError:
+                    	logger.error("timeout object has no attribute value")
                     #traceback.print_exc()
                 self.state.netto_trig = -1
                 self.state.netdly_trig = -1
