@@ -26,12 +26,6 @@ import doctest
 import shutil
 import warnings
 
-# pyflakes autodetection of PY2 does not work with the future library.
-# Therefore, overwrite the pyflakes autodetection manually
-if PY2:
-    import pyflakes.checker
-    pyflakes.checker.PY2 = True
-
 
 def add_unittests(testsuite, module_name):
     """
@@ -324,6 +318,12 @@ else:
 def check_flake8():
     if not HAS_FLAKE8:
         raise Exception('flake8 is required to check code formatting')
+
+    # pyflakes autodetection of PY2 does not work with the future library.
+    # Therefore, overwrite the pyflakes autodetection manually
+    if PY2:
+        import pyflakes.checker
+        pyflakes.checker.PY2 = True
     import flake8.main
     from flake8.engine import get_style_guide
 
