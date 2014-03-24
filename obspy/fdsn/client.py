@@ -11,6 +11,7 @@ FDSN Web service client for ObsPy.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
+import copy
 from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import open
@@ -42,6 +43,10 @@ class Client(object):
 
     For details see the :meth:`~obspy.fdsn.client.Client.__init__()` method.
     """
+    # Dictionary caching any discovered service. Therefore repeatedly
+    # initializing a client with the same base URL is cheap.
+    __service_discovery_cache = {}
+
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
                  timeout=120, service_mappings=None):
@@ -1007,6 +1012,13 @@ class Client(object):
             urls.append(self._build_url("event", "catalogs"))
             urls.append(self._build_url("event", "contributors"))
 
+        # Access cache if available.
+        url_hash = "-".join(map(str, urls))
+        if url_hash in self.__service_discovery_cache:
+            self.services = copy.deepcopy(
+                self.__service_discovery_cache[url_hash])
+            return
+
         # Request all in parallel.
         wadl_queue = queue.Queue()
 
@@ -1075,6 +1087,10 @@ class Client(object):
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
             raise FDSNException(msg)
+
+        # Cache.
+        self.__service_discovery_cache[url_hash] = \
+            copy.deepcopy(self.services)
 
     def get_webservice_version(self, service):
         """
