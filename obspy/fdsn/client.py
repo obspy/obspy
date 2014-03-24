@@ -40,19 +40,7 @@ class Client(object):
     """
     FDSN Web service request client.
 
-    >>> client = Client("IRIS")
-    >>> print(client)  # doctest: +SKIP
-    FDSN Webservice Client (base url: http://service.iris.edu)
-    Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
-    'station' (v1.0.7), 'available_event_contributors',
-    'available_event_catalogs'
-    <BLANKLINE>
-    Use e.g. client.help('dataselect') for the
-    parameter description of the individual services
-    or client.help() for parameter description of
-    all webservices.
-
-    For details see  :meth:`~obspy.fdsn.client.Client.__init__()`.
+    For details see the :meth:`~obspy.fdsn.client.Client.__init__()` method.
     """
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
@@ -61,12 +49,11 @@ class Client(object):
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print(client)  # doctest: +SKIP
+        >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
-        Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
-        'station' (v1.0.7), 'available_event_contributors',
+        Available Services: 'dataselect' (v...), 'event' (v...),
+        'station' (v...), 'available_event_contributors',
         'available_event_catalogs'
-        <BLANKLINE>
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services
         or client.help() for parameter description of
@@ -483,7 +470,7 @@ class Client(object):
         ...                           attach_response=True)
         >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at ...>
-        >>> st.plot()
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -660,7 +647,7 @@ class Client(object):
         >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
         >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at ...>
-        >>> st.plot()
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
