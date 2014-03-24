@@ -52,38 +52,7 @@ class Client(object):
     or client.help() for parameter description of
     all webservices.
 
-    :type base_url: str
-    :param base_url: Base URL of FDSN web service compatible server
-        (e.g. "http://service.iris.edu") or key string for recognized
-        server (one of %s)
-    :type major_versions: dict
-    :param major_versions: Allows to specify custom major version numbers
-        for individual services (e.g.
-        `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
-        latest version at time of implementation will be used.
-    :type user: str
-    :param user: User name of HTTP Digest Authentication for access to
-        restricted data.
-    :type password: str
-    :param password: Password of HTTP Digest Authentication for access to
-        restricted data.
-    :type user_agent: str
-    :param user_agent: The user agent for all requests.
-    :type debug: bool
-    :param debug: Debug flag.
-    :type timeout: float
-    :param timeout: Maximum time (in seconds) to wait for a single request to
-        finish (after which an exception is raised).
-    :type service_mappings: dict
-    :param service_mappings: For advanced use only. Allows the direct
-        setting of the endpoints of the different services. (e.g.
-        ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
-        Valid keys are ``event``, ``station``, and ``dataselect``. This will
-        overwrite the ``base_url`` and ``major_versions`` arguments. For all
-        services not specified, the default default locations indicated by
-        ``base_url`` and ``major_versions`` will be used. Any service that is
-        manually specified as ``None`` (e.g.
-        ``service_mappings={'event': None}``) will be deactivated.
+    For details see  :meth:`~obspy.fdsn.client.Client.__init__()`.
     """
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
@@ -103,7 +72,38 @@ class Client(object):
         or client.help() for parameter description of
         all webservices.
 
-        For details see :class:`Client`.
+        :type base_url: str
+        :param base_url: Base URL of FDSN web service compatible server
+            (e.g. "http://service.iris.edu") or key string for recognized
+            server (one of %s).
+        :type major_versions: dict
+        :param major_versions: Allows to specify custom major version numbers
+            for individual services (e.g.
+            `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
+            latest version at time of implementation will be used.
+        :type user: str
+        :param user: User name of HTTP Digest Authentication for access to
+            restricted data.
+        :type password: str
+        :param password: Password of HTTP Digest Authentication for access to
+            restricted data.
+        :type user_agent: str
+        :param user_agent: The user agent for all requests.
+        :type debug: bool
+        :param debug: Debug flag.
+        :type timeout: float
+        :param timeout: Maximum time (in seconds) to wait for a single request
+            to finish (after which an exception is raised).
+        :type service_mappings: dict
+        :param service_mappings: For advanced use only. Allows the direct
+            setting of the endpoints of the different services. (e.g.
+            ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
+            Valid keys are ``event``, ``station``, and ``dataselect``. This
+            will overwrite the ``base_url`` and ``major_versions`` arguments.
+            For all services not specified, the default default locations
+            indicated by ``base_url`` and ``major_versions`` will be used. Any
+            service that is manually specified as ``None`` (e.g.
+            ``service_mappings={'event': None}``) will be deactivated.
         """
         self.debug = debug
         self.user = user
@@ -461,34 +461,23 @@ class Client(object):
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = t1 + 1
-        >>> st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t1, t2)
-        >>> print(st)  # doctest: +ELLIPSIS
-        1 Trace(s) in Stream:
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveforms("IU", "ANMO", "00", "BH*", t1, t2)
+        >>> t2 = t1 + 5
+        >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t1, t2)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ANMO.00.BH2 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveforms("IU", "A*", "*", "BHZ", t1, t2)
-        >>> print(st)  # doctest: +ELLIPSIS
-        7 Trace(s) in Stream:
-        IU.ADK.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ADK.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.AFI.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.AFI.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.ANTO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveforms("IU", "A??", "?0", "BHZ", t1, t2)
+        IU.ANMO.00.LHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+
+        The services can deal with UNIX style wildcards.
+
+        >>> st = client.get_waveforms("IU", "A*", "?0", "LHZ", t1, t2)
         >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         IU.ADK.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
         IU.AFI.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
         IU.AFI.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+
+        The ``attach_response`` keyword argument
         >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
         >>> st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
         ...                           attach_response=True)
