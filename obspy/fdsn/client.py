@@ -1015,6 +1015,8 @@ class Client(object):
         # Access cache if available.
         url_hash = "-".join(map(str, urls))
         if url_hash in self.__service_discovery_cache:
+            if self.debug is True:
+                print("Loading discovered services from cache.")
             self.services = copy.deepcopy(
                 self.__service_discovery_cache[url_hash])
             return
@@ -1089,6 +1091,8 @@ class Client(object):
             raise FDSNException(msg)
 
         # Cache.
+        if self.debug is True:
+            print("Storing discovered services in cache.")
         self.__service_discovery_cache[url_hash] = \
             copy.deepcopy(self.services)
 
