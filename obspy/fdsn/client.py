@@ -1013,7 +1013,7 @@ class Client(object):
             urls.append(self._build_url("event", "contributors"))
 
         # Access cache if available.
-        url_hash = "-".join(map(str, urls))
+        url_hash = frozenset(urls)
         if url_hash in self.__service_discovery_cache:
             if self.debug is True:
                 print("Loading discovered services from cache.")
