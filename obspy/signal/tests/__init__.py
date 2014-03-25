@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+import warnings
 import unittest
 from obspy.core.util import add_doctests, add_unittests
 
@@ -9,8 +11,13 @@ MODULE_NAME = "obspy.signal"
 
 def suite():
     suite = unittest.TestSuite()
-    add_doctests(suite, MODULE_NAME)
-    add_unittests(suite, MODULE_NAME)
+    with warnings.catch_warnings(record=True):
+        warnings.filterwarnings(
+            'ignore', 'Module obspy.signal.psd is deprecated! '
+            'Use obspy.signal.spectral_estimation instead or import directly '
+            '"from obspy.signal import ...".', category=DeprecationWarning)
+        add_doctests(suite, MODULE_NAME)
+        add_unittests(suite, MODULE_NAME)
     return suite
 
 

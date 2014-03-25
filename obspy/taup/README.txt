@@ -5,7 +5,7 @@ Copyright
 ---------
 License unknown!
 
-Copyright (c) 2011-2012 by:
+Copyright (c) 2011-2013 by:
     * Lion Krischer
     * Chris Scheingraber
     * Robert Barsch

@@ -19,7 +19,7 @@ Basic Usage
     >>> from obspy.earthworm import Client
     >>> client = Client("pele.ess.washington.edu", 16017)
     >>> response = client.availability("UW", "TUCA", channel="BHZ")
-    >>> print response  # doctest: #SKIP
+    >>> print response  # doctest: +SKIP
     [('UW',
       'TUCA',
       '--',
@@ -33,15 +33,17 @@ Basic Usage
     .. plot::
 
         from obspy.earthworm import Client
-        from obspy.core import UTCDateTime
-        client = Client("pele.ess.washington.edu", 16017)
+        from obspy import UTCDateTime
+        client = Client("pele.ess.washington.edu", 16017, timeout=5)
         response = client.availability("UW", "TUCA", channel="BHZ")
         t = response[0][4]
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

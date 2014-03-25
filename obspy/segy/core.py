@@ -8,7 +8,12 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.core import Stream, Trace, UTCDateTime, AttribDict
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import super
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
@@ -21,6 +26,8 @@ from obspy.segy.util import unpack_header_value
 
 import numpy as np
 from struct import unpack
+from copy import deepcopy
+import warnings
 
 
 # Valid data format codes as specified in the SEGY rev1 manual.
@@ -60,25 +67,24 @@ def isSEGY(filename):
     # greater than 0 and that the number of samples per trace is greater than
     # 0.
     try:
-        temp = open(filename, 'rb')
-        temp.seek(3212)
-        _number_of_data_traces = temp.read(2)
-        _number_of_auxiliary_traces = temp.read(2)
-        _sample_interval = temp.read(2)
-        temp.seek(2, 1)
-        _samples_per_trace = temp.read(2)
-        temp.seek(2, 1)
-        data_format_code = temp.read(2)
-        temp.seek(3500, 0)
-        _format_number = temp.read(2)
-        _fixed_length = temp.read(2)
-        _extended_number = temp.read(2)
-        temp.close()
+        with open(filename, 'rb') as fp:
+            fp.seek(3212)
+            _number_of_data_traces = fp.read(2)
+            _number_of_auxiliary_traces = fp.read(2)
+            _sample_interval = fp.read(2)
+            fp.seek(2, 1)
+            _samples_per_trace = fp.read(2)
+            fp.seek(2, 1)
+            data_format_code = fp.read(2)
+            fp.seek(3500, 0)
+            _format_number = fp.read(2)
+            _fixed_length = fp.read(2)
+            _extended_number = fp.read(2)
     except:
         return False
     # Unpack using big endian first and check if it is valid.
     try:
-        format = unpack('>h', data_format_code)[0]
+        format = unpack(b'>h', data_format_code)[0]
     except:
         return False
     if format in VALID_FORMATS:
@@ -87,20 +93,21 @@ def isSEGY(filename):
     # both yield a valid data sample format code because they are restricted to
     # be between 1 and 8.
     else:
-        format = unpack('<h', data_format_code)[0]
+        format = unpack(b'<h', data_format_code)[0]
         if format in VALID_FORMATS:
             _endian = '<'
         else:
             return False
     # Check if the sample interval and samples per Trace make sense.
-    _sample_interval = unpack('%sh' % _endian, _sample_interval)[0]
-    _samples_per_trace = unpack('%sh' % _endian, _samples_per_trace)[0]
-    _number_of_data_traces = unpack('%sh' % _endian, _number_of_data_traces)[0]
-    _number_of_auxiliary_traces = unpack('%sh' % _endian,
+    fmt = ('%sh' % _endian).encode('ascii', 'strict')
+    _sample_interval = unpack(fmt, _sample_interval)[0]
+    _samples_per_trace = unpack(fmt, _samples_per_trace)[0]
+    _number_of_data_traces = unpack(fmt, _number_of_data_traces)[0]
+    _number_of_auxiliary_traces = unpack(fmt,
                                          _number_of_auxiliary_traces)[0]
-    _format_number = unpack('%sh' % _endian, _format_number)[0]
-    _fixed_length = unpack('%sh' % _endian, _fixed_length)[0]
-    _extended_number = unpack('%sh' % _endian, _extended_number)[0]
+    _format_number = unpack(fmt, _format_number)[0]
+    _fixed_length = unpack(fmt, _fixed_length)[0]
+    _extended_number = unpack(fmt, _extended_number)[0]
     # Make some sanity checks and return False if they fail.
     # Unfortunately the format number is 0 in many files so it cannot be truly
     # tested.
@@ -145,7 +152,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/00001034.sgy_first_trace")
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
@@ -166,7 +173,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
     textual_file_header = segy_object.textual_file_header
     # The binary file header will be a new AttribDict
     binary_file_header = AttribDict()
-    for key, value in segy_object.binary_file_header.__dict__.iteritems():
+    for key, value in segy_object.binary_file_header.__dict__.items():
         setattr(binary_file_header, key, value)
     # Get the data encoding and the endianness from the first trace.
     data_encoding = segy_object.traces[0].data_encoding
@@ -197,7 +204,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
         if unpack_trace_headers:
             # Add the trace header as a new attrib dictionary.
             header = AttribDict()
-            for key, value in tr.header.__dict__.iteritems():
+            for key, value in tr.header.__dict__.items():
                 setattr(header, key, value)
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
@@ -211,8 +218,8 @@ def readSEGY(filename, headonly=False, byteorder=None,
         tr_header = trace.stats.segy.trace_header
         if tr_header.sample_interval_in_ms_for_this_trace > 0:
             trace.stats.delta = \
-                    float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                    1E6
+                float(tr.header.sample_interval_in_ms_for_this_trace) / \
+                1E6
         # If the year is not zero, calculate the start time. The end time is
         # then calculated from the start time and the sampling rate.
         if tr_header.year_data_recorded > 0:
@@ -231,8 +238,9 @@ def readSEGY(filename, headonly=False, byteorder=None,
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
             second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(year=year, julday=julday,
-                                    hour=hour, minute=minute, second=second)
+            trace.stats.starttime = UTCDateTime(
+                year=year, julday=julday, hour=hour, minute=minute,
+                second=second)
     return stream
 
 
@@ -307,7 +315,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         if hasattr(stream, 'stats') and hasattr(stream.stats, 'data_encoding'):
             data_encoding = stream.stats.data_encoding
         if hasattr(stream, 'stats') and hasattr(stream.stats,
-                                              'binary_file_header'):
+                                                'binary_file_header'):
             data_encoding = \
                 stream.stats.binary_file_header.data_sample_format_code
         # Set it to float if it in not given.
@@ -318,7 +326,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     if not hasattr(stream, 'stats'):
         stream.stats = AttribDict()
     if not hasattr(stream.stats, 'textual_file_header'):
-        stream.stats.textual_file_header = ""
+        stream.stats.textual_file_header = b""
     if not hasattr(stream.stats, 'binary_file_header'):
         stream.stats.binary_file_header = SEGYBinaryFileHeader()
 
@@ -353,8 +361,8 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     # Map the byteorder.
     byteorder = ENDIAN[byteorder]
     if textual_header_encoding is None:
-        if hasattr(stream, 'stats') and hasattr(stream.stats,
-                                            'textual_file_header_encoding'):
+        if hasattr(stream, 'stats') and hasattr(
+                stream.stats, 'textual_file_header_encoding'):
             textual_header_encoding = \
                 stream.stats.textual_file_header_encoding
         else:
@@ -365,7 +373,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     # Set the file wide headers.
     segy_file.textual_file_header = stream.stats.textual_file_header
     segy_file.textual_header_encoding = \
-            textual_header_encoding
+        textual_header_encoding
     binary_header = SEGYBinaryFileHeader()
     this_binary_header = stream.stats.binary_file_header
     # Loop over all items and if they exists set them. Ignore all other
@@ -382,11 +390,11 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         new_trace.data = trace.data
         # Create empty trace header if none is there.
         if not hasattr(trace.stats, 'segy'):
-            print "CREATING TRACE HEADER"
+            warnings.warn("CREATING TRACE HEADER")
             trace.stats.segy = {}
             trace.stats.segy.trace_header = SEGYTraceHeader(endian=byteorder)
         elif not hasattr(trace.stats.segy, 'trace_header'):
-            print "CREATING TRACE HEADER"
+            warnings.warn("CREATING TRACE HEADER")
             trace.stats.segy.trace_header = SEGYTraceHeader()
         this_trace_header = trace.stats.segy.trace_header
         new_trace_header = new_trace.header
@@ -473,7 +481,7 @@ def readSU(filename, headonly=False, byteorder=None,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/1.su_first_trace")
     >>> st #doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
@@ -506,7 +514,7 @@ def readSU(filename, headonly=False, byteorder=None,
         if unpack_trace_headers:
             # Add the trace header as a new attrib dictionary.
             header = AttribDict()
-            for key, value in tr.header.__dict__.iteritems():
+            for key, value in tr.header.__dict__.items():
                 setattr(header, key, value)
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
@@ -522,8 +530,8 @@ def readSU(filename, headonly=False, byteorder=None,
         tr_header = trace.stats.su.trace_header
         if tr_header.sample_interval_in_ms_for_this_trace > 0:
             trace.stats.delta = \
-                    float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                    1E6
+                float(tr.header.sample_interval_in_ms_for_this_trace) / \
+                1E6
         # If the year is not zero, calculate the start time. The end time is
         # then calculated from the start time and the sampling rate.
         # 99 is often used as a placeholder.
@@ -544,8 +552,9 @@ def readSU(filename, headonly=False, byteorder=None,
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
             second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(year=year, julday=julday,
-                                    hour=hour, minute=minute, second=second)
+            trace.stats.starttime = UTCDateTime(
+                year=year, julday=julday, hour=hour, minute=minute,
+                second=second)
     return stream
 
 
@@ -593,7 +602,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     # Figure out endianness and the encoding of the textual file header.
     if byteorder is None:
         if hasattr(stream[0].stats, 'su') and hasattr(stream[0].stats.su,
-                                                        'endian'):
+                                                      'endian'):
             byteorder = stream[0].stats.su.endian
         else:
             byteorder = '>'
@@ -621,7 +630,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
         # Set some special attributes, e.g. the sample count and other stuff.
         new_trace_header.number_of_samples_in_this_trace = trace.stats.npts
         new_trace_header.sample_interval_in_ms_for_this_trace = \
-                int(round((trace.stats.delta * 1E6)))
+            int(round((trace.stats.delta * 1E6)))
         # Set the date of the Trace if it is not UTCDateTime(0).
         if starttime == UTCDateTime(0):
             new_trace.header.year_data_recorded = 0
@@ -650,30 +659,31 @@ def __segy_trace__str__(self, *args, **kwargs):
     number within the line.
     """
     try:
-        out = "%s" % ('Seq. No. in line: %4i' % \
-             self.stats.segy.trace_header.trace_sequence_number_within_line)
-    except KeyError:
+        out = "%s" % (
+            'Seq. No. in line: %4i' %
+            self.stats.segy.trace_header.trace_sequence_number_within_line)
+    except (KeyError, AttributeError):
         # fall back if for some reason the segy attribute does not exists
         return getattr(Trace, '__original_str__')(self, *args, **kwargs)
     # output depending on delta or sampling rate bigger than one
     if self.stats.sampling_rate < 0.1:
-        if hasattr(self.stats, 'preview')  and self.stats.preview:
+        if hasattr(self.stats, 'preview') and self.stats.preview:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(delta).1f s, %(npts)d samples [preview]"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(delta).1f s, %(npts)d samples [preview]"
         else:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(delta).1f s, %(npts)d samples"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(delta).1f s, %(npts)d samples"
     else:
-        if hasattr(self.stats, 'preview')  and self.stats.preview:
+        if hasattr(self.stats, 'preview') and self.stats.preview:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
         else:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(sampling_rate).1f Hz, %(npts)d samples"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(sampling_rate).1f Hz, %(npts)d samples"
     # check for masked array
     if np.ma.count_masked(self.data):
         out += ' (masked)'
@@ -722,6 +732,13 @@ class LazyTraceHeaderAttribDict(AttribDict):
 
     __getattr__ = __getitem__
 
+    def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable, see #689
+        ad = self.__class__(
+            unpacked_header=deepcopy(self.__dict__['unpacked_header']),
+            unpacked_header_endian=deepcopy(self.__dict__['endian']),
+            data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
+                      if k not in ('unpacked_data', 'endian')))
+        return ad
 
 if __name__ == '__main__':
     import doctest

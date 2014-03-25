@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+   <doc title="SeismicPortal FDSN event web service 1.0.1"/>
+   <resources base="http://www.seismicportal.eu/fdsnws/event/1/">
+      <resource path="">
+         <method id="index" name="GET">
+			<doc>This documentation</doc>
+            <response>
+               <representation mediaType="text/html"/>               
+            </response>
+         </method>
+	  </resource>	 
+	
+	 <resource path="counts">
+		<method id="counts" name="GET">
+			<doc>Return the total number of events found</doc>
+		   <request>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="starttime" style="query" type="xs:date">
+				 <doc xml:lang="english">limit to events occurring on or after the specified start time.Examples: starttime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="endtime" style="query" type="xs:date">
+				 <doc xml:lang="english">limit to events occurring on or before the specified end time</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minlatitude" style="query" type="xs:double" >
+				 <doc xml:lang="english">southern boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxlatitude" style="query" type="xs:double">
+				 <doc xml:lang="english">northern boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minlongitude" style="query" type="xs:double">
+				 <doc xml:lang="english">western boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxlongitude" style="query" type="xs:double">
+				 <doc xml:lang="english">eastern boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minmagnitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with a magnitude larger than or equal to the specified minimum</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxmagnitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with a magnitude smaller than or equal to the specified maximum</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magtype" style="query" type="xs:string">
+				 <doc xml:lang="english" >Type of Magnitude used to test minimum and maximum limits (case insensitive). Examples: Ml,Ms,mb,Mw</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="catalog" style="query" type="xs:string">
+				 <doc xml:lang="english">Specify the catalog from which origins and magnitudes will be retrieved. See available catalogs at : http://www.seismicportal/fdsnws/event/1/catalogs</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="contributor" style="query" type="xs:string">
+				 <doc xml:lang="english" >Limit to events contributed by a specified contributor. See available catalogs at : http://www.seismicportal/fdsnws/event/1/contributors</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxdepth" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with depths equal to or less than the specified depth</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="mindepth" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with depths equal to or greater than the specified depth</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="latitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify the central latitude point for a radial search</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="longitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify the central longitude point for a radial search</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxradius" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify maximum distance from the geographic point defined by latitude and longitude</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minradius" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify minimum distance from the geographic point defined by latitude and longitude</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="updatedafter" style="query" type="xs:date">
+				 <doc xml:lang="english">Limit to events updated after the specified time</doc>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="format" style="query" type="xs:string" default="quakeml">
+				 <doc xml:lang="english">output format of the response. jsonp needs the callback param</doc>
+				 <option value="quakeml" mediaType="application/xml"/>
+				 <option value="json" mediaType="application/javascript"/>
+				 <option value="jsonp" mediaType="application/json"/>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="callback" style="query" type="xs:string">
+				 <doc xml:lang="english">javascript callback method name. used when output format is jsonp</doc>
+			  </param>
+			  
+		   </request>
+		   <response>
+			  <representation mediaType="application/json"/>
+			  <representation mediaType="application/javascript"/>
+			  <representation mediaType="application/xml"/>
+		   </response>
+		</method>
+	 </resource>
+	 
+	 <resource path="query">
+		<method id="query" name="GET">
+		   <doc>Return the events found</doc>
+		   <request>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="starttime" style="query" type="xs:date">
+				 <doc xml:lang="english">limit to events occurring on or after the specified start time.Examples: starttime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="endtime" style="query" type="xs:date">
+				 <doc xml:lang="english">limit to events occurring on or before the specified end time</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minlatitude" style="query" type="xs:double" >
+				 <doc xml:lang="english">southern boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxlatitude" style="query" type="xs:double">
+				 <doc xml:lang="english">northern boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minlongitude" style="query" type="xs:double">
+				 <doc xml:lang="english">western boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxlongitude" style="query" type="xs:double">
+				 <doc xml:lang="english">eastern boundary</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minmagnitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with a magnitude larger than or equal to the specified minimum</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxmagnitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with a magnitude smaller than or equal to the specified maximum</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magtype" style="query" type="xs:string">
+				 <doc xml:lang="english" >Type of Magnitude used to test minimum and maximum limits (case insensitive). Examples: Ml,Ms,mb,Mw</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="catalog" style="query" type="xs:string">
+				 <doc xml:lang="english">Specify the catalog from which origins and magnitudes will be retrieved. See available catalogs at : http://www.seismicportal/fdsnws/event/1/catalogs</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="contributor" style="query" type="xs:string">
+				 <doc xml:lang="english" >Limit to events contributed by a specified contributor. See available catalogs at : http://www.seismicportal/fdsnws/event/1/contributors</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxdepth" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with depths equal to or less than the specified depth</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="mindepth" style="query" type="xs:double">
+				 <doc xml:lang="english">Limit to events with depths equal to or greater than the specified depth</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="latitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify the central latitude point for a radial search</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="longitude" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify the central longitude point for a radial search</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxradius" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify maximum distance from the geographic point defined by latitude and longitude</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minradius" style="query" type="xs:double">
+				 <doc xml:lang="english">Specify minimum distance from the geographic point defined by latitude and longitude</doc>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="updatedafter" style="query" type="xs:date">
+				 <doc xml:lang="english">Limit to events updated after the specified time</doc>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="orderby" style="query" type="xs:string" default="time">
+				 <doc xml:lang="english" title="Specify the ordering of the returned results"/>
+				 <option value="time">
+					<doc xml:lang="english" title="Sort by time, descending"/>
+				 </option>
+				 <option value="magnitude">
+					<doc xml:lang="english" title="Sort by magnitude, descending"/>
+				 </option>
+				 <option value="time-asc">
+					<doc xml:lang="english" title="Sort by time, ascending"/>
+				 </option>
+				 <option value="magnitude-asc">
+					<doc xml:lang="english" title="Sort by magnitude, ascending"/>
+				 </option>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="eventid" style="query" type="xs:long">
+				 <doc xml:lang="english" title="Retrieve an event based on the unique ID numbers assigned by the SeismicPortal. ex : 20131030_0000001"/>
+			  </param>
+			  <!--
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="originid" style="query" type="xs:long">
+				 <doc xml:lang="english" title="Retrieve an event based on the unique origin ID numbers assigned by EMSC"/>
+			  </param>
+			  -->
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includearrivals" style="query" type="xs:boolean" default="false">
+				 <doc xml:lang="english" title="Specify if phase arrivals should be included"/>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includeallmagnitudes" style="query" type="xs:boolean" default="false">
+				 <doc xml:lang="english" title="Retrieve all magnitudes for the event, or only the primary magnitude from within the catalog"/>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includeallorigins" style="query" type="xs:boolean" default="false">
+				 <doc xml:lang="english" title="Retrieve all origins or only the primary origin associated with each event in a catalog"/>
+			  </param>
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="limit" style="query" type="xs:int">
+				 <doc xml:lang="english" title="Limit the results to the specified number of events"/>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="offset" style="query" type="xs:int">
+				 <doc xml:lang="english">Return results starting at the event count specified</doc>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="format" style="query" type="xs:string" default="quakeml">
+				 <doc xml:lang="english">Specify output format. This is an EMSC extension to the FDSN specification</doc>
+				 <option value="quakeml" mediaType="application/xml"/>
+				 <option value="json" mediaType="application/json"/>
+				 <option value="jsonp" mediaType="application/javascript"/>
+			  </param>
+			  
+			  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="callback" style="query" type="xs:string">
+				 <doc xml:lang="english">javascript callback method name. used when output format is jsonp. This is an EMSC extension to the FDSN specification</doc>
+			  </param>
+		   </request>
+		   <response>			   
+			  <representation mediaType="application/json"/>
+			  <representation mediaType="application/javascript"/>
+			  <representation mediaType="application/xml"/>
+		   </response>
+		</method>
+	 </resource>
+	 
+	 <resource path="version">
+		<method id="version" name="GET">
+		<doc>Return the version number of this Web Services</doc>
+		   <response>
+			  <representation mediaType="text/plain"/>
+		   </response>
+		</method>
+	 </resource>
+	 
+	 <resource path="catalogs">
+		<method id="catalogs" name="GET">
+			<doc>Return the available catalogs name</doc>
+		   <response>
+			  <representation mediaType="application/xml"/>
+		   </response>
+		</method>
+	 </resource>
+	 
+	 <resource path="contributors">	 
+		<method id="contributors" name="GET">
+			<doc>Return the contributors list</doc>
+		   <response>
+			  <representation mediaType="application/xml"/>
+		   </response>
+		</method>
+	 </resource>
+		 
+      
+   </resources>
+</application>
+

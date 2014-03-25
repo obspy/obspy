@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.geodetics import kilometer2degrees, locations2degrees, \
@@ -8,7 +10,7 @@ import warnings
 
 # checking for geographiclib
 try:
-    import geographiclib  # @UnusedImport
+    import geographiclib  # @UnusedImport # NOQA
     HAS_GEOGRAPHICLIB = True
 except ImportError:
     HAS_GEOGRAPHICLIB = False
@@ -35,17 +37,17 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertRaises(StopIteration, calcVincentyInverse, 0, 0, 0, 13)
         # working examples
         res = calcVincentyInverse(0, 0.2, 0, 20)
-        self.assertAlmostEquals(res[0], 2204125.9174282863)
-        self.assertAlmostEquals(res[1], 90.0)
-        self.assertAlmostEquals(res[2], 270.0)
+        self.assertAlmostEqual(res[0], 2204125.9174282863)
+        self.assertAlmostEqual(res[1], 90.0)
+        self.assertAlmostEqual(res[2], 270.0)
         res = calcVincentyInverse(0, 0, 0, 10)
-        self.assertAlmostEquals(res[0], 1113194.9077920639)
-        self.assertAlmostEquals(res[1], 90.0)
-        self.assertAlmostEquals(res[2], 270.0)
+        self.assertAlmostEqual(res[0], 1113194.9077920639)
+        self.assertAlmostEqual(res[1], 90.0)
+        self.assertAlmostEqual(res[2], 270.0)
         res = calcVincentyInverse(0, 0, 0, 17)
-        self.assertAlmostEquals(res[0], 1892431.3432465086)
-        self.assertAlmostEquals(res[1], 90.0)
-        self.assertAlmostEquals(res[2], 270.0)
+        self.assertAlmostEqual(res[0], 1892431.3432465086)
+        self.assertAlmostEqual(res[1], 90.0)
+        self.assertAlmostEqual(res[2], 270.0)
         # out of bounds
         self.assertRaises(ValueError, calcVincentyInverse, 91, 0, 0, 0)
         self.assertRaises(ValueError, calcVincentyInverse, -91, 0, 0, 0)
@@ -60,9 +62,9 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         # nearly antipodal points
         result = gps2DistAzimuth(15.26804251, 2.93007342, -14.80522806,
                                  -177.2299081)
-        self.assertAlmostEquals(result[0], 19951425.048688546)
-        self.assertAlmostEquals(result[1], 8.65553241932755)
-        self.assertAlmostEquals(result[2], 351.36325485132306)
+        self.assertAlmostEqual(result[0], 19951425.048688546)
+        self.assertAlmostEqual(result[1], 8.65553241932755)
+        self.assertAlmostEqual(result[2], 351.36325485132306)
         # out of bounds
         self.assertRaises(ValueError, gps2DistAzimuth, 91, 0, 0, 0)
         self.assertRaises(ValueError, gps2DistAzimuth, -91, 0, 0, 0)
@@ -134,9 +136,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         """
         # Inline method to avoid messy code.
         def assertLoc(lat1, long1, lat2, long2, approx_distance):
-            self.assertTrue( \
-            abs(math.radians(locations2degrees(lat1, long1, lat2, long2)) \
-                * 6371 - approx_distance) <= 20)
+            self.assertTrue(abs(math.radians(locations2degrees(
+                lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20)
 
         # Approximate values from the Great Circle Calculator:
         #   http://williams.best.vwh.net/gccalc.htm
@@ -164,22 +165,21 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         assertLoc(0, 0, 0, 180, 20004)
         assertLoc(11, 55, 11, 55, 0)
 
+    @skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not installed')
     def test_issue_375(self):
         """
         Test for #375.
         """
-        if not HAS_GEOGRAPHICLIB:
-            return
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
         self.assertEqual(round(azim, 0), 32)
         self.assertEqual(round(bazim, 0), 213)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 - 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 - 1)
         self.assertEqual(round(azim, 0), 328)
         self.assertEqual(round(bazim, 0), 147)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 + 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 + 1)
         self.assertEqual(round(azim, 0), 147)
         self.assertEqual(round(bazim, 0), 327)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 - 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 - 1)
         self.assertEqual(round(azim, 0), 213)
         self.assertEqual(round(bazim, 0), 33)
 

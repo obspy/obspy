@@ -19,7 +19,7 @@ format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
 http://examples.obspy.org.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/2001-01-13-1742-24S.KONO__004")
 >>> st  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
@@ -52,6 +52,7 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 >>> print(st[0].data)
 [  492   519   542 ..., -6960 -6858 24000]
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

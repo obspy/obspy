@@ -17,7 +17,6 @@
 		B4A45914140AE90300CEE334 /* obspy-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = B4A45913140AE90300CEE334 /* obspy-logo.png */; };
 		B4C3DAD6141920D500BDDEAC /* ApplicationDataModel.m in Sources */ = {isa = PBXBuildFile; fileRef = B4C3DAD5141920D500BDDEAC /* ApplicationDataModel.m */; };
 		B4C3DADE14192F0A00BDDEAC /* Hyperlink.m in Sources */ = {isa = PBXBuildFile; fileRef = B4C3DADD14192F0A00BDDEAC /* Hyperlink.m */; };
-		B4C3DAE014194E4700BDDEAC /* ObsPy.icns in Resources */ = {isa = PBXBuildFile; fileRef = B4C3DADF14194E4700BDDEAC /* ObsPy.icns */; };
 		B4D1974A14091C2500A86724 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4D1974914091C2500A86724 /* Cocoa.framework */; };
 		B4D1975414091C2500A86724 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B4D1975214091C2500A86724 /* InfoPlist.strings */; };
 		B4D1975614091C2500A86724 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B4D1975514091C2500A86724 /* main.m */; };
@@ -25,6 +24,7 @@
 		B4D1975D14091C2500A86724 /* ObsPyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B4D1975C14091C2500A86724 /* ObsPyAppDelegate.m */; };
 		B4D1976014091C2500A86724 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = B4D1975E14091C2500A86724 /* MainMenu.xib */; };
 		B4D9E084141E954B004387F7 /* TTYEmulation.m in Sources */ = {isa = PBXBuildFile; fileRef = B4D9E081141E954B004387F7 /* TTYEmulation.m */; };
+		B4DFD4F8188589E200F1B33A /* obspy.iconset in Resources */ = {isa = PBXBuildFile; fileRef = B4DFD4F7188589E200F1B33A /* obspy.iconset */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -52,7 +52,6 @@
 		B4C3DAD5141920D500BDDEAC /* ApplicationDataModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ApplicationDataModel.m; sourceTree = "<group>"; };
 		B4C3DADC14192F0A00BDDEAC /* Hyperlink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Hyperlink.h; sourceTree = "<group>"; };
 		B4C3DADD14192F0A00BDDEAC /* Hyperlink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Hyperlink.m; sourceTree = "<group>"; };
-		B4C3DADF14194E4700BDDEAC /* ObsPy.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ObsPy.icns; sourceTree = "<group>"; };
 		B4D1974514091C2500A86724 /* ObsPy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ObsPy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4D1974914091C2500A86724 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		B4D1974C14091C2500A86724 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -68,6 +67,7 @@
 		B4D1975F14091C2500A86724 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		B4D9E080141E954B004387F7 /* TTYEmulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TTYEmulation.h; sourceTree = "<group>"; };
 		B4D9E081141E954B004387F7 /* TTYEmulation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TTYEmulation.m; sourceTree = "<group>"; };
+		B4DFD4F7188589E200F1B33A /* obspy.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder.iconset; path = obspy.iconset; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,7 +96,6 @@
 		B4D1973A14091C2500A86724 = {
 			isa = PBXGroup;
 			children = (
-				B4C3DADF14194E4700BDDEAC /* ObsPy.icns */,
 				B4D1974F14091C2500A86724 /* ObsPy */,
 				B4D1974814091C2500A86724 /* Frameworks */,
 				B4D1974614091C2500A86724 /* Products */,
@@ -134,6 +133,7 @@
 		B4D1974F14091C2500A86724 /* ObsPy */ = {
 			isa = PBXGroup;
 			children = (
+				B4DFD4F7188589E200F1B33A /* obspy.iconset */,
 				B4D9E07E141E9535004387F7 /* Terminal Emulation */,
 				B4D1975B14091C2500A86724 /* ObsPyAppDelegate.h */,
 				B4D1975C14091C2500A86724 /* ObsPyAppDelegate.m */,
@@ -225,11 +225,11 @@
 				B4D1976014091C2500A86724 /* MainMenu.xib in Resources */,
 				B4A45914140AE90300CEE334 /* obspy-logo.png in Resources */,
 				B4512E681418182900279553 /* dsa_pub.pem in Resources */,
-				B4C3DAE014194E4700BDDEAC /* ObsPy.icns in Resources */,
 				B45969CE141FF2F3004E5DA9 /* numpy_tests.py in Resources */,
 				B45969CF141FF2F3004E5DA9 /* quick_test.py in Resources */,
 				B45969D0141FF2F3004E5DA9 /* scipy_tests.py in Resources */,
 				B49A7A3A142522D200059DDC /* prompt.png in Resources */,
+				B4DFD4F8188589E200F1B33A /* obspy.iconset in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

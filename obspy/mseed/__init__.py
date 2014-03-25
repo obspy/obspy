@@ -2,13 +2,14 @@
 """
 obspy.mseed - Mini-SEED read and write support
 ==============================================
-This module provides read and write support for `Mini-SEED
-<http://www.iris.edu/manuals/SEED_appG.htm>`_ waveform data and some other
-convenient methods to handle Mini-SEED files. Most methods are based on
-`libmseed <http://www.iris.edu/software/libraries/>`_, a C library framework
-by Chad Trabant and interfaced via Python :mod:`ctypes`.
+This module provides read and write support for the `Mini-SEED
+<http://www.iris.edu/dms/nodes/dmc/data/formats/#miniseed>`_ waveform data
+format and some other convenient methods to handle Mini-SEED files. Most
+methods are based on `libmseed
+<http://www.iris.edu/dms/nodes/dmc/software/downloads/libmseed/>`_, a C
+library framework by Chad Trabant and interfaced via Python :mod:`ctypes`.
 
-.. seealso:: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
+.. seealso:: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
@@ -20,7 +21,7 @@ Reading
 -------
 Similar to reading any other waveform data format using obspy.core:
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/test.mseed")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
@@ -34,7 +35,8 @@ Each trace will have a ``stats`` attribute containing the usual information.
 When reading a Mini-SEED file it will have one additional attribute ``mseed``.
 This attribute contains all Mini-SEED specific attributes.
 
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
+>>> stats_mseed = st[0].stats.pop('mseed')
+>>> print(st[0].stats)
          network: NL
          station: HGN
         location: 00
@@ -46,9 +48,14 @@ This attribute contains all Mini-SEED specific attributes.
             npts: 11947
            calib: 1.0
          _format: MSEED
-           mseed: AttribDict({'record_length': 4096, 'encoding': 'STEIM2',
-                              'filesize': 8192L, 'dataquality': 'R',
-                              'number_of_records': 2L, 'byteorder': '>'})
+>>> for k, v in sorted(stats_mseed.items()):
+...     print(k, v)
+byteorder >
+dataquality R
+encoding STEIM2
+filesize 8192
+number_of_records 2
+record_length 4096
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.
@@ -94,6 +101,8 @@ So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 >>> st.write('out.mseed', format='MSEED', reclen=512,  # doctest: +SKIP
 ...          encoding='STEIM1')
 """
+from __future__ import unicode_literals
+from __future__ import print_function
 
 
 if __name__ == '__main__':

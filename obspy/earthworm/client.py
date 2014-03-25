@@ -10,9 +10,10 @@ Earthworm Wave Server client for ObsPy.
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
+from __future__ import unicode_literals
 
 from fnmatch import fnmatch
-from obspy.core import Stream, UTCDateTime
+from obspy import Stream, UTCDateTime
 from obspy.earthworm.waveserver import readWaveServerV, getMenu
 
 
@@ -73,9 +74,8 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> from obspy.core import UTCDateTime
         >>> client = Client("pele.ess.washington.edu", 16017)
-        >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
+        >>> dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
         >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
         >>> st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
@@ -84,9 +84,9 @@ class Client(object):
         .. plot::
 
             from obspy.earthworm import Client
-            from obspy.core import UTCDateTime
-            client = Client("pele.ess.washington.edu", 16017)
-            dt = UTCDateTime() - 2000  # now - 2000 seconds
+            from obspy import UTCDateTime
+            client = Client("pele.ess.washington.edu", 16017, timeout=5)
+            dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
             st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
             st.plot()
             st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
@@ -105,7 +105,8 @@ class Client(object):
             location = '--'
         scnl = (station, channel, network, location)
         # fetch waveform
-        tbl = readWaveServerV(self.host, self.port, scnl, starttime, endtime)
+        tbl = readWaveServerV(self.host, self.port, scnl, starttime, endtime,
+                              timeout=self.timeout)
         # create new stream
         st = Stream()
         for tb in tbl:
@@ -137,11 +138,11 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: str, optional
-        :param format: Output format. Depending on your ObsPy installation one
-            of ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``. See the Supported
-            Formats section in method :meth:`~obspy.core.stream.Stream.write`
-            for a full list of supported formats. Defaults to ``'MSEED'``.
+        :param format: Output format. One of ``"MSEED"``, ``"GSE2"``,
+            ``"SAC"``, ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``,
+            ``"SU"``, ``"WAV"``. See the Supported Formats section in method
+            :meth:`~obspy.core.stream.Stream.write` for a full list of
+            supported formats. Defaults to ``'MSEED'``.
         :type cleanup: bool
         :param cleanup: Specifies whether perfectly aligned traces should be
             merged or not. See :meth:`~obspy.core.stream.Stream.merge`,
@@ -151,7 +152,6 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> from obspy.core import UTCDateTime
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
         >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',
@@ -188,10 +188,10 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017)
+        >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
         >>> response = client.availability(network="UW", station="TUCA",
         ...         channel="BH*")
-        >>> print response  # doctest: +SKIP
+        >>> print(response)  # doctest: +SKIP
         [('UW',
           'TUCA',
           '--',
@@ -215,7 +215,7 @@ class Client(object):
         pattern = ".".join((network, station, location, channel))
         # get overview of all available data, winston wave servers can not
         # restrict the query via network, station etc. so we do that manually
-        response = getMenu(self.host, self.port)
+        response = getMenu(self.host, self.port, timeout=self.timeout)
         # reorder items and convert time info to UTCDateTime
         response = [(x[3], x[1], x[4], x[2], UTCDateTime(x[5]),
                      UTCDateTime(x[6])) for x in response]

@@ -16,8 +16,6 @@
 
 
 void utl_geo_km(double orig_lon, double orig_lat, double rota, double *lon, double *lat) {
-   double	olon;
-   double	olat;
    double	lat_fac;	/* conversion factor for latitude in km */
    double	lon_fac;	/* conversion factor for longitude in km */
    double	snr;		/* sin of rotation angle */
@@ -32,12 +30,10 @@ void utl_geo_km(double orig_lon, double orig_lat, double rota, double *lon, doub
    /* convert everything to minutes */
    orig_lat = 60.0f * orig_lat;
    orig_lon = 60.0f * orig_lon;
-   olon = orig_lon;
-   olat = orig_lat;
 
    /* latitude */
-   dlt1 = atan(DRLT * tan(olat * DRAD/60.0));
-   dlt2 = atan(DRLT * tan((olat +1.0) * DRAD/60.0));
+   dlt1 = atan(DRLT * tan(orig_lat * DRAD/60.0));
+   dlt2 = atan(DRLT * tan((orig_lat +1.0) * DRAD/60.0));
    del  = dlt2 - dlt1;
    radius = E_RAD * (1.0 - (sin(dlt1)*sin(dlt1) / E_FLAT));
    lat_fac = radius * del;

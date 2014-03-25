@@ -75,7 +75,7 @@ After loading the data, we are able to pass the waveform data to the following
 trigger routines defined in :mod:`obspy.signal.trigger`:
 
     .. autosummary::
-       :toctree: ../packages/autogen
+       :toctree: ../../packages/autogen
 
        ~obspy.signal.trigger.recSTALTA
        ~obspy.signal.trigger.carlSTATrig
@@ -152,6 +152,8 @@ Delayed Sta Lta
     >>> plotTrigger(trace, cft, 5, 10)
 
 .. plot:: source/tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
+
+.. _trigger-tutorial-coincidence:
 
 -----------------------------------
 Network Coincidence Trigger Example
@@ -243,6 +245,106 @@ Here, some additional information on the peak values and standard deviations of
 the characteristic functions of the single station triggers is provided. Also,
 for both a weighted mean is calculated. These values can help to distinguish
 certain from questionable network triggers.
+
+For more information on all possible options see the documentation page for
+:func:`~obspy.signal.trigger.coincidenceTrigger`.
+
+----------------------------------------------------------------------
+Advanced Network Coincidence Trigger Example with Similarity Detection
+----------------------------------------------------------------------
+
+This example is an extension of the common network coincidence trigger.
+Waveforms with already known event(s) can be provided to check waveform
+similarity of single-station triggers. If the corresponding similarity
+threshold is exceeded the event trigger is included in the result list even if
+the coincidence sum does not exceed the specified minimum coincidence sum.
+Using this approach, events can be detected that have good recordings on one
+station with very similar waveforms but for some reason are not detected on
+enough other stations (e.g. temporary station outages or local high noise
+levels etc.).
+An arbitrary number of template waveforms can be provided for any station.
+Computation time might get significantly higher due to the necessary cross
+correlations.
+In the example we use two three-component event templates on top of a common
+network trigger on vertical components only.
+
+    >>> from obspy.core import Stream, read
+    >>> st = Stream()
+    >>> files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
+    ...          "BW.UH2..SHZ.D.2010.147.cut.slist.gz",
+    ...          "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
+    ...          "BW.UH3..SHN.D.2010.147.cut.slist.gz",
+    ...          "BW.UH3..SHE.D.2010.147.cut.slist.gz",
+    ...          "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
+    >>> for filename in files:
+    ...     st += read("http://examples.obspy.org/" + filename)
+    >>> st.filter('bandpass', freqmin=10, freqmax=20)  # optional prefiltering
+
+Here we set up a dictionary with template events for one single station. The
+specified times are exact P wave onsets, the event duration (including S wave)
+is about 2.5 seconds.
+On station UH3 we use two template events with three-component data, on station
+UH1 we use one template event with only vertical component data.
+
+    >>> times = ["2010-05-27T16:24:33.095000", "2010-05-27T16:27:30.370000"]
+    >>> event_templates = {"UH3": []}
+    >>> for t in times:
+    ...     t = UTCDateTime(t)
+    ...     st_ = st.select(station="UH3").slice(t, t + 2.5)
+    ...     event_templates["UH3"].append(st_)
+    >>> t = UTCDateTime("2010-05-27T16:27:30.574999")
+    >>> st_ = st.select(station="UH1").slice(t, t + 2.5)
+    >>> event_templates["UH1"] = [st_]
+
+The triggering step, including providing of similarity threshold and event
+template waveforms. Note that the coincidence sum is set to 4 and we manually
+specify to only use vertical components with equal station coincidence values
+of 1.
+
+    >>> from obspy.signal import coincidenceTrigger
+    >>> st2 = st.copy()
+    >>> trace_ids = {"BW.UH1..SHZ": 1,
+    ...              "BW.UH2..SHZ": 1,
+    ...              "BW.UH3..SHZ": 1,
+    ...              "BW.UH4..SHZ": 1}
+    >>> similarity_thresholds = {"UH1": 0.8, "UH3": 0.7}
+    >>> trig = coincidenceTrigger("classicstalta", 5, 1, st2, 4, sta=0.5,
+    ...                           lta=10, trace_ids=trace_ids,
+    ...                           event_templates=event_templates,
+    ...                           similarity_threshold=similarity_thresholds)
+
+The results now include two event triggers, that do not reach the specified
+minimum coincidence threshold but that have a similarity value that exceeds
+the specified similarity threshold when compared to at least one of the
+provided event template waveforms. Note the values of 1.0 when checking the
+event triggers where we extracted the event templates for this example.
+
+    >>> from pprint import pprint
+    >>> pprint(trig)
+    [{'coincidence_sum': 4.0,
+      'duration': 4.1100001335144043,
+      'similarity': {'UH1': 0.9414944738498271, 'UH3': 1.0},
+      'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+      'time': UTCDateTime(2010, 5, 27, 16, 24, 33, 210000),
+      'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ', 'BW.UH4..SHZ']},
+     {'coincidence_sum': 3.0,
+      'duration': 1.9900000095367432,
+      'similarity': {'UH1': 0.65228204570577764, 'UH3': 0.72679293429214198},
+      'stations': ['UH3', 'UH1', 'UH2'],
+      'time': UTCDateTime(2010, 5, 27, 16, 25, 26, 710000),
+      'trace_ids': ['BW.UH3..SHZ', 'BW.UH1..SHZ', 'BW.UH2..SHZ']},
+     {'coincidence_sum': 3.0,
+      'duration': 1.9200000762939453,
+      'similarity': {'UH1': 0.89404458774338103, 'UH3': 0.74581409371425222},
+      'stations': ['UH2', 'UH1', 'UH3'],
+      'time': UTCDateTime(2010, 5, 27, 16, 27, 2, 260000),
+      'trace_ids': ['BW.UH2..SHZ', 'BW.UH1..SHZ', 'BW.UH3..SHZ']},
+     {'coincidence_sum': 4.0,
+      'duration': 4.0299999713897705,
+      'similarity': {'UH1': 1.0, 'UH3': 1.0},
+      'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+      'time': UTCDateTime(2010, 5, 27, 16, 27, 30, 510000),
+      'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ', 'BW.UH4..SHZ']}]
 
 For more information on all possible options see the documentation page for
 :func:`~obspy.signal.trigger.coincidenceTrigger`.

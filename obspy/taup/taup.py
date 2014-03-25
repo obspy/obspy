@@ -2,14 +2,60 @@
 """
 obspy.taup - Travel time calculation tool
 """
-
-from obspy.core.util.decorator import deprecated
-from obspy.taup import __path__
-from obspy.taup.util import flibtaup as lib
-import ctypes as C
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
+import inspect
 import numpy as np
 import os
+import platform
 
+
+lib_name = 'libtau_%s_%s_py%s' % \
+    (platform.system(), platform.architecture()[0],
+     ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
+
+# Import libtau in a platform specific way.
+try:
+    # linux / mac using python import
+    libtau = __import__('obspy.lib.' + lib_name, globals(), locals(),
+                        ['ttimes'])
+    ttimes = libtau.ttimes
+except ImportError:
+    # windows using ctypes
+    if platform.system() == "Windows":
+        import ctypes as C
+        from distutils import sysconfig
+        lib_extension, = sysconfig.get_config_vars('SO')
+        libtau = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
+                        'lib', lib_name + lib_extension))
+
+        def ttimes(delta, depth, modnam):
+            delta = C.c_float(delta)
+            depth = C.c_float(abs(depth))
+            # initialize some arrays...
+            phase_names = (C.c_char * 8 * 60)()
+            flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
+            tt = np.zeros(60, 'float32', flags)
+            toang = np.zeros(60, 'float32', flags)
+            dtdd = np.zeros(60, 'float32', flags)
+            dtdh = np.zeros(60, 'float32', flags)
+            dddp = np.zeros(60, 'float32', flags)
+
+            libtau.ttimes_(C.byref(delta), C.byref(depth),
+                           modnam.encode('ascii'), phase_names,
+                           tt.ctypes.data_as(C.POINTER(C.c_float)),
+                           toang.ctypes.data_as(C.POINTER(C.c_float)),
+                           dtdd.ctypes.data_as(C.POINTER(C.c_float)),
+                           dtdh.ctypes.data_as(C.POINTER(C.c_float)),
+                           dddp.ctypes.data_as(C.POINTER(C.c_float)))
+            phase_names = np.array([p.value for p in phase_names])
+            return phase_names, tt, toang, dtdd, dtdh, dddp
+
+
+# Directory of obspy.taup.
+_taup_dir = \
+    os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 AVAILABLE_PHASES = [
     'P', "P'P'ab", "P'P'bc", "P'P'df", 'PKKPab', 'PKKPbc', 'PKKPdf', 'PKKSab',
@@ -53,46 +99,25 @@ def getTravelTimes(delta, depth, model='iasp91'):
     {'phase_name': 'P', 'dT/dD': 7.1050525, 'take-off angle': 45.169445,
      'time': 497.53741, 'd2T/dD2': -0.0044748308, 'dT/dh': -0.070258446}
     """
-    model_path = os.path.join(__path__[0], 'tables', model)
+    model_path = os.path.join(_taup_dir, 'tables', model)
     if not os.path.exists(model_path + os.path.extsep + 'hed') or \
        not os.path.exists(model_path + os.path.extsep + 'tbl'):
         msg = 'Model %s not found' % model
         raise ValueError(msg)
 
-    # Distance in degree
-    delta = C.c_float(delta)
     # Depth in kilometer.
-    depth = C.c_float(abs(depth))
+    depth = abs(depth)
 
-    # Max number of phases. Hard coded in the Fortran code. Do not change!
-    max = 60
+    # modnam is a string with 500 chars.
+    modnam = os.path.join(_taup_dir, 'tables', model).ljust(500)
 
-    phase_names = (C.c_char * 8 * max)()
-
-    modnam = (C.c_char * 500)()
-    modnam.value = os.path.join(__path__[0], 'tables', model)
-
-    flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
-    # Some arrays...
-    tt = np.zeros(60, 'float32', flags)
-    toang = np.zeros(60, 'float32', flags)
-    dtdd = np.zeros(60, 'float32', flags)
-    dtdh = np.zeros(60, 'float32', flags)
-    dddp = np.zeros(60, 'float32', flags)
-
-    flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
-
-    lib.ttimes(C.byref(delta), C.byref(depth), modnam,
-               phase_names,
-               tt.ctypes.data_as(C.POINTER(C.c_float)),
-               toang.ctypes.data_as(C.POINTER(C.c_float)),
-               dtdd.ctypes.data_as(C.POINTER(C.c_float)),
-               dtdh.ctypes.data_as(C.POINTER(C.c_float)),
-               dddp.ctypes.data_as(C.POINTER(C.c_float)))
+    phase_names, tt, toang, dtdd, dtdh, dddp = ttimes(delta, depth, modnam)
 
     phases = []
-    for _i in xrange(max):
-        phase_name = phase_names[_i].value.strip()
+    for _i, phase in enumerate(phase_names):
+        # An empty returned string will contain "\x00".
+        phase_name = phase.tostring().strip().\
+            replace(b"\x00", b"").decode()
         if not phase_name:
             break
         time_dict = {
@@ -104,24 +129,6 @@ def getTravelTimes(delta, depth, model='iasp91'):
             'd2T/dD2': dddp[_i]}
         phases.append(time_dict)
     return phases
-
-
-@deprecated
-def kilometer2degrees(kilometer, radius=6371):
-    """
-    DEPRECATED: Please use ``obspy.core.util.kilometer2degree()``.
-    """
-    from obspy.core.util.geodetics import kilometer2degrees as func
-    return func(kilometer, radius)
-
-
-@deprecated
-def locations2degrees(lat1, long1, lat2, long2):
-    """
-    DEPRECATED: Please use ``obspy.core.util.locations2degrees()``.
-    """
-    from obspy.core.util.geodetics import locations2degrees as func
-    return func(lat1, long1, lat2, long2)
 
 
 def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
@@ -185,7 +192,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
                     data[phase][1].append(np.NaN)
                     data[phase][0].append(degree)
     # Plot and some formatting.
-    for key, value in data.iteritems():
+    for key, value in data.items():
         plt.plot(value[0], value[1], '.', label=key)
     plt.grid()
     plt.xlabel('Distance (degrees)')

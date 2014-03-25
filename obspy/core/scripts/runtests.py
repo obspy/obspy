@@ -71,12 +71,25 @@ the names of all available test cases.
 
         $ obspy-runtests -r
 
+(8) To get a full list of all options, use::
+
+        $ obspy-runtests --help
+
 Of course you may combine most of the options here, e.g. in order to test
-all modules ecept the module obspy.sh and obspy.seishub, have a verbose output
-and report everything you would run::
+all modules except the module obspy.sh and obspy.seishub, have a verbose output
+and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
+from future.builtins import super
+from future.builtins import input
+from future.builtins import map
+from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
@@ -91,10 +104,11 @@ import sys
 import time
 import unittest
 import warnings
+import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap']
+                'suds', 'mpl_toolkits.basemap', 'mock', 'nose']
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -105,6 +119,8 @@ The following commands will produce the same output as shown above:
 
 Type "help" to see all available options.
 """
+
+HOSTNAME = platform.node().split('.', 1)[0]
 
 
 #XXX: start of ugly monkey patch for Python 2.7
@@ -138,6 +154,7 @@ def _getSuites(verbosity=1, names=[]):
     # need not be imported before in this case
     suites = {}
     ut = unittest.TestLoader()
+    status = True
     for name in names:
         suite = []
         if name in ALL_MODULES:
@@ -148,21 +165,19 @@ def _getSuites(verbosity=1, names=[]):
             test = name
         try:
             suite.append(ut.loadTestsFromName(test, None))
-        except Exception, e:
+        except Exception as e:
+            status = False
             if verbosity:
                 print(e)
-                print("Cannot import test suite for module obspy.%s" % name)
+                print(("Cannot import test suite for module obspy.%s" % name))
         else:
             suites[name] = ut.suiteClass(suite)
-    return suites
+    return suites, status
 
 
-def _createReport(ttrs, timetaken, log, server):
+def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
-    import httplib
-    import urllib
-    from urlparse import urlparse
-    import platform
+    from obspy.core import compatibility
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -174,7 +189,7 @@ def _createReport(ttrs, timetaken, log, server):
             data = codecs.open(log, 'r', encoding='UTF-8').read()
             result['install_log'] = escape(data)
         except:
-            print("Cannot open log file %s" % log)
+            print(("Cannot open log file %s" % log))
     # get ObsPy module versions
     result['obspy'] = {}
     tests = 0
@@ -227,16 +242,17 @@ def _createReport(ttrs, timetaken, log, server):
     for module in DEPENDENCIES:
         temp = module.split('.')
         try:
-            mod = __import__(module, fromlist=temp[1:])
+            mod = __import__(module,
+                             fromlist=[native_str(temp[1:])])
             if module == '_omnipy':
                 result['dependencies'][module] = mod.coreVersion()
             else:
                 result['dependencies'][module] = mod.__version__
-        except:
+        except ImportError:
             result['dependencies'][module] = ''
     # get system / environment settings
     result['platform'] = {}
-    for func in ['system', 'node', 'release', 'version', 'machine',
+    for func in ['system', 'release', 'version', 'machine',
                  'processor', 'python_version', 'python_implementation',
                  'python_compiler', 'architecture']:
         try:
@@ -246,6 +262,8 @@ def _createReport(ttrs, timetaken, log, server):
             result['platform'][func] = temp
         except:
             result['platform'][func] = ''
+    # set node name to hostname if set
+    result['platform']['node'] = hostname
     # post only the first part of the node name (only applies to MacOS X)
     try:
         result['platform']['node'] = result['platform']['node'].split('.')[0]
@@ -259,16 +277,16 @@ def _createReport(ttrs, timetaken, log, server):
 
     # generate XML document
     def _dict2xml(doc, result):
-        for key, value in result.iteritems():
+        for key, value in result.items():
             key = key.split('(')[0].strip()
             if isinstance(value, dict):
                 child = etree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
-                if isinstance(value, unicode):
+                if isinstance(value, (str, native_str)):
                     etree.SubElement(doc, key).text = value
-                elif isinstance(value, str):
-                    etree.SubElement(doc, key).text = unicode(value, 'utf-8')
+                elif isinstance(value, (str, native_str)):
+                    etree.SubElement(doc, key).text = str(value, 'utf-8')
                 else:
                     etree.SubElement(doc, key).text = str(value)
             else:
@@ -276,9 +294,9 @@ def _createReport(ttrs, timetaken, log, server):
     root = etree.Element("report")
     _dict2xml(root, result)
     xml_doc = etree.tostring(root)
-    print
+    print()
     # send result to report server
-    params = urllib.urlencode({
+    params = compatibility.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
@@ -291,23 +309,23 @@ def _createReport(ttrs, timetaken, log, server):
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = httplib.HTTPConnection(server)
+    conn = compatibility.HTTPConnection(server)
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
-        o = urlparse(response.msg['location'])
-        conn = httplib.HTTPConnection(o.netloc)
+        o = compatibility.urlparse(response.msg['location'])
+        conn = compatibility.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response
         response = conn.getresponse()
     # handle errors
     if response.status == 200:
-        print("Test report has been sent to %s. Thank you!" % (server))
+        print(("Test report has been sent to %s. Thank you!" % (server)))
     else:
-        print("Error: Could not sent a test report to %s." % (server))
-        print(response.reason)
+        print(("Error: Could not sent a test report to %s." % (server)))
+        print((response.reason))
 
 
 class _TextTestResult(unittest._TextTestResult):
@@ -371,8 +389,8 @@ class _TextTestRunner:
         wasSuccessful = True
         if self.verbosity:
             self.stream.writeln()
-        for result in results.values():
-            failed, errored = map(len, (result.failures, result.errors))
+        for result in list(results.values()):
+            failed, errored = list(map(len, (result.failures, result.errors)))
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
@@ -395,12 +413,13 @@ class _TextTestRunner:
             self.stream.writeln(")")
         elif self.verbosity:
             self.stream.writeln("OK")
-        return results, time_taken
+        return results, time_taken, (faileds + erroreds)
 
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org", all=False, timeit=False,
-             interactive=False, slowest=0, exclude=[], tutorial=False):
+             interactive=False, slowest=0, exclude=[], tutorial=False,
+             hostname=HOSTNAME):
     """
     This function executes ObsPy test suites.
 
@@ -430,7 +449,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             except ValueError:
                 pass
     # fetch tests suites
-    suites = _getSuites(verbosity, tests)
+    suites, status = _getSuites(verbosity, tests)
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
@@ -447,37 +466,45 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             msg = "Could not add tutorial files to tests."
             warnings.warn(msg)
     # run test suites
-    ttr, total_time = _TextTestRunner(verbosity=verbosity,
-                                      timeit=timeit).run(suites)
+    ttr, total_time, errors = _TextTestRunner(verbosity=verbosity,
+                                              timeit=timeit).run(suites)
     if slowest:
         mydict = {}
         # loop over modules
-        for mod in ttr.values():
+        for mod in list(ttr.values()):
             mydict.update(dict(mod.timer))
-        sorted_tests = sorted(mydict.iteritems(), key=operator.itemgetter(1))
+        sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
         sorted_tests = sorted_tests[::-1][:slowest]
         sorted_tests = ["%0.3fs: %s" % (dt, desc)
                         for (desc, dt) in sorted_tests]
-        print
-        print "Slowest Tests"
-        print "-------------"
-        print os.linesep.join(sorted_tests)
-        print
-        print
+        print()
+        print("Slowest Tests")
+        print("-------------")
+        print(os.linesep.join(sorted_tests))
+        print()
+        print()
     if interactive and not report:
-        msg = "Do you want to report this to tests.obspy.org? [n]: "
-        var = raw_input(msg).lower()
+        msg = "Do you want to report this to %s? [n]: " % (server)
+        var = input(msg).lower()
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server)
+        _createReport(ttr, total_time, log, server, hostname)
+    # make obspy-runtests exit with 1 if a test suite could not be added,
+    # indicating failure
+    if status is False:
+        errors += 1
+    if errors:
+        return errors
 
 
 def run(interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
-    except ImportError:
+        if matplotlib.get_backend().upper() != "AGG":
+            raise Exception()
+    except:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
     usage = "USAGE: %prog [options] module1 module2 ...\n\n"
@@ -489,8 +516,9 @@ def run(interactive=True):
                       action="store_true", dest="quiet",
                       help="quiet mode")
     # filter options
-    filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
-        "will test all installed ObsPy packages which don't require a " + \
+    filter = OptionGroup(
+        parser, "Module Filter", "Providing no modules " +
+        "will test all ObsPy modules which don't require a " +
         "active network connection.")
     filter.add_option("--all", default=False,
                       action="store_true", dest="all",
@@ -512,7 +540,7 @@ def run(interactive=True):
                       help="lists n slowest test cases")
     timing.add_option("-p", "--profile", default=False,
                       action="store_true", dest="profile",
-                      help="uses cProfile, saves the results to file " + \
+                      help="uses cProfile, saves the results to file " +
                            "obspy.pstats and prints some profiling numbers")
     parser.add_option_group(timing)
     # reporting options
@@ -526,9 +554,25 @@ def run(interactive=True):
     report.add_option("-u", "--server", default="tests.obspy.org",
                       type="string", dest="server",
                       help="report server (default is tests.obspy.org)")
+    report.add_option("-n", "--node", default=HOSTNAME,
+                      type="string", dest="hostname",
+                      help="nodename visible at the report server")
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
+    report.add_option("--keep-images", default=False,
+                      dest="keep_images", action="store_true",
+                      help="store images created during image comparison "
+                           "tests in subfolders of baseline images")
+    report.add_option("--keep-only-failed-images", default=False,
+                      dest="keep_only_failed_images", action="store_true",
+                      help="when storing images created during testing, only "
+                           "store failed images and the corresponding diff "
+                           "images (but not images that passed the "
+                           "corresponding test).")
+    report.add_option("--no-flake8", default=False,
+                      dest="no_flake8", action="store_true",
+                      help="skip code formatting test")
     parser.add_option_group(report)
     (options, _) = parser.parse_args()
     # set correct verbosity level
@@ -552,18 +596,26 @@ def run(interactive=True):
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
-    if options.report or 'OBSPY_REPORT' in os.environ.keys():
+    if options.report or 'OBSPY_REPORT' in list(os.environ.keys()):
         report = True
     else:
         report = False
-    if 'OBSPY_REPORT_SERVER' in os.environ.keys():
+    if 'OBSPY_REPORT_SERVER' in list(os.environ.keys()):
         options.server = os.environ['OBSPY_REPORT_SERVER']
     # check interactivity settings
     if interactive and options.dontask:
         interactive = False
-    runTests(verbosity, parser.largs, report, options.log, options.server,
-             options.all, options.timeit, interactive, options.n,
-             exclude=options.module, tutorial=options.tutorial)
+    if options.keep_images:
+        os.environ['OBSPY_KEEP_IMAGES'] = ""
+    if options.keep_only_failed_images:
+        os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
+    if options.no_flake8:
+        os.environ['OBSPY_NO_FLAKE8'] = ""
+    return runTests(
+        verbosity, parser.largs, report, options.log,
+        options.server, options.all, options.timeit, interactive, options.n,
+        exclude=options.module, tutorial=options.tutorial,
+        hostname=options.hostname)
 
 
 def main(interactive=True):
@@ -574,6 +626,13 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
+    # catch and ignore a numpy deprecation warning
+    with warnings.catch_warnings(record=True):
+        warnings.filterwarnings(
+            "ignore", 'The compiler package is deprecated and removed in '
+            'Python 3.x.', DeprecationWarning)
+        np.safe_eval('1')
+
     if '-p' in sys.argv or '--profile' in sys.argv:
         try:
             import cProfile as Profile
@@ -583,12 +642,14 @@ def main(interactive=True):
                     'obspy.pstats')
         import pstats
         stats = pstats.Stats('obspy.pstats')
-        print
-        print "Profiling:"
+        print()
+        print("Profiling:")
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
-        print PSTATS_HELP
+        print(PSTATS_HELP)
     else:
-        run(interactive)
+        errors = run(interactive)
+        if errors:
+            sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -596,4 +657,6 @@ if __name__ == "__main__":
     # This script is automatically installed with name obspy-runtests by
     # setup.py to the Scripts or bin directory of your Python distribution
     # setup.py needs a function to which it's scripts can be linked.
-    run(interactive=False)
+    errors = run(interactive=False)
+    if errors:
+        sys.exit(1)

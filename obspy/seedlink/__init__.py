@@ -16,6 +16,7 @@ Mitigation" under the European Community's Seventh Framework Programme
 activities of the JRA2/WP12 "Tools for real-time seismology, acquisition and
 mining".
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@
 """
 The Filter test suite.
 """
+from __future__ import unicode_literals
 
 from obspy.signal.headers import lib_name, lib_extension
 from obspy.signal import xcorr
@@ -24,34 +25,34 @@ class UtilTestCase(unittest.TestCase):
         tr1 = np.random.randn(10000).astype('float32')
         tr2 = tr1.copy()
         shift, corr = xcorr(tr1, tr2, 100)
-        self.assertEquals(shift, 0)
-        self.assertAlmostEquals(corr, 1, 2)
+        self.assertEqual(shift, 0)
+        self.assertAlmostEqual(corr, 1, 2)
         # example 2 - all samples are different
         tr1 = np.ones(10000, dtype='float32')
         tr2 = np.zeros(10000, dtype='float32')
         shift, corr = xcorr(tr1, tr2, 100)
-        self.assertEquals(shift, 0)
-        self.assertAlmostEquals(corr, 0, 2)
+        self.assertEqual(shift, 0)
+        self.assertAlmostEqual(corr, 0, 2)
         # example 3 - shift of 10 samples
         tr1 = np.random.randn(10000).astype('float32')
         tr2 = np.concatenate((np.zeros(10), tr1[0:-10]))
         shift, corr = xcorr(tr1, tr2, 100)
-        self.assertEquals(shift, -10)
-        self.assertAlmostEquals(corr, 1, 2)
+        self.assertEqual(shift, -10)
+        self.assertAlmostEqual(corr, 1, 2)
         shift, corr = xcorr(tr2, tr1, 100)
-        self.assertEquals(shift, 10)
-        self.assertAlmostEquals(corr, 1, 2)
+        self.assertEqual(shift, 10)
+        self.assertAlmostEqual(corr, 1, 2)
         # example 4 - shift of 10 samples + small sine disturbance
         tr1 = (np.random.randn(10000) * 100).astype('float32')
         var = np.sin(np.arange(10000, dtype='float32') * 0.1)
         tr2 = np.concatenate((np.zeros(10), tr1[0:-10])) * 0.9
         tr2 += var
         shift, corr = xcorr(tr1, tr2, 100)
-        self.assertEquals(shift, -10)
-        self.assertAlmostEquals(corr, 1, 2)
+        self.assertEqual(shift, -10)
+        self.assertAlmostEqual(corr, 1, 2)
         shift, corr = xcorr(tr2, tr1, 100)
-        self.assertEquals(shift, 10)
-        self.assertAlmostEquals(corr, 1, 2)
+        self.assertEqual(shift, 10)
+        self.assertAlmostEqual(corr, 1, 2)
 
     def test_SRLXcorr(self):
         """
@@ -79,8 +80,8 @@ class UtilTestCase(unittest.TestCase):
                    window_len, len(data1), len(data2),
                    C.byref(shift), C.byref(coe_p))
 
-        self.assertAlmostEquals(0.0, shift.value)
-        self.assertAlmostEquals(1.0, coe_p.value)
+        self.assertAlmostEqual(0.0, shift.value)
+        self.assertAlmostEqual(1.0, coe_p.value)
 
 
 def suite():

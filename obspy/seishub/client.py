@@ -8,19 +8,26 @@ SeisHub database client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import range
+from future.builtins import str
+from future.utils import PY2, native_str
 
 from datetime import datetime
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import guessDelta
 from obspy.xseed import Parser
 import os
 import pickle
 import time
-import urllib
-import urllib2
+from obspy.core.compatibility import urlopen, urlencode, \
+    HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler, build_opener, \
+    install_opener, HTTPError, Request
 import warnings
 import functools
 
@@ -28,12 +35,23 @@ import functools
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
 HTTP_ACCEPTED_NODATA_METHODS = ["HEAD", "GET", "DELETE"]
 HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
-                        HTTP_ACCEPTED_NODATA_METHODS
+    HTTP_ACCEPTED_NODATA_METHODS
 
 
 KEYWORDS = {'network': 'network_id', 'station': 'station_id',
             'location': 'location_id', 'channel': 'channel_id',
             'starttime': 'start_datetime', 'endtime': 'end_datetime'}
+
+
+def _unpickle(data):
+    if PY2:
+        obj = pickle.loads(data)
+    else:
+        # http://api.mongodb.org/python/current/\
+        # python3.html#why-can-t-i-share-pickled-objectids-\
+        # between-some-versions-of-python-2-and-3
+        obj = pickle.loads(data, encoding="latin-1")
+    return obj
 
 
 def _callChangeGetPAZ(func):
@@ -99,15 +117,14 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.seishub import Client
-    >>> from obspy.core import UTCDateTime
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()
     >>>
-    >>> st = client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)
+    >>> st = client.waveform.getWaveform("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    BW.RTPI..EHZ | 2009-09-03T00:00:00.000000Z - ... | 250.0 Hz, 5001 samples
+    BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10, debug=False,
@@ -142,12 +159,12 @@ class Client(object):
         self.xml_seeds = {}
         self.station_list = {}
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib2.build_opener(auth_handler)
+        auth_handler = HTTPBasicAuthHandler(password_mgr)
+        opener = build_opener(auth_handler)
         # install globally
-        urllib2.install_opener(opener)
+        install_opener(opener)
 
     def ping(self):
         """
@@ -155,7 +172,7 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            urllib2.urlopen(self.base_url).read()
+            urlopen(self.base_url).read()
             return (time.time() - t1) * 1000.0
         except:
             None
@@ -169,7 +186,7 @@ class Client(object):
         :return: ``True`` if OK, ``False`` if invalid.
         """
         (code, _msg) = self._HTTP_request(self.base_url + "/xml/",
-                                         method="HEAD")
+                                          method="HEAD")
         if code == 200:
             return True
         elif code == 401:
@@ -180,12 +197,12 @@ class Client(object):
     def _fetch(self, url, *args, **kwargs):  # @UnusedVariable
         params = {}
         # map keywords
-        for key, value in KEYWORDS.iteritems():
-            if key in kwargs.keys():
+        for key, value in KEYWORDS.items():
+            if key in list(kwargs.keys()):
                 kwargs[value] = kwargs[key]
                 del kwargs[key]
         # check for ranges and empty values
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if not value and value != 0:
                 continue
             if isinstance(value, tuple) and len(value) == 2:
@@ -197,13 +214,13 @@ class Client(object):
             else:
                 params[str(key)] = str(value)
         # replace special characters
-        remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
+        remoteaddr = self.base_url + url + '?' + urlencode(params)
         if self.debug:
-            print('\nRequesting %s' % (remoteaddr))
+            print(('\nRequesting %s' % (remoteaddr)))
         # certain requests randomly fail on rare occasions, retry
-        for _i in xrange(self.retries):
+        for _i in range(self.retries):
             try:
-                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+                response = urlopen(remoteaddr, timeout=self.timeout)
                 doc = response.read()
                 return doc
             # XXX currently there are random problems with SeisHub's internal
@@ -211,7 +228,7 @@ class Client(object):
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        response = urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -230,7 +247,7 @@ class Client(object):
         :param xml_string: XML for a send request (PUT/POST)
         """
         if method not in HTTP_ACCEPTED_METHODS:
-            raise ValueError("Method must be one of %s" % \
+            raise ValueError("Method must be one of %s" %
                              HTTP_ACCEPTED_METHODS)
         if method in HTTP_ACCEPTED_DATA_METHODS and not xml_string:
             raise TypeError("Missing data for %s request." % method)
@@ -239,12 +256,12 @@ class Client(object):
 
         req = _RequestWithMethod(method=method, url=url, data=xml_string,
                                  headers=headers)
-        # it seems the following always ends in a urllib2.HTTPError even with
+        # it seems the following always ends in a HTTPError even with
         # nice status codes...?!?
         try:
-            response = urllib2.urlopen(req)
+            response = urlopen(req)
             return response.code, response.msg
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             return e.code, e.msg
 
     def _objectify(self, url, *args, **kwargs):
@@ -267,7 +284,7 @@ class _BaseRESTClient(object):
         :return: Resource
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
@@ -299,11 +316,19 @@ class _BaseRESTClient(object):
         :param xml_string: XML for a send request (PUT/POST)
         :rtype: tuple
         :return: (HTTP status code, HTTP status message)
+
+        .. rubric:: Example
+
+        >>> c = Client()
+        >>> xseed_file = "dataless.seed.BW_UH1.xml"
+        >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
+        >>> c.station.putResource(xseed_file, xml_str)  # doctest: +SKIP
+        (201, 'OK')
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
-        return self.client._HTTP_request(url, method="PUT",
-                xml_string=xml_string, headers=headers)
+        return self.client._HTTP_request(
+            url, method="PUT", xml_string=xml_string, headers=headers)
 
     def deleteResource(self, resource_name, headers={}):
         """
@@ -318,8 +343,8 @@ class _BaseRESTClient(object):
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
-        return self.client._HTTP_request(url, method="DELETE",
-                headers=headers)
+        return self.client._HTTP_request(
+            url, method="DELETE", headers=headers)
 
 
 class _WaveformMapperClient(object):
@@ -357,7 +382,7 @@ master/seishub/plugins/seismology/waveform.py
         :return: List of containing station ids.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/seismology/waveform/getStationIds'
@@ -376,7 +401,7 @@ master/seishub/plugins/seismology/waveform.py
         :return: List of containing location ids.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/seismology/waveform/getLocationIds'
@@ -398,7 +423,7 @@ master/seishub/plugins/seismology/waveform.py
         :return: List of containing channel ids.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/seismology/waveform/getChannelIds'
@@ -422,16 +447,16 @@ master/seishub/plugins/seismology/waveform.py
         :return: List of dictionaries containing latency information.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/seismology/waveform/getLatency'
         root = self.client._objectify(url, **kwargs)
-        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+        return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                 for node in root.getchildren()]
 
     def getWaveform(self, network, station, location=None, channel=None,
-                    starttime=None, endtime=None, apply_filter=False,
+                    starttime=None, endtime=None, apply_filter=None,
                     getPAZ=False, getCoordinates=False,
                     metadata_timecheck=True, **kwargs):
         """
@@ -470,13 +495,13 @@ master/seishub/plugins/seismology/waveform.py
         """
         # NOTHING goes ABOVE this line!
         # append all args to kwargs, thus having everything in one dictionary
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
         # allow time strings in arguments
         for time in ["starttime", "endtime"]:
-            if isinstance(kwargs[time], str):
+            if isinstance(kwargs[time], (str, native_str)):
                 kwargs[time] = UTCDateTime(kwargs[time])
 
         trim_start = kwargs['starttime']
@@ -491,10 +516,10 @@ master/seishub/plugins/seismology/waveform.py
 
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
-        if data == '':
+        if not data:
             raise Exception("No waveform data available")
         # unpickle
-        stream = pickle.loads(data)
+        stream = _unpickle(data)
         if len(stream) == 0:
             raise Exception("No waveform data available")
         stream._cleanup()
@@ -516,13 +541,13 @@ master/seishub/plugins/seismology/waveform.py
                 tr.stats['paz'] = paz
 
         if getCoordinates:
-            coords = self.client.station.getCoordinates(network=network,
-                    station=station, location=location,
-                    datetime=starttime)
+            coords = self.client.station.getCoordinates(
+                network=network, station=station, location=location,
+                datetime=starttime)
             if metadata_timecheck:
                 coords_check = self.client.station.getCoordinates(
-                        network=network, station=station,
-                        location=location, datetime=endtime)
+                    network=network, station=station,
+                    location=location, datetime=endtime)
                 if coords != coords_check:
                     msg = "Coordinate information changing from start " + \
                           "time to end time."
@@ -553,7 +578,7 @@ master/seishub/plugins/seismology/waveform.py
         :return: Waveform preview as ObsPy Stream object.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
@@ -562,7 +587,7 @@ master/seishub/plugins/seismology/waveform.py
         if not data:
             raise Exception("No waveform data available")
         # unpickle
-        stream = pickle.loads(data)
+        stream = _unpickle(data)
         return stream
 
     def getPreviewByIds(self, trace_ids=None, starttime=None, endtime=None,
@@ -580,7 +605,7 @@ master/seishub/plugins/seismology/waveform.py
         :return: Waveform preview as ObsPy Stream object.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         # concatenate list of IDs into string
@@ -592,7 +617,7 @@ master/seishub/plugins/seismology/waveform.py
         if not data:
             raise Exception("No waveform data available")
         # unpickle
-        stream = pickle.loads(data)
+        stream = _unpickle(data)
         return stream
 
 
@@ -622,12 +647,12 @@ master/seishub/plugins/seismology/waveform.py
         :return: List of dictionaries containing station information.
         """
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/seismology/station/getList'
         root = self.client._objectify(url, **kwargs)
-        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+        return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                 for node in root.getchildren()]
 
     def getCoordinates(self, network, station, datetime, location=''):
@@ -651,7 +676,7 @@ master/seishub/plugins/seismology/waveform.py
         """
         # NOTHING goes ABOVE this line!
         kwargs = {}  # no **kwargs so use empty dict
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
@@ -676,7 +701,7 @@ master/seishub/plugins/seismology/waveform.py
         metadata = self.getList(**kwargs)
         if not metadata:
             msg = "No coordinates for station %s.%s at %s" % \
-                    (network, station, datetime)
+                (network, station, datetime)
             raise Exception(msg)
         stalist = self.client.station_list.setdefault(netsta, [])
         for data in metadata:
@@ -792,15 +817,15 @@ master/seishub/plugins/seismology/event.py
             msg = "Maximal allowed limit is 2500 entries."
             raise ValueError(msg)
         # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
+        for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
-        results = [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+        results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                    for node in root.getchildren()]
         if limit == len(results) or \
-           limit == None and len(results) == 50 or \
+           limit is None and len(results) == 50 or \
            len(results) == 2500:
             msg = "List of results might be incomplete due to option 'limit'."
             warnings.warn(msg)
@@ -857,8 +882,8 @@ master/seishub/plugins/seismology/event.py
         descrip_str = "Fetched from: %s" % self.client.base_url
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
-        descrip_str += "\n".join(["=".join((str(k), str(v))) \
-                                  for k, v in kwargs.items()])
+        descrip_str += "\n".join(["=".join((str(k), str(v)))
+                                  for k, v in list(kwargs.items())])
         SubElement(folder, "description").text = descrip_str
 
         style = SubElement(folder, "Style")
@@ -898,8 +923,9 @@ master/seishub/plugins/seismology/event.py
             liststyle = SubElement(style, "ListStyle")
             SubElement(liststyle, "maxSnippetLines").text = "5"
             SubElement(icon_style, "scale").text = str(icon_size)
-            point = SubElement(placemark, "Point")
-            SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+            if event_dict['longitude'] and event_dict['latitude']:
+                point = SubElement(placemark, "Point")
+                SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
                     (event_dict['longitude'], event_dict['latitude'])
 
             # detailed information on the event for the description
@@ -939,7 +965,7 @@ master/seishub/plugins/seismology/event.py
         return
 
 
-class _RequestWithMethod(urllib2.Request):
+class _RequestWithMethod(Request):
     """
     Improved urllib2.Request Class for which the HTTP Method can be set to
     values other than only GET and POST.
@@ -951,7 +977,7 @@ class _RequestWithMethod(urllib2.Request):
             msg = "HTTP Method not supported. " + \
                   "Supported are: %s." % HTTP_ACCEPTED_METHODS
             raise ValueError(msg)
-        urllib2.Request.__init__(self, *args, **kwargs)
+        Request.__init__(self, *args, **kwargs)
         self._method = method
 
     def get_method(self):

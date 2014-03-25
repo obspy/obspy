@@ -3,6 +3,7 @@
 """
 The polarization.core test suite.
 """
+from __future__ import unicode_literals
 
 from obspy.signal import konnoOhmachiSmoothing
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \
@@ -42,8 +43,8 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         # whole formulae is 1.
         window = konnoOhmachiSmoothingWindow(np.array([5.0, 1.0, 5.0, 2.0],
                                                       dtype='float32'), 5)
-        np.testing.assert_array_equal(window[[0, 2]], np.array([1.0, 1.0],
-                                                            dtype='float32'))
+        np.testing.assert_array_equal(
+            window[[0, 2]], np.array([1.0, 1.0], dtype='float32'))
         # Output dtype should be the dtype of frequencies.
         self.assertEqual(konnoOhmachiSmoothingWindow(np.array([1, 6, 12],
                          dtype='float32'), 5).dtype, np.float32)
@@ -72,30 +73,34 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         temp = np.geterr()
         np.seterr(all='ignore')
         frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-            dtype='float32')
+                               dtype='float32')
         matrix = calculateSmoothingMatrix(frequencies, 20.0)
         self.assertEqual(matrix.dtype, np.float32)
         for _i, freq in enumerate(frequencies):
-            np.testing.assert_array_equal(matrix[_i],
-                          konnoOhmachiSmoothingWindow(frequencies, freq, 20.0))
+            np.testing.assert_array_equal(
+                matrix[_i],
+                konnoOhmachiSmoothingWindow(frequencies, freq, 20.0))
             # Should not be normalized. Test only for larger frequencies
             # because smaller ones have a smaller window.
             if freq >= 10.0:
                 self.assertTrue(matrix[_i].sum() > 1.0)
         # Input should be output dtype.
-        frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
+        frequencies = np.array(
+            [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
             dtype='float64')
         matrix = calculateSmoothingMatrix(frequencies, 20.0)
         self.assertEqual(matrix.dtype, np.float64)
         # Check normalization.
-        frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
+        frequencies = np.array(
+            [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
             dtype='float32')
         matrix = calculateSmoothingMatrix(frequencies, 20.0, normalize=True)
         self.assertEqual(matrix.dtype, np.float32)
         for _i, freq in enumerate(frequencies):
-            np.testing.assert_array_equal(matrix[_i],
-              konnoOhmachiSmoothingWindow(frequencies, freq, 20.0,
-                                          normalize=True))
+            np.testing.assert_array_equal(
+                matrix[_i],
+                konnoOhmachiSmoothingWindow(frequencies, freq, 20.0,
+                                            normalize=True))
             # Should not be normalized. Test only for larger frequencies
             # because smaller ones have a smaller window.
             self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
@@ -119,7 +124,6 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, konnoOhmachiSmoothing, spectra,
                               frequencies)
-        warnings.filters.pop(0)
         # Correct the dtype.
         frequencies = np.require(frequencies, dtype=np.float32)
         # The first one uses the matrix method, the second one the non matrix
@@ -130,11 +134,13 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         # XXX: Why are the numerical inaccuracies quite large?
         np.testing.assert_almost_equal(smoothed_1, smoothed_2, 3)
         # Test the non-matrix mode for single spectra.
-        smoothed_3 = konnoOhmachiSmoothing(np.require(spectra[0],
-                dtype='float64'), np.require(frequencies, dtype='float64'))
-        smoothed_4 = konnoOhmachiSmoothing(np.require(spectra[0],
-                dtype='float64'), np.require(frequencies, dtype='float64'),
-                                           normalize=True)
+        smoothed_3 = konnoOhmachiSmoothing(
+            np.require(spectra[0], dtype='float64'),
+            np.require(frequencies, dtype='float64'))
+        smoothed_4 = konnoOhmachiSmoothing(
+            np.require(spectra[0], dtype='float64'),
+            np.require(frequencies, dtype='float64'),
+            normalize=True)
         # The normalized and not normalized should not be the same. That the
         # normalizing works has been tested before.
         self.assertFalse(np.all(smoothed_3 == smoothed_4))

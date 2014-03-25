@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       ~array_analysis.array_processing
        ~array_analysis.array_rotation_strain
        ~trigger.arPick
        ~filter.bandpass
@@ -26,12 +27,11 @@
        ~filter.lowpass
        ~invsim.pazToFreqResp
        ~trigger.pkBaer
-       ~psd.PPSD
-       ~psd.psd
+       ~spectral_estimation.PPSD
+       ~spectral_estimation.psd
        ~trigger.recSTALTA
        ~rotate.rotate_NE_RT
        ~invsim.seisSim
-       ~array_analysis.sonic
        ~util.utlGeoKm
        ~util.utlLonLat
        ~cross_correlation.xcorr
@@ -56,7 +56,7 @@
        invsim
        konnoohmachismoothing
        polarization
-       psd
+       spectral_estimation
        rotate
        tf_misfit
        trigger

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: calibration.py
 #  Purpose: Functions for relative calibration (e.g. Huddle test calibration)
@@ -16,11 +17,16 @@ Functions for relative calibration.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import str
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
+from obspy.gse2.paz import readPaz
 import numpy as np
 
 
@@ -86,15 +92,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     auto, _freq, _t = \
         spectral_helper(tr1, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
     cross, freq, _t = \
-        spectral_helper(tr1, tr2, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
+        spectral_helper(tr2, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
 
-    # 180 Grad Phasenverschiebung
-    cross.imag *= -1.0
-
-    # Replaces the following in compact form:
-    # res = np.zeros(nfft / 2 + 1, dtype='complex128')
-    # for i in range(nwin):
-    #     res += (cross[:, i] / auto[:, i]) * gg
     res = (cross / auto).sum(axis=1) * gg
 
     # The first item might be zero. Problems with phase calculations.
@@ -109,18 +108,21 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         spectra = np.empty((2, len(res.real)))
         spectra[0] = res.real
         spectra[1] = res.imag
-        new_spectra = konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth,
-                count=1, max_memory_usage=1024, normalize=True)
+        new_spectra = \
+            konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth, count=1,
+                                  max_memory_usage=1024, normalize=True)
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
     amp = np.abs(res)
-    phase = np.arctan(res.imag / res.real)
+    # include phase unwrapping
+    phase = np.unwrap(np.angle(res))  # + 2.0 * np.pi
     ra = np.abs(gg)
-    rpha = np.arctan(gg.imag / gg.real)
+    rpha = np.unwrap(np.angle(gg))
 
     if save_data:
-        trans_new = st2[0].stats.station + "." + str(window_len) + ".resp"
+        trans_new = (st2[0].stats.station + "." + st2[0].stats.channel +
+                     "." + str(window_len) + ".resp")
         trans_ref = st1[0].stats.station + ".refResp"
         # Create empty array for easy saving
         temp = np.empty((len(freq), 3))
@@ -144,13 +146,6 @@ def _calcresp(calfile, nfft, sampfreq):
         system
     :returns: complex transfer function, array of frequencies
     """
-    # avoid top level dependency on gse2
-    try:
-        from obspy.gse2.paz import readPaz
-    except ImportError:
-        msg = "Error during import from obspy.gse2. Please make " + \
-              "sure obspy.gse2 is installed properly."
-        raise ImportError(msg)
     # calculate transfer function
     poles, zeros, scale_fac = readPaz(calfile)
     h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0 / sampfreq,
@@ -206,7 +201,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
         scaling_factor = 2.
     else:
         raise ValueError("sides must be one of: 'default', 'onesided', or "
-            "'twosided'")
+                         "'twosided'")
 
     # Matlab divides by the sampling frequency so that density function
     # has units of dB/Hz and can be integrated by the plotted frequency
@@ -216,8 +211,8 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
     windowVals = np.hanning(NFFT)
 
-    step = NFFT - noverlap
-    ind = np.arange(0, len(x) - NFFT + 1, step)
+    step = int(NFFT) - int(noverlap)
+    ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
     Pxy = np.zeros((numFreqs, n), np.complex_)
 

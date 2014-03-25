@@ -10,6 +10,8 @@
 # Copyright (C) 2010-2012 Lion Krischer
 #---------------------------------------------------------------------
 """
+USAGE: obspy-mseed-recordanalyzer filename.mseed
+
 A command-line tool to analyze Mini-SEED records.
 
 :copyright:
@@ -17,15 +19,14 @@ A command-line tool to analyze Mini-SEED records.
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
-
-.. rubric:: Usage
-
-    $ ./obspy-mseed-recordanalyzer filename.mseed
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import open
 
 from copy import deepcopy
-from obspy.core import UTCDateTime
-from obspy.core.util.types import OrderedDict
+from obspy import UTCDateTime
+from obspy.core.util import OrderedDict
 from obspy import __version__
 from optparse import OptionParser
 from struct import unpack
@@ -80,7 +81,7 @@ class RecordAnalyser(object):
             return False
         return True
 
-    def next(self):
+    def __next__(self):
         """
         Jumps to the next record and parses the header.
         """
@@ -138,20 +139,21 @@ class RecordAnalyser(object):
         self.fixed_header['Sequence number'] = int(''.join(header_item[:6]))
         self.fixed_header['Data header/quality indicator'] = header_item[6]
         self.fixed_header['Station identifier code'] = \
-                ''.join(header_item[8:13]).strip()
+            ''.join(header_item[8:13]).strip()
         self.fixed_header['Location identifier'] = \
-                ''.join(header_item[13:15]).strip()
+            ''.join(header_item[13:15]).strip()
         self.fixed_header['Channel identifier'] = \
-                ''.join(header_item[15:18]).strip()
+            ''.join(header_item[15:18]).strip()
         self.fixed_header['Network code'] = \
-                ''.join(header_item[18:20]).strip()
+            ''.join(header_item[18:20]).strip()
         # Construct the starttime. This is only the starttime in the fixed
         # header without any offset. See page 31 of the SEED manual for the
         # time definition.
         self.fixed_header['Record start time'] = \
-                UTCDateTime(year=header_item[20], julday=header_item[21],
-                hour=header_item[22], minute=header_item[23],
-                second=header_item[24], microsecond=header_item[25] * 100)
+            UTCDateTime(year=header_item[20], julday=header_item[21],
+                        hour=header_item[22], minute=header_item[23],
+                        second=header_item[24], microsecond=header_item[25] *
+                        100)
         self.fixed_header['Number of samples'] = int(header_item[26])
         self.fixed_header['Sample rate factor'] = int(header_item[27])
         self.fixed_header['Sample rate multiplier'] = int(header_item[28])
@@ -159,7 +161,7 @@ class RecordAnalyser(object):
         self.fixed_header['I/O and clock flags'] = int(header_item[30])
         self.fixed_header['Data quality flags'] = int(header_item[31])
         self.fixed_header['Number of blockettes that follow'] = \
-                int(header_item[32])
+            int(header_item[32])
         self.fixed_header['Time correction'] = int(header_item[33])
         self.fixed_header['Beginning of data'] = int(header_item[34])
         self.fixed_header['First blockette'] = int(header_item[35])
@@ -197,17 +199,17 @@ class RecordAnalyser(object):
         # Check the blockette number.
         if blkt_type == 100:
             unpack_values = unpack('%sfxxxx' % self.endian,
-                                               self.file.read(8))
+                                   self.file.read(8))
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
         elif blkt_type == 1000:
             unpack_values = unpack('%sBBBx' % self.endian,
-                                               self.file.read(4))
+                                   self.file.read(4))
             blkt_dict['Encoding Format'] = int(unpack_values[0])
             blkt_dict['Word Order'] = int(unpack_values[1])
             blkt_dict['Data Record Length'] = int(unpack_values[2])
         elif blkt_type == 1001:
             unpack_values = unpack('%sBBxB' % self.endian,
-                                               self.file.read(4))
+                                   self.file.read(4))
             blkt_dict['Timing quality'] = int(unpack_values[0])
             blkt_dict['mu_sec'] = int(unpack_values[1])
             blkt_dict['Frame count'] = int(unpack_values[2])
@@ -230,8 +232,8 @@ class RecordAnalyser(object):
         corrections in Blockette 1001 are applied. Field 4 of Blockette 1001
         stores the offset in microseconds of the starttime.
         """
-        self.corrected_starttime = deepcopy(\
-                                self.fixed_header['Record start time'])
+        self.corrected_starttime = deepcopy(
+            self.fixed_header['Record start time'])
         # Check whether or not the time correction has already been applied.
         if not self.fixed_header['Activity flags'] & 2:
             # Apply the correction.
@@ -240,7 +242,7 @@ class RecordAnalyser(object):
         # Check for blockette 1001.
         if 1001 in self.blockettes:
             self.corrected_starttime += self.blockettes[1001]['mu_sec'] * \
-                    1E-6
+                1E-6
 
     def __str__(self):
         """
@@ -255,23 +257,23 @@ class RecordAnalyser(object):
         else:
             endian = 'Big Endian'
             ret_val = ('FILE: %s\nRecord Offset: %i byte\n' +
-                      'Header Endianness: %s\n\n') % \
+                       'Header Endianness: %s\n\n') % \
                       (filename, self.record_offset, endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
-        for key in self.fixed_header.keys():
+        for key in list(self.fixed_header.keys()):
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
         ret_val += '\nBLOCKETTES\n'
-        for key in self.blockettes.keys():
+        for key in list(self.blockettes.keys()):
             ret_val += '\t%i:' % key
             if not len(self.blockettes[key]):
                 ret_val += '\tNOT YET IMPLEMENTED\n'
-            for _i, blkt_key in enumerate(self.blockettes[key].keys()):
+            for _i, blkt_key in enumerate(list(self.blockettes[key].keys())):
                 if _i == 0:
                     tabs = '\t'
                 else:
                     tabs = '\t\t'
                 ret_val += '%s%s: %s\n' % (tabs, blkt_key,
-                                         self.blockettes[key][blkt_key])
+                                           self.blockettes[key][blkt_key])
         ret_val += '\nCALCULATED VALUES\n'
         ret_val += '\tCorrected Starttime: %s\n' % self.corrected_starttime
         return ret_val
@@ -293,7 +295,7 @@ def main():
         try:
             while i < options.n:
                 i += 1
-                rec.next()
+                next(rec)
         except:
             pass
         print(rec)

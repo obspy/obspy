@@ -3,10 +3,10 @@ Visualizing Probabilistic Power Spectral Densities
 ==================================================
 
 The following code example shows how to use the
-:class:`~obspy.signal.psd.PPSD` class defined in :mod:`obspy.signal`. The
-routine is useful for interpretation of e.g. noise measurements for site
-quality control checks. For more information on the topic see
-[McNamara2004]_.
+:class:`~obspy.signal.spectral_estimation.PPSD` class defined in
+:mod:`obspy.signal`. The routine is useful for interpretation of e.g. noise
+measurements for site quality control checks. For more information on the topic
+see [McNamara2004]_.
 
 .. doctest::
 
@@ -22,9 +22,9 @@ Read data and select a trace with the desired station/channel combination:
     >>> tr = st.select(id="BW.KW1..EHZ")[0]
 
 Get poles and zeros information, e.g. from a dataless SEED file. Then
-initialize a new :class:`~obspy.signal.psd.PPSD` instance. The ppsd object
-will then make sure that only appropriate data go into the probabilistic psd
-statistics.
+initialize a new :class:`~obspy.signal.spectral_estimation.PPSD` instance. The
+ppsd object will then make sure that only appropriate data go into the
+probabilistic psd statistics.
 
 .. doctest::
 
@@ -94,4 +94,5 @@ lines.
 .. note::
    
    Providing metadata from e.g. a Dataless SEED volume is safer than specifying
-   static poles and zeros information (see :class:`~obspy.signal.psd.PPSD`). 
+   static poles and zeros information (see
+   :class:`~obspy.signal.spectral_estimation.PPSD`). 

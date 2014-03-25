@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from future import standard_library  # NOQA
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
@@ -6,7 +8,7 @@ The paz test suite.
 
 from obspy.gse2 import paz
 import unittest
-import StringIO
+import io
 
 
 class PAZTestCase(unittest.TestCase):
@@ -17,7 +19,7 @@ class PAZTestCase(unittest.TestCase):
         """
         Reading PAZ files where PAZ are separated by spaces.
         """
-        f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
         2
         -4.39823 4.48709
         -4.39823 -4.48709
@@ -27,12 +29,12 @@ class PAZTestCase(unittest.TestCase):
         0.0 0.0
         0.4""")
         p, z, k = paz.readPaz(f)
-        self.assertAlmostEquals(-4.39823, p[0].real)
-        self.assertAlmostEquals(4.48709, p[0].imag)
-        self.assertAlmostEquals(-4.39823, p[1].real)
-        self.assertAlmostEquals(-4.48709, p[1].imag)
-        self.assertEquals([0j, 0j, 0j], z)
-        self.assertAlmostEquals(0.4, k)
+        self.assertAlmostEqual(-4.39823, p[0].real)
+        self.assertAlmostEqual(4.48709, p[0].imag)
+        self.assertAlmostEqual(-4.39823, p[1].real)
+        self.assertAlmostEqual(-4.48709, p[1].imag)
+        self.assertEqual([0j, 0j, 0j], z)
+        self.assertAlmostEqual(0.4, k)
         f.close()
 
     def test_readWithOutSpace(self):
@@ -41,7 +43,7 @@ class PAZTestCase(unittest.TestCase):
 
         Tests uses unrealistic PAZ information.
         """
-        f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
 2
 -4.3982340.48709
 -4.39823-4.48709
@@ -51,17 +53,17 @@ class PAZTestCase(unittest.TestCase):
 -1.0982330.08709
 0.5""")
         p, z, k = paz.readPaz(f)
-        self.assertAlmostEquals(-4.39823, p[0].real)
-        self.assertAlmostEquals(40.48709, p[0].imag)
-        self.assertAlmostEquals(-4.39823, p[1].real)
-        self.assertAlmostEquals(-4.48709, p[1].imag)
-        self.assertAlmostEquals(1.2, z[0].real)
-        self.assertAlmostEquals(4.0, z[0].imag)
-        self.assertAlmostEquals(-1.09823, z[1].real)
-        self.assertAlmostEquals(-3.08709, z[1].imag)
-        self.assertAlmostEquals(-1.09823, z[2].real)
-        self.assertAlmostEquals(30.08709, z[2].imag)
-        self.assertAlmostEquals(0.5, k)
+        self.assertAlmostEqual(-4.39823, p[0].real)
+        self.assertAlmostEqual(40.48709, p[0].imag)
+        self.assertAlmostEqual(-4.39823, p[1].real)
+        self.assertAlmostEqual(-4.48709, p[1].imag)
+        self.assertAlmostEqual(1.2, z[0].real)
+        self.assertAlmostEqual(4.0, z[0].imag)
+        self.assertAlmostEqual(-1.09823, z[1].real)
+        self.assertAlmostEqual(-3.08709, z[1].imag)
+        self.assertAlmostEqual(-1.09823, z[2].real)
+        self.assertAlmostEqual(30.08709, z[2].imag)
+        self.assertAlmostEqual(0.5, k)
         f.close()
 
 

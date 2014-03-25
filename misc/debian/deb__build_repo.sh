@@ -12,14 +12,14 @@ BUILDDIR=/tmp/python-obspy_build
 DEBDIR=$BUILDDIR/deb
 
 rm -rf $DEBDIR
-mkdir -p $DEBDIR/conf $DEBDIR/dists
+mkdir -p $DEBDIR/conf $DEBDIR/dists $DEBDIR/incoming
 
 cat > $DEBDIR/conf/distributions << EOF
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
 Suite: testing
-Codename: wheezy
-Version: 7.0
+Codename: jessie
+Version: 8.0
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository
@@ -29,9 +29,9 @@ Contents: . .gz
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
 Suite: stable
-Codename: squeeze
-Version: 6.0
-Architectures: amd64 i386
+Codename: wheezy
+Version: 7.0
+Architectures: amd64 i386 armhf
 Components: main
 Description: ObsPy Apt Repository
 SignWith: 34811F05
@@ -40,8 +40,8 @@ Contents: . .gz
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
 Suite: oldstable
-Codename: lenny
-Version: 5.0
+Codename: squeeze
+Version: 6.0
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository
@@ -91,7 +91,37 @@ Contents: . .gz
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
 Codename: precise
-Version: 12.04
+Version: 12.04 LTS
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: quantal
+Version: 12.10
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: raring
+Version: 13.04
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: saucy
+Version: 13.10
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository

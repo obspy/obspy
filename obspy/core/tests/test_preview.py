@@ -1,6 +1,7 @@
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core.preview import createPreview, mergePreviews, resamplePreview
 import numpy as np
 import unittest

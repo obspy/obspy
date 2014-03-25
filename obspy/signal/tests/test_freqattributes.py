@@ -3,6 +3,10 @@
 """
 The freqattributes.core test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import open
 
 from obspy.signal import freqattributes, util
 from scipy import signal
@@ -100,6 +104,12 @@ class FreqTraceTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((cfreq[1] - self.res[:, 19]) ** 2) /
                       np.sum(self.res[:, 19] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
+
+    def test_cfrequency_no_win(self):
+        cfreq = freqattributes.cfrequency(self.data_win_bc[0], self.fs,
+                                          self.smoothie, self.fk)
+        rms = (cfreq - self.res[0, 18]) / self.res[0, 18]
+        self.assertTrue(rms < 1.0e-5)
 
     def test_bwith(self):
         """

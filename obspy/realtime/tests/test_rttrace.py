@@ -2,7 +2,10 @@
 """
 The obspy.realtime.rttrace test suite.
 """
-from obspy.core import Trace
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from obspy import Trace
 from obspy.core.stream import read
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory

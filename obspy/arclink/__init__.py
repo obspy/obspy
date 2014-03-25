@@ -46,7 +46,7 @@ Basic Usage
     of the Bavarian network (``"BW"``) for an seismic event around
     2009-08-20 04:03:12 (UTC).
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> from obspy.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime("2009-08-20 04:03:12")
@@ -62,7 +62,7 @@ Basic Usage
 
     .. plot::
 
-        from obspy.core import UTCDateTime
+        from obspy import UTCDateTime
         from obspy.arclink.client import Client
         client = Client(user='test@obspy.org')
         t = UTCDateTime("2009-08-20 04:03:12")
@@ -72,7 +72,7 @@ Basic Usage
 (2) :meth:`~obspy.arclink.client.Client.getPAZ()`: Requests poles, zeros, gain
     and sensitivity of a single channel at a given time.
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> from obspy.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> dt = UTCDateTime(2009, 1, 1)
@@ -88,7 +88,7 @@ Basic Usage
 (3) :meth:`~obspy.arclink.client.Client.saveResponse()`: Writes a response
     information into a file.
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> from obspy.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1)
@@ -99,7 +99,7 @@ Basic Usage
     waveform unmodified into your local file system. Here we request a Full
     SEED volume.
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> from obspy.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1, 12, 0)
@@ -109,7 +109,7 @@ Basic Usage
 (5) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory
     data.
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> from obspy.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
@@ -130,7 +130,7 @@ Further Resources
   * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
   * https://raw.github.com/obspy/obspy/master/obspy/arclink/docs/protocol.txt
 
-* `Short introduction <http://www.webdc.eu/webdc_sum.html>`_ to the ArcLink
+* `Short introduction <http://www.webdc.eu/arclink/help.html>`_ to the ArcLink
   protocol
 * Latest `ArcLink server
   <ftp://ftp.gfz-potsdam.de/pub/home/st/GEOFON/software/SeisComP/ArcLink/>`_
@@ -156,8 +156,10 @@ Further Resources
 .. _`GNU Lesser General Public License, Version 3`:
         http://www.gnu.org/copyleft/lesser.html
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

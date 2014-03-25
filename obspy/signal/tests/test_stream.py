@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy import UTCDateTime, Stream, Trace, read
 import numpy as np
 import unittest
 from obspy.signal import bandpass, bandstop, lowpass, highpass
@@ -74,36 +75,45 @@ class StreamTestCase(unittest.TestCase):
                 st.filter(filt_type, **filt_ops)
                 # test if all traces were filtered as expected
                 for i, tr in enumerate(st):
-                    data_filt = filter_map[filt_type](st_bkp[i].data,
-                            df=st_bkp[i].stats.sampling_rate, **filt_ops)
+                    data_filt = filter_map[filt_type](
+                        st_bkp[i].data,
+                        df=st_bkp[i].stats.sampling_rate, **filt_ops)
                     np.testing.assert_array_equal(tr.data, data_filt)
                     self.assertTrue('processing' in tr.stats)
                     self.assertEqual(len(tr.stats.processing), 1)
-                    self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
-                            (filt_type, filt_ops))
+                    self.assertTrue("filter" in tr.stats.processing[0])
+                    self.assertTrue(filt_type in tr.stats.processing[0])
+                    for key, value in filt_ops.items():
+                        self.assertTrue("'%s': %s" % (key, value)
+                                        in tr.stats.processing[0])
                 st.filter(filt_type, **filt_ops)
                 for i, tr in enumerate(st):
                     self.assertTrue('processing' in tr.stats)
                     self.assertEqual(len(tr.stats.processing), 2)
                     for proc_info in tr.stats.processing:
-                        self.assertEqual(proc_info, "filter:%s:%s" % \
-                                (filt_type, filt_ops))
+                        self.assertTrue("filter" in proc_info)
+                        self.assertTrue(filt_type in proc_info)
+                        for key, value in filt_ops.items():
+                            self.assertTrue("'%s': %s" % (key, value)
+                                            in proc_info)
 
         # some tests that should raise an Exception
         st = streams[0]
         st_bkp = streams_bkp[0]
-        bad_filters = [['bandpass', {'freqmin': 1., 'XXX': 20.}],
-                ['bandstop', [1, 2, 3, 4, 5]],
-                ['bandstop', None],
-                ['bandstop', 3],
-                ['bandstop', 'XXX']]
+        bad_filters = [
+            ['bandpass', {'freqmin': 1., 'XXX': 20.}],
+            ['bandstop', [1, 2, 3, 4, 5]],
+            ['bandstop', None],
+            ['bandstop', 3],
+            ['bandstop', 'XXX']]
         for filt_type, filt_ops in bad_filters:
             self.assertRaises(TypeError, st.filter, filt_type, filt_ops)
-        bad_filters = [['bandpass', {'freqmin': 1., 'XXX': 20.}],
-                ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
-                ['bandstop', {}],
-                ['bandpass', {'freqmin': 5, 'corners': 6}],
-                ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
+        bad_filters = [
+            ['bandpass', {'freqmin': 1., 'XXX': 20.}],
+            ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
+            ['bandstop', {}],
+            ['bandpass', {'freqmin': 5, 'corners': 6}],
+            ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
         for filt_type, filt_ops in bad_filters:
             self.assertRaises(TypeError, st.filter, filt_type, **filt_ops)
         bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]

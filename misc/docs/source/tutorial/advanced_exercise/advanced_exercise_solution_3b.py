@@ -6,7 +6,7 @@ from math import log10
 st = read("../data/LKBD.MSEED")
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
-          'poles': [-6.2832-4.7124j, -6.2832+4.7124j]}
+          'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}
 
 parser = Parser("../data/LKBD.dataless")
 paz_le3d5s = parser.getPAZ("CH.LKBD..EHZ")

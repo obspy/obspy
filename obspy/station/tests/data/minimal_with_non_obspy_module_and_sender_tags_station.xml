@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">
+  <Source>OBS</Source>
+  <Sender>The ObsPy Team</Sender>
+  <Module>Some Random Module</Module>
+  <ModuleURI>http://www.some-random.site</ModuleURI>
+  <Created>2013-01-01T00:00:00+00:00</Created>
+  <Network code="PY"/>
+</FDSNStationXML>

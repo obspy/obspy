@@ -14,6 +14,7 @@
        ~trace.Stats
        ~stream.Stream
        ~utcdatetime.UTCDateTime
+       ~event.readEvents
 
     .. comment to end block
 
@@ -31,6 +32,7 @@
        quakeml
        util
        preview
+       json
 
     .. comment to end block
 

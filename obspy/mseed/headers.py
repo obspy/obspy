@@ -2,7 +2,9 @@
 """
 Defines the libmseed structures and blockettes.
 """
-
+from __future__ import unicode_literals
+from future.builtins import str
+from future.utils import native_str
 from distutils import sysconfig
 import ctypes as C
 import numpy as np
@@ -10,32 +12,37 @@ import os
 import platform
 
 
-HPTERROR = -2145916800000000L
+HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
 # Import shared libmseed depending on the platform.
 # create library names
 lib_names = [
-     # platform specific library name
-    'libmseed-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    # python3.3 platform specific library name
+    'libmseed_%s_%s_py%s.cpython-%sm' % (
+        platform.system(), platform.architecture()[0],
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # platform specific library name
+    'libmseed_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    # fallback for pre-packaged libraries
     'libmseed']
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
-clibmseed = None
 for lib_name in lib_names:
     try:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                         'lib', lib_name + lib_extension))
-    except Exception, e:
-        pass
-    else:
         break
-if not clibmseed:
-    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % (e)
+    except Exception as e:
+        err_msg = str(e)
+        pass
+else:
+    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % err_msg
     raise ImportError(msg)
 
 
@@ -52,7 +59,9 @@ if hasattr(C.pythonapi, 'Py_InitModule4'):
 elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
     Py_ssize_t = C.c_int64
 else:
-    raise TypeError("Cannot determine type of Py_ssize_t")
+    #XXX: just hard code it for now
+    Py_ssize_t = C.c_int64
+    #raise TypeError("Cannot determine type of Py_ssize_t")
 
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
@@ -60,7 +69,8 @@ MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
 VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS
 
 # expected data types for libmseed id: (numpy, ctypes)
-DATATYPES = {"a": C.c_char, "i": C.c_int32, "f": C.c_float, "d": C.c_double}
+DATATYPES = {b"a": C.c_char, b"i": C.c_int32, b"f": C.c_float,
+             b"d": C.c_double}
 SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 
 # Valid record lengths for Mini-SEED files.
@@ -418,16 +428,16 @@ class MSFileParam_s(C.Structure):
     pass
 
 MSFileParam_s._fields_ = [
-  ('fp', C.POINTER(Py_ssize_t)),
-  ('filename', C.c_char * 512),
-  ('rawrec', C.c_char_p),
-  ('readlen', C.c_int),
-  ('readoffset', C.c_int),
-  ('packtype', C.c_int),
-  ('packhdroffset', C.c_long),
-  ('filepos', C.c_long),
-  ('filesize', C.c_long),
-  ('recordcount', C.c_int),
+    ('fp', C.POINTER(Py_ssize_t)),
+    ('filename', C.c_char * 512),
+    ('rawrec', C.c_char_p),
+    ('readlen', C.c_int),
+    ('readoffset', C.c_int),
+    ('packtype', C.c_int),
+    ('packhdroffset', C.c_long),
+    ('filepos', C.c_long),
+    ('filesize', C.c_long),
+    ('recordcount', C.c_int),
 ]
 MSFileParam = MSFileParam_s
 
@@ -495,26 +505,31 @@ clibmseed.msr_endtime.restype = C.c_int64
 clibmseed.ms_detect.argtypes = [C.c_char_p, C.c_int]
 clibmseed.ms_detect.restype = C.c_int
 
-clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
-        C.c_int, C.c_int,
-        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-        C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
+clibmseed.msr_unpack_steim2.argtypes = [
+    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
-clibmseed.msr_unpack_steim1.argtypes = [C.POINTER(FRAME), C.c_int,
-        C.c_int, C.c_int,
-        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-        C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
+clibmseed.msr_unpack_steim1.argtypes = [
+    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely different to C.c_char_p which is a string
-clibmseed.mst_packgroup.argtypes = [C.POINTER(MSTraceGroup),
-    C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
-    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int),
-    C.c_short, C.c_short, C.POINTER(MSRecord)]
+clibmseed.mst_packgroup.argtypes = [
+    C.POINTER(MSTraceGroup), C.CFUNCTYPE(
+        C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
+    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int), C.c_short,
+    C.c_short, C.POINTER(MSRecord)]
 clibmseed.mst_packgroup.restype = C.c_int
 
 clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
@@ -527,13 +542,6 @@ clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
                                 C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
-
-PyFile_FromFile = C.pythonapi.PyFile_FromFile
-PyFile_FromFile.argtypes = [
-    Py_ssize_t, C.c_char_p, C.c_char_p, C.CFUNCTYPE(C.c_int, Py_ssize_t)]
-PyFile_FromFile.restype = C.py_object
-
-
 #####################################
 # Define the C structures.
 #####################################
@@ -542,6 +550,7 @@ PyFile_FromFile.restype = C.py_object
 # Container for a continuous trace segment, linkable
 class MSTraceSeg(C.Structure):
     pass
+
 
 MSTraceSeg._fields_ = [
     ('starttime', C.c_longlong),      # Time of first sample
@@ -556,7 +565,7 @@ MSTraceSeg._fields_ = [
                                       # by libmseed
     ('prev', C.POINTER(MSTraceSeg)),  # Pointer to previous segment
     ('next', C.POINTER(MSTraceSeg))   # Pointer to next segment
-    ]
+]
 
 
 # Container for a trace ID, linkable
@@ -581,7 +590,7 @@ MSTraceID._fields_ = [
      C.POINTER(MSTraceSeg)),          # Pointer to first of list of segments
     ('last', C.POINTER(MSTraceSeg)),  # Pointer to last of list of segments
     ('next', C.POINTER(MSTraceID))    # Pointer to next trace
-    ]
+]
 
 
 # Container for a continuous trace segment, linkable
@@ -592,7 +601,7 @@ MSTraceList._fields_ = [
     ('numtraces', C.c_int),            # Number of traces in list
     ('traces', C.POINTER(MSTraceID)),  # Pointer to list of traces
     ('last', C.POINTER(MSTraceID))     # Pointer to last used trace in list
-    ]
+]
 
 
 # Data selection structure time window definition containers
@@ -603,7 +612,7 @@ SelectTime._fields_ = [
     ('starttime', C.c_longlong),      # Earliest data for matching channels
     ('endtime', C.c_longlong),        # Latest data for matching channels
     ('next', C.POINTER(SelectTime))
-    ]
+]
 
 
 # Data selection structure definition containers
@@ -615,7 +624,7 @@ Selections._fields_ = [
                                       # Net_Sta_Loc_Chan_Qual
     ('timewindows', C.POINTER(SelectTime)),
     ('next', C.POINTER(Selections))
-    ]
+]
 
 
 # Container for a continuous linked list of records.
@@ -630,14 +639,14 @@ ContinuousSegment._fields_ = [
     ('hpdelta', C.c_longlong),
     ('samplecnt', C.c_int64),
     ('timing_quality', C.c_uint8),
-    ('calibration_type',  C.c_int8),
+    ('calibration_type', C.c_int8),
     ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
                                       # 'sampletype'
     ('firstRecord', C.c_void_p),
     ('lastRecord', C.c_void_p),
     ('next', C.POINTER(ContinuousSegment)),
     ('previous', C.POINTER(ContinuousSegment))
-    ]
+]
 
 
 # A container for continuous segments with the same id
@@ -658,7 +667,7 @@ LinkedIDList._fields_ = [
      C.POINTER(LinkedIDList)),        # Pointer to next id
     ('previous',
      C.POINTER(LinkedIDList)),        # Pointer to previous id
-    ]
+]
 
 
 ########################################
@@ -667,15 +676,19 @@ LinkedIDList._fields_ = [
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='b', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='b', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.POINTER(Selections),
+    C.c_int8,
     C.c_int,
+    C.c_int8,
+    C.c_int8,
     C.c_int,
-    C.c_int,
-    C.c_int,
-    C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)
-    ]
+    C.CFUNCTYPE(C.c_long, C.c_int, C.c_char),
+    C.CFUNCTYPE(C.c_void_p, C.c_char_p),
+    C.CFUNCTYPE(C.c_void_p, C.c_char_p)
+]
 
 clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)
 
@@ -688,6 +701,10 @@ clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 
 clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
 clibmseed.lil_free.restype = C.c_void_p
+
+
+clibmseed.allocate_bytes.argtypes = (C.c_int, )
+clibmseed.allocate_bytes.restype = C.c_void_p
 
 
 # Python callback functions for C

@@ -1,0 +1,45 @@
+.TH MS_GENFACTMULT 3 2004/11/22 "Libmseed API"
+.SH DESCRIPTION
+Generate SEED sample rate factor and multiplier
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_genfactmult\fP ( double " samprate ", int16_t *" factor ",
+.BI "                      int16_t *" multiplier " );"
+
+.BI "int  \fBms_ratapprox\fP ( double " real ", int *" num ", int *" den ",
+.BI "                    int " maxval ", double " precision " );"
+.fi
+
+.SH DESCRIPTION
+\fBms_genfactmult\fP generates an appropriate SEED sample rate
+\fIfactor\fP and \fImultiplier\fP pair from a double precision sample
+rate (\fIsamprate\fP).  The factor and multiplier are cast as int16_t
+because that is the integer size needed for the fixed section of the
+SEED data header.
+
+If the input sample rate is already integer (within 0.000001) it will
+be placed into the factor and the multiplier will be set to 1.
+
+An error will be produced if the sample rate is very high (> 32727) or
+negative.
+
+\fBms_ratapprox\fP finds an approximate rational number for a real
+through continued fraction expansion.  Given a double precision
+\fIreal\fP the routine tries to find a rational in numerator
+(\fInum\fP) and denominator (\fIden\fP) form whose absolute values are
+not larger than \fImaxval\fP while trying to reach a specified
+\fIprecision\fP.
+
+.SH RETURN VALUES
+\fBms_genfactmult\fP returns 0 on success and -1 on error.
+
+\fBms_ratapprox\fP returns the number of iterations performed.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

@@ -67,7 +67,7 @@ int def_units_flag;
 /* define a pointer to a channel structure to use in determining the input and
    output units if using "default" units and for use in error output*/
 struct channel *GblChanPtr;
-float unitScaleFact;
+float unitScaleFact = 1.0;
 
 /* define global variables for use in printing error messages */
 char *curr_file;
@@ -79,7 +79,7 @@ jmp_buf jump_buffer;
 
 char myLabel[20];
 
-int evresp_(char *sta, char *cha, char *net, char *locid, char *datime, 
+int evresp_(char *sta, char *cha, char *net, char *locid, char *datime,
 	    char *units, char *file, float *freqs, int *nfreqs_in, float *resp,
 	    char *rtype, char *verbose, int *start_stage, int *stop_stage,
 	    int *stdio_flag, int lsta, int lcha, int lnet, int llocid,
@@ -227,8 +227,9 @@ Notes:
 
  *=================================================================*/
 
-double Pi;
-double twoPi;
+double Pi = 3.141592653589793;
+double twoPi = 6.283185307179586;
+
 /* IGD 08/21/06 Added Tesla */
 char SEEDUNITS[][UNITS_STR_LEN] = {"Undef Units", "Displacement", "Velocity",
                         "Acceleration", "Counts", "Volts", "", "Pascals", "Tesla"};
@@ -679,9 +680,9 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
                   if (strcmp(units, "VEL") != 0)	{
                     if(strcmp(units, "DEF") != 0)  {
                       fprintf(stderr, "%s WARNING: OUTPUT %s does not make sense if INPUT is PRESSURE\n",
-                                      myLabel, units);	
+                                      myLabel, units);
                       strcpy (units, "VEL");
-                      fprintf(stderr, "%s      OUTPUT units are reset and interpreted as PRESSURE\n", myLabel);	
+                      fprintf(stderr, "%s      OUTPUT units are reset and interpreted as PRESSURE\n", myLabel);
                     }
                   }
                 }
@@ -727,23 +728,23 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
 			nfreqs = this_channel.first_stage->first_blkt->blkt_info.list.nresp;
 			freqs = (double *) malloc(sizeof(double) * nfreqs); /* malloc a new vector */
     			memcpy (freqs, this_channel.first_stage->first_blkt->blkt_info.list.freq, sizeof(double) * nfreqs); /*cp*/
-			resp->rvec = alloc_complex(nfreqs);	
+			resp->rvec = alloc_complex(nfreqs);
 			output=resp->rvec;
 			resp->nfreqs = nfreqs;
 			resp->freqs = (double *) malloc(sizeof(double) * nfreqs); /* malloc a new vector */
-    			memcpy (resp->freqs, this_channel.first_stage->first_blkt->blkt_info.list.freq, sizeof(double) * nfreqs); /*cp*/						
+    			memcpy (resp->freqs, this_channel.first_stage->first_blkt->blkt_info.list.freq, sizeof(double) * nfreqs); /*cp*/
 		}
 		else	{
 			nfreqs = nfreqs_orig;
 			freqs = (double *) malloc(sizeof(double) * nfreqs); /* malloc a new vector */
     			memcpy (freqs, freqs_orig, sizeof(double) * nfreqs); /*cp*/
-			resp->rvec = alloc_complex(nfreqs);	
-			output=resp->rvec;			
+			resp->rvec = alloc_complex(nfreqs);
+			output=resp->rvec;
 			resp->nfreqs = nfreqs;
 			resp->freqs = (double *) malloc(sizeof(double) * nfreqs); /* malloc a new vector */
     			memcpy (resp->freqs, freqs_orig, sizeof(double) * nfreqs); /*cp*/
 		}
- 
+
                 /* normalize the response of the filter sequence */
 
                 norm_resp(&this_channel, start_stage, stop_stage);

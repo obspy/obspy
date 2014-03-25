@@ -8,17 +8,25 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import range
+from future.builtins import super
+from future.builtins import str
+from future.utils import native_str
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
+from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
+    taper_API_change
+from obspy.core import compatibility
 from obspy.core.util.misc import flatnotmaskedContiguous
 import math
 import numpy as np
 import warnings
-
-
-signal = None
+import functools
 
 
 class Stats(AttribDict):
@@ -41,11 +49,11 @@ class Stats(AttribDict):
 
     >>> stats = Stats()
     >>> stats.network = 'BW'
-    >>> stats['network']
-    'BW'
+    >>> print(stats['network'])
+    BW
     >>> stats['station'] = 'MANZ'
-    >>> stats.station
-    'MANZ'
+    >>> print(stats.station)
+    MANZ
 
     .. rubric:: _`Default Attributes`
 
@@ -127,27 +135,24 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
     """
-
     readonly = ['endtime']
-    sampling_rate = 1.0
-    starttime = UTCDateTime(0)
-    npts = 0
+    defaults = {
+        'sampling_rate': 1.0,
+        'delta': 1.0,
+        'starttime': UTCDateTime(0),
+        'endtime': UTCDateTime(0),
+        'npts': 0,
+        'calib': 1.0,
+        'network': '',
+        'station': '',
+        'location': '',
+        'channel': '',
+    }
 
     def __init__(self, header={}):
         """
         """
-        # set default values without calculating derived entries
-        super(Stats, self).__setitem__('sampling_rate', 1.0)
-        super(Stats, self).__setitem__('starttime', UTCDateTime(0))
-        super(Stats, self).__setitem__('npts', 0)
-        # set default values for all other headers
-        header.setdefault('calib', 1.0)
-        for default in ['station', 'network', 'location', 'channel']:
-            header.setdefault(default, '')
-        # initialize
         super(Stats, self).__init__(header)
-        # calculate derived values
-        self._calculateDerivedValues()
 
     def __setitem__(self, key, value):
         """
@@ -166,8 +171,18 @@ class Stats(AttribDict):
                 value = int(value)
             # set current key
             super(Stats, self).__setitem__(key, value)
-            # set derived values
-            self._calculateDerivedValues()
+            # set derived value: delta
+            try:
+                delta = 1.0 / float(self.sampling_rate)
+            except ZeroDivisionError:
+                delta = 0
+            self.__dict__['delta'] = delta
+            # set derived value: endtime
+            if self.npts == 0:
+                timediff = 0
+            else:
+                timediff = (self.npts - 1) * delta
+            self.__dict__['endtime'] = self.starttime + timediff
             return
         # prevent a calibration factor of 0
         if key == 'calib' and value == 0:
@@ -190,31 +205,41 @@ class Stats(AttribDict):
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
 
-    def _calculateDerivedValues(self):
-        """
-        Calculates derived headers such as `delta` and `endtime`.
-        """
-        # set delta
-        try:
-            delta = 1.0 / float(self.sampling_rate)
-        except ZeroDivisionError:
-            delta = 0
-        super(Stats, self).__setitem__('delta', delta)
-        # set endtime
-        if self.npts == 0:
-            timediff = 0
-        else:
-            timediff = (self.npts - 1) * delta
-        self.__dict__['endtime'] = self.starttime + timediff
 
-    def setEndtime(self, value):  # @UnusedVariable
-        msg = "Attribute \"endtime\" in Stats object is read only!"
-        raise AttributeError(msg)
+def _add_processing_info(func):
+    """
+    This is a decorator that attaches information about a processing call as a
+    string to the Trace.stats.processing list.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        callargs = compatibility.getcallargs(func, *args, **kwargs)
+        callargs.pop("self")
+        kwargs_ = callargs.pop("kwargs", {})
+        from obspy import __version__
+        info = "ObsPy {version}: {function}(%s)".format(
+            version=__version__,
+            function=func.__name__)
+        arguments = []
+        arguments += \
+            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+             "%s='%s'" % (k, v) for k, v in callargs.items()]
+        arguments += \
+            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+             "%s='%s'" % (k, v) for k, v in kwargs_.items()]
+        arguments.sort()
+        info = info % "::".join(arguments)
+        self = args[0]
+        result = func(*args, **kwargs)
+        # Attach after executing the function to avoid having it attached
+        # while the operation failed.
+        self._addProcessingInfo(info)
+        return result
 
-    def getEndtime(self):
-        return self.__dict__['endtime']
-
-    endtime = property(getEndtime, setEndtime)
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
 
 
 class Trace(object):
@@ -247,13 +272,11 @@ class Trace(object):
     """
 
     def __init__(self, data=np.array([]), header=None):
-        # make sure Trace gets initialized with ndarray as self.data
+        # make sure Trace gets initialized with suitable ndarray as self.data
         # otherwise we could end up with e.g. a list object in self.data
-        if not isinstance(data, np.ndarray):
-            msg = "Trace.data must be a NumPy array."
-            raise ValueError(msg)
+        _data_sanity_checks(data)
         # set some defaults if not set yet
-        if header == None:
+        if header is None:
             # Default values: For detail see
             # http://www.obspy.org/wiki/\
             # KnownIssues#DefaultParameterValuesinPython
@@ -337,23 +360,23 @@ class Trace(object):
         out = ''
         # output depending on delta or sampling rate bigger than one
         if self.stats.sampling_rate < 0.1:
-            if hasattr(self.stats, 'preview')  and self.stats.preview:
+            if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(delta).1f s, %(npts)d samples [preview]"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(delta).1f s, %(npts)d samples [preview]"
             else:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(delta).1f s, %(npts)d samples"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(delta).1f s, %(npts)d samples"
         else:
-            if hasattr(self.stats, 'preview')  and self.stats.preview:
+            if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
             else:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(sampling_rate).1f Hz, %(npts)d samples"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(sampling_rate).1f Hz, %(npts)d samples"
         # check for masked array
         if np.ma.count_masked(self.data):
             out += ' (masked)'
@@ -384,9 +407,7 @@ class Trace(object):
         """
         # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
-            if not isinstance(value, np.ndarray):
-                msg = "Trace.data must be a NumPy array."
-                ValueError(msg)
+            _data_sanity_checks(value)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
@@ -409,7 +430,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> tr = read()[0]
         >>> st = tr * 5
         >>> len(st)
@@ -417,7 +438,7 @@ class Trace(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
-        from obspy.core import Stream
+        from obspy import Stream
         st = Stream()
         for _i in range(num):
             st += self.copy()
@@ -434,12 +455,12 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr / 7
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 429 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z ... | 100.0 Hz, 429 samples
@@ -451,7 +472,7 @@ class Trace(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
-        from obspy.core import Stream
+        from obspy import Stream
         total_length = np.size(self.data)
         rest_length = total_length % num
         if rest_length:
@@ -467,6 +488,9 @@ class Trace(object):
             tend = tstart + (self.stats.delta * packet_length)
         return st
 
+    # Py3k: '/' does not map to __div__ anymore in Python 3
+    __truediv__ = __div__
+
     def __mod__(self, num):
         """
         Splits Trace into new Stream containing Traces with num samples.
@@ -478,12 +502,12 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr % 800
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 800 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 800 samples
@@ -492,11 +516,13 @@ class Trace(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
-        from obspy.core import Stream
+        elif num <= 0:
+            raise ValueError("Positive Integer expected")
+        from obspy import Stream
         st = Stream()
         total_length = np.size(self.data)
         if num >= total_length:
-            st.append(tr.copy())
+            st.append(self.copy())
             return st
         tstart = self.stats.starttime
         tend = tstart + (self.stats.delta * (num - 1))
@@ -558,6 +584,12 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA
                     Trace 2:     FF
                     1 + 2  : AAAA--AAAAAA
+
+                Missing data can be merged in from a different trace::
+
+                    Trace 1: AAAA--AAAAAA (contained trace, missing samples)
+                    Trace 2:     FF
+                    1 + 2  : AAAAFFAAAAAA
         1       Discard data of the previous trace assuming the following trace
                 contains data with a more correct time value. The parameter
                 ``interpolation_samples`` specifies the number of samples used
@@ -590,6 +622,12 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
                     1 + 2  : AAAAAAAAAAAA
+
+                Missing data can be merged in from a different trace::
+
+                    Trace 1: AAAA--AAAAAA (contained trace, missing samples)
+                    Trace 2:     FF
+                    1 + 2  : AAAAFFAAAAAA
         ======  ===============================================================
 
         .. rubric:: _`Handling gaps`
@@ -647,7 +685,7 @@ class Trace(object):
             fill_value = (lt.data[-1], rt.data[0])
         sr = self.stats.sampling_rate
         delta = (rt.stats.starttime - lt.stats.endtime) * sr
-        delta = int(round(delta)) - 1
+        delta = int(compatibility.round_away(delta)) - 1
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
         out = self.__class__(header=deepcopy(lt.stats))
@@ -693,9 +731,25 @@ class Trace(object):
             lenrt = len(rt)
             t1 = len(lt) - delta
             t2 = t1 + lenrt
-            if np.all(lt.data[t1:t2] == rt.data):
-                # check if data are the same
-                data = [lt.data]
+            # check if data are the same
+            data_equal = (lt.data[t1:t2] == rt.data)
+            # force a masked array and fill it for check of equality of valid
+            # data points
+            if np.all(np.ma.masked_array(data_equal).filled()):
+                # if all (unmasked) data are equal,
+                if isinstance(data_equal, np.ma.masked_array):
+                    x = np.ma.masked_array(lt.data[t1:t2])
+                    y = np.ma.masked_array(rt.data)
+                    data_same = np.choose(x.mask, [x, y])
+                    data = np.choose(x.mask & y.mask, [data_same, np.nan])
+                    if np.any(np.isnan(data)):
+                        data = np.ma.masked_invalid(data)
+                    # convert back to maximum dtype of original data
+                    dtype = np.max((x.dtype, y.dtype))
+                    data = data.astype(dtype)
+                    data = [lt.data[:t1], data, lt.data[t2:]]
+                else:
+                    data = [lt.data]
             elif method == 0:
                 gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
                 data = [lt.data[:t1], gap, lt.data[t2:]]
@@ -717,6 +771,10 @@ class Trace(object):
         else:
             data = np.concatenate(data)
             data = np.require(data, dtype=lt.data.dtype)
+        # Check if we can downgrade to normal ndarray
+        if isinstance(data, np.ma.masked_array) and \
+           np.ma.count_masked(data) == 0:
+            data = data.compressed()
         out.data = data
         return out
 
@@ -734,10 +792,10 @@ class Trace(object):
 
         >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
         >>> tr = Trace(header=meta)
-        >>> tr.getId()
-        'BW.MANZ..EHZ'
-        >>> tr.id
-        'BW.MANZ..EHZ'
+        >>> print(tr.getId())
+        BW.MANZ..EHZ
+        >>> print(tr.id)
+        BW.MANZ..EHZ
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
@@ -754,24 +812,19 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.plot()
         """
-        try:
-            from obspy.imaging.waveform import WaveformPlotting
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "plot ObsPy Trace objects."
-            raise ImportError(msg)
+        from obspy.imaging.waveform import WaveformPlotting
         waveform = WaveformPlotting(stream=self, **kwargs)
         return waveform.plotWaveform()
 
@@ -784,30 +837,25 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.spectrogram() # doctest: +SKIP
+        >>> tr.spectrogram()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.spectrogram(sphinx=True)
         """
-        try:
-            from obspy.imaging.spectrogram import spectrogram as _spectogram
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "use the spectrogram plotting routine."
-            raise ImportError(msg)
         # set some default values
         if 'samp_rate' not in kwargs:
             kwargs['samp_rate'] = self.stats.sampling_rate
         if 'title' not in kwargs:
             kwargs['title'] = str(self)
-        return _spectogram(data=self.data, **kwargs)
+        from obspy.imaging.spectrogram import spectrogram
+        return spectrogram(data=self.data, **kwargs)
 
     def write(self, filename, format, **kwargs):
         """
@@ -816,10 +864,9 @@ class Trace(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
-            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``, ``"PICKLE"``. See
+        :param format: The format to write must be specified. One of
+            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
+            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
             :meth:`obspy.core.stream.Stream.write` method for all possible
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
@@ -828,11 +875,11 @@ class Trace(object):
         .. rubric:: Example
 
         >>> tr = Trace()
-        >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
+        >>> tr.write("out.mseed", format="MSEED")  # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
-        from obspy.core import Stream
+        from obspy import Stream
         Stream([self]).write(filename, format, **kwargs)
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True,
@@ -845,7 +892,8 @@ class Trace(object):
 
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr._ltrim(tr.stats.starttime + 8)
+        >>> tr._ltrim(tr.stats.starttime + 8)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([8, 9])
         >>> tr.stats.starttime
@@ -858,21 +906,21 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((starttime - self.stats.starttime) * \
-                          self.stats.sampling_rate)
+            delta = compatibility.round_away(
+                (starttime - self.stats.starttime) * self.stats.sampling_rate)
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
             if delta < 0 and pad:
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
-                        float(self.stats.sampling_rate)
-                newdelta = round((starttime - newstarttime) * \
-                                 self.stats.sampling_rate)
+                    float(self.stats.sampling_rate)
+                newdelta = compatibility.round_away(
+                    (starttime - newstarttime) * self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
-            delta = int(math.floor(round((self.stats.starttime - starttime) * \
-                                          self.stats.sampling_rate, 7))) * -1
+            delta = int(math.floor(round((self.stats.starttime - starttime) *
+                                   self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -886,7 +934,7 @@ class Trace(object):
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
-                raise Exception("Time offset between starttime and " + \
+                raise Exception("Time offset between starttime and "
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((gap, self.data))
             return
@@ -895,6 +943,7 @@ class Trace(object):
             return
         elif delta > 0:
             self.data = self.data[delta:]
+        return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):
         """
@@ -905,7 +954,8 @@ class Trace(object):
 
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr._rtrim(tr.stats.starttime + 2)
+        >>> tr._rtrim(tr.stats.starttime + 2)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([0, 1, 2])
         >>> tr.stats.endtime
@@ -918,14 +968,16 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.starttime) * \
-                           self.stats.sampling_rate) - self.stats.npts + 1
+            delta = compatibility.round_away(
+                (endtime - self.stats.starttime) *
+                self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
-            #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
-            #                       self.stats.sampling_rate, 7)))
-            delta = int(math.floor(round((endtime - self.stats.endtime) * \
+            # delta = -1*int(math.floor(compatibility.round_away(
+            #     (self.stats.endtime - endtime) * \
+            #     self.stats.sampling_rate, 7)))
+            delta = int(math.floor(round((endtime - self.stats.endtime) *
                                    self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
             return
@@ -935,29 +987,24 @@ class Trace(object):
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
                 # too large number of pointes, e.g. 189336539799
-                raise Exception("Time offset between starttime and " + \
+                raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((self.data, gap))
             return
         elif endtime < self.stats.starttime:
             self.stats.starttime = self.stats.endtime + \
-                                   delta * self.stats.delta
+                delta * self.stats.delta
             self.data = np.empty(0, dtype=org_dtype)
             return
         # cut from right
-        if pad:
-            delta = abs(delta)
-            total = len(self.data) - delta
-            if endtime == self.stats.starttime:
-                total = 1
-            self.data = self.data[:total]
-        else:
-            delta = abs(delta)
-            total = len(self.data) - delta
-            if endtime == self.stats.starttime:
-                total = 1
-            self.data = self.data[:total]
+        delta = abs(delta)
+        total = len(self.data) - delta
+        if endtime == self.stats.starttime:
+            total = 1
+        self.data = self.data[:total]
+        return self
 
+    @_add_processing_info
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
         """
@@ -1001,7 +1048,8 @@ class Trace(object):
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> t = tr.stats.starttime
-        >>> tr.trim(t + 2.000001, t + 7.999999)
+        >>> tr.trim(t + 2.000001, t + 7.999999)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([2, 3, 4, 5, 6, 7, 8])
         """
@@ -1015,6 +1063,14 @@ class Trace(object):
         if endtime:
             self._rtrim(endtime, pad, nearest_sample=nearest_sample,
                         fill_value=fill_value)
+        # if pad=True and fill_value is given convert to NumPy ndarray
+        if pad is True and fill_value is not None:
+            try:
+                self.data = self.data.filled()
+            except AttributeError:
+                # numpy.ndarray object has no attribute 'filled' - ignoring
+                pass
+        return self
 
     def slice(self, starttime=None, endtime=None):
         """
@@ -1063,12 +1119,12 @@ class Trace(object):
             raise Exception(msg % (self.stats.endtime, self.stats.starttime))
         sr = self.stats.sampling_rate
         if self.stats.starttime != self.stats.endtime:
-            if int(round(delta * sr)) + 1 != len(self.data):
+            if int(compatibility.round_away(delta * sr)) + 1 != len(self.data):
                 msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data len(%d)"
                 raise Exception(msg % (sr, delta, len(self.data)))
             # Check if the endtime fits the starttime, npts and sampling_rate.
             if self.stats.endtime != self.stats.starttime + \
-                (self.stats.npts - 1) / float(self.stats.sampling_rate):
+                    (self.stats.npts - 1) / float(self.stats.sampling_rate):
                 msg = "Endtime is not the time of the last sample."
                 raise Exception(msg)
         elif self.stats.npts not in [0, 1]:
@@ -1082,7 +1138,9 @@ class Trace(object):
             msg = "Trace data should be stored as numpy.ndarray in the " + \
                   "system specific byte order."
             raise Exception(msg)
+        return self
 
+    @_add_processing_info
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
         """
@@ -1127,6 +1185,15 @@ class Trace(object):
 
         .. note::
 
+            Instead of the builtin deconvolution based on Poles and Zeros
+            information, the deconvolution can be performed using evalresp
+            instead by using the option `seedresp` (see documentation of
+            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            <http://docs.obspy.org/master/tutorial/code_snippets/\
+seismometer_correction_simulation.html#using-a-resp-file>`_.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
@@ -1136,11 +1203,10 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.plot() # doctest: +SKIP
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
         ...                       -131.04-467.29j, -131.04+467.29j],
@@ -1150,15 +1216,16 @@ class Trace(object):
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
         >>> paz_1hz['sensitivity'] = 1.0
         >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-        >>> tr.plot() # doctest: +SKIP
+        ... # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             from obspy.signal import cornFreq2Paz
             st = read()
             tr = st[0]
-            tr.plot()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
                                   -131.04-467.29j, -131.04+467.29j],
@@ -1170,34 +1237,45 @@ class Trace(object):
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             tr.plot()
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-
         # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
 
-        self.data = signal.seisSim(self.data, self.stats.sampling_rate,
-                paz_remove=paz_remove, paz_simulate=paz_simulate,
-                remove_sensitivity=remove_sensitivity,
-                simulate_sensitivity=simulate_sensitivity, **kwargs)
+        # some convenience handling for evalresp type instrument correction
+        if "seedresp" in kwargs:
+            seedresp = kwargs["seedresp"]
+            # if date is missing use trace's starttime
+            seedresp.setdefault("date", self.stats.starttime)
+            # if a Parser object is provided, get corresponding RESP
+            # information
+            from obspy.xseed import Parser
+            if isinstance(seedresp['filename'], Parser):
+                seedresp = deepcopy(seedresp)
+                kwargs['seedresp'] = seedresp
+                resp_key = ".".join(("RESP", self.stats.network,
+                                     self.stats.station, self.stats.location,
+                                     self.stats.channel))
+                for key, stringio in seedresp['filename'].getRESP():
+                    if key == resp_key:
+                        stringio.seek(0, 0)
+                        seedresp['filename'] = stringio
+                        break
+                else:
+                    msg = "Response for %s not found in Parser" % self.id
+                    raise ValueError(msg)
+            # Set the SEED identifiers!
+            for item in ["network", "station", "location", "channel"]:
+                seedresp[item] = self.stats[item]
 
-        # add processing information to the stats dictionary
-        if paz_remove:
-            proc_info = "simulate:inverse:%s:sensitivity=%s" % \
-                    (paz_remove, remove_sensitivity)
-            self._addProcessingInfo(proc_info)
-        if paz_simulate:
-            proc_info = "simulate:forward:%s:sensitivity=%s" % \
-                    (paz_simulate, simulate_sensitivity)
-            self._addProcessingInfo(proc_info)
+        from obspy.signal import seisSim
+        self.data = seisSim(
+            self.data, self.stats.sampling_rate, paz_remove=paz_remove,
+            paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
+            simulate_sensitivity=simulate_sensitivity, **kwargs)
 
+        return self
+
+    @_add_processing_info
     def filter(self, type, **options):
         """
         Filters the data of the current trace.
@@ -1245,15 +1323,16 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.filter("highpass", freq=1.0)
@@ -1266,10 +1345,9 @@ class Trace(object):
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
         self.data = func(self.data, df=self.stats.sampling_rate, **options)
-        # add processing information to the stats dictionary
-        proc_info = "filter:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
+        return self
 
+    @_add_processing_info
     def trigger(self, type, **options):
         """
         Runs a triggering algorithm on the data of the current trace.
@@ -1319,22 +1397,24 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)
-        >>> tr.plot() # doctest: +SKIP
-        >>> tr.trigger("recstalta", sta=3, lta=10)
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+        >>> tr.trigger("recstalta", sta=1, lta=4)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.filter("highpass", freq=1.0)
             tr.plot()
-            tr.trigger('recstalta', sta=3, lta=10)
+            tr.trigger('recstalta', sta=1, lta=4)
             tr.plot()
         """
         type = type.lower()
@@ -1351,10 +1431,10 @@ class Trace(object):
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the trigger_functions dictionary
         self.data = func(self.data, **options)
-        # add processing information to the stats dictionary
-        proc_info = "trigger:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
+        return self
 
+    @skipIfNoData
+    @_add_processing_info
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1366,6 +1446,9 @@ class Trace(object):
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults to ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
+        :type no_filter: bool, optional
+        :param no_filter: Deactivates automatic filtering if set to ``True``.
+            Defaults to ``True``.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which endtime of trace
             would change. Defaults to ``False``.
@@ -1389,7 +1472,8 @@ class Trace(object):
         8
         >>> tr.stats.sampling_rate
         1.0
-        >>> tr.resample(4.0)
+        >>> tr.resample(4.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> len(tr)
         32
         >>> tr.stats.sampling_rate
@@ -1415,12 +1499,11 @@ class Trace(object):
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
         # resample
         num = int(self.stats.npts / factor)
-        self.data = resample(self.data, num, window=window)
+        self.data = resample(self.data, num, window=native_str(window))
         self.stats.sampling_rate = sampling_rate
-        # add processing information to the stats dictionary
-        proc_info = "resample:%d:%s" % (sampling_rate, window)
-        self._addProcessingInfo(proc_info)
+        return self
 
+    @_add_processing_info
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
         Downsample trace data by an integer factor.
@@ -1465,21 +1548,14 @@ class Trace(object):
         1.0
         >>> tr.data
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> tr.decimate(4, strict_length=False, no_filter=True)
+        >>> tr.decimate(4, strict_length=False,
+        ...    no_filter=True)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data
         array([0, 4, 8])
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-
         # check if endtime changes and this is not explicitly allowed
         if strict_length and len(self.data) % factor:
             msg = "Endtime of trace would change and strict_length=True."
@@ -1497,12 +1573,10 @@ class Trace(object):
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure
-        self.data = signal.integerDecimation(self.data, factor)
+        from obspy.signal import integerDecimation
+        self.data = integerDecimation(self.data, factor)
         self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
-
-        # add processing information to the stats dictionary
-        proc_info = "downsample:integerDecimation:%s" % factor
-        self._addProcessingInfo(proc_info)
+        return self
 
     def max(self):
         """
@@ -1548,6 +1622,8 @@ class Trace(object):
         """
         return self.data.std()
 
+    @skipIfNoData
+    @_add_processing_info
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1579,10 +1655,10 @@ class Trace(object):
         func = _getFunctionFromEntryPoint('differentiate', type)
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
-        # add processing information to the stats dictionary
-        proc_info = "differentiate:%s" % type
-        self._addProcessingInfo(proc_info)
+        return self
 
+    @skipIfNoData
+    @_add_processing_info
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1633,10 +1709,11 @@ class Trace(object):
             args = [self.data, self.stats.delta]
         # integrating
         self.data = func(*args, **options)
-        # add processing information to the stats dictionary
-        proc_info = "integrate:%s" % (type)
-        self._addProcessingInfo(proc_info)
+        return self
 
+    @skipIfNoData
+    @raiseIfMasked
+    @_add_processing_info
     def detrend(self, type='simple', **options):
         """
         Method to remove a linear trend from the trace.
@@ -1679,22 +1756,44 @@ class Trace(object):
             options['type'] = type
         # detrending
         self.data = func(self.data, **options)
-        # add processing information to the stats dictionary
-        proc_info = "detrend:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
+        return self
 
-    def taper(self, type='cosine', *args, **kwargs):
+    @skipIfNoData
+    @taper_API_change()
+    @_add_processing_info
+    def taper(self, max_percentage, type='hann', max_length=None,
+              side='both', **kwargs):
         """
         Method to taper the trace.
 
         Optional (and sometimes necessary) options to the tapering function can
-        be provided as args and kwargs. See respective function definitions in
+        be provided as kwargs. See respective function definitions in
         `Supported Methods`_ section below.
 
         :type type: str
         :param type: Type of taper to use for detrending. Defaults to
             ``'cosine'``.  See the `Supported Methods`_ section below for
             further details.
+        :type max_percentage: None, float
+        :param max_percentage: Decimal percentage of taper at one end (ranging
+            from 0. to 0.5). Default is 0.05 (5%).
+        :type max_length: None, float
+        :param max_length: Length of taper at one end in seconds.
+        :type side: str
+        :param side: Specify if both sides should be tapered (default, "both")
+            or if only the left half ("left") or right half ("right") should be
+            tapered.
+
+        .. note::
+
+            To get the same results as the default taper in SAC, use
+            `max_percentage=0.05` and leave `type` as `hann`.
+
+        .. note::
+
+            If both `max_percentage` and `max_length` are set to a float, the
+            shorter tape length is used. If both `max_percentage` and
+            `max_length` are set to `None`, the whole trace will be tapered.
 
         .. note::
 
@@ -1752,16 +1851,51 @@ class Trace(object):
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
         type = type.lower()
+        side = side.lower()
+        side_valid = ['both', 'left', 'right']
+        npts = self.stats.npts
+        if side not in side_valid:
+            raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
+        # store all constraints for maximum taper length
+        max_half_lenghts = []
+        if max_percentage is not None:
+            max_half_lenghts.append(int(max_percentage * npts))
+        if max_length is not None:
+            max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
+        if np.all([2 * mhl > npts for mhl in max_half_lenghts]):
+            msg = "The requested taper is longer than the trace. " \
+                  "The taper will be shortened to trace length."
+            warnings.warn(msg)
+        # add full trace length to constraints
+        max_half_lenghts.append(int(npts / 2))
+        # select shortest acceptable window half-length
+        wlen = min(max_half_lenghts)
+        # obspy.signal.cosTaper has a default value for taper percentage,
+        # we need to override is as we control percentage completely via npts
+        # of taper function and insert ones in the middle afterwards
+        if type == "cosine":
+            kwargs['p'] = 1.0
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        self.data = self.data * func(self.stats.npts, *args, **kwargs)
-        # add processing information to the stats dictionary
-        proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
-        self._addProcessingInfo(proc_info)
+        if 2 * wlen == npts:
+            taper_sides = func(2 * wlen, **kwargs)
+        else:
+            taper_sides = func(2 * wlen + 1, **kwargs)
+        if side == 'left':
+            taper = np.hstack((taper_sides[:wlen], np.ones(npts - wlen)))
+        elif side == 'right':
+            taper = np.hstack((np.ones(npts - wlen),
+                               taper_sides[len(taper_sides) - wlen:]))
+        else:
+            taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
+                               taper_sides[len(taper_sides) - wlen:]))
+        self.data = self.data * taper
+        return self
 
+    @_add_processing_info
     def normalize(self, norm=None):
         """
         Method to normalize the trace to its absolute maximum.
@@ -1786,17 +1920,19 @@ class Trace(object):
         .. rubric:: Example
 
         >>> tr = Trace(data=np.array([0, -3, 9, 6]))
-        >>> tr.normalize()
+        >>> tr.normalize()  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
-        >>> tr.stats.processing
-        ['normalize:9']
+        >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=None)
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
-        >>> tr.normalize()
+        >>> tr.normalize()  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
-        >>> tr.stats.processing
-        ['normalize:-9.2']
+        >>> print(tr.stats.processing[0])  # doctest: +ELLIPSIS
+        ObsPy ...: normalize(norm=None)
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
@@ -1811,9 +1947,7 @@ class Trace(object):
         self.data = self.data.astype("float64")
         self.data /= abs(norm)
 
-        # add processing information to the stats dictionary
-        proc_info = "normalize:%s" % norm
-        self._addProcessingInfo(proc_info)
+        return self
 
     def copy(self):
         """
@@ -1862,18 +1996,20 @@ class Trace(object):
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
 
+    @_add_processing_info
     def split(self):
         """
         Splits Trace object containing gaps using a NumPy masked array into
         several traces.
 
-        :rtype: list
-        :returns: List of split traces. A gapless trace will still be
-            returned as list with only one entry.
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: Stream containing all split traces. A gapless trace will
+            still be returned as Stream with only one entry.
         """
+        from obspy import Stream
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
-            return [self]
+            return Stream([self])
         slices = flatnotmaskedContiguous(self.data)
         trace_list = []
         for slice in slices:
@@ -1882,9 +2018,10 @@ class Trace(object):
             stats = self.stats.copy()
             tr = Trace(header=stats)
             tr.stats.starttime += (stats.delta * slice.start)
-            tr.data = self.data[slice.start:slice.stop]
+            # return the underlying data not the masked array
+            tr.data = self.data.data[slice.start:slice.stop]
             trace_list.append(tr)
-        return trace_list
+        return Stream(trace_list)
 
     def times(self):
         """
@@ -1902,6 +2039,233 @@ class Trace(object):
         if isinstance(self.data, np.ma.masked_array):
             timeArray = np.ma.array(timeArray, mask=self.data.mask)
         return timeArray
+
+    def attach_response(self, inventories):
+        """
+        Search for and attach channel response to the trace as
+        :class:`Trace`.stats.response. Raises an exception if no matching
+        response can be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Trace.remove_response`.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> tr = st[0]
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> tr.attach_response(inv)
+        >>> print(tr.stats.response)  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+
+        :type inventories: :class:`~obspy.station.inventory.Inventory` or
+            :class:`~obspy.station.network.Network` or a list containing
+            objects of these types or a string with a filename of a StationXML
+            file.
+        :param inventories: Station metadata to use in search for response for
+            each trace in the stream.
+        """
+        from obspy.station import Inventory, Network, read_inventory
+        if isinstance(inventories, Inventory) or \
+           isinstance(inventories, Network):
+            inventories = [inventories]
+        elif isinstance(inventories, (str, native_str)):
+            inventories = [read_inventory(inventories)]
+        responses = []
+        for inv in inventories:
+            try:
+                responses.append(inv.get_response(self.id,
+                                                  self.stats.starttime))
+            except:
+                pass
+        if len(responses) > 1:
+            msg = "Found more than one matching response. Attaching first."
+            warnings.warn(msg)
+        elif len(responses) < 1:
+            msg = "No matching response information found."
+            raise Exception(msg)
+        self.stats.response = responses[0]
+
+    @_add_processing_info
+    def remove_response(self, output="VEL", water_level=60, pre_filt=None,
+                        zero_mean=True, taper=True, taper_fraction=0.05,
+                        **kwargs):
+        """
+        Deconvolve instrument response.
+
+        Uses the :class:`obspy.station.response.Response` object attached as
+        :class:`Trace`.stats.response to deconvolve the instrument response
+        from the trace's timeseries data. Raises an exception if the response
+        is not present. Use e.g. :meth:`Trace.attach_response` to attach
+        response to trace providing :class:`obspy.station.inventory.Inventory`
+        data.
+        Note that there are two ways to prevent overamplification
+        while convolving the inverted instrument spectrum: One possibility is
+        to specify a water level which represents a clipping of the inverse
+        spectrum and limits amplification to a certain maximum cut-off value
+        (`water_level` in dB). The other possibility is to taper the waveform
+        data in the frequency domain prior to multiplying with the inverse
+        spectrum, i.e. perform a pre-filtering in the frequency domain
+        (specifying the four corner frequencies of the frequency taper as a
+        tuple in `pre_filt`).
+
+        .. note::
+
+            Any additional kwargs will be passed on to
+            :meth:`obspy.station.response.Response.get_evalresp_response`, see
+            documentation of that method for further customization (e.g.
+            start/stop stage).
+
+        .. note::
+
+            Using :meth:`~Trace.remove_response` is equivalent to using
+            :meth:`~Trace.simulate` with the identical response provided as
+            a (dataless) SEED or RESP file and when using the same
+            `water_level` and `pre_filt` (and options `sacsim=True` and
+            `pitsasim=False` which influence very minor details in detrending
+            and tapering).
+
+        .. rubric:: Example
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> tr = st[0].copy()
+        >>> tr.plot()  # doctest: +SKIP
+        >>> # Response object is already attached to example data:
+        >>> print(tr.stats.response)  \
+                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        Channel Response
+            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+            4 stages:
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+        >>> tr.remove_response()  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            st = read()
+            tr = st[0]
+            tr.remove_response()
+            tr.plot()
+
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type water_level: float
+        :param water_level: Water level for deconvolution.
+        :type pre_filt: List or tuple of four float
+        :param pre_filt: Apply a bandpass filter in frequency domain to the
+            data before deconvolution. The list or tuple defines
+            the four corner frequencies `(f1, f2, f3, f4)` of a cosine taper
+            which is one between `f2` and `f3` and tapers to zero for
+            `f1 < f < f2` and `f3 < f < f4`.
+        :type zero_mean: bool
+        :param zero_mean: If `True`, the mean of the waveform data is
+            subtracted in time domain prior to deconvolution.
+        :type taper: bool
+        :param taper: If `True`, a cosine taper is applied to the waveform data
+            in time domain prior to deconvolution.
+        :type taper_fraction: float
+        :param taper_fraction: Taper fraction of cosine taper to use.
+        """
+        from obspy.station import Response, PolynomialResponseStage
+        from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
+
+        if "response" not in self.stats:
+            msg = ("No response information attached to trace "
+                   "(as Trace.stats.response).")
+            raise KeyError(msg)
+        if not isinstance(self.stats.response, Response):
+            msg = ("Response must be of type obspy.station.response.Response "
+                   "(but is of type %s).") % type(self.stats.response)
+            raise TypeError(msg)
+
+        response = self.stats.response
+        # polynomial response using blockette 62 stage 0
+        if not response.response_stages and response.instrument_polynomial:
+            coefficients = response.instrument_polynomial.coefficients
+            self.data = np.poly1d(coefficients[::-1])(self.data)
+            return self
+
+        # polynomial response using blockette 62 stage 1 and no other stages
+        if len(response.response_stages) == 1 and \
+           isinstance(response.response_stages[0], PolynomialResponseStage):
+            # check for gain
+            if response.response_stages[0].stage_gain is None:
+                msg = 'Stage gain not defined for %s - setting it to 1.0'
+                warnings.warn(msg % self.id)
+                gain = 1
+            else:
+                gain = response.response_stages[0].stage_gain
+            coefficients = response.response_stages[0].coefficients[:]
+            for i in range(len(coefficients)):
+                coefficients[i] /= math.pow(gain, i)
+            self.data = np.poly1d(coefficients[::-1])(self.data)
+            return self
+
+        # use evalresp
+        data = self.data.astype("float64")
+        npts = len(data)
+        # time domain pre-processing
+        if zero_mean:
+            data -= data.mean()
+        if taper:
+            data *= cosTaper(npts, taper_fraction,
+                             sactaper=True, halfcosine=False)
+        # smart calculation of nfft dodging large primes
+        from obspy.signal.util import _npts2nfft
+        nfft = _npts2nfft(npts)
+        # Transform data to Frequency domain
+        data = np.fft.rfft(data, n=nfft)
+        # calculate and apply frequency response,
+        # optionally prefilter in frequency domain and/or apply water level
+        freq_response, freqs = \
+            self.stats.response.get_evalresp_response(self.stats.delta, nfft,
+                                                      output=output, **kwargs)
+        if pre_filt:
+            data *= c_sac_taper(freqs, flimit=pre_filt)
+        if water_level is not None:
+            specInv(freq_response, water_level)
+        data *= freq_response
+
+        data[-1] = abs(data[-1]) + 0.0j
+        # transform data back into the time domain
+        data = np.fft.irfft(data)[0:npts]
+        # assign processed data and store processing information
+        self.data = data
+        info = ":".join(["remove_response"] +
+                        [str(x) for x in (output, water_level, pre_filt,
+                                          zero_mean, taper, taper_fraction)] +
+                        ["%s=%s" % (k, v) for k, v in kwargs.items()])
+        self._addProcessingInfo(info)
+        return self
+
+
+def _data_sanity_checks(value):
+    """
+    Checks if a given input is suitable to be used for Trace.data. Raises the
+    corresponding exception if it is not, otherwise silently passes.
+    """
+    if not isinstance(value, np.ndarray):
+        msg = "Trace.data must be a NumPy array."
+        raise ValueError(msg)
+    if value.ndim != 1:
+        msg = ("Numpy array for Trace.data has bad shape ('%s'). Only 1-d "
+               "arrays are allowed for initialization.") % str(value.shape)
+        raise ValueError(msg)
 
 
 if __name__ == '__main__':

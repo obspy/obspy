@@ -1,0 +1,50 @@
+.TH MST_GROUPSORT 3 2007/04/12 "Libmseed API"
+.SH DESCRIPTION
+Manipulate MSTrace segments in a MSTraceGroup
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSTrace  *\fBmst_groupsort\fP ( MSTraceGroup *" mstg ", flag " quality " );
+
+.BI "MSTrace  *\fBmst_groupheal\fP ( MSTraceGroup *" mstg ", double " timetol ",
+.BI "                          double " sampratetol " );"
+.fi
+
+.SH DESCRIPTION
+\fBmst_groupsort\fP will sort the MSTrace segments in a MSTraceGroup
+first on the source name (as returned by \fBmst_srcname\fP), then on
+start time, then on descending end time, and finally on sample rate.
+The \fIquality\fP flag, passed directly to \fBmst_srcname\fP, controls
+the addition of the quality indicator to the source name and thus the
+addition of sorting on the quality indicator (but only if the MSTrace
+has an associated quality, see \fBmst_srcname(3)\fP for more details).
+
+\fBmst_groupheal\fP will attempt to heal MSTrace segments in a
+MSTraceGroup if they fit within the specified time and sample rate
+tolerance (\fItimetol\fP and \fIsampratetol\fP respectively).  This is
+useful when, for whatever reason, the MSTraceGroup has separate
+MSTrace segments which belong together.  This usually only happens
+when data is added to a MSTraceGroup in random data time order.
+Before attempting to heal the MSTraces the MSTraceGroup will be sorted
+using \fBmst_groupsort\fP.
+
+If \fIsampratetol\fP is -1.0 the default tolerance of abs(1-sr1/sr2)
+is used.  If \fItimetol\fP is -1.0 the default time tolerance of 1/2
+the sample period will be used.
+
+.SH RETURN VALUES
+\fBmst_groupsort\fP returns 0 on success and -1 on error.
+
+\fBmst_groupheal\fP returns the number of MSTrace segments merged on
+success and -1 on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP and \fBmst_srcname(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

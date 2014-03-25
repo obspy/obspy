@@ -11,6 +11,8 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import str
 
 from obspy.core.utcdatetime import UTCDateTime
 

@@ -13,7 +13,10 @@ The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
 :license:
     Unknown
 """
+from __future__ import unicode_literals
 
+# Convenience imports.
+from obspy.taup.taup import getTravelTimes, travelTimePlot
 
 if __name__ == '__main__':
     import doctest

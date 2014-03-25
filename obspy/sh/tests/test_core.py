@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import open
 
-from obspy.core import UTCDateTime, read, Trace
+from obspy import UTCDateTime, read, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ, \
-                                                           STANDARD_ASC_HEADERS
+    STANDARD_ASC_HEADERS
 import numpy as np
 import os
 import unittest
+import warnings
 
 
 class CoreTestCase(unittest.TestCase):
@@ -118,17 +122,19 @@ class CoreTestCase(unittest.TestCase):
         stream1.verify()
         self._compareStream(stream1)
         # write
-        tempfile = NamedTemporaryFile().name
-        writeASC(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
-        # read both files and compare the content
-        text1 = open(origfile, 'rb').read()
-        text2 = open(tempfile, 'rb').read()
-        self.assertEquals(text1, text2)
-        # read again
-        stream2 = readASC(tempfile)
-        stream2.verify()
-        self._compareStream(stream2)
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            writeASC(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
+            # read both files and compare the content
+            with open(origfile, 'rt') as f:
+                text1 = f.readlines()
+            with open(tempfile, 'rt') as f:
+                text2 = f.readlines()
+            self.assertEqual(text1, text2)
+            # read again
+            stream2 = readASC(tempfile)
+            stream2.verify()
+            self._compareStream(stream2)
 
     def test_readAndWriteMultiChannelASCFileViaObsPy(self):
         """
@@ -140,14 +146,14 @@ class CoreTestCase(unittest.TestCase):
         stream1.verify()
         self._compareStream(stream1)
         # write
-        tempfile = NamedTemporaryFile().name
-        hd = STANDARD_ASC_HEADERS + ['COMMENT']
-        stream1.write(tempfile, format="SH_ASC", included_headers=hd)
-        # read again w/ auto detection
-        stream2 = read(tempfile)
-        stream2.verify()
-        self._compareStream(stream2)
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            hd = STANDARD_ASC_HEADERS + ['COMMENT']
+            stream1.write(tempfile, format="SH_ASC", included_headers=hd)
+            # read again w/ auto detection
+            stream2 = read(tempfile)
+            stream2.verify()
+            self._compareStream(stream2)
 
     def test_readAndWriteMultiChannelQFile(self):
         """
@@ -160,15 +166,15 @@ class CoreTestCase(unittest.TestCase):
         stream1.verify()
         self._compareStream(stream1)
         # write
-        tempfile = NamedTemporaryFile(suffix='.QHD').name
-        writeQ(stream1, tempfile, append=False)
-        # read again
-        stream2 = readQ(tempfile)
-        stream2.verify()
-        self._compareStream(stream2)
-        # remove binary file too (dynamically created)
-        os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        os.remove(tempfile)
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            writeQ(stream1, tempfile, append=False)
+            # read again
+            stream2 = readQ(tempfile)
+            stream2.verify()
+            self._compareStream(stream2)
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         #2 - big endian (SUN)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
         # read original
@@ -176,15 +182,15 @@ class CoreTestCase(unittest.TestCase):
         stream1.verify()
         self._compareStream(stream1)
         # write
-        tempfile = NamedTemporaryFile(suffix='.QHD').name
-        writeQ(stream1, tempfile, byteorder=">", append=False)
-        # read again
-        stream2 = readQ(tempfile, byteorder=">")
-        stream2.verify()
-        self._compareStream(stream2)
-        # remove binary file too (dynamically created)
-        os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        os.remove(tempfile)
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            writeQ(stream1, tempfile, byteorder=">", append=False)
+            # read again
+            stream2 = readQ(tempfile, byteorder=">")
+            stream2.verify()
+            self._compareStream(stream2)
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
 
     def test_readAndWriteMultiChannelQFileViaObsPy(self):
         """
@@ -197,15 +203,15 @@ class CoreTestCase(unittest.TestCase):
         stream1.verify()
         self._compareStream(stream1)
         # write
-        tempfile = NamedTemporaryFile(suffix='.QHD').name
-        stream1.write(tempfile, format="Q", append=False)
-        # read again w/ auto detection
-        stream2 = read(tempfile)
-        stream2.verify()
-        self._compareStream(stream2)
-        # remove binary file too (dynamically created)
-        os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        os.remove(tempfile)
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            stream1.write(tempfile, format="Q", append=False)
+            # read again w/ auto detection
+            stream2 = read(tempfile)
+            stream2.verify()
+            self._compareStream(stream2)
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         #2 - big endian (SUN)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
         # read original
@@ -213,15 +219,15 @@ class CoreTestCase(unittest.TestCase):
         stream1.verify()
         self._compareStream(stream1)
         # write
-        tempfile = NamedTemporaryFile(suffix='.QHD').name
-        stream1.write(tempfile, format="Q", byteorder=">", append=False)
-        # read again w/ auto detection
-        stream2 = read(tempfile, byteorder=">")
-        stream2.verify()
-        self._compareStream(stream2)
-        # remove binary file too (dynamically created)
-        os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        os.remove(tempfile)
+        with NamedTemporaryFile(suffix='.QHD') as tf:
+            tempfile = tf.name
+            stream1.write(tempfile, format="Q", byteorder=">", append=False)
+            # read again w/ auto detection
+            stream2 = read(tempfile, byteorder=">")
+            stream2.verify()
+            self._compareStream(stream2)
+            # remove binary file too (dynamically created)
+            os.remove(os.path.splitext(tempfile)[0] + '.QBN')
 
     def test_skipASClines(self):
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
@@ -245,19 +251,21 @@ class CoreTestCase(unittest.TestCase):
         for format in ['SH_ASC', 'Q']:
             for num in range(0, 4):
                 tr = Trace(data=np.arange(num))
-                tempfile = NamedTemporaryFile().name
-                if format == 'Q':
-                    tempfile += '.QHD'
-                tr.write(tempfile, format=format)
-                # test results
-                st = read(tempfile, format=format)
-                self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
-                # Q files consist of two files - deleting additional file
-                if format == 'Q':
-                    os.remove(tempfile[:-4] + '.QBN')
-                    os.remove(tempfile[:-4])
-                os.remove(tempfile)
+                with NamedTemporaryFile() as tf:
+                    tempfile = tf.name
+                    if format == 'Q':
+                        tempfile += '.QHD'
+                    tr.write(tempfile, format=format)
+                    # test results
+                    with warnings.catch_warnings() as _:  # NOQA
+                        warnings.simplefilter("ignore")
+                        st = read(tempfile, format=format)
+                    self.assertEqual(len(st), 1)
+                    self.assertEqual(len(st[0]), num)
+                    # Q files consist of two files - deleting additional file
+                    if format == 'Q':
+                        os.remove(tempfile[:-4] + '.QBN')
+                        os.remove(tempfile[:-4] + '.QHD')
 
 
 def suite():

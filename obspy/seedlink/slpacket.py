@@ -11,6 +11,11 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import chr
 
 
 from obspy.core.trace import Trace
@@ -57,15 +62,15 @@ class SLPacket(object):
     """
     TYPE_SLINFT = -101
     TYPE_SLINF = -102
-    SLTERMINATE = "SLTERMINATE"
-    SLNOPACKET = "SLNOPACKET"
-    SLERROR = "SLERROR"
+    SLTERMINATE = b"SLTERMINATE"
+    SLNOPACKET = b"SLNOPACKET"
+    SLERROR = b"SLERROR"
     SLHEADSIZE = 8
     SLRECSIZE = 512
-    SIGNATURE = "SL"
-    INFOSIGNATURE = "SLINFO"
-    ERRORSIGNATURE = "ERROR\r\n"
-    ENDSIGNATURE = "END"
+    SIGNATURE = b"SL"
+    INFOSIGNATURE = b"SLINFO"
+    ERRORSIGNATURE = b"ERROR\r\n"
+    ENDSIGNATURE = b"END"
     slhead = None
     msrecord = None
     blockette = None
@@ -102,17 +107,17 @@ class SLPacket(object):
             seqnum = int(seqstr, 16)
         except Exception:
             msg = "SLPacket.getSequenceNumber(): bad packet sequence number: "
-            print msg, seqstr
+            print(msg, seqstr)
             return -1
         return seqnum
 
     def getMSRecord(self):
         # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
-        pyobj = np.array(self.msrecord)
+        pyobj = np.frombuffer(self.msrecord, dtype=np.uint8)
         errcode = \
-                clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
-                len(pyobj), C.pointer(msr), -1, 1, 1)
+            clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
+                                len(pyobj), C.pointer(msr), -1, 1, 1)
         if errcode != 0:
             msg = "failed to decode mini-seed record: msr_parse errcode: %s"
             raise SeedLinkException(msg % (errcode))

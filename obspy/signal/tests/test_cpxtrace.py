@@ -3,6 +3,9 @@
 """
 The cpxtrace.core test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy.signal import cpxtrace, util
 from scipy import signal

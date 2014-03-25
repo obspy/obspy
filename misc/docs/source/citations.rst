@@ -23,11 +23,24 @@ Citations
    | **ObsPy: A Python Toolbox for Seismology**,
    | *Seismological Research Letters*, 81 (3), 530-533.
    | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
+.. [ChassandeMottin2002]  
+   | Chassande-Mottin, E. (2002),
+   | **Testing the normality of the gravitational wave data with a low cost recursive estimate of the kurtosis**,
+   | *arXiv*, (gr-qc/0212010).
+   | http://arxiv.org/abs/gr-qc/0212010
 .. [Deichmann1992]  
    | Deichmann, N. and Garcia-Fernandez, M. (1992),
    | **Rupture geometry from high-precision relative hypocentre locations of microearthquake clusters**,
    | *Geophysical Journal International*, 110 (3), 501-517.
    | http://doi.wiley.com/10.1111/j.1365-246X.1992.tb02088.x
+.. [Flinn1965]  
+   | Flinn, E. A. and Engdahl, E. R. (1965),
+   | **A proposed basis for geographical and seismic regionalization**,
+   | *Reviews of Geophysics*, 3 (1), 123-149.
+.. [Flinn1974]  
+   | Flinn, E. A., Engdahl, E. R., and Hill, A. R. (1974),
+   | **Seismic and geographical regionalization**,
+   | *Bulletin of the Seismological Society of America*, 64 (3-2), 771-992.
 .. [Jurkevics1988]  
    | Jurkevics, A. (1988),
    | **Polarization analysis of three-component array data**,
@@ -77,6 +90,10 @@ Citations
    | **Observations and Modeling of Seismic Background Noise**,
    | U.S. Geological Survey open-file report 93-322, Albuquerque, N.M.
    | http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+.. [Pullan1990]  
+   | Pullan, S. (1990),
+   | **Recommended standard for seismic (/radar) data files in the personal computer environment**,
+   | *Geophysics*, 55 (9), 1260-1271.
 .. [Snoke2009]  
    | Snoke, J. A. (2009),
    | **Traveltime Tables for iasp91 and ak135**,
@@ -112,8 +129,16 @@ Citations
    | **Application of Mwp to deep and teleseismic earthquakes**,
    | *Bulletin of the Seismological Society of America*, 89 (5), 1345-1351.
    | http://www.bssaonline.org/content/89/5/1345.abstract
+.. [Tsuboi2004]  
+   | {Tsuboi}, S., {Tromp}, J., and {Komatitsch}, D. (2004),
+   | **An XML-SEED Format for the Exchange of Synthetic Seismograms**,
+   | *AGU Fall Meeting Abstracts*, B3.
 .. [Withers1998]  
    | Withers, M., Aster, R., Young, C., Beiriger, J., Harris, M., Moore, S., and Trujillo, J. (1998),
    | **A comparison of select trigger algorithms for automated global seismic phase and event detection**,
    | *Bulletin of the Seismological Society of America*, 88 (1), 95-106.
    | http://www.bssaonline.org/content/88/1/95.abstract
+.. [Young1996]  
+   | Young, J. B., Presgrave, B. W., Aichele, H., Wiens, D. A., and Flinn, E. A. (1996),
+   | **The Flinn-Engdahl regionalisation scheme: the 1995 revision**,
+   | *Physics of the Earth and Planetary Interiors*, 96 (4), 223-297.

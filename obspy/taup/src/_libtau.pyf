@@ -1,0 +1,18 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module _libtau ! in
+    interface  ! in :_libtau
+        subroutine ttimes(deltain,zs,modnam,phcd,tt,toang,dtdd,dtdh,dddp) ! in :_libtau:ttimes_subrout.f
+            real :: deltain
+            real :: zs
+            character*500 :: modnam
+            character dimension(60,8), intent(c, out) :: phcd
+            real dimension(60), intent(out) :: tt
+            real dimension(60), intent(out) :: toang
+            real dimension(60), intent(out) :: dtdd
+            real dimension(60), intent(out) :: dtdh
+            real dimension(60), intent(out) :: dddp
+        end subroutine ttimes
+    end interface
+end python module _libtau

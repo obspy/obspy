@@ -18,7 +18,7 @@ format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
 http://examples.obspy.org.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
 >>> print(st) #doctest: +NORMALIZE_WHITESPACE
 1 Trace(s) in Stream:
@@ -30,7 +30,7 @@ data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
 'st[0]' will have a stats attribute containing the essential meta information
 of the WAV file.
 
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
          network:
          station:
         location:
@@ -38,7 +38,7 @@ of the WAV file.
        starttime: 1970-01-01T00:00:00.000000Z
          endtime: 1970-01-01T00:00:00.371143Z
    sampling_rate: 7000.0
-           delta: 0.000142857142857
+           delta: 0.000142857142857...
             npts: 2599
            calib: 1.0
          _format: WAV
@@ -59,6 +59,7 @@ squeezed. Using the original sampling_rate results in an WAV file with
 frequencies which cannot be heard by a human, therefore it makes sense to
 set the framerate to a high value.
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

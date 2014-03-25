@@ -5,13 +5,13 @@ from math import log10
 st = read("../data/LKBD.MSEED")
 
 paz_le3d5s = {'gain': 1.009,
-              'poles': [-0.885+0.887j,
-                        -0.885-0.887j,
-                        -0.427+0j],
+              'poles': [-0.885 + 0.887j,
+                        -0.885 - 0.887j,
+                        -0.427 + 0j],
               'sensitivity': 167364000.0,
               'zeros': [0j, 0j, 0j]}
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
-          'poles': [-6.2832-4.7124j, -6.2832+4.7124j]}
+          'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}
 
 st.simulate(paz_remove=paz_le3d5s, paz_simulate=paz_wa, water_level=10)
 

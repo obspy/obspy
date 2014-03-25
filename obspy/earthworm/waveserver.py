@@ -8,8 +8,12 @@ Low-level Earthworm Wave Server tools.
     GNU General Public License (GPLv2)
     (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import range
 
-from obspy.core import Trace, UTCDateTime, Stats, Stream
+from obspy import Trace, UTCDateTime, Stream
+from obspy.core import Stats
 import struct
 import socket
 import numpy as np
@@ -71,12 +75,12 @@ class tracebuf2:
         """
         Parse tracebuf header into class variables
         """
-        packStr = '2i3d7s9s4s3s2s3s2s2s'
+        packStr = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
         if dtype[0] in 'ts':
-            endian = '>'
+            endian = b'>'
         elif dtype[0] in 'if':
-            endian = '<'
+            endian = b'<'
         else:
             raise ValueError
         self.inputType = getNumpyType(dtype)
@@ -84,7 +88,7 @@ class tracebuf2:
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
             struct.unpack(endian + packStr, head)
         if not tp.startswith(dtype):
-            print 'Error parsing header: %s!=%s' % (dtype, tp)
+            print('Error parsing header: %s!=%s' % (dtype, tp))
         self.start = UTCDateTime(ts)
         self.end = UTCDateTime(te)
         return
@@ -96,8 +100,8 @@ class tracebuf2:
         self.data = np.fromstring(dat, self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
-            print 'data count in header (%d) != data count (%d)' % (self.nsamp,
-                                                                    ndat)
+            print('data count in header (%d) != data count (%d)' % (self.nsamp,
+                                                                    ndat))
             self.ndata = ndat
         return
 
@@ -106,26 +110,27 @@ class tracebuf2:
         Return class contents as obspy.Trace object
         """
         stat = Stats()
-        stat.network = self.net.split('\x00')[0]
-        stat.station = self.sta.split('\x00')[0]
-        location = self.loc.split('\x00')[0]
+        stat.network = self.net.split(b'\x00')[0].decode()
+        stat.station = self.sta.split(b'\x00')[0].decode()
+        location = self.loc.split(b'\x00')[0].decode()
         if location == '--':
             stat.location = ''
         else:
             stat.location = location
-        stat.channel = self.chan.split('\x00')[0]
+        stat.channel = self.chan.split(b'\x00')[0].decode()
         stat.starttime = UTCDateTime(self.start)
         stat.sampling_rate = self.rate
         stat.npts = len(self.data)
         return Trace(data=self.data, header=stat)
 
 
-def sendSockReq(server, port, reqStr):
+def sendSockReq(server, port, reqStr, timeout=None):
     """
     Sets up socket to server and port, sends reqStr
     to socket and returns open socket
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(timeout)
     s.connect((server, port))
     if reqStr[-1] == '\n':
         s.send(reqStr)
@@ -140,18 +145,18 @@ def getSockCharLine(sock, timeout=10.):
     """
     sock.settimeout(timeout)
     chunks = []
-    indat = '^'
+    indat = b'^'
     try:
-        while indat[-1] != '\n':
+        while indat[-1] != b'\n':
             # see http://obspy.org/ticket/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
             chunks.append(indat)
     except socket.timeout:
-        print 'socket timeout in getSockCharLine()'
+        print('socket timeout in getSockCharLine()')
         return None
     if chunks:
-        response = ''.join(chunks)
+        response = b''.join(chunks)
         return response
     else:
         return None
@@ -162,8 +167,7 @@ def getSockBytes(sock, nbytes, timeout=None):
     Listens for nbytes from open socket.
     Returns byte array as python string or None if timeout
     """
-    if timeout:
-        sock.settimeout(timeout)
+    sock.settimeout(timeout)
     chunks = []
     btoread = nbytes
     try:
@@ -172,7 +176,7 @@ def getSockBytes(sock, nbytes, timeout=None):
             btoread -= len(indat)
             chunks.append(indat)
     except socket.timeout:
-        print 'socket timeout in getSockBytes()'
+        print('socket timeout in getSockBytes()')
         return None
     if chunks:
         response = ''.join(chunks)
@@ -181,35 +185,39 @@ def getSockBytes(sock, nbytes, timeout=None):
         return None
 
 
-def getMenu(server, port, scnl=None):
+def getMenu(server, port, scnl=None, timeout=None):
     """
     Return list of tanks on server
     """
     rid = 'getMenu'
     if scnl:
         # only works on regular waveservers (not winston)
-        getstr = 'MENUSCNL: %s %s %s %s %s\n' % (rid, scnl[0], scnl[1],
-                                             scnl[2], scnl[3])
+        getstr = 'MENUSCNL: %s %s %s %s %s\n' % (
+            rid, scnl[0], scnl[1], scnl[2], scnl[3])
     else:
         # added SCNL not documented but required
         getstr = 'MENU: %s SCNL\n' % rid
-    sock = sendSockReq(server, port, getstr)
-    r = getSockCharLine(sock, 2.)
+    sock = sendSockReq(server, port,
+                       getstr.encode('ascii', 'strict'),
+                       timeout=timeout)
+    r = getSockCharLine(sock, timeout=timeout)
     sock.close()
     if r:
-        tokens = r.split()
+        # XXX: we got here from bytes to utf-8 to keep the remaining code
+        # intact
+        tokens = r.decode().split()
         if tokens[0] == rid:
             tokens = tokens[1:]
         flag = tokens[-1]
         if flag in ['FN', 'FC', 'FU']:
-            print 'request returned %s - %s' % (flag, RETURNFLAG_KEY[flag])
+            print('request returned %s - %s' % (flag, RETURNFLAG_KEY[flag]))
             return []
         if tokens[7] in DATATYPE_KEY:
             elen = 8  # length of return entry if location included
         elif tokens[6] in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
-            print 'no type token found in getMenu'
+            print('no type token found in getMenu')
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
@@ -224,7 +232,7 @@ def getMenu(server, port, scnl=None):
     return []
 
 
-def readWaveServerV(server, port, scnl, start, end):
+def readWaveServerV(server, port, scnl, start, end, timeout=None):
     """
     Reads data for specified time interval and scnl on specified waveserverV.
 
@@ -233,18 +241,18 @@ def readWaveServerV(server, port, scnl, start, end):
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
     reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
-    sock = sendSockReq(server, port, reqstr)
-    r = getSockCharLine(sock, 10.)
+    sock = sendSockReq(server, port, reqstr, timeout=timeout)
+    r = getSockCharLine(sock, timeout=timeout)
     if not r:
         return []
-    tokens = r.split()
+    tokens = r.decode().split()
     flag = tokens[6]
     if flag != 'F':
         msg = 'readWaveServerV returned flag %s - %s'
-        print  msg % (flag, RETURNFLAG_KEY[flag])
+        print(msg % (flag, RETURNFLAG_KEY[flag]))
         return []
     nbytes = int(tokens[-1])
-    dat = getSockBytes(sock, nbytes)
+    dat = getSockBytes(sock, nbytes, timeout=timeout)
     sock.close()
     tbl = []
     new = tracebuf2()  # empty..filled below

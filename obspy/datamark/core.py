@@ -2,13 +2,17 @@
 """
 DATAMARK bindings to ObsPy core module.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import range
 
-from obspy.core import Trace, UTCDateTime, Stream
+from obspy import Trace, UTCDateTime, Stream
 import numpy as np
 import warnings
 
 
-def isDATAMARK(filename):  # @UnusedVariable
+def isDATAMARK(filename, century="20"):  # @UnusedVariable
     """
     Checks whether a file is DATAMARK or not.
 
@@ -19,27 +23,28 @@ def isDATAMARK(filename):  # @UnusedVariable
     """
     # as long we don't have full format description we just try to read the
     # file like readDATAMARK and check for errors
+    century = "20"  # hardcoded ;(
     try:
-        fpin = open(filename, "rb")
-        pklen = fpin.read(4)
-        _truelen = np.fromstring(pklen, '>i')[0]  # equiv to Str4Int
-        buff = fpin.read(6)
-        yy = "%s%x" % (20, np.fromstring(buff[0], dtype='b')[0])
-        mm = "%x" % np.fromstring(buff[1], dtype='b')[0]
-        dd = "%x" % np.fromstring(buff[2], dtype='b')[0]
-        hh = "%x" % np.fromstring(buff[3], dtype='b')[0]
-        mi = "%x" % np.fromstring(buff[4], dtype='b')[0]
-        sec = "%x" % np.fromstring(buff[5], dtype='b')[0]
+        with open(filename, "rb") as fpin:
+            fpin.read(4)
+            buff = fpin.read(6)
+            yy = "%s%02x" % (century, ord(buff[0:1]))
+            mm = "%x" % ord(buff[1:2])
+            dd = "%x" % ord(buff[2:3])
+            hh = "%x" % ord(buff[3:4])
+            mi = "%x" % ord(buff[4:5])
+            sec = "%x" % ord(buff[5:6])
 
-        _date = UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
-                           int(sec))
-        buff = fpin.read(4)
-        _flag = np.fromstring(buff[0], dtype='b')[0]
-        _chanum = np.fromstring(buff[1], dtype='b')[0]
-        _datawide = np.fromstring(buff[2], dtype='b')[0] >> 4
-        _srate = np.fromstring(buff[3], dtype='b')[0]
-        idata00 = fpin.read(4)
-        _idata22 = np.fromstring(idata00, '>i')[0]
+            # This will raise for invalid dates.
+            UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
+                        int(sec))
+            buff = fpin.read(4)
+            '%02x' % ord(buff[0:1])
+            '%02x' % ord(buff[1:2])
+            int('%x' % (ord(buff[2:3]) >> 4))
+            ord(buff[3:4])
+            idata00 = fpin.read(4)
+            np.fromstring(idata00, '>i')[0]
     except:
         return False
     return True
@@ -61,6 +66,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
     :returns: Stream object containing header and data.
     """
     output = {}
+    srates = {}
 
     # read datamark file
     with open(filename, "rb") as fpin:
@@ -79,12 +85,12 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             buff = fpin.read(6)
             leng += 6
 
-            yy = "%s%x" % (century, np.fromstring(buff[0], dtype='b')[0])
-            mm = "%x" % np.fromstring(buff[1], dtype='b')[0]
-            dd = "%x" % np.fromstring(buff[2], dtype='b')[0]
-            hh = "%x" % np.fromstring(buff[3], dtype='b')[0]
-            mi = "%x" % np.fromstring(buff[4], dtype='b')[0]
-            sec = "%x" % np.fromstring(buff[5], dtype='b')[0]
+            yy = "%s%02x" % (century, ord(buff[0:1]))
+            mm = "%x" % ord(buff[1:2])
+            dd = "%x" % ord(buff[2:3])
+            hh = "%x" % ord(buff[3:4])
+            mi = "%x" % ord(buff[4:5])
+            sec = "%x" % ord(buff[5:6])
 
             date = UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
                                int(sec))
@@ -95,11 +101,16 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             while leng < truelen:
                 buff = fpin.read(4)
                 leng += 4
-                _flag = np.fromstring(buff[0], dtype='b')[0]
-                chanum = np.fromstring(buff[1], dtype='b')[0]
-                datawide = np.fromstring(buff[2], dtype='b')[0] >> 4
-                srate = np.fromstring(buff[3], dtype='b')[0]
+                flag = '%02x' % ord(buff[0:1])
+                chanum = '%02x' % ord(buff[1:2])
+                chanum = "%02s%02s" % (flag, chanum)
+                datawide = int('%x' % (ord(buff[2:3]) >> 4))
+                srate = ord(buff[3:4])
                 xlen = (srate - 1) * datawide
+                if datawide == 0:
+                    xlen = srate / 2
+                    datawide = 0.5
+
                 idata00 = fpin.read(4)
                 leng += 4
                 idata22 = np.fromstring(idata00, '>i')[0]
@@ -108,6 +119,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     output[chanum].append(idata22)
                 else:
                     output[chanum] = [idata22, ]
+                    srates[chanum] = srate
                 sdata = fpin.read(xlen)
                 leng += xlen
 
@@ -116,31 +128,48 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     sdata += fpin.read(xlen - len(sdata))
                     msg = "This shouldn't happen, it's weird..."
                     warnings.warn(msg)
-                for i in range((xlen / datawide)):
-                    idata2 = 0
-                    if datawide == 1:
-                        idata2 = np.fromstring(sdata[i:i + 1], 'b')[0]
-                    elif datawide == 2:
-                        idata2 = np.fromstring(sdata[2 * i:2 * (i + 1)],
-                                               '>h')[0]
-                    elif datawide == 3:
-                        idata2 = np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
-                                               '>i')[0] >> 8
-                    elif datawide == 4:
-                        idata2 = np.fromstring(sdata[4 * i:4 * (i + 1)],
-                                               '>i')[0]
-                    else:
-                        msg = "DATAWIDE is %s " % datawide + \
-                              "but only values of 1, 2, 3 or 4 are supported."
-                        raise NotImplementedError(msg)
-                    idata22 += idata2
-                    output[chanum].append(idata22)
+
+                if datawide == 0.5:
+                    for i in range(srate // 2):
+                        idata2 = output[chanum][-1] + \
+                            np.fromstring(sdata[i:i + 1], 'b')[0] >> 4
+                        output[chanum].append(idata2)
+                        idata2 = idata2 +\
+                            (np.fromstring(sdata[i:i + 1],
+                                           'b')[0] << 4) >> 4
+                        output[chanum].append(idata2)
+                elif datawide == 1:
+                    for i in range((xlen // datawide)):
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[i:i + 1], 'b')[0]
+                        output[chanum].append(idata2)
+                elif datawide == 2:
+                    for i in range((xlen // datawide)):
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[2 * i:2 * (i + 1)], '>h')[0]
+                        output[chanum].append(idata2)
+                elif datawide == 3:
+                    for i in range((xlen // datawide)):
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
+                                          '>i')[0] >> 8
+                        output[chanum].append(idata2)
+                elif datawide == 4:
+                    for i in range((xlen // datawide)):
+                        idata2 = output[chanum][-1] +\
+                            np.fromstring(sdata[4 * i:4 * (i + 1)],
+                                          '>i')[0]
+                        output[chanum].append(idata2)
+                else:
+                    msg = "DATAWIDE is %s " % datawide + \
+                          "but only values of 0.5, 1, 2, 3 or 4 are supported."
+                    raise NotImplementedError(msg)
 
     traces = []
-    for i in output.keys():
+    for i in list(output.keys()):
         t = Trace(data=np.array(output[i]))
         t.stats.channel = str(i)
-        t.stats.sampling_rate = float(srate)
+        t.stats.sampling_rate = float(srates[i])
         t.stats.starttime = start
         traces.append(t)
     return Stream(traces=traces)

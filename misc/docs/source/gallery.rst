@@ -31,6 +31,11 @@ Gallery
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html#creating-a-one-day-plot
     :alt: Creating a One-Day Plot
 
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
+    :width: 300px
+    :target: tutorial/code_snippets/waveform_plotting_tutorial.html#plotting-a-record-section
+    :alt: Plotting a Record Section
+
 .. plot:: source/tutorial/code_snippets/filtering_seismograms.py
     :width: 300px
     :target: tutorial/code_snippets/filtering_seismograms.html
@@ -126,10 +131,15 @@ Gallery
     :target: tutorial/code_snippets/array_response_function.html
     :alt: Array Response Function
 
-.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform.py
+.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform_obspy.py
     :width: 300px
     :target: tutorial/code_snippets/continuous_wavelet_transform.html
-    :alt: Continuous Wavelet Transform
+    :alt: Continuous Wavelet Transform (ObsPy)
+
+.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform_mlpy.py
+    :width: 300px
+    :target: tutorial/code_snippets/continuous_wavelet_transform.html
+    :alt: Continuous Wavelet Transform (MLPY)
 
 .. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex1.py
     :width: 300px

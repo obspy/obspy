@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from obspy.core.util import Enum
 
 OriginUncertaintyDescription = Enum([
@@ -95,6 +96,7 @@ MomentTensorCategory = Enum([
 ])
 
 EventType = Enum([
+    "not existing",
     "not reported",
     "earthquake",
     "anthropogenic event",
@@ -138,7 +140,7 @@ EventType = Enum([
     "rockslide",
     "meteorite",
     "volcanic eruption",
-])
+], replace={'other': 'other event'})
 
 EventTypeCertainty = Enum([
     "known",

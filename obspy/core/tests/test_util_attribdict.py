@@ -1,6 +1,7 @@
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 
-from obspy.core.util import AttribDict
+from obspy.core import AttribDict
 import unittest
 
 
@@ -18,7 +19,7 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via pop
         temp = ad.pop('test')
-        self.assertEquals(temp, 1)
+        self.assertEqual(temp, 1)
         self.assertFalse('test' in ad)
         self.assertTrue('test2' in ad)
         self.assertFalse('test' in ad.__dict__)
@@ -36,7 +37,7 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via popitem
         temp = ad.popitem()
-        self.assertEquals(temp, ('test2', 'test'))
+        self.assertEqual(temp, ('test2', 'test'))
         self.assertFalse('test2' in ad)
         self.assertFalse('test2' in ad.__dict__)
         self.assertFalse(hasattr(ad, 'test2'))
@@ -197,7 +198,72 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertFalse(hasattr(ad, 'test2'))
         # class attributes should be still present
         self.assertTrue(hasattr(ad, 'readonly'))
-        self.assertTrue(hasattr(ad, 'priorized_keys'))
+        self.assertTrue(hasattr(ad, 'defaults'))
+
+    def test_init_argument(self):
+        """
+        Tests initialization of AttribDict with various arguments.
+        """
+        # one dict works as expected
+        ad = AttribDict({'test': 1})
+        self.assertEqual(ad.test, 1)
+        # multiple dicts results into TypeError
+        self.assertRaises(TypeError, AttribDict, {}, {})
+        self.assertRaises(TypeError, AttribDict, {}, {}, blah=1)
+        # non-dicts results into TypeError
+        self.assertRaises(TypeError, AttribDict, 1)
+        self.assertRaises(TypeError, AttribDict, object())
+
+    def test_defaults(self):
+        """
+        Tests default of __getitem__/__getattr__ methods of AttribDict class.
+        """
+        # 1
+        ad = AttribDict()
+        ad['test'] = 'NEW'
+        self.assertEqual(ad.__getitem__('test'), 'NEW')
+        self.assertEqual(ad.__getitem__('xxx', 'blub'), 'blub')
+        self.assertEqual(ad.__getitem__('test', 'blub'), 'NEW')
+        self.assertEqual(ad.__getattr__('test'), 'NEW')
+        self.assertEqual(ad.__getattr__('xxx', 'blub'), 'blub')
+        self.assertEqual(ad.__getattr__('test', 'blub'), 'NEW')
+        # should raise KeyError without default item
+        self.assertRaises(KeyError, ad.__getitem__, 'xxx')
+        self.assertRaises(AttributeError, ad.__getattr__, 'xxx')
+
+    def test_set_readonly(self):
+        """
+        Tests of setting readonly attributes.
+        """
+        class MyAttribDict(AttribDict):
+            readonly = ['test']
+            defaults = {'test': 1}
+
+        ad = MyAttribDict()
+        self.assertEqual(ad.test, 1)
+        self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
+
+    def test_deepcopy(self):
+        """
+        Tests __deepcopy__ method of AttribDict.
+        """
+        class MyAttribDict(AttribDict):
+            defaults = {'test': 1}
+
+        ad = MyAttribDict()
+        ad.muh = 2
+        ad2 = ad.__deepcopy__()
+        self.assertEqual(ad2.test, 1)
+        self.assertEqual(ad2.muh, 2)
+
+    def test_compare_with_dict(self):
+        """
+        Checks if AttribDict is still comparable to a dict object.
+        """
+        adict = {'test': 1}
+        ad = AttribDict(adict)
+        self.assertEqual(ad, adict)
+        self.assertEqual(adict, ad)
 
 
 def suite():

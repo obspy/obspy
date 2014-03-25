@@ -1,0 +1,43 @@
+.TH MSR_INIT 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Initializing and freeing MSRecord and related structures
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSRecord *\fBmsr_init\fP ( MSRecord *" msr " );
+
+.BI "void      \fBmsr_free\fP ( MSRecord **" ppmsr " ); 
+
+.BI "void      \fBmsr_free_blktchain\fP ( MSRecord *" msr " );
+.fi
+
+.SH DESCRIPTION
+\fBmsr_init\fP will initialize a MSRecord structure.  If the \fImsr\fP
+parameter is NULL a new structure will be allocated.  If the \fImsr\fP
+parameter is not NULL the blockette chain (MSRecord.blkts) will be
+freed but any memory allocated for MSRecord.fsdh and
+MSRecord.datasamples will be preserved as it will cleanly be re-used
+by routines such as \fBmsr_unpack(3)\fP.
+
+\fBmsr_free\fP will free all memory associated with a MSRecord
+structure including the blockette chain and set the structure pointer
+(*ppmsr) to 0.
+
+\fBmsr_free_blktchain\fP will free all memory associated with the
+blockette chain of an MSRecord structure.  The shortcut blockette
+pointers will also be reset.
+
+.SH RETURN VALUES
+\fBmsr_init\fP returns a pointer to the MSRecord structure initialized
+on success or NULL on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmsr_pack(3)\fP and \fBmsr_unpack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

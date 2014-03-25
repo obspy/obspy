@@ -1,12 +1,12 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The cross correlation test suite.
 """
+from __future__ import unicode_literals
 
 import os
 import unittest
-from obspy.core import read, UTCDateTime
+from obspy import read, UTCDateTime
 from obspy.signal.cross_correlation import xcorrPickCorrection
 
 
@@ -34,16 +34,16 @@ class CrossCorrelationTestCase(unittest.TestCase):
         t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 
         dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1)
-        self.assertAlmostEquals(dt, -0.014459080288833711)
-        self.assertAlmostEquals(coeff, 0.91542878457939791)
+        self.assertAlmostEqual(dt, -0.014459080288833711)
+        self.assertAlmostEqual(coeff, 0.91542878457939791)
         dt, coeff = xcorrPickCorrection(t2, tr2, t1, tr1, 0.05, 0.2, 0.1)
-        self.assertAlmostEquals(dt, 0.014459080288833711)
-        self.assertAlmostEquals(coeff, 0.91542878457939791)
-        dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1,
-                filter="bandpass",
-                filter_options={'freqmin': 1, 'freqmax': 10})
-        self.assertAlmostEquals(dt, -0.013025086360067755)
-        self.assertAlmostEquals(coeff, 0.98279277273758803)
+        self.assertAlmostEqual(dt, 0.014459080288833711)
+        self.assertAlmostEqual(coeff, 0.91542878457939791)
+        dt, coeff = xcorrPickCorrection(
+            t1, tr1, t2, tr2, 0.05, 0.2, 0.1, filter="bandpass",
+            filter_options={'freqmin': 1, 'freqmax': 10})
+        self.assertAlmostEqual(dt, -0.013025086360067755)
+        self.assertAlmostEqual(coeff, 0.98279277273758803)
 
 
 def suite():

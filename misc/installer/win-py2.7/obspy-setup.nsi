@@ -1,5 +1,6 @@
 !include "LogicLib.nsh"
 !include "x64.nsh"
+!include "MUI2.nsh"
 
 
 Name ObsPy
@@ -33,12 +34,19 @@ RequestExecutionLevel admin
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 2.7.2-5
+!define VERSION 2.7.2-7
+!define PRODNAME "ObsPy - a Python framework for seismological observatories."
 !define COMPANY "ObsPy Developer Team"
 !define URL http://www.obspy.org
 
 # MUI Symbol Definitions
 !define MUI_ICON "obspy.ico"
+!define MUI_HEADERIMAGE
+!define MUI_WELCOMEFINISHPAGE_BITMAP "welcome.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP_NOSTRETCH 
+!define MUI_HEADERIMAGE_BITMAP "header.bmp"
+!define MUI_HEADERIMAGE_BITMAP_NOSTRETCH 
+!define MUI_HEADERIMAGE_RIGHT
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
@@ -104,7 +112,7 @@ InstallDir $PROFILE\ObsPy
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 2.7.2.3
+VIProductVersion 2.7.2.7
 VIAddVersionKey ProductName ObsPy
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -324,6 +332,7 @@ Function InstallDependencies
     # pyzmq
     DetailPrint "Running easy_install.exe -U pyzmq"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "pyzmq"'
+    DetailPrint "Copying TCL folder"
     # copy tcl folder in virtualenv as this is not done automatically
     CopyFiles "$PythonDirectory\tcl" "$INSTDIR"
 FunctionEnd
@@ -331,46 +340,8 @@ FunctionEnd
 Function InstallObsPy
     DetailPrint "Installing ObsPy ($INSTDIR)"
     # installation of all ObsPy modules
-    DetailPrint "Running easy_install.exe -U obspy.core"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.core"'
-    DetailPrint "Running easy_install.exe -U obspy.mseed"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.mseed"'
-    DetailPrint "Running easy_install.exe -U obspy.arclink"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.arclink"'
-    DetailPrint "Running easy_install.exe -U obspy.earthworm"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.earthworm"'
-    DetailPrint "Running easy_install.exe -U obspy.gse2"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.gse2"'
-    DetailPrint "Running easy_install.exe -U obspy.imaging"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.imaging"'
-    DetailPrint "Running easy_install.exe -U obspy.iris"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.iris"'
-    DetailPrint "Running easy_install.exe -U obspy.neries"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.neries"'
-    DetailPrint "Running easy_install.exe -U obspy.sac"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.sac"'
-    DetailPrint "Running easy_install.exe -U obspy.seishub"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.seg2"'
-    DetailPrint "Running easy_install.exe -U obspy.seg2"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.segy"'
-    DetailPrint "Running easy_install.exe -U obspy.seisan"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.seisan"'
-    DetailPrint "Running easy_install.exe -U obspy.segy"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.seishub"'
-    DetailPrint "Running easy_install.exe -U obspy.signal"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.signal"'
-    DetailPrint "Running easy_install.exe -U obspy.sh"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.sh"'
-    DetailPrint "Running easy_install.exe -U obspy.taup"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.taup"'
-    DetailPrint "Running easy_install.exe -U obspy.wav"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.wav"'
-    DetailPrint "Running easy_install.exe -U obspy.xseed"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.xseed"'
-    DetailPrint "Running easy_install.exe -U obspy.realtime"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.realtime"'
-    DetailPrint "Running easy_install.exe -U obspy.datamark"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.datamark"'
+    DetailPrint "Running easy_install.exe -U obspy"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy"'
 FunctionEnd
 
 # Installer sections
@@ -382,23 +353,23 @@ Section
     Call InstallPython
     Call InstallDependencies
     Call InstallObsPy
-    SetOutPath $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk" http://www.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk" http://tutorial.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk" http://gallery.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk" http://examples.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk" http://tests.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk" "cmd" '/K "$INSTDIR\Scripts\ipython"' "$INSTDIR\Scripts\python.exe" 0
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console (QT).lnk" "cmd" '/K "$INSTDIR\Scripts\ipython" qtconsole --colors=linux --pylab=inline' "$INSTDIR\Scripts\python.exe" 0
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk" "cmd" '/K "$INSTDIR\Scripts\activate.bat"'
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk" "cmd" '/K "$INSTDIR\Scripts\obspy-runtests"' "$WINDIR\System32\SHELL32.dll" 152
+    SetOutPath $SMPROGRAMS\ObsPy
+    CreateShortcut "$SMPROGRAMS\ObsPy\ObsPy Homepage.lnk" http://www.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\ObsPy\Tutorials.lnk" http://tutorial.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\ObsPy\Gallery.lnk" http://gallery.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\ObsPy\Waveform Examples.lnk" http://examples.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\ObsPy\Buildbot Reports.lnk" http://tests.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\ObsPy\IPython Console.lnk" "cmd" '/K "$INSTDIR\Scripts\ipython"' "$INSTDIR\Scripts\python.exe" 0
+    CreateShortcut "$SMPROGRAMS\ObsPy\IPython Console (QT).lnk" "cmd" '/K "$INSTDIR\Scripts\ipython" qtconsole --colors=linux --pylab=inline' "$INSTDIR\Scripts\python.exe" 0
+    CreateShortcut "$SMPROGRAMS\ObsPy\ObsPy Shell.lnk" "cmd" '/K "$INSTDIR\Scripts\activate.bat"'
+    CreateShortcut "$SMPROGRAMS\ObsPy\Run Test Suite.lnk" "cmd" '/K "$INSTDIR\Scripts\obspy-runtests"' "$WINDIR\System32\SHELL32.dll" 152
     WriteRegStr HKLM "${REGKEY}\Components" Main 1
     WriteRegStr HKLM "${REGKEY}" Path $INSTDIR
     SetOutPath $INSTDIR
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    SetOutPath $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
+    SetOutPath $SMPROGRAMS\ObsPy
+    CreateShortcut "$SMPROGRAMS\ObsPy\Uninstall ObsPy.lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
     WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
@@ -414,27 +385,22 @@ SectionEnd
 # Uninstaller sections
 Section uninstall
     SetShellVarContext all
-    Delete "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\IPython Console (QT).lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk"
-    Delete "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
+    Delete "$SMPROGRAMS\ObsPy\ObsPy Homepage.lnk"
+    Delete "$SMPROGRAMS\ObsPy\Tutorials.lnk"
+    Delete "$SMPROGRAMS\ObsPy\Gallery.lnk"
+    Delete "$SMPROGRAMS\ObsPy\Waveform Examples.lnk"
+    Delete "$SMPROGRAMS\ObsPy\Buildbot Reports.lnk"
+    Delete "$SMPROGRAMS\ObsPy\IPython Console.lnk"
+    Delete "$SMPROGRAMS\ObsPy\IPython Console (QT).lnk"
+    Delete "$SMPROGRAMS\ObsPy\ObsPy Shell.lnk"
+    Delete "$SMPROGRAMS\ObsPy\Run Test Suite.lnk"
+    Delete "$SMPROGRAMS\ObsPy\Uninstall ObsPy.lnk"
     DeleteRegValue HKLM "${REGKEY}\Components" Main
     DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     DeleteRegValue HKLM "${REGKEY}" StartMenuGroup
     DeleteRegValue HKLM "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKLM "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKLM "${REGKEY}"
-    RMDir /r $SMPROGRAMS\$StartMenuGroup
+    RMDir /r $SMPROGRAMS\ObsPy
     RMDir /r $INSTDIR
-    Push $R0
-    StrCpy $R0 $StartMenuGroup 1
-    StrCmp $R0 ">" no_smgroup
-no_smgroup:
-    Pop $R0
 SectionEnd

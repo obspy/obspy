@@ -2,7 +2,10 @@
 """
 The obspy.realtime.signal test suite.
 """
-from obspy.core import read
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import super
+from obspy import read
 from obspy.core.stream import Stream
 from obspy.realtime import RtTrace, signal
 import numpy as np
@@ -116,6 +119,38 @@ class RealTimeSignalTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
+    def test_offset(self):
+        """
+        Testing offset function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'offset': 500}
+        # filtering manual
+        self.filt_trace_data = signal.offset(trace, **options)
+        # filtering real time
+        process_list = [('offset', options)]
+        self._runRtProcess(process_list)
+        # check results
+        diff = self.rt_trace.data - self.orig_trace.data
+        self.assertEqual(np.mean(diff), 500)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
+
+    def test_kurtosis(self):
+        """
+        Testing kurtosis function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'win': 5}
+        # filtering manual
+        self.filt_trace_data = signal.kurtosis(trace, **options)
+        # filtering real time
+        process_list = [('kurtosis', options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
+
     def test_abs(self):
         """
         Testing np.abs function.
@@ -205,7 +240,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         trace = self.orig_trace.copy()
         np.testing.assert_almost_equal(self.filt_trace_data,
-                                        self.rt_trace.data)
+                                       self.rt_trace.data)
         np.testing.assert_almost_equal(trace.data[1:], self.rt_trace.data[1:])
         np.testing.assert_almost_equal(trace.data[1:],
                                        self.filt_trace_data[1:])
@@ -259,13 +294,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
 
 
 def suite():
-    # skip test suite if obspy.sac is not installed
-    try:
-        import obspy.sac  # @UnusedImport
-    except ImportError:
-        pass
-    else:
-        return unittest.makeSuite(RealTimeSignalTestCase, 'test')
+    return unittest.makeSuite(RealTimeSignalTestCase, 'test')
 
 
 if __name__ == '__main__':

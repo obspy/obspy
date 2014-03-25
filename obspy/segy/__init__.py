@@ -57,7 +57,7 @@ only unpacked on demand by default.
 
 >>> from obspy.segy.core import readSEGY
 >>> from obspy.core.util import getExampleFile
->>> # or 'from obspy.core import read' if file wide headers are of no interest
+>>> # or 'from obspy import read' if file wide headers are of no interest
 >>> filename = getExampleFile("00001034.sgy_first_trace")
 >>> st = readSEGY(filename)
 >>> st #doctest: +ELLIPSIS
@@ -74,11 +74,11 @@ unpack all header fields.
 
 >>> st1 = readSEGY(filename)
 >>> len(st1[0].stats.segy.trace_header)
-6
+8
 >>> st1[0].stats.segy.trace_header.data_use # Unpacking a value on the fly.
 1
 >>> len(st1[0].stats.segy.trace_header) # This value will remain unpacked.
-7
+9
 >>> st2 = readSEGY(filename, unpack_trace_headers=True)
 >>> len(st2[0].stats.segy.trace_header)
 92
@@ -171,7 +171,8 @@ The other possibility is to autogenerate the headers with the help of ObsPy and
 a potential manual review of them which is demonstrated in the following
 script::
 
-    from obspy.core import read, Trace, AttribDict, Stream, UTCDateTime
+    from obspy import read, Trace, Stream, UTCDateTime
+    from obspy.core import AttribDict
     from obspy.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
     from obspy.segy.core import readSEGY
     import numpy as np
@@ -236,6 +237,7 @@ _i + 1
     print stream.stats.binary_file_header.trace_sorting_code
     print st1.stats.binary_file_header.trace_sorting_code
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

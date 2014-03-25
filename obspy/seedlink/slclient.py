@@ -16,6 +16,10 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
 
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.seedlink.seedlinkexception import SeedLinkException
@@ -23,6 +27,38 @@ from obspy.seedlink.slpacket import SLPacket
 import logging
 import sys
 import traceback
+
+
+USAGE = """
+## General program options ##
+-V             report program version
+-h             show this usage message
+-v             be more verbose, multiple flags can be used
+-p             print details of data packets
+-nd delay      network re-connect delay (seconds), default 30
+-nt timeout    network timeout (seconds), re-establish connection if no
+               data/keepalives are received in this time, default 600
+-k interval    send keepalive (heartbeat) packets this often (seconds)
+-x statefile   save/restore stream state information to this file
+-t begintime   sets a beginning time for the initiation of data transmission
+               (year,month,day,hour,minute,second)
+-e endtime     sets an end time for windowed data transmission
+               (year,month,day,hour,minute,second)
+-i infolevel   request this INFO level, write response to std out, and exit
+               infolevel is one of: ID, STATIONS, STREAMS, GAPS, CONNECTIONS,
+               ALL
+
+## Data stream selection ##
+-l listfile    read a stream list from this file for multi-station mode
+-s selectors   selectors for uni-station or default for multi-station
+-S streams     select streams for multi-station (requires SeedLink >= 2.5)
+  'streams' = 'stream1[:selectors1],stream2[:selectors2],...'
+       'stream' is in NET_STA format, for example:
+       -S \"IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D\"
+
+<[host]:port>  Address of the SeedLink server in host:port format
+               if host is omitted (i.e. ':18000'), localhost is assumed
+"""
 
 
 # default logger
@@ -67,7 +103,6 @@ class SLClient(object):
     COPYRIGHT_YEAR = VERSION_YEAR
     PROGRAM_NAME = "SLClient v" + VERSION
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
-    BANNER = ["SLClient comes with ABSOLUTELY NO WARRANTY"]
 
     def __init__(self, loglevel='DEBUG'):
         """
@@ -88,10 +123,6 @@ class SLClient(object):
         self.begin_time = None
         self.end_time = None
         self.infolevel = None
-
-        ## for-while
-        for line in SLClient.BANNER:
-            print line
         self.slconn = SeedLinkConnection()
 
     def parseCmdLineArgs(self, args):
@@ -108,7 +139,7 @@ class SLClient(object):
         optind = 1
         while optind < len(args):
             if args[optind] == "-V":
-                print(self.VERSION_INFO, sys.stderr)
+                print((self.VERSION_INFO, sys.stderr))
                 return 1
             elif args[optind] == "-h":
                 self.printUsage(False)
@@ -148,12 +179,12 @@ class SLClient(object):
                 optind += 1
                 self.infolevel = args[optind]
             elif args[optind].startswith("-"):
-                print("Unknown option: " + args[optind], sys.stderr)
+                print(("Unknown option: " + args[optind], sys.stderr))
                 return -1
             elif self.slconn.getSLAddress() is None:
                 self.slconn.setSLAddress(args[optind])
             else:
-                print("Unknown option: " + args[optind], sys.stderr)
+                print(("Unknown option: " + args[optind], sys.stderr))
                 return -1
             optind += 1
         return 0
@@ -203,11 +234,11 @@ class SLClient(object):
                 if terminate:
                     break
             except SeedLinkException as sle:
-                print(self.__class__.__name__ + ": " + sle.value)
-            if count >= sys.maxint:
+                print((self.__class__.__name__ + ": " + sle.value))
+            if count >= sys.maxsize:
                 count = 1
-                print "DEBUG INFO: " + self.__class__.__name__ + ":",
-                print "Packet count reset to 1"
+                print("DEBUG INFO: " + self.__class__.__name__ + ":", end=' ')
+                print("Packet count reset to 1")
             else:
                 count += 1
             slpack = self.slconn.collect()
@@ -241,7 +272,7 @@ class SLClient(object):
         if (type == SLPacket.TYPE_SLINF):
             return False
         if (type == SLPacket.TYPE_SLINFT):
-            print "Complete INFO:\n" + self.slconn.getInfoString()
+            print("Complete INFO:\n" + self.slconn.getInfoString())
             if self.infolevel is not None:
                 return True
             else:
@@ -254,65 +285,41 @@ class SLClient(object):
                 infostr = "ID"
                 self.slconn.requestInfo(infostr)
         except SeedLinkException as sle:
-            print(self.__class__.__name__ + ": " + sle.value)
+            print((self.__class__.__name__ + ": " + sle.value))
 
         # if here, must be a data blockette
-        print self.__class__.__name__ + ": packet seqnum:",
-        print str(seqnum) + ": blockette type: " + str(type)
+        print(self.__class__.__name__ + ": packet seqnum:", end=' ')
+        print(str(seqnum) + ": blockette type: " + str(type))
         if not self.ppackets:
             return False
 
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: "
-            print trace.id, trace.stats['starttime'],
-            print " dt:" + str(1.0 / trace.stats['sampling_rate']),
-            print " npts:" + str(trace.stats['npts']),
-            print " sampletype:" + str(trace.stats['sampletype']),
-            print " dataquality:" + str(trace.stats['dataquality'])
+            print(self.__class__.__name__ + ": blockette contains a trace: ")
+            print(trace.id, trace.stats['starttime'], end=' ')
+            print(" dt:" + str(1.0 / trace.stats['sampling_rate']), end=' ')
+            print(" npts:" + str(trace.stats['npts']), end=' ')
+            print(" sampletype:" + str(trace.stats['sampletype']), end=' ')
+            print(" dataquality:" + str(trace.stats['dataquality']))
             if self.verbose >= 3:
-                print self.__class__.__name__ + ":"
-                print "blockette contains a trace: " + str(trace.stats)
+                print(self.__class__.__name__ + ":")
+                print("blockette contains a trace: " + str(trace.stats))
         else:
-            print self.__class__.__name__ + ": blockette contains no trace"
+            print(self.__class__.__name__ + ": blockette contains no trace")
         return False
 
-    def printUsage(self, concise):
+    def printUsage(self, concise=True):
         """
         Prints the usage message for this class.
         """
-        print("\nUsage: python %s [options] <[host]:port>" % \
-              (self.__class__.__name__))
+        print(("\nUsage: python %s [options] <[host]:port>" %
+              (self.__class__.__name__)))
         if concise:
-            print("Use '-h' for detailed help")
-            return
-        print
-        print(" ## General program options ##")
-        print(" -V             report program version")
-        print(" -h             show this usage message")
-        print(" -v             be more verbose, multiple flags can be used")
-        print(" -p             print details of data packets")
-        print(" -nd delay      network re-connect delay (seconds), default 30")
-        print(" -nt timeout    network timeout (seconds), re-establish connection if no")
-        print("                  data/keepalives are received in this time, default 600")
-        print(" -k interval    send keepalive (heartbeat) packets this often (seconds)")
-        print(" -x statefile   save/restore stream state information to this file")
-        print(" -t begintime   sets a beginning time for the initiation of data transmission (year,month,day,hour,minute,second)")
-        print(" -e endtime     sets an end time for windowed data transmission  (year,month,day,hour,minute,second)")
-        print(" -i infolevel   request this INFO level, write response to std out, and exit ")
-        print("                  infolevel is one of: ID, STATIONS, STREAMS, GAPS, CONNECTIONS, ALL ")
-        print
-        print(" ## Data stream selection ##")
-        print(" -l listfile    read a stream list from this file for multi-station mode")
-        print(" -s selectors   selectors for uni-station or default for multi-station")
-        print(" -S streams     select streams for multi-station (requires SeedLink >= 2.5)")
-        print("   'streams' = 'stream1[:selectors1],stream2[:selectors2],...'")
-        print("        'stream' is in NET_STA format, for example:")
-        print("        -S \"IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D\"")
-        print("")
-        print(" <[host]:port>  Address of the SeedLink server in host:port format")
-        print("                  if host is omitted (i.e. ':18000'), localhost is assumed")
+            usage = "Use '-h' for detailed help"
+        else:
+            usage = USAGE
+        print(usage)
 
     @classmethod
     def main(cls, args):

@@ -1,0 +1,82 @@
+.TH MS_LOOKUP 3 2006/12/12 "Libmseed API"
+.SH DESCRIPTION
+Look up libmseed and Mini-SEED related information
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "char    *\fBms_errorstr\fP ( int " errorcode " );"
+
+.BI "uint8_t  \fBms_samplesize\fP ( const char " sampletype " );"
+
+.BI "char    *\fBms_encodingstr\fP ( const char " encoding " );"
+
+.BI "char    *\fBms_blktdesc\fP ( uint16_t " blkttype " );"
+
+.BI "uint16_t \fBms_blktlen\fP ( uint16_t " blkttype ", const char *" blktdata ",
+.BI "                      flag " swapflag " );
+.fi
+
+.SH DESCRIPTION
+\fBms_errorstr\fP returns a pointer to a string describing the
+specified libmseed error code.  The error codes are defined in
+libmseed.h and returned by various functions.
+
+\fBms_samplesize\fP returns the sample size based on the specified
+\fIsampletype\fP.  In general libmseed uses the following character
+sample types:
+.sp
+.nf
+"a" = 1 byte (ASCII)
+"i" = 4 bytes (integer)
+"f" = 4 bytes (float)
+"d" = 8 bytes (double)
+.fi
+
+\fBms_encoding\fP returns a pointer to a string describing the
+specified data \fIencoding\fP format.  If the encoding format is
+unknown an appropriate string is return stating just that.
+
+\fBms_blktdesc\fP returns a pointer to a string describing the
+specified blockette type (\fIblkttype\fP).  If the blockette type is
+unknown NULL is returned.
+
+\fBms_blktlen\fP returns the total length of the specified blockette
+type (\fIblkttype\fP) in bytes.  A pointer to the blockette itself
+(\fIblkt\fP) should also be provided along with a \fIswapflag\fP that
+should be set to 1 when the blockette is known to have a different
+byte order than the host computer.  The length returned includes both
+the blockette "header" (type and next fields) and "body".
+
+Technically a pointer to blockette and the swapflag only need to be
+supplied when the blockette type is a variable length blockette and
+the length is contained within the blockette itself (e.g. blockette
+type 2000).  For blockettes of known fixed length (most of them) the
+\fIblkt\fP pointer and \fIswapflag\fP are not used.
+
+In the case of blockette type 405 that is variable length and not self
+describing 0 will be returned.  In the case of blockette type 2000
+that is variable length and self describing the length will be read
+from a known offset into the blockette data.
+
+
+.SH RETURN VALUES
+\fBms_errorstr\fP returns a pointer to a static string.
+
+\fBms_samplesize\fP returns the sample size in bytes or 0 for unknown
+sample type.
+
+\fBms_encoding\fP returns a pointer to a static string.
+
+\fBms_blktdesc\fP returns a pointer to a static string or NULL if the
+blockette type is unknown.
+
+\fBms_blktlen\fP returns the total length of the specified blockette
+type or 0 for unknown type.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

@@ -3,9 +3,7 @@ Beamforming - FK Analysis
 =========================
 
 The following code shows how to do an FK Analysis with ObsPy. The data are from
-the blasting of the AGFA skyscraper in Munich (:func:`pickled <pickle.dump>`
-stream object with paz attached to each :class:`~obspy.core.trace.Trace`, can
-also be found `here <http://examples.obspy.org/agfa.dump>`_). We execute
+the blasting of the AGFA skyscraper in Munich. We execute
 :func:`~obspy.signal.array_analysis.sonic` using the following settings:
 
 * The slowness grid is set to corner values of -3.0 to 3.0 s/km with a step

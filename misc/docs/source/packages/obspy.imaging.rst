@@ -13,6 +13,7 @@
        beachball
        waveform
        mopad_wrapper
+       maps
 
     .. comment to end block
 

@@ -8,8 +8,9 @@ Additional utilities for obspy.db.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 
 
 def parseMappingData(lines):
