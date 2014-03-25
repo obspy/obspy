@@ -101,6 +101,10 @@ class Client(object):
         self.user = user
         self.timeout = timeout
 
+        # Cache for the webservice versions. This makes interactive use of
+        # the client more convenient.
+        self.__version_cache = {}
+
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
 
@@ -1099,6 +1103,9 @@ class Client(object):
     def get_webservice_version(self, service):
         """
         Get full version information of webservice (as a tuple of ints).
+
+        This method is cached and will only be called once for each service
+        per client object.
         """
         if service is not None and service not in self.services:
             msg = "Service '%s' not available for current client." % service
@@ -1108,9 +1115,18 @@ class Client(object):
             msg = "Service '%s is not a valid FDSN web service." % service
             raise ValueError(msg)
 
+        # Access cache.
+        if service in self.__version_cache:
+            return self.__version_cache[service]
+
         url = self._build_url(service, "version")
         version = self._download(url, return_string=True)
-        return list(map(int, version.split(b".")))
+        version = list(map(int, version.split(b".")))
+
+        # Store in cache.
+        self.__version_cache[service] = version
+
+        return version
 
     def _get_webservice_versionstring(self, service):
         """
