@@ -924,7 +924,10 @@ class Pickler(object):
                     ns_abbrev, ns = ns
                 self._addNamespace(ns, ns_abbrev)
             tag = "{%s}%s" % (ns, key)
-            self._str(value, element, tag)
+            if isinstance(value, bool):
+                self._bool(value, element, tag)
+            else:
+                self._str(value, element, tag)
 
     def _getNamespaceMap(self):
         nsmap = self.ns_dict.copy()
