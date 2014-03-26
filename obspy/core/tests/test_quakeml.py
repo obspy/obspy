@@ -11,6 +11,7 @@ from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Pick
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
@@ -786,13 +787,13 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - tag with explicit namespace but no explicit ns abbreviation
         #  - tag without explicit namespace (gets obspy default ns)
         #  - tag with explicit namespace and namespace abbreviation
-        my_extra = \
+        my_extra = AttribDict(
             {'public': {'value': True,
                         '_namespace': r"http://some-page.de/xmlns/1.0"},
              'custom_tag': {'value': "True"},
              'new_tag': {'value': 1234,
                          '_namespace': ("ns0",
-                                        r"http://test.org/xmlns/0.1")}}
+                                        r"http://test.org/xmlns/0.1")}})
         cat[0].extra = my_extra.copy()
         # insert a pick with an extra field
         p = Pick()

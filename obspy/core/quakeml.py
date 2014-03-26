@@ -28,6 +28,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
+from obspy.core.util import AttribDict
 import warnings
 from obspy.core import compatibility
 import inspect
@@ -110,6 +111,7 @@ class Unpickler(object):
             comment.text = self._xpath2obj('text', el)
             comment.creation_info = self._creation_info(el)
             comment.resource_id = el.get('id', None)
+            self._extra(el, comment)
             obj.append(comment)
         return obj
 
@@ -121,6 +123,7 @@ class Unpickler(object):
             contrib.residual = self._xpath2obj("residual", el, float)
             contrib.station_magnitude_id = \
                 self._xpath2obj("stationMagnitudeID", el, str)
+            self._extra(el, contrib)
             obj.append(contrib)
         return obj
 
@@ -138,6 +141,7 @@ class Unpickler(object):
         obj.creation_time = self._xpath2obj(
             'creationInfo/creationTime', element, UTCDateTime)
         obj.version = self._xpath2obj('creationInfo/version', element)
+        self._extra(element, obj)
         return obj
 
     def _origin_quality(self, element):
@@ -166,6 +170,7 @@ class Unpickler(object):
             'quality/maximumDistance', element, float)
         obj.median_distance = self._xpath2obj(
             'quality/medianDistance', element, float)
+        self._extra(element, obj)
         return obj
 
     def _event_description(self, element):
@@ -174,6 +179,7 @@ class Unpickler(object):
             text = self._xpath2obj('text', el)
             type = self._xpath2obj('type', el)
             out.append(EventDescription(text=text, type=type))
+            self._extra(el, out[-1])
         return out
 
     def _value(self, element, name, quantity_type=float):
@@ -230,6 +236,7 @@ class Unpickler(object):
             ct.hour, ct.hour_errors = self._int_value(el, 'hour')
             ct.minute, ct.minute_errors = self._int_value(el, 'minute')
             ct.second, ct.second_errors = self._float_value(el, 'second')
+            self._extra(el, ct)
             obj.append(ct)
         return obj
 
@@ -247,6 +254,7 @@ class Unpickler(object):
             'majorAxisAzimuth', element, float)
         obj.major_axis_rotation = self._xpath2obj(
             'majorAxisRotation', element, float)
+        self._extra(element, obj)
         return obj
 
     def _origin_uncertainty(self, element):
@@ -270,6 +278,7 @@ class Unpickler(object):
             obj.confidence_ellipsoid = self._confidence_ellipsoid(ce_el[0])
         except IndexError:
             obj.confidence_ellipsoid = ConfidenceEllipsoid()
+        self._extra(element, obj)
         return obj
 
     def _waveform_ids(self, element):
@@ -321,6 +330,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _pick(self, element):
@@ -350,6 +360,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _origin(self, element):
@@ -396,6 +407,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.origin_uncertainty = self._origin_uncertainty(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _magnitude(self, element):
@@ -434,6 +446,7 @@ class Unpickler(object):
             self._station_magnitude_contributions(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _station_magnitude(self, element):
@@ -468,6 +481,7 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _axis(self, element, name):
@@ -487,6 +501,7 @@ class Unpickler(object):
         obj.azimuth, obj.azimuth_errors = self._float_value(sub_el, 'azimuth')
         obj.plunge, obj.plunge_errors = self._float_value(sub_el, 'plunge')
         obj.length, obj.length_errors = self._float_value(sub_el, 'length')
+        self._extra(sub_el, obj)
         return obj
 
     def _principal_axes(self, element):
@@ -506,6 +521,7 @@ class Unpickler(object):
         obj.p_axis = self._axis(sub_el, 'pAxis')
         # optional parameter
         obj.n_axis = self._axis(sub_el, 'nAxis')
+        self._extra(sub_el, obj)
         return obj
 
     def _nodal_plane(self, element, name):
@@ -525,6 +541,7 @@ class Unpickler(object):
         obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
         obj.dip, obj.dip_errors = self._float_value(sub_el, 'dip')
         obj.rake, obj.rake_errors = self._float_value(sub_el, 'rake')
+        self._extra(sub_el, obj)
         return obj
 
     def _nodal_planes(self, element):
@@ -547,6 +564,7 @@ class Unpickler(object):
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
         except:
             obj.preferred_plane = None
+        self._extra(sub_el, obj)
         return obj
 
     def _source_time_function(self, element):
@@ -567,6 +585,7 @@ class Unpickler(object):
         # optional parameter
         obj.rise_time = self._xpath2obj('riseTime', sub_el, float)
         obj.decay_time = self._xpath2obj('decayTime', sub_el, float)
+        self._extra(sub_el, obj)
         return obj
 
     def _tensor(self, element):
@@ -588,6 +607,7 @@ class Unpickler(object):
         obj.m_rt, obj.m_rt_errors = self._float_value(sub_el, 'Mrt')
         obj.m_rp, obj.m_rp_errors = self._float_value(sub_el, 'Mrp')
         obj.m_tp, obj.m_tp_errors = self._float_value(sub_el, 'Mtp')
+        self._extra(sub_el, obj)
         return obj
 
     def _data_used(self, element):
@@ -609,6 +629,7 @@ class Unpickler(object):
         obj.component_count = self._xpath2obj('componentCount', sub_el, int)
         obj.shortest_period = self._xpath2obj('shortestPeriod', sub_el, float)
         obj.longest_period = self._xpath2obj('longestPeriod', sub_el, float)
+        self._extra(sub_el, obj)
         return obj
 
     def _moment_tensor(self, element):
@@ -646,6 +667,7 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(mt_el)
         obj.comments = self._comments(mt_el)
         obj.resource_id = mt_el.get('publicID')
+        self._extra(mt_el, obj)
         return obj
 
     def _focal_mechanism(self, element):
@@ -689,6 +711,7 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _deserialize(self):
@@ -700,6 +723,10 @@ class Unpickler(object):
             raise Exception("Not a QuakeML compatible file or string")
         # set default namespace for parser
         self.parser.namespace = self.parser._getElementNamespace(catalog_el)
+        self._root_namespaces = [self.parser.xml_root.nsmap[element_.prefix]
+                                 for element_ in
+                                 (self.parser.xml_root,
+                                  self.parser.xml_root.getchildren()[0])]
         # create catalog
         catalog = Catalog(force_resource_id=False)
         # optional catalog attributes
@@ -761,9 +788,28 @@ class Unpickler(object):
                 event.focal_mechanisms.append(fm)
             # finally append newly created event to catalog
             event.resource_id = event_el.get('publicID')
+            self._extra(event_el, event)
             catalog.append(event)
         catalog.resource_id = catalog_el.get('publicID')
         return catalog
+
+    def _extra(self, element, obj):
+        """
+        Add information stored in custom tags in obj.extra.
+        """
+        # search all namespaces in current scope
+        for ns in element.nsmap.values():
+            # skip the two top-level quakeml namespaces,
+            # we're not interested in quakeml defined tags here
+            if ns in self._root_namespaces:
+                continue
+            # process all elements of this custom namespace, if any
+            for el in element.iterfind("{%s}*" % ns):
+                # remove namespace from tag name
+                _, name = el.tag.split("}")
+                extra = obj.setdefault("extra", AttribDict())
+                extra[name] = {'value': el.text,
+                               '_namespace': '%s' % ns}
 
 
 class Pickler(object):
