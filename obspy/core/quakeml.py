@@ -33,7 +33,6 @@ import warnings
 from obspy.core import compatibility
 import inspect
 import os
-import importlib
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -815,13 +814,13 @@ class Unpickler(object):
                     try:
                         try:
                             # Check if it's a builtin type
-                            module = importlib.import_module('__builtin__')
+                            module = __import__('__builtin__')
                             cls = getattr(module, type_)
                         except AttributeError:
                             # try to import non builtin class
                             # (e.g. UTCDateTime)
                             module, type_ = type_.rsplit(".", 1)
-                            module = importlib.import_module(module)
+                            module = __import__(module, fromlist=[""])
                             cls = getattr(module, type_)
                         value = cls(value)
                     except Exception as e:
@@ -976,7 +975,7 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, value in obj.extra.iteritems():
+        for key, value in obj.extra.items():
             ns = None
             # check if a namespace is given
             if isinstance(value, dict):
