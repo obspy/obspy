@@ -36,7 +36,7 @@ import os
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
                  'q': "http://quakeml.org/xmlns/quakeml/1.2"}
-NAMESPACE_DEFAULT = ('obspy', "http://obspy.org/xmlns/default")
+NAMESPACE_DEFAULT = ('obspy', "http://obspy.org/xmlns/0.1")
 
 
 def isQuakeML(filename):
