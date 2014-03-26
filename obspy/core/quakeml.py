@@ -936,7 +936,9 @@ class Pickler(object):
             if ns in nsmap.values():
                 continue
             ns_abbrev = "ns%d" % _i
-            _i += 1
+            while ns_abbrev in nsmap:
+                _i += 1
+                ns_abbrev = "ns%d" % _i
             nsmap[ns_abbrev] = ns
         return nsmap
 
@@ -944,14 +946,16 @@ class Pickler(object):
         if ns_abbrev is None:
             self.ns_set.add(ns)
             return
-        msg = "Namespace shortname already in use, falling back " + \
-              " to a generic shortname."
         # check if abbreviation is already in use
         if ns_abbrev == "":
+            msg = ("Using empty namespace shortname is not allowed, falling "
+                   "back to a generic shortname.")
             warnings.warn(msg)
             self.ns_set.add(ns)
             return
         elif ns_abbrev in self.ns_dict:
+            msg = ("Namespace shortname already in use, falling back "
+                   "to a generic shortname.")
             if self.ns_dict[ns_abbrev] != ns:
                 warnings.warn(msg)
                 self.ns_set.add(ns)
