@@ -871,6 +871,7 @@ class Pickler(object):
         self._str(creation_info.author_uri, subelement, 'authorURI')
         self._time(creation_info.creation_time, subelement, 'creationTime')
         self._str(creation_info.version, subelement, 'version')
+        self._extra(creation_info, subelement)
         # append only if at least one sub-element is set
         if len(subelement) > 0:
             element.append(subelement)
@@ -886,6 +887,7 @@ class Pickler(object):
             if contrib.residual:
                 etree.SubElement(contrib_el, 'residual').text = \
                     str(contrib.residual)
+            self._extra(contrib, contrib_el)
             element.append(contrib_el)
 
     def _comments(self, comments, element):
@@ -896,6 +898,7 @@ class Pickler(object):
             comment_el = etree.Element('comment', attrib=attrib)
             etree.SubElement(comment_el, 'text').text = comment.text
             self._creation_info(comment.creation_info, comment_el)
+            self._extra(comment, comment_el)
             element.append(comment_el)
 
     def _extra(self, obj, element):
@@ -992,6 +995,7 @@ class Pickler(object):
         self._str(arrival.earth_model_id, element, 'earthModelID')
         self._comments(arrival.comments, element)
         self._creation_info(arrival.creation_info, element)
+        self._extra(arrival, element)
         return element
 
     def _magnitude(self, magnitude):
@@ -1029,6 +1033,7 @@ class Pickler(object):
             magnitude.station_magnitude_contributions, element)
         self._comments(magnitude.comments, element)
         self._creation_info(magnitude.creation_info, element)
+        self._extra(magnitude, element)
         return element
 
     def _station_magnitude(self, magnitude):
@@ -1063,6 +1068,7 @@ class Pickler(object):
         self._waveform_id(magnitude.waveform_id, element)
         self._comments(magnitude.comments, element)
         self._creation_info(magnitude.creation_info, element)
+        self._extra(magnitude, element)
         return element
 
     def _origin(self, origin):
@@ -1109,6 +1115,7 @@ class Pickler(object):
             self._value(ctime.hour, ctime.hour_errors, ct_el, 'hour')
             self._value(ctime.minute, ctime.minute_errors, ct_el, 'minute')
             self._value(ctime.second, ctime.second_errors, ct_el, 'second')
+            self._extra(ctime, ct_el)
             if len(ct_el) > 0:
                 element.append(ct_el)
         # quality
@@ -1129,6 +1136,7 @@ class Pickler(object):
             self._str(qu.minimum_distance, qu_el, 'minimumDistance')
             self._str(qu.maximum_distance, qu_el, 'maximumDistance')
             self._str(qu.median_distance, qu_el, 'medianDistance')
+            self._extra(qu, qu_el)
             if len(qu_el) > 0:
                 element.append(qu_el)
         self._str(origin.origin_type, element, 'type')
@@ -1163,15 +1171,18 @@ class Pickler(object):
                 self._str(ce.major_axis_plunge, ce_el, 'majorAxisPlunge')
                 self._str(ce.major_axis_azimuth, ce_el, 'majorAxisAzimuth')
                 self._str(ce.major_axis_rotation, ce_el, 'majorAxisRotation')
+                self._extra(ce, ce_el)
                 # add confidence ellipsoid to origin uncertainty only if set
                 if len(ce_el) > 0:
                     ou_el.append(ce_el)
+            self._extra(ou, ou_el)
             # add origin uncertainty to origin only if anything is set
             if len(ou_el) > 0:
                 element.append(ou_el)
         # arrivals
         for ar in origin.arrivals:
             element.append(self._arrival(ar))
+        self._extra(origin, element)
         return element
 
     def _pick(self, pick):
@@ -1221,6 +1232,7 @@ class Pickler(object):
                         obj.nodal_plane_1.dip_errors, el, 'dip')
             self._value(obj.nodal_plane_1.rake,
                         obj.nodal_plane_1.rake_errors, el, 'rake')
+            self._extra(obj.nodal_plane_1, el)
             subelement.append(el)
         if obj.nodal_plane_2:
             el = etree.Element('nodalPlane2')
@@ -1230,10 +1242,12 @@ class Pickler(object):
                         obj.nodal_plane_2.dip_errors, el, 'dip')
             self._value(obj.nodal_plane_2.rake,
                         obj.nodal_plane_2.rake_errors, el, 'rake')
+            self._extra(obj.nodal_plane_2, el)
             subelement.append(el)
         if obj.preferred_plane:
             subelement.attrib['preferredPlane'] = str(obj.preferred_plane)
         # append only if at least one sub-element is set
+        self._extra(obj, subelement)
         if len(subelement) > 0:
             element.append(subelement)
 
@@ -1255,6 +1269,7 @@ class Pickler(object):
                     obj.t_axis.plunge_errors, el, 'plunge')
         self._value(obj.t_axis.length,
                     obj.t_axis.length_errors, el, 'length')
+        self._extra(obj.t_axis, el)
         subelement.append(el)
         # pAxis
         el = etree.Element('pAxis')
@@ -1264,6 +1279,7 @@ class Pickler(object):
                     obj.p_axis.plunge_errors, el, 'plunge')
         self._value(obj.p_axis.length,
                     obj.p_axis.length_errors, el, 'length')
+        self._extra(obj.p_axis, el)
         subelement.append(el)
         # nAxis (optional)
         if obj.n_axis:
@@ -1274,7 +1290,9 @@ class Pickler(object):
                         obj.n_axis.plunge_errors, el, 'plunge')
             self._value(obj.n_axis.length,
                         obj.n_axis.length_errors, el, 'length')
+            self._extra(obj.n_axis, el)
             subelement.append(el)
+        self._extra(obj, subelement)
         element.append(subelement)
 
     def _moment_tensor(self, moment_tensor, element):
@@ -1301,6 +1319,7 @@ class Pickler(object):
             self._str(sub.component_count, sub_el, 'componentCount')
             self._str(sub.shortest_period, sub_el, 'shortestPeriod')
             self._str(sub.longest_period, sub_el, 'longestPeriod')
+            self._extra(sub, sub_el)
             mt_el.append(sub_el)
         self._str(moment_tensor.moment_magnitude_id,
                   mt_el, 'momentMagnitudeID')
@@ -1316,6 +1335,7 @@ class Pickler(object):
             self._value(sub.m_rt, sub.m_rt_errors, sub_el, 'Mrt')
             self._value(sub.m_rp, sub.m_rp_errors, sub_el, 'Mrp')
             self._value(sub.m_tp, sub.m_tp_errors, sub_el, 'Mtp')
+            self._extra(sub, sub_el)
             mt_el.append(sub_el)
         self._str(moment_tensor.variance, mt_el, 'variance')
         self._str(moment_tensor.variance_reduction, mt_el, 'varianceReduction')
@@ -1332,12 +1352,14 @@ class Pickler(object):
             self._str(sub.duration, sub_el, 'duration')
             self._str(sub.rise_time, sub_el, 'riseTime')
             self._str(sub.decay_time, sub_el, 'decayTime')
+            self._extra(sub, sub_el)
             mt_el.append(sub_el)
         self._str(moment_tensor.method_id, mt_el, 'MethodID')
         self._str(moment_tensor.category, mt_el, 'category')
         self._str(moment_tensor.inversion_type, mt_el, 'inversionType')
         self._comments(moment_tensor.comments, mt_el)
         self._creation_info(moment_tensor.creation_info, mt_el)
+        self._extra(moment_tensor, mt_el)
         element.append(mt_el)
 
     def _focal_mechanism(self, focal_mechanism):
@@ -1372,6 +1394,7 @@ class Pickler(object):
                   'evaluationStatus')
         self._comments(focal_mechanism.comments, element)
         self._creation_info(focal_mechanism.creation_info, element)
+        self._extra(focal_mechanism, element)
         return element
 
     def _serialize(self, catalog, pretty_print=True):
@@ -1410,6 +1433,7 @@ class Pickler(object):
                 el = etree.Element('description')
                 self._str(description.text, el, 'text', True)
                 self._str(description.type, el, 'type')
+                self._extra(description, el)
                 event_el.append(el)
             self._comments(event.comments, event_el)
             self._creation_info(event.creation_info, event_el)
@@ -1434,6 +1458,7 @@ class Pickler(object):
         nsmap = self._getNamespaceMap()
         root_el = etree.Element('{%s}quakeml' % NSMAP_QUAKEML['q'],
                                 nsmap=nsmap)
+        self._extra(catalog, catalog_el)
         root_el.append(catalog_el)
         return tostring(root_el, pretty_print=pretty_print)
 
