@@ -7,7 +7,8 @@ from future.builtins import open
 from future.builtins import str
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
-    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
+    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
+    Pick
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
@@ -767,6 +768,74 @@ class QuakeMLTestCase(unittest.TestCase):
             self.assertEqual(len(w), 0)
 
         self.assertEqual(cat1, cat2)
+
+    def test_write_with_extra_tags_and_read(self):
+        """
+        Tests that a QuakeML file with additional custom "extra" tags gets
+        written correctly and that when reading it again the extra tags are
+        parsed correctly.
+        """
+        filename = os.path.join(self.path, "quakeml_1.2_origin.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        # add some custom tags to first event:
+        #  - tag with explicit namespace but no explicit ns abbreviation
+        #  - tag without explicit namespace (gets obspy default ns)
+        #  - tag with explicit namespace and namespace abbreviation
+        my_extra = \
+            {'public': {'value': True,
+                        '_namespace': r"http://some-page.de/xmlns/1.0"},
+             'custom_tag': {'value': "True"},
+             'new_tag': {'value': 1234,
+                         '_namespace': ("ns0",
+                                        r"http://test.org/xmlns/0.1")}}
+        cat[0].extra = my_extra.copy()
+        # insert a pick with an extra field
+        p = Pick()
+        p.extra = {'weight': 2}
+        cat[0].picks.append(p)
+
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write file
+            cat.write(tmpfile, "QUAKEML")
+            # check contents
+            with open(tmpfile, "rb") as fh:
+                lines = fh.readlines()
+            # check namespace definitions in root element
+            got = sorted(lines[1].strip()[:-1].split())
+            expected = ['<q:quakeml',
+                        'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        'xmlns:obspy="http://obspy.org/xmlns/0.1"',
+                        'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            self.assertEqual(got, expected)
+            # check additional tags
+            got = sorted([lines[i_].strip() for i_ in xrange(85, 88)])
+            expected = ['<ns0:new_tag>1234</ns0:new_tag>',
+                        '<ns1:public>true</ns1:public>',
+                        '<obspy:custom_tag>True</obspy:custom_tag>']
+            self.assertEqual(got, expected)
+            # now, read again to test if its parsed correctly..
+            cat = readQuakeML(tmpfile)
+        # when reading..
+        #  - namespace abbreviations should be disregarded
+        #  - we always end up with a namespace definition, even if it was
+        #    omitted when originally setting the custom tag
+        my_extra['custom_tag']['_namespace'] = r'http://obspy.org/xmlns/0.1'
+        my_extra['new_tag']['_namespace'] = r'http://test.org/xmlns/0.1'
+        self.assertTrue(hasattr(cat[0], "extra"))
+        self.assertEqual(cat[0].extra, my_extra)
+        self.assertTrue(hasattr(cat[0].picks[0], "extra"))
+        self.assertEqual(
+            cat[0].picks[0].extra,
+            {'weight': {'value': 2,
+                        '_namespace': r'http://obspy.org/xmlns/0.1'}})
 
 
 def suite():
