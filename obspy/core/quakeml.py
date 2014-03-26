@@ -33,6 +33,7 @@ import warnings
 from obspy.core import compatibility
 import inspect
 import os
+import importlib
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -807,8 +808,28 @@ class Unpickler(object):
             for el in element.iterfind("{%s}*" % ns):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
+                value = el.text
+                # try to reconstruct original python type from attribute
+                type_ = el.get("pythonType")
+                if type_ is not None:
+                    try:
+                        try:
+                            # Check if it's a builtin type
+                            module = importlib.import_module('__builtin__')
+                            cls = getattr(module, type_)
+                        except AttributeError:
+                            # try to import non builtin class
+                            # (e.g. UTCDateTime)
+                            module, type_ = type_.rsplit(".", 1)
+                            module = importlib.import_module(module)
+                            cls = getattr(module, type_)
+                        value = cls(value)
+                    except Exception as e:
+                        msg = ("Failed to automatically convert extra tag to "
+                               "correct Python type: %s" % str(e))
+                        warnings.warn(msg)
                 extra = obj.setdefault("extra", AttribDict())
-                extra[name] = {'value': el.text,
+                extra[name] = {'value': value,
                                '_namespace': '%s' % ns}
 
 
@@ -852,17 +873,18 @@ class Pickler(object):
         except:
             return ResourceIdentifier().getQuakeMLURI()
 
-    def _str(self, value, root, tag, always_create=False):
+    def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
             value = value.getQuakeMLURI()
         if always_create is False and value is None:
             return
-        etree.SubElement(root, tag).text = "%s" % (value)
+        etree.SubElement(root, tag, attrib=attrib).text = "%s" % value
 
-    def _bool(self, value, root, tag, always_create=False):
+    def _bool(self, value, root, tag, always_create=False, attrib=None):
         if always_create is False and value is None:
             return
-        etree.SubElement(root, tag).text = str(bool(value)).lower()
+        etree.SubElement(root, tag, attrib=attrib).text = \
+            str(bool(value)).lower()
 
     def _time(self, value, root, tag, always_create=False):
         if always_create is False and value is None:
@@ -973,10 +995,16 @@ class Pickler(object):
                     ns_abbrev, ns = ns
                 self._addNamespace(ns, ns_abbrev)
             tag = "{%s}%s" % (ns, key)
-            if isinstance(value, bool):
-                self._bool(value, element, tag)
+            cls = type(value)
+            if cls.__module__ == "__builtin__":
+                type_ = str(cls.__name__)
             else:
-                self._str(value, element, tag)
+                type_ = ".".join((cls.__module__, cls.__name__))
+            attrib = {'pythonType': type_}
+            if isinstance(value, bool):
+                self._bool(value, element, tag, attrib=attrib)
+            else:
+                self._str(value, element, tag, attrib=attrib)
 
     def _getNamespaceMap(self):
         nsmap = self.ns_dict.copy()

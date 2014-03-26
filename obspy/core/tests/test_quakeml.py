@@ -790,10 +790,11 @@ class QuakeMLTestCase(unittest.TestCase):
         my_extra = AttribDict(
             {'public': {'value': True,
                         '_namespace': r"http://some-page.de/xmlns/1.0"},
-             'custom_tag': {'value': "True"},
+             'custom': {'value': u"True"},
              'new_tag': {'value': 1234,
                          '_namespace': ("ns0",
-                                        r"http://test.org/xmlns/0.1")}})
+                                        r"http://test.org/xmlns/0.1")},
+             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')}})
         cat[0].extra = my_extra.copy()
         # insert a pick with an extra field
         p = Pick()
@@ -817,10 +818,13 @@ class QuakeMLTestCase(unittest.TestCase):
                         'xmlns="http://quakeml.org/xmlns/bed/1.2"']
             self.assertEqual(got, expected)
             # check additional tags
-            got = sorted([lines[i_].strip() for i_ in xrange(85, 88)])
-            expected = ['<ns0:new_tag>1234</ns0:new_tag>',
-                        '<ns1:public>true</ns1:public>',
-                        '<obspy:custom_tag>True</obspy:custom_tag>']
+            got = sorted([lines[i_].strip() for i_ in xrange(85, 89)])
+            expected = [
+                u'<ns0:new_tag pythonType="int">1234</ns0:new_tag>',
+                u'<ns1:public pythonType="bool">true</ns1:public>',
+                u'<obspy:custom pythonType="unicode">True</obspy:custom>',
+                u'<obspy:tX pythonType="obspy.core.utcdatetime.UTCDateTime">' +
+                u'2013-01-02T13:12:14.600000Z</obspy:tX>']
             self.assertEqual(got, expected)
             # now, read again to test if its parsed correctly..
             cat = readQuakeML(tmpfile)
@@ -828,7 +832,8 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - namespace abbreviations should be disregarded
         #  - we always end up with a namespace definition, even if it was
         #    omitted when originally setting the custom tag
-        my_extra['custom_tag']['_namespace'] = r'http://obspy.org/xmlns/0.1'
+        my_extra['custom']['_namespace'] = r'http://obspy.org/xmlns/0.1'
+        my_extra['tX']['_namespace'] = r'http://obspy.org/xmlns/0.1'
         my_extra['new_tag']['_namespace'] = r'http://test.org/xmlns/0.1'
         self.assertTrue(hasattr(cat[0], "extra"))
         self.assertEqual(cat[0].extra, my_extra)
