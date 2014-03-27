@@ -1172,7 +1172,7 @@ class Pickler(object):
         if amp.time_window is not None:
             self._time_window(amp.time_window, element)
         self._str(amp.pick_id, element, 'pickID')
-        self._waveform_id(amp.waveform_id, element, 'waveformID')
+        self._waveform_id(amp.waveform_id, element, required=False)
         self._str(amp.filter_id, element, 'filterID')
         self._value(amp.scaling_time, amp.scaling_time_errors, element,
                     'scalingTime')
