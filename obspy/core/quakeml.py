@@ -278,7 +278,7 @@ class Unpickler(object):
         try:
             return self._waveform_ids(element)[0]
         except IndexError:
-            return WaveformStreamID()
+            return None
 
     def _arrival(self, element):
         """
