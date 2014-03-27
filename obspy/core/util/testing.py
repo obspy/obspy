@@ -297,7 +297,8 @@ def get_matplotlib_defaul_tolerance():
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
     ]
-FLAKE8_IGNORE_CODES = ["E256"]
+# E265: block comment should start with '# '  (> 500 appearances)
+FLAKE8_IGNORE_CODES = ["E265"]
 
 try:
     import flake8
