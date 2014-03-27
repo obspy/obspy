@@ -65,7 +65,7 @@ def isSLIST(filename):
         return False
     if not temp.startswith('TIMESERIES'):
         return False
-    if not 'SLIST' in temp:
+    if 'SLIST' not in temp:
         return False
     return True
 
@@ -91,7 +91,7 @@ def isTSPAIR(filename):
         return False
     if not temp.startswith('TIMESERIES'):
         return False
-    if not 'TSPAIR' in temp:
+    if 'TSPAIR' not in temp:
         return False
     return True
 

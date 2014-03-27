@@ -1118,7 +1118,7 @@ class SeedLinkConnection(object):
         """
         start_time = time.time()
         ready_to_write = []
-        while (not sock in ready_to_write) and \
+        while (sock not in ready_to_write) and \
               (time.time() - start_time) < timeout:
 
             _ready_to_read, ready_to_write, _in_error = \

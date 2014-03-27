@@ -142,7 +142,7 @@ class BlocketteTestCase(unittest.TestCase):
 
             # prepare XSEED
             for key, data in example.items():
-                if not 'XSEED' in key:
+                if 'XSEED' not in key:
                     continue
                 if key == 'XSEED':
                     key = ''

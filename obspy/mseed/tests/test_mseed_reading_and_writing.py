@@ -171,7 +171,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                  'int32_Steim2_littleEndian.mseed']
         for file in files:
             info = util.getRecordInformation(os.path.join(path, file))
-            if not 'ASCII' in file:
+            if 'ASCII' not in file:
                 encoding = file.split('_')[1].upper()
                 byteorder = file.split('_')[2].split('.')[0]
             else:

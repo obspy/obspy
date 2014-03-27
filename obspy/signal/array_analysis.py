@@ -513,7 +513,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         ts_w2[itime] = w[1]
         ts_w3[itime] = w[2]  # torsion in radians
         ts_tilt[itime] = np.sqrt(w[0] ** 2 + w[1] ** 2)
-            # 7/21/06.II.6(19), amount of tilt in radians
+        # 7/21/06.II.6(19), amount of tilt in radians
 
         #---------------------------------------------------------------
         #
@@ -526,9 +526,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         #
         # find maximum shear strain in horizontal plane, and find its azimuth
         eh = np.r_[np.c_[e[0, 0], e[0, 1]], np.c_[e[1, 0], e[1, 1]]]
-            # 7/21/06.II.2(4)
+        # 7/21/06.II.2(4)
         gammah = eh - np.trace(eh) * np.eye(2) / 2.
-            # 9/14/92.II.4, 7/21/06.II.2(5)
+        # 9/14/92.II.4, 7/21/06.II.2(5)
 
         # eigvecs are principal axes, eigvals are principal strains
         [eigvals, _eigvecs] = np.linalg.eig(gammah)
