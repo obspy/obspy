@@ -755,6 +755,28 @@ class QuakeMLTestCase(unittest.TestCase):
 
         self.assertEqual(cat1, cat2)
 
+    def test_read_amplitude_time_window(self):
+        """
+        Tests reading an QuakeML Amplitude with TimeWindow.
+        """
+        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        self.assertEqual(len(cat[0].amplitudes), 1)
+        amp = cat[0].amplitudes[0]
+        self.assertEqual(amp.type, "A")
+        self.assertEqual(amp.category, "point")
+        self.assertEqual(amp.unit, "m/s")
+        self.assertEqual(amp.generic_amplitude, 1e-08)
+        self.assertEqual(amp.time_window.begin, 0.0)
+        self.assertEqual(amp.time_window.end, 0.51424)
+        self.assertEqual(amp.time_window.reference,
+                         UTCDateTime("2007-10-10T14:40:39.055"))
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')
