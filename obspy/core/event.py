@@ -1099,7 +1099,7 @@ __Amplitude = _eventTypeClassFactory(
                       ("category", AmplitudeCategory),
                       ("unit", AmplitudeUnit),
                       ("method_id", ResourceIdentifier),
-                      ("period", float),
+                      ("period", float, ATTRIBUTE_HAS_ERRORS),
                       ("snr", float),
                       ("time_window", TimeWindow),
                       ("pick_id", ResourceIdentifier),
