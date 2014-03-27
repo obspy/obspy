@@ -225,7 +225,7 @@ class WaveformPlotting(object):
         ids = []
         for tr in self.stream:
             tr_id = self.__getMergeId(tr)
-            if not tr_id in ids:
+            if tr_id not in ids:
                 ids.append(tr_id)
         return ids
 

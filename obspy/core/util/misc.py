@@ -201,7 +201,7 @@ except TypeError:
         Replacement for older numpy.loadtxt versions not supporting ndlim
         parameter.
         """
-        if not 'ndlim' in kwargs:
+        if 'ndlim' not in kwargs:
             return np.loadtxt(*args, **kwargs)
         # ok we got a ndlim param
         if kwargs['ndlim'] != 1:

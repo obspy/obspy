@@ -25,7 +25,7 @@ def __parseTag(fh):
     """
     data = fh.read(16)
     # byte order format for this data. Uses letter “I” for Intel format
-        # data (little endian) or letter “M” for Motorola (big endian) format
+    # data (little endian) or letter “M” for Motorola (big endian) format
     format = unpack('=c', data[0])[0]
     if format == 'I':
         endian = '<'

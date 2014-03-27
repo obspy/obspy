@@ -77,7 +77,7 @@ def add_doctests(testsuite, module_name):
 
     for root, _dirs, files in os.walk(MODULE_PATH):
         # skip directories without __init__.py
-        if not '__init__.py' in files:
+        if '__init__.py' not in files:
             continue
         # skip tests directories
         if root.endswith('tests'):

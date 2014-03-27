@@ -303,7 +303,7 @@ class MomentTensor:
 
         All internal calculations are carried out within the NED space.
         """
-        if not self._input_basis in self._list_of_possible_input_bases:
+        if self._input_basis not in self._list_of_possible_input_bases:
             print 'provided input basis not implemented - please specify one',
             print 'of the following bases:', self._list_of_possible_input_bases
             raise MTError(' !! ')
@@ -1475,7 +1475,7 @@ class MomentTensor:
 
 def _puzzle_basis_transformation(mat_tup_arr_vec, in_basis, out_basis):
     lo_bases = ['NED', 'USE', 'XYZ', 'NWU']
-    if (not in_basis in lo_bases) and(out_basis in lo_bases):
+    if (in_basis not in lo_bases) and (out_basis in lo_bases):
         sys.exit('wrong basis chosen')
 
     if in_basis == out_basis:
@@ -2605,9 +2605,9 @@ class BeachBall:
                                    obj2cor_in_right_order[1, -1] ** 2)
             dist_last_first_point = \
                 np.sqrt((obj2cor_in_right_order[0, -1] -
-                        obj2cor_in_right_order[0, 0]) ** 2 +
-                       (obj2cor_in_right_order[1, -1] -
-                        obj2cor_in_right_order[1, 0]) ** 2)
+                         obj2cor_in_right_order[0, 0]) ** 2 +
+                        (obj2cor_in_right_order[1, -1] -
+                         obj2cor_in_right_order[1, 0]) ** 2)
 
             # check, if distance between last and first point is smaller than
             # the distance between last point and the edge (at radius=2)
@@ -3020,7 +3020,7 @@ class BeachBall:
         """
         list_of_possible_projections = ['stereo', 'ortho', 'lambert', 'gnom']
 
-        if not self._plot_projection in list_of_possible_projections:
+        if self._plot_projection not in list_of_possible_projections:
             print 'desired projection not possible - choose from:\n ',
             print list_of_possible_projections
             raise MTError(' !! ')
@@ -3059,7 +3059,7 @@ class BeachBall:
 
         available_coord_systems = ['NED']
 
-        if not self._plot_basis in available_coord_systems:
+        if self._plot_basis not in available_coord_systems:
             print 'desired plotting projection not possible - choose from :\n',
             print available_coord_systems
             raise MTError(' !! ')
@@ -3136,7 +3136,7 @@ class BeachBall:
 
         available_coord_systems = ['NED']
 
-        if not self._plot_basis in available_coord_systems:
+        if self._plot_basis not in available_coord_systems:
             print 'desired plotting projection not possible - choose from :\n',
             print available_coord_systems
             raise MTError(' !! ')
@@ -3211,7 +3211,7 @@ class BeachBall:
 
         available_coord_systems = ['NED']
 
-        if not self._plot_basis in available_coord_systems:
+        if self._plot_basis not in available_coord_systems:
             print 'desired plotting projection not possible - choose from :\n',
             print available_coord_systems
             raise MTError(' !! ')
@@ -3290,7 +3290,7 @@ class BeachBall:
 
         available_coord_systems = ['NED']
 
-        if not self._plot_basis in available_coord_systems:
+        if self._plot_basis not in available_coord_systems:
             print 'desired plotting projection not possible - choose from :\n',
             print available_coord_systems
             raise MTError(' !! ')
@@ -3838,7 +3838,7 @@ class BeachBall:
                     alpha=self._plot_faultplane_alpha * self._plot_total_alpha)
 
         elif self._plot_show_1faultplane:
-            if not self._plot_show_FP_index in [1, 2]:
+            if self._plot_show_FP_index not in [1, 2]:
                 print 'no fault plane specified for being plotted... ',
                 print 'continue without faultplane'
                 pass
@@ -5258,8 +5258,8 @@ def main():
     try:
         M_raw = [float(xx) for xx in sys.argv[2].split(',')]
     except:
-#        sys.exit('\n  ERROR - Provide valid source mechanism !!!\n')
-#    if sys.argv[2].startswith('-'):
+        #        sys.exit('\n  ERROR - Provide valid source mechanism !!!\n')
+        #    if sys.argv[2].startswith('-'):
         dummy_list = []
         dummy_list.append(sys.argv[0])
         dummy_list.append(sys.argv[1])
