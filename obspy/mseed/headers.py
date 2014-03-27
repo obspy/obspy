@@ -7,7 +7,7 @@ from distutils import sysconfig
 import ctypes as C
 import numpy as np
 import os
-import platform
+from obspy.core.util.misc import _get_lib_name
 
 
 HPTERROR = -2145916800000000L
@@ -18,9 +18,7 @@ ENDIAN = {0: '<', 1: '>'}
 # create library names
 lib_names = [
     # platform specific library name
-    'libmseed_%s_%s_py%s' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    _get_lib_name('mseed'),
     # fallback for pre-packaged libraries
     'libmseed']
 # get default file extension for shared objects

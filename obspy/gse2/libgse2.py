@@ -26,20 +26,18 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
 from distutils import sysconfig
 from obspy import UTCDateTime
+from obspy.core.util.misc import _get_lib_name
 import ctypes as C
 import doctest
 import numpy as np
 import os
-import platform
 import warnings
 
 # Import shared libgse2
 # create library names
 lib_names = [
     # platform specific library name
-    'libgse2_%s_%s_py%s' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    _get_lib_name("gse2"),
     # fallback for pre-packaged libraries
     'libgse2']
 # get default file extension for shared objects

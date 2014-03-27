@@ -4,15 +4,13 @@ from distutils import sysconfig
 from struct import unpack
 import ctypes as C
 import os
-import platform
+from obspy.core.util.misc import _get_lib_name
 
 # Import shared libsegy depending on the platform.
 # create library names
 lib_names = [
     # platform specific library name
-    'libsegy_%s_%s_py%s' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    _get_lib_name('segy'),
     # fallback for pre-packaged libraries
     'libsegy']
 # get default file extension for shared objects

@@ -57,6 +57,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
+from misc import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -316,15 +317,6 @@ def find_packages():
             modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
     return [_i.replace(os.sep, ".") for _i in modules]
 
-
-def _get_lib_name(lib):
-    """
-    Helper function to get an architecture and Python version specific library
-    filename.
-    """
-    return "lib%s_%s_%s_py%s" % (
-        lib, platform.system(), platform.architecture()[0], "".join(
-            [str(i) for i in platform.python_version_tuple()[:2]]))
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
