@@ -8,6 +8,8 @@
 
 0.9.1:
  - obspy.core:
+   * bugfix: Input/Output to/from QuakeML was missing Amplitude
+     elements (see #763)
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
    * extend remove_response for polynomial responses

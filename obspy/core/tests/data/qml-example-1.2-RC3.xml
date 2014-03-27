@@ -53,11 +53,18 @@
         <originID>smi:nz.org.geonet/event/2806038g/origin/1</originID>
         <stationCount>15</stationCount>
       </magnitude>
-      <amplitude publicID="smi:nz.org.geonet/event/2806038g/amplitude/1">
+      <amplitude publicID="smi:nz.org.geonet/event/2806038g/amplitude/1/modified">
         <type>A</type>
+        <category>point</category>
+        <unit>m/s</unit>
         <genericAmplitude>
           <value>1.0e-08</value>
         </genericAmplitude>
+        <timeWindow>
+          <reference>2007-10-10T14:40:39.055</reference>
+          <begin>0</begin>
+          <end>0.51424</end>
+        </timeWindow>
       </amplitude>
     </event>
   </eventParameters>
