@@ -1247,7 +1247,7 @@ class Client(object):
                                            stream.get('code', ''),
                                            comp.get('code', '')])
                         # write channel entry
-                        if not id in data:
+                        if id not in data:
                             data[id] = []
                         temp = AttribDict()
                         data[id].append(temp)
