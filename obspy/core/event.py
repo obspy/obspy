@@ -2816,7 +2816,7 @@ class Catalog(object):
                 msg = "%s is not a valid filter key" % key
                 raise ValueError(msg)
         if inverse:
-            events = [ev for ev in self.events if not ev in events]
+            events = [ev for ev in self.events if ev not in events]
         return Catalog(events=events)
 
     def copy(self):

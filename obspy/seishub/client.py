@@ -913,7 +913,7 @@ master/seishub/plugins/seismology/event.py
             # detailed information on the event for the description
             descrip_str = ""
             for key in interesting_keys:
-                if not key in event_dict:
+                if key not in event_dict:
                     continue
                 descrip_str += "\n%s: %s" % (key, event_dict[key])
             SubElement(placemark, "description").text = descrip_str

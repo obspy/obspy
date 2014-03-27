@@ -872,17 +872,17 @@ class Parser(object):
         Checks if all blockettes necessary for creating a SEED String are
         available.
         """
-        if not 10 in [_i.id for _i in self.volume]:
+        if 10 not in [_i.id for _i in self.volume]:
             return False
         abb_blockettes = [_i.id for _i in self.abbreviations]
-        if not 30 in abb_blockettes and not 33 in abb_blockettes and \
-           not 34 in abb_blockettes:
+        if 30 not in abb_blockettes and 33 not in abb_blockettes and \
+           34 not in abb_blockettes:
             return False
         # Check every station:
         for _i in self.stations:
             stat_blockettes = [_j.id for _j in _i]
-            if not 50 in stat_blockettes and not 52 in stat_blockettes and \
-               not 58 in stat_blockettes:
+            if 50 not in stat_blockettes and 52 not in stat_blockettes and \
+               58 not in stat_blockettes:
                 return False
         return True
 

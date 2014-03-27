@@ -48,8 +48,8 @@ class SonicTestCase(unittest.TestCase):
         trl = list()
         for i in xrange(len(geometry)):
             tr = Trace(coherent_wave[-min_dt + dt[i]:-max_dt + dt[i]].copy())
-                # + amp / SNR * \
-                # np.random.randn(length - abs(min_dt) - abs(max_dt)))
+            # + amp / SNR * \
+            # np.random.randn(length - abs(min_dt) - abs(max_dt)))
             tr.stats.sampling_rate = df
             tr.stats.coordinates = AttribDict()
             tr.stats.coordinates.x = geometry[i, 0]
