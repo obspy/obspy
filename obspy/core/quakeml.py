@@ -859,8 +859,7 @@ class Pickler(object):
     def _time(self, value, root, tag, always_create=False):
         if always_create is False and value is None:
             return
-        dt = value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-        etree.SubElement(root, tag).text = "%s" % (dt)
+        etree.SubElement(root, tag).text = str(value)
 
     def _value(self, quantity, error, element, tag, always_create=False):
         if always_create is False and quantity is None:
