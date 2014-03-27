@@ -379,7 +379,7 @@ class Unpickler(object):
         if time_window_el is not None:
             obj.time_window = self._time_window(time_window_el[0])
         obj.pick_id = self._xpath2obj('pickID', element)
-        obj.waveform_id = self._xpath2obj('waveformID', element)
+        obj.waveform_id = self._waveform_id(element)
         obj.filter_id = self._xpath2obj('filterID', element)
         obj.scaling_time, obj.scaling_time_errors = \
             self._time_value(element, 'scalingTime')
@@ -1166,13 +1166,14 @@ class Pickler(object):
         self._str(amp.type, element, 'type')
         self._str(amp.category, element, 'category')
         self._str(amp.unit, element, 'unit')
-        self._str(amp.method_id, element, 'methodId')
+        self._str(amp.method_id, element, 'methodID')
         self._value(amp.period, amp.period_errors, element, 'period')
         self._str(amp.snr, element, 'snr')
-        self._time_window(amp.time_window, element)
-        self._str(amp.pick_id, element, 'pickId')
-        self._str(amp.waveform_id, element, 'waveformId')
-        self._str(amp.filter_id, element, 'filterId')
+        if amp.time_window is not None:
+            self._time_window(amp.time_window, element)
+        self._str(amp.pick_id, element, 'pickID')
+        self._waveform_id(amp.waveform_id, element, 'waveformID')
+        self._str(amp.filter_id, element, 'filterID')
         self._value(amp.scaling_time, amp.scaling_time_errors, element,
                     'scalingTime')
         self._str(amp.magnitude_hint, element, 'magnitudeHint')
