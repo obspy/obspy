@@ -297,6 +297,7 @@ def get_matplotlib_defaul_tolerance():
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
     ]
+FLAKE8_IGNORE_CODES = ["E256"]
 
 try:
     import flake8
@@ -344,6 +345,8 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
+    flake8_style.options.ignore = \
+        tuple(set(flake8_style.options.ignore + tuple(FLAKE8_IGNORE_CODES)))
     sys.stdout = StringIO.StringIO()
     report = flake8_style.check_files(files)
     sys.stdout.seek(0)
