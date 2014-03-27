@@ -755,6 +755,68 @@ class QuakeMLTestCase(unittest.TestCase):
 
         self.assertEqual(cat1, cat2)
 
+    def test_read_amplitude_time_window(self):
+        """
+        Tests reading an QuakeML Amplitude with TimeWindow.
+        """
+        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        self.assertEqual(len(cat[0].amplitudes), 1)
+        amp = cat[0].amplitudes[0]
+        self.assertEqual(amp.type, "A")
+        self.assertEqual(amp.category, "point")
+        self.assertEqual(amp.unit, "m/s")
+        self.assertEqual(amp.generic_amplitude, 1e-08)
+        self.assertEqual(amp.time_window.begin, 0.0)
+        self.assertEqual(amp.time_window.end, 0.51424)
+        self.assertEqual(amp.time_window.reference,
+                         UTCDateTime("2007-10-10T14:40:39.055"))
+
+    def test_write_amplitude_time_window(self):
+        """
+        Tests writing an QuakeML Amplitude with TimeWindow.
+        """
+        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            cat.write(tmpfile, format='QUAKEML')
+            with open(tmpfile, "rb") as fh:
+                lines = fh.readlines()
+
+            firstline = 45
+            while "<amplitude " not in lines[firstline]:
+                firstline += 1
+
+            got = [lines[i_].strip()
+                   for i_ in xrange(firstline, firstline + 13)]
+            expected = [
+                '<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
+                'amplitude/1/modified">',
+                '<genericAmplitude>',
+                '<value>1e-08</value>',
+                '</genericAmplitude>',
+                '<type>A</type>',
+                '<category>point</category>',
+                '<unit>m/s</unit>',
+                '<timeWindow>',
+                '<reference>2007-10-10T14:40:39.055000Z</reference>',
+                '<begin>0.0</begin>',
+                '<end>0.51424</end>',
+                '</timeWindow>',
+                '</amplitude>']
+            self.assertEqual(got, expected)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')
