@@ -1125,7 +1125,7 @@ def convert_to_string(value):
     '1'
     >>> convert_to_string(1.2)
     '1.2'
-    >>> convert_to_string(obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
+    >>> convert_to_string(UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
     '2012-01-02T03:04:05.666666'
     >>> convert_to_string(True)
     'true'
@@ -1141,7 +1141,7 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, float):
         return str(value)
-    elif isinstance(value, obspy.UTCDateTime):
+    elif isinstance(value, UTCDateTime):
         return str(value).replace("Z", "")
 
 

@@ -11,7 +11,7 @@ obspy.core.util.geodetics - Various geodetic utilities for ObsPy.
 """
 
 from obspy.core.util.geodetics.base import calcVincentyInverse, \
-        gps2DistAzimuth, kilometer2degrees, locations2degrees
+    gps2DistAzimuth, kilometer2degrees, locations2degrees
 from obspy.core.util.geodetics.flinnengdahl import FlinnEngdahl
 
 
