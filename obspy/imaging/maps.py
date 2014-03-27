@@ -252,8 +252,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
                       orientation='horizontal',
                       ticks=locator,
                       format=formatter)
-                      #format=formatter)
-                      #ticks=mpl.ticker.MaxNLocator(4))
+        #              format=formatter)
+        #              ticks=mpl.ticker.MaxNLocator(4))
         cb.update_ticks()
 
     if show:

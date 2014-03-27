@@ -1194,9 +1194,9 @@ class MomentTensor:
         Returns the decomposition type.
         """
         decomp_dict = dict(list(zip(('20', '21', '31'),
-                               ('ISO + DC + CLVD',
-                                'ISO + major DC + minor DC',
-                                'ISO + DC1 + DC2 + DC3'))))
+                                    ('ISO + DC + CLVD',
+                                     'ISO + major DC + minor DC',
+                                     'ISO + DC1 + DC2 + DC3'))))
         if style == 'f':
             print('\n Decomposition type: \n  ')
             return decomp_dict[str(self._decomposition_key)]
@@ -4299,8 +4299,8 @@ def main():
         if temp_dict['GMT_projection']:
             lo_allowed_projections = ['stereo', 'ortho', 'lambert']  # ,'gnom']
             do_allowed_projections = dict(list(zip(('s', 'o', 'l', 'g'),
-                                              ('stereo', 'ortho',
-                                               'lambert', 'gnom'))))
+                                                   ('stereo', 'ortho',
+                                                    'lambert', 'gnom'))))
             try:
                 gmtp = temp_dict['GMT_projection'].lower()
                 if gmtp in lo_allowed_projections:
@@ -4589,8 +4589,8 @@ def main():
         if temp_dict['plot_projection']:
             lo_allowed_projections = ['stereo', 'ortho', 'lambert']  # ,'gnom']
             do_allowed_projections = dict(list(zip(('s', 'o', 'l', 'g'),
-                                              ('stereo', 'ortho',
-                                               'lambert', 'gnom'))))
+                                                   ('stereo', 'ortho',
+                                                    'lambert', 'gnom'))))
             try:
                 ppl = temp_dict['plot_projection'].lower()
                 if ppl in lo_allowed_projections:
