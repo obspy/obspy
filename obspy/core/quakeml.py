@@ -20,7 +20,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
     QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
     PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier, StationMagnitudeContribution
+    ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
@@ -335,6 +335,54 @@ class Unpickler(object):
         obj.onset = self._xpath2obj('onset', element)
         obj.phase_hint = self._xpath2obj('phaseHint', element)
         obj.polarity = self._xpath2obj('polarity', element)
+        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
+        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        obj.comments = self._comments(element)
+        obj.creation_info = self._creation_info(element)
+        obj.resource_id = element.get('publicID')
+        return obj
+
+    def _time_window(self, element):
+        """
+        Converts an etree.Element into a TimeWindow object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.TimeWindow`
+        """
+        obj = TimeWindow(force_resource_id=False)
+        # required parameter
+        obj.begin = self._float_value(element, 'begin')
+        obj.end = self._float_value(element, 'end')
+        obj.scaling_time = self._time_value(element, 'reference')
+        return obj
+
+    def _amplitude(self, element):
+        """
+        Converts an etree.Element into a Amplitude object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.Amplitude`
+        """
+        obj = Amplitude(force_resource_id=False)
+        # required parameter
+        obj.generic_amplitude, obj.generic_amplitude_errors = \
+            self._float_value(element, 'genericAmplitude')
+        # optional parameter
+        obj.type = self._xpath2obj('type', element)
+        obj.category = self._xpath2obj('category', element)
+        obj.unit = self._xpath2obj('unit', element)
+        obj.method_id = self._xpath2obj('methodID', element)
+        obj.period, obj.period_errors = self._float_value(element, 'period')
+        obj.snr = self._xpath2obj('snr', element)
+        time_window_el = self._xpath('timeWindow', element) or None
+        if time_window_el is not None:
+            obj.time_window = self._time_window(time_window_el[0])
+        obj.pick_id = self._xpath2obj('pickID', element)
+        obj.waveform_id = self._xpath2obj('waveformID', element)
+        obj.filter_id = self._xpath2obj('filterID', element)
+        obj.scaling_time, obj.scaling_time_errors = \
+            self._time_value(element, 'scalingTime')
+        obj.magnitude_hint = self._xpath2obj('magnitudeHint', element)
         obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.comments = self._comments(element)
@@ -744,6 +792,11 @@ class Unpickler(object):
             for pick_el in self._xpath('pick', event_el):
                 pick = self._pick(pick_el)
                 event.picks.append(pick)
+            # amplitudes
+            event.amplitudes = []
+            for el in self._xpath('amplitude', event_el):
+                amp = self._amplitude(el)
+                event.amplitudes.append(amp)
             # focal mechanisms
             event.focal_mechanisms = []
             for fm_el in self._xpath('focalMechanism', event_el):
