@@ -376,6 +376,7 @@ class Unpickler(object):
         obj.end = self._xpath2obj('end', element, convert_to=float)
         obj.reference = self._xpath2obj('reference', element,
                                         convert_to=UTCDateTime)
+        self._extra(element, obj)
         return obj
 
     def _amplitude(self, element):
@@ -410,6 +411,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _origin(self, element):
@@ -1316,6 +1318,7 @@ class Pickler(object):
         self._time(time_window.reference, el, 'reference')
         self._str(time_window.begin, el, 'begin')
         self._str(time_window.end, el, 'end')
+        self._extra(time_window, element)
         element.append(el)
 
     def _amplitude(self, amp):
@@ -1349,6 +1352,7 @@ class Pickler(object):
         self._str(amp.evaluation_status, element, 'evaluationStatus')
         self._comments(amp.comments, element)
         self._creation_info(amp.creation_info, element)
+        self._extra(amp, element)
         return element
 
     def _pick(self, pick):
