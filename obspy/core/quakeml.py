@@ -351,9 +351,10 @@ class Unpickler(object):
         """
         obj = TimeWindow(force_resource_id=False)
         # required parameter
-        obj.begin = self._float_value(element, 'begin')
-        obj.end = self._float_value(element, 'end')
-        obj.scaling_time = self._time_value(element, 'reference')
+        obj.begin = self._xpath2obj('begin', element, convert_to=float)
+        obj.end = self._xpath2obj('end', element, convert_to=float)
+        obj.reference = self._xpath2obj('reference', element,
+                                        convert_to=UTCDateTime)
         return obj
 
     def _amplitude(self, element):
