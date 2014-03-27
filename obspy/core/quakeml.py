@@ -1143,6 +1143,45 @@ class Pickler(object):
             element.append(self._arrival(ar))
         return element
 
+    def _time_window(self, time_window, element):
+        el = etree.Element('timeWindow')
+        self._time(time_window.reference, el, 'reference')
+        self._str(time_window.begin, el, 'begin')
+        self._str(time_window.end, el, 'end')
+        element.append(el)
+
+    def _amplitude(self, amp):
+        """
+        Converts an Amplitude into etree.Element object.
+
+        :type amp: :class:`~obspy.core.event.Amplitude`
+        :rtype: etree.Element
+        """
+        element = etree.Element(
+            'amplitude', attrib={'publicID': self._id(amp.resource_id)})
+        # required parameter
+        self._value(amp.generic_amplitude, amp.generic_amplitude_errors,
+                    element, 'genericAmplitude', True)
+        # optional parameter
+        self._str(amp.type, element, 'type')
+        self._str(amp.category, element, 'category')
+        self._str(amp.unit, element, 'unit')
+        self._str(amp.method_id, element, 'methodId')
+        self._value(amp.period, amp.period_errors, element, 'period')
+        self._str(amp.snr, element, 'snr')
+        self._time_window(amp.time_window, element)
+        self._str(amp.pick_id, element, 'pickId')
+        self._str(amp.waveform_id, element, 'waveformId')
+        self._str(amp.filter_id, element, 'filterId')
+        self._value(amp.scaling_time, amp.scaling_time_errors, element,
+                    'scalingTime')
+        self._str(amp.magnitude_hint, element, 'magnitudeHint')
+        self._str(amp.evaluation_mode, element, 'evaluationMode')
+        self._str(amp.evaluation_status, element, 'evaluationStatus')
+        self._comments(amp.comments, element)
+        self._creation_info(amp.creation_info, element)
+        return element
+
     def _pick(self, pick):
         """
         Converts a Pick into etree.Element object.
@@ -1398,6 +1437,9 @@ class Pickler(object):
             # picks
             for pick in event.picks:
                 event_el.append(self._pick(pick))
+            # amplitudes
+            for amp in event.amplitudes:
+                event_el.append(self._amplitude(amp))
             # focal mechanisms
             for focal_mechanism in event.focal_mechanisms:
                 event_el.append(self._focal_mechanism(focal_mechanism))
