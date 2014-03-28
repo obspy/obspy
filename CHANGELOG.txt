@@ -12,6 +12,8 @@
      Inventory/Station/Channel/Response objects (see #750)
 
 0.9.2:
+ - general:
+   * fix installation on CygWin (see #755)
  - obspy.core:
    * bugfix: Input/Output to/from QuakeML was missing Amplitude
      elements (see #763)
