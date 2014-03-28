@@ -9,6 +9,13 @@ by a distributed team in a transparent collaborative manner.
 
 .. seealso:: https://quake.ethz.ch/quakeml/
 
+.. note::
+
+    For handling additional information not covered by the QuakeML standard and
+    how to output it to QuakeML see the `ObsPy Tutorial
+    <http://docs.obspy.org/tutorial/code_snippets/\
+    quakeml_custom_tags.html>`_.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:

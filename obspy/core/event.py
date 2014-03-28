@@ -2,6 +2,13 @@
 """
 Module for handling ObsPy Catalog and Event objects.
 
+.. note::
+
+    For handling additional information not covered by the QuakeML standard and
+    how to output it to QuakeML see the `ObsPy Tutorial
+    <http://docs.obspy.org/tutorial/code_snippets/\
+    quakeml_custom_tags.html>`_.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -889,6 +896,13 @@ class CreationInfo(__CreationInfo):
     >>> info = CreationInfo(author="obspy.org", version="0.0.1")
     >>> print(info)
     CreationInfo(author='obspy.org', version='0.0.1')
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -913,6 +927,13 @@ class TimeWindow(__TimeWindow):
         point in time window. The value may be zero, but not negative.  Unit: s
     :type reference: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param reference: Reference point in time (“central” point).
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -968,6 +989,13 @@ class CompositeTime(__CompositeTime):
     >>> # Can also be instantiated with the uncertainties.
     >>> print(CompositeTime(year=2011, year_errors={"uncertainty":1}))
     CompositeTime(year=2011 [uncertainty=1])
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1005,6 +1033,13 @@ class Comment(__Comment):
     >>> comment.creation_info = {"author": "obspy.org"}
     >>> print(comment.creation_info)
     CreationInfo(author='obspy.org')
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1242,6 +1277,13 @@ class Amplitude(__Amplitude):
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: CreationInfo for the Amplitude object.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1333,6 +1375,13 @@ class Pick(__Pick):
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: CreationInfo for the Pick object.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1424,6 +1473,13 @@ class Arrival(__Arrival):
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: CreationInfo for the Arrival object.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1489,6 +1545,13 @@ class OriginQuality(__OriginQuality):
     :type median_distance: float, optional
     :param median_distance: Median epicentral distance of used stations.
         Unit: deg
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1523,6 +1586,13 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         direction of the ellipsoid’s minor axis. Corresponds to Tait-Bryan
         angle θ.
         Unit: deg
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1571,6 +1641,13 @@ class OriginUncertainty(__OriginUncertainty):
     :type confidence_level: float, optional
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1730,6 +1807,13 @@ class Origin(__Origin):
           longitude: 42.0
            latitude: 12.0 [confidence_level=95.0]
          depth_type: ...'from location'
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1757,6 +1841,13 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
         is no rule for the sum of the weights of all station magnitude
         contributions to a specific network magnitude. In particular, the
         weights are not required to sum up to unity.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1844,6 +1935,13 @@ class Magnitude(__Magnitude):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1894,6 +1992,13 @@ class StationMagnitude(__StationMagnitude):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1921,6 +2026,13 @@ class EventDescription(__EventDescription):
             * ``"nearest cities"``
             * ``"earthquake name"``
             * ``"region name"``
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -1964,6 +2076,13 @@ class Tensor(__Tensor):
     :param m_tp: Moment-tensor element Mtp. Unit: Nm
     :type m_tp_errors: :class:`~obspy.core.util.AttribDict`
     :param m_tp_errors: AttribDict containing error quantities.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2000,6 +2119,13 @@ class DataUsed(__DataUsed):
     :param shortest_period: Shortest period present in data. Unit: s
     :type longest_period: float, optional
     :param longest_period: Longest period present in data. Unit: s
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2028,6 +2154,13 @@ class SourceTimeFunction(__SourceTimeFunction):
     :param rise_time: Source time function rise time. Unit: s
     :type decay_time: float, optional
     :param decay_time: Source time function decay time. Unit: s
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2055,6 +2188,13 @@ class NodalPlane(__NodalPlane):
     :param rake: Rake angle of nodal plane. Unit: deg
     :type rake_errors: :class:`~obspy.core.util.AttribDict`
     :param rake_errors: AttribDict containing error quantities.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2088,6 +2228,13 @@ class Axis(__Axis):
         system. Unit: Nm
     :type length_errors: :class:`~obspy.core.util.AttribDict`
     :param length_errors: AttribDict containing error quantities.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2113,6 +2260,13 @@ class NodalPlanes(__NodalPlanes):
     :type preferred_plane: ``1`` or ``2``, optional
     :param preferred_plane: Indicator for preferred nodal plane of moment
         tensor solution. It can take integer values ``1`` or ``2``.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2134,6 +2288,13 @@ class PrincipalAxes(__PrincipalAxes):
     :param p_axis: P (pressure) axis of a double-couple moment tensor solution.
     :type n_axis: :class:`~obspy.core.event.Axis`, optional
     :param n_axis: N (neutral) axis of a double-couple moment tensor solution.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2231,6 +2392,13 @@ class MomentTensor(__MomentTensor):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2313,6 +2481,13 @@ class FocalMechanism(__FocalMechanism):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
 
 
@@ -2417,6 +2592,13 @@ class Event(__Event):
     :type station_magnitudes: list of
         :class:`~obspy.core.event.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
     def __eq__(self, other):
         """
@@ -2512,6 +2694,13 @@ class Catalog(object):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML standard
+        and how to output it to QuakeML see the `ObsPy Tutorial
+        <http://docs.obspy.org/tutorial/code_snippets/\
+        quakeml_custom_tags.html>`_.
     """
     def __init__(self, events=None, **kwargs):
         if not events:
