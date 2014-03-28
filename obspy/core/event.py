@@ -2595,6 +2595,8 @@ class Catalog(object):
 
         :return: Event objects
         """
+        if index == "extra":
+            return self.__dict__[index]
         if isinstance(index, slice):
             return self.__class__(events=self.events.__getitem__(index))
         else:

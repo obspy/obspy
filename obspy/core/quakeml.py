@@ -774,10 +774,9 @@ class Unpickler(object):
             raise Exception("Not a QuakeML compatible file or string")
         # set default namespace for parser
         self.parser.namespace = self.parser._getElementNamespace(catalog_el)
-        self._root_namespaces = [self.parser.xml_root.nsmap[element_.prefix]
-                                 for element_ in
-                                 (self.parser.xml_root,
-                                  self.parser.xml_root.getchildren()[0])]
+        self._quakeml_namespaces = [
+            ns for ns in self.parser.xml_root.nsmap.values()
+            if ns.startswith(r"http://quakeml.org/xmlns/")]
         # create catalog
         catalog = Catalog(force_resource_id=False)
         # optional catalog attributes
@@ -847,6 +846,7 @@ class Unpickler(object):
             self._extra(event_el, event)
             catalog.append(event)
         catalog.resource_id = catalog_el.get('publicID')
+        self._extra(catalog_el, catalog)
         return catalog
 
     def _extra(self, element, obj):
@@ -857,7 +857,7 @@ class Unpickler(object):
         for ns in element.nsmap.values():
             # skip the two top-level quakeml namespaces,
             # we're not interested in quakeml defined tags here
-            if ns in self._root_namespaces:
+            if ns in self._quakeml_namespaces:
                 continue
             # process all elements of this custom namespace, if any
             for el in element.iterfind("{%s}*" % ns):
@@ -883,7 +883,17 @@ class Unpickler(object):
                         msg = ("Failed to automatically convert extra tag to "
                                "correct Python type: %s" % str(e))
                         warnings.warn(msg)
-                extra = obj.setdefault("extra", AttribDict())
+                try:
+                    extra = obj.setdefault("extra", AttribDict())
+                # Catalog object is not based on AttribDict..
+                except AttributeError:
+                    if not isinstance(obj, Catalog):
+                        raise
+                    if hasattr(obj, "extra"):
+                        extra = obj.extra
+                    else:
+                        extra = AttribDict()
+                        obj.extra = extra
                 extra[name] = {'value': value,
                                'namespace': '%s' % ns}
 
@@ -1628,10 +1638,10 @@ class Pickler(object):
             self._extra(event, event_el)
             # add event node to catalog
             catalog_el.append(event_el)
+        self._extra(catalog, catalog_el)
         nsmap = self._getNamespaceMap()
         root_el = etree.Element('{%s}quakeml' % NSMAP_QUAKEML['q'],
                                 nsmap=nsmap)
-        self._extra(catalog, catalog_el)
         root_el.append(catalog_el)
         return tostring(root_el, pretty_print=pretty_print)
 
