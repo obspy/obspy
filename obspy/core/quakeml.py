@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import str
+from future.utils import native_str
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -1060,7 +1061,7 @@ class Pickler(object):
             else:
                 # allow two formats:
                 # ["shortname", "namespaceurl"] or "namespaceurl"
-                if isinstance(ns, basestring):
+                if isinstance(ns, (str, native_str)):
                     ns_abbrev = None
                 else:
                     ns_abbrev, ns = ns
