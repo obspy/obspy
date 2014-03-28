@@ -5,6 +5,8 @@
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
+ - obspy.core:
+   * Support for basic custom namespace tags in QuakeML I/O (see #454)
 
 0.9.1:
  - obspy.core:
