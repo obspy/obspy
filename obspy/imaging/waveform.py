@@ -177,7 +177,10 @@ class WaveformPlotting(object):
         if self.transparent:
             self.background_color = None
         # Ticks.
-        self.tick_format = kwargs.get('tick_format', '%H:%M:%S')
+        if self.type == 'relative':
+            self.tick_format = kwargs.get('tick_format', '%.2f')
+        else:
+            self.tick_format = kwargs.get('tick_format', '%H:%M:%S')
         self.tick_rotation = kwargs.get('tick_rotation', 0)
         # Whether or not to save a file.
         self.outfile = kwargs.get('outfile')
@@ -823,7 +826,8 @@ class WaveformPlotting(object):
                 (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
-                labels = ['%.2f' % (self.starttime + _i * interval).timestamp
+                labels = [self.tick_format % (self.starttime
+                                              + _i * interval).timestamp
                           for _i in range(self.number_of_ticks)]
             else:
                 labels = [(self.starttime + _i *
