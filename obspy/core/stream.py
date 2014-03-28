@@ -1049,6 +1049,16 @@ class Stream(object):
         :param time_down: Flip the plot horizontaly, time goes down.
             Defaults to ``False``, i.e., time goes up.
 
+        **Relative Parameters**
+
+        The following parameters are only available if ``type='relative'`` is
+        set.
+
+        :type reftime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param reftime: The reference time to which the relative scale will
+            refer.
+            Defaults to ``starttime``.
+
         .. rubric:: Color Options
 
         Colors can be specified as defined in the :mod:`matplotlib.colors`

@@ -103,10 +103,10 @@ class WaveformPlotting(object):
         self.sect_vred = kwargs.get('vred', None)
         # normalize times
         if self.type == 'relative':
-            dt = self.starttime
+            dt = kwargs.get('reftime', self.starttime)
             # fix plotting boundaries
-            self.endtime = UTCDateTime(self.endtime - self.starttime)
-            self.starttime = UTCDateTime(0)
+            self.endtime = UTCDateTime(self.endtime - dt)
+            self.starttime = UTCDateTime(self.starttime - dt)
             # fix stream times
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
