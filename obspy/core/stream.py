@@ -850,19 +850,21 @@ class Stream(object):
         :param starttime: Starttime of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted from the beginning.
-            Defaults to ``False``.
+            Defaults to ``None``.
         :param endtime: Endtime of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted until the end.
-            Defaults to ``False``.
+            Defaults to ``None``.
         :param fig: Use an existing matplotlib figure instance.
-            Default to ``None``.
+            Defaults to ``None``.
         :param automerge: If automerge is True, Traces with the same id will be
             merged.
             Defaults to ``True``.
         :param size: Size tuple in pixel for the output file. This corresponds
             to the resolution of the graph for vector formats.
-            Defaults to ``(800, 250)`` pixel per channel.
+            Defaults to ``(800, 250)`` pixel per channel for ``type='normal'``
+            or ``type='relative'``, ``(800, 600)`` for ``type='dayplot'``, and
+            ``(1000, 600)`` for ``type='section'``.
         :param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
             Defaults to ``100``.
@@ -881,14 +883,14 @@ class Stream(object):
             Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
             Defaults to ``4``.
-        :param tick_format: The way the time axis is formated.
-            Defaults to ``'%H:%M:%S'``.
+        :param tick_format: The way the time axis is formatted.
+            Defaults to ``'%H:%M:%S'`` or ``'%.2f'`` if ``type='relative'``.
         :param tick_rotation: Tick rotation in degrees.
-            Default to ``0``.
+            Defaults to ``0``.
         :param handle: Whether or not to return the matplotlib figure instance
             after the plot has been created.
             Defaults to ``False``.
-        :param method: By default, all traces with more than 400.000 samples
+        :param method: By default, all traces with more than 400,000 samples
             will be plotted with a fast method that cannot be zoomed.
             Setting this argument to ``'full'`` will straight up plot the data.
             This results in a potentially worse performance but the interactive
@@ -900,17 +902,21 @@ class Stream(object):
             the seismogram at 0 seconds. ``'normal'`` will produce a standard
             plot.
             Defaults to ``'normal'``.
-        :param equal_scale: Is enabled all plots are equally scaled. Defaults
-            to ``True``.
-        :param block: If True (default) block call to showing plot. Only works
-            if the active matplotlib backend supports it.
-        :param linewidth: Float value in points of the line width. Defaults to
-            ``0.4``.
-        :param linestyle: Line style. Default to ``'-'``
-        :param grid_color: Color of the grid. Default to ``'black'``.
+        :param equal_scale: Is enabled all plots are equally scaled.
+            Defaults to ``True``.
+        :param block: If True block call to showing plot. Only works if the
+            active matplotlib backend supports it.
+            Defaults to ``True``.
+        :param linewidth: Float value in points of the line width.
+            Defaults to ``1.0``.
+        :param linestyle: Line style.
+            Defaults to ``'-'``
+        :param grid_color: Color of the grid.
+            Defaults to ``'black'``.
         :param grid_linewidth: Float value in points of the grid line width.
             Defaults to ``0.5``.
-        :param grid_linestyle: Grid line style. Default to ``':'``
+        :param grid_linestyle: Grid line style.
+            Defaults to ``':'``
 
         **Dayplot Parameters**
 
@@ -928,9 +934,10 @@ class Stream(object):
             overshooting or additional padding will occur.
             If ``None`` the range will be chosen to be the 99.5-percentile of
             the actual range - so some values will overshoot.
-            Defaults to None.
+            Defaults to ``None``.
         :param interval: This defines the interval length in minutes for one
             line.
+            Defaults to ``15``.
         :param time_offset: Only used if ``type='dayplot'``. The difference
             between the timezone of the data (specified with the kwarg
             'timezone') and UTC time in hours. Will be displayed in a string.
@@ -941,15 +948,16 @@ class Stream(object):
             Defaults to ``'local time'``.
         :param localization_dict: Enables limited localization of the dayplot
             through the usage of a dictionary. To change the labels to, e.g.
-            german, use the following:
+            German, use the following:
                 localization_dict={'time in': 'Zeit in', 'seconds': 'Sekunden',
                                    'minutes': 'Minuten', 'hours': 'Stunden'}
         :param data_unit: If given, the scale of the data will be drawn on the
             right hand side in the form "%f {data_unit}". The unit is supposed
             to be a string containing the actual unit of the data. Can be a
             LaTeX expression if matplotlib has been built with LaTeX support,
-            e.g. "$\\frac{m}{s}$". Be careful to escape the backslashes, or
-            use r-prepended strings, e.g. r"$\\frac{m}{s}$".
+            e.g. "$\\\\frac{m}{s}$". Be careful to escape the backslashes, or
+            use r-prepended strings, e.g. r"$\\\\frac{m}{s}$".
+            Defaults to ``None``, meaning no scale is drawn.
         :param events: An optional list of events can be drawn on the plot if
             given.  They will be displayed as yellow stars with optional
             annotations.  They are given as a list of dictionaries. Each
@@ -966,27 +974,33 @@ class Stream(object):
             obspy.neries. Just pass a dictionary with a "min_magnitude" key,
             e.g.
                 events={"min_magnitude": 5.5}
-        :param x_labels_size: Size of x labels in points or fontsize
+            Defaults to ``[]``.
+        :param x_labels_size: Size of x labels in points or fontsize.
             Defaults to ``8``.
-        :param y_labels_size: Size of y labels in points or fontsize
+        :param y_labels_size: Size of y labels in points or fontsize.
             Defaults to ``8``.
-        :param title_size: Size of the title in points or fontsize
+        :param title_size: Size of the title in points or fontsize.
             Defaults to ``10``.
         :param subplots_adjust_left: The left side of the subplots of the
-            figure in fraction of the figure width Defaults to ``0.12``.
+            figure in fraction of the figure width.
+            Defaults to ``0.12``.
         :param subplots_adjust_right: The right side of the subplots of the
-            figure in fraction of the figure width Defaults to ``0.88``.
+            figure in fraction of the figure width.
+            Defaults to ``0.88``.
         :param subplots_adjust_top: The top side of the subplots of the figure
-            in fraction of the figure width
+            in fraction of the figure width.
             Defaults to ``0.95``.
         :param subplots_adjust_bottom: The bottom side of the subplots of the
-            figure in fraction of the figure width Defaults to ``0.0``.
+            figure in fraction of the figure width.
+            Defaults to ``0.1``.
         :param right_vertical_labels: Whether or not to display labels on the
-            right side of the dayplot.  Defaults to ``False``.
-        :param one_tick_per_line: Whether or not to display one tick per line
+            right side of the dayplot.
             Defaults to ``False``.
-        :param show_y_UTC_label: Whether or not to display Y UTC vertical
-            label Defaults to ``True``.
+        :param one_tick_per_line: Whether or not to display one tick per line.
+            Defaults to ``False``.
+        :param show_y_UTC_label: Whether or not to display the Y UTC vertical
+            label.
+            Defaults to ``True``.
         :param title: The title to display on top of the plot
             Defaults to ``self.stream[0].id``.
 
@@ -1001,24 +1015,25 @@ class Stream(object):
 
         :type scale: float, optional
         :param scale: Scale the traces width with this factor.
-            Default is ``1.0``
+            Defaults to ``1.0``.
         :type vred: float, optional
         :param vred: Perform velocity reduction, in m/s.
         :type norm: string, optional
         :param norm: Defines how the traces are normalized,
             either against each ``trace`` or against the global
-            maximum ``stream``. Default is ``trace``
+            maximum ``stream``.
+            Defaults to ``trace``.
         :type offset_min: float or None, optional
         :param offset_min: Minimum offset in meters to plot.
-            Default is minimum offset.
+            Defaults to minimum offset of all traces.
         :type offset_max: float or None, optional
         :param offset_min: Maximum offset in meters to plot.
-            Default is maximum offset.
-        :param dist_degree: Plot trace distance in degree from epicenter,
-            default is ``False``. If ``True`` parameter ``ev_coord`` has to be
-            defined.
+            Defaults to maximum offset of all traces.
+        :param dist_degree: Plot trace distance in degree from epicenter. If
+            ``True``, parameter ``ev_coord`` has to be defined.
+            Defaults to ``False``.
         :type ev_coord: tuple or None, optional
-        :param ev_coord: Events' coordinates as tuple
+        :param ev_coord: Event's coordinates as tuple
             ``(latitude, longitude)``.
         :type plot_dx: integer, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
@@ -1029,10 +1044,10 @@ class Stream(object):
         :param recordlength: Length of the record section in seconds.
         :type alpha: float, optional
         :param alpha: Transparancy of the traces between 0.0 - 1.0.
-            Default is ``0.5``
+            Defaults to ``0.5``.
         :type time_down: bool, optional
         :param time_down: Flip the plot horizontaly, time goes down.
-            Default is ``False``, time goes up.
+            Defaults to ``False``, i.e., time goes up.
 
         .. rubric:: Color Options
 
@@ -1041,12 +1056,12 @@ class Stream(object):
 
         Short Version: For all color values, you can either use:
 
-        * legit `HTML color names <http://www.w3.org/TR/css3-color/#html4>`_,
+        * legal `HTML color names <http://www.w3.org/TR/css3-color/#html4>`_,
           e.g. ``'blue'``,
         * HTML hex strings, e.g. ``'#EE00FF'``,
-        * pass an string of a R, G, B tuple, where each of the component is a
+        * pass an string of a R, G, B tuple, where each of the components is a
           float value in the range of 0 to 1, e.g. ``'(1, 0.25, 0.5)'``, or
-        * use a single letters for the basic built-in colors, such as ``'b'``
+        * use single letters for the basic built-in colors, such as ``'b'``
           (blue), ``'g'`` (green), ``'r'`` (red), ``'c'`` (cyan), ``'m'``
           (magenta), ``'y'`` (yellow), ``'k'`` (black), ``'w'`` (white).
 
