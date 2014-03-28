@@ -814,7 +814,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 firstline += 1
 
             got = [lines[i_].strip()
-                   for i_ in xrange(firstline, firstline + 13)]
+                   for i_ in range(firstline, firstline + 13)]
             expected = [
                 '<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
                 'amplitude/1/modified">',

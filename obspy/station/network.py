@@ -17,6 +17,8 @@ from obspy.station.util import BaseNode
 from obspy.station.station import Station
 import textwrap
 import warnings
+import fnmatch
+import copy
 
 
 class Network(BaseNode):
@@ -241,6 +243,302 @@ class Network(BaseNode):
             msg = "No matching coordinates found."
             raise Exception(msg)
         return coordinates[0]
+
+    def select(self, station=None, location=None, channel=None, time=None,
+               starttime=None, endtime=None, sampling_rate=None,
+               keep_empty=False):
+        """
+        Returns the :class:`Network` object only with these
+        :class:`~obspy.station.station.Station`s /
+        :class:`~obspy.station.channel.Channel`s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see http://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Examples
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> net = read_inventory()[0]
+        >>> t = UTCDateTime(2008, 7, 1, 12)
+        >>> net = net.select(channel="[LB]HZ", time=t)
+        >>> print(net)  # doctest: +NORMALIZE_WHITESPACE
+        Network GR (GRSN)
+            Station Count: None/None (Selected/Total)
+            None -
+            Access: None
+            Contains:
+                Stations (2):
+                    GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (4):
+                    GR.FUR..BHZ, GR.FUR..LHZ, GR.WET..BHZ, GR.WET..LHZ
+
+        The `station`, `location` and `channel` selection criteria  may also
+        contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
+        :func:`~fnmatch.fnmatch`).
+
+        :type station: str
+        :type location: str
+        :type channel: str
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include stations/channels active at given point in
+            time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include stations/channels active at or after
+            given point in time (i.e. channels ending before given time will
+            not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include stations/channels active before or at
+            given point in time (i.e. channels starting after given time will
+            not be shown).
+        :type sampling_rate: float
+        :type keep_empty: bool
+        :param keep_empty: If set to `True`, networks/stations that match
+            themselves but have no matching child elements (stations/channels)
+            will be included in the result.
+        """
+        stations = []
+        for sta in self.stations:
+            # skip if any given criterion is not matched
+            if station is not None:
+                if not fnmatch.fnmatch(sta.code.upper(),
+                                       station.upper()):
+                    continue
+            if any([t is not None for t in (time, starttime, endtime)]):
+                if not sta.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
+                    continue
+
+            sta_ = sta.select(
+                location=location, channel=channel, time=time,
+                starttime=starttime, endtime=endtime,
+                sampling_rate=sampling_rate)
+            if not keep_empty and not sta_.channels:
+                continue
+            stations.append(sta_)
+        net = copy.copy(self)
+        net.stations = stations
+        return net
+
+    def plot(self, projection='cyl', resolution='l',
+             continent_fill_color='0.9', water_fill_color='1.0', marker="v",
+             size=15**2, label=True, color='blue', time=None, show=True,
+             outfile=None, **kwargs):  # @UnusedVariable
+        """
+        Creates a preview map of all stations in current network object.
+
+        :type projection: str, optional
+        :param projection: The map projection. Currently supported are
+            * ``"cyl"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+            Defaults to "cyl"
+        :type resolution: str, optional
+        :param resolution: Resolution of the boundary database to use. Will be
+            based directly to the basemap module. Possible values are
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+            Defaults to ``"l"``
+        :type continent_fill_color: Valid matplotlib color, optional
+        :param continent_fill_color:  Color of the continents. Defaults to
+            ``"0.9"`` which is a light gray.
+        :type water_fill_color: Valid matplotlib color, optional
+        :param water_fill_color: Color of all water bodies.
+            Defaults to ``"white"``.
+        :type marker: str
+        :param marker: Marker symbol (see :func:`matplotlib.pyplot.scatter`).
+        :type label: bool
+        :param label: Whether to label stations with "network.station" or not.
+        :type color: str
+        :param color: Face color of marker symbol (see
+            :func:`matplotlib.pyplot.scatter`).
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only plot stations available at given point in time.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Example
+
+        Cylindrical projection for global overview:
+
+        >>> from obspy import read_inventory
+        >>> net = read_inventory()[0]
+        >>> net.plot(label=False)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot(label=False)
+
+        Orthographic projection:
+
+        >>> net.plot(projection="ortho")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot(projection="ortho")
+
+        Local (azimuthal equidistant) projection:
+
+        >>> net.plot(projection="local")  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot(projection="local")
+        """
+        from obspy.imaging.maps import plot_basemap
+        import matplotlib.pyplot as plt
+
+        # lat/lon coordinates, magnitudes, dates
+        lats = []
+        lons = []
+        labels = []
+        for sta in self.select(time=time).stations:
+            label_ = "   " + ".".join((self.code, sta.code))
+            if sta.latitude is None or sta.longitude is None:
+                msg = ("Station '%s' does not have latitude/longitude "
+                       "information and will not be plotted." % label)
+                warnings.warn(msg)
+                continue
+            lats.append(sta.latitude)
+            lons.append(sta.longitude)
+            labels.append(label_)
+
+        if not label:
+            labels = None
+
+        fig = plot_basemap(lons, lats, size, color, labels,
+                           projection=projection, resolution=resolution,
+                           continent_fill_color=continent_fill_color,
+                           water_fill_color=water_fill_color,
+                           colormap=None, marker=marker, title=None,
+                           show=False, **kwargs)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
+
+    def plot_response(self, min_freq, output="VEL", station="*", location="*",
+                      channel="*", time=None, starttime=None, endtime=None,
+                      axes=None, unwrap_phase=False, show=True, outfile=None):
+        """
+        Show bode plot of instrument response of all (or a subset of) the
+        network's channels.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type station: str
+        :param station: Only plot matching stations. Accepts UNIX style
+            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
+            :func:`~fnmatch.fnmatch`)
+        :type location: str
+        :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :func:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :func:`~fnmatch.fnmatch`)
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only regard stations active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only regard stations active at or after given point
+            in time (i.e. stations ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only regard stations active before or at given point in
+            time (i.e. stations starting after given time will not be shown).
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> net = read_inventory()[0]
+        >>> net.plot_response(0.001, station="FUR")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            net = read_inventory()[0]
+            net.plot_response(0.001, station="FUR")
+        """
+        import matplotlib.pyplot as plt
+
+        if axes:
+            ax1, ax2 = axes
+            fig = ax1.figure
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        matching = self.select(station=station, location=location,
+                               channel=channel, time=time,
+                               starttime=starttime, endtime=endtime)
+
+        for sta in matching.stations:
+            for cha in sta.channels:
+                cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                         label=".".join((self.code, sta.code,
+                                         cha.location_code, cha.code)),
+                         unwrap_phase=unwrap_phase, show=False, outfile=None)
+
+        # final adjustments to plot if we created the figure in here
+        if not axes:
+            from obspy.station.response import _adjust_bode_plot_figure
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
 
 
 if __name__ == '__main__':

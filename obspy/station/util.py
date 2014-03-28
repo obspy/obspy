@@ -17,6 +17,7 @@ from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
     FloatWithUncertaintiesFixedUnit
 import re
+import copy
 
 
 class BaseNode(ComparingObject):
@@ -101,6 +102,82 @@ class BaseNode(ComparingObject):
             self._historical_code = value.strip()
         else:
             self._historical_code = None
+
+    def copy(self):
+        """
+        Returns a deepcopy of the object.
+
+        :rtype: same class as original object
+        :return: Copy of current object.
+
+        .. rubric:: Examples
+
+        1. Create a station object and copy it
+
+            >>> from obspy import read_inventory
+            >>> sta = read_inventory()[0][0]
+            >>> sta2 = sta.copy()
+
+           The two objects are not the same:
+
+            >>> sta is sta2
+            False
+
+           But they have equal data (before applying further processing):
+
+            >>> sta == sta2
+            True
+
+        2. The following example shows how to make an alias but not copy the
+           data. Any changes on ``st3`` would also change the contents of
+           ``st``.
+
+            >>> sta3 = sta
+            >>> sta is sta3
+            True
+            >>> sta == sta3
+            True
+        """
+        return copy.deepcopy(self)
+
+    def is_active(self, time=None, starttime=None, endtime=None):
+        """
+        Checks if the item was active at some given point in time (`time`)
+        and/or if it was active at some point during a certain time range
+        (`starttime`, `endtime`).
+
+        .. note::
+            If none of the time constraints is specified the result will always
+            be `True`.
+
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include networks/stations/channels active at given
+            point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include networks/stations/channels active at or
+            after given point in time (i.e. channels ending before given time
+            will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include networks/stations/channels active before
+            or at given point in time (i.e. channels starting after given time
+            will not be shown).
+        :rtype: bool
+        :returns: `True`/`False` depending on whether the item matches the
+            specified time criteria.
+        """
+        if time is not None:
+            if self.start_date is not None and time < self.start_date:
+                return False
+            if self.end_date is not None and time > self.end_date:
+                return False
+        if starttime is not None and self.end_date is not None:
+            if starttime > self.end_date:
+                return False
+        if endtime is not None and self.start_date is not None:
+            if endtime < self.start_date:
+                return False
+
+        return True
 
 
 class Equipment(ComparingObject):

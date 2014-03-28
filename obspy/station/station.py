@@ -17,6 +17,9 @@ from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
 from obspy.station.util import Longitude, Latitude, Distance
 import textwrap
+import fnmatch
+import warnings
+import copy
 
 
 class Station(BaseNode):
@@ -271,6 +274,171 @@ class Station(BaseNode):
             self._elevation = value
         else:
             self._elevation = Distance(value)
+
+    def select(self, location=None, channel=None, time=None, starttime=None,
+               endtime=None, sampling_rate=None):
+        """
+        Returns the :class:`Station` object only with these
+        :class:`~obspy.station.channel.Channel`s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see http://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Examples
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> sta = read_inventory()[0][0]
+        >>> t = UTCDateTime(2008, 7, 1, 12)
+        >>> sta = sta.select(channel="[LB]HZ", time=t)
+        >>> print(sta)  # doctest: +NORMALIZE_WHITESPACE
+        Station FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+            Station Code: FUR
+            Channel Count: None/None (Selected/Total)
+            2006-12-16T00:00:00.000000Z -
+            Access: None
+            Latitude: 48.16, Longitude: 11.28, Elevation: 565.0 m
+            Available Channels:
+                FUR..BHZ, FUR..LHZ
+
+        The `location` and `channel` selection criteria  may also contain UNIX
+        style wildcards (e.g. ``*``, ``?``, ...; see
+        :func:`~fnmatch.fnmatch`).
+
+        :type location: str
+        :type channel: str
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include channels active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include channels active at or after given point
+            in time (i.e. channels ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include channels active before or at given point
+            in time (i.e. channels starting after given time will not be
+            shown).
+        :type sampling_rate: float
+        """
+        channels = []
+        for cha in self.channels:
+            # skip if any given criterion is not matched
+            if location is not None:
+                if not fnmatch.fnmatch(cha.location_code.upper(),
+                                       location.upper()):
+                    continue
+            if channel is not None:
+                if not fnmatch.fnmatch(cha.code.upper(),
+                                       channel.upper()):
+                    continue
+            if sampling_rate is not None:
+                if not cha.sample_rate:
+                    msg = ("Omitting channel that has no sampling rate "
+                           "specified.")
+                    warnings.warn(msg)
+                    continue
+                if float(sampling_rate) != cha.sample_rate:
+                    continue
+            if any([t is not None for t in (time, starttime, endtime)]):
+                if not cha.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
+                    continue
+
+            channels.append(cha)
+        sta = copy.copy(self)
+        sta.channels = channels
+        return sta
+
+    def plot(self, min_freq, output="VEL", location="*", channel="*",
+             time=None, starttime=None, endtime=None, axes=None,
+             unwrap_phase=False, show=True, outfile=None):
+        """
+        Show bode plot of instrument response of all (or a subset of) the
+        station's channels.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type location: str
+        :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :func:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :func:`~fnmatch.fnmatch`)
+        :param time: Only show channels active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only show channels active at or after given point in
+            time (i.e. channels ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only show channels active before or at given point in
+            time (i.e. channels starting after given time will not be shown).
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> sta = read_inventory()[0][0]
+        >>> sta.plot(0.001, output="VEL", channel="*Z")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            sta = read_inventory()[0][0]
+            sta.plot(0.001, output="VEL", channel="*Z")
+        """
+        import matplotlib.pyplot as plt
+
+        if axes:
+            ax1, ax2 = axes
+            fig = ax1.figure
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        matching = self.select(location=location, channel=channel, time=time,
+                               starttime=starttime, endtime=endtime)
+
+        for cha in matching.channels:
+            cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                     label=".".join((self.code, cha.location_code, cha.code)),
+                     unwrap_phase=unwrap_phase, show=False, outfile=None)
+
+        # final adjustments to plot if we created the figure in here
+        if not axes:
+            from obspy.station.response import _adjust_bode_plot_figure
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
 
 
 if __name__ == '__main__':

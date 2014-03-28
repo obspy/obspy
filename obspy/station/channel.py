@@ -287,6 +287,61 @@ class Channel(BaseNode):
         else:
             self._clock_drift_in_seconds_per_sample = ClockDrift(value)
 
+    def plot(self, min_freq, output="VEL", start_stage=None, end_stage=None,
+             label=None, axes=None, unwrap_phase=False, show=True,
+             outfile=None):
+        """
+        Show bode plot of the channel's instrument response.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> cha = read_inventory()[0][0][0]
+        >>> cha.plot(0.001, output="VEL")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            cha = read_inventory()[0][0][0]
+            cha.plot(0.001, output="VEL")
+        """
+        return self.response.plot(
+            min_freq=min_freq, output=output,
+            start_stage=start_stage, end_stage=end_stage, label=label,
+            axes=axes, sampling_rate=self.sample_rate,
+            unwrap_phase=unwrap_phase, show=show, outfile=outfile)
+
 
 if __name__ == '__main__':
     import doctest

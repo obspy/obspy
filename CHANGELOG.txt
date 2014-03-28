@@ -2,13 +2,18 @@
  - general:
    * support for Python 3.3
    * More generic processing history for most Stream and Trace methods.
+ - obspy.core:
+   * Support for basic custom namespace tags in QuakeML I/O (see #454)
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
- - obspy.core:
-   * Support for basic custom namespace tags in QuakeML I/O (see #454)
+   * Refactored Catalog.plot() into helper routine
+     obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.station:
+   * add plotting methods (response/bode, location maps) to
+     Inventory/Station/Channel/Response objects (see #750)
 
-0.9.1:
+0.9.2:
  - obspy.core:
    * bugfix: Input/Output to/from QuakeML was missing Amplitude
      elements (see #763)
