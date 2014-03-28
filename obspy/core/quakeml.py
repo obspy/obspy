@@ -885,7 +885,7 @@ class Unpickler(object):
                         warnings.warn(msg)
                 extra = obj.setdefault("extra", AttribDict())
                 extra[name] = {'value': value,
-                               '_namespace': '%s' % ns}
+                               'namespace': '%s' % ns}
 
 
 class Pickler(object):
@@ -1034,7 +1034,7 @@ class Pickler(object):
             ns = None
             # check if a namespace is given
             if isinstance(value, dict):
-                ns = value.get("_namespace")
+                ns = value.get("namespace")
                 value = value.get("value")
             # otherwise use default obspy namespace (and add it to
             if ns is None:
