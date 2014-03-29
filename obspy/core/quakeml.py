@@ -873,7 +873,7 @@ class Unpickler(object):
                 _, name = el.tag.split("}")
                 value = el.text
                 # try to reconstruct original python type from attribute
-                type_ = el.get("pythonType")
+                type_ = el.attrib.pop("pythonType", None)
                 if type_ is not None:
                     try:
                         try:
@@ -904,6 +904,8 @@ class Unpickler(object):
                         obj.extra = extra
                 extra[name] = {'value': value,
                                'namespace': '%s' % ns}
+                if el.attrib:
+                    extra[name]['attrib'] = el.attrib
 
 
 class Pickler(object):
@@ -1050,9 +1052,11 @@ class Pickler(object):
             return
         for key, value in obj.extra.items():
             ns = None
+            attrib = {}
             # check if a namespace is given
             if isinstance(value, dict):
                 ns = value.get("namespace")
+                attrib = value.get("attrib", {})
                 value = value.get("value")
             # otherwise use default obspy namespace (and add it to
             if ns is None:
@@ -1072,7 +1076,7 @@ class Pickler(object):
                 type_ = str(cls.__name__)
             else:
                 type_ = ".".join((cls.__module__, cls.__name__))
-            attrib = {'pythonType': type_}
+            attrib['pythonType'] = type_
             if isinstance(value, bool):
                 self._bool(value, element, tag, attrib=attrib)
             else:
