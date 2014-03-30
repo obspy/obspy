@@ -103,10 +103,10 @@ class WaveformPlotting(object):
         self.sect_vred = kwargs.get('vred', None)
         # normalize times
         if self.type == 'relative':
-            dt = self.starttime
+            dt = kwargs.get('reftime', self.starttime)
             # fix plotting boundaries
-            self.endtime = UTCDateTime(self.endtime - self.starttime)
-            self.starttime = UTCDateTime(0)
+            self.endtime = UTCDateTime(self.endtime - dt)
+            self.starttime = UTCDateTime(self.starttime - dt)
             # fix stream times
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
@@ -177,7 +177,10 @@ class WaveformPlotting(object):
         if self.transparent:
             self.background_color = None
         # Ticks.
-        self.tick_format = kwargs.get('tick_format', '%H:%M:%S')
+        if self.type == 'relative':
+            self.tick_format = kwargs.get('tick_format', '%.2f')
+        else:
+            self.tick_format = kwargs.get('tick_format', '%H:%M:%S')
         self.tick_rotation = kwargs.get('tick_rotation', 0)
         # Whether or not to save a file.
         self.outfile = kwargs.get('outfile')
@@ -823,7 +826,8 @@ class WaveformPlotting(object):
                 (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
-                labels = ['%.2f' % (self.starttime + _i * interval).timestamp
+                labels = [self.tick_format % (self.starttime
+                                              + _i * interval).timestamp
                           for _i in range(self.number_of_ticks)]
             else:
                 labels = [(self.starttime + _i *
