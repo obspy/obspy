@@ -10,21 +10,14 @@ from distutils import sysconfig
 import ctypes as C
 import numpy as np
 import os
-import platform
+from obspy.core.util.misc import _get_lib_name
 
 
 # Import shared libsignal depending on the platform.
 # create library names
 lib_names = [
     # python3.3 platform specific library name
-    'libsignal_%s_%s_py%s.cpython-%sm' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-    # platform specific library name
-    'libsignal_%s_%s_py%s' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    _get_lib_name('signal'),
     # fallback for pre-packaged libraries
     'libsignal']
 # get default file extension for shared objects
@@ -46,14 +39,7 @@ else:
 # create library names
 erlib_names = [
     # python3.3 platform specific library name
-    'libevresp_%s_%s_py%s.cpython-%sm' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-    # platform specific library name
-    'libevresp_%s_%s_py%s' % (
-        platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    _get_lib_name('evresp'),
     # fallback for pre-packaged libraries
     'libevresp']
 # initialize library

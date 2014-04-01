@@ -8,6 +8,7 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import str, int, open, range
@@ -21,6 +22,9 @@ import itertools
 import tempfile
 import numpy as np
 import math
+import re
+import platform
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -471,6 +475,39 @@ def factorize_int(x):
     if num > 1:
         factors.append(int(num))
     return factors
+
+
+def cleanse_pymodule_filename(filename):
+    """
+    Replace all characters not allowed in Python module names in filename with
+    "_".
+
+    See bug report:
+     - http://stackoverflow.com/questions/21853678/install-obspy-in-cygwin
+     - See #755
+
+    See also:
+     - http://stackoverflow.com/questions/7552311/
+     - http://docs.python.org/2/reference/lexical_analysis.html#identifiers
+
+    >>> cleanse_pymodule_filename("0blup-bli.554_3!32")
+    '_blup_bli_554_3_32'
+    """
+    filename = re.sub(r'^[^a-zA-Z_]', "_", filename)
+    filename = re.sub(r'[^a-zA-Z0-9_]', "_", filename)
+    return filename
+
+
+def _get_lib_name(lib):
+    """
+    Helper function to get an architecture and Python version specific library
+    filename.
+    """
+    libname = "lib%s_%s_%s_py%s.cpython-%sm" % (
+        lib, platform.system(), platform.architecture()[0],
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+    return cleanse_pymodule_filename(libname)
 
 
 if __name__ == '__main__':

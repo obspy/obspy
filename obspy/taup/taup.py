@@ -4,16 +4,14 @@ obspy.taup - Travel time calculation tool
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import str
 import inspect
 import numpy as np
 import os
 import platform
+from obspy.core.util.misc import _get_lib_name
 
 
-lib_name = 'libtau_%s_%s_py%s' % \
-    (platform.system(), platform.architecture()[0],
-     ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
+lib_name = _get_lib_name('tau')
 
 # Import libtau in a platform specific way.
 try:
