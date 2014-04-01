@@ -9,9 +9,6 @@ Various additional utilities for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 # NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import str, int, open, range
 from contextlib import contextmanager
 import os
 import sys
@@ -506,7 +503,7 @@ def _get_lib_name(lib):
     libname = "lib%s_%s_%s_py%s.cpython-%sm" % (
         lib, platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
     return cleanse_pymodule_filename(libname)
 
 
