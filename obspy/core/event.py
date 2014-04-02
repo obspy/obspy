@@ -1089,11 +1089,11 @@ class WaveformStreamID(__WaveformStreamID):
                                             location_code, channel_code]]):
                 network_code, station_code, location_code, channel_code = \
                     4 * [None]
-        super(self.__class__, self).__init__(network_code=network_code,
-                                             station_code=station_code,
-                                             location_code=location_code,
-                                             channel_code=channel_code,
-                                             resource_uri=resource_uri)
+        super(WaveformStreamID, self).__init__(network_code=network_code,
+                                               station_code=station_code,
+                                               location_code=location_code,
+                                               channel_code=channel_code,
+                                               resource_uri=resource_uri)
 
     def getSEEDString(self):
         return "%s.%s.%s.%s" % (
@@ -2460,10 +2460,10 @@ class Event(__Event):
         """
         return "Event:\t%s\n\n%s" % (
             self.short_str(),
-            "\n".join(super(self.__class__, self).__str__().split("\n")[1:]))
+            "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
     def __repr__(self):
-        return super(self.__class__, self).__str__(force_one_line=True)
+        return super(Event, self).__str__(force_one_line=True)
 
     def preferred_origin(self):
         """
@@ -2654,7 +2654,7 @@ class Catalog(object):
         if not isinstance(index, (str, native_str)):
             self.events.__setitem__(index, event)
         else:
-            super(self.__class__, self).__setitem__(index, event)
+            super(Catalog, self).__setitem__(index, event)
 
     def __str__(self, print_all=False):
         """
