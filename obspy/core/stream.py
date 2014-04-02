@@ -2575,19 +2575,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         try:
             while True:
                 trace = self.traces.pop(0)
-                id = trace.getId()
                 # add trace to respective list or create that list
-                try:
-                    traces_dict[id].append(trace)
-                except:
-                    traces_dict[id] = [trace]
+                traces_dict.setdefault(trace.id, []).append(trace)
         except IndexError:
             pass
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for id in traces_dict.keys():
-            trace_list = traces_dict[id]
+        for id_ in traces_dict.keys():
+            trace_list = traces_dict[id_]
             cur_trace = trace_list.pop(0)
             # work through all traces of same id
             while trace_list:
@@ -2598,7 +2594,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     t1 = trace.stats.starttime
                     t2 = min(cur_trace.stats.endtime, trace.stats.endtime)
                     # if consistent: add them together
-                    if cur_trace.slice(t1, t2) == trace.slice(t1, t2):
+                    if np.array_equal(cur_trace.slice(t1, t2).data,
+                                      trace.slice(t1, t2).data):
                         cur_trace += trace
                     # if not consistent: leave them alone
                     else:
