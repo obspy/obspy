@@ -850,7 +850,7 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - tag without explicit namespace (gets obspy default ns)
         #  - tag with explicit namespace and namespace abbreviation
         my_extra = AttribDict(
-            {'public': {'value': True,
+            {'public': {'value': False,
                         'namespace': r"http://some-page.de/xmlns/1.0",
                         'attrib': {"some_attrib": "some_value",
                                    "another_attrib": "another_value"}},
@@ -888,7 +888,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 u'<ns1:public ' +
                 u'another_attrib="another_value" ' +
                 u'pythonType="bool" ' +
-                u'some_attrib="some_value">true</ns1:public>',
+                u'some_attrib="some_value">false</ns1:public>',
                 u'<obspy:custom pythonType="unicode">True</obspy:custom>',
                 u'<obspy:tX pythonType="obspy.core.utcdatetime.UTCDateTime">' +
                 u'2013-01-02T13:12:14.600000Z</obspy:tX>']

@@ -886,7 +886,18 @@ class Unpickler(object):
                             module, type_ = type_.rsplit(".", 1)
                             module = __import__(module, fromlist=[""])
                             cls = getattr(module, type_)
-                        value = cls(value)
+                        if cls is bool:
+                            if value in ("0", "false"):
+                                value = False
+                            elif value in ("1", "true"):
+                                value = True
+                            else:
+                                msg = ("XML string representation of type "
+                                       "bool must be either '1'/'true' or "
+                                       "'0'/'false' (got: %s)." % value)
+                                raise Exception(msg)
+                        else:
+                            value = cls(value)
                     except Exception as e:
                         msg = ("Failed to automatically convert extra tag to "
                                "correct Python type: %s" % str(e))
