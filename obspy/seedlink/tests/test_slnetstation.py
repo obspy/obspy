@@ -8,7 +8,7 @@ import unittest
 
 class SLNetStationTestCase(unittest.TestCase):
 
-    def test_issueXXX(self):
+    def test_issue769(self):
         """
         Assure that different station objects don't share selector lists.
         """
