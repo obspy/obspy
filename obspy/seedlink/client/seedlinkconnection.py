@@ -894,11 +894,14 @@ class SeedLinkConnection(object):
                                 #print SLPacket.TYPE_SLINFT
                                 lenmsr = len(slpacket.msrecord)
                                 if (type == SLPacket.TYPE_SLINF):
-                                    self.infoStrBuf += \
-                                        str(slpacket.msrecord)[64: lenmsr]
+                                    data = slpacket.msrecord[64: lenmsr]
+                                    data = data.decode('ASCII', errors='ignore')
+                                    self.infoStrBuf += data
                                 elif (type == SLPacket.TYPE_SLINFT):
-                                    self.infoStrBuf += \
-                                        str(slpacket.msrecord)[64: lenmsr]
+                                    data = slpacket.msrecord[64: lenmsr]
+                                    data = data.decode('ASCII', errors='ignore')
+                                    self.infoStrBuf += data
+                                        
                                     self.info_string = \
                                         self.createInfoString(self.infoStrBuf)
                                     self.infoStrBuf = ""
