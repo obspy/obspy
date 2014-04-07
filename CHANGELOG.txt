@@ -19,6 +19,9 @@
      specified explicitely (see #754)
  - obspy.imaging:
    * Fixing waveform plotting.
+ - obspy.seedlink:
+   * bugfix: different instances of a SeedLink connection had a shared
+     state (see #561)
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
  - obspy.taup:

@@ -52,8 +52,6 @@ class SLPacket(object):
     :type slhead: bytes
     :var msrecord: The MiniSEED record.
     :type msrecord: bytes
-    :var blockette: The Blockette contained in msrecord.
-    :type blockette: list
     """
     TYPE_SLINFT = -101
     TYPE_SLINF = -102
@@ -66,10 +64,6 @@ class SLPacket(object):
     INFOSIGNATURE = "SLINFO"
     ERRORSIGNATURE = "ERROR\r\n"
     ENDSIGNATURE = "END"
-    slhead = None
-    msrecord = None
-    blockette = None
-    trace = None
 
     def __init__(self, bytes=None, offset=None):
         if bytes is None or offset is None:
@@ -80,6 +74,7 @@ class SLPacket(object):
         self.slhead = bytes[offset: offset + self.SLHEADSIZE]
         self.msrecord = bytes[offset + self.SLHEADSIZE:
                               offset + self.SLHEADSIZE + self.SLRECSIZE]
+        self.trace = None
 
     def getSequenceNumber(self):
         #print "DEBUG: repr(self.slhead):", repr(self.slhead)
