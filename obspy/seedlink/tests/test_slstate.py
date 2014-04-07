@@ -2,7 +2,6 @@
 """
 The obspy.seedlink.client.slstate test suite.
 """
-from obspy.core.util.decorator import skipIf
 from obspy.seedlink.client.slstate import SLState
 import unittest
 
@@ -15,7 +14,7 @@ class SLStateTestCase(unittest.TestCase):
         """
         slstate1 = SLState()
         slstate2 = SLState()
-        
+
         self.assertNotEqual(id(slstate1.databuf), id(slstate2.databuf))
         self.assertNotEqual(id(slstate1.packed_buf), id(slstate2.packed_buf))
 
