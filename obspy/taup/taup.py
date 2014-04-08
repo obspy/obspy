@@ -11,7 +11,7 @@ import platform
 from obspy.core.util.misc import _get_lib_name
 
 
-lib_name = _get_lib_name('tau')
+lib_name = _get_lib_name('tau', during_build=False)
 
 # Import libtau in a platform specific way.
 try:

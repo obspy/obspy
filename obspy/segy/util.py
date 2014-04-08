@@ -12,7 +12,7 @@ from obspy.core.util.misc import _get_lib_name
 # create library names
 lib_names = [
     # python3.3 platform specific library name
-    _get_lib_name('segy'),
+    _get_lib_name('segy', during_build=False),
     # fallback for pre-packaged libraries
     'libsegy']
 # get default file extension for shared objects
