@@ -495,16 +495,26 @@ def cleanse_pymodule_filename(filename):
     return filename
 
 
-def _get_lib_name(lib):
+def _get_lib_name(lib, during_build=False):
     """
     Helper function to get an architecture and Python version specific library
     filename.
+
+    :type during_build: bool
+    :param during_build: Numpy distutils adds a suffix to the filename we
+        specify to build. So when loading the file we have to add this suffix.
     """
-    libname = "lib%s_%s_%s_py%s.cpython-%sm" % (
+    libname = "lib%s_%s_%s_py%s" % (
         lib, platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
         ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    return cleanse_pymodule_filename(libname)
+    libname = cleanse_pymodule_filename(libname)
+    # XXX TODO: should be changed in principle?
+    # numpy distutils suffixes like this, not Python conform, see #771 #755
+    if not during_build:
+        libname = "%s.cpython-%sm" % (
+            libname,
+            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
+    return libname
 
 
 if __name__ == '__main__':

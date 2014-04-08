@@ -378,7 +378,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2"), files, **kwargs)
+    config.add_extension(_get_lib_name("gse2", during_build=True), files,
+                         **kwargs)
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
@@ -397,7 +398,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
-    config.add_extension(_get_lib_name("mseed"), files, **kwargs)
+    config.add_extension(_get_lib_name("mseed", during_build=True), files,
+                         **kwargs)
 
     # SEGY
     path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
@@ -407,7 +409,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy"), files, **kwargs)
+    config.add_extension(_get_lib_name("segy", during_build=True), files,
+                         **kwargs)
 
     # SIGNAL
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -417,7 +420,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal"), files, **kwargs)
+    config.add_extension(_get_lib_name("signal", during_build=True), files,
+                         **kwargs)
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -429,11 +433,12 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    config.add_extension(_get_lib_name("evresp"), files, **kwargs)
+    config.add_extension(_get_lib_name("evresp", during_build=True), files,
+                         **kwargs)
 
     # TAUP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau")
+    libname = _get_lib_name("tau", during_build=True)
     files = glob.glob(os.path.join(path, "*.f"))
     # compiler specific options
     kwargs = {'libraries': []}
