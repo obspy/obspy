@@ -20,7 +20,7 @@ ENDIAN = {0: '<', 1: '>'}
 # create library names
 lib_names = [
     # python3.3 platform specific library name
-    _get_lib_name('mseed', during_build=False),
+    _get_lib_name('mseed', add_extension_suffix=True),
     # fallback for pre-packaged libraries
     'libmseed']
 # get default file extension for shared objects

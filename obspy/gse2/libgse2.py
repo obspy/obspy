@@ -43,7 +43,7 @@ import warnings
 # create library names
 lib_names = [
     # python3.3 platform specific library name
-    _get_lib_name("gse2", during_build=False),
+    _get_lib_name("gse2", add_extension_suffix=True),
     # fallback for pre-packaged libraries
     'libgse2']
 # get default file extension for shared objects
