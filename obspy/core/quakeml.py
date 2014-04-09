@@ -135,49 +135,56 @@ class Unpickler(object):
             obj.append(contrib)
         return obj
 
-    def _creation_info(self, element):
-        for child in element:
-            if 'creationInfo' in child.tag:
-                break
-        else:
+    def _creation_info(self, parent):
+        elements = self._xpath("creationInfo", parent)
+        if len(elements) > 1:
+            raise NotImplementedError("Only one CreationInfo allowed.")
+        elif len(elements) == 0:
             return None
+        element = elements[0]
         obj = CreationInfo()
-        obj.agency_uri = self._xpath2obj('creationInfo/agencyURI', element)
-        obj.author_uri = self._xpath2obj('creationInfo/authorURI', element)
-        obj.agency_id = self._xpath2obj('creationInfo/agencyID', element)
-        obj.author = self._xpath2obj('creationInfo/author', element)
+        obj.agency_uri = self._xpath2obj('agencyURI', element)
+        obj.author_uri = self._xpath2obj('authorURI', element)
+        obj.agency_id = self._xpath2obj('agencyID', element)
+        obj.author = self._xpath2obj('author', element)
         obj.creation_time = self._xpath2obj(
-            'creationInfo/creationTime', element, UTCDateTime)
-        obj.version = self._xpath2obj('creationInfo/version', element)
+            'creationTime', element, UTCDateTime)
+        obj.version = self._xpath2obj('version', element)
         self._extra(element, obj)
         return obj
 
-    def _origin_quality(self, element):
+    def _origin_quality(self, parent):
+        elements = self._xpath("quality", parent)
+        if len(elements) > 1:
+            raise NotImplementedError("Only one OriginQuality allowed.")
+        elif len(elements) == 0:
+            return None
+        element = elements[0]
         obj = OriginQuality()
         obj.associated_phase_count = self._xpath2obj(
-            'quality/associatedPhaseCount', element, int)
+            'associatedPhaseCount', element, int)
         obj.used_phase_count = self._xpath2obj(
-            'quality/usedPhaseCount', element, int)
+            'usedPhaseCount', element, int)
         obj.associated_station_count = self._xpath2obj(
-            'quality/associatedStationCount', element, int)
+            'associatedStationCount', element, int)
         obj.used_station_count = self._xpath2obj(
-            'quality/usedStationCount', element, int)
+            'usedStationCount', element, int)
         obj.depth_phase_count = self._xpath2obj(
-            'quality/depthPhaseCount', element, int)
+            'depthPhaseCount', element, int)
         obj.standard_error = self._xpath2obj(
-            'quality/standardError', element, float)
+            'standardError', element, float)
         obj.azimuthal_gap = self._xpath2obj(
-            'quality/azimuthalGap', element, float)
+            'azimuthalGap', element, float)
         obj.secondary_azimuthal_gap = self._xpath2obj(
-            'quality/secondaryAzimuthalGap', element, float)
+            'secondaryAzimuthalGap', element, float)
         obj.ground_truth_level = self._xpath2obj(
-            'quality/groundTruthLevel', element)
+            'groundTruthLevel', element)
         obj.minimum_distance = self._xpath2obj(
-            'quality/minimumDistance', element, float)
+            'minimumDistance', element, float)
         obj.maximum_distance = self._xpath2obj(
-            'quality/maximumDistance', element, float)
+            'maximumDistance', element, float)
         obj.median_distance = self._xpath2obj(
-            'quality/medianDistance', element, float)
+            'medianDistance', element, float)
         self._extra(element, obj)
         return obj
 
@@ -265,27 +272,33 @@ class Unpickler(object):
         self._extra(element, obj)
         return obj
 
-    def _origin_uncertainty(self, element):
+    def _origin_uncertainty(self, parent):
+        elements = self._xpath("originUncertainty", parent)
+        if len(elements) > 1:
+            raise NotImplementedError("Only one OriginUncertainty allowed.")
+        elif len(elements) == 0:
+            return None
+        element = elements[0]
         obj = OriginUncertainty()
         obj.preferred_description = self._xpath2obj(
-            'originUncertainty/preferredDescription', element)
+            'preferredDescription', element)
         obj.horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/horizontalUncertainty', element, float)
+            'horizontalUncertainty', element, float)
         obj.min_horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/minHorizontalUncertainty', element, float)
+            'minHorizontalUncertainty', element, float)
         obj.max_horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/maxHorizontalUncertainty', element, float)
+            'maxHorizontalUncertainty', element, float)
         obj.azimuth_max_horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/azimuthMaxHorizontalUncertainty', element,
-            float)
+            'azimuthMaxHorizontalUncertainty', element, float)
         obj.confidence_level = self._xpath2obj(
-            'originUncertainty/confidenceLevel', element, float)
+            'confidenceLevel', element, float)
+        ce_el = self._xpath('confidenceEllipsoid', element)
         try:
-            ce_el = self._xpath('originUncertainty/confidenceEllipsoid',
-                                element)
-            obj.confidence_ellipsoid = self._confidence_ellipsoid(ce_el[0])
+            ce_el = ce_el[0]
         except IndexError:
             obj.confidence_ellipsoid = ConfidenceEllipsoid()
+        else:
+            obj.confidence_ellipsoid = self._confidence_ellipsoid(ce_el)
         self._extra(element, obj)
         return obj
 
