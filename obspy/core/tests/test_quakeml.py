@@ -856,9 +856,9 @@ class QuakeMLTestCase(unittest.TestCase):
                                    "another_attrib": "another_value"}},
              'custom': {'value': u"True"},
              'new_tag': {'value': 1234,
-                         'namespace': ("ns0",
-                                       r"http://test.org/xmlns/0.1")},
+                         'namespace': r"http://test.org/xmlns/0.1"},
              'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')}})
+        nsmap = {"ns0": r"http://test.org/xmlns/0.1"}
         cat[0].extra = my_extra.copy()
         # insert a pick with an extra field
         p = Pick()
@@ -868,7 +868,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write file
-            cat.write(tmpfile, "QUAKEML")
+            cat.write(tmpfile, "QUAKEML", nsmap=nsmap)
             # check contents
             with open(tmpfile, "rb") as fh:
                 lines = fh.readlines()
@@ -899,6 +899,7 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - namespace abbreviations should be disregarded
         #  - we always end up with a namespace definition, even if it was
         #    omitted when originally setting the custom tag
+        #  - custom namespace abbreviations should attached to Catalog
         my_extra['custom']['namespace'] = r'http://obspy.org/xmlns/0.1'
         my_extra['tX']['namespace'] = r'http://obspy.org/xmlns/0.1'
         my_extra['new_tag']['namespace'] = r'http://test.org/xmlns/0.1'
@@ -909,6 +910,8 @@ class QuakeMLTestCase(unittest.TestCase):
             cat[0].picks[0].extra,
             {'weight': {'value': 2,
                         'namespace': r'http://obspy.org/xmlns/0.1'}})
+        self.assertTrue(hasattr(cat, "nsmap"))
+        self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])
 
 
 def suite():

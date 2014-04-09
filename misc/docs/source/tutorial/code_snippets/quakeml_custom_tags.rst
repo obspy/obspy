@@ -16,23 +16,24 @@ with custom xml tags:
                         'namespace': r"http://some-page.de/xmlns/1.0"},
              'custom': {'value': u"True"},
              'new_tag': {'value': 1234,
-                         'namespace': ("ns0",
-                                       r"http://test.org/xmlns/0.1")},
+                         'namespace': r"http://test.org/xmlns/0.1"},
              'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')}}
     
     cat = Catalog()
     cat.extra = extra
-    cat.write("my_catalog.xml", "QUAKEML")
+    cat.write("my_catalog.xml", "QUAKEML",
+              nsmap={"ns0": r"http://test.org/xmlns/0.1"})
 
 All custom information to be stored in custom QuakeML conform xml tags has to
 be stored in ``extra`` attribute of e.g. ``Catalog``, ``Event``, ``Pick``.  The
 keys are used as the name of the xml tag, the content of the xml tag is defined
 in a simple dictionary: ``'value'`` defines the content of the tag (the string
 representation of the object gets stored in the textual xml output).
-``'namespace'`` can be used to specify a custom namespace for the tag. It can
-be either a string with the custom namespace, or a tuple of namespace
-abbreviation and namespace to use in the xml file. If the ``'namespace'`` key
-is missing a default ObsPy namespace is used.
+``'namespace'`` can be used to specify a custom namespace for the tag.
+If the ``'namespace'`` key is missing a default ObsPy namespace is used.
+Namespace abbreviations in the output xml can be specified during output as
+QuakeML by providing a dictionary of namespace abbreviation mappings as
+`nsmap` parameter to :meth:`Catalog.write() <obspy.core.event.Catalog.write>`.
 The xml output of the above example looks like:
 
 .. code-block:: xml

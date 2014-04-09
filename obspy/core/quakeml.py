@@ -27,7 +27,6 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 from future.builtins import open
 from future.builtins import str
-from future.utils import native_str
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -800,6 +799,8 @@ class Unpickler(object):
             if ns.startswith(r"http://quakeml.org/xmlns/")]
         # create catalog
         catalog = Catalog(force_resource_id=False)
+        # add any custom namespace abbreviations of root element to Catalog
+        catalog.nsmap = self.parser.xml_root.nsmap.copy()
         # optional catalog attributes
         catalog.description = self._xpath2obj('description', catalog_el)
         catalog.comments = self._comments(catalog_el)
@@ -940,10 +941,9 @@ class Pickler(object):
         # set of namespace urls without given abbreviation
         self.ns_set = set()
         # dictionary of namespace/namespace urls
-        if not nsmap:
+        self.ns_dict = nsmap
+        if self.ns_dict is None:
             self.ns_dict = {}
-        else:
-            self.ns_dict = nsmap
         self.ns_dict.update(NSMAP_QUAKEML.copy())
 
     def dump(self, catalog, file):
@@ -1089,15 +1089,9 @@ class Pickler(object):
             # otherwise use default obspy namespace (and add it to
             if ns is None:
                 ns_abbrev, ns = NAMESPACE_DEFAULT
-                self._addNamespace(ns, ns_abbrev)
             else:
-                # allow two formats:
-                # ["shortname", "namespaceurl"] or "namespaceurl"
-                if isinstance(ns, (str, native_str)):
-                    ns_abbrev = None
-                else:
-                    ns_abbrev, ns = ns
-                self._addNamespace(ns, ns_abbrev)
+                ns_abbrev = None
+            self._addNamespace(ns, ns_abbrev)
             tag = "{%s}%s" % (ns, key)
             cls = type(value)
             if cls.__module__ == "__builtin__":
@@ -1733,7 +1727,10 @@ def writeQuakeML(catalog, filename, validate=False, nsmap=None,
     :param nsmap: Additional custom namespace abbreviation mappings
         (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
-    xml_doc = Pickler(nsmap=nsmap).dumps(catalog)
+    nsmap_ = getattr(catalog, "nsmap", {})
+    if nsmap:
+        nsmap_.update(nsmap)
+    xml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
 
     if validate is True and not _validate(compatibility.BytesIO(xml_doc)):
         raise AssertionError(
