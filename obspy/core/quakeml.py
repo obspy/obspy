@@ -112,9 +112,9 @@ class Unpickler(object):
     def _xpath(self, *args, **kwargs):
         return self.parser.xpath(*args, **kwargs)
 
-    def _comments(self, element):
+    def _comments(self, parent):
         obj = []
-        for el in self._xpath('comment', element):
+        for el in self._xpath('comment', parent):
             comment = Comment(force_resource_id=False)
             comment.text = self._xpath2obj('text', el)
             comment.creation_info = self._creation_info(el)
@@ -123,9 +123,9 @@ class Unpickler(object):
             obj.append(comment)
         return obj
 
-    def _station_magnitude_contributions(self, element):
+    def _station_magnitude_contributions(self, parent):
         obj = []
-        for el in self._xpath("stationMagnitudeContribution", element):
+        for el in self._xpath("stationMagnitudeContribution", parent):
             contrib = StationMagnitudeContribution()
             contrib.weight = self._xpath2obj("weight", el, float)
             contrib.residual = self._xpath2obj("residual", el, float)
@@ -181,18 +181,18 @@ class Unpickler(object):
         self._extra(element, obj)
         return obj
 
-    def _event_description(self, element):
+    def _event_description(self, parent):
         out = []
-        for el in self._xpath('description', element):
+        for el in self._xpath('description', parent):
             text = self._xpath2obj('text', el)
             type = self._xpath2obj('type', el)
             out.append(EventDescription(text=text, type=type))
             self._extra(el, out[-1])
         return out
 
-    def _value(self, element, name, quantity_type=float):
+    def _value(self, parent, name, quantity_type=float):
         try:
-            el = self._xpath(name, element)[0]
+            el = self._xpath(name, parent)[0]
         except IndexError:
             return None, None
 
@@ -234,9 +234,9 @@ class Unpickler(object):
     def _time_value(self, element, name):
         return self._value(element, name, UTCDateTime)
 
-    def _composite_times(self, element):
+    def _composite_times(self, parent):
         obj = []
-        for el in self._xpath('compositeTime', element):
+        for el in self._xpath('compositeTime', parent):
             ct = CompositeTime()
             ct.year, ct.year_errors = self._int_value(el, 'year')
             ct.month, ct.month_errors = self._int_value(el, 'month')
@@ -289,9 +289,9 @@ class Unpickler(object):
         self._extra(element, obj)
         return obj
 
-    def _waveform_ids(self, element):
+    def _waveform_ids(self, parent):
         objs = []
-        for wid_el in self._xpath('waveformID', element):
+        for wid_el in self._xpath('waveformID', parent):
             obj = WaveformStreamID()
             obj.network_code = wid_el.get('networkCode') or ''
             obj.station_code = wid_el.get('stationCode') or ''
@@ -301,9 +301,9 @@ class Unpickler(object):
             objs.append(obj)
         return objs
 
-    def _waveform_id(self, element):
+    def _waveform_id(self, parent):
         try:
-            return self._waveform_ids(element)[0]
+            return self._waveform_ids(parent)[0]
         except IndexError:
             return None
 
@@ -543,17 +543,17 @@ class Unpickler(object):
         self._extra(element, obj)
         return obj
 
-    def _axis(self, element, name):
+    def _axis(self, parent, name):
         """
         Converts an etree.Element into an Axis object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :type name: tag name of axis
         :rtype: :class:`~obspy.core.event.Axis`
         """
         obj = Axis()
         try:
-            sub_el = self._xpath(name, element)[0]
+            sub_el = self._xpath(name, parent)[0]
         except IndexError:
             return obj
         # required parameter
@@ -563,15 +563,15 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _principal_axes(self, element):
+    def _principal_axes(self, parent):
         """
         Converts an etree.Element into an PrincipalAxes object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.PrincipalAxes`
         """
         try:
-            sub_el = self._xpath('principalAxes', element)[0]
+            sub_el = self._xpath('principalAxes', parent)[0]
         except IndexError:
             return None
         obj = PrincipalAxes()
@@ -583,17 +583,17 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _nodal_plane(self, element, name):
+    def _nodal_plane(self, parent, name):
         """
         Converts an etree.Element into an NodalPlane object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :type name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
         obj = NodalPlane()
         try:
-            sub_el = self._xpath(name, element)[0]
+            sub_el = self._xpath(name, parent)[0]
         except IndexError:
             return obj
         # required parameter
@@ -603,16 +603,16 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _nodal_planes(self, element):
+    def _nodal_planes(self, parent):
         """
         Converts an etree.Element into an NodalPlanes object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.NodalPlanes`
         """
         obj = NodalPlanes()
         try:
-            sub_el = self._xpath('nodalPlanes', element)[0]
+            sub_el = self._xpath('nodalPlanes', parent)[0]
         except IndexError:
             return obj
         # optional parameter
@@ -626,16 +626,16 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _source_time_function(self, element):
+    def _source_time_function(self, parent):
         """
         Converts an etree.Element into an SourceTimeFunction object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.SourceTimeFunction`
         """
         obj = SourceTimeFunction()
         try:
-            sub_el = self._xpath('sourceTimeFunction', element)[0]
+            sub_el = self._xpath('sourceTimeFunction', parent)[0]
         except IndexError:
             return obj
         # required parameters
@@ -647,16 +647,16 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _tensor(self, element):
+    def _tensor(self, parent):
         """
         Converts an etree.Element into an Tensor object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.Tensor`
         """
         obj = Tensor()
         try:
-            sub_el = self._xpath('tensor', element)[0]
+            sub_el = self._xpath('tensor', parent)[0]
         except IndexError:
             return obj
         # required parameters
@@ -669,16 +669,16 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _data_used(self, element):
+    def _data_used(self, parent):
         """
         Converts an etree.Element into an DataUsed object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.DataUsed`
         """
         obj = DataUsed()
         try:
-            sub_el = self._xpath('dataUsed', element)[0]
+            sub_el = self._xpath('dataUsed', parent)[0]
         except IndexError:
             return obj
         # required parameters
@@ -691,16 +691,16 @@ class Unpickler(object):
         self._extra(sub_el, obj)
         return obj
 
-    def _moment_tensor(self, element):
+    def _moment_tensor(self, parent):
         """
         Converts an etree.Element into an MomentTensor object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.MomentTensor`
         """
         obj = MomentTensor(force_resource_id=False)
         try:
-            mt_el = self._xpath('momentTensor', element)[0]
+            mt_el = self._xpath('momentTensor', parent)[0]
         except IndexError:
             return obj
         # required parameters
