@@ -936,11 +936,15 @@ class Pickler(object):
     """
     Serializes an ObsPy Catalog object into QuakeML format.
     """
-    def __init__(self):
+    def __init__(self, nsmap=None):
         # set of namespace urls without given abbreviation
         self.ns_set = set()
         # dictionary of namespace/namespace urls
-        self.ns_dict = NSMAP_QUAKEML.copy()
+        if not nsmap:
+            self.ns_dict = {}
+        else:
+            self.ns_dict = nsmap
+        self.ns_dict.update(NSMAP_QUAKEML.copy())
 
     def dump(self, catalog, file):
         """
@@ -1707,7 +1711,7 @@ def readQuakeML(filename):
     return Unpickler().load(filename)
 
 
-def writeQuakeML(catalog, filename, validate=False,
+def writeQuakeML(catalog, filename, validate=False, nsmap=None,
                  **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
@@ -1725,8 +1729,11 @@ def writeQuakeML(catalog, filename, validate=False,
     :param validate: If True, the final QuakeML file will be validated against
         the QuakeML schema file. Raises an AssertionError if the validation
         fails.
+    :type nsmap: dict, optional
+    :param nsmap: Additional custom namespace abbreviation mappings
+        (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
-    xml_doc = Pickler().dumps(catalog)
+    xml_doc = Pickler(nsmap=nsmap).dumps(catalog)
 
     if validate is True and not _validate(compatibility.BytesIO(xml_doc)):
         raise AssertionError(
