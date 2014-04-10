@@ -26,12 +26,6 @@ import doctest
 import shutil
 import warnings
 
-# pyflakes autodetection of PY2 does not work with the future library.
-# Therefore, overwrite the pyflakes autodetection manually
-if PY2:
-    import pyflakes.checker
-    pyflakes.checker.PY2 = True
-
 
 def add_unittests(testsuite, module_name):
     """
@@ -89,7 +83,7 @@ def add_doctests(testsuite, module_name):
 
     for root, _dirs, files in os.walk(MODULE_PATH):
         # skip directories without __init__.py
-        if not '__init__.py' in files:
+        if '__init__.py' not in files:
             continue
         # skip tests directories
         if root.endswith('tests'):
@@ -311,6 +305,8 @@ def get_matplotlib_defaul_tolerance():
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
     ]
+# E265: block comment should start with '# '  (> 500 appearances)
+FLAKE8_IGNORE_CODES = ["E265"]
 
 try:
     import flake8
@@ -324,6 +320,12 @@ else:
 def check_flake8():
     if not HAS_FLAKE8:
         raise Exception('flake8 is required to check code formatting')
+
+    # pyflakes autodetection of PY2 does not work with the future library.
+    # Therefore, overwrite the pyflakes autodetection manually
+    if PY2:
+        import pyflakes.checker
+        pyflakes.checker.PY2 = True
     import flake8.main
     from flake8.engine import get_style_guide
 
@@ -358,6 +360,8 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
+    flake8_style.options.ignore = \
+        tuple(set(flake8_style.options.ignore + tuple(FLAKE8_IGNORE_CODES)))
     sys.stdout = compatibility.StringIO()
     if PY2:
         files = [native_str(f) for f in files]

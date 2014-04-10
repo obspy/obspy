@@ -57,6 +57,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
+from misc import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -320,15 +321,6 @@ def find_packages():
     return [_i.replace(os.sep, ".") for _i in modules]
 
 
-def _get_lib_name(lib):
-    """
-    Helper function to get an architecture and Python version specific library
-    filename.
-    """
-    return "lib%s_%s_%s_py%s" % (
-        lib, platform.system(), platform.architecture()[0], "".join(
-            [str(i) for i in platform.python_version_tuple()[:2]]))
-
 # monkey patches for MS Visual Studio
 if IS_MSVC:
     # support library paths containing spaces
@@ -386,7 +378,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2"), files, **kwargs)
+    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
+                         files, **kwargs)
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
@@ -405,7 +398,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
-    config.add_extension(_get_lib_name("mseed"), files, **kwargs)
+    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SEGY
     path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
@@ -415,7 +409,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy"), files, **kwargs)
+    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SIGNAL
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -425,7 +420,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal"), files, **kwargs)
+    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
+                         files, **kwargs)
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -437,11 +433,12 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    config.add_extension(_get_lib_name("evresp"), files, **kwargs)
+    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
+                         files, **kwargs)
 
     # TAUP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau")
+    libname = _get_lib_name("tau", add_extension_suffix=False)
     files = glob.glob(os.path.join(path, "*.f"))
     # compiler specific options
     kwargs = {'libraries': []}

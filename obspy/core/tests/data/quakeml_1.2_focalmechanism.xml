@@ -103,7 +103,7 @@
           <agencyURI>smi:smi-registry/organization/MUH</agencyURI>
           <author>Erika Mustermann</author>
           <authorURI>smi:smi-registry/organization/MUH</authorURI>
-          <creationTime>2012-04-04T16:40:50+00:00</creationTime>
+          <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
           <version>1.0.1</version>
         </creationInfo>
       </focalMechanism>

@@ -39,8 +39,8 @@ except ImportError:
 
 def plot_basemap(lons, lats, size, color, labels=None,
                  projection='cyl', resolution='l', continent_fill_color='0.8',
-                 water_fill_color='1.0', colormap=None, marker="o",
-                 title=None, colorbar_ticklabel_format=None,
+                 water_fill_color='1.0', colormap=None, colorbar=None,
+                 marker="o", title=None, colorbar_ticklabel_format=None,
                  show=True, **kwargs):  # @UnusedVariable
     """
     Creates a basemap plot with a data point scatter plot.
@@ -86,10 +86,14 @@ def plot_basemap(lons, lats, size, color, labels=None,
         Defaults to None which will use the default colormap for the date
         encoding and a colormap going from green over yellow to red for the
         depth encoding.
+    :type colorbar: bool, optional
+    :param colorbar: When left `None`, a colorbar is plotted if more than one
+        object is plotted. Using `True`/`False` the colorbar can be forced
+        on/off.
     :type title: str
     :param title: Title above plot.
     :type colorbar_ticklabel_format: str or func or
-        subclass of :matplotlib:`matplotlib.ticker.Formatter`
+        subclass of :class:`matplotlib.ticker.Formatter`
     :param colorbar_ticklabel_format: Format string or Formatter used to format
         colorbar tick labels.
     :type show: bool
@@ -113,11 +117,14 @@ def plot_basemap(lons, lats, size, color, labels=None,
     # The colorbar should only be plotted if more then one event is
     # present.
 
-    if len(lons) > 1 and hasattr(color, "__len__") and \
-            not isinstance(color, (str, native_str)):
-        show_colorbar = True
+    if colorbar is not None:
+        show_colorbar = colorbar
     else:
-        show_colorbar = False
+        if len(lons) > 1 and hasattr(color, "__len__") and \
+                not isinstance(color, (str, native_str)):
+            show_colorbar = True
+        else:
+            show_colorbar = False
 
     if projection == "local":
         ax_x0, ax_width = 0.10, 0.80
@@ -129,7 +136,11 @@ def plot_basemap(lons, lats, size, color, labels=None,
         cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
         plt.sca(map_ax)
     else:
-        map_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.85])
+        ax_y0, ax_height = 0.05, 0.85
+        if projection == "local":
+            ax_y0 += 0.05
+            ax_height -= 0.05
+        map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
     if projection == 'cyl':
         bmap = Basemap(resolution=resolution)
@@ -159,6 +170,16 @@ def plot_basemap(lons, lats, size, color, labels=None,
         else:
             height = 2.0 * deg2m_lat
             width = 5.0 * deg2m_lon
+        # do intelligent aspect calculation for local projection
+        # adjust to figure dimensions
+        w, h = fig.get_size_inches()
+        aspect = w / h
+        if show_colorbar:
+            aspect *= 1.2
+        if width / height < aspect:
+            width = height * aspect
+        else:
+            height = width / aspect
 
         bmap = Basemap(projection='aeqd', resolution=resolution,
                        area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
@@ -252,8 +273,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
                       orientation='horizontal',
                       ticks=locator,
                       format=formatter)
-                      #format=formatter)
-                      #ticks=mpl.ticker.MaxNLocator(4))
+        #              format=formatter)
+        #              ticks=mpl.ticker.MaxNLocator(4))
         cb.update_ticks()
 
     if show:

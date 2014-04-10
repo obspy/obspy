@@ -158,10 +158,57 @@ Gallery
 
 .. plot:: source/tutorial/code_snippets/benchmark.py
     :width: 300px
-    :target: http://docs.obspy.org/packages/autogen/obspy.segy.benchmark.plotBenchmark.html
+    :target: packages/autogen/obspy.segy.benchmark.plotBenchmark.html
     :alt: Benchmark Plot
 
 .. plot:: source/tutorial/code_snippets/xcorr_pick_correction.py
     :width: 300px
     :target: tutorial/code_snippets/xcorr_pick_correction.html
     :alt: Cross Correlation Pick Correction
+
+.. plot::
+    :width: 300px
+    :target: packages/autogen/obspy.station.inventory.Inventory.plot.html
+    :alt: Basemap preview plot of Inventory class
+
+    from obspy import read_inventory
+    inv = read_inventory()
+    inv.plot(projection="local",
+             color_per_network={'GR': 'blue',
+                                'BW': 'green'})
+
+.. plot::
+    :width: 300px
+    :target: packages/autogen/obspy.station.network.Network.plot.html
+    :alt: Basemap preview plot of Network class
+
+    from obspy import read_inventory
+    net = read_inventory()[0]
+    net.plot(projection="ortho")
+
+.. plot::
+    :width: 300px
+    :target: packages/autogen/obspy.core.event.Catalog.plot.html
+    :alt: Basemap preview plot of Catalog class
+
+    from obspy import readEvents
+    cat = readEvents()
+    cat.plot()
+
+.. plot::
+    :width: 300px
+    :target: packages/autogen/obspy.station.inventory.Inventory.plot_response.html
+    :alt: Bode plot of Inventory class
+
+    from obspy import read_inventory
+    inv = read_inventory()
+    inv.plot_response(0.001, station="RJOB")
+
+.. plot::
+    :width: 300px
+    :target: packages/autogen/obspy.station.response.Response.plot.html
+    :alt: Bode plot of Response class
+
+    from obspy import read_inventory
+    resp = read_inventory()[0][0][0].response
+    resp.plot(0.001, output="VEL")

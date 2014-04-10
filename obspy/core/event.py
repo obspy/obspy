@@ -1111,7 +1111,7 @@ __Amplitude = _eventTypeClassFactory(
                       ("category", AmplitudeCategory),
                       ("unit", AmplitudeUnit),
                       ("method_id", ResourceIdentifier),
-                      ("period", float),
+                      ("period", float, ATTRIBUTE_HAS_ERRORS),
                       ("snr", float),
                       ("time_window", TimeWindow),
                       ("pick_id", ResourceIdentifier),
@@ -2830,7 +2830,7 @@ class Catalog(object):
                 msg = "%s is not a valid filter key" % key
                 raise ValueError(msg)
         if inverse:
-            events = [ev for ev in self.events if not ev in events]
+            events = [ev for ev in self.events if ev not in events]
         return Catalog(events=events)
 
     def copy(self):
@@ -2948,18 +2948,18 @@ class Catalog(object):
 
         :type projection: str, optional
         :param projection: The map projection. Currently supported are
-            * ``"cyl"`` (Will plot the whole world.)
-            * ``"ortho"`` (Will center around the mean lat/long.)
-            * ``"local"`` (Will plot around local events)
+                * ``"cyl"`` (Will plot the whole world.)
+                * ``"ortho"`` (Will center around the mean lat/long.)
+                * ``"local"`` (Will plot around local events)
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are
-            * ``"c"`` (crude)
-            * ``"l"`` (low)
-            * ``"i"`` (intermediate)
-            * ``"h"`` (high)
-            * ``"f"`` (full)
+                * ``"c"`` (crude)
+                * ``"l"`` (low)
+                * ``"i"`` (intermediate)
+                * ``"h"`` (high)
+                * ``"f"`` (full)
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
@@ -2970,14 +2970,14 @@ class Catalog(object):
         :type label: str, optional
         :param label:Events will be labeld based on the chosen property.
             Possible values are
-            * ``"magnitude"``
-            * ``None``
+                * ``"magnitude"``
+                * ``None``
             Defaults to ``"magnitude"``
         :type color: str, optional
         :param color:The events will be color-coded based on the chosen
             proberty. Possible values are
-            * ``"date"``
-            * ``"depth"``
+                * ``"date"``
+                * ``"depth"``
             Defaults to ``"depth"``
         :type colormap: str, optional, any matplotlib colormap
         :param colormap: The colormap for color-coding the events.
@@ -2999,7 +2999,7 @@ class Catalog(object):
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
 
-        .. rubric:: Example
+        .. rubric:: Examples
 
         Cylindrical projection for global overview:
 

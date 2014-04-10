@@ -5,9 +5,18 @@
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
+   * Refactored Catalog.plot() into helper routine
+     obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.station:
+   * add plotting methods (response/bode, location maps) to
+     Inventory/Station/Channel/Response objects (see #750)
 
-0.9.1:
+0.9.2:
+ - general:
+   * fix installation on CygWin (see #755)
  - obspy.core:
+   * bugfix: Input/Output to/from QuakeML was missing Amplitude
+     elements (see #763)
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
    * extend remove_response for polynomial responses
@@ -23,6 +32,9 @@
      specified explicitely (see #754)
  - obspy.imaging:
    * Fixing waveform plotting.
+ - obspy.seedlink:
+   * bugfix: different instances of a SeedLink connection had a shared
+     state (see #561)
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
    * add get_coordinates method to inventory and network objects (see #740)

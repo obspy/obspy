@@ -21,7 +21,9 @@ from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 from obspy.station.network import Network
 import textwrap
 import warnings
-from copy import deepcopy
+import copy
+import fnmatch
+import numpy as np
 
 
 def _createExampleInventory():
@@ -86,7 +88,7 @@ class Inventory(ComparingObject):
             self.created = created
 
     def __add__(self, other):
-        new = deepcopy(self)
+        new = copy.deepcopy(self)
         if isinstance(other, Inventory):
             new.networks.extend(other.networks)
         elif isinstance(other, Network):
@@ -274,6 +276,368 @@ class Inventory(ComparingObject):
             msg = "No matching coordinates found."
             raise Exception(msg)
         return coordinates[0]
+
+    def select(self, network=None, station=None, location=None, channel=None,
+               time=None, starttime=None, endtime=None, sampling_rate=None,
+               keep_empty=False):
+        """
+        Returns the :class:`Inventory` object only with these
+        :class:`~obspy.station.network.Network`s /
+        :class:`~obspy.station.station.Station`s /
+        :class:`~obspy.station.channel.Channel`s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see http://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Examples
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> t = UTCDateTime(2007, 7, 1, 12)
+        >>> inv = inv.select(channel="*Z", station="[RW]*", time=t)
+        >>> print(inv)  # doctest: +NORMALIZE_WHITESPACE
+        Inventory created at 2014-03-03T11:07:06.198000Z
+            Created by: fdsn-stationxml-converter/1.0.0
+                    http://www.iris.edu/fdsnstationconverter
+            Sending institution: Erdbebendienst Bayern
+            Contains:
+                Networks (2):
+                    GR
+                    BW
+                Stations (2):
+                    BW.RJOB (Jochberg, Bavaria, BW-Net)
+                    GR.WET (Wettzell, Bavaria, GR-Net)
+                Channels (4):
+                    BW.RJOB..EHZ, GR.WET..BHZ, GR.WET..HHZ, GR.WET..LHZ
+
+        The `network`, `station`, `location` and `channel` selection criteria
+        may also contain UNIX style wildcards (e.g. ``*``, ``?``, ...; see
+        :func:`~fnmatch.fnmatch`).
+
+        :type network: str
+        :type station: str
+        :type location: str
+        :type channel: str
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include networks/stations/channels active at given
+            point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include networks/stations/channels active at or
+            after given point in time (i.e. channels ending before given time
+            will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include networks/stations/channels active before
+            or at given point in time (i.e. channels starting after given time
+            will not be shown).
+        :type sampling_rate: float
+        :type keep_empty: bool
+        :param keep_empty: If set to `True`, networks/stations that match
+            themselves but have no matching child elements (stations/channels)
+            will be included in the result.
+        """
+        networks = []
+        for net in self.networks:
+            # skip if any given criterion is not matched
+            if network is not None:
+                if not fnmatch.fnmatch(net.code.upper(),
+                                       network.upper()):
+                    continue
+            if any([t is not None for t in (time, starttime, endtime)]):
+                if not net.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
+                    continue
+
+            net_ = net.select(
+                station=station, location=location, channel=channel, time=time,
+                starttime=starttime, endtime=endtime,
+                sampling_rate=sampling_rate, keep_empty=keep_empty)
+            if not keep_empty and not net_.stations:
+                continue
+            networks.append(net_)
+        inv = copy.copy(self)
+        inv.networks = networks
+        return inv
+
+    def plot(self, projection='cyl', resolution='l',
+             continent_fill_color='0.9', water_fill_color='1.0', marker="v",
+             size=15**2, label=True, color='blue', color_per_network=False,
+             colormap="jet", legend="upper left", time=None, show=True,
+             outfile=None, **kwargs):  # @UnusedVariable
+        """
+        Creates a preview map of all networks/stations in current inventory
+        object.
+
+        :type projection: str, optional
+        :param projection: The map projection. Currently supported are
+            * ``"cyl"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+            Defaults to "cyl"
+        :type resolution: str, optional
+        :param resolution: Resolution of the boundary database to use. Will be
+            based directly to the basemap module. Possible values are
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+            Defaults to ``"l"``
+        :type continent_fill_color: Valid matplotlib color, optional
+        :param continent_fill_color:  Color of the continents. Defaults to
+            ``"0.9"`` which is a light gray.
+        :type water_fill_color: Valid matplotlib color, optional
+        :param water_fill_color: Color of all water bodies.
+            Defaults to ``"white"``.
+        :type marker: str
+        :param marker: Marker symbol (see :func:`matplotlib.pyplot.scatter`).
+        :type size: float
+        :param size: Marker size (see :func:`matplotlib.pyplot.scatter`).
+        :type label: bool
+        :param label: Whether to label stations with "network.station" or not.
+        :type color: str
+        :param color: Face color of marker symbol (see
+            :func:`matplotlib.pyplot.scatter`).
+        :type color_per_network: bool (or dict)
+        :param color_per_network: If set to `True`, each network will be drawn
+            in a different color. A dictionary can be provided that maps
+            network codes to color values (e.g.
+            `color_per_network={"GR": "black", "II": "green"}).
+        :type colormap: str, optional, any matplotlib colormap
+        :param colormap: Only ued if `color_per_network=True`. Specifies which
+            colormap is used to draw the colors for the individual networks.
+        :type legend: str or `None`
+        :param legend: Location string for legend, if networks are plotted in
+            different colors (i.e. option `color_per_network` in use). See
+            :func:`matplotlib.pyplot.legend` for possible values for
+            legend location string. To disable legend set to `None`.
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only plot stations available at given point in time.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Example
+
+        Cylindrical projection for global overview:
+
+        >>> from obspy import read_inventory
+        >>> inv = read_inventory()
+        >>> inv.plot(label=False)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            inv = read_inventory()
+            inv.plot(label=False)
+
+        Orthographic projection, automatic colors per network:
+
+        >>> inv.plot(projection="ortho", label=False,
+        ...          color_per_network=True)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            inv = read_inventory()
+            inv.plot(projection="ortho", label=False, color_per_network=True)
+
+        Local (azimuthal equidistant) projection, with custom colors:
+
+        >>> colors = {'GR': 'blue', 'BW': 'green'}
+        >>> inv.plot(projection="local",
+        ...          color_per_network=colors)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            inv = read_inventory()
+            inv.plot(projection="local",
+                     color_per_network={'GR': 'blue',
+                                        'BW': 'green'})
+        """
+        from obspy.imaging.maps import plot_basemap
+        import matplotlib.pyplot as plt
+
+        inv = self.select(time=time)
+
+        # lat/lon coordinates, magnitudes, dates
+        lats = []
+        lons = []
+        labels = []
+        colors = []
+
+        if color_per_network and not isinstance(color_per_network, dict):
+            from matplotlib.cm import get_cmap
+            cmap = get_cmap(name=colormap)
+            codes = set([n.code for n in inv])
+            nums = np.linspace(0, 1, endpoint=False, num=len(codes))
+            color_per_network = dict([(code, cmap(n))
+                                      for code, n in zip(sorted(codes), nums)])
+
+        for net in inv:
+            for sta in net:
+                if sta.latitude is None or sta.longitude is None:
+                    msg = ("Station '%s' does not have latitude/longitude "
+                           "information and will not be plotted." % label)
+                    warnings.warn(msg)
+                    continue
+                if color_per_network:
+                    label_ = "   %s" % sta.code
+                    color_ = color_per_network.get(net.code, "k")
+                else:
+                    label_ = "   " + ".".join((net.code, sta.code))
+                    color_ = color
+                lats.append(sta.latitude)
+                lons.append(sta.longitude)
+                labels.append(label_)
+                colors.append(color_)
+
+        if not label:
+            labels = None
+
+        fig = plot_basemap(lons, lats, size, colors, labels,
+                           projection=projection, resolution=resolution,
+                           continent_fill_color=continent_fill_color,
+                           water_fill_color=water_fill_color,
+                           colormap=None, colorbar=False, marker=marker,
+                           title=None, show=False, **kwargs)
+
+        if legend is not None and color_per_network:
+            ax = fig.axes[0]
+            count = len(ax.collections)
+            for code, color in sorted(color_per_network.items()):
+                ax.scatter([0], [0], size, color, label=code, marker=marker)
+            ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                      fontsize="medium", markerscale=0.8, handletextpad=0.1)
+            # remove collections again solely created for legend handles
+            ax.collections = ax.collections[:count]
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
+
+    def plot_response(self, min_freq, output="VEL", network="*", station="*",
+                      location="*", channel="*", time=None, starttime=None,
+                      endtime=None, axes=None, unwrap_phase=False, show=True,
+                      outfile=None):
+        """
+        Show bode plot of instrument response of all (or a subset of) the
+        inventory's channels.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type network: str
+        :param network: Only plot matching networks. Accepts UNIX style
+            patterns and wildcards (e.g. "G*", "*[ER]"; see
+            :func:`~fnmatch.fnmatch`)
+        :type station: str
+        :param station: Only plot matching stations. Accepts UNIX style
+            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
+            :func:`~fnmatch.fnmatch`)
+        :type location: str
+        :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :func:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
+            :func:`~fnmatch.fnmatch`)
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only regard networks/stations/channels active at given
+            point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only regard networks/stations/channels active at or
+            after given point in time (i.e. networks ending before given time
+            will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only regard networks/stations/channels active before or
+            at given point in time (i.e. networks starting after given time
+            will not be shown).
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> inv = read_inventory()
+        >>> inv.plot_response(0.001, station="RJOB")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            inv = read_inventory()
+            inv.plot_response(0.001, station="RJOB")
+        """
+        import matplotlib.pyplot as plt
+
+        if axes:
+            ax1, ax2 = axes
+            fig = ax1.figure
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        matching = self.select(network=network, station=station,
+                               location=location, channel=channel, time=time,
+                               starttime=starttime, endtime=endtime)
+
+        for net in matching.networks:
+            for sta in net.stations:
+                for cha in sta.channels:
+                    cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                             label=".".join((net.code, sta.code,
+                                             cha.location_code, cha.code)),
+                             unwrap_phase=unwrap_phase, show=False,
+                             outfile=None)
+
+        # final adjustments to plot if we created the figure in here
+        if not axes:
+            from obspy.station.response import _adjust_bode_plot_figure
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
 
 
 if __name__ == '__main__':
