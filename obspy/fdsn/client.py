@@ -568,12 +568,23 @@ class Client(object):
         Helper method to fetch response via get_stations() and attach it to
         each trace in stream.
         """
-        netstas = set([tuple(tr.id.split(".")[:2]) for tr in st])
+        netids = {}
+        for tr in st:
+            if tr.id not in netids:
+                netids[tr.id] = (tr.stats.starttime, tr.stats.endtime)
+                continue
+            netids[tr.id] = (
+                min(tr.stats.starttime, netids[tr.id][0]),
+                max(tr.stats.endtime, netids[tr.id][1]))
+
         inventories = []
-        for net, sta in netstas:
+        for key, value in netids.items():
+            net, sta, loc, chan = key.split(".")
+            starttime, endtime = value
             try:
-                inventories.append(self.get_stations(network=net, station=sta,
-                                                     level="response"))
+                inventories.append(self.get_stations(
+                    network=net, station=sta, location=loc, channel=chan,
+                    starttime=starttime, endtime=endtime, level="response"))
             except Exception as e:
                 warnings.warn(str(e))
         st.attach_response(inventories)
