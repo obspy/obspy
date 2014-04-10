@@ -588,22 +588,15 @@ class ClientTestCase(unittest.TestCase):
         """
         client = self.client
 
-        import time
-        a = time.time()
         bulk = ("IU ANMO 00 BHZ 2000-03-25T00:00:00 2000-03-25T00:00:04\n")
         st = client.get_waveforms_bulk(bulk, attach_response=True)
-        b = time.time()
-        print b - a
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
-        a = time.time()
         st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
                                   UTCDateTime("2000-02-27T06:00:00.000"),
                                   UTCDateTime("2000-02-27T06:00:05.000"),
                                   attach_response=True)
-        b = time.time()
-        print b - a
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
