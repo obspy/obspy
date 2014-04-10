@@ -13,7 +13,7 @@ class PDASCase(unittest.TestCase):
     def setUp(self):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
-        self.testfile = os.path.join(self.path, 'data', 'p1246001_cropped.108')
+        self.testfile = os.path.join(self.path, 'data', 'p1246001.108')
 
     def test_readPDAS(self):
         """
