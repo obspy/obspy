@@ -57,8 +57,8 @@ class Client(object):
         >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
         Available Services: 'dataselect' (v...), 'event' (v...),
-        'station' (v...), 'available_event_contributors',
-        'available_event_catalogs'
+        'station' (v...), 'available_event_catalogs',
+        'available_event_contributors'
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services
         or client.help() for parameter description of
@@ -867,8 +867,8 @@ class Client(object):
                          for s in self.services if s in FDSNWS])
         services_string = ["'%s' (v%s)" % (s, versions[s])
                            for s in FDSNWS if s in self.services]
-        services_string += ["'%s'" % s
-                            for s in self.services if s not in FDSNWS]
+        other_services = sorted([s for s in self.services if s not in FDSNWS])
+        services_string += ["'%s'" % s for s in other_services]
         services_string = ", ".join(services_string)
         ret = ("FDSN Webservice Client (base url: {url})\n"
                "Available Services: {services}\n\n"
@@ -1040,7 +1040,7 @@ class Client(object):
         """
         services = ["dataselect", "event", "station"]
         # omit manually deactivated services
-        for service, custom_target in self._service_mappings.iteritems():
+        for service, custom_target in self._service_mappings.items():
             if custom_target is None:
                 services.remove(service)
         urls = [self._build_url(service, "application.wadl")

@@ -15,13 +15,13 @@ from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import str
 from future.builtins import open
-import mock
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core import compatibility
+from obspy.core.compatibility import mock
 from obspy.station import Response
 import os
 import sys
