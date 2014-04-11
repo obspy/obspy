@@ -10,6 +10,7 @@ The obspy.fdsn.client test suite.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
+import warnings
 from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import str
@@ -793,12 +794,19 @@ class ClientTestCase(unittest.TestCase):
         base_url_event = "http://other_url.com/beta/event_service/11"
         base_url_station = "http://some_url.com/beta2/station/7"
         base_url_ds = "http://new.com/beta3/dataselect/8"
+
         # An exception will be raised if not actual WADLs are returned.
-        c = Client(base_url=base_url, service_mappings={
-            "event": base_url_event,
-            "station": base_url_station,
-            "dataselect": base_url_ds,
-        })
+        # Catch warnings to avoid them being raised for the tests.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            c = Client(base_url=base_url, service_mappings={
+                "event": base_url_event,
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        for warning in w:
+            self.assertTrue("Could not parse" in str(warning) or
+                            "cannot deal with" in str(warning))
 
         # Test the dataselect downloading.
         download_url_mock.reset_mock()
