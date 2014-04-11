@@ -21,7 +21,7 @@ import numpy as np
 import math
 import re
 import platform
-import sysconfig
+from distutils import sysconfig
 # NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
 
