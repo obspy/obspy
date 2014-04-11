@@ -315,6 +315,20 @@ class Client(object):
                             IU.AFI (Afiamalu, Samoa)
                             IU.ANMO (Albuquerque, New Mexico, USA)
                     Channels (0):
+        >>> inventory.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import UTCDateTime
+            from obspy.fdsn import Client
+            client = Client()
+            starttime = UTCDateTime("2001-01-01")
+            endtime = UTCDateTime("2001-01-02")
+            inventory = client.get_stations(network="IU", station="A*",
+                                            starttime=starttime,
+                                            endtime=endtime)
+            inventory.plot()
+
 
         The result is an :class:`~obspy.station.inventory.Inventory` object
         which models a StationXML file.
@@ -328,7 +342,7 @@ class Client(object):
         >>> inventory = client.get_stations(
         ...     starttime=starttime, endtime=endtime,
         ...     network="IU", sta="ANMO", loc="00", channel="*Z",
-        ...     level="channel")
+        ...     level="response")
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
@@ -342,6 +356,20 @@ class Client(object):
                 Channels (4):
                     IU.ANMO.00.BHZ, IU.ANMO.00.LHZ, IU.ANMO.00.UHZ,
                     IU.ANMO.00.VHZ
+        >>> inventory[0].plot_response(min_freq=1E-4)  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import UTCDateTime
+            from obspy.fdsn import Client
+            client = Client()
+            starttime = UTCDateTime("2001-01-01")
+            endtime = UTCDateTime("2001-01-02")
+            inventory = client.get_stations(
+                starttime=starttime, endtime=endtime,
+                network="IU", sta="ANMO", loc="00", channel="*Z",
+                level="response")
+            inventory[0].plot_response(min_freq=1E-4)
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit to metadata epochs starting on or after the
