@@ -106,6 +106,19 @@ USP     http://sismo.iag.usp.br
                         IU.AFI (Afiamalu, Samoa)
                         IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (0):
+    >>> inventory.plot()  # doctest: +SKIP
+
+    .. plot::
+
+        from obspy import UTCDateTime
+        from obspy.fdsn import Client
+        client = Client()
+        starttime = UTCDateTime("2002-01-01")
+        endtime = UTCDateTime("2002-01-02")
+        inventory = client.get_stations(network="IU", station="A*",
+                                        starttime=starttime,
+                                        endtime=endtime)
+        inventory.plot()
 
 Please see the documentation for each method for further information and
 examples.
