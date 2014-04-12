@@ -10,17 +10,18 @@ The obspy.fdsn.client test suite.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
+import warnings
 from future import standard_library  # NOQA
 from future.builtins import zip
 from future.builtins import str
 from future.builtins import open
-import mock
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core import compatibility
+from obspy.core.compatibility import mock
 from obspy.station import Response
 import os
 import sys
@@ -72,13 +73,18 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.fdsn.client.Client.
     """
-    @classmethod
-    def setUpClass(cls):
+    def __init__(self, *args, **kwargs):
+        """
+        setupClass() would be better suited for the task at hand but is not
+        supported by Python 2.6.
+        """
+        super(ClientTestCase, self).__init__(*args, **kwargs)
+
         # directory where the test files are located
-        cls.path = os.path.dirname(__file__)
-        cls.datapath = os.path.join(cls.path, "data")
-        cls.client = Client(base_url="IRIS", user_agent=USER_AGENT)
-        cls.client_auth = \
+        self.path = os.path.dirname(__file__)
+        self.datapath = os.path.join(self.path, "data")
+        self.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        self.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
 
@@ -124,14 +130,14 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests how the variety of location values are handled.
 
-        Why location? Mostly because it is one tricky parameter.  It is not
-        uncommon to assume that a non-existant location is "--", but in
-        reality "--" is "<space><space>". This substitution exists because
-        mostly because various applications have trouble digesting spaces
-        (spaces in the URL, for example).
+        Why location? Mostly because it is one tricky parameter. It is not
+        uncommon to assume that a non-existent location is "--", but in reality
+        "--" is "<space><space>". This substitution exists because mostly
+        because various applications have trouble digesting spaces (spaces in
+        the URL, for example).
         The confusion begins when location is treated as empty instead, which
-        would imply "I want all locations" instead of "I only want locations
-        of <space><space>"
+        would imply "I want all locations" instead of "I only want locations of
+        <space><space>"
         """
         # requests with no specified location should be treated as a wildcard
         self.assertFalse(
@@ -267,7 +273,8 @@ class ClientTestCase(unittest.TestCase):
                          self.client.services["available_event_contributors"]),
                          set(("University of Washington", "ANF", "GCMT",
                               "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
-                              "UNKNOWN", "NEIC PDE-M", "NEIC PDE-Q")))
+                              "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
+                              "NEIC PDE-Q")))
 
     def test_simple_XML_parser(self):
         """
@@ -290,17 +297,18 @@ class ClientTestCase(unittest.TestCase):
 
     def test_IRIS_example_queries_event(self):
         """
-        Tests the (sometimes modified) example queries given on IRIS webpage.
+        Tests the (sometimes modified) example queries given on the IRIS
+        web page.
         """
         client = self.client
 
         queries = [
             dict(eventid=609301),
-            dict(starttime=UTCDateTime("2011-01-07T01:00:00"),
-                 endtime=UTCDateTime("2011-01-07T02:00:00"),
-                 catalog="NEIC PDE"),
-            dict(starttime=UTCDateTime("2011-01-07T14:00:00"),
-                 endtime=UTCDateTime("2011-01-08T00:00:00"), minlatitude=15,
+            dict(starttime=UTCDateTime("2001-01-07T01:00:00"),
+                 endtime=UTCDateTime("2001-01-07T01:05:00"),
+                 catalog="ISC"),
+            dict(starttime=UTCDateTime("2001-01-07T14:00:00"),
+                 endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
                  maxlatitude=40, minlongitude=-170, maxlongitude=170,
                  includeallmagnitudes=True, minmagnitude=4,
                  orderby="magnitude"),
@@ -335,10 +343,12 @@ class ClientTestCase(unittest.TestCase):
             dict(startafter=UTCDateTime("2003-01-07"),
                  endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
                  maxlatitude=55, minlongitude=170, maxlongitude=-170),
-            dict(starttime=UTCDateTime("2013-01-01"), network="IU",
-                 sta="ANMO", level="channel"),
-            dict(starttime=UTCDateTime("2013-01-01"), network="IU", sta="A*",
-                 location="00", level="channel", format="text"),
+            dict(starttime=UTCDateTime("2000-01-01"),
+                 endtime=UTCDateTime("2001-01-01"), net="IU",
+                 sta="ANMO"),
+            dict(starttime=UTCDateTime("2000-01-01"),
+                 endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
+                 location="00"),
         ]
         result_files = ["stations_by_latlon.xml",
                         "stations_by_misc.xml",
@@ -438,17 +448,15 @@ class ClientTestCase(unittest.TestCase):
         """
         try:
             client = self.client
-            sys.stdout = compatibility.StringIO()
-            client.help()
-            sys.stdout.close()
 
             # Capture output
-            sys.stdout = compatibility.StringIO()
+            tmp = compatibility.StringIO()
+            sys.stdout = tmp
 
             client.help("event")
             got = sys.stdout.getvalue()
-            sys.stdout.close()
             sys.stdout = sys.__stdout__
+            tmp.close()
             expected = (
                 "Parameter description for the 'event' service (v1.0.6) of "
                 "'http://service.iris.edu':\n"
@@ -460,7 +468,7 @@ class ClientTestCase(unittest.TestCase):
                 "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
                 "Available contributors: NEIC PDE-W, ANF, University of "
                 "Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, "
-                "NEIC PDE-M, GCMT\n")
+                "NEIC PDE-M, NEIC COMCAT, GCMT\n")
             # allow for changes in version number..
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
@@ -468,13 +476,13 @@ class ClientTestCase(unittest.TestCase):
                                      normalize_version_number(expected)))
 
             # Reset. Creating a new one is faster then clearing the old one.
-            sys.stdout.close()
-            sys.stdout = compatibility.StringIO()
+            tmp = compatibility.StringIO()
+            sys.stdout = tmp
 
             client.help("station")
             got = sys.stdout.getvalue()
-            sys.stdout.close()
             sys.stdout = sys.__stdout__
+            tmp.close()
             expected = (
                 "Parameter description for the 'station' service (v1.0.7) of "
                 "'http://service.iris.edu':\n"
@@ -489,11 +497,13 @@ class ClientTestCase(unittest.TestCase):
                                      normalize_version_number(expected)))
 
             # Reset.
-            sys.stdout.close()
-            sys.stdout = compatibility.StringIO()
+            tmp = compatibility.StringIO()
+            sys.stdout = tmp
 
             client.help("dataselect")
             got = sys.stdout.getvalue()
+            sys.stdout = sys.__stdout__
+            tmp.close()
             expected = (
                 "Parameter description for the 'dataselect' service (v1.0.0) "
                 "of 'http://service.iris.edu':\n"
@@ -503,7 +513,6 @@ class ClientTestCase(unittest.TestCase):
                              failmsg(normalize_version_number(got),
                                      normalize_version_number(expected)))
 
-            sys.stdout.close()
         finally:
             sys.stdout = sys.__stdout__
 
@@ -529,92 +538,55 @@ class ClientTestCase(unittest.TestCase):
         bulk request.
         """
         clients = [self.client, self.client_auth]
-        file1 = os.path.join(self.datapath, "bulk1.mseed")
-        file2 = os.path.join(self.datapath, "bulk2.mseed")
-        expected1 = read(file1)
-        expected2 = read(file2)
+        file = os.path.join(self.datapath, "bulk.mseed")
+        expected = read(file)
         # test cases for providing lists of lists
-        bulk1 = (("TA", "A25A", "", "BHZ",
-                  UTCDateTime("2010-03-25T00:00:00"),
-                  UTCDateTime("2010-03-25T00:00:04")),
-                 ("IU", "ANMO", "*", "BH?",
-                  UTCDateTime("2010-03-25"),
-                  UTCDateTime("2010-03-25T00:00:08")),
-                 ("IU", "ANMO", "10", "HHZ",
-                  UTCDateTime("2010-05-25T00:00:00"),
-                  UTCDateTime("2010-05-25T00:00:04")),
-                 ("II", "KURK", "00", "BHN",
-                  UTCDateTime("2010-03-25T00:00:00"),
-                  UTCDateTime("2010-03-25T00:00:04")))
-        bulk2 = (("TA", "A25A", "", "BHZ",
-                  UTCDateTime("2010-03-25T00:00:00"),
-                  UTCDateTime("2010-03-25T00:00:04")),
-                 ("TA", "A25A", "", "BHE",
-                  UTCDateTime("2010-03-25T00:00:00"),
-                  UTCDateTime("2010-03-25T00:00:06")),
-                 ("IU", "ANMO", "*", "HHZ",
-                  UTCDateTime("2010-03-25T00:00:00"),
-                  UTCDateTime("2010-03-25T00:00:08")))
-        params2 = dict(quality="B", longestonly=False, minimumlength=5)
+        bulk = (("TA", "A25A", "", "BHZ",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:04")),
+                ("TA", "A25A", "", "BHE",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:06")),
+                ("IU", "ANMO", "*", "HHZ",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:08")))
+        params = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
             # test output to stream
-            got = client.get_waveforms_bulk(bulk1)
-            self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveforms_bulk(bulk2, **params2)
-            self.assertEqual(got, expected2, failmsg(got, expected2))
+            got = client.get_waveforms_bulk(bulk, **params)
+            self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk1, filename=tf.name)
+                client.get_waveforms_bulk(bulk, filename=tf.name, **params)
                 got = read(tf.name)
-            self.assertEqual(got, expected1, failmsg(got, expected1))
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk2, filename=tf.name, **params2)
-                got = read(tf.name)
-            self.assertEqual(got, expected2, failmsg(got, expected2))
+            self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a request string
-        bulk1 = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
-                 "IU ANMO * BH? 2010-03-25 2010-03-25T00:00:08\n"
-                 "IU ANMO 10 HHZ 2010-05-25T00:00:00 2010-05-25T00:00:04\n"
-                 "II KURK 00 BHN 2010-03-25T00:00:00 2010-03-25T00:00:04\n")
-        bulk2 = ("quality=B\n"
-                 "longestonly=false\n"
-                 "minimumlength=5\n"
-                 "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
-                 "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
-                 "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
+        bulk = ("quality=B\n"
+                "longestonly=false\n"
+                "minimumlength=5\n"
+                "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
+                "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
         for client in clients:
             # test output to stream
-            got = client.get_waveforms_bulk(bulk1)
-            self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveforms_bulk(bulk2)
-            self.assertEqual(got, expected2, failmsg(got, expected2))
+            got = client.get_waveforms_bulk(bulk)
+            self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk1, filename=tf.name)
+                client.get_waveforms_bulk(bulk, filename=tf.name)
                 got = read(tf.name)
-            self.assertEqual(got, expected1, failmsg(got, expected1))
-            with NamedTemporaryFile() as tf:
-                client.get_waveforms_bulk(bulk2, filename=tf.name)
-                got = read(tf.name)
-            self.assertEqual(got, expected2, failmsg(got, expected2))
+            self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a filename
         for client in clients:
             with NamedTemporaryFile() as tf:
                 with open(tf.name, "wt") as fh:
-                    fh.write(bulk1)
-                got = client.get_waveforms_bulk(bulk1)
-            self.assertEqual(got, expected1, failmsg(got, expected1))
-            with NamedTemporaryFile() as tf:
-                with open(tf.name, "wt") as fh:
-                    fh.write(bulk2)
-                got = client.get_waveforms_bulk(bulk2)
-            self.assertEqual(got, expected2, failmsg(got, expected2))
+                    fh.write(bulk)
+                got = client.get_waveforms_bulk(bulk)
+            self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a file-like object
         for client in clients:
-            got = client.get_waveforms_bulk(compatibility.StringIO(bulk1))
-            self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveforms_bulk(compatibility.StringIO(bulk2))
-            self.assertEqual(got, expected2, failmsg(got, expected2))
+            got = client.get_waveforms_bulk(compatibility.StringIO(bulk))
+            self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_get_waveform_attach_response(self):
         """
@@ -622,17 +594,14 @@ class ClientTestCase(unittest.TestCase):
         """
         client = self.client
 
-        bulk = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
-                "IU ANMO * BH? 2010-03-25 2010-03-25T00:00:08\n"
-                "IU ANMO 10 HHZ 2010-05-25T00:00:00 2010-05-25T00:00:04\n"
-                "II KURK 00 BHN 2010-03-25T00:00:00 2010-03-25T00:00:04\n")
+        bulk = ("IU ANMO 00 BHZ 2000-03-25T00:00:00 2000-03-25T00:00:04\n")
         st = client.get_waveforms_bulk(bulk, attach_response=True)
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
         st = client.get_waveforms("IU", "ANMO", "00", "BHZ",
-                                  UTCDateTime("2010-02-27T06:30:00.000"),
-                                  UTCDateTime("2010-02-27T06:40:00.000"),
+                                  UTCDateTime("2000-02-27T06:00:00.000"),
+                                  UTCDateTime("2000-02-27T06:00:05.000"),
                                   attach_response=True)
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
@@ -809,17 +778,18 @@ class ClientTestCase(unittest.TestCase):
                 return 200, "1.0.200"
             elif "event" in args[0]:
                 with open(os.path.join(
-                        self.datapath, "2014-01-07_iris_event.wadl")) as fh:
+                        self.datapath, "2014-01-07_iris_event.wadl"),
+                        "rb") as fh:
                     return 200, fh.read()
             elif "station" in args[0]:
                 with open(os.path.join(
                         self.datapath,
-                        "2014-01-07_iris_station.wadl")) as fh:
+                        "2014-01-07_iris_station.wadl"), "rb") as fh:
                     return 200, fh.read()
             elif "dataselect" in args[0]:
                 with open(os.path.join(
                         self.datapath,
-                        "2014-01-07_iris_dataselect.wadl")) as fh:
+                        "2014-01-07_iris_dataselect.wadl"), "rb") as fh:
                     return 200, fh.read()
             return 404, None
 
@@ -829,12 +799,19 @@ class ClientTestCase(unittest.TestCase):
         base_url_event = "http://other_url.com/beta/event_service/11"
         base_url_station = "http://some_url.com/beta2/station/7"
         base_url_ds = "http://new.com/beta3/dataselect/8"
+
         # An exception will be raised if not actual WADLs are returned.
-        c = Client(base_url=base_url, service_mappings={
-            "event": base_url_event,
-            "station": base_url_station,
-            "dataselect": base_url_ds,
-        })
+        # Catch warnings to avoid them being raised for the tests.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            c = Client(base_url=base_url, service_mappings={
+                "event": base_url_event,
+                "station": base_url_station,
+                "dataselect": base_url_ds,
+            })
+        for warning in w:
+            self.assertTrue("Could not parse" in str(warning) or
+                            "cannot deal with" in str(warning))
 
         # Test the dataselect downloading.
         download_url_mock.reset_mock()
