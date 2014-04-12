@@ -852,8 +852,8 @@ class Parser(object):
         return_records = []
         # Loop over all blockettes.
         record = b''
-        for blockette in blockettes:
-            blockette.compact = self.compact
+        for blockette_ in blockettes:
+            blockette_.compact = self.compact
             rec_len = len(record)
             # Never split a blockette’s “length/blockette type” section across
             # records.
@@ -863,7 +863,7 @@ class Parser(object):
                 return_records.append(record)
                 record = b''
                 rec_len = 0
-            blockette_str = blockette.getSEED()
+            blockette_str = blockette_.getSEED()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.
@@ -1176,11 +1176,11 @@ class Parser(object):
             dip = None
             azimuth = None
             blockettes = self._select(tr.id, tr.stats.starttime)
-            for blockette in blockettes:
-                if blockette.id != 52:
+            for blockette_ in blockettes:
+                if blockette_.id != 52:
                     continue
-                dip = blockette.dip
-                azimuth = blockette.azimuth
+                dip = blockette_.dip
+                azimuth = blockette_.azimuth
                 break
             if dip is None or azimuth is None:
                 msg = "Dip and azimuth need to be available for every trace."

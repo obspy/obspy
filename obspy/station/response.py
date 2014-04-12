@@ -151,14 +151,14 @@ class ResponseStage(ComparingObject):
             if self.output_units_description else "",
             gain=self.stage_gain,
             gain_freq=self.stage_gain_frequency,
-            decimation=
-            "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
-            "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
-            "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
-                self.decimation_input_sample_rate, self.decimation_factor,
-                self.decimation_offset, self.decimation_delay,
-                self.decimation_correction)
-            if self.decimation_input_sample_rate is not None else "")
+            decimation=(
+                "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
+                "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
+                "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
+                    self.decimation_input_sample_rate, self.decimation_factor,
+                    self.decimation_offset, self.decimation_delay,
+                    self.decimation_correction)
+                if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
 
 

@@ -889,7 +889,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
-    _BF, CAPON = 0, 1
+    if method == 0:
+        method = "_BF"
+    elif method == 1:
+        method = "CAPON"
+    else:
+        raise NotImplementedError("Invalid method.")
     res = []
     eotr = True
 
@@ -959,14 +964,14 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         for i in range(nstat):
             for j in range(i, nstat):
                 R[:, i, j] = ft[i, :] * ft[j, :].conj()
-                if method == CAPON:
+                if method == "CAPON":
                     R[:, i, j] /= np.abs(R[:, i, j].sum())
                 if i != j:
                     R[:, j, i] = R[:, i, j].conjugate()
                 else:
                     dpow += np.abs(R[:, i, j].sum())
         dpow *= nstat
-        if method == CAPON:
+        if method == "CAPON":
             # P(f) = 1/(e.H R(f)^-1 e)
             for n in range(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
