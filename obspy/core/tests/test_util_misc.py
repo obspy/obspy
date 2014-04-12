@@ -98,12 +98,12 @@ class UtilMiscTestCase(unittest.TestCase):
                 lines = fh.readlines()
             for i, line in enumerate(lines):
                 line = line.strip()
-                if line.startswith("#"):
+                if line.startswith(b"#"):
                     continue
-                if "from obspy" in line:
-                    if " import " in line:
+                if b"from obspy" in line:
+                    if b" import " in line:
                         self.fail(msg % (i, line))
-                if "import obspy" in line:
+                if b"import obspy" in line:
                     self.fail(msg % (i, line))
 
 
