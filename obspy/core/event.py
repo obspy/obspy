@@ -2417,19 +2417,6 @@ class Event(__Event):
         :class:`~obspy.core.event.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
     """
-    def __eq__(self, other):
-        """
-        Implements rich comparison of Event objects for "==" operator.
-
-        Events are the same, if the have the same id.
-        """
-        # check if other object is a Event
-        if not isinstance(other, Event):
-            return False
-        if (self.resource_id != other.resource_id):
-            return False
-        return True
-
     def short_str(self):
         """
         Returns a short string representation of the current Event.
