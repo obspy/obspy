@@ -95,7 +95,7 @@ class NDKTestCase(unittest.TestCase):
         GlobalCMT catalog and thus only a warning should be raised.
         """
         filename = os.path.join(self.datapath,
-                                "file_with_faulty_timestamp.ndk")
+                                "faulty_cmt_timestamp.ndk")
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             cat = read_ndk(filename)
@@ -199,6 +199,27 @@ class NDKTestCase(unittest.TestCase):
 
         self.assertEqual(len(w), 0)
         self.assertEqual(cat_1, cat_2)
+
+    def test_is_ndk_for_file_with_invalid_date(self):
+        """
+        Tests the is_ndk function for a file with invalid date.
+        """
+        self.assertFalse(is_ndk(os.path.join(self.datapath,
+                                             "faulty_invalid_date.ndk")))
+
+    def test_is_ndk_for_file_with_invalid_latitude(self):
+        """
+        Tests the is_ndk function a file with an invalid latitude.
+        """
+        self.assertFalse(is_ndk(os.path.join(self.datapath,
+                                             "faulty_invalid_latitude.ndk")))
+
+    def test_is_ndk_for_file_with_infeasible_latitude(self):
+        """
+        Tests the is_ndk function a file with an infeasible latitude.
+        """
+        self.assertFalse(is_ndk(os.path.join(
+            self.datapath, "faulty_infeasible_latitude.ndk")))
 
 
 def suite():

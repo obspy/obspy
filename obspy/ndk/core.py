@@ -151,6 +151,7 @@ def read_ndk(filename, *args, **kwargs):
                 "\t%s\n"
                 "%s") % (_i, "\n\t".join(lines), exc)
             warnings.warn(msg, ObsPyNDKWarning)
+            continue
 
         # Use one creation info for essentially every item.
         creation_info = CreationInfo(
@@ -184,6 +185,7 @@ def read_ndk(filename, *args, **kwargs):
                    "assembled to a valid time. Event will be skipped.") % \
                   (_i, record["date"], record["time"])
             warnings.warn(msg, ObsPyNDKWarning)
+            continue
 
         # Create two origins, one with the reference latitude/longitude and
         # one with the centroidal values.
