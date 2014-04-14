@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import warnings
 from obspy import readEvents
 from obspy.ndk.core import is_ndk, read_ndk
 
@@ -83,6 +84,21 @@ class NDKTestCase(unittest.TestCase):
             self.assertTrue(is_ndk(filename))
         for filename in invalid_files:
             self.assertFalse(is_ndk(filename))
+
+    def test_file_with_faulty_timestamp(self):
+        """
+        Tests a file with timestamp 'O-0000000000000'. While this is wrong
+        according to the specification it is unfortunately present in the
+        GlobalCMT catalog and thus only a warning should be raised.
+        """
+        filename = os.path.join(self.datapath,
+                                "file_with_faulty_timestamp.ndk")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = read_ndk(filename)
+
+        self.assertEqual(len(w), 1)
+        self.assertTrue("Invalid CMT Timestamp 'O-000000" in str(w[0]))
 
 
 def suite():
