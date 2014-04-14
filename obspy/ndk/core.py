@@ -164,7 +164,7 @@ def read_ndk(filename, *args, **kwargs):
 
         # Create an event object.
         event = Event(
-            resource_id=_get_resource_id(record["cmt_event_name"], "event"),
+            force_resource_id=False,
             event_type="earthquake",
             event_type_certainty="known",
             event_descriptions=[
@@ -187,8 +187,7 @@ def read_ndk(filename, *args, **kwargs):
         # Create two origins, one with the reference latitude/longitude and
         # one with the centroidal values.
         ref_origin = Origin(
-            resource_id=_get_resource_id(record["cmt_event_name"], "origin",
-                                         tag="reforigin"),
+            force_resource_id=False,
             time=time,
             longitude=record["hypo_lng"],
             latitude=record["hypo_lat"],
@@ -197,14 +196,15 @@ def read_ndk(filename, *args, **kwargs):
             origin_type="hypocenter",
             comments=[Comment(text="Hypocenter catalog: %s" %
                               record["hypocenter_reference_catalog"],
-                              resource_id=_get_resource_id(
-                                  record["cmt_event_name"], "comment",
-                                  tag="ref_origin"))]
+                              force_resource_id=False)]
         )
+        ref_origin.comments[0].resource_id = _get_resource_id(
+            record["cmt_event_name"], "comment", tag="ref_origin")
+        ref_origin.resource_id = _get_resource_id(record["cmt_event_name"],
+                                                  "origin", tag="reforigin")
 
         cmt_origin = Origin(
-            resource_id=_get_resource_id(record["cmt_event_name"], "origin",
-                                         tag="cmtorigin"),
+            force_resource_id=False,
             longitude=record["centroid_longitude"],
             longitude_errors={
                 "uncertainty": record["centroid_longitude_error"]},
@@ -223,44 +223,53 @@ def read_ndk(filename, *args, **kwargs):
             epicenter_fixed=False,
             creation_info=creation_info.copy()
         )
+        cmt_origin.resource_id = _get_resource_id(record["cmt_event_name"],
+                                                  "origin",
+                                                  tag="cmtorigin")
         event.origins = [ref_origin, cmt_origin]
         event.preferred_origin_id = cmt_origin.resource_id.id
 
         # Create the magnitude object.
         mag = Magnitude(
-            resource_id=_get_resource_id(record["cmt_event_name"],
-                                         "magnitude", tag="moment_mag"),
+            force_resource_id=False,
             mag=round(record["Mw"], 2),
             magnitude_type="Mwc",
             origin_id=cmt_origin.resource_id,
             creation_info=creation_info.copy()
         )
+        mag.resource_id = _get_resource_id(record["cmt_event_name"],
+                                           "magnitude", tag="moment_mag")
         event.magnitudes = [mag]
         event.preferred_magnitude_id = mag.resource_id.id
 
         # Add the reported mb, MS magnitudes as additional magnitude objects.
         event.magnitudes.append(Magnitude(
-            resource_id=_get_resource_id(record["cmt_event_name"],
-                                         "magnitude", tag="mb"),
+            force_resource_id=False,
             mag=record["mb"],
             magnitude_type="mb",
             comments=[Comment(
-                resource_id=_get_resource_id(record["cmt_event_name"],
-                                             "comment", "mb_magnitude"),
+                force_resource_id=False,
                 text="Reported magnitude in NDK file. Most likely 'mb'."
             )]
         ))
+        event.magnitudes[-1].comments[-1].resource_id = _get_resource_id(
+            record["cmt_event_name"], "comment", tag="mb_magnitude")
+        event.magnitudes[-1].resource_id = _get_resource_id(
+            record["cmt_event_name"], "magnitude", tag="mb")
+
         event.magnitudes.append(Magnitude(
-            resource_id=_get_resource_id(record["cmt_event_name"],
-                                         "magnitude", tag="MS"),
+            force_resource_id=False,
             mag=record["MS"],
             magnitude_type="MS",
             comments=[Comment(
-                resource_id=_get_resource_id(record["cmt_event_name"],
-                                             "comment", "MS_magnitude"),
+                force_resource_id=False,
                 text="Reported magnitude in NDK file. Most likely 'MS'."
             )]
         ))
+        event.magnitudes[-1].comments[-1].resource_id = _get_resource_id(
+            record["cmt_event_name"], "comment", tag="MS_magnitude")
+        event.magnitudes[-1].resource_id = _get_resource_id(
+            record["cmt_event_name"], "magnitude", tag="MS")
 
         # Take care of the moment tensor.
         tensor = Tensor(
@@ -279,8 +288,7 @@ def read_ndk(filename, *args, **kwargs):
             creation_info=creation_info.copy()
         )
         mt = MomentTensor(
-            resource_id=_get_resource_id(record["cmt_event_name"],
-                                         "momenttensor"),
+            force_resource_id=False,
             scalar_moment=record["scalar_moment"],
             tensor=tensor,
             data_used=[DataUsed(**i) for i in record["data_used"]],
@@ -291,10 +299,11 @@ def read_ndk(filename, *args, **kwargs):
             ),
             creation_info=creation_info.copy()
         )
+        mt.resource_id = _get_resource_id(record["cmt_event_name"],
+                                          "momenttensor")
         axis = [Axis(**i) for i in record["principal_axis"]]
         focmec = FocalMechanism(
-            resource_id=_get_resource_id(record["cmt_event_name"],
-                                         "focal_mechanism"),
+            force_resource_id=False,
             moment_tensor=mt,
             principal_axes=PrincipalAxes(
                 # The ordering is the same as for the IRIS SPUD service and
@@ -309,20 +318,27 @@ def read_ndk(filename, *args, **kwargs):
                 nodal_plane_2=NodalPlane(**record["nodal_plane_2"])
             ),
             comments=[
-                Comment(resource_id=_get_resource_id(record["cmt_event_name"],
-                                                     "comment",
-                                                     tag="cmt_type"),
+                Comment(force_resource_id=False,
                         text="CMT Analysis Type: %s" %
                              record["cmt_type"].capitalize()),
-                Comment(resource_id=_get_resource_id(record["cmt_event_name"],
-                                                     "comment",
-                                                     tag="cmt_timestamp"),
+                Comment(force_resource_id=False,
                         text="CMT Timestamp: %s" %
                              record["cmt_timestamp"])],
             creation_info=creation_info.copy()
         )
+        focmec.comments[0].resource_id = _get_resource_id(
+            record["cmt_event_name"], "comment", tag="cmt_type")
+        focmec.comments[1].resource_id = _get_resource_id(
+            record["cmt_event_name"], "comment", tag="cmt_timestamp")
+        focmec.resource_id = _get_resource_id(record["cmt_event_name"],
+                                              "focal_mechanism")
         event.focal_mechanisms = [focmec]
         event.preferred_focal_mechanism_id = focmec.resource_id.id
+
+        # Set at end to avoid duplicate resource id warning.
+        event.resource_id = _get_resource_id(record["cmt_event_name"],
+                                             "event")
+
         cat.append(event)
 
     return cat

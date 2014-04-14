@@ -202,6 +202,16 @@ class NDKTestCase(unittest.TestCase):
         self.assertEqual(len(w), 0)
         self.assertEqual(cat_1, cat_2)
 
+        filename = os.path.join(self.datapath, "multiple_events.ndk")
+        cat_1 = readEvents(filename)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat_2 = readEvents(filename)
+
+        self.assertEqual(len(w), 0)
+        self.assertEqual(cat_1, cat_2)
+
 
 def suite():
     return unittest.makeSuite(NDKTestCase, 'test')
