@@ -440,8 +440,9 @@ def _read_lines(line1, line2, line3, line4, line5):
     elif timestamp.startswith("S-"):
         rec["cmt_type"] = "standard"
     else:
-        msg = "Unknown timestamp '%s'." % timestamp
-        raise ObsPyNDKException(msg)
+        msg = "Invalid CMT timestamp '%s'." % timestamp
+        warnings.warn(msg)
+        rec["cmt_type"] = "unknown"
 
     # Fourth line: CMT info (3)
     # [1-2]   The exponent for all following moment values. For example, if

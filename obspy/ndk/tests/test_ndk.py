@@ -98,7 +98,9 @@ class NDKTestCase(unittest.TestCase):
             cat = read_ndk(filename)
 
         self.assertEqual(len(w), 1)
-        self.assertTrue("Invalid CMT Timestamp 'O-000000" in str(w[0]))
+        self.assertTrue("Invalid CMT timestamp 'O-000000" in str(w[0]))
+        self.assertTrue("Unknown" in
+                        cat[0].focal_mechanisms[0].comments[0].text)
 
 
 def suite():
