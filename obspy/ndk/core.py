@@ -69,8 +69,8 @@ def is_ndk(filename):
             first_line = fh.readline()
     else:
         pos = filename.tell()
-        first_line = unicode(filename.readline())
-        filename.seek(0, pos)
+        first_line = str(filename.readline())
+        filename.seek(pos, 0)
 
     # A certain minimum length is required to extract all the following
     # parameters.
@@ -113,7 +113,7 @@ def read_ndk(filename, *args, **kwargs):
         with open(filename, "rt") as fh:
             data = fh.read()
     else:
-        data = unicode(filename.read())
+        data = str(filename.read())
 
     # Create iterator that yields lines.
     def lines_iter():

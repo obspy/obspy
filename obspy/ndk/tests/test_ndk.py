@@ -6,6 +6,7 @@ import unittest
 import warnings
 
 from obspy import readEvents
+from obspy.core.compatibility import StringIO, BytesIO
 from obspy.ndk.core import is_ndk, read_ndk
 
 
@@ -110,6 +111,76 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         cat = readEvents(filename)
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        self.assertEqual(cat, ref_cat)
+
+    def test_reading_using_obspy_plugin(self):
+        """
+        Checks that reading with the readEvents() function works correctly.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        cat = readEvents(filename)
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        self.assertEqual(cat, ref_cat)
+
+    def test_reading_from_string_io(self):
+        """
+        Tests reading from StringIO.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        with open(filename, "rt") as fh:
+            file_object = StringIO(fh.read())
+
+        cat = readEvents(file_object)
+        file_object.close()
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        self.assertEqual(cat, ref_cat)
+
+    def test_reading_from_bytes_io(self):
+        """
+        Tests reading from BytesIO.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        with open(filename, "rt") as fh:
+            file_object = StringIO(fh.read())
+
+        cat = readEvents(file_object)
+        file_object.close()
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        self.assertEqual(cat, ref_cat)
+
+    def test_reading_from_open_file_in_text_mode(self):
+        """
+        Tests reading from an open file in text mode.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        with open(filename, "rt") as fh:
+            cat = readEvents(fh)
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        self.assertEqual(cat, ref_cat)
+
+    def test_reading_from_open_file_in_binary_mode(self):
+        """
+        Tests reading from an open file in binary mode.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        with open(filename, "rb") as fh:
+            cat = readEvents(fh)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
         ref_cat = readEvents(reference)
