@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import warnings
-from obspy import readEvents
-from obspy.ndk.core import is_ndk, read_ndk
-
+import inspect
 import os
 import unittest
+import warnings
+
+from obspy import readEvents
+from obspy.ndk.core import is_ndk, read_ndk
 
 
 class NDKTestCase(unittest.TestCase):
@@ -13,7 +14,9 @@ class NDKTestCase(unittest.TestCase):
     Test suite for obspy.ndk
     """
     def setUp(self):
-        self.datapath = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe())))
+        self.datapath = os.path.join(self.path, "data")
 
     def test_read_single_ndk(self):
         """
@@ -71,13 +74,12 @@ class NDKTestCase(unittest.TestCase):
         """
         Test for the the is_ndk() function.
         """
-        folder = os.path.dirname(__file__)
         valid_files = [os.path.join(self.datapath, "C200604092050A.ndk"),
                        os.path.join(self.datapath, "multiple_events.ndk")]
         invalid_files = []
-        for filename in os.listdir(folder):
+        for filename in os.listdir(self.path):
             if filename.endswith(".py"):
-                invalid_files.append(os.path.join(folder, filename))
+                invalid_files.append(os.path.join(self.path, filename))
         self.assertTrue(len(invalid_files) > 0)
 
         for filename in valid_files:
