@@ -519,7 +519,7 @@ def _read_lines(line1, line2, line3, line4, line5):
             "azimuth": float(axis[2])
         })
 
-    nodal_planes = map(float, line5[57:].strip().split())
+    nodal_planes = list(map(float, line5[57:].strip().split()))
     rec["nodal_plane_1"] = {
         "strike": nodal_planes[0],
         "dip": nodal_planes[1],

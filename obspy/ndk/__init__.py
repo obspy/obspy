@@ -58,7 +58,7 @@ The :func:`~obspy.core.event.readEvents` method is used to read NDK files to
 
 >>> import obspy
 >>> cat = obspy.readEvents("/path/to/C200604092050A.ndk")
->>> print cat
+>>> print(cat)
 1 Event(s) in Catalog:
 2006-04-09T20:50:51.300000Z | -20.460,  -70.730 | 5.73 Mwc
 
@@ -72,7 +72,7 @@ case to the solutions from February 2011).
 
 >>> cat = obspy.readEvents("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
 ...                        "catalog/NEW_MONTHLY/2011/feb11.ndk")
->>> print cat
+>>> print(cat)
 135 Event(s) in Catalog:
 2011-02-01T03:32:08.600000Z | +22.520, +144.790 | 5.02 Mwc
 2011-02-01T08:16:31.700000Z | +24.190, +121.730 | 5.33 Mwc
