@@ -104,6 +104,18 @@ class NDKTestCase(unittest.TestCase):
         self.assertTrue("Unknown" in
                         cat[0].focal_mechanisms[0].comments[0].text)
 
+    def test_reading_using_obspy_plugin(self):
+        """
+        Checks that reading with the readEvents() function works correctly.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        cat = readEvents(filename)
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        self.assertEqual(cat, ref_cat)
+
 
 def suite():
     return unittest.makeSuite(NDKTestCase, 'test')
