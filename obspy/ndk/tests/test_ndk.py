@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from obspy import readEvents
-from obspy.ndk.core import read_ndk
+from obspy.ndk.core import is_ndk, read_ndk
 
 import os
 import unittest
@@ -65,6 +65,24 @@ class NDKTestCase(unittest.TestCase):
         for event in cat[3:]:
             self.assertTrue("Quick" in
                             event.focal_mechanisms[0].comments[0].text)
+
+    def test_is_ndk(self):
+        """
+        Test for the the is_ndk() function.
+        """
+        folder = os.path.dirname(__file__)
+        valid_files = [os.path.join(self.datapath, "C200604092050A.ndk"),
+                       os.path.join(self.datapath, "multiple_events.ndk")]
+        invalid_files = []
+        for filename in os.listdir(folder):
+            if filename.endswith(".py"):
+                invalid_files.append(os.path.join(folder, filename))
+        self.assertTrue(len(invalid_files) > 0)
+
+        for filename in valid_files:
+            self.assertTrue(is_ndk(filename))
+        for filename in invalid_files:
+            self.assertFalse(is_ndk(filename))
 
 
 def suite():
