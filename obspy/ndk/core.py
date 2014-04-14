@@ -94,7 +94,7 @@ def is_ndk(filename):
 
 def read_ndk(filename, *args, **kwargs):
     """
-    Reads an NDK file to an :class:`~obspy.core.event.Catalog` object.
+    Reads an NDK file to a :class:`~obspy.core.event.Catalog` object.
 
     :param filename: File or file-like object in text mode.
     """
