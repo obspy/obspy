@@ -150,8 +150,8 @@ class NDKTestCase(unittest.TestCase):
         Tests reading from BytesIO.
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
-        with open(filename, "rt") as fh:
-            file_object = StringIO(fh.read())
+        with open(filename, "rb") as fh:
+            file_object = BytesIO(fh.read())
 
         cat = readEvents(file_object)
         file_object.close()

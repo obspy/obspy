@@ -63,14 +63,13 @@ def is_ndk(filename):
     location are valid. Then it assumes the file is an NDK file.
     """
     # Get the first line.
-    if not hasattr(filename, "read") or not hasattr(filename, "seek") \
-            or not hasattr(filename, "tell"):
+    if not hasattr(filename, "readline"):
         with open(filename, "rt") as fh:
             first_line = fh.readline()
     else:
-        pos = filename.tell()
-        first_line = str(filename.readline())
-        filename.seek(pos, 0)
+        first_line = filename.readline()
+        if hasattr(first_line, "decode"):
+            first_line = first_line.decode()
 
     # A certain minimum length is required to extract all the following
     # parameters.
@@ -113,7 +112,9 @@ def read_ndk(filename, *args, **kwargs):
         with open(filename, "rt") as fh:
             data = fh.read()
     else:
-        data = str(filename.read())
+        data = filename.read()
+        if hasattr(data, "decode"):
+            data = data.decode()
 
     # Create iterator that yields lines.
     def lines_iter():
