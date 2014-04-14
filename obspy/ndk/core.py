@@ -14,6 +14,7 @@ The format is an ASCII format but will internally handled by unicode routines.
 from __future__ import division
 from __future__ import unicode_literals
 from __future__ import print_function
+import traceback
 from future import standard_library  # NOQA
 from future.builtins import open
 
@@ -33,6 +34,13 @@ from obspy.core.util.geodetics import FlinnEngdahl
 class ObsPyNDKException(Exception):
     """
     Base Exception class for this module.
+    """
+    pass
+
+
+class ObsPyNDKWarning(UserWarning):
+    """
+    Base warning for this module.
     """
     pass
 
@@ -125,14 +133,23 @@ def read_ndk(filename, *args, **kwargs):
     cat = Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())))
 
     # Loop over 5 lines at onces.
-    for lines in itertools.zip_longest(*[lines_iter()] * 5):
+    for _i, lines in enumerate(itertools.zip_longest(*[lines_iter()] * 5)):
         if None in lines:
             msg = "Skipped last %i lines. Not a multiple of 5 lines." % (
                 lines.count(None))
-            warnings.warn(msg)
+            warnings.warn(msg, ObsPyNDKWarning)
 
         # Parse the lines to a human readable dictionary.
-        record = _read_lines(*lines)
+        try:
+            record = _read_lines(*lines)
+        except ValueError as e:
+            exc = traceback.format_exc()
+            msg = (
+                "Could not parse event %i (faulty file?). Will be "
+                "skipped. Lines of event:\n"
+                "\t%s\n"
+                "%s") % (_i, "\n\t".join(lines), exc)
+            warnings.warn(msg, ObsPyNDKWarning)
 
         # Use one creation info for essentially every item.
         creation_info = CreationInfo(
@@ -157,14 +174,22 @@ def read_ndk(filename, *args, **kwargs):
             ]
         )
 
+        # Assemble the time for the reference origin.
+        try:
+            time = UTCDateTime(record["date"].replace("/", "-") + "T" +
+                               record["time"])
+        except ValueError:
+            msg = ("Invalid time in event %i. '%s' and '%s' cannot be "
+                   "assembled to a valid time. Event will be skipped.") % \
+                  (_i, record["date"], record["time"])
+            warnings.warn(msg, ObsPyNDKWarning)
+
         # Create two origins, one with the reference latitude/longitude and
         # one with the centroidal values.
         ref_origin = Origin(
             resource_id=_get_resource_id(record["cmt_event_name"], "origin",
                                          tag="reforigin"),
-            # Assemble the time.
-            time=UTCDateTime(record["date"].replace("/", "-") + "T" +
-                             record["time"]),
+            time=time,
             longitude=record["hypo_lng"],
             latitude=record["hypo_lat"],
             # Convert to m.
@@ -440,8 +465,9 @@ def _read_lines(line1, line2, line3, line4, line5):
     elif timestamp.startswith("S-"):
         rec["cmt_type"] = "standard"
     else:
-        msg = "Invalid CMT timestamp '%s'." % timestamp
-        warnings.warn(msg)
+        msg = "Invalid CMT timestamp '%s' for event %s." % (
+            timestamp, rec["cmt_event_name"])
+        warnings.warn(msg, ObsPyNDKWarning)
         rec["cmt_type"] = "unknown"
 
     # Fourth line: CMT info (3)
