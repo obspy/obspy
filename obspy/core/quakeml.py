@@ -136,6 +136,9 @@ class Unpickler(object):
         return obj
 
     def _origin_quality(self, element):
+        # Do not add an element if it is not given in the XML file.
+        if not self._xpath("quality", element):
+            return None
         obj = OriginQuality()
         obj.associated_phase_count = self._xpath2obj(
             'quality/associatedPhaseCount', element, int)
@@ -245,6 +248,9 @@ class Unpickler(object):
         return obj
 
     def _origin_uncertainty(self, element):
+        # Do not add an element if it is not given in the XML file.
+        if not self._xpath("originUncertainty", element):
+            return None
         obj = OriginUncertainty()
         obj.preferred_description = self._xpath2obj(
             'originUncertainty/preferredDescription', element)
