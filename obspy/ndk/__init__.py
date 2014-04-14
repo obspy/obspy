@@ -45,6 +45,14 @@ collecting the most recent solutions. Standard solution are available via the
 Basic Usage
 -----------
 
+.. note::
+
+    During reading all values will be converted from ``dyne-cm`` to ``N m``.
+    Furthermore the depth values will be converted to ``m`` and the source time
+    function duration will be doubled to adhere to the QuakeML standard.  The
+    region name in the NDK file will be replaced with its full Flinn-Engdahl
+    region name using ObsPy's built-in region parser.
+
 The :func:`~obspy.core.event.readEvents` method is used to read NDK files to
 :class:`~obspy.core.event.Catalog` objects.
 
