@@ -142,7 +142,7 @@ def read_ndk(filename, *args, **kwargs):
         # Parse the lines to a human readable dictionary.
         try:
             record = _read_lines(*lines)
-        except ValueError as e:
+        except ValueError:
             exc = traceback.format_exc()
             msg = (
                 "Could not parse event %i (faulty file?). Will be "
@@ -329,17 +329,17 @@ def read_ndk(filename, *args, **kwargs):
 
 
 def _read_lines(line1, line2, line3, line4, line5):
-    #First line: Hypocenter line
-    #[1-4]   Hypocenter reference catalog (e.g., PDE for USGS location,
-    #        ISC for #ISC catalog, SWE for surface-wave location,
-    #        [Ekstrom, BSSA, 2006])
-    #[6-15]  Date of reference event
-    #[17-26] Time of reference event
-    #[28-33] Latitude
-    #[35-41] Longitude
-    #[43-47] Depth
-    #[49-55] Reported magnitudes, usually mb and MS
-    #[57-80] Geographical location (24 characters)
+    # First line: Hypocenter line
+    # [1-4]   Hypocenter reference catalog (e.g., PDE for USGS location,
+    #         ISC for #ISC catalog, SWE for surface-wave location,
+    #         [Ekstrom, BSSA, 2006])
+    # [6-15]  Date of reference event
+    # [17-26] Time of reference event
+    # [28-33] Latitude
+    # [35-41] Longitude
+    # [43-47] Depth
+    # [49-55] Reported magnitudes, usually mb and MS
+    # [57-80] Geographical location (24 characters)
     rec = {}
     rec["hypocenter_reference_catalog"] = line1[:4].strip()
     rec["date"] = line1[5:15].strip()
