@@ -47,6 +47,51 @@ def _get_resource_id(cmtname, res_type, tag=None):
     return res_id
 
 
+def is_ndk(filename):
+    """
+    Checks that a file is actually an NDK file.
+
+    It will read the first line and check to see if the date, time, and the
+    location are valid. Then it assumes the file is an NDK file.
+    """
+    # Get the first line.
+    if not hasattr(filename, "read") or not hasattr(filename, "seek") \
+            or not hasattr(filename, "tell"):
+        with open(filename, "rt") as fh:
+            first_line = fh.readline()
+    else:
+        pos = filename.tell()
+        first_line = unicode(filename.readline())
+        filename.seek(0, pos)
+
+    # A certain minimum length is required to extract all the following
+    # parameters.
+    if len(first_line) < 46:
+        return False
+
+    date = first_line[5:15].strip()
+    time = first_line[16:26]
+
+    # Assemble the time.
+    try:
+        UTCDateTime(date.replace("/", "-") + "T" + time)
+    except TypeError:
+        return False
+
+    try:
+        latitude = float(first_line[27:33])
+        longitude = float(first_line[34:41])
+        depth = float(first_line[42:47])
+    except ValueError:
+        return False
+
+    if (-90.0 <= latitude <= 90.0) and \
+            (-180.0 <= longitude <= 180.0) and \
+            (0 <= depth <= 800000):
+        return True
+    return False
+
+
 def read_ndk(filename, *args, **kwargs):
     """
     Reads an NDK file to an :class:`~obspy.core.event.Catalog` object.
