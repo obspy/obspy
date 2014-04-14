@@ -187,6 +187,21 @@ class NDKTestCase(unittest.TestCase):
 
         self.assertEqual(cat, ref_cat)
 
+    def test_reading_the_same_file_twice_does_not_raise_a_warnings(self):
+        """
+        Asserts that reading the same file twice does not raise a warning
+        due to resource identifier already in use.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+        cat_1 = readEvents(filename)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat_2 = readEvents(filename)
+
+        self.assertEqual(len(w), 0)
+        self.assertEqual(cat_1, cat_2)
+
 
 def suite():
     return unittest.makeSuite(NDKTestCase, 'test')
