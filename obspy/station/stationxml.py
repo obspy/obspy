@@ -1002,9 +1002,10 @@ def _write_response_stage(parent, stage):
                        ResponseListResponseStage: "ResponseList",
                        FIRResponseStage: "FIR",
                        PolynomialResponseStage: "Polynomial"}
-        sub_ = etree.SubElement(sub, tagname_map[type(stage)],
-                                {'name': str(stage.name),
-                                 'resourceId': stage.resource_id2})
+        subel_attrs = {"name": str(stage.name)}
+        if stage.resource_id2 is not None:
+            subel_attrs["resourceId"] = stage.resource_id2
+        sub_ = etree.SubElement(sub, tagname_map[type(stage)], subel_attrs)
         # write operations common to all stage types
         _obj2tag(sub_, "Description", stage.description)
         sub__ = etree.SubElement(sub_, "InputUnits")
