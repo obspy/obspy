@@ -345,6 +345,10 @@ def read_ndk(filename, *args, **kwargs):
 
         cat.append(event)
 
+    if len(cat) == 0:
+        msg = "No valid events found in NDK file."
+        raise ObsPyNDKException(msg)
+
     return cat
 
 
@@ -484,6 +488,9 @@ def _read_lines(line1, line2, line3, line4, line5):
         rec["cmt_type"] = "quick"
     elif timestamp.startswith("S-"):
         rec["cmt_type"] = "standard"
+    # This is invalid but occurs a lot so we include it here.
+    elif timestamp.startswith("O-"):
+        rec["cmt_type"] = "unknown"
     else:
         msg = "Invalid CMT timestamp '%s' for event %s." % (
             timestamp, rec["cmt_event_name"])

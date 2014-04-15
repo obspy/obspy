@@ -7,7 +7,7 @@ import warnings
 
 from obspy import readEvents
 from obspy.core.compatibility import StringIO, BytesIO
-from obspy.ndk.core import is_ndk, read_ndk
+from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException
 
 
 class NDKTestCase(unittest.TestCase):
@@ -87,23 +87,6 @@ class NDKTestCase(unittest.TestCase):
             self.assertTrue(is_ndk(filename))
         for filename in invalid_files:
             self.assertFalse(is_ndk(filename))
-
-    def test_file_with_faulty_timestamp(self):
-        """
-        Tests a file with timestamp 'O-0000000000000'. While this is wrong
-        according to the specification it is unfortunately present in the
-        GlobalCMT catalog and thus only a warning should be raised.
-        """
-        filename = os.path.join(self.datapath,
-                                "faulty_cmt_timestamp.ndk")
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            cat = read_ndk(filename)
-
-        self.assertEqual(len(w), 1)
-        self.assertTrue("Invalid CMT timestamp 'O-000000" in str(w[0]))
-        self.assertTrue("Unknown" in
-                        cat[0].focal_mechanisms[0].comments[0].text)
 
     def test_reading_using_obspy_plugin(self):
         """
@@ -261,6 +244,41 @@ class NDKTestCase(unittest.TestCase):
         self.assertTrue("Not a multiple of 5 lines" in str(w[0]))
         # Only five events will have been read.
         self.assertEqual(len(cat), 5)
+
+    def test_reading_event_with_faulty_but_often_occuring_timestamp(self):
+        """
+        The timestamp "O-00000000000000" is not valid according to the NDK
+        definition but is occuring a lot in the GCMT catalog thus we include it
+        here.
+        """
+        filename = os.path.join(self.datapath, "faulty_cmt_timestamp.ndk")
+
+        cat = readEvents(filename)
+
+        self.assertEqual(len(cat), 1)
+        comments = cat[0].focal_mechanisms[0].comments
+        self.assertTrue("CMT Analysis Type: Unknown" in comments[0].text)
+        self.assertTrue("CMT Timestamp: O-000000000" in comments[1].text)
+
+    def test_raise_exception_if_no_events_in_file(self):
+        """
+        The parser is fairly relaxed and will skip invalid files. This test
+        assures that an exception is raised if every event has been skipped.
+        """
+        with open(os.path.join(self.datapath, "C200604092050A.ndk"), "rt") \
+                as fh:
+            lines = [_i.rstrip() for _i in fh.readlines()]
+
+        # Assemble anew and skip last line.
+        data = StringIO("\n".join(lines[:-1]))
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            with self.assertRaises(ObsPyNDKException) as exp:
+                readEvents(data)
+
+        self.assertEqual("No valid events found in NDK file.",
+                         str(exp.exception))
 
 
 def suite():
