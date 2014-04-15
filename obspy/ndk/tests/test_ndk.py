@@ -221,6 +221,26 @@ class NDKTestCase(unittest.TestCase):
         self.assertFalse(is_ndk(os.path.join(
             self.datapath, "faulty_infeasible_latitude.ndk")))
 
+    def test_reading_file_with_multiple_errors(self):
+        """
+        Tests reading a file with multiple errors.
+        """
+        filename = os.path.join(self.datapath, "faulty_multiple_events.ndk")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readEvents(filename)
+
+        self.assertEqual(len(w), 5)
+        self.assertTrue("Invalid time in event 2" in str(w[0]))
+        self.assertTrue("Unknown data type" in str(w[1]))
+        self.assertTrue("Moment rate function" in str(w[2]))
+        self.assertTrue("Unknown source type" in str(w[3]))
+        self.assertTrue("Unknown type of depth" in str(w[4]))
+
+        # Two events should still be available.
+        self.assertEqual(len(cat), 1)
+
     def test_missing_lines(self):
         """
         Tests the raised warning if one an event has less then 5 lines.

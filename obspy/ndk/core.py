@@ -144,13 +144,13 @@ def read_ndk(filename, *args, **kwargs):
         # Parse the lines to a human readable dictionary.
         try:
             record = _read_lines(*lines)
-        except ValueError:
+        except (ValueError, ObsPyNDKException):
             exc = traceback.format_exc()
             msg = (
                 "Could not parse event %i (faulty file?). Will be "
                 "skipped. Lines of event:\n"
                 "\t%s\n"
-                "%s") % (_i, "\n\t".join(lines), exc)
+                "%s") % (_i + 1, "\n\t".join(lines), exc)
             warnings.warn(msg, ObsPyNDKWarning)
             continue
 
@@ -184,7 +184,7 @@ def read_ndk(filename, *args, **kwargs):
         except ValueError:
             msg = ("Invalid time in event %i. '%s' and '%s' cannot be "
                    "assembled to a valid time. Event will be skipped.") % \
-                  (_i, record["date"], record["time"])
+                  (_i + 1, record["date"], record["time"])
             warnings.warn(msg, ObsPyNDKWarning)
             continue
 
@@ -397,7 +397,7 @@ def _read_lines(line1, line2, line3, line4, line5):
     data_used = line2[17:61].strip()
     # Use regex to get the data used in case the data types are in a
     # different order.
-    data_used = re.findall(r"[A-Z]:\s+\d+\s+\d+\s+\d+", data_used)
+    data_used = re.findall(r"[A-Z]:\s*\d+\s+\d+\s+\d+", data_used)
     rec["data_used"] = []
     for data in data_used:
         data_type, count = data.split(":")
