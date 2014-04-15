@@ -149,6 +149,7 @@
           </nAxis>
         </principalAxes>
         <momentTensor publicID="smi:local/ndk/C200604092050A/momenttensor">
+          <derivedOriginID>smi:local/ndk/C200604092050A/origin#cmtorigin</derivedOriginID>
           <dataUsed>
             <waveType>body waves</waveType>
             <stationCount>88</stationCount>

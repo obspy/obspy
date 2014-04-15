@@ -325,6 +325,7 @@ def read_ndk(filename, *args, **kwargs):
                 type=record["moment_rate_type"],
                 duration=record["moment_rate_duration"]
             ),
+            derived_origin_id=cmt_origin.resource_id,
             creation_info=creation_info.copy()
         )
         mt.resource_id = _get_resource_id(record["cmt_event_name"],
