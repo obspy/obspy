@@ -55,6 +55,31 @@ def _get_resource_id(cmtname, res_type, tag=None):
     return res_id
 
 
+def _parse_date_time(date, time):
+    """
+    Function taking a tuple of date and time string from an NDK file and
+    converting it to an UTCDateTime object.
+
+    In particular it is able to deal with a time string specifying 60
+    seconds which is not a valid ISO time string but occurs a lot in NDK
+    files.
+    """
+    add_minute = False
+    if ":60.0" in time:
+        time = time.replace(":60.0", ":0.0")
+        add_minute = True
+    try:
+        dt = UTCDateTime(date.replace("/", "-") + "T" + time)
+    except (TypeError, ValueError):
+        msg = ("Could not parse date/time string '%s' and '%s' to a valid "
+               "time" % (date, time))
+        raise ObsPyNDKException(msg)
+
+    if add_minute:
+        dt += 60.0
+    return dt
+
+
 def is_ndk(filename):
     """
     Checks that a file is actually an NDK file.
@@ -81,8 +106,8 @@ def is_ndk(filename):
 
     # Assemble the time.
     try:
-        UTCDateTime(date.replace("/", "-") + "T" + time)
-    except TypeError:
+        _parse_date_time(date, time)
+    except ObsPyNDKException:
         return False
 
     try:
@@ -179,9 +204,8 @@ def read_ndk(filename, *args, **kwargs):
 
         # Assemble the time for the reference origin.
         try:
-            time = UTCDateTime(record["date"].replace("/", "-") + "T" +
-                               record["time"])
-        except ValueError:
+            time = _parse_date_time(record["date"], record["time"])
+        except ObsPyNDKException:
             msg = ("Invalid time in event %i. '%s' and '%s' cannot be "
                    "assembled to a valid time. Event will be skipped.") % \
                   (_i + 1, record["date"], record["time"])

@@ -10,6 +10,7 @@ from obspy.core.compatibility import StringIO, BytesIO
 from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException, \
     _parse_date_time
 
+
 class NDKTestCase(unittest.TestCase):
     """
     Test suite for obspy.ndk
@@ -221,7 +222,7 @@ class NDKTestCase(unittest.TestCase):
         self.assertTrue("Unknown source type" in str(w[3]))
         self.assertTrue("Unknown type of depth" in str(w[4]))
 
-        # Two events should still be available.
+        # One event should still be available.
         self.assertEqual(len(cat), 1)
 
     def test_missing_lines(self):
@@ -287,25 +288,25 @@ class NDKTestCase(unittest.TestCase):
         # Simple tests for some valid times.
         date, time = "1997/11/03", "19:17:33.8"
         self.assertEqual(_parse_date_time(date, time),
-                         UTCDateTime(1997, 11, 3, 19, 17, 33, 8E5))
+                         UTCDateTime(1997, 11, 3, 19, 17, 33, int(8E5)))
         date, time = "1996/11/20", "19:42:56.1"
         self.assertEqual(_parse_date_time(date, time),
-                         UTCDateTime(1996, 11, 20, 19, 42, 56, 1E5))
+                         UTCDateTime(1996, 11, 20, 19, 42, 56, int(1E5)))
         date, time = "2005/01/01", "01:20:05.4"
         self.assertEqual(_parse_date_time(date, time),
-                         UTCDateTime(2005, 1, 1, 1, 20, 5, 4E5))
+                         UTCDateTime(2005, 1, 1, 1, 20, 5, int(4E5)))
         date, time = "2013/03/01", "03:29:46.8"
         self.assertEqual(_parse_date_time(date, time),
-                         UTCDateTime(2013, 3, 1, 3, 29, 46, 8E5))
+                         UTCDateTime(2013, 3, 1, 3, 29, 46, int(8E5)))
         date, time = "2013/03/02", "07:53:43.8"
         self.assertEqual(_parse_date_time(date, time),
-                         UTCDateTime(2013, 3, 2, 7, 53, 43, 8E5))
+                         UTCDateTime(2013, 3, 2, 7, 53, 43, int(8E5)))
 
         # Some more tests for 60s. The tested values are all values occuring
         # in a big NDK test file.
         date, time = "1998/09/27", "00:57:60.0"
         self.assertEqual(_parse_date_time(date, time),
-                         UTCDateTime(1998, 8, 27, 0, 58))
+                         UTCDateTime(1998, 9, 27, 0, 58))
         date, time = "2000/12/22", "16:29:60.0"
         self.assertEqual(_parse_date_time(date, time),
                          UTCDateTime(2000, 12, 22, 16, 30))
