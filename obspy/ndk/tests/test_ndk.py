@@ -5,10 +5,10 @@ import os
 import unittest
 import warnings
 
-from obspy import readEvents
+from obspy import readEvents, UTCDateTime
 from obspy.core.compatibility import StringIO, BytesIO
-from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException
-
+from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException, \
+    _parse_date_time
 
 class NDKTestCase(unittest.TestCase):
     """
@@ -280,10 +280,79 @@ class NDKTestCase(unittest.TestCase):
         self.assertEqual("No valid events found in NDK file.",
                          str(exp.exception))
 
+    def test_parse_date_time_function(self):
+        """
+        Tests the _parse_date_time() function.
+        """
+        # Simple tests for some valid times.
+        date, time = "1997/11/03", "19:17:33.8"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(1997, 11, 3, 19, 17, 33, 8E5))
+        date, time = "1996/11/20", "19:42:56.1"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(1996, 11, 20, 19, 42, 56, 1E5))
+        date, time = "2005/01/01", "01:20:05.4"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2005, 1, 1, 1, 20, 5, 4E5))
+        date, time = "2013/03/01", "03:29:46.8"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2013, 3, 1, 3, 29, 46, 8E5))
+        date, time = "2013/03/02", "07:53:43.8"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2013, 3, 2, 7, 53, 43, 8E5))
+
+        # Some more tests for 60s. The tested values are all values occuring
+        # in a big NDK test file.
+        date, time = "1998/09/27", "00:57:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(1998, 8, 27, 0, 58))
+        date, time = "2000/12/22", "16:29:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2000, 12, 22, 16, 30))
+        date, time = "2003/06/19", "23:04:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2003, 6, 19, 23, 5))
+        date, time = "2005/06/20", "02:32:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2005, 6, 20, 2, 33))
+        date, time = "2006/03/02", "17:16:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2006, 3, 2, 17, 17))
+        date, time = "2006/05/26", "10:25:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2006, 5, 26, 10, 26))
+        date, time = "2006/08/20", "13:34:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2006, 8, 20, 13, 35))
+        date, time = "2007/04/20", "00:30:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2007, 4, 20, 0, 31))
+        date, time = "2007/07/02", "00:54:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2007, 7, 2, 0, 55))
+        date, time = "2007/08/27", "17:11:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2007, 8, 27, 17, 12))
+        date, time = "2008/09/24", "01:36:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2008, 9, 24, 1, 37))
+        date, time = "2008/10/05", "10:44:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2008, 10, 5, 10, 45))
+        date, time = "2009/04/17", "04:09:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2009, 4, 17, 4, 10))
+        date, time = "2009/06/03", "14:30:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2009, 6, 3, 14, 31))
+        date, time = "2009/07/20", "10:44:60.0"
+        self.assertEqual(_parse_date_time(date, time),
+                         UTCDateTime(2009, 7, 20, 10, 45))
+
 
 def suite():
-    return unittest.makeSuite(NDKTestCase, 'test')
+    return unittest.makeSuite(NDKTestCase, "test")
 
 
-if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+if __name__ == "__main__":
+    unittest.main(defaultTest="suite")
