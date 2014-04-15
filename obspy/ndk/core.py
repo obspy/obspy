@@ -173,7 +173,7 @@ def read_ndk(filename, *args, **kwargs):
             exc = traceback.format_exc()
             msg = (
                 "Could not parse event %i (faulty file?). Will be "
-                "skipped. Lines of event:\n"
+                "skipped. Lines of the event:\n"
                 "\t%s\n"
                 "%s") % (_i + 1, "\n\t".join(lines), exc)
             warnings.warn(msg, ObsPyNDKWarning)
@@ -518,8 +518,7 @@ def _read_lines(line1, line2, line3, line4, line5):
     else:
         msg = "Invalid CMT timestamp '%s' for event %s." % (
             timestamp, rec["cmt_event_name"])
-        warnings.warn(msg, ObsPyNDKWarning)
-        rec["cmt_type"] = "unknown"
+        raise ObsPyNDKException(msg)
 
     # Fourth line: CMT info (3)
     # [1-2]   The exponent for all following moment values. For example, if

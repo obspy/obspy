@@ -215,12 +215,13 @@ class NDKTestCase(unittest.TestCase):
             warnings.simplefilter("always")
             cat = readEvents(filename)
 
-        self.assertEqual(len(w), 5)
+        self.assertEqual(len(w), 6)
         self.assertTrue("Invalid time in event 2" in str(w[0]))
         self.assertTrue("Unknown data type" in str(w[1]))
         self.assertTrue("Moment rate function" in str(w[2]))
         self.assertTrue("Unknown source type" in str(w[3]))
         self.assertTrue("Unknown type of depth" in str(w[4]))
+        self.assertTrue("Invalid CMT timestamp" in str(w[5]))
 
         # One event should still be available.
         self.assertEqual(len(cat), 1)
@@ -237,6 +238,7 @@ class NDKTestCase(unittest.TestCase):
         data = StringIO("\n".join(lines[:-1]))
 
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             cat = readEvents(data)
 
         data.close()
@@ -275,11 +277,7 @@ class NDKTestCase(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            with self.assertRaises(ObsPyNDKException) as exp:
-                readEvents(data)
-
-        self.assertEqual("No valid events found in NDK file.",
-                         str(exp.exception))
+            self.assertRaises(ObsPyNDKException, readEvents, data)
 
     def test_parse_date_time_function(self):
         """
