@@ -221,6 +221,27 @@ class NDKTestCase(unittest.TestCase):
         self.assertFalse(is_ndk(os.path.join(
             self.datapath, "faulty_infeasible_latitude.ndk")))
 
+    def test_missing_lines(self):
+        """
+        Tests the raised warning if one an event has less then 5 lines.
+        """
+        with open(os.path.join(self.datapath, "multiple_events.ndk"), "rt") \
+                as fh:
+            lines = [_i.rstrip() for _i in fh.readlines()]
+
+        # Assemble anew and skip last line.
+        data = StringIO("\n".join(lines[:-1]))
+
+        with warnings.catch_warnings(record=True) as w:
+            cat = readEvents(data)
+
+        data.close()
+
+        self.assertEqual(len(w), 1)
+        self.assertTrue("Not a multiple of 5 lines" in str(w[0]))
+        # Only five events will have been read.
+        self.assertEqual(len(cat), 5)
+
 
 def suite():
     return unittest.makeSuite(NDKTestCase, 'test')
