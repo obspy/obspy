@@ -939,7 +939,8 @@ def _write_response(parent, resp):
         attr["resourceId"] = resp.resource_id
     parent = etree.SubElement(parent, "Response", attr)
     # write instrument sensitivity
-    if resp.instrument_sensitivity is not None:
+    if resp.instrument_sensitivity is not None and \
+            any(resp.instrument_sensitivity.__dict__.values()):
         ins_sens = resp.instrument_sensitivity
         sub = etree.SubElement(parent, "InstrumentSensitivity")
         etree.SubElement(sub, "Value").text = \
