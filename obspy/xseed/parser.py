@@ -824,8 +824,8 @@ class Parser(object):
         return_records = []
         # Loop over all blockettes.
         record = ''
-        for blockette in blockettes:
-            blockette.compact = self.compact
+        for blockette_ in blockettes:
+            blockette_.compact = self.compact
             rec_len = len(record)
             # Never split a blockette’s “length/blockette type” section across
             # records.
@@ -835,7 +835,7 @@ class Parser(object):
                 return_records.append(record)
                 record = ''
                 rec_len = 0
-            blockette_str = blockette.getSEED()
+            blockette_str = blockette_.getSEED()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.

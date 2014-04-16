@@ -482,9 +482,9 @@ master/seishub/plugins/seismology/waveform.py
                 kwargs[key] = value
 
         # allow time strings in arguments
-        for time in ["starttime", "endtime"]:
-            if isinstance(kwargs[time], str):
-                kwargs[time] = UTCDateTime(kwargs[time])
+        for time_ in ["starttime", "endtime"]:
+            if isinstance(kwargs[time_], str):
+                kwargs[time_] = UTCDateTime(kwargs[time_])
 
         trim_start = kwargs['starttime']
         trim_end = kwargs['endtime']
