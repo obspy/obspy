@@ -397,7 +397,7 @@ class SeedLinkConnection(object):
                                                           streamfile))
         except IOError as e:
             msg = "%s: reading stream list file: %s" % (e, streamfile)
-            logger.crictical(msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
             try:
@@ -485,7 +485,7 @@ class SeedLinkConnection(object):
 
         :param net: network code.
         :param station: station code.
-        :param selectors: selectors for this net/station, null if none.
+        :param selectors_str: selectors for this net/station, null if none.
         :param seqnum: SeedLink sequence number of last packet received, -1 to
             start at the next data.
         :param timestamp: SeedLink time stamp in a UTCDateTime format
@@ -503,15 +503,18 @@ class SeedLinkConnection(object):
             if stream.net == SeedLinkConnection.UNINETWORK and \
                stream.station == SeedLinkConnection.UNISTATION:
                 msg = "addStream called, but uni-station mode configured!"
-                logger.crictical(msg)
+                logger.critical(msg)
                 raise SeedLinkException(msg)
 
-        selectors = selectors_str.split()
+        if not selectors_str:
+            selectors = []
+        else:
+            selectors = selectors_str.split()
 
         # Search the stream chain if net/station/selector already present
         for stream in self.streams:
             if stream.net == net and stream.station == station:
-                return stream.appendSelectors(selectors)
+                return stream.appendSelectors(selectors_str)
 
         # Add new stream
         newstream = SLNetStation(net, station, selectors, seqnum, timestamp)
@@ -632,10 +635,14 @@ class SeedLinkConnection(object):
                             # AJL stream.btime = Btime(timeStr)
                             stream.btime = UTCDateTime(timeStr)
                             stacount += 1
+                        except SeedLinkException as sle:
+                            msg = "parsing timestamp in line %s of state " + \
+                                "file: %s"
+                            logger.error(msg % (linecount, sle.value))
                         except Exception as e:
                             msg = "parsing timestamp in line %s of state " + \
                                 "file: %s"
-                            logger.error(msg % (linecount, e.value))
+                            logger.error(msg % (linecount, str(e)))
             if (stacount == 0):
                 msg = "no matching streams found in %s"
                 logger.error(msg % (self.statefile))
@@ -1374,7 +1381,7 @@ class SeedLinkConnection(object):
         # Fail if none of the given selectors were accepted
         if acceptsel < 1:
             msg = "response: no data stream selector(s) accepted"
-            raise SeedLinkException()
+            raise SeedLinkException(msg)
 
         msg = "response: %s selector(s) accepted"
         logger.debug(msg % (acceptsel))
@@ -1523,8 +1530,11 @@ class SeedLinkConnection(object):
             # negotiate the station connection
             try:
                 self.negotiateStation(curstream)
+            except SeedLinkException as sle:
+                logger.error(sle.value)
+                continue
             except Exception as e:
-                logger.error(e.value)
+                logger.error(str(e))
                 continue
             acceptsta += 1
 
