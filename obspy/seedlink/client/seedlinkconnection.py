@@ -625,10 +625,14 @@ class SeedLinkConnection(object):
                             # AJL stream.btime = Btime(timeStr)
                             stream.btime = UTCDateTime(timeStr)
                             stacount += 1
+                        except SeedLinkException as sle:
+                            msg = "parsing timestamp in line %s of state " + \
+                                "file: %s"
+                            logger.error(msg % (linecount, sle.value))
                         except Exception as e:
                             msg = "parsing timestamp in line %s of state " + \
                                 "file: %s"
-                            logger.error(msg % (linecount, e.value))
+                            logger.error(msg % (linecount, str(e)))
             if (stacount == 0):
                 msg = "no matching streams found in %s"
                 logger.error(msg % (self.statefile))
@@ -1512,8 +1516,11 @@ class SeedLinkConnection(object):
             # negotiate the station connection
             try:
                 self.negotiateStation(curstream)
+            except SeedLinkException as sle:
+                logger.error(sle.value)
+                continue
             except Exception as e:
-                logger.error(e.value)
+                logger.error(str(e))
                 continue
             acceptsta += 1
 
