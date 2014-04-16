@@ -504,7 +504,7 @@ class SeedLinkConnection(object):
         # Search the stream chain if net/station/selector already present
         for stream in self.streams:
             if stream.net == net and stream.station == station:
-                return stream.appendSelectors(selectors)
+                return stream.appendSelectors(selectors_str)
 
         # Add new stream
         newstream = SLNetStation(net, station, selectors, seqnum, timestamp)
