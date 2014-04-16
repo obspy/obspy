@@ -1370,7 +1370,7 @@ class SeedLinkConnection(object):
         # Fail if none of the given selectors were accepted
         if acceptsel < 1:
             msg = "response: no data stream selector(s) accepted"
-            raise SeedLinkException()
+            raise SeedLinkException(msg)
 
         msg = "response: %s selector(s) accepted"
         logger.debug(msg % (acceptsel))
