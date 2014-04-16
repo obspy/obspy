@@ -478,7 +478,7 @@ class SeedLinkConnection(object):
 
         :param net: network code.
         :param station: station code.
-        :param selectors: selectors for this net/station, null if none.
+        :param selectors_str: selectors for this net/station, null if none.
         :param seqnum: SeedLink sequence number of last packet received, -1 to
             start at the next data.
         :param timestamp: SeedLink time stamp in a UTCDateTime format
@@ -499,7 +499,10 @@ class SeedLinkConnection(object):
                 logger.critical(msg)
                 raise SeedLinkException(msg)
 
-        selectors = selectors_str.split()
+        if not selectors_str:
+            selectors = []
+        else:
+            selectors = selectors_str.split()
 
         # Search the stream chain if net/station/selector already present
         for stream in self.streams:
