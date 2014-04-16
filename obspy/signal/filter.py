@@ -31,9 +31,9 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandpass Filter.
 
-    Filter data from ``freqmin`` to ``freqmax`` using ``corners`` 
+    Filter data from ``freqmin`` to ``freqmax`` using ``corners``
     corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design) 
+    The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
 
@@ -74,7 +74,7 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
 
     Filter data removing data between frequencies ``freqmin`` and ``freqmax``
     using ``corners`` corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design) 
+    The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
     :param data: Data to filter, type numpy.ndarray.
@@ -114,7 +114,7 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design) 
+    The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
     :param data: Data to filter, type numpy.ndarray.
@@ -149,7 +149,7 @@ def highpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data below certain frequency ``freq`` using
     ``corners`` corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design) 
+    The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
     :param data: Data to filter, type numpy.ndarray.
