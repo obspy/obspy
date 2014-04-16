@@ -390,7 +390,7 @@ class SeedLinkConnection(object):
                                                           streamfile))
         except IOError as e:
             msg = "%s: reading stream list file: %s" % (e, streamfile)
-            logger.crictical(msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
             try:
@@ -496,7 +496,7 @@ class SeedLinkConnection(object):
             if stream.net == SeedLinkConnection.UNINETWORK and \
                stream.station == SeedLinkConnection.UNISTATION:
                 msg = "addStream called, but uni-station mode configured!"
-                logger.crictical(msg)
+                logger.critical(msg)
                 raise SeedLinkException(msg)
 
         selectors = selectors_str.split()
