@@ -903,14 +903,16 @@ class SeedLinkConnection(object):
                                 if (type == SLPacket.TYPE_SLINF):
                                     data = slpacket.msrecord[64: lenmsr]
                                     # Convert received bytes (ASCII) to string
-                                    data = data.decode('ASCII', errors='ignore')
+                                    data = data.decode('ASCII',
+                                                       errors='ignore')
                                     self.infoStrBuf += data
                                 elif (type == SLPacket.TYPE_SLINFT):
                                     data = slpacket.msrecord[64: lenmsr]
                                     # Convert received bytes (ASCII) to string
-                                    data = data.decode('ASCII', errors='ignore')
+                                    data = data.decode('ASCII',
+                                                       errors='ignore')
                                     self.infoStrBuf += data
-                                        
+
                                     self.info_string = \
                                         self.createInfoString(self.infoStrBuf)
                                     self.infoStrBuf = ""
