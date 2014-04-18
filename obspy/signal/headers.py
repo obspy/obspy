@@ -17,7 +17,7 @@ from obspy.core.util.misc import _get_lib_name
 # create library names
 lib_names = [
     # python3.3 platform specific library name
-    _get_lib_name('signal'),
+    _get_lib_name('signal', add_extension_suffix=True),
     # fallback for pre-packaged libraries
     'libsignal']
 # get default file extension for shared objects
@@ -39,7 +39,7 @@ else:
 # create library names
 erlib_names = [
     # python3.3 platform specific library name
-    _get_lib_name('evresp'),
+    _get_lib_name('evresp', add_extension_suffix=True),
     # fallback for pre-packaged libraries
     'libevresp']
 # initialize library

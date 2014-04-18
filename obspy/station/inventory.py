@@ -471,7 +471,9 @@ class Inventory(ComparingObject):
         from obspy.imaging.maps import plot_basemap
         import matplotlib.pyplot as plt
 
-        inv = self.select(time=time)
+        # The empty ones must be kept as otherwise inventory files without
+        # channels will end up with nothing.
+        inv = self.select(time=time, keep_empty=True)
 
         # lat/lon coordinates, magnitudes, dates
         lats = []

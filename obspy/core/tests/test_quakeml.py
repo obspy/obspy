@@ -808,26 +808,26 @@ class QuakeMLTestCase(unittest.TestCase):
                 lines = fh.readlines()
 
             firstline = 45
-            while "<amplitude " not in lines[firstline]:
+            while b"<amplitude " not in lines[firstline]:
                 firstline += 1
 
             got = [lines[i_].strip()
                    for i_ in range(firstline, firstline + 13)]
             expected = [
-                '<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
-                'amplitude/1/modified">',
-                '<genericAmplitude>',
-                '<value>1e-08</value>',
-                '</genericAmplitude>',
-                '<type>A</type>',
-                '<category>point</category>',
-                '<unit>m/s</unit>',
-                '<timeWindow>',
-                '<reference>2007-10-10T14:40:39.055000Z</reference>',
-                '<begin>0.0</begin>',
-                '<end>0.51424</end>',
-                '</timeWindow>',
-                '</amplitude>']
+                b'<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
+                b'amplitude/1/modified">',
+                b'<genericAmplitude>',
+                b'<value>1e-08</value>',
+                b'</genericAmplitude>',
+                b'<type>A</type>',
+                b'<category>point</category>',
+                b'<unit>m/s</unit>',
+                b'<timeWindow>',
+                b'<reference>2007-10-10T14:40:39.055000Z</reference>',
+                b'<begin>0.0</begin>',
+                b'<end>0.51424</end>',
+                b'</timeWindow>',
+                b'</amplitude>']
             self.assertEqual(got, expected)
 
 
