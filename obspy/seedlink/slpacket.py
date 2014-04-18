@@ -157,8 +157,8 @@ class SLPacket(object):
             sampletype = sampletype.decode()
 
         data = _ctypesArray2NumpyArray(msrecord_py.datasamples,
-                                   msrecord_py.numsamples,
-                                   sampletype)
+                                       msrecord_py.numsamples,
+                                       sampletype)
         self.trace = Trace(data, header)
         return self.trace
 
