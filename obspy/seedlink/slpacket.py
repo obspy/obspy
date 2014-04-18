@@ -95,14 +95,15 @@ class SLPacket(object):
         if not self.slhead[0: len(self.SIGNATURE)].lower() == \
                 self.SIGNATURE.lower():
             return -1
-        seqstr = str(self.slhead[2:8])
-        #print "DEBUG: seqstr:", seqstr,", int(seqstr, 16):", int(seqstr, 16)
+        seqbytes = bytes(self.slhead[2:8])
+        #print "DEBUG: seqbytes:", seqbytes,", int(seqbytes, 16):", \
+        #      int(seqbytes, 16)
         seqnum = -1
         try:
-            seqnum = int(seqstr, 16)
+            seqnum = int(seqbytes, 16)
         except Exception:
             msg = "SLPacket.getSequenceNumber(): bad packet sequence number: "
-            print(msg, seqstr)
+            print(msg, seqbytes)
             return -1
         return seqnum
 
