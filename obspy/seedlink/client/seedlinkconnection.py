@@ -895,11 +895,12 @@ class SeedLinkConnection(object):
 
                                 if (type == SLPacket.TYPE_SLINFT):
                                     # Terminated INFO response packet
-                                    # -> build complete INFO response
+                                    # -> build complete INFO response string,
+                                    #    strip NULL bytes from the end
                                     self.info_string = \
                                         self.info_response_buffer.getvalue().\
                                         decode('ASCII', errors='ignore').\
-                                        replace("><", ">\n<")
+                                        replace("><", ">\n<").rstrip('\x00')
 
                                     self.info_response_buffer = io.BytesIO()
                         self.state.query_mode = SLState.NO_QUERY
