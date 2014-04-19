@@ -28,6 +28,7 @@ import select
 import socket
 import time
 import logging
+import io
 
 
 # default logger
@@ -136,7 +137,7 @@ class SeedLinkConnection(object):
         self.info_request_string = None
         self.socket = None
         self.state = None
-        self.infoStrBuf = ""
+        self.info_response_buffer = io.BytesIO()
         self.state = SLState()
 
     def isConnected(self, timeout=1.0):
@@ -282,17 +283,6 @@ class SeedLinkConnection(object):
            packets
         """
         return self.info_string
-
-    def createInfoString(self, strBuf):
-        """
-        Creates an info String from a String Buffer
-
-        :param strBuf: the buffer to convert to an INFO String.
-
-        :return: the INFO Sting.
-        """
-        strBuf = strBuf.replace("><", ">\n<")
-        return str(strBuf).strip()
 
     def checkslcd(self):
         """
@@ -712,7 +702,7 @@ class SeedLinkConnection(object):
         self.disconnect()
         self.state = SLState()
         self.info_request_string = None
-        self.infoStrBuf = ""
+        self.info_response_buffer = io.BytesIO()
         return SLPacket.SLTERMINATE
 
     def collect(self):
@@ -900,22 +890,18 @@ class SeedLinkConnection(object):
                                 #print "DEBUG: SLPacket.TYPE_SLINFT:",
                                 #print SLPacket.TYPE_SLINFT
                                 lenmsr = len(slpacket.msrecord)
-                                if (type == SLPacket.TYPE_SLINF):
-                                    data = slpacket.msrecord[64: lenmsr]
-                                    # Convert received bytes (ASCII) to string
-                                    data = data.decode('ASCII',
-                                                       errors='ignore')
-                                    self.infoStrBuf += data
-                                elif (type == SLPacket.TYPE_SLINFT):
-                                    data = slpacket.msrecord[64: lenmsr]
-                                    # Convert received bytes (ASCII) to string
-                                    data = data.decode('ASCII',
-                                                       errors='ignore')
-                                    self.infoStrBuf += data
+                                data = slpacket.msrecord[64:lenmsr]
+                                self.info_response_buffer.write(data)
 
+                                if (type == SLPacket.TYPE_SLINFT):
+                                    # Terminated INFO response packet
+                                    # -> build complete INFO response
                                     self.info_string = \
-                                        self.createInfoString(self.infoStrBuf)
-                                    self.infoStrBuf = ""
+                                        self.info_response_buffer.getvalue().\
+                                        decode('ASCII', errors='ignore').\
+                                        replace("><", ">\n<")
+
+                                    self.info_response_buffer = io.BytesIO()
                         self.state.query_mode = SLState.NO_QUERY
                     else:
                         # Get packet and update the stream chain entry if not
