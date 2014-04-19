@@ -285,7 +285,7 @@ class SeedLinkConnection(object):
         :return: the INFO Sting.
         """
         strBuf = strBuf.replace("><", ">\n<")
-        return str(strBuf).strip()
+        return str(strBuf).strip().rstrip('\x00')
 
     def checkslcd(self):
         """
