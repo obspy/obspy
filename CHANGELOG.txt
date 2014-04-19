@@ -23,6 +23,7 @@
    * bugfix: different instances of a SeedLink connection had a shared
      state (see #561)
    * multiple smaller bugfixes (see #777)
+   * trailing null characters are now stripped from INFO responses (see #778)
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
  - obspy.taup:
