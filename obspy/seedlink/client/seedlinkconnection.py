@@ -1200,12 +1200,13 @@ class SeedLinkConnection(object):
 
         # check for end or no bytes read
         if (nbytesread == -1):
+            # XXX This is never true
             msg = "[%s] socket.read(): %s: TCP FIN or EOF received"
             logger.error(msg % (code, nbytesread))
             return
         else:
             if (nbytesread == 0):
-                return ""
+                return b""
 
         return bytesread
 
