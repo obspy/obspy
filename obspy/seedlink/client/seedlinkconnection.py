@@ -140,6 +140,20 @@ class SeedLinkConnection(object):
         self.info_response_buffer = io.BytesIO()
         self.state = SLState()
 
+    @property
+    def infoStrBuf(self):
+        msg = 'infoStrBuf was removed in favor of info_response_buffer'
+        raise AttributeError(msg)
+
+    @infoStrBuf.setter
+    def infoStrBuf(self, value):
+        msg = 'infoStrBuf was removed in favor of info_response_buffer'
+        raise AttributeError(msg)
+
+    def createInfoString(self, strBuf):
+        msg = 'method createInfoString was removed'
+        raise AttributeError(msg)
+
     def isConnected(self, timeout=1.0):
         """
         Returns connection state of the connection socket.
