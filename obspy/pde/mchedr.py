@@ -703,7 +703,7 @@ class Unpickler(object):
             #FIXME: not sure which kind of data is used
             #for scalar moment determination.
             data_used.wave_type = 'unknown'
-        moment_tensor.data_used = data_used
+        moment_tensor.data_used = [data_used]
         focal_mechanism.moment_tensor = moment_tensor
         event.focal_mechanisms.append(focal_mechanism)
         return focal_mechanism
