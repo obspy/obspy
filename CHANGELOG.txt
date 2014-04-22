@@ -1,12 +1,14 @@
 0.10.0:
  - general:
-   * support for Python 3.3
+   * support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.ndk:
+   * New submodule able to read NDK files from the Global CMT project.
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
