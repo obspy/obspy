@@ -2152,12 +2152,11 @@ __MomentTensor = _eventTypeClassFactory(
                       ("greens_function_id", ResourceIdentifier),
                       ("filter_id", ResourceIdentifier),
                       ("source_time_function", SourceTimeFunction),
-                      ("data_used", DataUsed),
                       ("method_id", ResourceIdentifier),
                       ("category", MomentTensorCategory),
                       ("inversion_type", MTInversionType),
                       ("creation_info", CreationInfo)],
-    class_contains=['comments'])
+    class_contains=["comments", "data_used"])
 
 
 class MomentTensor(__MomentTensor):
@@ -2209,7 +2208,7 @@ class MomentTensor(__MomentTensor):
         optional
     :param source_time_function: Source time function used in moment-tensor
         inversion.
-    :type data_used: :class:`~obspy.core.event.DataUsed`, optional
+    :type data_used: list of :class:`~obspy.core.event.DataUsed`, optional
     :param data_used: Describes waveform data used for moment-tensor inversion.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Resource identifier of the method used for moment-tensor
@@ -2418,19 +2417,6 @@ class Event(__Event):
         :class:`~obspy.core.event.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
     """
-    def __eq__(self, other):
-        """
-        Implements rich comparison of Event objects for "==" operator.
-
-        Events are the same, if the have the same id.
-        """
-        # check if other object is a Event
-        if not isinstance(other, Event):
-            return False
-        if (self.resource_id != other.resource_id):
-            return False
-        return True
-
     def short_str(self):
         """
         Returns a short string representation of the current Event.

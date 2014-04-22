@@ -136,6 +136,9 @@ class Unpickler(object):
         return obj
 
     def _origin_quality(self, element):
+        # Do not add an element if it is not given in the XML file.
+        if not self._xpath("quality", element):
+            return None
         obj = OriginQuality()
         obj.associated_phase_count = self._xpath2obj(
             'quality/associatedPhaseCount', element, int)
@@ -245,6 +248,9 @@ class Unpickler(object):
         return obj
 
     def _origin_uncertainty(self, element):
+        # Do not add an element if it is not given in the XML file.
+        if not self._xpath("originUncertainty", element):
+            return None
         obj = OriginUncertainty()
         obj.preferred_description = self._xpath2obj(
             'originUncertainty/preferredDescription', element)
@@ -636,23 +642,27 @@ class Unpickler(object):
 
     def _data_used(self, element):
         """
-        Converts an etree.Element into an DataUsed object.
+        Converts an etree.Element into a list of DataUsed objects.
 
         :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.DataUsed`
+        :rtype: list of :class:`~obspy.core.event.DataUsed`
         """
-        obj = DataUsed()
-        try:
-            sub_el = self._xpath('dataUsed', element)[0]
-        except IndexError:
-            return obj
-        # required parameters
-        obj.wave_type = self._xpath2obj('waveType', sub_el)
-        # optional parameter
-        obj.station_count = self._xpath2obj('stationCount', sub_el, int)
-        obj.component_count = self._xpath2obj('componentCount', sub_el, int)
-        obj.shortest_period = self._xpath2obj('shortestPeriod', sub_el, float)
-        obj.longest_period = self._xpath2obj('longestPeriod', sub_el, float)
+        obj = []
+        for el in self._xpath('dataUsed', element):
+            data_used = DataUsed()
+            # required parameters
+            data_used.wave_type = self._xpath2obj('waveType', el)
+            # optional parameter
+            data_used.station_count = \
+                self._xpath2obj('stationCount', el, int)
+            data_used.component_count = \
+                self._xpath2obj('componentCount', el, int)
+            data_used.shortest_period = \
+                self._xpath2obj('shortestPeriod', el, float)
+            data_used.longest_period = \
+                self._xpath2obj('longestPeriod', el, float)
+
+            obj.append(data_used)
         return obj
 
     def _moment_tensor(self, element):
@@ -1309,9 +1319,8 @@ class Pickler(object):
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
         # optional parameter
         # Data Used
-        if moment_tensor.data_used:
+        for sub in moment_tensor.data_used:
             sub_el = etree.Element('dataUsed')
-            sub = moment_tensor.data_used
             self._str(sub.wave_type, sub_el, 'waveType')
             self._str(sub.station_count, sub_el, 'stationCount')
             self._str(sub.component_count, sub_el, 'componentCount')

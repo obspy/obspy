@@ -79,15 +79,15 @@ KEYWORDS = [
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NERA', 'NERIES', 'observatory', 'ORFEUS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
+    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
+    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
     'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
-    'future',
+    'future>=0.11.4',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
@@ -222,6 +222,7 @@ ENTRY_POINTS = {
         'QUAKEML = obspy.core.quakeml',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
+        'NDK = obspy.ndk.core'
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -235,6 +236,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
     ],
+    'obspy.plugin.event.NDK': [
+        'isFormat = obspy.ndk.core:is_ndk',
+        'readFormat = obspy.ndk.core:read_ndk',
+        ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
     ],

@@ -24,10 +24,7 @@ before_install:
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
   #- pip install https://github.com/megies/basemap/archive/v1.0.7_geos_link_fix.zip
   - pip install --use-mirrors flake8
-  # Future 0.11.3 has some issues and essentially does not work under Python 2.x. Older
-  # versions have some other issues. The master more or less resolves them.
-  # XXX: Replace once a new future version has been released!
-  - pip install --use-mirrors https://github.com/PythonCharmers/python-future/archive/master.zip
+  - pip install --use-mirrors future
   - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
