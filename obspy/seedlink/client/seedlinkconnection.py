@@ -151,6 +151,9 @@ class SeedLinkConnection(object):
         raise AttributeError(msg)
 
     def createInfoString(self, strBuf):
+        """
+        Method was removed.
+        """
         msg = 'method createInfoString was removed'
         raise AttributeError(msg)
 
