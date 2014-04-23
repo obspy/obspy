@@ -306,6 +306,33 @@ class WaveformTestCase(unittest.TestCase):
             st.plot(outfile=ic.name, type='section', dist_degree=True,
                     ev_coord=(0.0, 0.0))
 
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDefaultRelative(self):
+        """
+        Plots one hour, starting Jan 1970, with a relative scale.
+        """
+        start = UTCDateTime(0)
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_default_relative.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='relative')
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotRefTimeRelative(self):
+        """
+        Plots one hour, starting Jan 1970, with a relative scale.
+
+        The reference time is at 300 seconds after the start.
+        """
+        start = UTCDateTime(0)
+        ref = UTCDateTime(300)
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_reftime_relative.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='relative', reftime=ref)
+
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')

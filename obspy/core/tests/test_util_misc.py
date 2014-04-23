@@ -5,6 +5,7 @@ from future.utils import PY2
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
+from obspy.core.util.decorator import skipIf
 import os
 import platform
 import sys
@@ -49,7 +50,7 @@ class UtilMiscTestCase(unittest.TestCase):
                     "\t\tID numbers assigned by\n"
                     "\t\tthe IRIS DMC")
 
-    @unittest.skipIf(not PY2, 'Solely test related Py3k issue')
+    @skipIf(not PY2, 'Solely test related Py3k issue')
     def test_CatchOutput(self):
         """
         """
@@ -81,6 +82,29 @@ class UtilMiscTestCase(unittest.TestCase):
             else:
                 self.assertEqual(out.stdout, "abc\nghi\njkl\n")
                 self.assertEqual(out.stderr, "123\n456\n")
+
+    def test_no_obspy_imports(self):
+        """
+        Check files that are used at install time for obspy imports.
+        """
+        from obspy.core import util
+        files = ["misc.py", "version.py"]
+
+        for file_ in files:
+            file_ = os.path.join(os.path.dirname(util.__file__), file_)
+            msg = ("File %s seems to contain an import 'from obspy' "
+                   "(line %%i: '%%s').") % file_
+            with open(file_, "rb") as fh:
+                lines = fh.readlines()
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if line.startswith(b"#"):
+                    continue
+                if b"from obspy" in line:
+                    if b" import " in line:
+                        self.fail(msg % (i, line))
+                if b"import obspy" in line:
+                    self.fail(msg % (i, line))
 
 
 def suite():

@@ -1,13 +1,24 @@
 0.10.0:
  - general:
-   * support for Python 3.3
+   * support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
+   * Refactored Catalog.plot() into helper routine
+     obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.ndk:
+   * New submodule able to read NDK files from the Global CMT project.
+ - obspy.station:
+   * add plotting methods (response/bode, location maps) to
+     Inventory/Station/Channel/Response objects (see #750)
 
-0.9.1:
+0.9.2:
+ - general:
+   * fix installation on CygWin (see #755)
  - obspy.core:
+   * bugfix: Input/Output to/from QuakeML was missing Amplitude
+     elements (see #763)
    * fixing very slow response removal for some magic bad values of npts
      (see #715)
    * extend remove_response for polynomial responses
@@ -19,8 +30,14 @@
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
+   * for advanced users: endpoints of any particular service can now be
+     specified explicitely (see #754)
  - obspy.imaging:
    * Fixing waveform plotting.
+ - obspy.seedlink:
+   * bugfix: different instances of a SeedLink connection had a shared
+     state (see #561)
+   * multiple smaller bugfixes (see #777)
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
    * add get_coordinates method to inventory and network objects (see #740)

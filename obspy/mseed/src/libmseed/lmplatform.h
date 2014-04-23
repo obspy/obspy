@@ -52,7 +52,7 @@ extern "C" {
    * WIN32 => WIN32 and Windows Sockets 2 (LMP_WIN32)
    */
 
-#if defined(__linux__) || defined(__linux)
+#if defined(__linux__) || defined(__linux) || defined(__CYGWIN__)
   #define LMP_GLIBC2 1
 
   #include <stdlib.h>

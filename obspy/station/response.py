@@ -18,6 +18,7 @@ from future.builtins import str
 import warnings
 import ctypes as C
 import numpy as np
+from math import pi
 from collections import defaultdict
 
 from obspy.core.util.base import ComparingObject
@@ -150,14 +151,14 @@ class ResponseStage(ComparingObject):
             if self.output_units_description else "",
             gain=self.stage_gain,
             gain_freq=self.stage_gain_frequency,
-            decimation=
-            "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
-            "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
-            "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
-                self.decimation_input_sample_rate, self.decimation_factor,
-                self.decimation_offset, self.decimation_delay,
-                self.decimation_correction)
-            if self.decimation_input_sample_rate is not None else "")
+            decimation=(
+                "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
+                "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
+                "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
+                    self.decimation_input_sample_rate, self.decimation_factor,
+                    self.decimation_offset, self.decimation_delay,
+                    self.decimation_correction)
+                if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
 
 
@@ -1080,6 +1081,144 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
+    def plot(self, min_freq, output="VEL", start_stage=None,
+             end_stage=None, label=None, axes=None, sampling_rate=None,
+             unwrap_phase=False, show=True, outfile=None):
+        """
+        Show bode plot of instrument response.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement), "VEL"
+            (velocity) or "ACC" (acceleration).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type sampling_rate: float
+        :param sampling_rate: Manually specify sampling rate of time series.
+            If not given it is attempted to determine it from the information
+            in the individual response stages.  Does not influence the spectra
+            calculation, if it is not known, just provide the highest frequency
+            that should be plotted times two.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> resp = read_inventory()[0][0][0].response
+        >>> resp.plot(0.001, output="VEL")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            resp = read_inventory()[0][0][0].response
+            resp.plot(0.001, output="VEL")
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.transforms import blended_transform_factory
+
+        # detect sampling rate from response stages
+        if sampling_rate is None:
+            for stage in self.response_stages[::-1]:
+                if (stage.decimation_input_sample_rate is not None
+                        and stage.decimation_factor is not None):
+                    sampling_rate = (stage.decimation_input_sample_rate /
+                                     stage.decimation_factor)
+                    break
+            else:
+                msg = ("Failed to autodetect sampling rate of channel from "
+                       "response stages. Please manually specify parameter "
+                       "`sampling_rate`")
+                raise Exception(msg)
+
+        t_samp = 1.0 / sampling_rate
+        nyquist = sampling_rate / 2.0
+        nfft = sampling_rate / min_freq
+
+        cpx_response, freq = self.get_evalresp_response(
+            t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
+            end_stage=end_stage)
+
+        if axes:
+            ax1, ax2 = axes
+            fig = ax1.figure
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        label_kwarg = {}
+        if label is not None:
+            label_kwarg['label'] = label
+
+        # plot amplitude response
+        lw = 1.5
+        lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
+        color = lines[0].get_color()
+        if self.instrument_sensitivity:
+            trans_above = blended_transform_factory(ax1.transData,
+                                                    ax1.transAxes)
+            trans_right = blended_transform_factory(ax1.transAxes,
+                                                    ax1.transData)
+            arrowprops = dict(
+                arrowstyle="wedge,tail_width=1.4,shrink_factor=0.8", fc=color)
+            bbox = dict(boxstyle="round", fc="w")
+            ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
+                         (self.instrument_sensitivity.frequency, 1.0),
+                         xytext=(self.instrument_sensitivity.frequency, 1.1),
+                         xycoords=trans_above, textcoords=trans_above,
+                         ha="center", va="bottom",
+                         arrowprops=arrowprops, bbox=bbox)
+            ax1.annotate("%.1e" % self.instrument_sensitivity.value,
+                         (1.0, self.instrument_sensitivity.value),
+                         xytext=(1.05, self.instrument_sensitivity.value),
+                         xycoords=trans_right, textcoords=trans_right,
+                         ha="left", va="center",
+                         arrowprops=arrowprops, bbox=bbox)
+
+        # plot phase response
+        phase = np.angle(cpx_response)
+        if unwrap_phase:
+            phase = np.unwrap(phase)
+        ax2.semilogx(freq, phase, color=color, lw=lw)
+
+        # plot nyquist frequency
+        for ax in (ax1, ax2):
+            ax.axvline(nyquist, ls="--", color=color, lw=lw)
+
+        # only do adjustments if we initialized the figure in here
+        if not axes:
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
+
 
 class InstrumentSensitivity(ComparingObject):
     """
@@ -1310,6 +1449,59 @@ class CoefficientWithUncertainties(FloatWithUncertainties):
         if value is not None:
             value = int(value)
         self._number = value
+
+
+def _adjust_bode_plot_figure(fig, grid=True, show=True):
+    """
+    Helper function to do final adjustments to Bode plot figure.
+    """
+    import matplotlib.pyplot as plt
+    # make more room in between subplots for the ylabel of right plot
+    fig.subplots_adjust(hspace=0.02, top=0.87, right=0.82)
+    ax1, ax2 = fig.axes[:2]
+    ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    plt.setp(ax2.get_yticklabels()[-1], visible=False)
+    ax1.set_ylabel('Amplitude')
+    minmax1 = ax1.get_ylim()
+    ax1.set_ylim(top=minmax1[1] * 5)
+    ax1.grid(True)
+    ax2.set_xlabel('Frequency [Hz]')
+    ax2.set_ylabel('Phase [rad]')
+    minmax2 = ax2.yaxis.get_data_interval()
+    yticks2 = np.arange(minmax2[0] - minmax2[0] % (pi / 2),
+                        minmax2[1] - minmax2[1] % (pi / 2) + pi, pi / 2)
+    ax2.set_yticks(yticks2)
+    ax2.set_yticklabels([_pitick2latex(x) for x in yticks2])
+    ax2.grid(True)
+    if show:
+        plt.show()
+
+
+def _pitick2latex(x):
+    """
+    Helper function to convert a float that is a multiple of pi/2
+    to a latex string.
+    """
+    # safety check, if no multiple of pi/2 return normal representation
+    if x % (pi / 2) != 0:
+        return "%#.3g" % x
+    string = "$"
+    if x < 0:
+        string += "-"
+    if x / pi % 1 == 0:
+        x = abs(int(x / pi))
+        if x == 0:
+            return "$0$"
+        elif x == 1:
+            x = ""
+        string += r"%s\pi$" % x
+    else:
+        x = abs(int(2 * x / pi))
+        if x == 1:
+            x = ""
+        string += r"\frac{%s\pi}{2}$" % x
+    return string
 
 
 if __name__ == '__main__':

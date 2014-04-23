@@ -852,8 +852,8 @@ class Parser(object):
         return_records = []
         # Loop over all blockettes.
         record = b''
-        for blockette in blockettes:
-            blockette.compact = self.compact
+        for blockette_ in blockettes:
+            blockette_.compact = self.compact
             rec_len = len(record)
             # Never split a blockette’s “length/blockette type” section across
             # records.
@@ -863,7 +863,7 @@ class Parser(object):
                 return_records.append(record)
                 record = b''
                 rec_len = 0
-            blockette_str = blockette.getSEED()
+            blockette_str = blockette_.getSEED()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.
@@ -902,17 +902,17 @@ class Parser(object):
         Checks if all blockettes necessary for creating a SEED String are
         available.
         """
-        if not 10 in [_i.id for _i in self.volume]:
+        if 10 not in [_i.id for _i in self.volume]:
             return False
         abb_blockettes = [_i.id for _i in self.abbreviations]
-        if not 30 in abb_blockettes and not 33 in abb_blockettes and \
-           not 34 in abb_blockettes:
+        if 30 not in abb_blockettes and 33 not in abb_blockettes and \
+           34 not in abb_blockettes:
             return False
         # Check every station:
         for _i in self.stations:
             stat_blockettes = [_j.id for _j in _i]
-            if not 50 in stat_blockettes and not 52 in stat_blockettes and \
-               not 58 in stat_blockettes:
+            if 50 not in stat_blockettes and 52 not in stat_blockettes and \
+               58 not in stat_blockettes:
                 return False
         return True
 
@@ -1176,11 +1176,11 @@ class Parser(object):
             dip = None
             azimuth = None
             blockettes = self._select(tr.id, tr.stats.starttime)
-            for blockette in blockettes:
-                if blockette.id != 52:
+            for blockette_ in blockettes:
+                if blockette_.id != 52:
                     continue
-                dip = blockette.dip
-                azimuth = blockette.azimuth
+                dip = blockette_.dip
+                azimuth = blockette_.azimuth
                 break
             if dip is None or azimuth is None:
                 msg = "Dip and azimuth need to be available for every trace."

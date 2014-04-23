@@ -27,7 +27,8 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css', 'y', 'pde', 'station']
+                   'realtime', 'datamark', 'css', 'y', 'pde', 'station',
+                   'ndk']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -317,8 +318,18 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
+            # If it is a file-like object, store the position and restore it
+            # later to avoid that the isFormat() functions move the file
+            # pointer.
+            if hasattr(filename, "tell") and hasattr(filename, "seek"):
+                position = filename.tell()
+            else:
+                position = None
             # check format
-            if isFormat(filename):
+            is_format = isFormat(filename)
+            if position is not None:
+                filename.seek(0, 0)
+            if is_format:
                 break
         else:
             raise TypeError('Unknown format for file %s' % filename)

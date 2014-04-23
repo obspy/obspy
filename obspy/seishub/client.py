@@ -500,9 +500,9 @@ master/seishub/plugins/seismology/waveform.py
                 kwargs[key] = value
 
         # allow time strings in arguments
-        for time in ["starttime", "endtime"]:
-            if isinstance(kwargs[time], (str, native_str)):
-                kwargs[time] = UTCDateTime(kwargs[time])
+        for time_ in ["starttime", "endtime"]:
+            if isinstance(kwargs[time_], (str, native_str)):
+                kwargs[time_] = UTCDateTime(kwargs[time_])
 
         trim_start = kwargs['starttime']
         trim_end = kwargs['endtime']
@@ -931,7 +931,7 @@ master/seishub/plugins/seismology/event.py
             # detailed information on the event for the description
             descrip_str = ""
             for key in interesting_keys:
-                if not key in event_dict:
+                if key not in event_dict:
                     continue
                 descrip_str += "\n%s: %s" % (key, event_dict[key])
             SubElement(placemark, "description").text = descrip_str

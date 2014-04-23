@@ -71,23 +71,23 @@ class SLState(object):
     KEEP_ALIVE_QUERY = 2
     BUFSIZE = 8192
 
-    state = SL_DOWN
-    query_mode = NO_QUERY
-    #AJL databuf = [str() for __idx0 in range(BUFSIZE)]
-    databuf = bytearray(BUFSIZE)
-    recptr = 0
-    sendptr = 0
-    expect_info = False
-    netto_trig = -1
-    netdly_trig = 0
-    keepalive_trig = -1
-    previous_time = 0.0
-    netto_time = 0.0
-    netdly_time = 0.0
-    keepalive_time = 0.0
-
     def __init__(self):
-        pass
+        self.state = SLState.SL_DOWN
+        self.query_mode = SLState.NO_QUERY
+        #AJL self.databuf = [str() for __idx0 in range(BUFSIZE)]
+        self.databuf = bytearray(SLState.BUFSIZE)
+        #AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
+        self.packed_buf = bytearray(SLState.BUFSIZE)
+        self.recptr = 0
+        self.sendptr = 0
+        self.expect_info = False
+        self.netto_trig = -1
+        self.netdly_trig = 0
+        self.keepalive_trig = -1
+        self.previous_time = 0.0
+        self.netto_time = 0.0
+        self.netdly_time = 0.0
+        self.keepalive_time = 0.0
 
     def getPacket(self):
         """
@@ -177,9 +177,6 @@ class SLState(object):
 
         """
         self.sendptr += SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
-
-    #AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
-    packed_buf = bytearray(BUFSIZE)
 
     def packDataBuffer(self):
         """

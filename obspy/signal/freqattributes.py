@@ -236,11 +236,11 @@ def domperiod(data, fs, smoothie, fk):
         predominant period (windowed only).
     """
     nfft = 1024
-    #nfft = util.nextpow2(data.shape[1])
+    # nfft = util.nextpow2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
     dperiod = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
-    #f_sm = util.smooth(abs(f[:,0:nfft/2]),1)
+    # f_sm = util.smooth(abs(f[:,0:nfft // 2]),1)
     f_sm = f[:, 0:nfft // 2]
     if np.size(data.shape) > 1:
         i = 0

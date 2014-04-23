@@ -11,6 +11,7 @@ FDSN Web service client for ObsPy.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
+import copy
 from future import standard_library  # NOQA
 from future.builtins import range
 from future.builtins import open
@@ -40,64 +41,69 @@ class Client(object):
     """
     FDSN Web service request client.
 
-    >>> client = Client("IRIS")
-    >>> print(client)  # doctest: +SKIP
-    FDSN Webservice Client (base url: http://service.iris.edu)
-    Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
-    'station' (v1.0.7), 'available_event_contributors',
-    'available_event_catalogs'
-    <BLANKLINE>
-    Use e.g. client.help('dataselect') for the
-    parameter description of the individual services
-    or client.help() for parameter description of
-    all webservices.
-
-    :type base_url: str
-    :param base_url: Base URL of FDSN web service compatible server
-        (e.g. "http://service.iris.edu") or key string for recognized
-        server (one of %s)
-    :type major_versions: dict
-    :param major_versions: Allows to specify custom major version numbers
-        for individual services (e.g.
-        `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
-        latest version at time of implementation will be used.
-    :type user: str
-    :param user: User name of HTTP Digest Authentication for access to
-        restricted data.
-    :type password: str
-    :param password: Password of HTTP Digest Authentication for access to
-        restricted data.
-    :type user_agent: str
-    :param user_agent: The user agent for all requests.
-    :type debug: bool
-    :param debug: Debug flag.
-    :type timeout: float
-    :param timeout: Maximum time (in seconds) to wait for a single request to
-        finish (after which an exception is raised).
+    For details see the :meth:`~obspy.fdsn.client.Client.__init__()` method.
     """
-    def __init__(self, base_url="IRIS", major_versions={}, user=None,
+    # Dictionary caching any discovered service. Therefore repeatedly
+    # initializing a client with the same base URL is cheap.
+    __service_discovery_cache = {}
+
+    def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120):
+                 timeout=120, service_mappings=None):
         """
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print(client)  # doctest: +SKIP
+        >>> print(client)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
-        Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
-        'station' (v1.0.7), 'available_event_contributors',
-        'available_event_catalogs'
-        <BLANKLINE>
+        Available Services: 'dataselect' (v...), 'event' (v...),
+        'station' (v...), 'available_event_catalogs',
+        'available_event_contributors'
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services
         or client.help() for parameter description of
         all webservices.
 
-        For details see :class:`Client`.
+        :type base_url: str
+        :param base_url: Base URL of FDSN web service compatible server
+            (e.g. "http://service.iris.edu") or key string for recognized
+            server (one of %s).
+        :type major_versions: dict
+        :param major_versions: Allows to specify custom major version numbers
+            for individual services (e.g.
+            `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
+            latest version at time of implementation will be used.
+        :type user: str
+        :param user: User name of HTTP Digest Authentication for access to
+            restricted data.
+        :type password: str
+        :param password: Password of HTTP Digest Authentication for access to
+            restricted data.
+        :type user_agent: str
+        :param user_agent: The user agent for all requests.
+        :type debug: bool
+        :param debug: Debug flag.
+        :type timeout: float
+        :param timeout: Maximum time (in seconds) to wait for a single request
+            to finish (after which an exception is raised).
+        :type service_mappings: dict
+        :param service_mappings: For advanced use only. Allows the direct
+            setting of the endpoints of the different services. (e.g.
+            ``service_mappings={'station': 'http://example.com/test/stat/1'}``)
+            Valid keys are ``event``, ``station``, and ``dataselect``. This
+            will overwrite the ``base_url`` and ``major_versions`` arguments.
+            For all services not specified, the default default locations
+            indicated by ``base_url`` and ``major_versions`` will be used. Any
+            service that is manually specified as ``None`` (e.g.
+            ``service_mappings={'event': None}``) will be deactivated.
         """
         self.debug = debug
         self.user = user
         self.timeout = timeout
+
+        # Cache for the webservice versions. This makes interactive use of
+        # the client more convenient.
+        self.__version_cache = {}
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
@@ -117,11 +123,24 @@ class Client(object):
             compatibility.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
-        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        # Avoid mutable kwarg.
+        if major_versions is None:
+            major_versions = {}
+        # Make a copy to avoid overwriting the default service versions.
+        self.major_versions = DEFAULT_SERVICE_VERSIONS.copy()
         self.major_versions.update(major_versions)
+
+        # Avoid mutable kwarg.
+        if service_mappings is None:
+            service_mappings = {}
+        self._service_mappings = service_mappings
 
         if self.debug is True:
             print("Base URL: %s" % self.base_url)
+            if self._service_mappings:
+                print("Custom service mappings:")
+                for key, value in self._service_mappings.items():
+                    print("\t%s: '%s'" % (key, value))
             print("Request Headers: %s" % str(self.request_headers))
 
         self._discover_services()
@@ -143,15 +162,19 @@ class Client(object):
         >>> print(cat)
         1 Event(s) in Catalog:
         1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 mw
-        >>> t1 = UTCDateTime("2011-01-07T01:00:00")
-        >>> t2 = UTCDateTime("2011-01-07T02:00:00")
-        >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4)
+
+        The return value is a :class:`~obspy.core.event.Catalog` object
+        which can contain any number of events.
+
+        >>> t1 = UTCDateTime("2001-01-07T00:00:00")
+        >>> t2 = UTCDateTime("2001-01-07T03:00:00")
+        >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4,
+        ...                         catalog="ISC")
         >>> print(cat)
-        4 Event(s) in Catalog:
-        2011-01-07T01:29:49.760000Z | +49.520, +156.895 | 4.2 mb
-        2011-01-07T01:19:16.660000Z | +20.123,  -45.656 | 5.5 MW
-        2011-01-07T01:14:45.500000Z |  -3.268, +100.745 | 4.5 mb
-        2011-01-07T01:14:01.280000Z | +36.095,  +27.550 | 4.0 mb
+        3 Event(s) in Catalog:
+        2001-01-07T02:55:59.290000Z |  +9.801,  +76.548 | 4.9 mb
+        2001-01-07T02:35:35.170000Z | -21.291,  -68.308 | 4.4 mb
+        2001-01-07T00:09:25.630000Z | +22.946, -107.011 | 4.0 mb
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Limit to events on or after the specified start time.
@@ -271,30 +294,55 @@ class Client(object):
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, filename=None, **kwargs):
         """
-        Query the station service of the client.
+        Query the station service of the FDSN client.
 
         >>> client = Client("IRIS")
-        >>> inventory = client.get_stations(latitude=-56.1, longitude=-26.7,
-        ...                                 maxradius=15)
+        >>> starttime = UTCDateTime("2001-01-01")
+        >>> endtime = UTCDateTime("2001-01-02")
+        >>> inventory = client.get_stations(network="IU", station="A*",
+        ...                                 starttime=starttime,
+        ...                                 endtime=endtime)
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    http://service.iris.edu/fdsnws/station/1/query?...
+                        http://service.iris.edu/fdsnws/station/1/query...
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
-                Networks (3):
-                    AI
-                    II
-                    SY
-                Stations (4):
-                    AI.ORCD (ORCADAS, SOUTH ORKNEY ISLANDS)
-                    II.HOPE (Hope Point, South Georgia Island)
-                    SY.HOPE (HOPE synthetic)
-                    SY.ORCD (ORCD synthetic)
-                Channels (0):
+                    Networks (1):
+                            IU
+                    Stations (3):
+                            IU.ADK (Adak, Aleutian Islands, Alaska)
+                            IU.AFI (Afiamalu, Samoa)
+                            IU.ANMO (Albuquerque, New Mexico, USA)
+                    Channels (0):
+        >>> inventory.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import UTCDateTime
+            from obspy.fdsn import Client
+            client = Client()
+            starttime = UTCDateTime("2001-01-01")
+            endtime = UTCDateTime("2001-01-02")
+            inventory = client.get_stations(network="IU", station="A*",
+                                            starttime=starttime,
+                                            endtime=endtime)
+            inventory.plot()
+
+
+        The result is an :class:`~obspy.station.inventory.Inventory` object
+        which models a StationXML file.
+
+        The ``level`` argument determines the amount of returned information.
+        ``level="station"`` is useful for availability queries whereas
+        ``level="response"`` returns the full response information for the
+        requested channels. ``level`` can furthermore be set to ``"network"``
+        and ``"channel"``.
+
         >>> inventory = client.get_stations(
-        ...     starttime=UTCDateTime("2013-01-01"), network="IU",
-        ...     sta="ANMO", level="channel")
+        ...     starttime=starttime, endtime=endtime,
+        ...     network="IU", sta="ANMO", loc="00", channel="*Z",
+        ...     level="response")
         >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
@@ -305,26 +353,23 @@ class Client(object):
                     IU
                 Stations (1):
                     IU.ANMO (Albuquerque, New Mexico, USA)
-                Channels (57):
-                    IU.ANMO.00.BH1, IU.ANMO.00.BH2, IU.ANMO.00.BHZ,
-                    IU.ANMO.00.LH1, IU.ANMO.00.LH2, IU.ANMO.00.LHZ,
-                    IU.ANMO.00.VH1, IU.ANMO.00.VH2, IU.ANMO.00.VHZ,
-                    IU.ANMO.00.VM1, IU.ANMO.00.VM2, IU.ANMO.00.VMZ,
-                    IU.ANMO.10.BH1, IU.ANMO.10.BH2, IU.ANMO.10.BHZ,
-                    IU.ANMO.10.EH1, IU.ANMO.10.EH2, IU.ANMO.10.EHZ,
-                    IU.ANMO.10.HH1, IU.ANMO.10.HH2, IU.ANMO.10.HHZ,
-                    IU.ANMO.10.LH1, IU.ANMO.10.LH2, IU.ANMO.10.LHZ,
-                    IU.ANMO.10.VH1, IU.ANMO.10.VH2, IU.ANMO.10.VHZ,
-                    IU.ANMO.10.VM1, IU.ANMO.10.VM2, IU.ANMO.10.VMZ,
-                    IU.ANMO.20.EN1, IU.ANMO.20.EN2, IU.ANMO.20.ENZ,
-                    IU.ANMO.20.HN1, IU.ANMO.20.HN1, IU.ANMO.20.HN2,
-                    IU.ANMO.20.HN2, IU.ANMO.20.HNZ, IU.ANMO.20.HNZ,
-                    IU.ANMO.20.LN1, IU.ANMO.20.LN1, IU.ANMO.20.LN2,
-                    IU.ANMO.20.LN2, IU.ANMO.20.LNZ, IU.ANMO.20.LNZ,
-                    IU.ANMO.30.LDO, IU.ANMO.31.LDO, IU.ANMO.35.LDO,
-                    IU.ANMO.40.LFZ, IU.ANMO.50.LDO, IU.ANMO.50.LIO,
-                    IU.ANMO.50.LKO, IU.ANMO.50.LRH, IU.ANMO.50.LRI,
-                    IU.ANMO.50.LWD, IU.ANMO.50.LWS, IU.ANMO.60.HDF
+                Channels (4):
+                    IU.ANMO.00.BHZ, IU.ANMO.00.LHZ, IU.ANMO.00.UHZ,
+                    IU.ANMO.00.VHZ
+        >>> inventory[0].plot_response(min_freq=1E-4)  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import UTCDateTime
+            from obspy.fdsn import Client
+            client = Client()
+            starttime = UTCDateTime("2001-01-01")
+            endtime = UTCDateTime("2001-01-02")
+            inventory = client.get_stations(
+                starttime=starttime, endtime=endtime,
+                network="IU", sta="ANMO", loc="00", channel="*Z",
+                level="response")
+            inventory[0].plot_response(min_freq=1E-4)
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit to metadata epochs starting on or after the
@@ -438,40 +483,31 @@ class Client(object):
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = t1 + 1
-        >>> st = client.get_waveforms("IU", "ANMO", "00", "BHZ", t1, t2)
+        >>> t2 = t1 + 5
+        >>> st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t1, t2)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveforms("IU", "ANMO", "00", "BH*", t1, t2)
+        IU.ANMO.00.LHZ | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
+
+        The services can deal with UNIX style wildcards.
+
+        >>> st = client.get_waveforms("IU", "A*", "1?", "LHZ", t1, t2)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ANMO.00.BH2 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveforms("IU", "A*", "*", "BHZ", t1, t2)
-        >>> print(st)  # doctest: +ELLIPSIS
-        7 Trace(s) in Stream:
-        IU.ADK.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ADK.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.AFI.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.AFI.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.ANTO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> st = client.get_waveforms("IU", "A??", "?0", "BHZ", t1, t2)
-        >>> print(st)  # doctest: +ELLIPSIS
-        4 Trace(s) in Stream:
-        IU.ADK.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
-        IU.AFI.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        IU.AFI.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        IU.ADK.10.LHZ  | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
+        IU.AFI.10.LHZ  | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
+        IU.ANMO.10.LHZ | 2010-02-27T06:30:00.069538Z - ... | 1.0 Hz, 5 samples
+
+        Use ``attach_response=True`` to automatically add response information
+        to each trace. This can be used to remove response using
+        :meth:`~obspy.core.stream.Stream.remove_response`.
+
         >>> t = UTCDateTime("2012-12-14T10:36:01.6Z")
-        >>> st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
+        >>> st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
         ...                           attach_response=True)
         >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at ...>
-        >>> st.plot()
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -479,16 +515,10 @@ class Client(object):
             from obspy.fdsn import Client
             client = Client("IRIS")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
-            st = client.get_waveforms("TA", "?42A", "*", "BHZ", t+300, t+400,
+            st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
                                       attach_response=True)
             st.remove_response(output="VEL")
             st.plot()
-
-        .. note::
-
-            Use `attach_response=True` to automatically add response
-            information to each trace. This can be used to remove response
-            using :meth:`~obspy.core.stream.Stream.remove_response`.
 
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
@@ -566,12 +596,23 @@ class Client(object):
         Helper method to fetch response via get_stations() and attach it to
         each trace in stream.
         """
-        netstas = set([tuple(tr.id.split(".")[:2]) for tr in st])
+        netids = {}
+        for tr in st:
+            if tr.id not in netids:
+                netids[tr.id] = (tr.stats.starttime, tr.stats.endtime)
+                continue
+            netids[tr.id] = (
+                min(tr.stats.starttime, netids[tr.id][0]),
+                max(tr.stats.endtime, netids[tr.id][1]))
+
         inventories = []
-        for net, sta in netstas:
+        for key, value in netids.items():
+            net, sta, loc, chan = key.split(".")
+            starttime, endtime = value
             try:
-                inventories.append(self.get_stations(network=net, station=sta,
-                                                     level="response"))
+                inventories.append(self.get_stations(
+                    network=net, station=sta, location=loc, channel=chan,
+                    starttime=starttime, endtime=endtime, level="response"))
             except Exception as e:
                 warnings.warn(str(e))
         st.attach_response(inventories)
@@ -648,7 +689,7 @@ class Client(object):
         >>> st = client.get_waveforms_bulk(bulk, attach_response=True)
         >>> st.remove_response(output="VEL") # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at ...>
-        >>> st.plot()
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -826,8 +867,8 @@ class Client(object):
                          for s in self.services if s in FDSNWS])
         services_string = ["'%s' (v%s)" % (s, versions[s])
                            for s in FDSNWS if s in self.services]
-        services_string += ["'%s'" % s
-                            for s in self.services if s not in FDSNWS]
+        other_services = sorted([s for s in self.services if s not in FDSNWS])
+        services_string += ["'%s'" % s for s in other_services]
         services_string = ", ".join(services_string)
         ret = ("FDSN Webservice Client (base url: {url})\n"
                "Available Services: {services}\n\n"
@@ -987,7 +1028,8 @@ class Client(object):
             if service == "dataselect" and resource_type == "query":
                 resource_type = "queryauth"
         return build_url(self.base_url, service, self.major_versions[service],
-                         resource_type, parameters)
+                         resource_type, parameters,
+                         service_mappings=self._service_mappings)
 
     def _discover_services(self):
         """
@@ -996,10 +1038,25 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
+        services = ["dataselect", "event", "station"]
+        # omit manually deactivated services
+        for service, custom_target in self._service_mappings.items():
+            if custom_target is None:
+                services.remove(service)
         urls = [self._build_url(service, "application.wadl")
-                for service in ("dataselect", "event", "station")]
-        urls.append(self._build_url("event", "catalogs"))
-        urls.append(self._build_url("event", "contributors"))
+                for service in services]
+        if "event" in services:
+            urls.append(self._build_url("event", "catalogs"))
+            urls.append(self._build_url("event", "contributors"))
+
+        # Access cache if available.
+        url_hash = frozenset(urls)
+        if url_hash in self.__service_discovery_cache:
+            if self.debug is True:
+                print("Loading discovered services from cache.")
+            self.services = copy.deepcopy(
+                self.__service_discovery_cache[url_hash])
+            return
 
         # Request all in parallel.
         wadl_queue = queue.Queue()
@@ -1054,7 +1111,7 @@ class Client(object):
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
                 except ValueError:
-                    msg = "Could not parse the catalogs at '%s'."
+                    msg = "Could not parse the catalogs at '%s'." % url
                     warnings.warn(msg)
 
             elif "event" in url and "contributors" in url:
@@ -1062,7 +1119,7 @@ class Client(object):
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
                 except ValueError:
-                    msg = "Could not parse the contributors at '%s'."
+                    msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
             msg = ("No FDSN services could be discoverd at '%s'. This could "
@@ -1070,9 +1127,18 @@ class Client(object):
                    "service address." % self.base_url)
             raise FDSNException(msg)
 
+        # Cache.
+        if self.debug is True:
+            print("Storing discovered services in cache.")
+        self.__service_discovery_cache[url_hash] = \
+            copy.deepcopy(self.services)
+
     def get_webservice_version(self, service):
         """
         Get full version information of webservice (as a tuple of ints).
+
+        This method is cached and will only be called once for each service
+        per client object.
         """
         if service is not None and service not in self.services:
             msg = "Service '%s' not available for current client." % service
@@ -1082,9 +1148,18 @@ class Client(object):
             msg = "Service '%s is not a valid FDSN web service." % service
             raise ValueError(msg)
 
+        # Access cache.
+        if service in self.__version_cache:
+            return self.__version_cache[service]
+
         url = self._build_url(service, "version")
         version = self._download(url, return_string=True)
-        return list(map(int, version.split(b".")))
+        version = list(map(int, version.split(b".")))
+
+        # Store in cache.
+        self.__version_cache[service] = version
+
+        return version
 
     def _get_webservice_versionstring(self, service):
         """
@@ -1108,7 +1183,7 @@ def convert_to_string(value):
     >>> print(convert_to_string(1.2))
     1.2
     >>> print(convert_to_string( \
-              obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666)))
+              UTCDateTime(2012, 1, 2, 3, 4, 5, 666666)))
     2012-01-02T03:04:05.666666
     >>> print(convert_to_string(True))
     true
@@ -1124,7 +1199,7 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, float):
         return str(value)
-    elif isinstance(value, obspy.UTCDateTime):
+    elif isinstance(value, UTCDateTime):
         return str(value).replace("Z", "")
     elif PY2 and isinstance(value, bytes):
         return value
@@ -1132,7 +1207,8 @@ def convert_to_string(value):
         raise TypeError("Unexpected type %s" % repr(value))
 
 
-def build_url(base_url, service, major_version, resource_type, parameters={}):
+def build_url(base_url, service, major_version, resource_type,
+              parameters=None, service_mappings=None):
     """
     URL builder for the FDSN webservices.
 
@@ -1146,6 +1222,12 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
                         "query", {"cha": "EHE"}))
     http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE
     """
+    # Avoid mutable kwargs.
+    if parameters is None:
+        parameters = {}
+    if service_mappings is None:
+        service_mappings = {}
+
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station"]:
         msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
@@ -1168,8 +1250,13 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
         loc = loc.replace(",,", ",--,")
         parameters["location"] = loc
 
-    url = "/".join((base_url, "fdsnws", service,
-                    str(major_version), resource_type))
+    # Apply per-service mappings if any.
+    if service in service_mappings:
+        url = "/".join((service_mappings[service], resource_type))
+    else:
+        url = "/".join((base_url, "fdsnws", service,
+                        str(major_version), resource_type))
+
     if parameters:
         # Strip parameters.
         for key, value in parameters.items():

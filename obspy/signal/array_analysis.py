@@ -513,7 +513,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         ts_w2[itime] = w[1]
         ts_w3[itime] = w[2]  # torsion in radians
         ts_tilt[itime] = np.sqrt(w[0] ** 2 + w[1] ** 2)
-            # 7/21/06.II.6(19), amount of tilt in radians
+        # 7/21/06.II.6(19), amount of tilt in radians
 
         #---------------------------------------------------------------
         #
@@ -526,9 +526,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         #
         # find maximum shear strain in horizontal plane, and find its azimuth
         eh = np.r_[np.c_[e[0, 0], e[0, 1]], np.c_[e[1, 0], e[1, 1]]]
-            # 7/21/06.II.2(4)
+        # 7/21/06.II.2(4)
         gammah = eh - np.trace(eh) * np.eye(2) / 2.
-            # 9/14/92.II.4, 7/21/06.II.2(5)
+        # 9/14/92.II.4, 7/21/06.II.2(5)
 
         # eigvecs are principal axes, eigvals are principal strains
         [eigvals, _eigvecs] = np.linalg.eig(gammah)
@@ -889,7 +889,6 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
-    _BF, CAPON = 0, 1
     res = []
     eotr = True
 
@@ -929,7 +928,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nlow = int(frqlow / float(deltaf) + 0.5)
     nhigh = int(frqhigh / float(deltaf) + 0.5)
     nlow = max(1, nlow)  # avoid using the offset
-    nhigh = min(nfft / 2 - 1, nhigh)  # avoid using nyquist
+    nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
     # to spead up the routine a bit we estimate all steering vectors in advance
     steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
@@ -959,14 +958,14 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         for i in range(nstat):
             for j in range(i, nstat):
                 R[:, i, j] = ft[i, :] * ft[j, :].conj()
-                if method == CAPON:
+                if method == 1:
                     R[:, i, j] /= np.abs(R[:, i, j].sum())
                 if i != j:
                     R[:, j, i] = R[:, i, j].conjugate()
                 else:
                     dpow += np.abs(R[:, i, j].sum())
         dpow *= nstat
-        if method == CAPON:
+        if method == 1:
             # P(f) = 1/(e.H R(f)^-1 e)
             for n in range(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)

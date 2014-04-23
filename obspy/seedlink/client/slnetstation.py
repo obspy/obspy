@@ -35,11 +35,6 @@ class SLNetStation(object):
     :type btime: TTT
     """
     MAX_SELECTOR_SIZE = 8
-    net = None
-    station = None
-    selectors = []
-    seqnum = -1
-    btime = None
 
     def __init__(self, net, station, selectors, seqnum, timestamp):
         """
@@ -58,9 +53,13 @@ class SLNetStation(object):
         #print "DEBUG: selectors:", selectors
         if selectors is not None:
             self.selectors = selectors
+        else:
+            self.selectors = []
         self.seqnum = seqnum
         if timestamp is not None:
             self.btime = UTCDateTime(timestamp)
+        else:
+            self.btime = None
 
     def appendSelectors(self, newSelectors):
         """

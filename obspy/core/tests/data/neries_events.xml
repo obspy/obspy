@@ -8,7 +8,7 @@
       <creationInfo>
         <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
         <authorURI>smi:smi-registry/organization/EMSC</authorURI>
-        <creationTime>2012-04-04T16:40:50+00:00</creationTime>
+        <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
         <version>1.0.1</version>
       </creationInfo>
       <description>
@@ -27,7 +27,7 @@
           <value>79.689</value>
         </longitude>
         <depth>
-          <value>1</value>
+          <value>1000</value>
           <uncertainty>0</uncertainty>
         </depth>
         <depthType>from location</depthType>
@@ -72,7 +72,7 @@
       <creationInfo>
         <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
         <authorURI>smi:smi-registry/organization/EMSC</authorURI>
-        <creationTime>2012-04-04T16:40:50+00:00</creationTime>
+        <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
         <version>1.0.1</version>
       </creationInfo>
       <description>
@@ -91,7 +91,7 @@
           <value>41.044</value>
         </longitude>
         <depth>
-          <value>14.4</value>
+          <value>14400</value>
           <uncertainty>0</uncertainty>
         </depth>
         <depthType>from location</depthType>
@@ -136,7 +136,7 @@
       <creationInfo>
         <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
         <authorURI>smi:smi-registry/organization/EMSC</authorURI>
-        <creationTime>2012-04-04T16:40:50+00:00</creationTime>
+        <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
         <version>1.0.1</version>
       </creationInfo>
       <description>
@@ -155,7 +155,7 @@
           <value>37.736</value>
         </longitude>
         <depth>
-          <value>7</value>
+          <value>7000</value>
           <uncertainty>0</uncertainty>
         </depth>
         <depthType>from location</depthType>

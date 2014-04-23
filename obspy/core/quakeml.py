@@ -25,7 +25,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
     QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
     PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier, StationMagnitudeContribution
+    ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 from obspy.core import compatibility
@@ -136,6 +136,9 @@ class Unpickler(object):
         return obj
 
     def _origin_quality(self, element):
+        # Do not add an element if it is not given in the XML file.
+        if not self._xpath("quality", element):
+            return None
         obj = OriginQuality()
         obj.associated_phase_count = self._xpath2obj(
             'quality/associatedPhaseCount', element, int)
@@ -245,6 +248,9 @@ class Unpickler(object):
         return obj
 
     def _origin_uncertainty(self, element):
+        # Do not add an element if it is not given in the XML file.
+        if not self._xpath("originUncertainty", element):
+            return None
         obj = OriginUncertainty()
         obj.preferred_description = self._xpath2obj(
             'originUncertainty/preferredDescription', element)
@@ -283,7 +289,7 @@ class Unpickler(object):
         try:
             return self._waveform_ids(element)[0]
         except IndexError:
-            return WaveformStreamID()
+            return None
 
     def _arrival(self, element):
         """
@@ -340,6 +346,55 @@ class Unpickler(object):
         obj.onset = self._xpath2obj('onset', element)
         obj.phase_hint = self._xpath2obj('phaseHint', element)
         obj.polarity = self._xpath2obj('polarity', element)
+        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
+        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
+        obj.comments = self._comments(element)
+        obj.creation_info = self._creation_info(element)
+        obj.resource_id = element.get('publicID')
+        return obj
+
+    def _time_window(self, element):
+        """
+        Converts an etree.Element into a TimeWindow object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.TimeWindow`
+        """
+        obj = TimeWindow(force_resource_id=False)
+        # required parameter
+        obj.begin = self._xpath2obj('begin', element, convert_to=float)
+        obj.end = self._xpath2obj('end', element, convert_to=float)
+        obj.reference = self._xpath2obj('reference', element,
+                                        convert_to=UTCDateTime)
+        return obj
+
+    def _amplitude(self, element):
+        """
+        Converts an etree.Element into a Amplitude object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.Amplitude`
+        """
+        obj = Amplitude(force_resource_id=False)
+        # required parameter
+        obj.generic_amplitude, obj.generic_amplitude_errors = \
+            self._float_value(element, 'genericAmplitude')
+        # optional parameter
+        obj.type = self._xpath2obj('type', element)
+        obj.category = self._xpath2obj('category', element)
+        obj.unit = self._xpath2obj('unit', element)
+        obj.method_id = self._xpath2obj('methodID', element)
+        obj.period, obj.period_errors = self._float_value(element, 'period')
+        obj.snr = self._xpath2obj('snr', element)
+        time_window_el = self._xpath('timeWindow', element) or None
+        if time_window_el is not None:
+            obj.time_window = self._time_window(time_window_el[0])
+        obj.pick_id = self._xpath2obj('pickID', element)
+        obj.waveform_id = self._waveform_id(element)
+        obj.filter_id = self._xpath2obj('filterID', element)
+        obj.scaling_time, obj.scaling_time_errors = \
+            self._time_value(element, 'scalingTime')
+        obj.magnitude_hint = self._xpath2obj('magnitudeHint', element)
         obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.comments = self._comments(element)
@@ -587,23 +642,27 @@ class Unpickler(object):
 
     def _data_used(self, element):
         """
-        Converts an etree.Element into an DataUsed object.
+        Converts an etree.Element into a list of DataUsed objects.
 
         :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.DataUsed`
+        :rtype: list of :class:`~obspy.core.event.DataUsed`
         """
-        obj = DataUsed()
-        try:
-            sub_el = self._xpath('dataUsed', element)[0]
-        except IndexError:
-            return obj
-        # required parameters
-        obj.wave_type = self._xpath2obj('waveType', sub_el)
-        # optional parameter
-        obj.station_count = self._xpath2obj('stationCount', sub_el, int)
-        obj.component_count = self._xpath2obj('componentCount', sub_el, int)
-        obj.shortest_period = self._xpath2obj('shortestPeriod', sub_el, float)
-        obj.longest_period = self._xpath2obj('longestPeriod', sub_el, float)
+        obj = []
+        for el in self._xpath('dataUsed', element):
+            data_used = DataUsed()
+            # required parameters
+            data_used.wave_type = self._xpath2obj('waveType', el)
+            # optional parameter
+            data_used.station_count = \
+                self._xpath2obj('stationCount', el, int)
+            data_used.component_count = \
+                self._xpath2obj('componentCount', el, int)
+            data_used.shortest_period = \
+                self._xpath2obj('shortestPeriod', el, float)
+            data_used.longest_period = \
+                self._xpath2obj('longestPeriod', el, float)
+
+            obj.append(data_used)
         return obj
 
     def _moment_tensor(self, element):
@@ -749,6 +808,11 @@ class Unpickler(object):
             for pick_el in self._xpath('pick', event_el):
                 pick = self._pick(pick_el)
                 event.picks.append(pick)
+            # amplitudes
+            event.amplitudes = []
+            for el in self._xpath('amplitude', event_el):
+                amp = self._amplitude(el)
+                event.amplitudes.append(amp)
             # focal mechanisms
             event.focal_mechanisms = []
             for fm_el in self._xpath('focalMechanism', event_el):
@@ -810,8 +874,7 @@ class Pickler(object):
     def _time(self, value, root, tag, always_create=False):
         if always_create is False and value is None:
             return
-        dt = value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-        etree.SubElement(root, tag).text = "%s" % (dt)
+        etree.SubElement(root, tag).text = str(value)
 
     def _value(self, quantity, error, element, tag, always_create=False):
         if always_create is False and quantity is None:
@@ -1098,6 +1161,46 @@ class Pickler(object):
             element.append(self._arrival(ar))
         return element
 
+    def _time_window(self, time_window, element):
+        el = etree.Element('timeWindow')
+        self._time(time_window.reference, el, 'reference')
+        self._str(time_window.begin, el, 'begin')
+        self._str(time_window.end, el, 'end')
+        element.append(el)
+
+    def _amplitude(self, amp):
+        """
+        Converts an Amplitude into etree.Element object.
+
+        :type amp: :class:`~obspy.core.event.Amplitude`
+        :rtype: etree.Element
+        """
+        element = etree.Element(
+            'amplitude', attrib={'publicID': self._id(amp.resource_id)})
+        # required parameter
+        self._value(amp.generic_amplitude, amp.generic_amplitude_errors,
+                    element, 'genericAmplitude', True)
+        # optional parameter
+        self._str(amp.type, element, 'type')
+        self._str(amp.category, element, 'category')
+        self._str(amp.unit, element, 'unit')
+        self._str(amp.method_id, element, 'methodID')
+        self._value(amp.period, amp.period_errors, element, 'period')
+        self._str(amp.snr, element, 'snr')
+        if amp.time_window is not None:
+            self._time_window(amp.time_window, element)
+        self._str(amp.pick_id, element, 'pickID')
+        self._waveform_id(amp.waveform_id, element, required=False)
+        self._str(amp.filter_id, element, 'filterID')
+        self._value(amp.scaling_time, amp.scaling_time_errors, element,
+                    'scalingTime')
+        self._str(amp.magnitude_hint, element, 'magnitudeHint')
+        self._str(amp.evaluation_mode, element, 'evaluationMode')
+        self._str(amp.evaluation_status, element, 'evaluationStatus')
+        self._comments(amp.comments, element)
+        self._creation_info(amp.creation_info, element)
+        return element
+
     def _pick(self, pick):
         """
         Converts a Pick into etree.Element object.
@@ -1216,9 +1319,8 @@ class Pickler(object):
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
         # optional parameter
         # Data Used
-        if moment_tensor.data_used:
+        for sub in moment_tensor.data_used:
             sub_el = etree.Element('dataUsed')
-            sub = moment_tensor.data_used
             self._str(sub.wave_type, sub_el, 'waveType')
             self._str(sub.station_count, sub_el, 'stationCount')
             self._str(sub.component_count, sub_el, 'componentCount')
@@ -1353,6 +1455,9 @@ class Pickler(object):
             # picks
             for pick in event.picks:
                 event_el.append(self._pick(pick))
+            # amplitudes
+            for amp in event.amplitudes:
+                event_el.append(self._amplitude(amp))
             # focal mechanisms
             for focal_mechanism in event.focal_mechanisms:
                 event_el.append(self._focal_mechanism(focal_mechanism))
