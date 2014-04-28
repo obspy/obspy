@@ -599,7 +599,6 @@ class ClientTestCase(unittest.TestCase):
         """
         clients = [self.client, self.client_auth]
         file = os.path.join(self.datapath, "bulk.mseed")
-        expected = read(file)
         # test cases for providing lists of lists
         starttime = UTCDateTime(1990, 1, 1)
         endtime = UTCDateTime(1990, 1, 1) + 10
