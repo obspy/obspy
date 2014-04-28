@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import io
 import inspect
 import os
 import unittest
@@ -225,6 +226,40 @@ class NDKTestCase(unittest.TestCase):
 
         # One event should still be available.
         self.assertEqual(len(cat), 1)
+
+    def test_reading_from_string(self):
+        """
+        Tests reading from a string.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        with io.open(filename, "rt") as fh:
+            data = fh.read()
+
+        self.assertTrue(is_ndk(data))
+        cat = read_ndk(data)
+
+        self.assertEqual(cat, ref_cat)
+
+    def test_reading_from_bytestring(self):
+        """
+        Tests reading from a byte string.
+        """
+        filename = os.path.join(self.datapath, "C200604092050A.ndk")
+
+        reference = os.path.join(self.datapath, "C200604092050A.xml")
+        ref_cat = readEvents(reference)
+
+        with io.open(filename, "rb") as fh:
+            data = fh.read()
+
+        self.assertTrue(is_ndk(data))
+        cat = read_ndk(data)
+
+        self.assertEqual(cat, ref_cat)
 
     def test_missing_lines(self):
         """
