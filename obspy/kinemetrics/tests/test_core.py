@@ -23,8 +23,8 @@ class CoreTestCase(unittest.TestCase):
         """
         Test for the the is_evt() function.
         """
-        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.kinemetrics"),
-                       os.path.join(self.path, "BX456_MOLA-02351.kinemetrics")]
+        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
+                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
         invalid_files = []
         py_dir = os.path.join(self.path, os.pardir, os.pardir)
         for filename in os.listdir(py_dir):
@@ -42,7 +42,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.kinemetrics')
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
         st = read(filename)
         st.verify()
@@ -58,7 +58,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
 
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.kinemetrics')
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         # 2
         st = read(filename)
         st.verify()
@@ -84,7 +84,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via obspy.kinemetrics.core.read_evt function.
         """
-        filename = os.path.join(self.path, 'BI008_MEMA-04823.kinemetrics')
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
         st = read_evt(filename)
         st.verify()
@@ -100,7 +100,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
 
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.kinemetrics')
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         # 2
         st = read_evt(filename)
         st.verify()

@@ -32,9 +32,9 @@ def is_evt(filename):
     """
     try:
         Tag = evt.EVT_TAG()
-        fpin = open(filename, "rb")
-        Tag.read(fpin)
-        Tag.verify()
+        with open(filename, "rb") as fh:
+            Tag.read(fh)
+            Tag.verify()
     except (EVTBaseError, IOError):
         return False
     return True

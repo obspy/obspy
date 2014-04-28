@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 obspy.kinemetrics - Evt (Kinemetrics) client for ObsPy
-==============================================
+======================================================
 
 This module provides read support for Kinemetrics data
 
