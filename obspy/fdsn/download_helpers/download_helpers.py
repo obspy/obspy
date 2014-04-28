@@ -155,49 +155,6 @@ def get_availability(client, client_name, restrictions, domain):
     return availability
 
 
-class Domain(object):
-    def get_query_parameters(self):
-        raise NotImplementedError
-
-    def is_in_domain(self, latitude, longitude):
-        return None
-
-
-class RectangularDomain(Domain):
-    def __init__(self, min_latitude, max_latitude, min_longitude,
-                 max_longitude):
-        self.min_latitude = min_latitude
-        self.max_latitude = max_latitude
-        self.min_longitude = min_longitude
-        self.max_longitude = max_longitude
-
-    def get_query_parameters(self):
-        return {
-            "min_latitude": self.min_latitude,
-            "max_latitude": self.max_latitude,
-            "min_longitude": self.min_longitude,
-            "max_longitude": self.max_longitude}
-
-
-class CircularDomain(Domain):
-    def __init__(self, latitude, longitude, min_radius, max_radius):
-        self.latitude = latitude
-        self.longitude = longitude
-        self.min_radius = min_radius
-        self.max_radius = max_radius
-
-    def get_query_parameters(self):
-        return {
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "min_radius": self.min_radius,
-            "max_radius": self.max_radius}
-
-
-class GlobalDomain(Domain):
-    def get_query_parameters(self):
-        return {}
-
 
 class DownloadHelper(object):
     def __init__(self, clients=None):
