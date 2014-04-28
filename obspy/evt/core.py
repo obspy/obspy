@@ -21,7 +21,7 @@ import obspy.evt.evt as evt
 from . evt_base import EVTBaseError
 
 
-def is_evnt(filename):
+def is_evt(filename):
     """
     Checks whether a file is EVT or not.
     :type filename: string
@@ -35,9 +35,6 @@ def is_evnt(filename):
         Tag.read(fpin)
         Tag.verify()
     except (EVTBaseError, IOError):
-        (etype, value, traceback) = sys.exc_info()
-        message = "Error : " + value.message + str(traceback)
-        warnings.warn(message)
         return False
     return True
 

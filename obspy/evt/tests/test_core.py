@@ -8,7 +8,7 @@ import unittest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.evt.core import read_evt
+from obspy.evt.core import is_evt, read_evt
 
 
 class CoreTestCase(unittest.TestCase):
@@ -18,6 +18,25 @@ class CoreTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def test_is_evt(self):
+        """
+        Test for the the is_evt() function.
+        """
+        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
+                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
+        invalid_files = []
+        py_dir = os.path.join(self.path, os.pardir, os.pardir)
+        for filename in os.listdir(py_dir):
+            if filename.endswith(".py"):
+                invalid_files.append(
+                    os.path.abspath(os.path.join(py_dir, filename)))
+        self.assertTrue(len(invalid_files) > 0)
+
+        for filename in valid_files:
+            self.assertTrue(is_evt(filename))
+        for filename in invalid_files:
+            self.assertFalse(is_evt(filename))
 
     def test_readViaObsPy(self):
         """
