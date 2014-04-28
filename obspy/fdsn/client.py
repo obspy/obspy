@@ -18,9 +18,9 @@ from future.builtins import open
 from future.builtins import str
 from future.builtins import map
 from future.utils import PY2, native_str
-from lxml import etree
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
@@ -28,6 +28,8 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, \
 from obspy.core.util.misc import wrap_long_string
 from obspy.core import compatibility
 
+import collections
+from lxml import etree
 import queue
 import threading
 import warnings
@@ -747,26 +749,47 @@ class Client(object):
             msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
+        arguments = OrderedDict(
+            quality=quality,
+            minimumlength=minimumlength,
+            longestonly=longestonly
+        )
+        bulk = self._get_bulk_string(bulk, arguments)
+
+        url = self._build_url("dataselect", "query")
+
+        data_stream = self._download(url,
+                                     data=bulk.encode('ascii', 'strict'))
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            st = obspy.read(data_stream, format="MSEED")
+            data_stream.close()
+            if attach_response:
+                self._attach_responses(st)
+            return st
+
+    def _get_bulk_string(self, bulk, arguments):
         locs = locals()
-        # if it's an iterable, we build up the query string from it
-        # StringIO objects also have __iter__ so check for read as well
-        if hasattr(bulk, "__iter__") \
+        # If its an iterable, we build up the query string from it
+        # StringIO objects also have __iter__ so check for 'read' as well
+        if isinstance(bulk, collections.Iterable) \
                 and not hasattr(bulk, "read") \
                 and not isinstance(bulk, (str, native_str)):
-            tmp = ["%s=%s" % (key, convert_to_string(locs[key]))
-                   for key in ("quality", "minimumlength", "longestonly")
-                   if locs[key] is not None]
+            tmp = ["%s=%s" % (key, convert_to_string(value))
+                   for key, value in arguments.items() if value is not None]
             # empty location codes have to be represented by two dashes
             tmp += [" ".join((net, sta, loc or "--", cha,
                               convert_to_string(t1), convert_to_string(t2)))
                     for net, sta, loc, cha, t1, t2 in bulk]
             bulk = "\n".join(tmp)
         else:
-            override_keys = ("quality", "minimumlength", "longestonly")
-            if any([locs[key] is not None for key in override_keys]):
+            if any([value is not None for value in arguments.values()]):
                 msg = ("Parameters %s are ignored when request data is "
                        "provided as a string or file!")
-                warnings.warn(msg % override_keys)
+                warnings.warn(msg % arguments.keys())
             # if it has a read method, read data from there
             if hasattr(bulk, "read"):
                 bulk = bulk.read()
@@ -783,21 +806,7 @@ class Client(object):
                 msg = ("Unrecognized input for 'bulk' argument. Please "
                        "contact developers if you think this is a bug.")
                 raise NotImplementedError(msg)
-
-        url = self._build_url("dataselect", "query")
-
-        data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
-        data_stream.seek(0, 0)
-        if filename:
-            self._write_to_file_object(filename, data_stream)
-            data_stream.close()
-        else:
-            st = obspy.read(data_stream, format="MSEED")
-            data_stream.close()
-            if attach_response:
-                self._attach_responses(st)
-            return st
+        return bulk
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
