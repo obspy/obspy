@@ -15,8 +15,6 @@ from __future__ import print_function
 from future import standard_library  # NOQA
 from future.builtins import open
 
-import sys
-import warnings
 import obspy.kinemetrics.evt as evt
 from . evt_base import EVTBaseError
 

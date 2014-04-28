@@ -34,7 +34,6 @@ class EVT(object):
     """
     Class to read EVT (Kinemetrics) formatted files.
     """
-
     def __init__(self):
         self.ETag = EVT_TAG()
         self.EHeader = EVT_HEADER()
@@ -73,16 +72,16 @@ class EVT(object):
         :type filename: string
         :param filename: EVT file to be read.
         :type raw : boolean
-        :param raw : True if Raw datas (no corrections, int32)
+        :param raw : True if Raw data (no corrections, int32)
                      False if data in m/s2 (default)
         :rtype: obspy.core.stream.Stream
-        :return: Obspy STream with data
+        :return: Obspy Stream with data
         """
         self.file_pointer = open(filename, "rb")
         self.ETag.read(self.file_pointer)
         endian = self.ETag.endian
         self.EHeader.unsetdico()
-        self.EHeader.read(self.file_pointer, self.ETag.lenght, endian)
+        self.EHeader.read(self.file_pointer, self.ETag.length, endian)
 
         self.data = np.ndarray([self.EHeader.nchannels, 0])
 
@@ -90,13 +89,13 @@ class EVT(object):
             try:
                 self.ETag.read(self.file_pointer)
                 retparam = self.EFrame.read(self.file_pointer,
-                                            self.ETag.lenght, endian)
+                                            self.ETag.length, endian)
                 if (self.samplingrate == 0):
                     self.samplingrate = retparam[0]
                 elif (self.samplingrate != retparam[0]):
                     raise EVTBadHeaderError("Sampling rate not constant")
                 datal = self.EData.read(self.file_pointer,
-                                        self.ETag.datalenght, endian, retparam)
+                                        self.ETag.datalength, endian, retparam)
                 npdata = np.array(datal)
                 self.data = np.hstack((self.data, npdata))  # append data
             except EVTEOFError:
@@ -127,6 +126,7 @@ class EVT_DATA(object):
     def read(self, fp, length, endian, param):
         """
         read data from fp
+
         :param fp: file pointer
         :param length: length to be readed
         :param endian: endian type in datafile
@@ -142,7 +142,7 @@ class EVT_DATA(object):
         num = (samplrate/10)*numbyte*numchan
         data = [[] for _ in range(numchan)]
         if (length != num):
-            raise EVTBadDataError("Bad data lenght")
+            raise EVTBadDataError("Bad data length")
         for j in range(samplrate // 10):
             for k in range(numchan):
                 i = (j * numchan) + k
@@ -228,7 +228,7 @@ class EVT_HEADER(EVT_Virtual):
         elif (length == 2736):  # File Header 18 channel
             raise EVTNotImplementedError("16 Channel not implemented")
         else:
-            raise EVTBadHeaderError("Bad Header lenght " + length)
+            raise EVTBadHeaderError("Bad Header length " + length)
 
     def analyse_header12(self, head_buff):
         val = unpack(self.endian+HEADER_STRUCT1, head_buff[0:0x7c])
@@ -312,6 +312,7 @@ class EVT_FRAME(EVT_Virtual):
     def read(self, fp, length, endian):
         """
         read a frame
+
         :rtype: list
         :return: samplingrate, samplesize, blocktime, channels
         """
@@ -320,7 +321,7 @@ class EVT_FRAME(EVT_Virtual):
         if (length == 32):  # Frame Header
             self.analyse_frame32(buff)
         else:
-            raise EVTBadHeaderError("Bad Header lenght " + length)
+            raise EVTBadHeaderError("Bad Header length " + length)
         samplingrate = self.streampar & 4095
         samplesize = (self.framestatus >> 6)+1
         return (samplingrate, samplesize, self.blocktime, self.channels())
@@ -363,8 +364,8 @@ class EVT_TAG(EVT_Virtual):
                 'version': [2, ""],
                 'instrument': [3, ['_instrument', '']],
                 'type': [4, ""],
-                'lenght': [5, ""],
-                'datalenght': [6, ""],
+                'length': [5, ""],
+                'datalength': [6, ""],
                 'id': [7, ""],
                 'checksum': [8, ""],
                 'endian': [9, ""]}
@@ -404,8 +405,8 @@ class EVT_TAG(EVT_Virtual):
             if verbose:
                 print("Type of Header ", self.type, " not known")
             retval = 1
-        if (self.type == 1) and (self.lenght not in [2040, 2736]):
+        if (self.type == 1) and (self.length not in [2040, 2736]):
             if verbose:
-                print("Bad Header file lenght : ", self.length)
+                print("Bad Header file length : ", self.length)
             retval = 1
         return retval
