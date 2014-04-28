@@ -1,7 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import unittest
+
 from obspy.core.util import add_doctests, add_unittests
+
 
 MODULE_NAME = "obspy.evt"
 

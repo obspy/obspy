@@ -157,6 +157,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
     ],
+    'obspy.plugin.waveform.EVT': [
+        'isFormat = obspy.evt.core:is_evt',
+        'readFormat = obspy.evt.core:read_evt',
+    ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',
         'readFormat = obspy.gse2.core:readGSE1',

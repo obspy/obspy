@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.datamark.core test suite.
+The obspy.evt.core test suite.
 """
+import os
+import unittest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.evt.core import readEVT
-import os
-import unittest
+from obspy.evt.core import read_evt
 
 
 class CoreTestCase(unittest.TestCase):
     """
-Test cases for evt core interface
-"""
+    Test cases for evt core interface
+    """
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
@@ -63,11 +63,11 @@ Test cases for evt core interface
 
     def test_readViaModule(self):
         """
-        Read files via obspy.evt.core.readEVT function.
+        Read files via obspy.evt.core.read_evt function.
         """
         filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
-        st = readEVT(filename)
+        st = read_evt(filename)
         st.verify()
         self.assertEqual(len(st), 3)
         self.assertEqual(st[0].stats.starttime,
@@ -83,7 +83,7 @@ Test cases for evt core interface
 
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         # 2
-        st = readEVT(filename)
+        st = read_evt(filename)
         st.verify()
         self.assertEqual(len(st), 6)
         self.assertEqual(st[0].stats.starttime,

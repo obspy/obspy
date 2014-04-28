@@ -1,7 +1,19 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 EVT (Kinemetrics files) bindings to ObsPy core module.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+
+from future import standard_library  # NOQA
+from future.builtins import open
 
 import sys
 import warnings
@@ -9,7 +21,7 @@ import obspy.evt.evt as evt
 from . evt_base import EVTBaseError
 
 
-def isEVT(filename):
+def is_evnt(filename):
     """
     Checks whether a file is EVT or not.
     :type filename: string
@@ -30,7 +42,7 @@ def isEVT(filename):
     return True
 
 
-def readEVT(filename, **kwargs):
+def read_evt(filename, **kwargs):
     """
     Reads a EVT file and returns a Stream object.
 
