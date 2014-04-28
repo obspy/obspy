@@ -2,6 +2,8 @@
  - general:
    * support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
+ - obspy.evt:
+   * added support for Evt Kinemetrics data format.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
