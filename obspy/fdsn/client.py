@@ -771,6 +771,159 @@ class Client(object):
                 self._attach_responses(st)
             return st
 
+    def get_stations_bulk(self, bulk, level=None, includerestricted=None,
+                          includeavailability=None, filename=None, **kwargs):
+        r"""
+        Query the station service of the client. Bulk request.
+
+        Send a bulk request for stations to the server. `bulk` can either be
+        specified as a filename, a file-like object or a string (with
+        information formatted according to the FDSN standard) or a list of
+        lists (each specifying network, station, location, channel, starttime
+        and endtime). See examples and parameter description for more
+        details.
+
+        `bulk` can be provided in the following forms:
+
+        (1) As a list of lists. Each list item has to be list of network,
+            station, location, channel, starttime and endtime.
+
+        (2) As a valid request string/file as defined in the
+            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            The request information can be provided as a..
+
+              - a string containing the request information
+              - a string with the path to a local file with the request
+              - an open file handle (or file-like object) with the request
+
+        >>> client = Client("IRIS")
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = t1 + 1
+        >>> t3 = t1 + 3
+        >>> bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
+        ...         ("IU", "AFI", "1?", "BHE", t1, t3),
+        ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
+        >>> inv = client.get_stations_bulk(bulk)
+        >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+    		    None
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (2):
+                    GR
+                    IU
+                Stations (2):
+                    GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (0):
+        >>> inv.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import UTCDateTime
+            from obspy.fdsn import Client
+
+            client = Client("IRIS")
+            t1 = UTCDateTime("2010-02-27T06:30:00.000")
+            t2 = t1 + 1
+            t3 = t1 + 3
+            bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
+                    ("IU", "AFI", "1?", "BHE", t1, t3),
+                    ("GR", "GRA1", "*", "BH*", t2, t3)]
+            inv = client.get_stations_bulk(bulk)
+            inv.plot()
+
+        >>> inv = client.get_stations_bulk(bulk, level="channel")
+        >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                    None
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (2):
+                    GR
+                    IU
+                Stations (2):
+                    GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (5):
+                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    IU.ANMO.10.BHZ
+        >>> inv = client.get_stations_bulk("/tmp/request.txt") \
+        ...     # doctest: +SKIP
+        >>> print(inv)  # doctest: +SKIP
+        Inventory created at 2014-04-28T14:42:26.000000Z
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: 1.0.14
+                    None
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (2):
+                    GR
+                    IU
+                Stations (2):
+                    GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (5):
+                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    IU.ANMO.10.BHZ
+
+        :type bulk: str, file-like object or list of lists
+        :param bulk: Information about the requested data. See above for
+            details.
+        :type quality: str, optional
+        :param quality: Select a specific SEED quality indicator, handling is
+            data center dependent. Ignored when `bulk` is provided as a
+            request string/file.
+        :type minimumlength: float, optional
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds. Ignored when `bulk` is
+            provided as a request string/file.
+        :type longestonly: bool, optional
+        :param longestonly: Limit results to the longest continuous segment per
+            channel. Ignored when `bulk` is provided as a request string/file.
+        :type filename: str or open file-like object
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+        :type attach_response: bool
+        :param attach_response: Specify whether the station web service should
+            be used to automatically attach response information to each trace
+            in the result set. A warning will be shown if a response can not be
+            found for a channel. Does nothing if output to a file was
+            specified.
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "dataselect" not in self.services:
+            msg = "The current client does not have a dataselect service."
+            raise ValueError(msg)
+
+        arguments = OrderedDict(
+            level=level,
+            includerestriced=includerestricted,
+            includeavailability=includeavailability
+        )
+        bulk = self._get_bulk_string(bulk, arguments)
+
+        url = self._build_url("station", "query")
+
+        data_stream = self._download(url,
+                                     data=bulk.encode('ascii', 'strict'))
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+            return
+        else:
+            inv = obspy.read_inventory(data_stream, format="stationxml")
+            data_stream.close()
+            return inv
+
     def _get_bulk_string(self, bulk, arguments):
         locs = locals()
         # If its an iterable, we build up the query string from it

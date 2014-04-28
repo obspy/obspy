@@ -532,10 +532,10 @@ class ClientTestCase(unittest.TestCase):
                          failmsg(normalize_version_number(got),
                                  normalize_version_number(expected)))
 
-    def test_bulk(self):
+    def test_dataselect_bulk(self):
         """
-        Test bulk requests, POSTing data to server. Also tests authenticated
-        bulk request.
+        Test bulk dataselec requests, POSTing data to server. Also tests
+        authenticated bulk request.
         """
         clients = [self.client, self.client_auth]
         file = os.path.join(self.datapath, "bulk.mseed")
