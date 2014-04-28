@@ -7,6 +7,8 @@
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
+ - obspy.evt:
+   * added support for Evt Kinemetrics data format. 
 
 0.9.0:
  -  general:

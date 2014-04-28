@@ -1,0 +1,161 @@
+qlwin.tmp, 10/25/13 08:50:05
+To make a permanent copy on hard disk,
+  use 'FILE: SAVE AS' = eventfile.HDR
+
+QLWIN: C:\BI008_~1.EVT   10/25/2013 08:31 
+Altus Header, Version. 1.30,  S/N 4823
+ Etna  Stn: MEMA   Site: MEMBACH ENTRANCE
+ 12  channel unit, 3 channel(s) selected:  1 2 3
+ Channel(s) triggered:  2 3
+Comment: MEMBACH
+UserCodes:   0  0  0  0
+
+Main battery: 13.40V, charging, minimum alarm voltage: 12.0V
+   24 bit A/D with group delay: 0 msec
+Temperature:   7.6 deg.C
+
+Restart Source(s):
+  None Known.
+
+System Error(s):
+  None Known.
+
+Block File Transfer Buffer: Dynamic 256 - 2048 bytes
+
+Altus Time Source: Internal GPS Receiver.
+Event Start Time:  8/15/2013 (227)  09:20:28.000
+Event Trigger Time:  8/15/2013 (227)  09:20:34.600
+
+Samples per second:  250
+Duration:  23.000 seconds, 230 frames
+Pre-event:  6 seconds.
+Minimum runtime:  0 seconds.
+Post event:  15 seconds.
+Array Propagation Window:  0 seconds.
+Storage: Primary  A:, Secondary  A: 
+
+Digital Field Station OFF.
+
+Program versions:   sysBlk 0.00, bootBlk  1.12,
+                    appBlk 3.03,  dspBlk  1.02
+
+User input or GPS averaged:
+Instrument latitude: 50.609795 Degrees North
+Instrument longitude: 6.009250 Degrees East
+Instrument elevation: 298 Meters relative sea level.
+
+GPS latitude: 50.60 Degrees North
+GPS longitude:  6.00 Degrees East
+GPS altitude: 294 Meters relative sea level.
+
+Ch                    1               2               3
+  MaxPeak:       -0.0058097V     -0.0083113V     -0.0103807V
+   at seconds:         6.888           6.460           6.468
+  MinPeak:       -0.0065988V     -0.0090611V     -0.0123441V
+   at seconds:         6.856           6.632           6.500
+  Mean:          -0.0062418V     -0.0087175V     -0.0113231V
+  AcqOffset:      0.0000000V      0.0000000V      0.0000000V
+
+Ch                    1                2                3
+  Chan ID:           ----,            ----,            ----,
+  Sensors:       EpiSensor (32)   EpiSensor (32)   EpiSensor (32) 
+                   s/n     0        s/n     0        s/n     0
+  MappedChannel:      1                2                3 
+  Inverted:           no               no               no 
+  Displace, N:       0000,            0000,            0000,
+  Displace, E:       0000,            0000,            0000,
+  Displace, U:       0000,            0000,            0000,
+  Alt,Azi(deg):      0,      0        0,      0        0,      0
+
+Ch                    1                2                3
+  Gain:               1                1                1
+  Fullscale         2.50V            2.50V            2.50V
+  Sensitivity:      2.5000V/g        2.4990V/g        2.4998V/g
+  Damping:          0.7070           0.7070           0.7070
+  NatFreq:         196.00Hz          200.00Hz          204.00Hz
+   EpiSensor only:
+   CalCoil:         0.0500           0.0500           0.0500
+   Sensor Gain:       1                1                1   
+   Range:             1g               1g               1g     
+   Sensed Range:      1g               1g               1g     
+
+
+Ch                          1                2                3
+Trigger Threshold:       0.010%FS         0.010%FS         0.010%FS
+Detrigger Threshold:     2.000%FS         2.000%FS         2.000%FS
+Alarm Trig Threshold:    2.000%FS         2.000%FS         2.000%FS
+               Votes:       1                1                1
+
+External Trigger:  OFF,   Votes: 1
+Keyboard Trigger Votes: 1
+Stream:   Votes to trigger: 1,   Votes to detrigger: 1
+
+GPS Free Field.
+GPS turn On interval:  0 minutes(s).
+GPS maximum On time:  30 minute(s)
+All times as set manually, or 0.00 hour(s) from UTC if from GPS
+Clock Source: Internal GPS
+GPS Status byte decoded:
+   GPS present.
+   GPS locked.
+   GPS power is ON.
+GPS state of health byte [same as Acutime SOH byte]:
+  Doing position fixes.
+GPS updated the RTC 1 times since last reset.
+Drift at last two RTC updates to UTC: 1 & 0 msec.
+Last GPS Update times were:
+  8/3/2013 (215) 14:37:25 & 1/1/1980 (1) 00:00:00.
+Last GPS TurnOn times were:
+  7/19/2013 (200) 14:22:31 & 1/1/1980 (1) 00:00:00.
+Last GPS Lock times were:
+   8/15/2013 (227) 09:19:20 & 8/15/2013 (227) 09:16:50.
+Count of times GPS failed to lock
+    within gpsMaxTurnOnTime: 0
+
+
+Modem strings [ NULL TERMINATED ] from event header...
+ Initialization: AT&FE0&C1S0=1S25=10&W
+ Dialing Prefix: ATDT
+ Dialing Suffix: 
+ Hangup command: ATH0
+ Callout message: MEMBACH CALLS SEISMOLOGY
+ Callout Acknowledge message: 
+Cellular Phone Parameters:
+  Power control(CPPC) OFF, Duration 0 minutes.
+  Warmup or timed recording length: 0 seconds
+  Cell Trigger timed recordings are disabled.
+    Duration: Power control ON duration(minutes) + warmup(seconds).
+  Call-In Window Times or timed event start times: 
+   OFF    OFF    OFF    OFF    OFF 
+  CheckinTime(callout): 5:30, skip 6 days
+ Phone Numbers: 
+   1: 023757043    2: 027903942
+Automatic callout ON.
+  Call out on low battery voltage
+  Call out on battery charge failed
+  Call out on extreme temperature
+  Call out on event
+  Call out on GPS lock failure
+   Ignore alarm(s)
+ Wait for connection 45 seconds.
+ Pause -56 seconds between calls.
+ Extend pause between calls 0 minutes
+ Callout not complete until ANSWERMODE or CALLMODE issued (1).
+ Max dial attempts: 15.
+
+End Altus Etna Header S/N 4823, C:\BI008_~1.EVT
+
+
+QLWIN calculated statistics for all data points in C:\BI008_~1.EVT:
+
+Ch                    1                 2                 3
+ MaxPeak:         -0.0058097V       -0.0083113V       -0.0103807V
+ MinPeak:         -0.0065988V       -0.0090611V       -0.0123441V
+ Peak-Peak         0.0007892V        0.0007498V        0.0019634V
+ Mid-point        -0.0062042V       -0.0086862V       -0.0113624V
+ Mean:            -0.0062434V       -0.0087195V       -0.0113212V
+ BaseLine Correction ........
+  Max-Mean:        0.0004338V        0.0004082V        0.0009405V
+  Min-Mean:       -0.0003554V       -0.0003416V       -0.0010229V
+
+End QLWIN calculated statistics, C:\BI008_~1.EVT
