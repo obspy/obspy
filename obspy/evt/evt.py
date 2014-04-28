@@ -13,8 +13,8 @@ from struct import unpack
 import numpy as np
 
 from obspy import Trace, Stream
-
-from . evt_base import *
+from obspy.evt.evt_base import EVTBadHeaderError, EVTEOFError, \
+    EVTBadDataError, EVT_Virtual, EVTNotImplementedError
 
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
@@ -58,7 +58,7 @@ class EVT(object):
         Apply calibrations on data matrix
         """
         for i in range(self.EHeader.nchannels):
-#            grange = 8.0/(2 ** self.EHeader.chan_range[i])
+            # grange = 8.0/(2 ** self.EHeader.chan_range[i])
             calibV = 8388608.0 / self.EHeader.chan_fullscale[i]
             calibMKS = (calibV*self.EHeader.chan_sensitivity[i])/(9.81)
             self.data[i] /= calibMKS
@@ -154,7 +154,7 @@ class EVT_DATA(object):
         return data
 
 
-#===========================================================================
+# ==========================================================================
 HEADER_STRUCT1 = "3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"  # 0 - 0x7c (0-34)
 HEADER_STRUCT2 = "lLlL2l12x"*12  # 0x7c - 0x22c (35-106)
 HEADER_STRUCT3 = "3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"  # 0x22c-0x2c8(->139)
@@ -261,7 +261,7 @@ class EVT_HEADER(EVT_Virtual):
                 retval += dico[key] + " "
         return retval
 
-#===========================================================================
+# ==========================================================================
 FRAME_STRUCT = "BBHHLHHBBHB13s"
 
 
@@ -337,7 +337,7 @@ class EVT_FRAME(EVT_Virtual):
         return chan
 
 
-#=======================================================================
+# ======================================================================
 class EVT_TAG(EVT_Virtual):
     """
     Class to read the TAGs of EVT Files
