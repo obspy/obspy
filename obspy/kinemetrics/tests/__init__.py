@@ -5,7 +5,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.evt"
+MODULE_NAME = "obspy.kinemetrics"
 
 
 def suite():

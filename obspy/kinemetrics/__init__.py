@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.evt - Evt (Kinemetrics) client for ObsPy
+obspy.kinemetrics - Evt (Kinemetrics) client for ObsPy
 ==============================================
 
 This module provides read support for Kinemetrics data

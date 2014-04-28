@@ -13,7 +13,7 @@ from struct import unpack
 import numpy as np
 
 from obspy import Trace, Stream
-from obspy.evt.evt_base import EVTBadHeaderError, EVTEOFError, \
+from obspy.kinemetrics.evt_base import EVTBadHeaderError, EVTEOFError, \
     EVTBadDataError, EVT_Virtual, EVTNotImplementedError
 
 

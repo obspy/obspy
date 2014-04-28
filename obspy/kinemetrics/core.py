@@ -17,13 +17,14 @@ from future.builtins import open
 
 import sys
 import warnings
-import obspy.evt.evt as evt
+import obspy.kinemetrics.evt as evt
 from . evt_base import EVTBaseError
 
 
 def is_evt(filename):
     """
     Checks whether a file is EVT or not.
+
     :type filename: string
     :param filename: EVT file to be checked.
     :rtype: bool
