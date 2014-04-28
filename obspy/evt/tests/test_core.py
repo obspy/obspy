@@ -38,7 +38,7 @@ class CoreTestCase(unittest.TestCase):
         for filename in invalid_files:
             self.assertFalse(is_evt(filename))
 
-    def test_readViaObsPy(self):
+    def test_read_via_ObsPy(self):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -80,7 +80,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
 
-    def test_readViaModule(self):
+    def test_read_via_module(self):
         """
         Read files via obspy.evt.core.read_evt function.
         """
