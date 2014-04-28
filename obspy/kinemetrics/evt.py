@@ -8,6 +8,11 @@ Royal Observatory of Belgium, 2013
 GNU Lesser General Public License, Version 3
 (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+
+from future import standard_library  # NOQA
+from future.builtins import open
 
 from struct import unpack
 import numpy as np
@@ -41,9 +46,9 @@ class EVT(object):
         """
         for test purposes
         """
-        fp = open("output.txt", "w")
+        fp = open("output.txt", "wb")
         fp.write("####################\n")
-        print >> fp, self.EHeader
+        fp.write(fp, self.EHeader)
         fp.write("####################\n\n")
         for i in range(self.data.shape[1]):
             tmp = ""
@@ -107,7 +112,7 @@ class EVT(object):
         for i in range(self.EHeader.nchannels):
             t = Trace(data=self.data[i])
             t.stats.channel = str(i)
-            t.stats.station = self.EHeader.stnid
+            t.stats.station = self.EHeader.stnid.replace(b"\x00", b"").decode()
             t.stats.sampling_rate = float(self.samplingrate)
             t.stats.starttime = self.EHeader.startime
             t.stats.evt = self.EHeader.makeobspydico(i)
@@ -130,7 +135,6 @@ class EVT_DATA(object):
         :rtype: list of list
         :return: list of data
         """
-
         buff = fp.read(length)
         samplrate = param[0]
         numbyte = param[1]
@@ -139,15 +143,15 @@ class EVT_DATA(object):
         data = [[] for _ in range(numchan)]
         if (length != num):
             raise EVTBadDataError("Bad data lenght")
-        for j in range(samplrate/10):
+        for j in range(samplrate // 10):
             for k in range(numchan):
-                i = (j*numchan)+k
+                i = (j * numchan) + k
                 if numbyte == 2:
-                    val = unpack(">i", buff[i*2:(i*2)+2] + '\0\0')[0] >> 8
+                    val = unpack(b">i", buff[i*2:(i*2)+2] + b'\0\0')[0] >> 8
                 elif numbyte == 3:
-                    val = unpack(">i", buff[i*3:(i*3)+3] + '\0')[0] >> 8
+                    val = unpack(b">i", buff[i*3:(i*3)+3] + b'\0')[0] >> 8
                 elif numbyte == 4:
-                    val = unpack(">i", buff[i*4:(i*4)+4])[0]
+                    val = unpack(b">i", buff[i*4:(i*4)+4])[0]
                 else:
                     raise EVTBadDataError("Bad data format")
                 data[k].append(val)
@@ -155,13 +159,20 @@ class EVT_DATA(object):
 
 
 # ==========================================================================
-HEADER_STRUCT1 = "3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"  # 0 - 0x7c (0-34)
-HEADER_STRUCT2 = "lLlL2l12x"*12  # 0x7c - 0x22c (35-106)
-HEADER_STRUCT3 = "3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"  # 0x22c-0x2c8(->139)
-HEADER_STRUCT4 = "5sbH5h3H4BHBx8f2B10x"*12  # 0x2c8 - 0x658 (140 - 464) (27*12)
-HEADER_STRUCT5 = "3B5x6H2hb2Bxh3Hl8x"  # 0x658 - 0x688
-HEADER_STRUCT6 = "cBh"*15  # 0x688 - 0x6c4 (3*15)
-HEADER_STRUCT7 = "64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"  # 0x6c4 - 0x7f8
+# 0 - 0x7c (0-34)
+HEADER_STRUCT1 = b"3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"
+# 0x7c - 0x22c (35-106)
+HEADER_STRUCT2 = b"lLlL2l12x"*12
+# 0x22c-0x2c8(->139)
+HEADER_STRUCT3 = b"3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"
+# 0x2c8 - 0x658 (140 - 464) (27*12)
+HEADER_STRUCT4 = b"5sbH5h3H4BHBx8f2B10x"*12
+# 0x658 - 0x688
+HEADER_STRUCT5 = b"3B5x6H2hb2Bxh3Hl8x"
+# 0x688 - 0x6c4 (3*15)
+HEADER_STRUCT6 = b"cBh"*15
+# 0x6c4 - 0x7f8
+HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
 
 
 class EVT_HEADER(EVT_Virtual):
@@ -208,7 +219,10 @@ class EVT_HEADER(EVT_Virtual):
         read Header of Evt file
         """
         buff = fp.read(length)
-        self.endian = endian
+        try:
+            self.endian = endian.encode()
+        except:
+            self.endian = endian
         if (length == 2040):  # File Header 12 channel
             self.analyse_header12(buff)
         elif (length == 2736):  # File Header 18 channel
@@ -225,13 +239,15 @@ class EVT_HEADER(EVT_Virtual):
         self.setdico(list(val), 107)
         val = unpack(self.endian+HEADER_STRUCT4, head_buff[0x2c8:0x658])
         self.setdico(list(val), 140)
-        val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
-        val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
-        val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
+        # XXX: Those three do not do anything...
+        # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
+        # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
+        # val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
 
     def makeobspydico(self, numchan):
         """
         Make an obpsy dictionnary from header dictionnary for 1 channel
+
         :param numchan: channel to be converted
         :rtype: dictionnary
         """
@@ -250,6 +266,7 @@ class EVT_HEADER(EVT_Virtual):
     def _gpsstatus(self, value, a, b, c):
         """
         Transform bitarray for gpsstatus in human readable string
+
         :param value: gps status
         :rtype: string
         """
@@ -262,7 +279,7 @@ class EVT_HEADER(EVT_Virtual):
         return retval
 
 # ==========================================================================
-FRAME_STRUCT = "BBHHLHHBBHB13s"
+FRAME_STRUCT = b"BBHHLHHBBHB13s"
 
 
 class EVT_FRAME(EVT_Virtual):
@@ -319,7 +336,7 @@ class EVT_FRAME(EVT_Virtual):
         retval = 0
         if self.frametype not in [3, 4, 5]:
             if verbose:
-                print "FrameType ", self.frametype, " not Known"
+                print("FrameType ", self.frametype, " not Known")
             retval = 1
         return retval
 
@@ -363,18 +380,18 @@ class EVT_TAG(EVT_Virtual):
         :param fp: file descriptor of EVT file.
         """
         mystr = fp.read(16)
-        sync, byteOrder = unpack("cB", mystr[0:2])
-        if(len(mystr) < 16) or (sync == '\x00'):
+        sync, byteOrder = unpack(b"cB", mystr[0:2])
+        if (len(mystr) < 16) or (sync == b'\x00'):
             raise EVTEOFError
-        if (sync != 'K'):
-            raise EVTBadHeaderError('Sync error : <'+sync+'>')
-        if (byteOrder == 1):
-            endian = ">"
-        elif (byteOrder == 0):
-            endian = "<"
+        if sync != b'K':
+            raise EVTBadHeaderError('Sync error : <' + str(sync) + '>')
+        if byteOrder == 1:
+            endian = b">"
+        elif byteOrder == 0:
+            endian = b"<"
         else:
             raise EVTBadHeaderError
-        val = list(unpack(endian + "cBBBLHHHH", mystr))
+        val = list(unpack(endian + b"cBBBLHHHH", mystr))
         self.setdico(val)
         self.endian = endian
         if self.verify(0) == 1:
@@ -385,10 +402,10 @@ class EVT_TAG(EVT_Virtual):
         retval = 0
         if self.type not in [1, 2]:
             if verbose:
-                print "Type of Header ", self.type, " not known"
+                print("Type of Header ", self.type, " not known")
             retval = 1
         if (self.type == 1) and (self.lenght not in [2040, 2736]):
             if verbose:
-                print "Bad Header file lenght : ", self.lenght
+                print("Bad Header file lenght : ", self.length)
             retval = 1
         return retval

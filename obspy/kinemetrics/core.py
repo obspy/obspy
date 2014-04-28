@@ -53,13 +53,6 @@ def read_evt(filename, **kwargs):
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: Stream object containing header and data.
     """
-
-    try:
-        Evt_Obj = evt.EVT()
-        stream = Evt_Obj.readFile(filename)
-    except EVTBaseError:
-        (etype, value, traceback) = sys.exc_info()
-        message = "Error : " + value.message + str(traceback)
-        warnings.warn(message)
-        stream = False
+    Evt_Obj = evt.EVT()
+    stream = Evt_Obj.readFile(filename)
     return stream
