@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-EVT (Kinemetrics) support for ObsPy.
+EVT (Kinemetrics) format support for ObsPy
 
 :copyright:
 Royal Observatory of Belgium, 2013
