@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.fdsn.client test suite.
+The obspy.fdsn.download_helpers test suite.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -18,41 +18,66 @@ from obspy.fdsn.download_helpers.utils import filter_availability
 from obspy.fdsn.download_helpers.download_helpers import \
     _filter_channel_priority
 
+from obspy.fdsn.download_helpers import domain
+
+
+class DomainTestCase(unittest.TestCase):
+    """
+    Test case for the domain definitions.
+    """
+    def test_rectangular_domain(self):
+        """
+        Test the rectangular domain.
+        """
+        dom = domain.RectangularDomain(-10, 10, -20, 20)
+        query_params = dom.get_query_parameters()
+        self.assertEqual(query_params, {
+            "minlatitude": -10,
+            "maxlatitude": 10,
+            "minlongitude": -20,
+            "maxlongitude": 20})
+
+        self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
+
+    def test_circular_domain(self):
+        """
+        Test the circular domain.
+        """
+        dom = domain.CircularDomain(10, 20, 30, 40)
+        query_params = dom.get_query_parameters()
+        self.assertEqual(query_params, {
+            "latitude": 10,
+            "longitude": 20,
+            "minradius": 30,
+            "maxradius": 40})
+
+        self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
+
+    def test_global_domain(self):
+        """
+        Test the global domain.
+        """
+        dom = domain.GlobalDomain()
+        query_params = dom.get_query_parameters()
+        self.assertEqual(query_params, {})
+
+        self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
+
+    def test_subclassing_without_abstract_method(self):
+        """
+        Subclassing without implementing the get_query_parameters method
+        results in a TypeError upon instantiation time.
+        """
+        class NewDom(domain.Domain):
+            pass
+
+        self.assertRaises(TypeError, NewDom)
+
 
 class DownloadHelpersUtilTestCase(unittest.TestCase):
     """
     Test cases for utility functionality for the download helpers.
     """
-    def test_filter_availability(self):
-        """
-        Does not yet do anything.
-        """
-        dict_client1 =\
-          {'BW.FURT': {'channels': ['.BHE', '.BHN', '.BHZ', '00.LHE', '00.LHE'],
-          'elevation_in_m': 10.0,
-          'latitude': 1.0,
-          'longitude': 2.0}
-          }
-        dict_client2 =\
-          {'BE1.FURT': {'channels': ['.BHE', '.BHN', '.BHZ', '00.LHE', '00.LHE'],
-          'elevation_in_m': 10.0,
-          'latitude': 1.2,
-          'longitude': 2.0},
-          'BE2.FURT': {'channels': ['.BHE', '.BHN', '.BHZ', '00.LHE', '00.LHE'],
-          'elevation_in_m': 10.0,
-          'latitude': -1.2,
-          'longitude': 2.0},
-          'BE3.FURT': {'channels': ['.BHE', '.BHN', '.BHZ', '00.LHE', '00.LHE'],
-          'elevation_in_m': 10.0,
-          'latitude': 1.0001,
-          'longitude': 2.0}
-          }
-        output = filter_availability(dict_client1, dict_client2, 
-                                    dist_threshold=20)
-        self.assertEqual(dict_client1, output)
-
-
-
     def test_channel_priority_filtering(self):
         """
         Tests the channel priority filtering.
@@ -89,7 +114,10 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(DownloadHelpersUtilTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(DownloadHelpersUtilTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':

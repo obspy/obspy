@@ -43,12 +43,17 @@ class Domain:
 
     def is_in_domain(self, latitude, longitude):
         """
-        Returns True/False depending on the point being in the domain.
+        Returns True/False depending on the point being in the domain. If
+        not implemented no further restrictions will be applied after the
+        data has been downloaded.
         """
         raise NotImplementedError
 
 
 class RectangularDomain(Domain):
+    """
+    A rectangular domain defined by latitude and longitude bounds.
+    """
     def __init__(self, min_latitude, max_latitude, min_longitude,
                  max_longitude):
         self.min_latitude = min_latitude
@@ -58,13 +63,17 @@ class RectangularDomain(Domain):
 
     def get_query_parameters(self):
         return {
-            "min_latitude": self.min_latitude,
-            "max_latitude": self.max_latitude,
-            "min_longitude": self.min_longitude,
-            "max_longitude": self.max_longitude}
+            "minlatitude": self.min_latitude,
+            "maxlatitude": self.max_latitude,
+            "minlongitude": self.min_longitude,
+            "maxlongitude": self.max_longitude}
 
 
 class CircularDomain(Domain):
+    """
+    A circular domain defined by a center point and minimum and maximum
+    radius from that point.
+    """
     def __init__(self, latitude, longitude, min_radius, max_radius):
         self.latitude = latitude
         self.longitude = longitude
@@ -75,11 +84,13 @@ class CircularDomain(Domain):
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
-            "min_radius": self.min_radius,
-            "max_radius": self.max_radius}
+            "minradius": self.min_radius,
+            "maxradius": self.max_radius}
 
 
 class GlobalDomain(Domain):
+    """
+    Domain spanning the whole globe.
+    """
     def get_query_parameters(self):
         return {}
-

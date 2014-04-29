@@ -199,9 +199,9 @@ if __name__ == "__main__":
     # Setup the domain.
     domain = RectangularDomain(
         min_latitude=40,
-        max_longitude=50,
-        min_latitude=10,
-        max_latitude=20)
+        max_latitude=50,
+        min_longitude=10,
+        max_longitude=20)
 
     # Some more restrictions.
     restrictions = Restrictions(
