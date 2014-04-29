@@ -19,6 +19,7 @@ class FDSNException(Exception):
 
 
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
+                "ORFEUS": "http://www.orfeus-eu.org",
                 "USGS": "http://comcat.cr.usgs.gov",
                 "RESIF": "http://ws.resif.fr",
                 "NCEDC": "http://service.ncedc.org",
