@@ -28,6 +28,7 @@ import select
 import socket
 import time
 import logging
+import io
 
 
 # default logger
@@ -136,8 +137,25 @@ class SeedLinkConnection(object):
         self.info_request_string = None
         self.socket = None
         self.state = None
-        self.infoStrBuf = ""
+        self.info_response_buffer = io.BytesIO()
         self.state = SLState()
+
+    @property
+    def infoStrBuf(self):
+        msg = 'infoStrBuf was removed in favor of info_response_buffer'
+        raise AttributeError(msg)
+
+    @infoStrBuf.setter
+    def infoStrBuf(self, value):
+        msg = 'infoStrBuf was removed in favor of info_response_buffer'
+        raise AttributeError(msg)
+
+    def createInfoString(self, strBuf):
+        """
+        Method was removed.
+        """
+        msg = 'method createInfoString was removed'
+        raise AttributeError(msg)
 
     def isConnected(self, timeout=1.0):
         """
@@ -282,17 +300,6 @@ class SeedLinkConnection(object):
            packets
         """
         return self.info_string
-
-    def createInfoString(self, strBuf):
-        """
-        Creates an info String from a String Buffer
-
-        :param strBuf: the buffer to convert to an INFO String.
-
-        :return: the INFO Sting.
-        """
-        strBuf = strBuf.replace("><", ">\n<")
-        return str(strBuf).strip()
 
     def checkslcd(self):
         """
@@ -712,7 +719,7 @@ class SeedLinkConnection(object):
         self.disconnect()
         self.state = SLState()
         self.info_request_string = None
-        self.infoStrBuf = ""
+        self.info_response_buffer = io.BytesIO()
         return SLPacket.SLTERMINATE
 
     def collect(self):
@@ -900,15 +907,19 @@ class SeedLinkConnection(object):
                                 #print "DEBUG: SLPacket.TYPE_SLINFT:",
                                 #print SLPacket.TYPE_SLINFT
                                 lenmsr = len(slpacket.msrecord)
-                                if (type == SLPacket.TYPE_SLINF):
-                                    self.infoStrBuf += \
-                                        str(slpacket.msrecord)[64: lenmsr]
-                                elif (type == SLPacket.TYPE_SLINFT):
-                                    self.infoStrBuf += \
-                                        str(slpacket.msrecord)[64: lenmsr]
+                                data = slpacket.msrecord[64:lenmsr]
+                                self.info_response_buffer.write(data)
+
+                                if (type == SLPacket.TYPE_SLINFT):
+                                    # Terminated INFO response packet
+                                    # -> build complete INFO response string,
+                                    #    strip NULL bytes from the end
                                     self.info_string = \
-                                        self.createInfoString(self.infoStrBuf)
-                                    self.infoStrBuf = ""
+                                        self.info_response_buffer.getvalue().\
+                                        decode('ASCII', errors='ignore').\
+                                        replace("><", ">\n<").rstrip('\x00')
+
+                                    self.info_response_buffer = io.BytesIO()
                         self.state.query_mode = SLState.NO_QUERY
                     else:
                         # Get packet and update the stream chain entry if not
@@ -1206,12 +1217,13 @@ class SeedLinkConnection(object):
 
         # check for end or no bytes read
         if (nbytesread == -1):
+            # XXX This is never true
             msg = "[%s] socket.read(): %s: TCP FIN or EOF received"
             logger.error(msg % (code, nbytesread))
             return
         else:
             if (nbytesread == 0):
-                return ""
+                return b""
 
         return bytesread
 

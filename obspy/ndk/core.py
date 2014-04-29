@@ -20,6 +20,7 @@ from future.builtins import open
 
 import itertools
 import math
+import os
 import re
 import warnings
 import uuid
@@ -88,9 +89,23 @@ def is_ndk(filename):
     location are valid. Then it assumes the file is an NDK file.
     """
     # Get the first line.
+    # Not a file-like object.
     if not hasattr(filename, "readline"):
-        with open(filename, "rt") as fh:
-            first_line = fh.readline()
+        # Check if it exists, otherwise assume its a string.
+        if os.path.exists(filename):
+            with open(filename, "rt") as fh:
+                first_line = fh.readline()
+        else:
+            try:
+                filename = filename.decode()
+            except:
+                filename = str(filename)
+            filename = filename.strip()
+            line_ending = filename.find("\n")
+            if line_ending == -1:
+                return False
+            first_line = filename[:line_ending]
+    # File like object.
     else:
         first_line = filename.readline()
         if hasattr(first_line, "decode"):
@@ -134,8 +149,16 @@ def read_ndk(filename, *args, **kwargs):
     # the largest NDK file out in the wild is 13.7 MB so it does not matter
     # much.
     if not hasattr(filename, "read"):
-        with open(filename, "rt") as fh:
-            data = fh.read()
+        # Check if it exists, otherwise assume its a string.
+        if os.path.exists(filename):
+            with open(filename, "rt") as fh:
+                data = fh.read()
+        else:
+            try:
+                data = filename.decode()
+            except:
+                data = str(filename)
+            data = data.strip()
     else:
         data = filename.read()
         if hasattr(data, "decode"):

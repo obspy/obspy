@@ -95,14 +95,15 @@ class SLPacket(object):
         if not self.slhead[0: len(self.SIGNATURE)].lower() == \
                 self.SIGNATURE.lower():
             return -1
-        seqstr = str(self.slhead[2:8])
-        #print "DEBUG: seqstr:", seqstr,", int(seqstr, 16):", int(seqstr, 16)
+        seqbytes = bytes(self.slhead[2:8])
+        #print "DEBUG: seqbytes:", seqbytes,", int(seqbytes, 16):", \
+        #      int(seqbytes, 16)
         seqnum = -1
         try:
-            seqnum = int(seqstr, 16)
+            seqnum = int(seqbytes, 16)
         except Exception:
             msg = "SLPacket.getSequenceNumber(): bad packet sequence number: "
-            print(msg, seqstr)
+            print(msg, seqbytes)
             return -1
         return seqnum
 
@@ -129,6 +130,17 @@ class SLPacket(object):
         msrecord_py = self.getMSRecord()
         #print "DEBUG: msrecord_py:", msrecord_py
         header = _convertMSRToDict(msrecord_py)
+
+        # XXX Workaround: the fields in the returned struct of type
+        # obspy.mseed.header.MSRecord_s have byte values in Python 3, while
+        # the rest of the code still expects them to be string (see #770)
+        # -> convert
+        convert = ('network', 'station', 'location', 'channel',
+                   'dataquality', 'sampletype')
+        for key, value in header.items():
+            if key in convert and not isinstance(value, str):
+                header[key] = value.decode()
+
         # 20111201 AJL - bug fix?
         header['starttime'] = header['starttime'] / HPTMODULUS
         # 20111205 AJL - bug fix?
@@ -136,9 +148,17 @@ class SLPacket(object):
             header['sampling_rate'] = header['samprate']
             del header['samprate']
         # Access data directly as NumPy array.
+
+        # XXX Workaround: in Python 3 msrecord_py.sampletype is a byte
+        # (e.g. b'i'), while keys of mseed.headers.SAMPLESIZES are
+        # unicode ('i') (see above)
+        sampletype = msrecord_py.sampletype
+        if not isinstance(sampletype, str):
+            sampletype = sampletype.decode()
+
         data = _ctypesArray2NumpyArray(msrecord_py.datasamples,
                                        msrecord_py.numsamples,
-                                       msrecord_py.sampletype)
+                                       sampletype)
         self.trace = Trace(data, header)
         return self.trace
 

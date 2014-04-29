@@ -12,7 +12,6 @@ JSeedLink of Anthony Lomax
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import unicode_literals
-from future.builtins import range
 
 from obspy.seedlink.seedlinkexception import SeedLinkException
 from obspy.seedlink.slpacket import SLPacket
@@ -193,14 +192,13 @@ class SLState(object):
         self.recptr -= self.sendptr
         self.sendptr = 0
 
-    def appendBytes(self, bytes):
+    def appendBytes(self, bytes_):
         """
         Appends bytes to the receive buffer after the last received data.
         """
-        if self.bytesRemaining() < len(bytes):
+        if self.bytesRemaining() < len(bytes_):
             msg = "not enough bytes remaining in buffer to append new bytes"
             raise SeedLinkException(msg)
-        ## for-while
-        for i in range(len(bytes)):
-            self.databuf[self.recptr] = bytes[i]
-            self.recptr += 1
+
+        self.databuf[self.recptr:self.recptr + len(bytes_)] = bytes_
+        self.recptr += len(bytes_)
