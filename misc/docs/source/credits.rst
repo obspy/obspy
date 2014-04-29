@@ -40,6 +40,7 @@ libraries and applications, our build tools and our web sites.
     * Philippe Lesage
     * Anthony Lomax
     * Alessia Maggi
+    * Henri Martin
     * Tobias Megies
     * Alberto Michelini
     * Bernhard Morgenstern
