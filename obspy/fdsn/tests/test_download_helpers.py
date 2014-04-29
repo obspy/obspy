@@ -14,6 +14,7 @@ from future import standard_library  # NOQA
 import unittest
 
 from obspy.fdsn.download_helpers.utils import filter_availability
+from obspy.core.compatibility import mock
 
 from obspy.fdsn.download_helpers.download_helpers import \
     _filter_channel_priority
@@ -72,6 +73,12 @@ class DomainTestCase(unittest.TestCase):
             pass
 
         self.assertRaises(TypeError, NewDom)
+
+    def test_instantiating_root_domain_object_fails(self):
+        """
+        Trying to create a root domain object should fail.
+        """
+        self.assertRaises(TypeError, domain.Domain)
 
 
 class DownloadHelpersUtilTestCase(unittest.TestCase):
