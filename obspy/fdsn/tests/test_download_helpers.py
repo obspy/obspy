@@ -13,7 +13,7 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 import unittest
 
-from obspy.fdsn.download_helpers.utils import filter_stations
+from obspy.fdsn.download_helpers.utils import filter_stations, merge_stations
 from obspy.core.compatibility import mock
 
 from obspy.fdsn.download_helpers.download_helpers import \
@@ -235,6 +235,29 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Station("22", "22", 0, -88.9, 0, [])]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 2)
+
+    def test_merge_station_lists(self):
+        """
+        Tests the merging of two stations.
+        """
+        list_one = [
+            Station("11", "11", 0, 0, 0, []),
+            Station("11", "11", 0, 0, 500, []),
+            Station("11", "11", 0, 0, 1500, []),
+        ]
+        list_two = [
+            Station("11", "11", 0, 0, 10, []),
+            Station("11", "11", 0, 0, 505, []),
+            Station("11", "11", 0, 0, 1505, []),
+            ]
+        new_list = merge_stations(list_one, list_two, 20)
+        self.assertEqual(new_list, list_one)
+        new_list = merge_stations(list_one, list_two, 2)
+        self.assertEqual(new_list, list_one + list_two)
+        new_list = merge_stations(list_one, list_two, 8)
+        self.assertEqual(new_list, list_one + [
+            Station("11", "11", 0, 0, 10, [])])
+
 
 
 def suite():

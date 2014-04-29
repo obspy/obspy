@@ -57,7 +57,7 @@ def filter_stations(stations, minimum_distance_in_m):
     Removes stations until all stations have a certain minimum distance to
     each other.
     """
-    stations = copy.deepcopy(stations)
+    stations = copy.copy(stations)
     nd_tree = SphericalNearestNeighbour(stations)
     nns = nd_tree.query_pairs(minimum_distance_in_m)
 
@@ -74,3 +74,30 @@ def filter_stations(stations, minimum_distance_in_m):
     return [_i[1] for _i in itertools.ifilterfalse(
             lambda x: x[0] in indexes_to_remove,
             enumerate(stations))]
+
+
+def merge_stations(stations, other_stations, minimum_distance_in_m=0.0):
+    """
+    Merges two lists containing station objects. The first list is assumed
+    to already be filtered with
+    :func:`~obspy.fdsn.download_helpers.utils.filter_stations` and therefore
+    contain no two stations within ``minimum_distance_in_m`` from each other.
+    The stations in the ``other_station`` list will be successively added to
+    ``stations`` while ensuring the minimum inter-station distance will
+    remain be honored.
+    """
+    if not minimum_distance_in_m:
+        raise NotImplementedError
+
+    stations = copy.copy(stations)
+    for station in other_stations:
+        kd_tree = SphericalNearestNeighbour(stations)
+        neighbours = kd_tree.query([station])[0][0]
+        if np.isinf(neighbours[0]):
+            continue
+        min_distance = neighbours[0]
+        if min_distance < minimum_distance_in_m:
+            continue
+        stations.append(station)
+
+    return stations
