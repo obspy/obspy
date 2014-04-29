@@ -154,7 +154,7 @@ def get_availability(client, client_name, restrictions, domain):
         logger.error(
             "Failed getting availability for client '{0}': %s".format(
                 client_name), str(e))
-        return
+        return client_name, None
     logger.info("Successfully requested availability from client '%s'" %
                 client_name)
 
@@ -194,7 +194,7 @@ def get_availability(client, client_name, restrictions, domain):
     logger.info("Found %i matching channels from client '%s'." %
                 (sum([len(_i.channels) for _i in availability.values()]),
                 client_name))
-    return availability
+    return client_name, availability
 
 
 class DownloadHelper(object):
@@ -238,6 +238,16 @@ class DownloadHelper(object):
                 [(client, client_name, restrictions, self.domain) for
                  client_name, client in self._initialized_clients.items()])
         p.close()
+
+        # Sort by priority and only include those that actually have
+        # available information.
+        availabilities = {key: value for key, value in availabilities if
+                          value is not None}
+        available_channels = {}
+        for client in self.providers:
+            if client not in availabilities:
+                continue
+            available_channels[client] = availabilities[client]
 
         from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 

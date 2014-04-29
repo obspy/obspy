@@ -1,62 +1,46 @@
-from collections import OrderedDict
-from obspy.core.util import locations2degrees
+import numpy as np
+from scipy.spatial import cKDTree
 
-def filename_constructor(net, sta, loc, cha,
-        pattern='{net}.{sta}.{loc}.{cha}'):
-    '''
-    Construct arbitrary file names for saving the data
-    filename = filename_constructor('iN', 'iS', 'iL', 'iC',
-                pattern='MYFORMAT.{sta}.{net}.{cha}.{loc}.EXTENTION')
-    print filename
-    'MYFORMAT.iS.iN.iC.iL.EXTENTION'
-    '''
-    return pattern.format(net=net, sta=sta, loc=loc, cha=cha)
+# mean earth radius in meter as defined by the International Union of
+# Geodesy and Geophysics.
+EARTH_RADIUS = 6371009
 
-def filter_availability(dict_client1, dict_client2,
-                            dist_threshold=20):
-    '''
-    Filter one list of stations with another one!
-    dict_client1 = \
-    {"network.station": {
-         "latitude": 1.0,
-         "longitude": 2.0,
-         "elevation_in_m": 10.0,
-         "channels": [".BHE", ".BHN", ".BHZ", "00.LHE", "00.LHE", ...]},
-      "network.station": {...}, ...
-     }
-    '''
-    dict_client1 = OrderedDict(sorted(
-        dict_client1.items(), key=lambda x: x[1]["latitude"]))
-    dict_client2 = OrderedDict(sorted(
-        dict_client2.items(), key=lambda x: x[1]["latitude"]))
 
-    filtered_client2 = OrderedDict()
-    for key, value in dict_client2.items():
-        if key in dict_client1:
-            continue
-        filtered_client2[key] = value
-    dict_client2 = filtered_client2
+class SphericalNearestNeighbour(object):
+    """
+    Spherical nearest neighbour queries using scipy's fast
+    kd-tree implementation.
+    """
+    def __init__(self, data):
+        cart_data = self.spherical2cartesian(data)
+        self.data = data
+        self.kd_tree = cKDTree(data=cart_data, leafsize=10)
 
-    lat_thresh = 1.0
-    for key2, info2 in dict_client2.items():
-        print(key2)
-        for key1, info1 in dict_client1.items():
-            if abs(info1['latitude']-info2['latitude']) < lat_thresh:
-                dist12 = locations2degrees(info1['latitude'], info1['longitude'],
-                                           info2['latitude'], info2['longitude'])
-                dist12_m = dist12*111.*1000.
-                print(dist12_m)
-                if dist12_m < dist_threshold:
-                    print('Within the vicinity!')
-                    break
+    def query(self, points, k=10):
+        points = self.spherical2cartesian(points)
+        d, i = self.kd_tree.query(points, k=k)
+        return d, i
 
-            if info1['latitude'] > info2['latitude']:
-                # no way to come back...!
-                dict_client1[key2] = info2
-                break
-            else:
-                # Maybe the next station?
-                if (dict_client1.keys().index(key1) ==
-                        len(dict_client1)-1):
-                    dict_client1[key2] = info2
-                continue
+    @staticmethod
+    def spherical2cartesian(data):
+        """
+        Converts a list of :class:`~obspy.fdsn.download_helpers.Station`
+        objects to an array of shape(len(list), 3) containing x/y/z in meters.
+        """
+        # Create three arrays containing lat/lng/elevation.
+        shape = len(data)
+        lat = np.array((_i.latitude for _i in data), dtype=np.float64)
+        lon = np.array((_i.longitude for _i in data), dtype=np.float64)
+        r = np.array((EARTH_RADIUS + _i.elevation_in_m for _i in data),
+                     dtype=np.float64)
+        # Convert data from lat/lng to x/y/z.
+        colat = 90.0 - lat
+        cart_data = np.empty(shape, 3)
+
+        cart_data[:, 0] = r * np.sin(np.deg2rad(colat)) * \
+            np.cos(np.deg2rad(lon))
+        cart_data[:, 1] = r * np.sin(np.deg2rad(colat)) * \
+            np.sin(np.deg2rad(lon))
+        cart_data[:, 2] = r * np.cos(np.deg2rad(colat))
+
+        return cart_data
