@@ -11,10 +11,12 @@ Subclass if you need more complex custom domains.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from future.utils import with_metaclass
+
 from abc import ABCMeta, abstractmethod
 
 
-class Domain:
+class Domain(with_metaclass(ABCMeta)):
     """
     Abstract base class defining a domain. Subclass to define a custom domain.
 
@@ -28,8 +30,6 @@ class Domain:
     :meth:`~obspy.fdsn.download_helpers.Domain.in_in_domain` can later be
     used to refine the domain after the data has been downloaded.
     """
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def get_query_parameters(self):
         """
