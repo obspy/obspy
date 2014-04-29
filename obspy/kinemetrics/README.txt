@@ -1,5 +1,5 @@
-package obspy.evt
-==================
+package obspy.kinemetrics
+=========================
 
 Version 0.1.0 2013/11/19
 
@@ -11,13 +11,13 @@ Copyright (c) 2013 by:
     * Henri Martin
     * Thomas Lecocq
     * Kinemetrics(c)
-    
+
 
 Overview
 --------
 Evt read support for ObsPy.
 
-This module provides read support for Evt Kinemetrics data format. 
+This module provides read support for Evt Kinemetrics data format.
 This module is based on the Kinemetrics description of his format and on
 the C code provied (Kw2asc.c)
 
