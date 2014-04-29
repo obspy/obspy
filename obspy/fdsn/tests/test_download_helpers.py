@@ -119,6 +119,16 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             "S*", "BH*"])
         self.assertEqual(filtered_channels, ["SHE"])
 
+        # Different ways to not filter.
+        filtered_channels = _filter_channel_priority(channels, priorities=[
+            "*"])
+        self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
+
+        filtered_channels = _filter_channel_priority(channels,
+                                                     priorities=None)
+        self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
+
+
 
 def suite():
     suite = unittest.TestSuite()

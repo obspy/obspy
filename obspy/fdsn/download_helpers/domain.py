@@ -54,19 +54,19 @@ class RectangularDomain(Domain):
     """
     A rectangular domain defined by latitude and longitude bounds.
     """
-    def __init__(self, min_latitude, max_latitude, min_longitude,
-                 max_longitude):
-        self.min_latitude = min_latitude
-        self.max_latitude = max_latitude
-        self.min_longitude = min_longitude
-        self.max_longitude = max_longitude
+    def __init__(self, minlatitude, maxlatitude, minlongitude,
+                 maxlongitude):
+        self.minlatitude = minlatitude
+        self.maxlatitude = maxlatitude
+        self.minlongitude = minlongitude
+        self.maxlongitude = maxlongitude
 
     def get_query_parameters(self):
         return {
-            "minlatitude": self.min_latitude,
-            "maxlatitude": self.max_latitude,
-            "minlongitude": self.min_longitude,
-            "maxlongitude": self.max_longitude}
+            "minlatitude": self.minlatitude,
+            "maxlatitude": self.maxlatitude,
+            "minlongitude": self.minlongitude,
+            "maxlongitude": self.maxlongitude}
 
 
 class CircularDomain(Domain):
@@ -74,18 +74,18 @@ class CircularDomain(Domain):
     A circular domain defined by a center point and minimum and maximum
     radius from that point.
     """
-    def __init__(self, latitude, longitude, min_radius, max_radius):
+    def __init__(self, latitude, longitude, minradius, maxradius):
         self.latitude = latitude
         self.longitude = longitude
-        self.min_radius = min_radius
-        self.max_radius = max_radius
+        self.minradius = minradius
+        self.maxradius = maxradius
 
     def get_query_parameters(self):
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
-            "minradius": self.min_radius,
-            "maxradius": self.max_radius}
+            "minradius": self.minradius,
+            "maxradius": self.maxradius}
 
 
 class GlobalDomain(Domain):
