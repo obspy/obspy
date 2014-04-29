@@ -13,11 +13,11 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 import unittest
 
-from obspy.fdsn.download_helpers.utils import filter_availability
+from obspy.fdsn.download_helpers.utils import filter_stations
 from obspy.core.compatibility import mock
 
 from obspy.fdsn.download_helpers.download_helpers import \
-    _filter_channel_priority
+    _filter_channel_priority, Station
 
 from obspy.fdsn.download_helpers import domain
 
@@ -128,6 +128,113 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
                                                      priorities=None)
         self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
 
+    def test_station_list_nearest_neighbour_filter(self):
+        """
+        Test the filtering based on geographical distance.
+        """
+        # Only the one at depth 200 should be removed as it is the only one
+        # that has two neighbours inside the filter radius.
+        stations = [
+            Station("11", "11", 0, 0, 0, []),
+            Station("22", "22", 0, 0, 200, []),
+            Station("22", "22", 0, 0, 400, []),
+            Station("33", "33", 0, 0, 2000, []),
+        ]
+        filtered_stations = filter_stations(stations, 250)
+        self.assertEqual(filtered_stations, [
+            Station("11", "11", 0, 0, 0, []),
+            Station("22", "22", 0, 0, 400, []),
+            Station("33", "33", 0, 0, 2000, [])])
+
+        # The two at 200 and 250 m depth should be removed.
+        stations = [
+            Station("11", "11", 0, 0, 0, []),
+            Station("22", "22", 0, 0, 200, []),
+            Station("22", "22", 0, 0, 250, []),
+            Station("22", "22", 0, 0, 400, []),
+            Station("33", "33", 0, 0, 2000, [])]
+        filtered_stations = filter_stations(stations, 250)
+        self.assertEqual(filtered_stations, [
+            Station("11", "11", 0, 0, 0, []),
+            Station("22", "22", 0, 0, 400, []),
+            Station("33", "33", 0, 0, 2000, [])])
+
+        # Set the distance to 1 degree and check the longitude behaviour at
+        # the longitude wraparound point.
+        stations = [
+            Station("11", "11", 0, 0, 0, []),
+            Station("22", "22", 0, 90, 0, []),
+            Station("33", "33", 0, 180, 0, []),
+            Station("44", "44", 0, -90, 0, []),
+            Station("55", "55", 0, -180, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        # Only 4 stations should remain and either the one at 0,180 or the
+        # one at 0, -180 should have been removed as they are equal.
+        self.assertEqual(len(filtered_stations), 4)
+        self.assertTrue(Station("11", "11", 0, 0, 0, [])
+                        in filtered_stations)
+        self.assertTrue(Station("22", "22", 0, 90, 0, [])
+                        in filtered_stations)
+        self.assertTrue(Station("44", "44", 0, -90, 0, [])
+                        in filtered_stations)
+        self.assertTrue((Station("33", "33", 0, 180, 0, [])
+                         in filtered_stations) or
+                        (Station("55", "55", 0, -180, 0, [])
+                         in filtered_stations))
+
+        # Test filtering around the longitude wraparound.
+        stations = [
+            Station("11", "11", 0, 180, 0, []),
+            Station("22", "22", 0, 179.2, 0, []),
+            Station("33", "33", 0, 180.8, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(filtered_stations, [
+            Station("22", "22", 0, 179.2, 0, []),
+            Station("33", "33", 0, 180.8, 0, [])])
+
+        # Test the conversion of lat/lng to meter distances.
+        stations = [
+            Station("11", "11", 0, 180, 0, []),
+            Station("22", "22", 0, -180, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 1)
+        stations = [
+            Station("11", "11", 0, 180, 0, []),
+            Station("22", "22", 0, -179.5, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 1)
+        stations = [
+            Station("11", "11", 0, 180, 0, []),
+            Station("22", "22", 0, -179.1, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 1)
+        stations = [
+            Station("11", "11", 0, 180, 0, []),
+            Station("22", "22", 0, 178.9, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 2)
+
+        # Also test the latitude settings.
+        stations = [
+            Station("11", "11", 0, -90, 0, []),
+            Station("22", "22", 0, -90, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 1)
+        stations = [
+            Station("11", "11", 0, -90, 0, []),
+            Station("22", "22", 0, -89.5, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 1)
+        stations = [
+            Station("11", "11", 0, -90, 0, []),
+            Station("22", "22", 0, -89.1, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 1)
+        stations = [
+            Station("11", "11", 0, -90, 0, []),
+            Station("22", "22", 0, -88.9, 0, [])]
+        filtered_stations = filter_stations(stations, 111000)
+        self.assertEqual(len(filtered_stations), 2)
 
 
 def suite():
