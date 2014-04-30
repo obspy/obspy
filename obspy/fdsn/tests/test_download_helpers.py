@@ -135,104 +135,104 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         # Only the one at depth 200 should be removed as it is the only one
         # that has two neighbours inside the filter radius.
         stations = [
-            Station("11", "11", 0, 0, 0, []),
-            Station("22", "22", 0, 0, 200, []),
-            Station("22", "22", 0, 0, 400, []),
-            Station("33", "33", 0, 0, 2000, []),
+            Station("11", "11", 0, 0, 0, [], None),
+            Station("22", "22", 0, 0, 200, [], None),
+            Station("22", "22", 0, 0, 400, [], None),
+            Station("33", "33", 0, 0, 2000, [], None),
         ]
         filtered_stations = filter_stations(stations, 250)
         self.assertEqual(filtered_stations, [
-            Station("11", "11", 0, 0, 0, []),
-            Station("22", "22", 0, 0, 400, []),
-            Station("33", "33", 0, 0, 2000, [])])
+            Station("11", "11", 0, 0, 0, [], None),
+            Station("22", "22", 0, 0, 400, [], None),
+            Station("33", "33", 0, 0, 2000, [], None)])
 
         # The two at 200 and 250 m depth should be removed.
         stations = [
-            Station("11", "11", 0, 0, 0, []),
-            Station("22", "22", 0, 0, 200, []),
-            Station("22", "22", 0, 0, 250, []),
-            Station("22", "22", 0, 0, 400, []),
-            Station("33", "33", 0, 0, 2000, [])]
+            Station("11", "11", 0, 0, 0, [], None),
+            Station("22", "22", 0, 0, 200, [], None),
+            Station("22", "22", 0, 0, 250, [], None),
+            Station("22", "22", 0, 0, 400, [], None),
+            Station("33", "33", 0, 0, 2000, [], None)]
         filtered_stations = filter_stations(stations, 250)
         self.assertEqual(filtered_stations, [
-            Station("11", "11", 0, 0, 0, []),
-            Station("22", "22", 0, 0, 400, []),
-            Station("33", "33", 0, 0, 2000, [])])
+            Station("11", "11", 0, 0, 0, [], None),
+            Station("22", "22", 0, 0, 400, [], None),
+            Station("33", "33", 0, 0, 2000, [], None)])
 
         # Set the distance to 1 degree and check the longitude behaviour at
         # the longitude wraparound point.
         stations = [
-            Station("11", "11", 0, 0, 0, []),
-            Station("22", "22", 0, 90, 0, []),
-            Station("33", "33", 0, 180, 0, []),
-            Station("44", "44", 0, -90, 0, []),
-            Station("55", "55", 0, -180, 0, [])]
+            Station("11", "11", 0, 0, 0, [], None),
+            Station("22", "22", 0, 90, 0, [], None),
+            Station("33", "33", 0, 180, 0, [], None),
+            Station("44", "44", 0, -90, 0, [], None),
+            Station("55", "55", 0, -180, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         # Only 4 stations should remain and either the one at 0,180 or the
         # one at 0, -180 should have been removed as they are equal.
         self.assertEqual(len(filtered_stations), 4)
-        self.assertTrue(Station("11", "11", 0, 0, 0, [])
+        self.assertTrue(Station("11", "11", 0, 0, 0, [], None)
                         in filtered_stations)
-        self.assertTrue(Station("22", "22", 0, 90, 0, [])
+        self.assertTrue(Station("22", "22", 0, 90, 0, [], None)
                         in filtered_stations)
-        self.assertTrue(Station("44", "44", 0, -90, 0, [])
+        self.assertTrue(Station("44", "44", 0, -90, 0, [], None)
                         in filtered_stations)
-        self.assertTrue((Station("33", "33", 0, 180, 0, [])
+        self.assertTrue((Station("33", "33", 0, 180, 0, [], None)
                          in filtered_stations) or
-                        (Station("55", "55", 0, -180, 0, [])
+                        (Station("55", "55", 0, -180, 0, [], None)
                          in filtered_stations))
 
         # Test filtering around the longitude wraparound.
         stations = [
-            Station("11", "11", 0, 180, 0, []),
-            Station("22", "22", 0, 179.2, 0, []),
-            Station("33", "33", 0, 180.8, 0, [])]
+            Station("11", "11", 0, 180, 0, [], None),
+            Station("22", "22", 0, 179.2, 0, [], None),
+            Station("33", "33", 0, 180.8, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(filtered_stations, [
-            Station("22", "22", 0, 179.2, 0, []),
-            Station("33", "33", 0, 180.8, 0, [])])
+            Station("22", "22", 0, 179.2, 0, [], None),
+            Station("33", "33", 0, 180.8, 0, [], None)])
 
         # Test the conversion of lat/lng to meter distances.
         stations = [
-            Station("11", "11", 0, 180, 0, []),
-            Station("22", "22", 0, -180, 0, [])]
+            Station("11", "11", 0, 180, 0, [], None),
+            Station("22", "22", 0, -180, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 1)
         stations = [
-            Station("11", "11", 0, 180, 0, []),
-            Station("22", "22", 0, -179.5, 0, [])]
+            Station("11", "11", 0, 180, 0, [], None),
+            Station("22", "22", 0, -179.5, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 1)
         stations = [
-            Station("11", "11", 0, 180, 0, []),
-            Station("22", "22", 0, -179.1, 0, [])]
+            Station("11", "11", 0, 180, 0, [], None),
+            Station("22", "22", 0, -179.1, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 1)
         stations = [
-            Station("11", "11", 0, 180, 0, []),
-            Station("22", "22", 0, 178.9, 0, [])]
+            Station("11", "11", 0, 180, 0, [], None),
+            Station("22", "22", 0, 178.9, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 2)
 
         # Also test the latitude settings.
         stations = [
-            Station("11", "11", 0, -90, 0, []),
-            Station("22", "22", 0, -90, 0, [])]
+            Station("11", "11", 0, -90, 0, [], None),
+            Station("22", "22", 0, -90, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 1)
         stations = [
-            Station("11", "11", 0, -90, 0, []),
-            Station("22", "22", 0, -89.5, 0, [])]
+            Station("11", "11", 0, -90, 0, [], None),
+            Station("22", "22", 0, -89.5, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 1)
         stations = [
-            Station("11", "11", 0, -90, 0, []),
-            Station("22", "22", 0, -89.1, 0, [])]
+            Station("11", "11", 0, -90, 0, [], None),
+            Station("22", "22", 0, -89.1, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 1)
         stations = [
-            Station("11", "11", 0, -90, 0, []),
-            Station("22", "22", 0, -88.9, 0, [])]
+            Station("11", "11", 0, -90, 0, [], None),
+            Station("22", "22", 0, -88.9, 0, [], None)]
         filtered_stations = filter_stations(stations, 111000)
         self.assertEqual(len(filtered_stations), 2)
 
@@ -241,14 +241,14 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         Tests the merging of two stations.
         """
         list_one = [
-            Station("11", "11", 0, 0, 0, []),
-            Station("11", "11", 0, 0, 500, []),
-            Station("11", "11", 0, 0, 1500, []),
+            Station("11", "11", 0, 0, 0, [], None),
+            Station("11", "11", 0, 0, 500, [], None),
+            Station("11", "11", 0, 0, 1500, [], None),
         ]
         list_two = [
-            Station("11", "11", 0, 0, 10, []),
-            Station("11", "11", 0, 0, 505, []),
-            Station("11", "11", 0, 0, 1505, []),
+            Station("11", "11", 0, 0, 10, [], None),
+            Station("11", "11", 0, 0, 505, [], None),
+            Station("11", "11", 0, 0, 1505, [], None),
             ]
         new_list = merge_stations(list_one, list_two, 20)
         self.assertEqual(new_list, list_one)
@@ -256,7 +256,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         self.assertEqual(new_list, list_one + list_two)
         new_list = merge_stations(list_one, list_two, 8)
         self.assertEqual(new_list, list_one + [
-            Station("11", "11", 0, 0, 10, [])])
+            Station("11", "11", 0, 0, 10, [], None)])
 
 
 

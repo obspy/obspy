@@ -21,6 +21,8 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 import warnings
 
+from .utils import filter_stations, merge_stations
+
 
 # Setup the logger.
 logger = logging.getLogger("obspy-download-helper")
@@ -92,7 +94,8 @@ def _filter_channel_priority(channels, priorities=("HH[Z,N,E]", "BH[Z,N,E]",
 
 
 Station = namedtuple("Station", ["network", "station", "latitude",
-                                 "longitude", "elevation_in_m", "channels"])
+                                 "longitude", "elevation_in_m", "channels",
+                                 "client"])
 Channel = namedtuple("Channel", ["location", "channel"])
 
 
@@ -118,11 +121,13 @@ def get_availability(client, client_name, restrictions, domain):
          {("NET", "STA1"): Station(network="NET", station="STA1",
             latitude=1.0, longitude=2.0, elevation_in_m=3.0,
             channels=(Channel(location="", channel="EHE"),
-                      Channel(...),  ...)),
+                      Channel(...),  ...),
+            client="IRIS"),
           ("NET", "STA2"): Station(network="NET", station="STA2",
             latitude=1.0, longitude=2.0, elevation_in_m=3.0,
             channels=(Channel(location="", channel="EHE"),
-                      Channel(...),  ...)),
+                      Channel(...),  ...),
+            client="IRIS"),
           ...
          }
     """
@@ -188,7 +193,8 @@ def get_availability(client, client_name, restrictions, domain):
                 latitude=station.latitude,
                 longitude=station.longitude,
                 elevation_in_m=station.elevation,
-                channels=filtered_channels
+                channels=filtered_channels,
+                client=client_name
             )
 
     logger.info("Found %i matching channels from client '%s'." %
@@ -249,8 +255,9 @@ class DownloadHelper(object):
                 continue
             available_channels[client] = availabilities[client]
 
-        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+        # Create master availability.
 
+        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
     def __initialize_clients(self):
         """
