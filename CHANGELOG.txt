@@ -12,11 +12,16 @@
    * bugfix: channel code now correctly read (4 hex char)
    * bugfix: channels can have different sampling rate
    * improvement: datawide 0.5 (4 bits) encoding now supported
+   * century of data can now be specified
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
    * for advanced users: endpoints of any particular service can now be
      specified explicitely (see #754)
+   * new known FDSN providers: 'ORFEUS', 'GFZ', 'NERIES'
+   * more robust WADL parser
+   * the `attach_response=True` argument now uses a faster approach to
+     download the station data
  - obspy.imaging:
    * Fixing waveform plotting.
  - obspy.sac:
@@ -27,8 +32,16 @@
      state (see #561)
    * multiple smaller bugfixes (see #777)
    * trailing null characters are now stripped from INFO responses (see #778)
+ - obspy.seg2:
+   * numbers are now also recognized as months
+   * now filters non-printable chars from the header enabling it to read some
+     more files
+ - obspy.signal:
+   * the TF misfits now correctly use logarithmic axes instead of scaling an
+     image
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
+   * more robust writing of StationXML in case of missing elements
  - obspy.taup:
    * bugfix: avoid a bug that caused multiple calls to taup to result in
      spurious unexpected results (see #728)
