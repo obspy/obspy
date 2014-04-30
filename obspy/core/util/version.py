@@ -60,7 +60,7 @@ def call_git_describe(abbrev=4):
         return None
     try:
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
-                   '--always'],
+                   '--always', '--tags'],
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         line = p.stdout.readlines()[0]
