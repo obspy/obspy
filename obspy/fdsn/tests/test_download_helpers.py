@@ -13,13 +13,9 @@ from __future__ import unicode_literals
 from future import standard_library  # NOQA
 import unittest
 
-from obspy.fdsn.download_helpers.utils import filter_stations, merge_stations
-from obspy.core.compatibility import mock
-
-from obspy.fdsn.download_helpers.download_helpers import \
-    _filter_channel_priority, Station
-
 from obspy.fdsn.download_helpers import domain
+from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
+    filter_stations, merge_stations, Station
 
 
 class DomainTestCase(unittest.TestCase):
@@ -91,41 +87,41 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         channels = ["BHE", "SHE", "BHZ", "HHE"]
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "HH[Z,N,E]", "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
         self.assertEqual(filtered_channels, ["HHE"])
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
         self.assertEqual(filtered_channels, ["BHE", "BHZ"])
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "LH[Z,N,E]"])
         self.assertEqual(filtered_channels, [])
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "*"])
         self.assertEqual(filtered_channels, channels)
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "BH*", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
         self.assertEqual(filtered_channels, ["BHE", "BHZ"])
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "BH[N,Z]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
         self.assertEqual(filtered_channels, ["BHZ"])
 
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "S*", "BH*"])
         self.assertEqual(filtered_channels, ["SHE"])
 
         # Different ways to not filter.
-        filtered_channels = _filter_channel_priority(channels, priorities=[
+        filtered_channels = filter_channel_priority(channels, priorities=[
             "*"])
         self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
 
-        filtered_channels = _filter_channel_priority(channels,
-                                                     priorities=None)
+        filtered_channels = filter_channel_priority(channels,
+                                                    priorities=None)
         self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
 
     def test_station_list_nearest_neighbour_filter(self):
@@ -249,7 +245,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Station("11", "11", 0, 0, 10, [], None),
             Station("11", "11", 0, 0, 505, [], None),
             Station("11", "11", 0, 0, 1505, [], None),
-            ]
+        ]
         new_list = merge_stations(list_one, list_two, 20)
         self.assertEqual(new_list, list_one)
         new_list = merge_stations(list_one, list_two, 2)
@@ -259,12 +255,11 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Station("11", "11", 0, 0, 10, [], None)])
 
 
-
 def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(DownloadHelpersUtilTestCase, 'test'))
-    return suite
+    testsuite = unittest.TestSuite()
+    testsuite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(DownloadHelpersUtilTestCase, 'test'))
+    return testsuite
 
 
 if __name__ == '__main__':

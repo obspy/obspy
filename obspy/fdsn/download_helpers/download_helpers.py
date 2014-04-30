@@ -9,19 +9,16 @@ Download helpers.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from collections import namedtuple
-import fnmatch
 import logging
 from multiprocessing.pool import ThreadPool
 import itertools
-from urllib2 import HTTPError
 import obspy
 from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 import warnings
 
-from .utils import filter_stations, merge_stations
+from .utils import filter_stations, merge_stations, get_availability
 
 
 # Setup the logger.
@@ -39,15 +36,21 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 
+class FDSNDownloadHelperException(FDSNException):
+    pass
+
+
 class Restrictions(object):
     """
     Class storing non-domain bounds restrictions of a query.
     """
     __slots__ = ("starttime", "endtime", "network", "station", "location",
-                 "channel", "channel_priorities")
+                 "channel", "channel_priorities",
+                 "minimum_interstation_distance_in_m")
 
     def __init__(self, starttime, endtime, network=None, station=None,
                  location=None, channel=None,
+                 minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
                                      "MH[Z,N,E]", "EH[Z,N,E]",
                                      "LH[Z,N,E]")):
@@ -58,149 +61,8 @@ class Restrictions(object):
         self.location = location
         self.channel = channel
         self.channel_priorities = channel_priorities
-
-
-def _filter_channel_priority(channels, priorities=("HH[Z,N,E]", "BH[Z,N,E]",
-                                                   "MH[Z,N,E]", "EH[Z,N,E]",
-                                                   "LH[Z,N,E]")):
-    """
-    This function takes a dictionary containing channels keys and returns a new
-    one filtered with the given priorities list.
-
-    All channels matching the first pattern in the list will be retrieved. If
-    one or more channels are found it stops. Otherwise it will attempt to
-    retrieve channels matching the next pattern. And so on.
-
-    :type channels: list
-    :param channels: A list containing channel names.
-    :type priorities: list of unicode
-    :param priorities: The desired channels with descending priority. Channels
-        will be matched by fnmatch.fnmatch() so wildcards and sequences are
-        supported. The advisable form to request the three standard components
-        of a channel is "HH[Z,N,E]" to avoid getting e.g. rotated components.
-    :returns: A new list containing only the filtered channels.
-    """
-    if priorities is None:
-        return channels
-    filtered_channels = []
-    for pattern in priorities:
-        if filtered_channels:
-            break
-        for channel in channels:
-            if fnmatch.fnmatch(channel, pattern):
-                filtered_channels.append(channel)
-                continue
-    return filtered_channels
-
-
-Station = namedtuple("Station", ["network", "station", "latitude",
-                                 "longitude", "elevation_in_m", "channels",
-                                 "client"])
-Channel = namedtuple("Channel", ["location", "channel"])
-
-
-def get_availability(client, client_name, restrictions, domain):
-    """
-    Returns availability information from an initialized FDSN client.
-
-    :type client: :class:`obspy.fdsn.client.Client`
-    :param client: An initialized FDSN client.
-    :type client_name: str
-    :param client_name: The name of the client. Only used for logging.
-    :type restrictions: :class:`obspy.fdsn.download_helpers.Restrictions`
-    :param restrictions: The non-domain related restrictions for the query.
-    :type domain: :class:`obspy.fdsn.download_helpers.Domain` subclass
-    :param domain: The domain definition.
-    :rtype: dict
-
-    Return a dictionary akin to the following containing information about
-    all available channels according to the webservice.
-
-    .. code-block:: python
-
-         {("NET", "STA1"): Station(network="NET", station="STA1",
-            latitude=1.0, longitude=2.0, elevation_in_m=3.0,
-            channels=(Channel(location="", channel="EHE"),
-                      Channel(...),  ...),
-            client="IRIS"),
-          ("NET", "STA2"): Station(network="NET", station="STA2",
-            latitude=1.0, longitude=2.0, elevation_in_m=3.0,
-            channels=(Channel(location="", channel="EHE"),
-                      Channel(...),  ...),
-            client="IRIS"),
-          ...
-         }
-    """
-    # Check if stations needs to be filtered after downloading or if the
-    # restrictions one can impose with FDSN webservice query are enough.
-    try:
-        domain.is_in_domain(0, 0)
-        needs_filtering = True
-    except NotImplementedError:
-        needs_filtering = False
-
-    arguments = {
-        "network": restrictions.network,
-        "station": restrictions.station,
-        "location": restrictions.location,
-        "channel": restrictions.channel,
-        "starttime": restrictions.starttime,
-        "endtime": restrictions.endtime,
-        # Request at the channel level.
-        "level": "channel"
-    }
-    # Add the domain specific query parameters.
-    arguments.update(domain.get_query_parameters())
-
-    logger.info("Requesting availability from client '%s'" % client_name)
-    try:
-        inv = client.get_stations(**arguments)
-    except (FDSNException, HTTPError) as e:
-        logger.error(
-            "Failed getting availability for client '{0}': %s".format(
-                client_name), str(e))
-        return client_name, None
-    logger.info("Successfully requested availability from client '%s'" %
-                client_name)
-
-    availability = {}
-
-    for network in inv:
-        for station in network:
-            # Skip the station if it is not in the desired domain.
-            if needs_filtering is True and \
-                    not domain.is_in_domain(station.latitude,
-                                            station.longitude):
-                continue
-
-            # Group by locations and apply the channel priority filter to
-            # each.
-            filtered_channels = []
-            for location, channels in itertools.groupby(
-                    station.channels, lambda x: x.location_code):
-                channels = list(set([_i.code for _i in channels]))
-                filtered_channels.extend([
-                    Channel(location, _i) for _i in
-                    _filter_channel_priority(
-                        channels, priorities=restrictions.channel_priorities)])
-
-            if not filtered_channels:
-                continue
-
-            availability[(network.code, station.code)] = Station(
-                network=network.code,
-                station=station.code,
-                latitude=station.latitude,
-                longitude=station.longitude,
-                elevation_in_m=station.elevation,
-                channels=filtered_channels,
-                client=client_name
-            )
-
-    logger.info("Found %i matching channels from client '%s'." %
-                (sum([len(_i.channels) for _i in availability.values()]),
-                client_name))
-    return client_name, availability
+        self.minimum_interstation_distance_in_m = \
+            float(minimum_interstation_distance_in_m)
 
 
 class DownloadHelper(object):
@@ -230,7 +92,7 @@ class DownloadHelper(object):
         """
         def star_get_availability(args):
             try:
-                avail = get_availability(*args)
+                avail = get_availability(*args, logger=logger)
             except FDSNException as e:
                 logger.error(str(e))
                 return None
@@ -249,15 +111,32 @@ class DownloadHelper(object):
         # available information.
         availabilities = {key: value for key, value in availabilities if
                           value is not None}
-        available_channels = {}
+        availability = OrderedDict()
         for client in self.providers:
             if client not in availabilities:
                 continue
-            available_channels[client] = availabilities[client]
+            availability[client] = availabilities[client]
 
-        # Create master availability.
+        if not availability:
+            msg = "No suitable channel found across FDSN providers."
+            logger.error(msg)
+            raise FDSNDownloadHelperException(msg)
 
-        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+        # Create the master availability.
+        master_availability = availabilities.values()[0]
+        master_availability = filter_stations(
+            master_availability,
+            restrictions.minimum_interstation_distance_in_m)
+
+        for stations in availabilities.values()[1:]:
+            master_availability = merge_stations(
+                stations, restrictions.minimum_interstation_distance_in_m)
+
+        # Group available stations per client.
+        availability = {
+            (client_name, self._initialized_clients[client_name]): stations
+            for client_name, stations in
+            itertools.groupby(master_availability, lambda x: x.client)}
 
     def __initialize_clients(self):
         """
@@ -278,7 +157,7 @@ class DownloadHelper(object):
             if "dataselect" not in services or "station" not in services:
                 logger.info("Cannot use client '%s' as it does not have "
                             "'dataselect' and/or 'station' services."
-                            % (client_name))
+                            % client_name)
                 return client_name, None
             return client_name, this_client
 
@@ -303,4 +182,3 @@ class DownloadHelper(object):
         logger.info("Successfully initialized %i clients: %s."
                     % (len(self._initialized_clients),
                        ", ".join(self._initialized_clients.keys())))
-
