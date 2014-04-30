@@ -92,6 +92,10 @@ SDICT = {'kstnm': 0, 'kevnm': 1, 'khole': 2, 'ko': 3, 'ka': 4,
          'kuser2': 18, 'kcmpnm': 19, 'knetwk': 20,
          'kdatrd': 21, 'kinst': 22}
 
+TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "
+                      "This is not supported by the SAC file format standard. "
+                      "Prepending '19'.")
+
 
 class SacError(Exception):
     """
@@ -1136,7 +1140,11 @@ class SacIO(object):
         ### reftime is set to 0.0
         try:
             ms = self.GetHvalue('nzmsec') * 1000
-            self.reftime = UTCDateTime(year=self.GetHvalue('nzyear'),
+            yr = self.GetHvalue('nzyear')
+            if 0 <= yr <= 99:
+                warnings.warn(TWO_DIGIT_YEAR_MSG)
+                yr += 1900
+            self.reftime = UTCDateTime(year=yr,
                                        julday=self.GetHvalue('nzjday'),
                                        hour=self.GetHvalue('nzhour'),
                                        minute=self.GetHvalue('nzmin'),
