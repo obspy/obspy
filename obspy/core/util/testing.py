@@ -291,7 +291,7 @@ def get_matplotlib_defaul_tolerance():
     if getMatplotlibVersion() < [1, 3, 0]:
         return 2e-3
     else:
-        return 1
+        return 2
 
 
 FLAKE8_EXCLUDE_FILES = [
