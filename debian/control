@@ -17,7 +17,7 @@ Priority: extra
 Depends: python (>= 2.6), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
  python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
- python-suds (>= 0.4), ${shlibs:Depends}
+ python-suds (>= 0.4), ${shlibs:Depends}, python-tornado
 Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-db, python-obspy-earthworm, python-obspy-fissures,
  python-obspy-gse2, python-obspy-imaging, python-obspy-iris,
