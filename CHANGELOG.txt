@@ -19,6 +19,9 @@
      specified explicitely (see #754)
  - obspy.imaging:
    * Fixing waveform plotting.
+ - obspy.sac:
+   * SAC files with two digit year header field are now interpreted as
+     "19xx", same as done by SAC (see #779)
  - obspy.seedlink:
    * bugfix: different instances of a SeedLink connection had a shared
      state (see #561)
