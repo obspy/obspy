@@ -2,6 +2,9 @@
  - general:
    * support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
+ - obspy.fdsn:
+   * WADL files are cached per Python process.
+   * Bulk station downloading using POST requests.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)

@@ -532,10 +532,10 @@ class ClientTestCase(unittest.TestCase):
                          failmsg(normalize_version_number(got),
                                  normalize_version_number(expected)))
 
-    def test_bulk(self):
+    def test_dataselect_bulk(self):
         """
-        Test bulk requests, POSTing data to server. Also tests authenticated
-        bulk request.
+        Test bulk dataselect requests, POSTing data to server. Also tests
+        authenticated bulk request.
         """
         clients = [self.client, self.client_auth]
         file = os.path.join(self.datapath, "bulk.mseed")
@@ -587,6 +587,69 @@ class ClientTestCase(unittest.TestCase):
         for client in clients:
             got = client.get_waveforms_bulk(compatibility.StringIO(bulk))
             self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_station_bulk(self):
+        """
+        Test bulk station requests, POSTing data to server. Also tests
+        authenticated bulk request.
+
+        Does currently only test reading from a list of list. The other
+        input types are tested with the waveform bulk downloader and thus
+        should work just fine.
+        """
+        clients = [self.client, self.client_auth]
+        # test cases for providing lists of lists
+        starttime = UTCDateTime(1990, 1, 1)
+        endtime = UTCDateTime(1990, 1, 1) + 10
+        bulk = [
+            ["IU", "ANMO", "", "BHE", starttime, endtime],
+            ["IU", "CCM", "", "BHZ", starttime, endtime],
+            ["IU", "COR", "", "UHZ", starttime, endtime],
+            ["IU", "HRV", "", "LHN", starttime, endtime],
+        ]
+        for client in clients:
+            # Test with station level.
+            inv = client.get_stations_bulk(bulk, level="station")
+            # Test with output to file.
+            with NamedTemporaryFile() as tf:
+                client.get_stations_bulk(
+                    bulk, filename=tf.name, level="station")
+                inv2 = read_inventory(tf.name, format="stationxml")
+
+            self.assertEqual(inv.networks, inv2.networks)
+            self.assertEqual(len(inv.networks), 1)
+            self.assertEqual(inv[0].code, "IU")
+            self.assertEqual(len(inv.networks[0].stations), 4)
+            self.assertEqual(
+                sorted([_i.code for _i in inv.networks[0].stations]),
+                sorted(["ANMO", "CCM", "COR", "HRV"]))
+
+            # Test with channel level.
+            inv = client.get_stations_bulk(bulk, level="channel")
+            # Test with output to file.
+            with NamedTemporaryFile() as tf:
+                client.get_stations_bulk(
+                    bulk, filename=tf.name, level="channel")
+                inv2 = read_inventory(tf.name, format="stationxml")
+
+            self.assertEqual(inv.networks, inv2.networks)
+            self.assertEqual(len(inv.networks), 1)
+            self.assertEqual(inv[0].code, "IU")
+            self.assertEqual(len(inv.networks[0].stations), 4)
+            self.assertEqual(
+                sorted([_i.code for _i in inv.networks[0].stations]),
+                sorted(["ANMO", "CCM", "COR", "HRV"]))
+            channels = []
+            for station in inv[0]:
+                for channel in station:
+                    channels.append("IU.%s.%s.%s" % (
+                        station.code, channel.location_code,
+                        channel.code))
+            self.assertEqual(
+                sorted(channels),
+                sorted(["IU.ANMO..BHE", "IU.CCM..BHZ", "IU.COR..UHZ",
+                        "IU.HRV..LHN"]))
+        return
 
     def test_get_waveform_attach_response(self):
         """
