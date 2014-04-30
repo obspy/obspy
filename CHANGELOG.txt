@@ -17,7 +17,7 @@
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
    * for advanced users: endpoints of any particular service can now be
-     specified explicitely (see #754)
+     specified explicitly (see #754)
    * new known FDSN providers: 'ORFEUS', 'GFZ', 'NERIES'
    * more robust WADL parser
    * the `attach_response=True` argument now uses a faster approach to
@@ -108,8 +108,8 @@
      waveform files
    * check if ndim == 1 when setting Trace.data and raise if necessary,
      see #695
-   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
-     WaveformStreamID as specified in QuakeML docs (#633)
+   * change waveform_id parameter in obspy.core.event.FocalMechanism to list
+     of WaveformStreamID as specified in QuakeML docs (#633)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
