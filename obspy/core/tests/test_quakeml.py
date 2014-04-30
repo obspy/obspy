@@ -777,6 +777,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(amp.time_window.reference,
                          UTCDateTime("2007-10-10T14:40:39.055"))
 
+    @skipIf(not LXML_ETREE, "lxml too old to run this test.")
     def test_write_amplitude_time_window(self):
         """
         Tests writing an QuakeML Amplitude with TimeWindow.
