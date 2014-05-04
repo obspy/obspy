@@ -154,7 +154,7 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            urllib2.urlopen(self.base_url).read()
+            urllib2.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except:
             None
@@ -241,7 +241,7 @@ class Client(object):
         # it seems the following always ends in a urllib2.HTTPError even with
         # nice status codes...?!?
         try:
-            response = urllib2.urlopen(req)
+            response = urllib2.urlopen(req, timeout=self.timeout)
             return response.code, response.msg
         except urllib2.HTTPError, e:
             return e.code, e.msg
