@@ -4,10 +4,15 @@
 The obspy.seishub.client test suite.
 """
 
+from urllib2 import urlopen
 from obspy.seishub import Client
 import unittest
 from obspy.core import UTCDateTime, AttribDict
 from obspy.xseed.utils import SEEDParserException
+
+
+TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
+TESTSERVER_REACHABLE = None
 
 
 class ClientTestCase(unittest.TestCase):
@@ -16,7 +21,25 @@ class ClientTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.client = Client("http://teide.geophysik.uni-muenchen.de:8080")
+        global TESTSERVER_REACHABLE
+        # check once if seishub test server can be reached
+        if TESTSERVER_REACHABLE is None:
+            try:
+                code = urlopen(TESTSERVER, timeout=3).getcode()
+                assert(code == 200)
+            except:
+                TESTSERVER_REACHABLE = False
+            else:
+                TESTSERVER_REACHABLE = True
+        # if server can not be reached:
+        # skip test (py>=2.7) or raise an error immediately (py 2.6)
+        if not TESTSERVER_REACHABLE:
+            msg = "Seishub test server not reachable."
+            try:
+                self.skipTest(msg)
+            except AttributeError:
+                raise Exception(msg)
+        self.client = Client(TESTSERVER)
 
 #    def test_getWaveformApplyFilter(self):
 #        t = UTCDateTime("2009-09-03 00:00:00")

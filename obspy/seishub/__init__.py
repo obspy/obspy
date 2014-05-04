@@ -17,7 +17,7 @@ Basic Example
 >>> from obspy.seishub import Client
 >>> from obspy import UTCDateTime
 
->>> client = Client(timeout=20)
+>>> client = Client(timeout=2)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
 >>> st.sort()  # doctest: +ELLIPSIS

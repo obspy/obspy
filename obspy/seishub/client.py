@@ -101,7 +101,7 @@ class Client(object):
     >>> from obspy.seishub import Client
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
-    >>> client = Client()
+    >>> client = Client(timeout=2)
     >>>
     >>> st = client.waveform.getWaveform("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
@@ -714,7 +714,7 @@ master/seishub/plugins/seismology/waveform.py
 
         .. rubric:: Example
 
-        >>> c = Client()
+        >>> c = Client(timeout=2)
         >>> paz = c.station.getPAZ('BW.MANZ..EHZ', '20090707')
         >>> paz['zeros']
         [0j, 0j]
