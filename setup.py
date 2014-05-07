@@ -328,12 +328,15 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    # support library paths containing spaces
-    def _library_dir_option(self, dir):
-        return '"/LIBPATH:%s"' % (dir)
-
+    import distutils
     from distutils.msvc9compiler import MSVCCompiler
-    MSVCCompiler.library_dir_option = _library_dir_option
+
+    # for Python 2.x only -> support library paths containing spaces
+    if distutils.__version__.startswith('2.'):
+        def _library_dir_option(self, dir):
+            return '/LIBPATH:"%s"' % (dir)
+
+        MSVCCompiler.library_dir_option = _library_dir_option
 
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):
