@@ -381,11 +381,13 @@ class EVT_TAG(EVT_Virtual):
         :param fp: file descriptor of EVT file.
         """
         mystr = fp.read(16)
+        if len(mystr) < 16:
+            raise EVTEOFError
         sync, byteOrder = unpack(b"cB", mystr[0:2])
-        if (len(mystr) < 16) or (sync == b'\x00'):
+        if sync == b'\x00':
             raise EVTEOFError
         if sync != b'K':
-            raise EVTBadHeaderError('Sync error : <' + str(sync) + '>')
+            raise EVTBadHeaderError('Sync error')
         if byteOrder == 1:
             endian = b">"
         elif byteOrder == 0:
