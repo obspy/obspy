@@ -1003,7 +1003,9 @@ def _write_response_stage(parent, stage):
                        ResponseListResponseStage: "ResponseList",
                        FIRResponseStage: "FIR",
                        PolynomialResponseStage: "Polynomial"}
-        subel_attrs = {"name": str(stage.name)}
+        subel_attrs = {}
+        if stage.name is not None:
+            subel_attrs["name"] = str(stage.name)
         if stage.resource_id2 is not None:
             subel_attrs["resourceId"] = stage.resource_id2
         sub_ = etree.SubElement(sub, tagname_map[type(stage)], subel_attrs)
