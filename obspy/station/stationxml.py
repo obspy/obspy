@@ -774,7 +774,7 @@ def _float_to_str(x):
     Converts a float to str making sure no precision is lost in the string
     representation.
     """
-    text = ("%20f" % x).rstrip("0").lstrip()
+    text = ("%.20f" % x).rstrip("0").lstrip()
     if text.endswith("."):
         text += "0"
     return text
