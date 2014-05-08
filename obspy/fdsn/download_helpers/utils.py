@@ -2,9 +2,13 @@ import collections
 import copy
 import fnmatch
 import itertools
-from urllib2 import HTTPError
+import os
+from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
+from urllib2 import HTTPError
+import obspy
+import warnings
 
 from obspy.fdsn.client import FDSNException
 
@@ -19,6 +23,11 @@ Station = collections.namedtuple("Station",
                                   "longitude", "elevation_in_m", "channels",
                                   "client"])
 Channel = collections.namedtuple("Channel", ["location", "channel"])
+
+# Used for the quick StationXML indexer.
+ChannelAvailability = collections.namedtuple(
+    "ChannelAvailability", ["network", "station", "location",
+                            "channel", "starttime", "endtime"])
 
 
 def get_availability(client, client_name, restrictions, domain, logger):
@@ -251,3 +260,101 @@ def merge_stations(stations, other_stations, minimum_distance_in_m=0.0):
         stations.append(station)
 
     return stations
+
+
+def download_waveforms_and_stations(client, client_name, station_list,
+                                    starttime, endtime, temporary_directory):
+    # Create the bulk download list. This is the same for waveform and
+    # station bulk downloading.
+    (((s.network, s.station, c.location, c.channel, starttime, endtime)
+      for c in s.channels) for s in station_list)
+
+
+def default_get_stationxml_filename(root_folder, network, station):
+    """
+    The default implementation of getting the filename of a StationXML file.
+    """
+    return os.path.join(root_folder, "StationXML",
+                        "%s.%s.xml" % (network, station))
+
+
+def get_default_miniseed_filename(root_folder, network, station, location,
+                                  channel, starttime, endtime):
+    """
+    The default implementation of getting the filename of a MiniSEED file.
+    """
+    # time format that works in a filename
+    tformat = "%Y-%m-%d-%H-%M-%S"
+    return os.path.join(root_folder, "MiniSEED", "%s.%s.%s.%s_%s_%s" % (
+        network, station, location, channel,
+        starttime.strftime(tformat), endtime.strftime(tformat)))
+
+
+def does_file_contain_all_channels(filename, station, logger=None):
+    """
+    Test whether the StationXML file located at filename contains
+    information about all channels in station.
+
+    :type filename: str
+    :param filename: Filename of the StationXML file to check.
+    :type station: :class:`~obspy.fdsn.download_helpers.utils.Station`
+    :param station: Station object containing channel information.
+    :type logger: :class:`logging.Logger`
+    :param logger: Logger to log exceptions to.
+    """
+    try:
+        available_channels = get_stationxml_contents(filename)
+    except etree.XMLSyntaxError:
+        msg = "'%s' is not a valid XML file. Will be overwritten." % filename
+        if logger is not None:
+            logger.warning(msg)
+        else:
+            warnings.warn(msg)
+
+
+
+
+
+def get_stationxml_contents(filename):
+    """
+    Really fast way to get all channels with a response in a StationXML file.
+
+    :param filename: The path to the file.
+    :returns: list of ChannelAvailability objects.
+    """
+    # Small state machine.
+    network, station, location, channel, starttime, endtime = [None] * 6
+
+    ns = "http://www.fdsn.org/xml/station/1"
+    network_tag = "{%s}Network" % ns
+    station_tag = "{%s}Station" % ns
+    channel_tag = "{%s}Channel" % ns
+    response_tag = "{%s}Response" % ns
+
+    context = etree.iterparse(filename, events=("start", ),
+                              tag=(network_tag, station_tag, channel_tag,
+                                   response_tag))
+
+    channels = []
+    for event, elem in context:
+        if elem.tag == channel_tag:
+            channel = elem.get('code')
+            location = elem.get('locationCode').strip()
+            starttime = obspy.UTCDateTime(elem.get('startDate'))
+            endtime = obspy.UTCDateTime(elem.get('endDate'))
+        elif elem.tag == response_tag:
+            channels.append(ChannelAvailability(
+                network, station, location, channel, starttime, endtime
+            ))
+        elif elem.tag == station_tag:
+            station = elem.get('code')
+            location, channel, starttime, endtime = \
+                None, None, None, None
+        elif elem.tag == network_tag:
+            network = elem.get('code')
+            station, location, channel, starttime, endtime = \
+                None, None, None, None, None
+        while elem.getprevious() is not None:
+            del elem.getparent()[0]
+
+    return channels

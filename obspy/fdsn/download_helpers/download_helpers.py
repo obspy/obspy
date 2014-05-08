@@ -12,6 +12,8 @@ Download helpers.
 import logging
 from multiprocessing.pool import ThreadPool
 import itertools
+import shutil
+import tempfile
 import obspy
 from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
@@ -66,28 +68,40 @@ class Restrictions(object):
 
 
 class DownloadHelper(object):
-    def __init__(self, domain, providers=None):
+    def __init__(self, providers=None):
         """
-
-        :param domain:
         :param providers: List of FDSN client names or service URLS. Will use
             all FDSN implementations known to ObsPy if set to None. The order
             in the list also determines the priority, if data is available at
             more then one provider it will always be downloaded from the
             provider that comes first in the list.
         """
-        self.domain = domain
-
         if providers is None:
             providers = URL_MAPPINGS.keys()
         # Immutable tuple.
         self.providers = tuple(providers)
 
+        # Each call to self.download() will create a new temporary directory
+        # and save it in this variable.
+        self.temp_dir = None
+
         # Initialize all clients.
         self._initialized_clients = OrderedDict()
         self.__initialize_clients()
 
-    def download(self, restrictions):
+    def download(self, domain, restrictions, settings):
+        # Create a temporary directory which will be deleted after the
+        # downloading has been finished.
+        self.temp_dir = tempfile.mkdtemp(prefix="obspy_fdsn_download_helper")
+        logger.info("Using temporary directory: %s" % self.temp_dir)
+        try:
+            self._download(domain, restrictions, settings)
+        finally:
+            shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
+            logger.info("Deleted temporary directory.")
+
+    def _download(self, domain, restrictions, settings):
         """
         """
         def star_get_availability(args):
@@ -103,7 +117,7 @@ class DownloadHelper(object):
             warnings.simplefilter("default")
             availabilities = p.map(
                 star_get_availability,
-                [(client, client_name, restrictions, self.domain) for
+                [(client, client_name, restrictions, domain) for
                  client_name, client in self._initialized_clients.items()])
         p.close()
 
@@ -132,11 +146,17 @@ class DownloadHelper(object):
             master_availability = merge_stations(
                 stations, restrictions.minimum_interstation_distance_in_m)
 
+        # Filter out already existing files.
+        for station in stations:
+            asdf
+
+
         # Group available stations per client.
         availability = {
             (client_name, self._initialized_clients[client_name]): stations
             for client_name, stations in
             itertools.groupby(master_availability, lambda x: x.client)}
+
 
     def __initialize_clients(self):
         """
