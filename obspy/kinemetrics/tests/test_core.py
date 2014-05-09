@@ -25,7 +25,7 @@ class CoreTestCase(unittest.TestCase):
         """
         valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
                        os.path.join(self.path, "BX456_MOLA-02351.evt")]
-        invalid_files = []
+        invalid_files = [os.path.join(self.path, "NOUTF8.evt")]
         py_dir = os.path.join(self.path, os.pardir, os.pardir)
         for filename in os.listdir(py_dir):
             if filename.endswith(".py"):
