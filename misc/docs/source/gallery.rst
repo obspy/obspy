@@ -173,9 +173,7 @@ Gallery
 
     from obspy import read_inventory
     inv = read_inventory()
-    inv.plot(projection="local",
-             color_per_network={'GR': 'blue',
-                                'BW': 'green'})
+    inv.plot(projection="local", color_per_network={'GR': 'blue', 'BW': 'green'})
 
 .. plot::
     :width: 300px
