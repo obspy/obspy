@@ -32,8 +32,9 @@ before_install:
   - git config --local user.email "travis@travis-ci.org"
   - git config --local user.name "travis-ci"
   - git add *
+  - git pull
   - git commit -m "Uploading new wheels"
-  - git push --quiet origin master || ( git pull --rebase && git push --quiet origin master)
+  - git push --quiet origin master
   ### wheel building/upload end
   - exit 0
 install:
