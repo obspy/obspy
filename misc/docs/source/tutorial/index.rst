@@ -7,6 +7,8 @@ This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
 will give you a good idea of the library’s flavor and style.
 
+A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`.
+
 
 Introduction to ObsPy
 ---------------------
