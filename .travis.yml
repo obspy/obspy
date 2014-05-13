@@ -33,6 +33,7 @@ before_install:
   - git config --local user.name "travis-ci"
   - git add *
   - git pull
+  - git diff --exit-code --staged && exit 0  # exit if no staged changes
   - git commit -m "Uploading new wheels"
   - git push --quiet origin master
   ### wheel building/upload end
