@@ -468,6 +468,7 @@ class WaveformPlotting(object):
                                      format="catalog",
                                      min_magnitude=events["min_magnitude"])
             except Exception as e:
+                events = None
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
                 warnings.warn(msg)
