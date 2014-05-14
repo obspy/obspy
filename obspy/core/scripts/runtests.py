@@ -84,7 +84,7 @@ and report everything, you would run::
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import super
 from future.builtins import input
 from future.builtins import map
@@ -108,7 +108,7 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose']
+                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future']
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -123,7 +123,7 @@ Type "help" to see all available options.
 HOSTNAME = platform.node().split('.', 1)[0]
 
 
-#XXX: start of ugly monkey patch for Python 2.7
+# XXX: start of ugly monkey patch for Python 2.7
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
 class _WritelnDecorator(object):
     """
@@ -143,7 +143,7 @@ class _WritelnDecorator(object):
         self.write('\n')  # text-mode streams translate to \r\n if needed
 
 unittest._WritelnDecorator = _WritelnDecorator
-#XXX: end of ugly monkey patch
+# XXX: end of ugly monkey patch
 
 
 def _getSuites(verbosity=1, names=[]):
