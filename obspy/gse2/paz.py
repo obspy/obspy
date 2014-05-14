@@ -58,9 +58,11 @@ def readPaz(paz_file):
     zeros = []
 
     if isinstance(paz_file, (str, native_str)):
-        paz_file = open(paz_file, 'r')
-
-    PAZ = paz_file.readlines()
+        fh = open(paz_file, 'rt')
+        PAZ = fh.readlines()
+        fh.close()
+    else:
+        PAZ = paz_file.readlines()
     if PAZ[0][0:4] != 'CAL1':
         raise NameError("Unknown GSE PAZ format %s" % PAZ[0][0:4])
     if PAZ[0][31:34] != 'PAZ':

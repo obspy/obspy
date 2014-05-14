@@ -942,7 +942,12 @@ class Trace(object):
             self.data = np.empty(0, dtype=org_dtype)
             return
         elif delta > 0:
-            self.data = self.data[delta:]
+            try:
+                self.data = self.data[delta:]
+            except IndexError:
+                # a huge numbers for delta raises an IndexError
+                # here we just create empty array with same dtype
+                self.data = np.empty(0, dtype=org_dtype)
         return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):

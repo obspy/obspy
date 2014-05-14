@@ -55,6 +55,7 @@ def call_git_describe(abbrev=4):
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         path = p.stdout.readlines()[0].strip()
+        p.stdout.close()
     except:
         return None
     path = os.path.normpath(path)
@@ -70,6 +71,7 @@ def call_git_describe(abbrev=4):
         line = p.stdout.readlines()[0]
         if PY3:
             line = line.decode().rstrip()
+        p.stdout.close()
         # (this line prevents official releases)
         # should work again now, see #482 and obspy/obspy@b437f31
         if "-" not in line and "." not in line:
