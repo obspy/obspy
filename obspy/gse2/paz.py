@@ -58,9 +58,8 @@ def readPaz(paz_file):
     zeros = []
 
     if isinstance(paz_file, (str, native_str)):
-        fh = open(paz_file, 'rt')
-        PAZ = fh.readlines()
-        fh.close()
+        with open(paz_file, 'rt') as fh:
+            PAZ = fh.readlines()
     else:
         PAZ = paz_file.readlines()
     if PAZ[0][0:4] != 'CAL1':
