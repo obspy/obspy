@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import range
 from future.builtins import open
-from future.builtins import str  # NOQA
+from future.builtins import str  # NOQA @UnusedImport
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
@@ -263,7 +263,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 5)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        #self.assertNotEqual(stream[1], stream[-1])
+        # self.assertNotEqual(stream[1], stream[-1])
         self.assertEqual(stream[1], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[1].stats, stream[-1].stats)
@@ -442,21 +442,21 @@ class StreamTestCase(unittest.TestCase):
         t4 = UTCDateTime("2011-09-11")
         st = read()
         st_cut = read()
-        ###
+        # ##
         st_cut.cutout(t4, t4 + 10)
         self.__remove_processing(st_cut)
         self.assertEqual(st, st_cut)
-        ###
+        # ##
         st_cut.cutout(t1 - 10, t1)
         self.__remove_processing(st_cut)
         self.assertEqual(st, st_cut)
-        ###
+        # ##
         st_cut.cutout(t1, t2)
         st.trim(starttime=t2, nearest_sample=True)
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
         self.assertEqual(st, st_cut)
-        ###
+        # ##
         st = read()
         st_cut = read()
         st_cut.cutout(t3, t4)
@@ -464,7 +464,7 @@ class StreamTestCase(unittest.TestCase):
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
         self.assertEqual(st, st_cut)
-        ###
+        # ##
         st = read()
         st.trim(endtime=t2, nearest_sample=True)
         tmp = read()
@@ -835,7 +835,7 @@ class StreamTestCase(unittest.TestCase):
         tr2 = Trace(data=np.ones(3, dtype=np.int32) * 5)
         tr2.stats.starttime = tr1.stats.starttime + 9
         stream = Stream([tr1, tr2])
-        #1 - masked array
+        # 1 - masked array
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 1111-----555
@@ -845,7 +845,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
         self.assertEqual(st[0].data.tolist(),
                          [1, 1, 1, 1, None, None, None, None, None, 5, 5, 5])
-        #2 - fill in zeros
+        # 2 - fill in zeros
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111100000555
@@ -855,7 +855,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ndarray))
         self.assertEqual(st[0].data.tolist(),
                          [1, 1, 1, 1, 0, 0, 0, 0, 0, 5, 5, 5])
-        #2b - fill in some other user-defined value
+        # 2b - fill in some other user-defined value
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111199999555
@@ -865,7 +865,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ndarray))
         self.assertEqual(st[0].data.tolist(),
                          [1, 1, 1, 1, 9, 9, 9, 9, 9, 5, 5, 5])
-        #3 - use last value of first trace
+        # 3 - use last value of first trace
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111111111555
@@ -875,7 +875,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ndarray))
         self.assertEqual(st[0].data.tolist(),
                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5])
-        #4 - interpolate
+        # 4 - interpolate
         # Trace 1: 1111
         # Trace 2:          555
         # 1 + 2  : 111112334555
@@ -927,7 +927,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Test the merge method of the Stream object.
         """
-        #1 - overlapping trace with differing data
+        # 1 - overlapping trace with differing data
         # Trace 1: 0000000
         # Trace 2:      1111111
         # 1 + 2  : 00000--11111
@@ -940,7 +940,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
         self.assertEqual(st[0].data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
-        #2 - overlapping trace with same data
+        # 2 - overlapping trace with same data
         # Trace 1: 0123456
         # Trace 2:      56789
         # 1 + 2  : 0123456789
@@ -953,7 +953,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ndarray))
         np.testing.assert_array_equal(st[0].data, np.arange(10))
         #
-        #3 - contained overlap with same data
+        # 3 - contained overlap with same data
         # Trace 1: 0123456789
         # Trace 2:      56
         # 1 + 2  : 0123456789
@@ -966,7 +966,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ndarray))
         np.testing.assert_array_equal(st[0].data, np.arange(10))
         #
-        #4 - contained overlap with differing data
+        # 4 - contained overlap with differing data
         # Trace 1: 0000000000
         # Trace 2:      11
         # 1 + 2  : 00000--000
@@ -1568,16 +1568,16 @@ class StreamTestCase(unittest.TestCase):
         dt = end - start
         delta = tr1.stats.delta
         # test traces that should be merged:
-        ### contained traces with compatible data
+        # ## contained traces with compatible data
         tr2 = tr1.slice(start, start + dt / 3)
         tr3 = tr1.copy()
         tr4 = tr1.slice(start + dt / 4, end - dt / 4)
-        ### adjacent traces
+        # ## adjacent traces
         tr5 = tr1.copy()
         tr5.stats.starttime = end + delta
         tr6 = tr1.copy()
         tr6.stats.starttime = start - dt - delta
-        ### create overlapping traces with compatible data
+        # ## create overlapping traces with compatible data
         trO1 = tr1.copy()
         trO1.trim(starttime=start + 2 * delta)
         trO1.data = np.concatenate([trO1.data, np.arange(5)])
@@ -1932,7 +1932,7 @@ class StreamTestCase(unittest.TestCase):
         data = np.ones(10)
         tr = Trace(data=data.copy())
         st = Stream([tr, tr])
-        st.taper()
+        st.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
             self.assertTrue(st[0].data[i] <= 1.)
             self.assertTrue(st[0].data[i] >= 0.)
@@ -2011,8 +2011,8 @@ class StreamTestCase(unittest.TestCase):
             .decimate(factor=2, no_filter=True)\
             .resample(st[0].stats.sampling_rate / 2)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            -0.037004 - 0.037016j,
-                                            -251.33 + 0j],
+                                            - 0.037004 - 0.037016j,
+                                            - 251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\
