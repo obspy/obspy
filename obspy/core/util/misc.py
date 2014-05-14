@@ -515,14 +515,21 @@ def _get_lib_name(lib, add_extension_suffix):
     libname = cleanse_pymodule_filename(libname)
     # numpy distutils adds extension suffix by itself during build (#771, #755)
     if add_extension_suffix:
-        # append any extension suffix defined by Python for current platform,
-        # but strip ".so" or ".pyd" extensions
+        # append any extension suffix defined by Python for current platform
         ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+        # in principle "EXT_SUFFIX" is what we want.
+        # "SO" seems to be deprecated on newer python
+        # but: older python seems to have empty "EXT_SUFFIX", so we fall back
+        if not ext_suffix:
+            try:
+                ext_suffix = sysconfig.get_config_var("SO")
+            except Exception as e:
+                msg = ("Empty 'EXT_SUFFIX' encountered while building CDLL "
+                       "filename and fallback to 'SO' variable failed "
+                       "(%s)." % str(e))
+                warnings.warn(msg)
+                pass
         if ext_suffix:
-            if ext_suffix.endswith(".so"):
-                ext_suffix = ext_suffix[:-3]
-            elif ext_suffix.endswith(".pyd"):
-                ext_suffix = ext_suffix[:-4]
             libname = libname + ext_suffix
     return libname
 
