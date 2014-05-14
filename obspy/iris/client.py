@@ -10,7 +10,7 @@ IRIS Web service client for ObsPy.
 """
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import open
 from future.builtins import str
 from future.utils import native_str
@@ -19,6 +19,7 @@ from obspy.core.util import NamedTemporaryFile, loadtxt
 from obspy.core import compatibility
 import json
 import platform
+import warnings
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -89,6 +90,11 @@ class Client(object):
 
         See :mod:`obspy.iris` for all parameters.
         """
+        msg = ("Development and maintenance efforts will focus on the new "
+               "obspy.fdsn client. Please consider moving all code from using "
+               "obspy.iris to using obspy.fdsn.")
+        warnings.warn(msg, DeprecationWarning)
+
         self.base_url = base_url
         self.timeout = timeout
         self.debug = debug
