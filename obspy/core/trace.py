@@ -286,6 +286,14 @@ class Trace(object):
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
 
+    @property
+    def meta(self):
+        return self.stats
+
+    @meta.setter
+    def meta(self, value):
+        self.stats = value
+
     def __eq__(self, other):
         """
         Implements rich comparison of Trace objects for "==" operator.

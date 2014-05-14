@@ -1729,6 +1729,16 @@ class TraceTestCase(unittest.TestCase):
         self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
         self.assertEqual(tr.stats.processing, [info])
 
+    def test_meta(self):
+        """
+        Tests Trace.meta an alternative to Trace.stats
+        """
+        tr = Trace()
+        tr.meta = Stats({'network': 'NW'})
+        self.assertEqual(tr.stats.network, 'NW')
+        tr.stats = Stats({'network': 'BW'})
+        self.assertEqual(tr.meta.network, 'BW')
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
