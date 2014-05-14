@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from __future__ import unicode_literals
+from future.utils import PY3
 # Author: Douglas Creager <dcreager@dcreager.net>
 # This file is placed into the public domain.
 
@@ -56,7 +57,10 @@ def call_git_describe(abbrev=4):
         path = p.stdout.readlines()[0].strip()
     except:
         return None
-    if os.path.normpath(path) != OBSPY_ROOT:
+    path = os.path.normpath(path)
+    if PY3:
+        path = path.decode()
+    if path != OBSPY_ROOT:
         return None
     try:
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
@@ -64,6 +68,8 @@ def call_git_describe(abbrev=4):
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         line = p.stdout.readlines()[0]
+        if PY3:
+            line = line.decode().rstrip()
         # (this line prevents official releases)
         # should work again now, see #482 and obspy/obspy@b437f31
         if "-" not in line and "." not in line:
