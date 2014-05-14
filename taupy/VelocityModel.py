@@ -337,7 +337,7 @@ class VelocityModel(object):
         """ generated source for method print_ """
         i = 0
         while i < self.getNumLayers():
-            print self.getVelocityLayer(i)
+            print(self.getVelocityLayer(i))
             i += 1
 
     @classmethod
@@ -346,7 +346,7 @@ class VelocityModel(object):
         j = filename.lastIndexOf(System.getProperty("file.separator"))
         modelFilename = filename.substring(j + 1)
         modelName = modelFilename
-        if modelFilename.endsWith("tvel"):
+        if modelFilename.endsWith(".tvel"):
             modelName = modelFilename.substring(0, 5 - len(modelFilename))
         elif modelFilename.endsWith(".nd"):
             modelName = modelFilename.substring(0, 3 - len(modelFilename))
@@ -360,9 +360,10 @@ class VelocityModel(object):
     def readVelocityFile(cls, filename, fileType):
         """ Reads in a velocity file. The type of file is determined by the 
 	fileType parameter. Calls readTVelFile or readNDFile.
-     	 
-     	@exception VelocityModelException
+        @exception VelocityModelException
      	if the type of file cannot be determined. """
+
+        # filename formatting
         if fileType == None or fileType == "":
             if filename.endsWith(".nd"):
                 fileType = ".nd"
@@ -374,53 +375,56 @@ class VelocityModel(object):
         if not f.exists() and not filename.endsWith("." + fileType) and File(filename + "." + fileType).exists():
             f = File(filename + "." + fileType)
         vMod = VelocityModel()
-        if fileType.lower() == "nd".lower():
+
+        # the actual reading of the velocity file
+        if fileType.lower() == "nd":
             vMod = readNDFile(f)
-        elif fileType.lower() == "tvel".lower():
+        elif fileType.lower() == "tvel":
             vMod = readTVelFile(f)
         else:
             raise VelocityModelException("What type of velocity file, .tvel or .nd?")
+
         vMod.fixDisconDepths()
         return vMod
 
 
 
-     #* This method reads in a velocity model from a "tvel" ASCII text file. The
-     #* name of the model file for model "modelname" should be "modelname.tvel".
-     #* The format of the file is: comment line - generally info about the P
-     #* velocity model comment line - generally info about the S velocity model
-     #* depth pVel sVel Density depth pVel sVel Density . . .
-     #* 
-     #* The velocities are assumed to be linear between sample points. Because
-     #* this type of model file doesn't give complete information we make the
-     #* following assumptions: modelname - from the filename, with ".tvel"
-     #* dropped if present radiusOfEarth - the largest depth in the model
-     #* meanDensity - 5517.0 G - 6.67e-11
-     #* 
-     #* Also, because this method makes use of the string tokenizer, comments are
-     #* allowed. # as well as // signify that the rest of the line is a comment.
-     #* C style slash-star comments are also allowed.
-     #* 
-     #* @exception VelocityModelException
-     #*                occurs if an EOL should have been read but wasn't. This
-     #*                may indicate a poorly formatted tvel file.
 
     @classmethod
-    @overloaded
     def readTVelFile(cls, file_):
-        """ generated source for method readTVelFile """
-        fileIn = FileReader(file_)
-        vmod = cls.readTVelFile(fileIn, cls.getModelNameFromFileName(file_.__name__))
+        """ This method really does nothing but call the actual
+        reading-the-velocity-model method. For .tvel files."""
+        fileIn = FileReader(file_) # file_ = File(filename) just above
+        vmod = cls.readTVelFile_actually(fileIn, cls.getModelNameFromFileName(file_.__name__))
         # NB right here it should say readTVelFile_0, looking at the java.
         fileIn.close()
         return vmod
 
     # Merge these somehow!
-
+    # Or actually, just keep them separate for now until we can establish it works.
     @classmethod
-    @readTVelFile.register(object, Reader, str)
-    def readTVelFile_0(cls, in_, modelName):
-        """ generated source for method readTVelFile_0 """
+    # @readTVelFile.register(object, Reader, str) ???
+    def readTVelFile_actually(cls, in_, modelName):
+        """      * This method reads in a velocity model from a "tvel" ASCII text file. The
+        * name of the model file for model "modelname" should be "modelname.tvel".
+        * The format of the file is: comment line - generally info about the P
+        * velocity model comment line - generally info about the S velocity model
+        * depth pVel sVel Density depth pVel sVel Density . . .
+        * 
+        * The velocities are assumed to be linear between sample points. Because
+        * this type of model file doesn't give complete information we make the
+        * following assumptions: modelname - from the filename, with ".tvel"
+        * dropped if present radiusOfEarth - the largest depth in the model
+        * meanDensity - 5517.0 G - 6.67e-11
+        * 
+        * Also, because this method makes use of the string tokenizer, comments are
+        * allowed. # as well as // signify that the rest of the line is a comment.
+        * C style slash-star comments are also allowed.
+        * 
+        * @exception VelocityModelException
+        *                occurs if an EOL should have been read but wasn't. This
+        *                may indicate a poorly formatted tvel file.
+        """
         tokenIn = StreamTokenizer(in_)
         tokenIn.commentChar('#') 	# '#' means ignore to end of line
         tokenIn.slashStarComments(True)	# '/*...*/' means a comment
@@ -441,14 +445,12 @@ class VelocityModel(object):
         # the current layer.
         myLayerNumber = 0
         tempLayer = VelocityLayer()
-        topDepth = float()
-        topPVel = float()
-        topSVel = float()
-        topDensity = float()
-        botDepth = float()
-        botPVel = float()
-        botSVel = float()
-        botDensity = float()
+        
+        # topDepth = float()
+        # these and following are dropped. I quote "In Python, You don't create
+        # variables to hold a custom type. You don't create variables to hold any
+        # particular type. You don't "create" variables at all. You give names to objects."
+        
         # Preload the first line of the model
         tokenIn.nextToken()
         topDepth = tokenIn.nval
@@ -509,44 +511,44 @@ class VelocityModel(object):
         return VelocityModel(modelName, radiusOfEarth, cls.DEFAULT_MOHO, cls.DEFAULT_CMB, cls.DEFAULT_IOCB, 0, maxRadius, True, layers)
 
  
-     # This method reads in a velocity model from a "nd" ASCII text file, the
-     # format used by Xgbm. The name of the model file for model "modelname"
-     # should be "modelname.nd". The format of the file is: depth pVel sVel
-     # Density Qp Qs depth pVel sVel Density Qp Qs . . . with each major
-     # boundary separated with a line with "mantle", "outer-core" or
-     # "inner-core". "moho", "cmb" and "icocb" are allowed as synonyms respectively.
-     # This feature makes phase interpretation much easier to
-     # code. Also, as they are not needed for travel time calculations, the
-     # density, Qp and Qs may be omitted.
-     # 
-     # The velocities are assumed to be linear between sample points. Because
-     # this type of model file doesn't give complete information we make the
-     # following assumptions: 
-     # 
-     # modelname - from the filename, with ".nd" dropped, if present 
-     # 
-     # radiusOfEarth - the largest depth in the model
-     # 
-     # Also, because this method makes use of the string tokenizer, comments are
-     # allowed. # as well as // signify that the rest of the line is a comment.
-     # C style slash-star comments are also allowed.
-     # 
-     # @exception VelocityModelException
-     #                occurs if an EOL should have been read but wasn't. This
-     #                may indicate a poorly formatted model file.
+
     @classmethod
-    @overloaded
     def readNDFile(cls, file_):
         """ generated source for method readNDFile """
         fileIn = FileReader(file_)
-        vmod = cls.readNDFile(fileIn, cls.getModelNameFromFileName(file_.__name__))
+        vmod = cls.readNDFile_actually(fileIn, cls.getModelNameFromFileName(file_.__name__))
         fileIn.close()
         return vmod
 
     @classmethod
-    @readNDFile.register(object, Reader, str)
-    def readNDFile_0(cls, in_, modelName):
-        """ generated source for method readNDFile_0 """
+    # @readNDFile.register(object, Reader, str) This is a bit cryptic to me.
+    def readNDFile_actually(cls, in_, modelName):
+        """      This method reads in a velocity model from a "nd" ASCII text file, the
+        format used by Xgbm. The name of the model file for model "modelname"
+        should be "modelname.nd". The format of the file is: depth pVel sVel
+        Density Qp Qs depth pVel sVel Density Qp Qs . . . with each major
+        boundary separated with a line with "mantle", "outer-core" or
+        "inner-core". "moho", "cmb" and "icocb" are allowed as synonyms respectively.
+        This feature makes phase interpretation much easier to
+        code. Also, as they are not needed for travel time calculations, the
+        density, Qp and Qs may be omitted.
+        
+        The velocities are assumed to be linear between sample points. Because
+        this type of model file doesn't give complete information we make the
+        following assumptions: 
+        
+        modelname - from the filename, with ".nd" dropped, if present 
+        
+        radiusOfEarth - the largest depth in the model
+        
+        Also, because this method makes use of the string tokenizer, comments are
+        allowed. # as well as // signify that the rest of the line is a comment.
+        C style slash-star comments are also allowed.
+        
+        @exception VelocityModelException
+        occurs if an EOL should have been read but wasn't. This
+        may indicate a poorly formatted model file. 
+        """
         tokenIn = StreamTokenizer(in_)
         tokenIn.commentChar('#')	#'#' means ignore to end of line
         tokenIn.slashStarComments(True)	#'/*...*/' means a comment
@@ -560,15 +562,9 @@ class VelocityModel(object):
         # the current layer.
         myLayerNumber = 0
         tempLayer = VelocityLayer()
-        topDepth = float()
-        topPVel = float()
-        topSVel = float()
         topDensity = 2.6
         topQp = 1000
         topQs = 2000
-        botDepth = float()
-        botPVel = float()
-        botSVel = float()
         botDensity = topDensity
         botQp = topQp
         botQs = topQs
