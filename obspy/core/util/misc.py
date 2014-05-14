@@ -22,6 +22,7 @@ import math
 import re
 import platform
 from distutils import sysconfig
+import ctypes
 # NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
 
@@ -514,16 +515,45 @@ def _get_lib_name(lib, add_extension_suffix):
     libname = cleanse_pymodule_filename(libname)
     # numpy distutils adds extension suffix by itself during build (#771, #755)
     if add_extension_suffix:
-        # append any extension suffix defined by Python for current platform,
-        # but strip ".so" or ".pyd" extensions
+        # append any extension suffix defined by Python for current platform
         ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+        # in principle "EXT_SUFFIX" is what we want.
+        # "SO" seems to be deprecated on newer python
+        # but: older python seems to have empty "EXT_SUFFIX", so we fall back
+        if not ext_suffix:
+            try:
+                ext_suffix = sysconfig.get_config_var("SO")
+            except Exception as e:
+                msg = ("Empty 'EXT_SUFFIX' encountered while building CDLL "
+                       "filename and fallback to 'SO' variable failed "
+                       "(%s)." % str(e))
+                warnings.warn(msg)
+                pass
         if ext_suffix:
-            if ext_suffix.endswith(".so"):
-                ext_suffix = ext_suffix[:-3]
-            elif ext_suffix.endswith(".pyd"):
-                ext_suffix = ext_suffix[:-4]
             libname = libname + ext_suffix
     return libname
+
+
+def _load_CDLL(name):
+    """
+    Helper function to load a shared library built during obspy installation
+    with ctypes.
+
+    :type name: unicode
+    :param name: Name of the library to load (e.g. 'mseed').
+    :rtype: :class:`ctypes.CDLL`
+    """
+    # our custom defined part of the extension filename
+    libname = _get_lib_name(name, add_extension_suffix=True)
+    libdir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                          'lib')
+    libpath = os.path.join(libdir, libname)
+    try:
+        cdll = ctypes.CDLL(libpath)
+    except Exception as e:
+        msg = 'Could not load shared library "%s".\n\n %s' % (libname, str(e))
+        raise ImportError(msg)
+    return cdll
 
 
 if __name__ == '__main__':

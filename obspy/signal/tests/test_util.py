@@ -5,11 +5,10 @@ The Filter test suite.
 """
 from __future__ import unicode_literals
 
-from obspy.signal.headers import lib_name, lib_extension
+from obspy.core.util.misc import _load_CDLL
 from obspy.signal import xcorr
 import ctypes as C
 import numpy as np
-import os
 import unittest
 
 
@@ -67,10 +66,7 @@ class UtilTestCase(unittest.TestCase):
         window_len = 100
         corp = np.empty(2 * window_len + 1, dtype='float64')
 
-        path = os.path.dirname(__file__)
-        name = os.path.join(path, os.pardir, os.pardir, 'lib',
-                            lib_name + lib_extension)
-        lib = C.CDLL(name)
+        lib = _load_CDLL("signal")
         #
         shift = C.c_int()
         coe_p = C.c_double()
