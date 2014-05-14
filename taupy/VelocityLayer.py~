@@ -29,6 +29,7 @@ class VelocityLayer(object):
         self.topQs = float(topQs)
         self.botQs = float(botQs)
 
+    #This inbuilt decorator makes thickness read-only (i.e. getter method), cf https://docs.python.org/3/library/functions.html#property
     @property
     def thickness(self):
         """

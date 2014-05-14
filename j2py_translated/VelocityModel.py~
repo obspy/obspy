@@ -1,49 +1,77 @@
 #!/usr/bin/env python
-"""
-Package for storage and manipulation of seismic earth models.
-"""
-import itertools
-from header import TauPException
+""" generated source for module VelocityModel """
+# 
+#  * The TauP Toolkit: Flexible Seismic Travel-Time and Raypath Utilities.
+#  * Copyright (C) 1998-2000 University of South Carolina
+#  * 
+#  * This program is free software; you can redistribute it and/or modify it under
+#  * the terms of the GNU General Public License as published by the Free Software
+#  * Foundation; either version 2 of the License, or (at your option) any later
+#  * version.
+#  * 
+#  * This program is distributed in the hope that it will be useful, but WITHOUT
+#  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+#  * details.
+#  * 
+#  * You should have received a copy of the GNU General Public License along with
+#  * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+#  * Place - Suite 330, Boston, MA 02111-1307, USA.
+#  * 
+#  * The current version can be found at <A
+#  * HREF="www.seis.sc.edu">http://www.seis.sc.edu</A>
+#  * 
+#  * Bug reports and comments should be directed to H. Philip Crotwell,
+#  * crotwell@seis.sc.edu or Tom Owens, owens@seis.sc.edu
+#  * 
+#  
+# 
+#  * package for storage and manipulation of seismic earth models.
+#  * 
+#  
+# package: edu.sc.seis.TauP
+import java.io.BufferedOutputStream
 
-class VelocityModel(object):
-    def __init__(self, modelName="unknown", radiusOfEarth=6371.0,
-                 mohoDepth=35.0, cmbDepth=2889.0, iocbDepth=5153.9,
-                 minRadius=0.0, maxRadius=6371.0, isSpherical=True,
-                 layers=None):
-        """
-        :type modelName: str
-        :param modelName: name of the velocity model.
-        :type radiusOfEarth: float
-        :param radiusOfEarth: reference radius (km), usually radius of the
-            earth.
-        :type mohoDepth: float
-        :param mohoDepth: Depth (km) of the moho. It can be input from velocity
-            model (*.nd) or should be explicitly set. By default it is 35
-            kilometers (from Iasp91).  For phase naming, the tau model will
-            choose the closest 1st order discontinuity. Thus for most simple
-            earth models these values are satisfactory. Take proper care if
-            your model has a thicker crust and a discontinuity near 35 km
-            depth.
-        :type cmbDepth: float
-        :param cmbDepth: Depth (km) of the cmb (core mantle boundary). It can
-            be input from velocity model (*.nd) or should be explicitly set. By
-            default it is 2889 kilometers (from Iasp91). For phase naming, the
-            tau model will choose the closest 1st order discontinuity. Thus for
-            most simple earth models these values are satisfactory.
-        :type iocbDepth: float
-        :param iocbDepth: Depth (km) of the iocb (inner core outer core
-            boundary). It can be input from velocity model (*.nd) or should be
-            explicitly set. By default it is 5153.9 kilometers (from Iasp91).
-            For phase naming, the tau model will choose the closest 1st order
-            discontinuity. Thus for most simple earth models these values are
-            satisfactory.
-        :type minRadius: float
-        :param minRadius: Minimum radius of the model (km).
-        :type maxRadius: float
-        :param maxRadius: Maximum radius of the model (km).
-        :type isSpherical: bool
-        :param isSpherical: Is this a spherical model? Defaults to true.
-        """
+import java.io.BufferedWriter
+
+import java.io.DataOutputStream
+
+import java.io.File
+
+import java.io.FileOutputStream
+
+import java.io.FileReader
+
+import java.io.FileWriter
+
+import java.io.IOException
+
+import java.io.PrintWriter
+
+import java.io.Reader
+
+import java.io.Serializable
+
+import java.io.StreamTokenizer
+
+import java.util.ArrayList
+
+import java.util.List
+
+# 
+#  * This class defines basic classes to store and manipulate a velocity model.
+#  * 
+#  * @version 1.1.3 Wed Jul 18 15:00:35 GMT 2001
+#  * 
+#  * 
+#  * 
+#  * @author H. Philip Crotwell
+#  
+class VelocityModel(Cloneable, Serializable):
+    """ generated source for class VelocityModel """
+    def __init__(self, modelName, radiusOfEarth, mohoDepth, cmbDepth, iocbDepth, minRadius, maxRadius, spherical, layer):
+        """ generated source for method __init__ """
+        super(VelocityModel, self).__init__()
         self.modelName = modelName
         self.radiusOfEarth = radiusOfEarth
         self.mohoDepth = mohoDepth
@@ -51,142 +79,379 @@ class VelocityModel(object):
         self.iocbDepth = iocbDepth
         self.minRadius = minRadius
         self.maxRadius = maxRadius
-        self.isSpherical = isSpherical
-        self.layers = layers if layers else []
+        self.spherical = spherical
+        self.layer = layer
 
-    def __len__(self):
-        return len(self.layers)
+    #  name of the velocity model. 
+    modelName = "unknown"
 
-    # @property  ?
+    # 
+    #      * reference radius (km), usually radius of the earth, by default 6371
+    #      * kilometers.
+    #      
+    radiusOfEarth = 6371.0
+
+    #  kilometers
+    DEFAULT_MOHO = 35
+    DEFAULT_CMB = 2889.0
+    DEFAULT_IOCB = 5153.9
+
+    # 
+    #      * Depth (km) of the moho. It can be input from velocity model (*.nd) or
+    #      * should be explicitly set. By default it is 35 kilometers (from Iasp91).
+    #      * For phase naming, the tau model will choose the closest 1st order
+    #      * discontinuity. Thus for most simple earth models these values are
+    #      * satisfactory. Take proper care if your model has a thicker crust and a
+    #      * discontinuity near 35 km depth.
+    #      
+    mohoDepth = DEFAULT_MOHO
+
+    #  kilometers
+    # 
+    #      * Depth (km) of the cmb (core mantle boundary). It can be input from
+    #      * velocity model (*.nd) or should be explicitly set. By default it is 2889
+    #      * kilometers (from Iasp91). For phase naming, the tau model will choose the
+    #      * closest 1st order discontinuity. Thus for most simple earth models these
+    #      * values are satisfactory.
+    #      
+    cmbDepth = DEFAULT_CMB
+
+    #  kilometers
+    # 
+    #      * Depth (km) of the iocb (inner core outer core boundary). It can be input
+    #      * from velocity model (*.nd) or should be explicitly set. By default it is
+    #      * 5153.9 kilometers (from Iasp91). For phase naming, the tau model will
+    #      * choose the closest 1st order discontinuity. Thus for most simple earth
+    #      * models these values are satisfactory.
+    #      
+    iocbDepth = DEFAULT_IOCB
+
+    #  kilometers
+    #  minimum radius of the model (km), default 0.0 
+    minRadius = 0.0
+
+    #  kilometers
+    #  maximum radius of the model (km), default 6371.0 
+    maxRadius = 6371.0
+
+    #  kilometers
+    #  is this a spherical model? Default is true. 
+    spherical = True
+
+    #  the initial length of the layer vector. 
+    vectorLength = 16
+
+    # 
+    #      * expandable array to hold the layers
+    #      * 
+    #      
+    layer = List()
+
+    # ----------------------------------------
+    #      METHODS
+    #      ----------------------------------------
+    #  Accessor methods
+    #  get the model name. 
+    def getModelName(self):
+        """ generated source for method getModelName """
+        return self.modelName
+
+    #  set the model name. 
+    def setModelName(self, modelName):
+        """ generated source for method setModelName """
+        if 0 > len(modelName):
+            self.modelName = modelName
+        else:
+            self.modelName = "unknown"
+
+    # 
+    #      * sets radius of the earth (km), by default 6371 kilometers.
+    #      
+    def setRadiusOfEarth(self, radiusOfEarth):
+        """ generated source for method setRadiusOfEarth """
+        self.radiusOfEarth = radiusOfEarth
+
+    # 
+    #      * gets radius of the earth (km), by default 6371 kilometers.
+    #      
+    def getRadiusOfEarth(self):
+        """ generated source for method getRadiusOfEarth """
+        return self.radiusOfEarth
+
+    #  @return the depths of discontinuities within the velocity model 
     def getDisconDepths(self):
-        """
-        Returns the depths of discontinuities within the velocity model.
-        """
-        discontinuities = []
+        """ generated source for method getDisconDepths """
+        disconDepths = [None]*getNumLayers() + 2
+        numFound = 0
+        aboveLayer = VelocityLayer()
+        belowLayer = VelocityLayer()
+        __numFound_0 = numFound
+        numFound += 1
+        disconDepths[__numFound_0] = getVelocityLayer(0).getTopDepth()
+        layerNum = 0
+        while layerNum < getNumLayers() - 1:
+        __numFound_1 = numFound
+        numFound += 1
+            aboveLayer = getVelocityLayer(layerNum)
+            belowLayer = getVelocityLayer(layerNum + 1)
+            if aboveLayer.getBotPVelocity() != belowLayer.getTopPVelocity() or aboveLayer.getBotSVelocity() != belowLayer.getTopSVelocity():
+                #  a discontinuity
+                disconDepths[__numFound_1] = aboveLayer.getBotDepth()
+            layerNum += 1
+        __numFound_2 = numFound
+        numFound += 1
+        disconDepths[__numFound_2] = getVelocityLayer(getNumLayers() - 1).getBotDepth()
+        temp = [None]*numFound
+        System.arraycopy(disconDepths, 0, temp, 0, numFound)
+        return temp
 
-        discontinuities.append(self.layers[0].topDepth)
-        for above_layer, below_layer in itertools.izip(self.layers[:-1],
-                                                       self.layers[1:]):
-            if above_layer.botPVelocity != below_layer.topPVelocity or \
-                    above_layer.botSVelocity != below_layer.topSVelocity:
-                # Discontinuity found.
-                discontinuities.append(above_layer.botDepth)
-        discontinuities.append(self.layers[-1].botDepth)
+    # 
+    #      * @return depth (km) of the moho. It can be input from velocity model
+    #      *          (*.nd) or should be explicitly set. By default it is 35
+    #      *          kilometers (from Iasp91). For phase naming, the tau model will
+    #      *          choose the closest 1st order discontinuity. Thus for most simple
+    #      *          earth models these values are satisfactory. Take proper care if
+    #      *          your model has a thicker crust and a discontinuity near 35 km
+    #      *          depth.
+    #      
+    def getMohoDepth(self):
+        """ generated source for method getMohoDepth """
+        return self.mohoDepth
 
-        return discontinuities
+    def setMohoDepth(self, mohoDepth):
+        """ generated source for method setMohoDepth """
+        self.mohoDepth = mohoDepth
 
+    # 
+    #      * @return depth (km) of the cmb (core mantle boundary). It can be input
+    #      *          from velocity model (*.nd) or should be explicitly set. By
+    #      *          default it is 2889 kilometers (from Iasp91). For phase naming,
+    #      *          the tau model will choose the closest 1st order discontinuity.
+    #      *          Thus for most simple earth models these values are satisfactory.
+    #      
+    def getCmbDepth(self):
+        """ generated source for method getCmbDepth """
+        return self.cmbDepth
+
+    def setCmbDepth(self, cmbDepth):
+        """ generated source for method setCmbDepth """
+        self.cmbDepth = cmbDepth
+
+    # 
+    #      * @return the depth (km) of the iocb (inner core outer core boundary). It
+    #      *          can be input from velocity model (*.nd) or should be explicitly
+    #      *          set. By default it is 5153.9 kilometers (from Iasp91). For phase
+    #      *          naming, the tau model will choose the closest 1st order
+    #      *          discontinuity. Thus for most simple earth models these values
+    #      *          are satisfactory.
+    #      
+    def getIocbDepth(self):
+        """ generated source for method getIocbDepth """
+        return self.iocbDepth
+
+    def setIocbDepth(self, iocbDepth):
+        """ generated source for method setIocbDepth """
+        self.iocbDepth = iocbDepth
+
+    def getMinRadius(self):
+        """ generated source for method getMinRadius """
+        return self.minRadius
+
+    def setMinRadius(self, minRadius):
+        """ generated source for method setMinRadius """
+        self.minRadius = minRadius
+
+    def getMaxRadius(self):
+        """ generated source for method getMaxRadius """
+        return self.maxRadius
+
+    def setMaxRadius(self, maxRadius):
+        """ generated source for method setMaxRadius """
+        self.maxRadius = maxRadius
+
+    def getSpherical(self):
+        """ generated source for method getSpherical """
+        return self.spherical
+
+    def setSpherical(self, spherical):
+        """ generated source for method setSpherical """
+        self.spherical = spherical
+
+    def getVelocityLayerClone(self, layerNum):
+        """ generated source for method getVelocityLayerClone """
+        return (self.layer.get(layerNum)).clone()
+
+    def getVelocityLayer(self, layerNum):
+        """ generated source for method getVelocityLayer """
+        return self.layer.get(layerNum)
+
+    #  Returns the number of layers in this velocity model. 
+    def getNumLayers(self):
+        """ generated source for method getNumLayers """
+        return len(self.layer)
+
+    def getLayers(self):
+        """ generated source for method getLayers """
+        return self.layer.toArray([None]*0)
+
+    #  normal methods
+    # 
+    #      * Finds the layer containing the given depth. Note this returns the upper
+    #      * layer if the depth happens to be at a layer boundary.
+    #      * 
+    #      * @return the layer number
+    #      * @exception NoSuchLayerException
+    #      *                occurs if no layer contains the given depth.
+    #      
     def layerNumberAbove(self, depth):
-        """
-        Finds the layer containing the given depth. Note this returns the upper
-        layer if the depth happens to be at a layer boundary.
+        """ generated source for method layerNumberAbove """
+        tempLayer = VelocityLayer()
+        #  first check to see if depth is at top of top layer. 
+        tempLayer = self.getVelocityLayer(0)
+        if depth == tempLayer.getTopDepth():
+            return 0
+        else:
+            if depth < tempLayer.getTopDepth() or self.getVelocityLayer(tooLargeNum).getBotDepth() < depth:
+                raise NoSuchLayerException(depth)
+            while not found:
+                currentNum = Math.round((tooSmallNum + tooLargeNum) / 2.0)
+                tempLayer = self.getVelocityLayer(currentNum)
+                if tempLayer.getTopDepth() >= depth:
+                    tooLargeNum = currentNum - 1
+                elif tempLayer.getBotDepth() < depth:
+                    tooSmallNum = currentNum + 1
+                else:
+                    found = True
+            return currentNum
 
-        :returns: the layer number
-        """
-        for i, layer in enumerate(self.layers):
-            if layer.topDepth < depth <= layer.botDepth:
-                return i
-        raise TauPException("No such layer.")
-
+    # 
+    #      * Finds the layer containing the given depth. Note this returns the lower
+    #      * layer if the depth happens to be at a layer boundary.
+    #      * 
+    #      * @return the layer number
+    #      * @exception NoSuchLayerException
+    #      *                occurs if no layer contains the given depth.
+    #      
     def layerNumberBelow(self, depth):
-        """
-        Finds the layer containing the given depth. Note this returns the lower
-        layer if the depth happens to be at a layer boundary.
+        """ generated source for method layerNumberBelow """
+        tempLayer = self.getVelocityLayer(0)
+        tooSmallNum = 0
+        tooLargeNum = self.getNumLayers() - 1
+        currentNum = 0
+        found = False
+        #  first check to see if depth is at top of top layer. 
+        if depth == tempLayer.getTopDepth():
+            return 0
+        elif self.getVelocityLayer(tooLargeNum).getBotDepth() == depth:
+            #  and check the bottommost layer. 
+            return tooLargeNum
+        else:
+            if depth < tempLayer.getTopDepth() or self.getVelocityLayer(tooLargeNum).getBotDepth() < depth:
+                raise NoSuchLayerException(depth)
+            while not found:
+                currentNum = Math.round((tooSmallNum + tooLargeNum) / 2.0)
+                tempLayer = self.getVelocityLayer(currentNum)
+                if tempLayer.getTopDepth() > depth:
+                    tooLargeNum = currentNum - 1
+                elif tempLayer.getBotDepth() <= depth:
+                    tooSmallNum = currentNum + 1
+                else:
+                    found = True
+            return currentNum
 
-        :returns: the layer number
-        """
-        for i, layer in enumerate(self.layers):
-            if layer.topDepth <= depth < layer.botDepth:
-                return i
-        raise TauPException("No such layer.")
-
-
-    def evaluateAbove(self, depth, materialProperty):
-        """
-        returns the value of the given material property, usually P or S
-        velocity, at the given depth. Note this returns the value at the bottom
-        of the upper layer if the depth happens to be at a layer boundary.
-
-        :returns: the value of the given material property
-        """
-        layer = self.layers[self.layerNumberAbove(depth)]
-        return layer.evaluateAt(depth, materialProperty)
-
-    #
+    # 
     #      * returns the value of the given material property, usually P or S
-    #      * velocity, at the given depth. Note this returns the value at the top of
-    #      * the lower layer if the depth happens to be at a layer boundary.
-    #      *
+    #      * velocity, at the given depth. Note this returns the value at the bottom
+    #      * of the upper layer if the depth happens to be at a layer boundary.
+    #      * 
     #      * @return the value of the given material property
     #      * @exception NoSuchLayerException
     #      *                occurs if no layer contains the given depth.
     #      * @exception NoSuchMatPropException
     #      *                occurs if the material property is not recognized.
-    #
+    #      
+    def evaluateAbove(self, depth, materialProperty):
+        """ generated source for method evaluateAbove """
+        tempLayer = VelocityLayer()
+        tempLayer = self.getVelocityLayer(self.layerNumberAbove(depth))
+        return tempLayer.evaluateAt(depth, materialProperty)
+
+    # 
+    #      * returns the value of the given material property, usually P or S
+    #      * velocity, at the given depth. Note this returns the value at the top of
+    #      * the lower layer if the depth happens to be at a layer boundary.
+    #      * 
+    #      * @return the value of the given material property
+    #      * @exception NoSuchLayerException
+    #      *                occurs if no layer contains the given depth.
+    #      * @exception NoSuchMatPropException
+    #      *                occurs if the material property is not recognized.
+    #      
     def evaluateBelow(self, depth, materialProperty):
         """ generated source for method evaluateBelow """
         tempLayer = VelocityLayer()
         tempLayer = self.getVelocityLayer(self.layerNumberBelow(depth))
         return tempLayer.evaluateAt(depth, materialProperty)
 
-    #
+    # 
     #      * returns the value of the given material property, usually P or S
     #      * velocity, at the top of the given layer.
-    #      *
+    #      * 
     #      * @return the value of the given material property
     #      * @exception NoSuchMatPropException
     #      *                occurs if the material property is not recognized.
-    #
+    #      
     def evaluateAtTop(self, layerNumber, materialProperty):
         """ generated source for method evaluateAtTop """
         tempLayer = VelocityLayer()
         tempLayer = self.getVelocityLayer(layerNumber)
         return tempLayer.evaluateAtTop(materialProperty)
 
-    #
+    # 
     #      * returns the value of the given material property, usually P or S
     #      * velocity, at the bottom of the given layer.
-    #      *
+    #      * 
     #      * @return the value of the given material property
     #      * @exception NoSuchMatPropException
     #      *                occurs if the material property is not recognized.
-    #
+    #      
     def evaluateAtBottom(self, layerNumber, materialProperty):
         """ generated source for method evaluateAtBottom """
         tempLayer = VelocityLayer()
         tempLayer = self.getVelocityLayer(layerNumber)
         return tempLayer.evaluateAtBottom(materialProperty)
 
-    #
+    # 
     #      * returns the depth at the top of the given layer.
-    #      *
+    #      * 
     #      * @return the depth.
-    #
+    #      
     def depthAtTop(self, layerNumber):
         """ generated source for method depthAtTop """
         tempLayer = VelocityLayer()
         tempLayer = self.getVelocityLayer(layerNumber)
         return tempLayer.getTopDepth()
 
-    #
+    # 
     #      * returns the depth at the bottom of the given layer.
-    #      *
+    #      * 
     #      * @return the depth.
     #      * @exception NoSuchMatPropException
     #      *                occurs if the material property is not recognized.
-    #
+    #      
     def depthAtBottom(self, layerNumber):
         """ generated source for method depthAtBottom """
         tempLayer = VelocityLayer()
         tempLayer = self.getVelocityLayer(layerNumber)
         return tempLayer.getBotDepth()
 
-    #
+    # 
     #      * replaces layers in the velocity model with new layers. The number of old
     #      * and new layers need not be the same. @param matchTop false if the top
     #      * should be a discontinuity, true if the top velocity should be forced to
     #      * match the existing velocity at the top. @param matchBot similar for the
     #      * bottom.
-    #
+    #      
     def replaceLayers(self, newLayers, name, matchTop, matchBot):
         """ generated source for method replaceLayers """
         topLayerNum = self.layerNumberBelow(newLayers[0].getTopDepth())
@@ -239,20 +504,76 @@ class VelocityModel(object):
         outVMod.fixDisconDepths()
         outVMod.validate()
         return outVMod
-        
 
+    # originally: printGMT(String filename) 
+    @overloaded
+    def printGMT(self, filename):
+        """ prints out the velocity model into a file in a form suitable 
+        for plotting with GMT """
+        psFile = str()
+        if filename.endsWith(".gmt"):
+            psFile = filename.substring(0, 4 - len(filename)) + ".ps"
+        else:
+            psFile = filename + ".ps"
+        dos = PrintWriter(BufferedWriter(FileWriter(filename)))
+        dos.println("#!/bin/sh")
+        dos.println("#\n# This script will plot the " + self.getModelName() + " velocity model using GMT. If you want to\n" + "#use this as a data file for psxy in another script, delete these" + "\n# first lines, as well as the last line.\n#")
+        dos.println("/bin/rm -f " + psFile + "\n")
+        maxVel = 0
+        for vLayer in layer:
+            if vLayer.getTopPVelocity() > maxVel:
+                maxVel = vLayer.getTopPVelocity()
+            if vLayer.getBotPVelocity() > maxVel:
+                maxVel = vLayer.getBotPVelocity()
+            if vLayer.getTopSVelocity() > maxVel:
+                maxVel = vLayer.getTopSVelocity()
+            if vLayer.getBotSVelocity() > maxVel:
+                maxVel = vLayer.getBotSVelocity()
+        maxVel *= 1.05  #make little bit larger
+        dos.println("PCOLOR=0/0/255")
+        dos.println("SCOLOR=255/0/0")
+        dos.println()
+        dos.println("psbasemap -JX6i/-9i -P -R0/" + maxVel + "/0/" + self.getMaxRadius() + " -B1a2:'Velocity (km/s)':/200a400:'Depth (km)':/:.'" + self.getModelName() + "':WSen  -K > " + psFile)
+        dos.println()
+        dos.println("psxy -JX -P -R -W2p,${PCOLOR} -: -m -O -K >> " + psFile + " <<END")
+        printGMTforP(dos)
+        dos.println("END\n")
+        dos.println("psxy -JX -P -R -W2p,${SCOLOR} -: -m -O >> " + psFile + " <<END")
+        printGMTforS(dos)
+        dos.println("END\n")
+        dos.close()
 
-    # The GMT methods aren't necessary for now, copy them in again from the j2py code when needed.
-    # def printGMT(self, filename):
-   
-    # @printGMT.register(object, PrintWriter)
-    # def printGMT_0(self, dos):
-    
-    # def printGMTforP(self, dos):
-   
-    # def printGMTforS(self, dos):
-   
+    # originally: printGMT(PrintWriter dos) 
+    @printGMT.register(object, PrintWriter)
+    def printGMT_0(self, dos):
+        """ prints out the velocity model into a file in a form suitable 
+        for plotting with GMT """
+        dos.println("> P velocity for " + self.modelName + "  below")
+        printGMTforP(dos)
+        dos.println("> S velocity for " + self.modelName + "  below")
+        printGMTforP(dos)
 
+    def printGMTforP(self, dos):
+        """ generated source for method printGMTforP """
+        pVel = -1.0
+        layerNum = 0
+        while layerNum < self.getNumLayers():
+            if currVelocityLayer.getTopPVelocity() != pVel:
+                dos.println(float(currVelocityLayer.getTopDepth()) + " " + float(currVelocityLayer.getTopPVelocity()))
+            dos.println(float(currVelocityLayer.getBotDepth()) + " " + float(currVelocityLayer.getBotPVelocity()))
+            pVel = currVelocityLayer.getBotPVelocity()
+            layerNum += 1
+
+    def printGMTforS(self, dos):
+        """ generated source for method printGMTforS """
+        sVel = -1.0
+        layerNum = 0
+        while layerNum < self.getNumLayers():
+            if currVelocityLayer.getTopSVelocity() != sVel:
+                dos.println(float(currVelocityLayer.getTopDepth()) + " " + float(currVelocityLayer.getTopSVelocity()))
+            dos.println(float(currVelocityLayer.getBotDepth()) + " " + float(currVelocityLayer.getBotSVelocity()))
+            sVel = currVelocityLayer.getBotSVelocity()
+            layerNum += 1
 
     def validate(self):
         """ Performs internal consistency checks on the velocity model. """
@@ -414,8 +735,6 @@ class VelocityModel(object):
         # NB right here it should say readTVelFile_0, looking at the java.
         fileIn.close()
         return vmod
-
-    # Merge these somehow!
 
     @classmethod
     @readTVelFile.register(object, Reader, str)
@@ -717,3 +1036,4 @@ class VelocityModel(object):
             layers.add(newLayer)
             i += 1
         return VelocityModel(self.modelName, self.getRadiusOfEarth(), self.getMohoDepth(), self.getCmbDepth(), self.getIocbDepth(), self.getMinRadius(), self.getMaxRadius(), spherical, layers)
+

@@ -239,58 +239,101 @@ class VelocityModel(object):
         outVMod.fixDisconDepths()
         outVMod.validate()
         return outVMod
-        
 
+    @overloaded
+    def printGMT(self, filename):
+        """ generated source for method printGMT """
+        psFile = str()
+        if filename.endsWith(".gmt"):
+            psFile = filename.substring(0, 4 - len(filename)) + ".ps"
+        else:
+            psFile = filename + ".ps"
+        dos = PrintWriter(BufferedWriter(FileWriter(filename)))
+        dos.println("#!/bin/sh")
+        dos.println("#\n# This script will plot the " + self.getModelName() + " velocity model using GMT. If you want to\n" + "#use this as a data file for psxy in another script, delete these" + "\n# first lines, as well as the last line.\n#")
+        dos.println("/bin/rm -f " + psFile + "\n")
+        maxVel = 0
+        for vLayer in layer:
+            if vLayer.getTopPVelocity() > maxVel:
+                maxVel = vLayer.getTopPVelocity()
+            if vLayer.getBotPVelocity() > maxVel:
+                maxVel = vLayer.getBotPVelocity()
+            if vLayer.getTopSVelocity() > maxVel:
+                maxVel = vLayer.getTopSVelocity()
+            if vLayer.getBotSVelocity() > maxVel:
+                maxVel = vLayer.getBotSVelocity()
+        maxVel *= 1.05
+        dos.println("PCOLOR=0/0/255")
+        dos.println("SCOLOR=255/0/0")
+        dos.println()
+        dos.println("psbasemap -JX6i/-9i -P -R0/" + maxVel + "/0/" + self.getMaxRadius() + " -B1a2:'Velocity (km/s)':/200a400:'Depth (km)':/:.'" + self.getModelName() + "':WSen  -K > " + psFile)
+        dos.println()
+        dos.println("psxy -JX -P -R -W2p,${PCOLOR} -: -m -O -K >> " + psFile + " <<END")
+        printGMTforP(dos)
+        dos.println("END\n")
+        dos.println("psxy -JX -P -R -W2p,${SCOLOR} -: -m -O >> " + psFile + " <<END")
+        printGMTforS(dos)
+        dos.println("END\n")
+        dos.close()
 
-    # The GMT methods aren't necessary for now, copy them in again from the j2py code when needed.
-    # def printGMT(self, filename):
-   
-    # @printGMT.register(object, PrintWriter)
-    # def printGMT_0(self, dos):
-    
-    # def printGMTforP(self, dos):
-   
-    # def printGMTforS(self, dos):
-   
+    @printGMT.register(object, PrintWriter)
+    def printGMT_0(self, dos):
+        """ generated source for method printGMT_0 """
+        dos.println("> P velocity for " + self.modelName + "  below")
+        printGMTforP(dos)
+        dos.println("> S velocity for " + self.modelName + "  below")
+        printGMTforP(dos)
 
+    def printGMTforP(self, dos):
+        """ generated source for method printGMTforP """
+        pVel = -1.0
+        layerNum = 0
+        while layerNum < self.getNumLayers():
+            if currVelocityLayer.getTopPVelocity() != pVel:
+                dos.println(float(currVelocityLayer.getTopDepth()) + " " + float(currVelocityLayer.getTopPVelocity()))
+            dos.println(float(currVelocityLayer.getBotDepth()) + " " + float(currVelocityLayer.getBotPVelocity()))
+            pVel = currVelocityLayer.getBotPVelocity()
+            layerNum += 1
+
+    def printGMTforS(self, dos):
+        """ generated source for method printGMTforS """
+        sVel = -1.0
+        layerNum = 0
+        while layerNum < self.getNumLayers():
+            if currVelocityLayer.getTopSVelocity() != sVel:
+                dos.println(float(currVelocityLayer.getTopDepth()) + " " + float(currVelocityLayer.getTopSVelocity()))
+            dos.println(float(currVelocityLayer.getBotDepth()) + " " + float(currVelocityLayer.getBotSVelocity()))
+            sVel = currVelocityLayer.getBotSVelocity()
+            layerNum += 1
 
     def validate(self):
-        """ Performs internal consistency checks on the velocity model. """
+        """ generated source for method validate """
         currVelocityLayer = VelocityLayer()
         prevVelocityLayer = VelocityLayer()
-        #/* is radiusOfEarth positive? */
         if self.radiusOfEarth <= 0.0:
             System.err.println("Radius of earth is not positive. radiusOfEarth = " + self.radiusOfEarth)
             return False
-    	#/* is mohoDepth non-negative? */
         if self.mohoDepth < 0.0:
             System.err.println("mohoDepth is not non-negative. mohoDepth = " + self.mohoDepth)
             return False
-        #/* is cmbDepth >= mohoDepth? */
         if self.cmbDepth < self.mohoDepth:
             System.err.println("cmbDepth < mohoDepth. cmbDepth = " + self.cmbDepth + " mohoDepth = " + self.mohoDepth)
             return False
-        #/* is cmbDepth positive? */
         if self.cmbDepth <= 0.0:
             System.err.println("cmbDepth is not positive. cmbDepth = " + self.cmbDepth)
             return False
-        #/* is iocbDepth >= cmbDepth? */
         if self.iocbDepth < self.cmbDepth:
             System.err.println("iocbDepth < cmbDepth. iocbDepth = " + self.iocbDepth + " cmbDepth = " + self.cmbDepth)
             return False
-        #/* is iocbDepth positive? */
         if self.iocbDepth <= 0.0:
             System.err.println("iocbDepth is not positive. iocbDepth = " + self.iocbDepth)
             return False
-        #/* is minRadius non-negative? */
         if self.minRadius < 0.0:
             System.err.println("minRadius is not non-negative. minRadius = " + self.minRadius)
             return False
-        #/* is maxRadius positive? */
         if self.maxRadius <= 0.0:
             System.err.println("maxRadius is not positive. maxRadius = " + self.maxRadius)
             return False
-        #/* is maxRadius > minRadius? */
         if self.maxRadius <= self.minRadius:
             System.err.println("maxRadius <= minRadius. maxRadius = " + self.maxRadius + " minRadius = " + self.minRadius)
             return False
@@ -300,13 +343,11 @@ class VelocityModel(object):
         while layerNum < self.getNumLayers():
             currVelocityLayer = self.getVelocityLayer(layerNum)
             if prevVelocityLayer.getBotDepth() != currVelocityLayer.getTopDepth():
-            #* There is a gap in the velocity model!
                 System.err.println("There is a gap in the velocity model " + "between layers " + (layerNum - 1) + " and " + layerNum)
                 System.err.println("prevVelocityLayer=" + prevVelocityLayer)
                 System.err.println("currVelocityLayer=" + currVelocityLayer)
                 return False
             if currVelocityLayer.getBotDepth() == currVelocityLayer.getTopDepth():
-            #   more redundant comments in the original java
                 System.err.println("There is a zero thickness layer in the " + "velocity model at layer " + layerNum)
                 System.err.println("prevVelocityLayer=" + prevVelocityLayer)
                 System.err.println("currVelocityLayer=" + currVelocityLayer)
@@ -337,7 +378,7 @@ class VelocityModel(object):
         """ generated source for method print_ """
         i = 0
         while i < self.getNumLayers():
-            print self.getVelocityLayer(i)
+            print(self.getVelocityLayer(i))
             i += 1
 
     @classmethod
@@ -358,11 +399,7 @@ class VelocityModel(object):
 
     @classmethod
     def readVelocityFile(cls, filename, fileType):
-        """ Reads in a velocity file. The type of file is determined by the 
-	fileType parameter. Calls readTVelFile or readNDFile.
-     	 
-     	@exception VelocityModelException
-     	if the type of file cannot be determined. """
+        """ generated source for method readVelocityFile """
         if fileType == None or fileType == "":
             if filename.endsWith(".nd"):
                 fileType = ".nd"
@@ -383,62 +420,29 @@ class VelocityModel(object):
         vMod.fixDisconDepths()
         return vMod
 
-
-
-     #* This method reads in a velocity model from a "tvel" ASCII text file. The
-     #* name of the model file for model "modelname" should be "modelname.tvel".
-     #* The format of the file is: comment line - generally info about the P
-     #* velocity model comment line - generally info about the S velocity model
-     #* depth pVel sVel Density depth pVel sVel Density . . .
-     #* 
-     #* The velocities are assumed to be linear between sample points. Because
-     #* this type of model file doesn't give complete information we make the
-     #* following assumptions: modelname - from the filename, with ".tvel"
-     #* dropped if present radiusOfEarth - the largest depth in the model
-     #* meanDensity - 5517.0 G - 6.67e-11
-     #* 
-     #* Also, because this method makes use of the string tokenizer, comments are
-     #* allowed. # as well as // signify that the rest of the line is a comment.
-     #* C style slash-star comments are also allowed.
-     #* 
-     #* @exception VelocityModelException
-     #*                occurs if an EOL should have been read but wasn't. This
-     #*                may indicate a poorly formatted tvel file.
-
     @classmethod
     @overloaded
     def readTVelFile(cls, file_):
         """ generated source for method readTVelFile """
         fileIn = FileReader(file_)
         vmod = cls.readTVelFile(fileIn, cls.getModelNameFromFileName(file_.__name__))
-        # NB right here it should say readTVelFile_0, looking at the java.
         fileIn.close()
         return vmod
-
-    # Merge these somehow!
 
     @classmethod
     @readTVelFile.register(object, Reader, str)
     def readTVelFile_0(cls, in_, modelName):
         """ generated source for method readTVelFile_0 """
         tokenIn = StreamTokenizer(in_)
-        tokenIn.commentChar('#') 	# '#' means ignore to end of line
-        tokenIn.slashStarComments(True)	# '/*...*/' means a comment
-        tokenIn.slashSlashComments(True)# '//' means ignore to end of line
-        tokenIn.eolIsSignificant(True)	# end of line is important
-        tokenIn.parseNumbers()		# Differentiate between words and numbers. 
-        				# Note 1.1e3 is considered a string 
-        				# instead of a number.
-	# Read until we get 2 end of lines.
+        tokenIn.commentChar('#')
+        tokenIn.slashStarComments(True)
+        tokenIn.slashSlashComments(True)
+        tokenIn.eolIsSignificant(True)
+        tokenIn.parseNumbers()
         while tokenIn.nextToken() != StreamTokenizer.TT_EOL:
             pass
         while tokenIn.nextToken() != StreamTokenizer.TT_EOL:
             pass
-    	# Now we have passed both comment lines and are ready to read the
-        # velocity model.
-         
-        # Some temporary variables to store the current line from the file and
-        # the current layer.
         myLayerNumber = 0
         tempLayer = VelocityLayer()
         topDepth = float()
@@ -449,7 +453,6 @@ class VelocityModel(object):
         botPVel = float()
         botSVel = float()
         botDensity = float()
-        # Preload the first line of the model
         tokenIn.nextToken()
         topDepth = tokenIn.nval
         tokenIn.nextToken()
@@ -460,19 +463,16 @@ class VelocityModel(object):
             raise VelocityModelException("S velocity, " + topSVel + " at depth " + topDepth + " is greater than the P velocity, " + topPVel)
         tokenIn.nextToken()
         if tokenIn.ttype != StreamTokenizer.TT_EOL:
-        # density is not used and so is optional
             topDensity = tokenIn.nval
             tokenIn.nextToken()
         else:
             topDensity = 5571.0
         if tokenIn.ttype != StreamTokenizer.TT_EOL:
-        # this token should be an EOL, if not
             raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
         else:
             tokenIn.nextToken()
         layers = ArrayList()
         while tokenIn.ttype != StreamTokenizer.TT_EOF:
-        # Loop until we hit the end of file
             botDepth = tokenIn.nval
             tokenIn.nextToken()
             botPVel = tokenIn.nval
@@ -482,7 +482,6 @@ class VelocityModel(object):
                 raise VelocityModelException("S velocity, " + botSVel + " at depth " + botDepth + " is greater than the P velocity, " + botPVel)
             tokenIn.nextToken()
             if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # density is not used and is optional
                 botDensity = tokenIn.nval
                 tokenIn.nextToken()
             else:
@@ -493,47 +492,16 @@ class VelocityModel(object):
             topSVel = botSVel
             topDensity = botDensity
             if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # this token should be an EOL, if not
                 raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
             else:
                 tokenIn.nextToken()
             if tempLayer.getTopDepth() != tempLayer.getBotDepth():
-            # Don't use zero thickness layers, first order discontinuities
-            # are taken care of by storing top and bottom depths.
                 layers.add(tempLayer)
                 myLayerNumber += 1
         radiusOfEarth = topDepth
-        maxRadius = topDepth	# I assume that this is a whole earth model
-        			# so the maximum depth is equal to the
-        			# maximum radius is equal to the earth radius.
+        maxRadius = topDepth
         return VelocityModel(modelName, radiusOfEarth, cls.DEFAULT_MOHO, cls.DEFAULT_CMB, cls.DEFAULT_IOCB, 0, maxRadius, True, layers)
 
- 
-     # This method reads in a velocity model from a "nd" ASCII text file, the
-     # format used by Xgbm. The name of the model file for model "modelname"
-     # should be "modelname.nd". The format of the file is: depth pVel sVel
-     # Density Qp Qs depth pVel sVel Density Qp Qs . . . with each major
-     # boundary separated with a line with "mantle", "outer-core" or
-     # "inner-core". "moho", "cmb" and "icocb" are allowed as synonyms respectively.
-     # This feature makes phase interpretation much easier to
-     # code. Also, as they are not needed for travel time calculations, the
-     # density, Qp and Qs may be omitted.
-     # 
-     # The velocities are assumed to be linear between sample points. Because
-     # this type of model file doesn't give complete information we make the
-     # following assumptions: 
-     # 
-     # modelname - from the filename, with ".nd" dropped, if present 
-     # 
-     # radiusOfEarth - the largest depth in the model
-     # 
-     # Also, because this method makes use of the string tokenizer, comments are
-     # allowed. # as well as // signify that the rest of the line is a comment.
-     # C style slash-star comments are also allowed.
-     # 
-     # @exception VelocityModelException
-     #                occurs if an EOL should have been read but wasn't. This
-     #                may indicate a poorly formatted model file.
     @classmethod
     @overloaded
     def readNDFile(cls, file_):
@@ -548,16 +516,11 @@ class VelocityModel(object):
     def readNDFile_0(cls, in_, modelName):
         """ generated source for method readNDFile_0 """
         tokenIn = StreamTokenizer(in_)
-        tokenIn.commentChar('#')	#'#' means ignore to end of line
-        tokenIn.slashStarComments(True)	#'/*...*/' means a comment
-        tokenIn.slashSlashComments(True)#'//' means ignore to end of line
-        tokenIn.eolIsSignificant(True)	#end of line is important
-        tokenIn.parseNumbers()	# 
-                                # Differentiate between words and numbers. Note
-                                # 1.1e3 is considered a string instead of a
-                                # number.
-        # Some temporary variables to store the current line from the file and
-        # the current layer.
+        tokenIn.commentChar('#')
+        tokenIn.slashStarComments(True)
+        tokenIn.slashSlashComments(True)
+        tokenIn.eolIsSignificant(True)
+        tokenIn.parseNumbers()
         myLayerNumber = 0
         tempLayer = VelocityLayer()
         topDepth = float()
@@ -572,7 +535,6 @@ class VelocityModel(object):
         botDensity = topDensity
         botQp = topQp
         botQs = topQs
-        # Preload the first line of the model
         tokenIn.nextToken()
         topDepth = tokenIn.nval
         tokenIn.nextToken()
@@ -583,19 +545,15 @@ class VelocityModel(object):
             raise VelocityModelException("S velocity, " + topSVel + " at depth " + topDepth + " is greater than the P velocity, " + topPVel)
         tokenIn.nextToken()
         if tokenIn.ttype != StreamTokenizer.TT_EOL:
-        # density is not used and so is optional
             topDensity = tokenIn.nval
             tokenIn.nextToken()
             if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # Qp is not used and so is optional
                 topQp = tokenIn.nval
                 tokenIn.nextToken()
                 if tokenIn.ttype != StreamTokenizer.TT_EOL:
-                # Qs is not used and so is optional
                     topQs = tokenIn.nval
                     tokenIn.nextToken()
         if tokenIn.ttype != StreamTokenizer.TT_EOL:
-        # this token should be an EOL, if not
             raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
         else:
             tokenIn.nextToken()
@@ -604,18 +562,17 @@ class VelocityModel(object):
         iocbDepth = cls.DEFAULT_IOCB
         layers = ArrayList()
         while tokenIn.ttype != StreamTokenizer.TT_EOF:
-        # Loop until we hit the end of file
             if tokenIn.ttype == StreamTokenizer.TT_WORD:
                 if tokenIn.sval.lower() == "mantle".lower() or tokenIn.sval.lower() == "moho".lower():
-                    mohoDepth = topDepth	# moho
+                    mohoDepth = topDepth
                 if tokenIn.sval.lower() == "outer-core".lower() or tokenIn.sval.lower() == "cmb".lower():
-                    cmbDepth = topDepth		# Core Mantle Boundary 
+                    cmbDepth = topDepth
                 if tokenIn.sval.lower() == "inner-core".lower() or tokenIn.sval.lower() == "icocb".lower():
-                    iocbDepth = topDepth	# Inner Outer Core Boundary
+                    iocbDepth = topDepth
                 while tokenIn.ttype != StreamTokenizer.TT_EOL:
                     tokenIn.nextToken()
                 tokenIn.nextToken()
-                continue 
+                continue
             botDepth = tokenIn.nval
             tokenIn.nextToken()
             botPVel = tokenIn.nval
@@ -625,15 +582,12 @@ class VelocityModel(object):
                 raise VelocityModelException("S velocity, " + botSVel + " at depth " + botDepth + " is greater than the P velocity, " + botPVel)
             tokenIn.nextToken()
             if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # density is not used and so is optional
                 botDensity = tokenIn.nval
                 tokenIn.nextToken()
                 if tokenIn.ttype != StreamTokenizer.TT_EOL:
-                # Qp is not used and so is optional
                     botQp = tokenIn.nval
                     tokenIn.nextToken()
                     if tokenIn.ttype != StreamTokenizer.TT_EOL:
-                    # Qs is not used and so is optional
                         botQs = tokenIn.nval
                         tokenIn.nextToken()
             tempLayer = VelocityLayer(myLayerNumber, topDepth, botDepth, topPVel, botPVel, topSVel, botSVel, topDensity, botDensity, topQp, botQp, topQs, botQs)
@@ -644,29 +598,18 @@ class VelocityModel(object):
             topQp = botQp
             topQs = botQs
             if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # this token should be an EOL, if not
                 raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
             else:
                 tokenIn.nextToken()
             if tempLayer.getTopDepth() != tempLayer.getBotDepth():
-            # Don't use zero thickness layers, first order discontinuities
-            # are taken care of by storing top and bottom depths.
                 layers.add(tempLayer)
-                myLayerNumber += 1               
+                myLayerNumber += 1
         radiusOfEarth = topDepth
-        maxRadius = topDepth	#I assume that this is a whole earth model
-        			# so the maximum depth is equal to the
-        			# maximum radius is equal to the earth radius.
+        maxRadius = topDepth
         return VelocityModel(modelName, radiusOfEarth, mohoDepth, cmbDepth, iocbDepth, 0, maxRadius, True, layers)
 
     def fixDisconDepths(self):
-        """ Resets depths of major discontinuities to match those existing in the
-     	 input velocity model. The initial values are set such that if there is no
-     	 discontinuity within the top 100 km then the moho is set to 0.0.
-     	 Similarly, if there are no discontinuities at all then the cmb is set to
-     	 the radius of the earth. Similarly for the iocb, except it must be a
-     	 fluid to solid boundary and deeper than 100km to avoid problems with
-     	 shallower fluid layers, eg oceans. """
+        """ generated source for method fixDisconDepths """
         changeMade = False
         aboveLayer = VelocityLayer()
         belowLayer = VelocityLayer()
@@ -680,8 +623,7 @@ class VelocityModel(object):
         while layerNum < self.getNumLayers() - 1:
             aboveLayer = self.getVelocityLayer(layerNum)
             belowLayer = self.getVelocityLayer(layerNum + 1)
-            if aboveLayer.getBotPVelocity() != belowLayer.getTopPVelocity() or aboveLayer.getBotSVelocity() != belowLayer.getTopSVelocity():	# a discontinuity
-            
+            if aboveLayer.getBotPVelocity() != belowLayer.getTopPVelocity() or aboveLayer.getBotSVelocity() != belowLayer.getTopSVelocity():
                 if Math.abs(self.mohoDepth - aboveLayer.getBotDepth()) < mohoMin:
                     tempMohoDepth = aboveLayer.getBotDepth()
                     mohoMin = Math.abs(self.mohoDepth - aboveLayer.getBotDepth())
@@ -700,12 +642,7 @@ class VelocityModel(object):
         return changeMade
 
     def earthFlattenTransform(self):
-        """ Returns a flat velocity model object equivalent to the spherical 
-         velocity model via the earth flattening transform.
-     	 
-     	 @return the flattened VelocityModel object.
-     	 @exception VelocityModelException
-     	                occurs ???. """
+        """ generated source for method earthFlattenTransform """
         newLayer = VelocityLayer()
         oldLayer = VelocityLayer()
         spherical = False
@@ -717,3 +654,4 @@ class VelocityModel(object):
             layers.add(newLayer)
             i += 1
         return VelocityModel(self.modelName, self.getRadiusOfEarth(), self.getMohoDepth(), self.getCmbDepth(), self.getIocbDepth(), self.getMinRadius(), self.getMaxRadius(), spherical, layers)
+
