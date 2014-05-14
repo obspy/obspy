@@ -12,6 +12,7 @@ Module for handling ObsPy RtTrace objects.
 from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
+
 from future.builtins import super
 from future.builtins import str
 from future.builtins import range
@@ -220,7 +221,7 @@ class RtTrace(Trace):
         # check times
         gap_or_overlap = False
         if self.have_appended_data:
-            #delta = int(math.floor(\
+            # delta = int(math.floor(\
             #    round((rt.stats.starttime - lt.stats.endtime) * sr, 5) )) - 1
             diff = trace.stats.starttime - self.stats.endtime
             delta = diff * self.stats.sampling_rate - 1.0

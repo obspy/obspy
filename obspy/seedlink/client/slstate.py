@@ -73,9 +73,9 @@ class SLState(object):
     def __init__(self):
         self.state = SLState.SL_DOWN
         self.query_mode = SLState.NO_QUERY
-        #AJL self.databuf = [str() for __idx0 in range(BUFSIZE)]
+        # AJL self.databuf = [str() for __idx0 in range(BUFSIZE)]
         self.databuf = bytearray(SLState.BUFSIZE)
-        #AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
+        # AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
         self.packed_buf = bytearray(SLState.BUFSIZE)
         self.recptr = 0
         self.sendptr = 0
@@ -137,7 +137,7 @@ class SLState(object):
             raise SeedLinkException(msg)
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ERRORSIGNATURE)].lower() == \
-            SLPacket.ERRORSIGNATURE.lower()
+            SLPacket.ERRORSIGNATURE.lower()  # @UndefinedVariable
 
     def isEnd(self):
         """
@@ -152,7 +152,7 @@ class SLState(object):
             raise SeedLinkException(msg)
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ENDSIGNATURE)].lower() == \
-            SLPacket.ENDSIGNATURE.lower()
+            SLPacket.ENDSIGNATURE.lower()  # @UndefinedVariable
 
     def packetIsInfo(self):
         """
@@ -168,7 +168,7 @@ class SLState(object):
             raise SeedLinkException(msg)
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.INFOSIGNATURE)].lower() == \
-            SLPacket.INFOSIGNATURE.lower()
+            SLPacket.INFOSIGNATURE.lower()  # @UndefinedVariable
 
     def incrementSendPointer(self):
         """
@@ -182,7 +182,7 @@ class SLState(object):
         Packs the buffer by removing all sent packets and shifting remaining
         bytes to beginning of buffer.
         """
-        #AJL System.arraycopy(self.databuf, self.sendptr, self.packed_buf, 0,
+        # AJL System.arraycopy(self.databuf, self.sendptr, self.packed_buf, 0,
         #                     self.recptr - self.sendptr)
         self.packed_buf[0:self.recptr - self.sendptr] = \
             self.databuf[self.sendptr: self.recptr]

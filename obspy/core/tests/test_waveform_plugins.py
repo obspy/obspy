@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import range
 from future.builtins import str
 
@@ -231,7 +231,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
-                #for data in :
+                # for data in :
                 #    np.testing.assert_array_equal(values, original)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')

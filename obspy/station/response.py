@@ -15,6 +15,7 @@ from future.builtins import super
 from future.builtins import range
 from future.builtins import map
 from future.builtins import str
+
 import warnings
 import ctypes as C
 import numpy as np
@@ -1052,7 +1053,7 @@ class Response(ComparingObject):
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
         # XXX: Check if this is really not needed.
-        #output *= scale_factor[0]
+        # output *= scale_factor[0]
 
         return output, freqs
 

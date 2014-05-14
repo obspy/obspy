@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: paz.py
 #  Purpose: Python routines for reading GSE poles and zero files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Python routines for reading GSE pole and zero (PAZ) files.
 

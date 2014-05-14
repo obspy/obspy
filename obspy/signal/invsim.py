@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
 #   Author: Moritz Beyreuther, Yannik Behr
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Yannik Behr
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Python Module for Instrument Correction (Seismology).
 PAZ (Poles and zeros) information must be given in SEED convention, correction
@@ -123,7 +123,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     # at idx2 and idx3 equals one
     cos_win = np.zeros(npts)
     if halfcosine:
-        #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
+        # cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
         cos_win[idx1:idx2 + 1] = 0.5 * (
             1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /

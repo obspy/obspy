@@ -121,14 +121,16 @@ class TfTestCase(unittest.TestCase):
                         atol=np.abs(PM_11p_ref).max() * tol + atol_min))
 
         # keeping the save commands in case the files need to be updated
-        #np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TFPM_11p.dat', TFPM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TEM_11p.dat', TEM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FEM_11p.dat', FEM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FPM_11p.dat', FPM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TPM_11p.dat', TPM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFPM_11p.dat', TFPM_11p,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TEM_11p.dat', TEM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FEM_11p.dat', FEM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FPM_11p.dat', FPM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TPM_11p.dat', TPM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
     def test_envelope_misfit(self):
         """
@@ -182,14 +184,16 @@ class TfTestCase(unittest.TestCase):
                         atol=np.abs(PM_11a_ref).max() * tol + atol_min))
 
         # keeping the save commands in case the files need to be updated
-        #np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TFPM_11a.dat', TFPM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TEM_11a.dat', TEM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FEM_11a.dat', FEM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FPM_11a.dat', FPM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TPM_11a.dat', TPM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFPM_11a.dat', TFPM_11a,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TEM_11a.dat', TEM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FEM_11a.dat', FEM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FPM_11a.dat', FPM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TPM_11a.dat', TPM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
 
     def test_envelope_gof(self):
         """

@@ -13,6 +13,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from future.builtins import super
 from future.builtins import str
+
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
 from obspy.station.util import Longitude, Latitude, Distance
@@ -198,11 +199,11 @@ class Station(BaseNode):
             msg = "Equipments can only contain Equipment objects."
             raise ValueError(msg)
         self._equipments = value
-        #if value is None or isinstance(value, Equipment):
+        # if value is None or isinstance(value, Equipment):
         #    self._equipment = value
-        #elif isinstance(value, dict):
+        # elif isinstance(value, dict):
         #    self._equipment = Equipment(**value)
-        #else:
+        # else:
         #    msg = ("equipment needs to be be of type obspy.station.Equipment "
         #        "or contain a dictionary with values suitable for "
         #        "initialization.")

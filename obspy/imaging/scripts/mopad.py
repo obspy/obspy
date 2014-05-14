@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: mopad.py
 #  Purpose: Moment tensor Plotting and Decomposition tool
 #   Author: Lars Krieger, Sebastian Heimann
 #    Email: lars.krieger@zmaw.de, sebastian.heimann@zmaw.de
 #
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
@@ -246,7 +246,7 @@ class MomentTensor:
         # all 9 elements are given
         if np.prod(np.shape(mech)) == 9:
             if np.shape(mech)[0] == 3:
-                #assure symmetry:
+                # assure symmetry:
                 mech[1, 0] = mech[0, 1]
                 mech[2, 0] = mech[0, 2]
                 mech[2, 1] = mech[1, 2]
@@ -1478,11 +1478,11 @@ class MomentTensor:
         return self._plot_clr_order
 
 
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 #
 #   external functions:
 #
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 def _puzzle_basis_transformation(mat_tup_arr_vec, in_basis, out_basis):
     lo_bases = ['NED', 'USE', 'XYZ', 'NWU']
@@ -1880,11 +1880,11 @@ def fancy_vector(v):
         "  \\ %5.2F /\n" % (v[2])
 
 
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 #
 #   Class for plotting:
 #
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 class BeachBall:
     """
@@ -2934,7 +2934,7 @@ class BeachBall:
         # down_prime = - ( np.array( ( s_lat, c_lat*c_lon, -c_lat*s_lon ) ) )
         down_prime = -(np.array((s_lat, c_lat * s_lon, -c_lat * c_lon)))
 
-        #normalise:
+        # normalise:
         down_prime /= np.sqrt(np.dot(down_prime, down_prime))
 
         # get second local basis vector " north' " by orthogonalising
@@ -3022,7 +3022,7 @@ class BeachBall:
             rotated_object = rotated_thing.copy()
             setattr(self, '_' + obj + '_rotated', rotated_object.transpose())
 
-    #---------------------------------------------------------------
+    # ---------------------------------------------------------------
 
     def _vertical_2D_projection(self):
         """
@@ -3836,7 +3836,7 @@ class BeachBall:
                 c=self._plot_nodalline_colour, ls='-',
                 lw=self._plot_nodalline_width,
                 alpha=self._plot_nodalline_alpha * self._plot_total_alpha)
-        #ax.plot( neg_nodalline[0,:] ,neg_nodalline[1,:],'go')
+        # ax.plot( neg_nodalline[0,:] ,neg_nodalline[1,:],'go')
 
         ax.plot(pos_nodalline[0, :], pos_nodalline[1, :],
                 c=self._plot_nodalline_colour, ls='-',
@@ -3937,11 +3937,11 @@ class BeachBall:
         return plotfig
 
 
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 #
 #  input and call management
 #
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 
 def main():
     """
@@ -4704,7 +4704,7 @@ def main():
                     sec_colour_raw = fp_args[2].split(',')
                     if len(sec_colour_raw) == 1:
                         if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
-                            consistent_kwargs_dict['plot_faultplane_colour'] =\
+                            consistent_kwargs_dict['plot_faultplane_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:
                             raise

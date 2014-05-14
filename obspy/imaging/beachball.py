@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: beachball.py
 #  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
 #   Author: Robert Barsch
 #    Email: barsch@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Robert Barsch
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 """
 Draws a beachball diagram of an earthquake focal mechanism
@@ -816,7 +816,7 @@ def TDL(AN, BN):
         if SL < 0. and CL > 0:
             FL = -FL
     else:
-        if - ZN > 1.0:
+        if -ZN > 1.0:
             ZN = -1.0
         FDH = np.arccos(-ZN)
         FD = FDH * CON

@@ -17,7 +17,6 @@ from __future__ import unicode_literals
 from future.builtins import str
 from future.builtins import chr
 
-
 from obspy.core.trace import Trace
 from obspy.mseed.headers import clibmseed, HPTMODULUS, MSRecord
 from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray
@@ -82,21 +81,22 @@ class SLPacket(object):
         self.trace = None
 
     def getSequenceNumber(self):
-        #print "DEBUG: repr(self.slhead):", repr(self.slhead)
-        #print "DEBUG: self.slhead[0 : len(self.INFOSIGNATURE)].lower():",
-        #print self.slhead[0 : len(self.INFOSIGNATURE)].lower()
-        #print "DEBUG: self.INFOSIGNATURE.lower():", self.INFOSIGNATURE.lower()
+        # print "DEBUG: repr(self.slhead):", repr(self.slhead)
+        # print "DEBUG: self.slhead[0 : len(self.INFOSIGNATURE)].lower():",
+        # print self.slhead[0 : len(self.INFOSIGNATURE)].lower()
+        # print "DEBUG: self.INFOSIGNATURE.lower():",
+        #         self.INFOSIGNATURE.lower()
         if self.slhead[0: len(self.INFOSIGNATURE)].lower() == \
                 self.INFOSIGNATURE.lower():
             return 0
-        #print "DEBUG: self.slhead[0 : len(self.SIGNATURE)].lower():",
-        #print self.slhead[0 : len(self.SIGNATURE)].lower()
-        #print "DEBUG: self.SIGNATURE.lower():", self.SIGNATURE.lower()
+        # print "DEBUG: self.slhead[0 : len(self.SIGNATURE)].lower():",
+        # print self.slhead[0 : len(self.SIGNATURE)].lower()
+        # print "DEBUG: self.SIGNATURE.lower():", self.SIGNATURE.lower()
         if not self.slhead[0: len(self.SIGNATURE)].lower() == \
                 self.SIGNATURE.lower():
             return -1
         seqbytes = bytes(self.slhead[2:8])
-        #print "DEBUG: seqbytes:", seqbytes,", int(seqbytes, 16):", \
+        # print "DEBUG: seqbytes:", seqbytes,", int(seqbytes, 16):", \
         #      int(seqbytes, 16)
         seqnum = -1
         try:
@@ -117,9 +117,9 @@ class SLPacket(object):
         if errcode != 0:
             msg = "failed to decode mini-seed record: msr_parse errcode: %s"
             raise SeedLinkException(msg % (errcode))
-        #print "DEBUG: msr:", msr
+        # print "DEBUG: msr:", msr
         msrecord_py = msr.contents
-        #print "DEBUG: msrecord_py:", msrecord_py
+        # print "DEBUG: msrecord_py:", msrecord_py
         return msrecord_py
 
     def getTrace(self):
@@ -128,7 +128,7 @@ class SLPacket(object):
             return self.trace
 
         msrecord_py = self.getMSRecord()
-        #print "DEBUG: msrecord_py:", msrecord_py
+        # print "DEBUG: msrecord_py:", msrecord_py
         header = _convertMSRToDict(msrecord_py)
 
         # XXX Workaround: the fields in the returned struct of type
@@ -163,7 +163,7 @@ class SLPacket(object):
         return self.trace
 
     def getType(self):
-        #print "DEBUG: self.slhead:", repr(self.slhead)
+        # print "DEBUG: self.slhead:", repr(self.slhead)
         if self.slhead[0: len(SLPacket.INFOSIGNATURE)].lower() == \
                 SLPacket.INFOSIGNATURE.lower():
             if (chr(self.slhead[self.SLHEADSIZE - 1]) != '*'):
@@ -171,24 +171,24 @@ class SLPacket(object):
             else:
                 return self.TYPE_SLINF
         msrecord_py = self.getMSRecord()
-        #print "DEBUG: msrecord_py:", msrecord_py
-        #print "DEBUG: msrecord_py.reclen:", msrecord_py.reclen
-        #print "DEBUG: msrecord_py.sequence_number:",
-        #print msrecord_py.sequence_number
-        #print "DEBUG: msrecord_py.samplecnt:", msrecord_py.samplecnt
-        #print "DEBUG: msrecord_py.encoding:", msrecord_py.encoding
-        #print "DEBUG: msrecord_py.byteorder:", msrecord_py.byteorder
-        #print "DEBUG: msrecord_py.numsamples:", msrecord_py.numsamples
-        #print "DEBUG: msrecord_py.sampletype:", msrecord_py.sampletype
-        #print "DEBUG: msrecord_py.blkts:", msrecord_py.blkts
+        # print "DEBUG: msrecord_py:", msrecord_py
+        # print "DEBUG: msrecord_py.reclen:", msrecord_py.reclen
+        # print "DEBUG: msrecord_py.sequence_number:",
+        # print msrecord_py.sequence_number
+        # print "DEBUG: msrecord_py.samplecnt:", msrecord_py.samplecnt
+        # print "DEBUG: msrecord_py.encoding:", msrecord_py.encoding
+        # print "DEBUG: msrecord_py.byteorder:", msrecord_py.byteorder
+        # print "DEBUG: msrecord_py.numsamples:", msrecord_py.numsamples
+        # print "DEBUG: msrecord_py.sampletype:", msrecord_py.sampletype
+        # print "DEBUG: msrecord_py.blkts:", msrecord_py.blkts
         blockette = msrecord_py.blkts.contents
         while blockette:
-            #print "DEBUG: ===================="
-            #print "DEBUG: blkt_type:", blockette.blkt_type
-            #print "DEBUG: next_blkt:", blockette.next_blkt
-            #print "DEBUG: blktdata:", blockette.blktdata
-            #print "DEBUG: blktdatalen:", blockette.blktdatalen
-            #print "DEBUG: next:", blockette.next
+            # print "DEBUG: ===================="
+            # print "DEBUG: blkt_type:", blockette.blkt_type
+            # print "DEBUG: next_blkt:", blockette.next_blkt
+            # print "DEBUG: blktdata:", blockette.blktdata
+            # print "DEBUG: blktdatalen:", blockette.blktdatalen
+            # print "DEBUG: next:", blockette.next
             try:
                 blockette = blockette.next.contents
             except:

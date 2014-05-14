@@ -1,7 +1,7 @@
-from __future__ import unicode_literals
-from future.builtins import open
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import open
 
 from obspy.core.util import FlinnEngdahl
 import os

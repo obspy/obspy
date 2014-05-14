@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: konnoohmachismoothing.py
 #  Purpose: Small module to smooth spectra with the so called Konno & Ohmachi
 #           method.
@@ -8,7 +8,7 @@
 #  License: GPLv2
 #
 # Copyright (C) 2011 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions to smooth spectra with the so called Konno & Ohmachi method.
 

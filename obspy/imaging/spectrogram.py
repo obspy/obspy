@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: spectrogram.py
 #  Purpose: Plotting spectrogram of Seismograms.
 #   Author: Christian Sippl, Moritz Beyreuther
 #    Email: sippl@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Christian Sippl
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Plotting spectrogram of seismograms.
 
@@ -18,7 +18,6 @@ Plotting spectrogram of seismograms.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future.builtins import str  # NOQA
 
 from matplotlib import mlab
 from matplotlib.colors import Normalize
@@ -112,7 +111,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
-    #XXX add condition for too many windows => calculation takes for ever
+    # XXX add condition for too many windows => calculation takes for ever
     nfft = int(_nearestPow2(wlen * samp_rate))
     if nfft > npts:
         nfft = int(_nearestPow2(npts / 8.0))

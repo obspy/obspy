@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: seg.py
 #  Purpose: Routines for reading and writing SEG Y files.
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Routines to read and write SEG Y rev 1 encoded seismic data files.
 """
 from __future__ import division
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import open
 from future.builtins import str
 

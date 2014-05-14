@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 
 from obspy.core import compatibility
 from obspy import UTCDateTime
@@ -24,37 +24,37 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_readDateTime(self):
         field = VariableString(1, "test", 1, 22, 'T', strict=True)
-        #1
+        # 1
         orig = b'1992,002,00:00:00.0000~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1992, 1, 2))
         self.assertEqual(field.write(dt), b'1992,002~')
-        #1
+        # 1
         orig = b'1992,002~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1992, 1, 2))
         self.assertEqual(field.write(dt), b'1992,002~')
-        #2
+        # 2
         orig = b'1992,005,01:02:03.4567~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1992, 1, 5, 1, 2, 3, 456700))
         self.assertEqual(field.write(dt), orig)
-        #3
+        # 3
         orig = b'1992,005,01:02:03.0001~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1992, 1, 5, 1, 2, 3, 100))
         self.assertEqual(field.write(dt), orig)
-        #4
+        # 4
         orig = b'1992,005,01:02:03.1000~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1992, 1, 5, 1, 2, 3, 100000))
         self.assertEqual(field.write(dt), orig)
-        #5
+        # 5
         orig = b'1987,023,04:23:05.1~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1987, 1, 23, 4, 23, 5, 100000))
         self.assertEqual(field.write(dt), b'1987,023,04:23:05.1000~')
-        #6
+        # 6
         orig = b'1987,023,04:23:05.123~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1987, 1, 23, 4, 23, 5, 123000))
@@ -83,17 +83,17 @@ class FieldsTestCase(unittest.TestCase):
     def test_readCompactDateTime(self):
         field = VariableString(1, "test", 0, 22, 'T', strict=True,
                                compact=True)
-        #1
+        # 1
         orig = b'1992,002~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(1992, 1, 2))
         self.assertEqual(field.write(dt), orig)
-        #2
+        # 2
         orig = b'2007,199~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(2007, 7, 18))
         self.assertEqual(field.write(dt), orig)
-        #3 - wrong syntax
+        # 3 - wrong syntax
         orig = b'1992'
         self.assertRaises(Exception, field.read, compatibility.BytesIO(orig))
         orig = b'1992,'
@@ -102,26 +102,26 @@ class FieldsTestCase(unittest.TestCase):
         self.assertRaises(Exception, field.read, compatibility.BytesIO(orig))
         orig = b'1992,~'
         self.assertRaises(Exception, field.read, compatibility.BytesIO(orig))
-        #5 - empty datetime
+        # 5 - empty datetime
         orig = b'~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, '')
         self.assertEqual(field.write(dt), b'~')
-        #6 - bad syntax
+        # 6 - bad syntax
         orig = b''
         self.assertRaises(Exception, field.read, compatibility.BytesIO(orig))
         self.assertEqual(field.write(dt), b'~')
-        #7
+        # 7
         orig = b'2007,199~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(2007, 7, 18))
         self.assertEqual(field.write(dt), b'2007,199~')
-        #8
+        # 8
         orig = b'2009,074,12~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(2009, 3, 15, 12))
         self.assertEqual(field.write(dt), orig)
-        #9
+        # 9
         orig = b'2008,358,01:30:22.0012~'
         dt = field.read(compatibility.BytesIO(orig))
         self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 1200))

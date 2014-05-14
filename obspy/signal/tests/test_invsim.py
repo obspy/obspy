@@ -5,7 +5,7 @@ The InvSim test suite.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
@@ -23,31 +23,31 @@ import unittest
 # signals are in velocity, thus must be integrated to offset and take one
 # zero less than pitsa (remove 1/w in frequency domain)
 PAZ_WOOD_ANDERSON = {'poles': [-6.2832 - 4.7124j,
-                               -6.2832 + 4.7124j],
+                               - 6.2832 + 4.7124j],
                      'zeros': [0.0 + 0.0j] * 1,
                      'sensitivity': 1.0,
                      'gain': 1. / 2.25}
 
 PAZ_WWSSN_SP = {'poles': [-4.0093 - 4.0093j,
-                          -4.0093 + 4.0093j,
-                          -4.6077 - 6.9967j,
-                          -4.6077 + 6.9967j],
+                          - 4.0093 + 4.0093j,
+                          - 4.6077 - 6.9967j,
+                          - 4.6077 + 6.9967j],
                 'zeros': [0.0 + 0.0j] * 2,
                 'sensitivity': 1.0,
                 'gain': 1. / 1.0413}
 
 PAZ_WWSSN_LP = {'poles': [-0.4189 + 0.0j,
-                          -0.4189 + 0.0j,
-                          -0.0628 + 0.0j,
-                          -0.0628 + 0.0j],
+                          - 0.4189 + 0.0j,
+                          - 0.0628 + 0.0j,
+                          - 0.0628 + 0.0j],
                 'zeros': [0.0 + 0.0j] * 2,
                 'sensitivity': 1.0,
                 'gain': 1. / 0.0271}
 
 PAZ_KIRNOS = {'poles': [-0.1257 - 0.2177j,
-                        -0.1257 + 0.2177j,
-                        -83.4473 + 0.0j,
-                        -0.3285 + 0.0j],
+                        - 0.1257 + 0.2177j,
+                        - 83.4473 + 0.0j,
+                        - 0.3285 + 0.0j],
               'zeros': [0.0 + 0.0j] * 2,
               'sensitivity': 1.0,
               'gain': 1. / 1.61}
@@ -162,9 +162,9 @@ class InvSimTestCase(unittest.TestCase):
         mag_RNON = estimateMagnitude(paz, 6.78e4, 0.125, 1.538)
         self.assertAlmostEqual(mag_RNON, 1.4995311686507182)
 
-    #XXX: Test for really big signal is missing, where the water level is
+    # XXX: Test for really big signal is missing, where the water level is
     # actually acting
-    #def test_seisSimVsPitsa2(self):
+    # def test_seisSimVsPitsa2(self):
     #    from obspy.mseed import test as tests_
     #    path = os.path.dirname(__file__)
     #    file = os.path.join(path, 'data', 'BW.BGLD..EHE.D.2008.001')
@@ -193,9 +193,9 @@ class InvSimTestCase(unittest.TestCase):
         fl2 = 1.0 / plow
         fl3 = 1.0 / phigh
         fl4 = 1.0 / (phigh - 0.25 * phigh)
-        #Uncomment the following to run the sac-commands
-        #that created the testing file
-        #if 1:
+        # Uncomment the following to run the sac-commands
+        # that created the testing file
+        # if 1:
         #    import subprocess as sp
         #    p = sp.Popen('sac',shell=True,stdin=sp.PIPE)
         #    cd1 = p.stdin
@@ -280,14 +280,14 @@ class InvSimTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
         self.assertTrue(rms < 0.0094)
-        #import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
-        #plt.plot(trtest.data,'g')
-        #plt.figure()
-        #plt.psd(tr.data,Fs=100.,NFFT=32768)
-        #plt.psd(trtest.data,Fs=100.,NFFT=32768)
-        #plt.figure()
-        #plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
-        #plt.show()
+        # import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
+        # plt.plot(trtest.data,'g')
+        # plt.figure()
+        # plt.psd(tr.data,Fs=100.,NFFT=32768)
+        # plt.psd(trtest.data,Fs=100.,NFFT=32768)
+        # plt.figure()
+        # plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
+        # plt.show()
 
     def test_cosineTaper(self):
         # SAC trace was generated with:
@@ -302,18 +302,18 @@ class InvSimTestCase(unittest.TestCase):
         # The following lines compare the cosTaper result with
         # the result of the algorithm used by SAC in its taper routine
         # (taper.c)
-        #freqs = np.fft.fftfreq(2**15,0.01)
-        #fl1 = 0.00588
-        #fl2 = 0.00625
-        #fl3 = 30.0
-        #fl4 = 35.0
-        #npts = freqs.size
-        #tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
-        #tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
-        #import matplotlib.pyplot as plt
-        #plt.plot(tap,'b')
-        #plt.plot(tap2,'g--')
-        #plt.show()
+        # freqs = np.fft.fftfreq(2**15,0.01)
+        # fl1 = 0.00588
+        # fl2 = 0.00625
+        # fl3 = 30.0
+        # fl4 = 35.0
+        # npts = freqs.size
+        # tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
+        # tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
+        # import matplotlib.pyplot as plt
+        # plt.plot(tap,'b')
+        # plt.plot(tap2,'g--')
+        # plt.show()
 
     def test_evalrespUsingDifferentLineSeparator(self):
         """

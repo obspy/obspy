@@ -1,15 +1,13 @@
-from __future__ import unicode_literals
-from future.builtins import open
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Filename: reftekrescue.py
 #  Purpose: Restore REFTEK data from raw binary data dumps
 #   Author: Tobias Megies
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2011 Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 Restore REFTEK data from raw binary data dumps.
 
@@ -39,7 +37,8 @@ conversion tools.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals
+from future.builtins import open
 from optparse import OptionParser
 import warnings
 import mmap

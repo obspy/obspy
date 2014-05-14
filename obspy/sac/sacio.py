@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: sacio.py
 #  Purpose: Read & Write Seismograms, Format SAC.
 #   Author: Yannik Behr, C. J. Ammon's
 #    Email: yannik.behr@vuw.ac.nz
 #
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -14,6 +14,7 @@ from future.builtins import map
 from future.builtins import range
 from future.builtins import str
 from future.utils import native_str
+
 from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
 from obspy.core import compatibility
@@ -119,8 +120,8 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(list(map(chr, list(range(32, 127)))) +
-                              list("\n\r\t\b")).encode('ascii', 'ignore')
+    text_characters = str("").join(list(map(chr, list(range(32, 127)))) +
+                                   list("\n\r\t\b")).encode('ascii', 'ignore')
     _null_trans = compatibility.maketrans(b"", b"")
     with open(filename, 'rb') as fp:
         s = fp.read(blocksize)
@@ -532,19 +533,19 @@ class SacIO(object):
 
         >>> tr = SacIO('test.sac', headonly=True)  # doctest: +SKIP
         """
-        #### check if file exists
+        # check if file exists
         try:
-            #### open the file
+            # open the file
             f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         # parse the header
         #
         # The sac header has 70 floats, 40 integers, then 192 bytes
         #    in strings. Store them in array (an convert the char to a
         #    list). That's a total of 632 bytes.
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         self.hf = np.fromfile(f, dtype='<f4', count=70)
         self.hi = np.fromfile(f, dtype='<i4', count=40)
         # read in the char values
@@ -597,7 +598,7 @@ class SacIO(object):
         >>> u.GetHvalueFromFile('test2.sac',"kevnm") # doctest: +SKIP
         'hullahulla      '
         """
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         # open the file
         #
         try:
@@ -635,17 +636,17 @@ class SacIO(object):
         >>> tr = SacIO('test.sac')  # doctest: +SKIP
         """
         try:
-            #### open the file
+            # open the file
             f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         # parse the header
         #
         # The sac header has 70 floats, 40 integers, then 192 bytes
         #    in strings. Store them in array (an convert the char to a
         #    list). That's a total of 632 bytes.
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         self.hf = np.fromfile(f, dtype='<f4', count=70)
         self.hi = np.fromfile(f, dtype='<i4', count=40)
         # read in the char values
@@ -654,7 +655,7 @@ class SacIO(object):
             self.hf = self.hi = self.hs = None
             f.close()
             raise SacIOError("Cannot read all header values")
-        ##### only continue if it is a SAC file
+        # only continue if it is a SAC file
         try:
             self.IsSACfile(fname, fsize)
         except SacError:
@@ -671,9 +672,9 @@ class SacIO(object):
             except SacError as e:
                 f.close()
                 raise SacError(e)
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         # read in the seismogram points
-        #--------------------------------------------------------------
+        # --------------------------------------------------------------
         # you just have to know it's in the 10th place
         # actually, it's in the SAC manual
         npts = self.hi[9]
@@ -715,19 +716,19 @@ class SacIO(object):
         Reading only the header portion of alphanumeric SAC-files is currently
         not supported.
         """
-        ###### open the file
+        # open the file
         try:
             f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
         try:
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             # parse the header
             #
             # The sac header has 70 floats, 40 integers, then 192 bytes
             #    in strings. Store them in array (an convert the char to a
             #    list). That's a total of 632 bytes.
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             # read in the float values
             self.hf = np.fromfile(f, dtype='<f4', count=70, sep=" ")
             # read in the int values
@@ -739,9 +740,9 @@ class SacIO(object):
             for i in range(0, 24, 3):
                 line = f.readline()
                 self.hs[i:i + 3] = np.fromstring(line, dtype='|S8', count=3)
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             # read in the seismogram points
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
         except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
@@ -777,19 +778,19 @@ class SacIO(object):
         Reading only the header portion of alphanumeric SAC-files is currently
         not supported.
         """
-        ###### open the file
+        # open the file
         try:
             f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
         try:
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             # parse the header
             #
             # The sac header has 70 floats, 40 integers, then 192 bytes
             #    in strings. Store them in array (an convert the char to a
             #    list).
-            #--------------------------------------------------------------
+            # --------------------------------------------------------------
             # read in the float values
             self.hf = np.fromfile(f, dtype='<f4', count=70, sep=" ")
             # read in the int values
@@ -1135,9 +1136,8 @@ class SacIO(object):
         >>> t.endtime.timestamp - t.reftime.timestamp
         100.0
         """
-        ### if any of the time-header values are still set to
-        ### -12345 then UTCDateTime raises an exception and
-        ### reftime is set to 0.0
+        # if any of the time-header values are still set to -12345 then
+        # UTCDateTime raises an exception and reftime is set to 0.0
         try:
             ms = self.GetHvalue('nzmsec') * 1000
             yr = self.GetHvalue('nzyear')
@@ -1303,7 +1303,7 @@ class SacIO(object):
         return header
 
 
-############# UTILITIES ###################################################
+# UTILITIES
 def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
                tohz=False):
     '''
@@ -1367,7 +1367,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         line = paz_file.readline()
         if not line:
             break
-        ### lines starting with * are comments
+        # lines starting with * are comments
         if line.startswith('*'):
             continue
         if line.find('ZEROS') != -1:
@@ -1404,15 +1404,15 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             constant = float(a[1])
     paz_file.close()
 
-    ### To convert the velocity response to the displacement response,
-    ### multiplication with jw is used. This is equivalent to one more
-    ### zero in the pole-zero representation
+    # To convert the velocity response to the displacement response,
+    # multiplication with jw is used. This is equivalent to one more
+    # zero in the pole-zero representation
     if todisp:
         zeros.append(complex(0, 0j))
 
-    ### To convert the displacement response to the velocity response,
-    ### division with jw is used. This is equivalent to one less zero
-    ### in the pole-zero representation
+    # To convert the displacement response to the velocity response,
+    # division with jw is used. This is equivalent to one less zero
+    # in the pole-zero representation
     if tovel:
         for i, zero in enumerate(list(zeros)):
             if zero == complex(0, 0j):
@@ -1422,7 +1422,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             raise Exception("Could not remove (0,0j) zero to change \
             displacement response to velocity response")
 
-    ### convert poles, zeros and gain in Hertz to radians
+    # convert poles, zeros and gain in Hertz to radians
     if torad:
         tmp = [z * 2. * np.pi for z in zeros]
         zeros = tmp
@@ -1441,9 +1441,9 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         # correct or if I have missed something. I've therefore decided
         # to leave it out for now, in order to stay compatible with the
         # rdseed program and the SAC program.
-        #constant *= (2. * np.pi) ** 3
+        # constant *= (2. * np.pi) ** 3
 
-    ### convert poles, zeros and gain in radian to Hertz
+    # convert poles, zeros and gain in radian to Hertz
     if tohz:
         for i, z in enumerate(zeros):
             if abs(z) > 0.0:
@@ -1451,7 +1451,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         for i, p in enumerate(poles):
             if abs(p) > 0.0:
                 poles[i] /= 2 * np.pi
-        #constant /= (2. * np.pi) ** 3
+        # constant /= (2. * np.pi) ** 3
 
     # fill up ObsPy Poles and Zeros AttribDict
     # In SAC pole-zero files CONSTANT is defined as:
@@ -1552,9 +1552,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     if todisp:
         zeros.append(complex(0, 0j))
 
-    ### To convert the displacement response to the velocity response,
-    ### division with jw is used. This is equivalent to one less zero
-    ### in the pole-zero representation
+    # To convert the displacement response to the velocity response,
+    # division with jw is used. This is equivalent to one less zero
+    # in the pole-zero representation
     if tovel:
         for i, zero in enumerate(list(zeros)):
             if zero == complex(0, 0j):
@@ -1564,7 +1564,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
             raise Exception("Could not remove (0,0j) zero to change \
             displacement response to velocity response")
 
-    ### convert poles, zeros and gain in radian to Hertz
+    # convert poles, zeros and gain in radian to Hertz
     if tohz:
         for i, z in enumerate(zeros):
             if abs(z) > 0.0:

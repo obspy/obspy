@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: tf_misfit.py
 #  Purpose: Various Time Frequency Misfit Functions
 #   Author: Martin van Driel
 #    Email: vandriel@sed.ethz.ch
 #
 # Copyright (C) 2012 Martin van Driel
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Time Frequency Misfit Functions based on [Kristekova2006]_ and
 [Kristekova2009]_.

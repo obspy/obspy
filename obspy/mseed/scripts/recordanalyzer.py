@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: recordanalyzer.py
 #  Purpose: A command-line tool to analyze Mini-SEED records for development
 #           purposes.
@@ -8,7 +8,7 @@
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010-2012 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 USAGE: obspy-mseed-recordanalyzer filename.mseed
 

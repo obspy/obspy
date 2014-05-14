@@ -4,9 +4,10 @@
 The libgse2 test suite.
 """
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import zip
 from future.builtins import open
+
 from ctypes import ArgumentError
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, CatchOutput
@@ -196,11 +197,11 @@ class LibGSE2TestCase(unittest.TestCase):
             lines = (l for l in fin if not l.startswith(b'DAT2'))
             fout.write(b"".join(lines))
         fout.seek(0)
-        #with CatchOutput() as out:
+        # with CatchOutput() as out:
         with CatchOutput():
             self.assertRaises(GSEUtiError, libgse2.read, fout)
         # XXX: CatchOutput does not work on Py3k, skipping for now
-        #self.assertEqual(out.stdout,
+        # self.assertEqual(out.stdout,
         #                 "decomp_6b: Neither DAT2 or DAT1 found!\n")
 
     def test_parse_STA2(self):

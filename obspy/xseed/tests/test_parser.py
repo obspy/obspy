@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import range
 from future.builtins import str
 from future.builtins import open
@@ -398,14 +398,14 @@ class ParserTestCase(unittest.TestCase):
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
                  [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j,
-                  -6.32511E+02 + 0.00000E+00j],
+                  - 6.32511E+02 + 0.00000E+00j],
                  [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j]]
         poles = [[-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
-                  -3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j],
+                  - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j],
                  [-3.58123E-02 - 4.44766E-02j, -3.58123E-02 + 4.44766E-02j,
-                  -5.13245E+02 + 0.00000E+00j, -6.14791E+04 + 0.00000E+00j],
+                  - 5.13245E+02 + 0.00000E+00j, -6.14791E+04 + 0.00000E+00j],
                  [-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
-                  -3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j]]
+                  - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j]]
         sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
         seismometer_gain = [+2.29145E+03, +1.02583E+01, +2.29145E+03]
         for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
@@ -510,7 +510,7 @@ class ParserTestCase(unittest.TestCase):
         """
         Tests RESP file creation from XML-SEED.
         """
-        ### example 1
+        # 1
         # parse Dataless SEED
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
@@ -522,7 +522,7 @@ class ParserTestCase(unittest.TestCase):
             sp2 = Parser(tempfile)
             # create RESP files
             sp2.getRESP()
-        ### example 2
+        # 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp1 = Parser(filename)

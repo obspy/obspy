@@ -14,7 +14,7 @@ class UtilTestCase(unittest.TestCase):
         """
         Tests for function parseMappingData.
         """
-        #1
+        # 1
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 1970-01-01 2007-12-31",
                 "BW.MANZ.00.EHE GE.ROTZ..EHZ 2008-01-01",
                 " ",
@@ -31,7 +31,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(results['.MANZ.00.EHE'][0]['endtime'], None)
         self.assertEqual(len(results['BW.MANZ.00.EHE']), 2)
         self.assertEqual(len(results['BW...EHE']), 1)
-        #2 invalid ids
+        # 2 invalid ids
         data = ["BWMANZ00EHE GE.ROTZ..EHZ"]
         self.assertRaises(Exception, parseMappingData, data)
         data = ["BW.MANZ.00EHE GE.ROTZ..EHZ"]
@@ -46,7 +46,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(Exception, parseMappingData, data)
         data = ["BW.MANZ.00.XXXX GE.ROTZ..EHZ"]
         self.assertRaises(Exception, parseMappingData, data)
-        #3 invalid date/times
+        # 3 invalid date/times
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 2008 2009"]
         self.assertRaises(Exception, parseMappingData, data)
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 2009-01-01 2008-01-01"]

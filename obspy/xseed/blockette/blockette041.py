@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import range
 from future.builtins import str
 from future.utils import native_str
@@ -34,7 +34,7 @@ class Blockette041(Blockette):
         Integer(6, "Signal In Units", 3, xpath=34),
         Integer(7, "Signal Out Units", 3, xpath=34),
         Integer(8, "Number of Factors", 4),
-        #REPEAT field 9 for the Number of Factors
+        # REPEAT field 9 for the Number of Factors
         Loop("FIR Coefficient", "Number of Factors", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]

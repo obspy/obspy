@@ -281,7 +281,7 @@ class SLClient(object):
 
         # can send an in-line INFO request here
         try:
-            #if (count % 100 == 0 and not self.slconn.state.expect_info):
+            # if (count % 100 == 0 and not self.slconn.state.expect_info):
             if (count % 100 == 0):
                 infostr = "ID"
                 self.slconn.requestInfo(infostr)

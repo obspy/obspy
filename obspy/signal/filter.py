@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: filter.py
 #  Purpose: Various Seismogram Filtering Functions
 #   Author: Tobias Megies, Moritz Beyreuther, Yannik Behr
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009 Tobias Megies, Moritz Beyreuther, Yannik Behr
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Seismogram Filtering Functions
 
@@ -356,7 +356,7 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
     # rp - maximum ripple of passband, rs - attenuation of stopband
     rp, rs, order = 1, 96, 1e99
     ws = freq / nyquist  # stop band frequency
-    wp = ws              # pass band frequency
+    wp = ws  # pass band frequency
     # raise for some bad scenarios
     if ws > 1:
         ws = 1.0

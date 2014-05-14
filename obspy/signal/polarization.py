@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: polarization.py
 #   Author: Conny Hammer
 #    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Polarization Analysis
 
@@ -89,8 +89,8 @@ def eigval(datax, datay, dataz, fk, normf=1):
         [leigenv1[np.size(leigenv1) - 1]] * (np.size(fk) // 2))
     dleigenv1 = signal.lfilter(fk, 1, leigenv1_add)
     dleigenv[:, 0] = dleigenv1[len(fk) - 1:]
-    #dleigenv1 = dleigenv1[np.size(fk) // 2:(np.size(dleigenv1) - np.size(fk) /
-    #        2)]
+    # dleigenv1 = dleigenv1[np.size(fk) // 2:(np.size(dleigenv1) -
+    #        np.size(fk) / 2)]
 
     leigenv2_add = np.append(
         np.append(
@@ -98,8 +98,8 @@ def eigval(datax, datay, dataz, fk, normf=1):
             leigenv2), [leigenv2[np.size(leigenv2) - 1]] * (np.size(fk) // 2))
     dleigenv2 = signal.lfilter(fk, 1, leigenv2_add)
     dleigenv[:, 1] = dleigenv2[len(fk) - 1:]
-    #dleigenv2 = dleigenv2[np.size(fk) // 2:(np.size(dleigenv2) - np.size(fk) /
-    #        2)]
+    # dleigenv2 = dleigenv2[np.size(fk) // 2:(np.size(dleigenv2) -
+    #        np.size(fk) / 2)]
 
     leigenv3_add = np.append(
         np.append(
@@ -107,21 +107,21 @@ def eigval(datax, datay, dataz, fk, normf=1):
         [leigenv3[np.size(leigenv3) - 1]] * (np.size(fk) // 2))
     dleigenv3 = signal.lfilter(fk, 1, leigenv3_add)
     dleigenv[:, 2] = dleigenv3[len(fk) - 1:]
-    #dleigenv3 = dleigenv3[np.size(fk) // 2:(np.size(dleigenv3) - np.size(fk) /
-    #        2)]
+    # dleigenv3 = dleigenv3[np.size(fk) // 2:(np.size(dleigenv3) -
+    #        np.size(fk) / 2)]
 
     rect_add = np.append(
         np.append([rect[0]] * (np.size(fk) // 2), rect),
         [rect[np.size(rect) - 1]] * (np.size(fk) // 2))
     drect = signal.lfilter(fk, 1, rect_add)
     drect = drect[len(fk) - 1:]
-    #drect = drect[np.size(fk) // 2:(np.size(drect3) - np.size(fk) // 2)]
+    # drect = drect[np.size(fk) // 2:(np.size(drect3) - np.size(fk) // 2)]
 
     plan_add = np.append(
         np.append([plan[0]] * (np.size(fk) // 2), plan),
         [plan[np.size(plan) - 1]] * (np.size(fk) // 2))
     dplan = signal.lfilter(fk, 1, plan_add)
     dplan = dplan[len(fk) - 1:]
-    #dplan = dplan[np.size(fk) // 2:(np.size(dplan) - np.size(fk) // 2)]
+    # dplan = dplan[np.size(fk) // 2:(np.size(dplan) - np.size(fk) // 2)]
 
     return leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect, dplan

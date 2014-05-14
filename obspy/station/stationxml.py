@@ -11,6 +11,7 @@ File dealing with the StationXML format.
 """
 from __future__ import unicode_literals
 from future.builtins import str
+
 import inspect
 from lxml import etree
 import os
@@ -1160,7 +1161,7 @@ def _tags2obj(element, tag, convert):
     values = []
     # make sure, only unicode
     if convert is str:
-        ### XXX: this warning if raised with python3
+        # XXX: this warning if raised with python3
         warnings.warn("overriding 'str' with 'unicode'.")
         convert = str
     for elem in element.findall(tag):

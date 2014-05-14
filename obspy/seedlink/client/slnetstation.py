@@ -50,7 +50,7 @@ class SLNetStation(object):
         """
         self.net = str(net)
         self.station = str(station)
-        #print "DEBUG: selectors:", selectors
+        # print "DEBUG: selectors:", selectors
         if selectors is not None:
             self.selectors = selectors
         else:

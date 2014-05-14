@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: libgse2.py
 #  Purpose: Python wrapper for gse_functions of Stefan Stange
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 """
 Lowlevel module internally used for handling GSE2 files
 
@@ -261,7 +261,7 @@ def uncompress_CM6(f, n_samps):
     :type n_samps: Int
     :param n_samps: Number of samples
     """
-    def read83(cbuf, vptr):
+    def read83(cbuf, vptr):  # @UnusedVariable
         line = f.readline()
         if line == b'':
             return None

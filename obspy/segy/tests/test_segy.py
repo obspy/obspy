@@ -4,7 +4,7 @@ The obspy.segy test suite.
 """
 from __future__ import division
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import range
 from future.builtins import open
 
@@ -371,7 +371,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
             # Always write the SEGY File revision number!
-            #org_data[3500:3502] = new_data[3500:3502]
+            # org_data[3500:3502] = new_data[3500:3502]
             # Test the identity without the SEGY revision number
             self.assertEqual(org_data[:3500], new_data[:3500])
             self.assertEqual(org_data[3502:], new_data[3502:])

@@ -47,7 +47,7 @@ class Blockette061(Blockette):
         Integer(6, "Signal In Units", 3, xpath=34),
         Integer(7, "Signal Out Units", 3, xpath=34),
         Integer(8, "Number of Coefficients", 4),
-        #REPEAT field 9 for the Number of Coefficients
+        # REPEAT field 9 for the Number of Coefficients
         Loop("FIR Coefficient", "Number of Coefficients", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]

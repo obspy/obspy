@@ -159,7 +159,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and write Q file via obspy.sh.core.readQ.
         """
-        #1 - little endian (PC)
+        # 1 - little endian (PC)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST.QHD')
         # read original
         stream1 = readQ(origfile)
@@ -175,7 +175,7 @@ class CoreTestCase(unittest.TestCase):
             self._compareStream(stream2)
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        #2 - big endian (SUN)
+        # 2 - big endian (SUN)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
         # read original
         stream1 = readQ(origfile, byteorder=">")
@@ -196,7 +196,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and write Q file test via obspy.core.
         """
-        #1 - little endian (PC)
+        # 1 - little endian (PC)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST.QHD')
         # read original
         stream1 = read(origfile, format="Q")
@@ -212,7 +212,7 @@ class CoreTestCase(unittest.TestCase):
             self._compareStream(stream2)
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
-        #2 - big endian (SUN)
+        # 2 - big endian (SUN)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
         # read original
         stream1 = read(origfile, format="Q", byteorder=">")

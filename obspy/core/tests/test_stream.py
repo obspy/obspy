@@ -442,21 +442,21 @@ class StreamTestCase(unittest.TestCase):
         t4 = UTCDateTime("2011-09-11")
         st = read()
         st_cut = read()
-        # ##
+        # 1
         st_cut.cutout(t4, t4 + 10)
         self.__remove_processing(st_cut)
         self.assertEqual(st, st_cut)
-        # ##
+        # 2
         st_cut.cutout(t1 - 10, t1)
         self.__remove_processing(st_cut)
         self.assertEqual(st, st_cut)
-        # ##
+        # 3
         st_cut.cutout(t1, t2)
         st.trim(starttime=t2, nearest_sample=True)
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
         self.assertEqual(st, st_cut)
-        # ##
+        # 4
         st = read()
         st_cut = read()
         st_cut.cutout(t3, t4)
@@ -464,7 +464,7 @@ class StreamTestCase(unittest.TestCase):
         self.__remove_processing(st_cut)
         self.__remove_processing(st)
         self.assertEqual(st, st_cut)
-        # ##
+        # 5
         st = read()
         st.trim(endtime=t2, nearest_sample=True)
         tmp = read()
@@ -1568,16 +1568,16 @@ class StreamTestCase(unittest.TestCase):
         dt = end - start
         delta = tr1.stats.delta
         # test traces that should be merged:
-        # ## contained traces with compatible data
+        # contained traces with compatible data
         tr2 = tr1.slice(start, start + dt / 3)
         tr3 = tr1.copy()
         tr4 = tr1.slice(start + dt / 4, end - dt / 4)
-        # ## adjacent traces
+        # adjacent traces
         tr5 = tr1.copy()
         tr5.stats.starttime = end + delta
         tr6 = tr1.copy()
         tr6.stats.starttime = start - dt - delta
-        # ## create overlapping traces with compatible data
+        # create overlapping traces with compatible data
         trO1 = tr1.copy()
         trO1.trim(starttime=start + 2 * delta)
         trO1.data = np.concatenate([trO1.data, np.arange(5)])
@@ -2011,8 +2011,8 @@ class StreamTestCase(unittest.TestCase):
             .decimate(factor=2, no_filter=True)\
             .resample(st[0].stats.sampling_rate / 2)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            - 0.037004 - 0.037016j,
-                                            - 251.33 + 0j],
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\

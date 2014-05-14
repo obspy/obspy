@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: libgse1.py
 #  Purpose: Python wrapper for reading GSE1 files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 """
 Low-level module internally used for handling GSE1 files
 

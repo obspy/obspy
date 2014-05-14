@@ -29,9 +29,9 @@ class CoreTestCase(unittest.TestCase):
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
         self.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
-             -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
-             -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
-             -5.87784529e-01, -3.09016049e-01], dtype='float32')
+             - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
+             - 1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
+             - 5.87784529e-01, -3.09016049e-01], dtype='float32')
 
     def test_readViaObsPy(self):
         """
@@ -284,7 +284,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test case for issue #156.
         """
-        #1
+        # 1
         tr = Trace()
         tr.stats.delta = 0.01
         tr.data = np.arange(0, 3000)
@@ -294,7 +294,7 @@ class CoreTestCase(unittest.TestCase):
             st = read(sac_file)
         self.assertEqual(st[0].stats.delta, 0.01)
         self.assertEqual(st[0].stats.sampling_rate, 100.0)
-        #2
+        # 2
         tr = Trace()
         tr.stats.delta = 0.005
         tr.data = np.arange(0, 2000)

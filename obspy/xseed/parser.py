@@ -11,7 +11,7 @@ Main module containing XML-SEED parser.
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from future import standard_library  # NOQA @UnusedImport
 from future.builtins import range
 from future.builtins import open
 from future.builtins import str
@@ -613,7 +613,7 @@ class Parser(object):
         if temp not in [b'010', b'008', b'005']:
             raise SEEDParserException("Expecting blockette 010, 008 or 005")
         # Skip the next four bytes containing the length of the blockette.
-        #data.seek(4, 1)
+        # data.seek(4, 1)
         data.read(4)
         # Set the version.
         self.version = float(data.read(4))
@@ -985,7 +985,7 @@ class Parser(object):
                     self.abbreviations.append(blkt)
             # Update the stations.
             self.stations.extend(self.temp['stations'])
-            #XXX Update volume control header!
+            # XXX Update volume control header!
 
         # Also make the version of the format 2.4.
         self.volume[0].version_of_format = 2.4

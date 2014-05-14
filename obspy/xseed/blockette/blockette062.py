@@ -42,7 +42,7 @@ class Blockette062(Blockette):
         Float(12, "Upper Bound of Approximation", 12, mask='%+1.5e'),
         Float(13, "Maximum Absolute Error", 12, mask='%+1.5e'),
         Integer(14, "Number of Polynomial Coefficients", 3),
-        #REPEAT fields 15 and 16 for each polynomial coefficient
+        # REPEAT fields 15 and 16 for each polynomial coefficient
         Loop("Polynomial Coefficients", "Number of Polynomial Coefficients", [
             Float(12, "Polynomial Coefficient", 12, mask='%+1.5e'),
             Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: trigger.py
 #  Purpose: Python trigger/picker routines for seismology.
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 """
 Various routines related to triggering/picking
 
@@ -216,7 +216,7 @@ def classicSTALTAPy(a, nsta, nlta):
     :rtype: NumPy ndarray
     :return: Characteristic function of classic STA/LTA
     """
-    #XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
+    # XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
     #    This should be faster then the for loops in this fct
     #    Currently debian lenny ships 1.1.1
     m = len(a)
