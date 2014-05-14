@@ -23,31 +23,31 @@ import unittest
 # signals are in velocity, thus must be integrated to offset and take one
 # zero less than pitsa (remove 1/w in frequency domain)
 PAZ_WOOD_ANDERSON = {'poles': [-6.2832 - 4.7124j,
-                               - 6.2832 + 4.7124j],
+                               -6.2832 + 4.7124j],
                      'zeros': [0.0 + 0.0j] * 1,
                      'sensitivity': 1.0,
                      'gain': 1. / 2.25}
 
 PAZ_WWSSN_SP = {'poles': [-4.0093 - 4.0093j,
-                          - 4.0093 + 4.0093j,
-                          - 4.6077 - 6.9967j,
-                          - 4.6077 + 6.9967j],
+                          -4.0093 + 4.0093j,
+                          -4.6077 - 6.9967j,
+                          -4.6077 + 6.9967j],
                 'zeros': [0.0 + 0.0j] * 2,
                 'sensitivity': 1.0,
                 'gain': 1. / 1.0413}
 
 PAZ_WWSSN_LP = {'poles': [-0.4189 + 0.0j,
-                          - 0.4189 + 0.0j,
-                          - 0.0628 + 0.0j,
-                          - 0.0628 + 0.0j],
+                          -0.4189 + 0.0j,
+                          -0.0628 + 0.0j,
+                          -0.0628 + 0.0j],
                 'zeros': [0.0 + 0.0j] * 2,
                 'sensitivity': 1.0,
                 'gain': 1. / 0.0271}
 
 PAZ_KIRNOS = {'poles': [-0.1257 - 0.2177j,
-                        - 0.1257 + 0.2177j,
-                        - 83.4473 + 0.0j,
-                        - 0.3285 + 0.0j],
+                        -0.1257 + 0.2177j,
+                        -83.4473 + 0.0j,
+                        -0.3285 + 0.0j],
               'zeros': [0.0 + 0.0j] * 2,
               'sensitivity': 1.0,
               'gain': 1. / 1.61}
@@ -82,8 +82,8 @@ class InvSimTestCase(unittest.TestCase):
         # paz of test file
         samp_rate = 200.0
         PAZ_LE3D = {'poles': [-4.21 + 4.66j,
-                              - 4.21 - 4.66j,
-                              - 2.105 + 0.0j],
+                              -4.21 - 4.66j,
+                              -2.105 + 0.0j],
                     'zeros': [0.0 + 0.0j] * 3,
                     'sensitivity': 1.0,
                     'gain': 0.4}
@@ -118,7 +118,7 @@ class InvSimTestCase(unittest.TestCase):
         # paz of test file
         samp_rate = 200.0
         PAZ_STS2 = {'poles': [-0.03736 - 0.03617j,
-                              - 0.03736 + 0.03617j],
+                              -0.03736 + 0.03617j],
                     'zeros': [0.0 + 0.0j] * 2,
                     'sensitivity': 1.0,
                     'gain': 1.5}

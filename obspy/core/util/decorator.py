@@ -123,8 +123,8 @@ def skip_on_network_error(func):
         try:
             return func(*args, **kwargs)
         ###################################################
-        # # add more except clauses like this to add other
-        # # network errors that should be skipped
+        # add more except clauses like this to add other
+        # network errors that should be skipped
         except socket.timeout as e:
             if str(e) == "timed out":
                 raise unittest.SkipTest(str(e))

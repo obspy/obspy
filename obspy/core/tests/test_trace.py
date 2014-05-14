@@ -1519,8 +1519,8 @@ class TraceTestCase(unittest.TestCase):
             .verify()\
             .filter("lowpass", freq=2.0)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            - 0.037004 - 0.037016j,
-                                            - 251.33 + 0j],
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\
@@ -1673,7 +1673,7 @@ class TraceTestCase(unittest.TestCase):
         tr.filter("lowpass", freq=2.0)
         tr.simulate(paz_remove={
             'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
-                      - 251.33 + 0j],
+                      -251.33 + 0j],
             'zeros': [0j, 0j],
             'gain': 60077000.0,
             'sensitivity': 2516778400.0})

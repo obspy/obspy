@@ -329,9 +329,9 @@ class StreamState_s(C.Structure):
     _fields_ = [
         ('packedrecords', C.c_longlong),  # Count of packed records
         ('packedsamples', C.c_longlong),  # Count of packed samples
-        ('lastintsample', C.c_int),  # Value of last integer sample packed
-        ('comphistory', C.c_byte),  # Control use of lastintsample for
-                                    # compression history
+        ('lastintsample', C.c_int),       # Value of last integer sample packed
+        ('comphistory', C.c_byte),        # Control use of lastintsample for
+                                          # compression history
     ]
 StreamState = StreamState_s
 
@@ -341,36 +341,37 @@ class MSRecord_s(C.Structure):
 
 MSRecord_s._fields_ = [
     ('record', C.POINTER(C.c_char)),  # Mini-SEED record
-    ('reclen', C.c_int),  # Length of Mini-SEED record in bytes
-    # Pointers to SEED data record structures
-    ('fsdh', C.POINTER(fsdh_s)),  # Fixed Section of Data Header
-    ('blkts', C.POINTER(BlktLink)),  # Root of blockette chain
+    ('reclen', C.c_int),              # Length of Mini-SEED record in bytes
+                                      # Pointers to SEED data record structures
+    ('fsdh', C.POINTER(fsdh_s)),      # Fixed Section of Data Header
+    ('blkts', C.POINTER(BlktLink)),   # Root of blockette chain
     ('Blkt100',
-     C.POINTER(blkt_100_s)),  # Blockette 100, if present
+     C.POINTER(blkt_100_s)),          # Blockette 100, if present
     ('Blkt1000',
-     C.POINTER(blkt_1000_s)),  # Blockette 1000, if present
+     C.POINTER(blkt_1000_s)),         # Blockette 1000, if present
     ('Blkt1001',
-     C.POINTER(blkt_1001_s)),  # Blockette 1001, if present
-    # Common header fields in accessible form
-    ('sequence_number', C.c_int),  # SEED record sequence number
-    ('network', C.c_char * 11),  # Network designation, NULL terminated
-    ('station', C.c_char * 11),  # Station designation, NULL terminated
-    ('location', C.c_char * 11),  # Location designation, NULL terminated
-    ('channel', C.c_char * 11),  # Channel designation, NULL terminated
-    ('dataquality', C.c_char),  # Data quality indicator
-    ('starttime', C.c_longlong),  # Record start time, corrected (first sample)
-    ('samprate', C.c_double),  # Nominal sample rate (Hz)
-    ('samplecnt', C.c_int64),  # Number of samples in record
-    ('encoding', C.c_byte),  # Data encoding format
-    ('byteorder', C.c_byte),  # Byte order of record
-    # Data sample fields
-    ('datasamples', C.c_void_p),  # Data samples, 'numsamples' of type
-                                  # 'sampletype'
-    ('numsamples', C.c_int64),  # Number of data samples in datasamples
-    ('sampletype', C.c_char),  # Sample type code: a, i, f, d
-    # Stream oriented state information
+     C.POINTER(blkt_1001_s)),         # Blockette 1001, if present
+                                      # Common header fields in accessible form
+    ('sequence_number', C.c_int),     # SEED record sequence number
+    ('network', C.c_char * 11),       # Network designation, NULL terminated
+    ('station', C.c_char * 11),       # Station designation, NULL terminated
+    ('location', C.c_char * 11),      # Location designation, NULL terminated
+    ('channel', C.c_char * 11),       # Channel designation, NULL terminated
+    ('dataquality', C.c_char),        # Data quality indicator
+    ('starttime', C.c_longlong),      # Record start time, corrected (first
+                                      # sample)
+    ('samprate', C.c_double),         # Nominal sample rate (Hz)
+    ('samplecnt', C.c_int64),         # Number of samples in record
+    ('encoding', C.c_byte),           # Data encoding format
+    ('byteorder', C.c_byte),          # Byte order of record
+                                      # Data sample fields
+    ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
+                                      # 'sampletype'
+    ('numsamples', C.c_int64),        # Number of data samples in datasamples
+    ('sampletype', C.c_char),         # Sample type code: a, i, f, d
+                                      # Stream oriented state information
     ('ststate',
-     C.POINTER(StreamState)),  # Stream processing state information
+     C.POINTER(StreamState)),         # Stream processing state information
 ]
 MSRecord = MSRecord_s
 
@@ -379,24 +380,24 @@ class MSTrace_s(C.Structure):
     pass
 
 MSTrace_s._fields_ = [
-    ('network', C.c_char * 11),  # Network designation, NULL terminated
-    ('station', C.c_char * 11),  # Station designation, NULL terminated
-    ('location', C.c_char * 11),  # Location designation, NULL terminated
-    ('channel', C.c_char * 11),  # Channel designation, NULL terminated
-    ('dataquality', C.c_char),  # Data quality indicator
-    ('type', C.c_char),  # MSTrace type code
-    ('starttime', C.c_longlong),  # Time of first sample
-    ('endtime', C.c_longlong),  # Time of last sample
-    ('samprate', C.c_double),  # Nominal sample rate (Hz)
-    ('samplecnt', C.c_int64),  # Number of samples in trace coverage
-    ('datasamples', C.c_void_p),  # Data samples, 'numsamples' of type
-                                  # 'sampletype'
-    ('numsamples', C.c_int64),  # Number of data samples in datasamples
-    ('sampletype', C.c_char),  # Sample type code: a, i, f, d
-    ('prvtptr', C.c_void_p),  # Private pointer for general use
+    ('network', C.c_char * 11),       # Network designation, NULL terminated
+    ('station', C.c_char * 11),       # Station designation, NULL terminated
+    ('location', C.c_char * 11),      # Location designation, NULL terminated
+    ('channel', C.c_char * 11),       # Channel designation, NULL terminated
+    ('dataquality', C.c_char),        # Data quality indicator
+    ('type', C.c_char),               # MSTrace type code
+    ('starttime', C.c_longlong),      # Time of first sample
+    ('endtime', C.c_longlong),        # Time of last sample
+    ('samprate', C.c_double),         # Nominal sample rate (Hz)
+    ('samplecnt', C.c_int64),         # Number of samples in trace coverage
+    ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
+                                      # 'sampletype'
+    ('numsamples', C.c_int64),        # Number of data samples in datasamples
+    ('sampletype', C.c_char),         # Sample type code: a, i, f, d
+    ('prvtptr', C.c_void_p),          # Private pointer for general use
     ('ststate',
-     C.POINTER(StreamState)),  # Stream processing state information
-    ('next', C.POINTER(MSTrace_s)),  # Pointer to next trace
+     C.POINTER(StreamState)),         # Stream processing state information
+    ('next', C.POINTER(MSTrace_s)),   # Pointer to next trace
 ]
 MSTrace = MSTrace_s
 
@@ -405,7 +406,7 @@ class MSTraceGroup_s(C.Structure):
     pass
 
 MSTraceGroup_s._fields_ = [
-    ('numtraces', C.c_int),  # Number of MSTraces in the trace chain
+    ('numtraces', C.c_int),            # Number of MSTraces in the trace chain
     ('traces', C.POINTER(MSTrace_s)),  # Root of the trace chain
 ]
 MSTraceGroup = MSTraceGroup_s
@@ -546,18 +547,18 @@ class MSTraceSeg(C.Structure):
 
 
 MSTraceSeg._fields_ = [
-    ('starttime', C.c_longlong),  # Time of first sample
-    ('endtime', C.c_longlong),  # Time of last sample
-    ('samprate', C.c_double),  # Nominal sample rate (Hz)
-    ('samplecnt', C.c_int64),  # Number of samples in trace coverage
-    ('datasamples', C.c_void_p),  # Data samples, 'numsamples' of type
-                                  # 'sampletype'
-    ('numsamples', C.c_int64),  # Number of data samples in datasamples
-    ('sampletype', C.c_char),  # Sample type code: a, i, f, d
-    ('prvtptr', C.c_void_p),  # Private pointer for general use, unused
-                              # by libmseed
+    ('starttime', C.c_longlong),      # Time of first sample
+    ('endtime', C.c_longlong),        # Time of last sample
+    ('samprate', C.c_double),         # Nominal sample rate (Hz)
+    ('samplecnt', C.c_int64),         # Number of samples in trace coverage
+    ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
+                                      # 'sampletype'
+    ('numsamples', C.c_int64),        # Number of data samples in datasamples
+    ('sampletype', C.c_char),         # Sample type code: a, i, f, d
+    ('prvtptr', C.c_void_p),          # Private pointer for general use, unused
+                                      # by libmseed
     ('prev', C.POINTER(MSTraceSeg)),  # Pointer to previous segment
-    ('next', C.POINTER(MSTraceSeg))  # Pointer to next segment
+    ('next', C.POINTER(MSTraceSeg))   # Pointer to next segment
 ]
 
 
@@ -566,23 +567,23 @@ class MSTraceID(C.Structure):
     pass
 
 MSTraceID._fields_ = [
-    ('network', C.c_char * 11),  # Network designation, NULL terminated
-    ('station', C.c_char * 11),  # Station designation, NULL terminated
-    ('location', C.c_char * 11),  # Location designation, NULL terminated
-    ('channel', C.c_char * 11),  # Channel designation, NULL terminated
-    ('dataquality', C.c_char),  # Data quality indicator
-    ('srcname', C.c_char * 45),  # Source name (Net_Sta_Loc_Chan_Qual),
-                                 # NULL terminated
-    ('type', C.c_char),  # Trace type code
-    ('earliest', C.c_longlong),  # Time of earliest sample
-    ('latest', C.c_longlong),  # Time of latest sample
-    ('prvtptr', C.c_void_p),  # Private pointer for general use, unused
-                              # by libmseed
-    ('numsegments', C.c_int),  # Number of segments for this ID
+    ('network', C.c_char * 11),       # Network designation, NULL terminated
+    ('station', C.c_char * 11),       # Station designation, NULL terminated
+    ('location', C.c_char * 11),      # Location designation, NULL terminated
+    ('channel', C.c_char * 11),       # Channel designation, NULL terminated
+    ('dataquality', C.c_char),        # Data quality indicator
+    ('srcname', C.c_char * 45),       # Source name (Net_Sta_Loc_Chan_Qual),
+                                      # NULL terminated
+    ('type', C.c_char),               # Trace type code
+    ('earliest', C.c_longlong),       # Time of earliest sample
+    ('latest', C.c_longlong),         # Time of latest sample
+    ('prvtptr', C.c_void_p),          # Private pointer for general use, unused
+                                      # by libmseed
+    ('numsegments', C.c_int),         # Number of segments for this ID
     ('first',
-     C.POINTER(MSTraceSeg)),  # Pointer to first of list of segments
+     C.POINTER(MSTraceSeg)),          # Pointer to first of list of segments
     ('last', C.POINTER(MSTraceSeg)),  # Pointer to last of list of segments
-    ('next', C.POINTER(MSTraceID))  # Pointer to next trace
+    ('next', C.POINTER(MSTraceID))    # Pointer to next trace
 ]
 
 
@@ -591,9 +592,9 @@ class MSTraceList(C.Structure):
     pass
 
 MSTraceList._fields_ = [
-    ('numtraces', C.c_int),  # Number of traces in list
+    ('numtraces', C.c_int),            # Number of traces in list
     ('traces', C.POINTER(MSTraceID)),  # Pointer to list of traces
-    ('last', C.POINTER(MSTraceID))  # Pointer to last used trace in list
+    ('last', C.POINTER(MSTraceID))     # Pointer to last used trace in list
 ]
 
 
@@ -603,7 +604,7 @@ class SelectTime(C.Structure):
 
 SelectTime._fields_ = [
     ('starttime', C.c_longlong),  # Earliest data for matching channels
-    ('endtime', C.c_longlong),  # Latest data for matching channels
+    ('endtime', C.c_longlong),    # Latest data for matching channels
     ('next', C.POINTER(SelectTime))
 ]
 
@@ -647,19 +648,19 @@ class LinkedIDList(C.Structure):
     pass
 
 LinkedIDList._fields_ = [
-    ('network', C.c_char * 11),  # Network designation, NULL terminated
-    ('station', C.c_char * 11),  # Station designation, NULL terminated
-    ('location', C.c_char * 11),  # Location designation, NULL terminated
-    ('channel', C.c_char * 11),  # Channel designation, NULL terminated
-    ('dataquality', C.c_char),  # Data quality indicator
+    ('network', C.c_char * 11),      # Network designation, NULL terminated
+    ('station', C.c_char * 11),      # Station designation, NULL terminated
+    ('location', C.c_char * 11),     # Location designation, NULL terminated
+    ('channel', C.c_char * 11),      # Channel designation, NULL terminated
+    ('dataquality', C.c_char),       # Data quality indicator
     ('firstSegment',
      C.POINTER(ContinuousSegment)),  # Pointer to first of list of segments
     ('lastSegment',
      C.POINTER(ContinuousSegment)),  # Pointer to last of list of segments
     ('next',
-     C.POINTER(LinkedIDList)),  # Pointer to next id
+     C.POINTER(LinkedIDList)),       # Pointer to next id
     ('previous',
-     C.POINTER(LinkedIDList)),  # Pointer to previous id
+     C.POINTER(LinkedIDList)),       # Pointer to previous id
 ]
 
 
