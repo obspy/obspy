@@ -22,6 +22,7 @@ import math
 import re
 import platform
 from distutils import sysconfig
+import ctypes
 # NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
 
@@ -524,6 +525,28 @@ def _get_lib_name(lib, add_extension_suffix):
                 ext_suffix = ext_suffix[:-4]
             libname = libname + ext_suffix
     return libname
+
+
+def _load_CDLL(name):
+    """
+    Helper function to load a shared library built during obspy installation
+    with ctypes.
+
+    :type name: unicode
+    :param name: Name of the library to load (e.g. 'mseed').
+    :rtype: :class:`ctypes.CDLL`
+    """
+    # our custom defined part of the extension filename
+    libname = _get_lib_name(name, add_extension_suffix=True)
+    libdir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                          'lib')
+    libpath = os.path.join(libdir, libname)
+    try:
+        cdll = ctypes.CDLL(libpath)
+    except Exception as e:
+        msg = 'Could not load shared library "%s".\n\n %s' % (libname, str(e))
+        raise ImportError(msg)
+    return cdll
 
 
 if __name__ == '__main__':
