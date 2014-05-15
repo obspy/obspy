@@ -190,7 +190,12 @@ def plot_basemap(lons, lats, size, color, labels=None,
             """
             dval = val2 - val1
             round_pos = int(round(-np.log10(1. * dval / N)))
-            delta = round(2. * dval / N, round_pos) / 2
+            # Fake negative rounding as not supported by future as of now.
+            if round_pos < 0:
+                factor = 10 ** (abs(round_pos))
+                delta = round(2. * dval / N / factor) * factor / 2
+            else:
+                delta = round(2. * dval / N, round_pos) / 2
             new_val1 = np.ceil(val1 / delta) * delta
             new_val2 = np.floor(val2 / delta) * delta
             N = (new_val2 - new_val1) / delta + 1
