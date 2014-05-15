@@ -271,7 +271,7 @@ class SEG2(object):
         # all kinds of subtle changes throughout this file. Separating the
         # handling for Python 2 and 3 seems the cleaner and simpler approach.
         if PY2:
-            strings = [filter(is_good_char, _i)
+            strings = ["".join(filter(is_good_char, _i))
                        for _i in strings
                        if len(_i) >= 3]
         else:
