@@ -152,7 +152,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # read temp file directly without libmseed
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
-                bin_data = np.fromfile(fp, dtype='>f4', count=7)
+                dtype = np.dtype('>f4')
+                bin_data = np.frombuffer(fp.read(7 * dtype.itemsize),
+                                         dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
             st2 = readMSEED(tempfile)

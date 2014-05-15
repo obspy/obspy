@@ -325,7 +325,9 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
                 trace.stats.y.tag_station_response = params
             elif tag_type == 7:
                 # TAG_DATA_INT32
-                trace.data = np.fromfile(fh, dtype=np.int32, count=count)
+                trace.data = np.frombuffer(
+                    fh.read(np.dtype(np.int32).itemsize * count),
+                    dtype=np.int32).copy()
                 # break loop as TAG_DATA_INT32 should be the last tag in file
                 break
             else:

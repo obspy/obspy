@@ -57,20 +57,24 @@ def read(fh, verify_chksum=True):
         verifyChecksum(fh, data, version=1)
     return header, data
 
-
 def readIntegerData(fh, npts):
     """
     Reads npts points of uncompressed integers from given file handler.
     """
     # find next DAT1 section within file
-    buf = fh.readline()
-    while buf:
-        if buf.startswith(b"DAT1"):
-            data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
-            break
-        buf = fh.readline()
-    return data
+    data = []
+    in_data_section = False
 
+    while len(data) < npts:
+        buf = fh.readline()
+        if buf.startswith(b"DAT1"):
+            in_data_section = True
+            continue
+        if not in_data_section:
+            continue
+        data.extend(buf.strip().split(b" "))
+
+    return np.array(data, dtype=np.int32)
 
 def readHeader(fh):
     """

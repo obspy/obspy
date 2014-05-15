@@ -164,7 +164,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     # now parse each event file channel header + data
     stream = Stream()
     dlen = arch // 8
-    dtype = byteorder + 'i' + str(dlen)
+    dtype = np.dtype(byteorder + 'i' + str(dlen))
     stype = '=i' + str(dlen)
     for _i in range(number_of_channels):
         # get channel header
@@ -191,7 +191,9 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = np.fromfile(fh, dtype=dtype, count=header['npts'] + 2)
+            data = np.frombuffer(
+                fh.read((header['npts'] + 2) * dtype.itemsize),
+                dtype=dtype).copy()
             # convert to system byte order
             data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))
