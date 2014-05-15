@@ -241,9 +241,9 @@ class FilterTestCase(unittest.TestCase):
         df = 200  # Hz
         b, a = lowpassCheby2(data=None, freq=50,
                              df=df, maxorder=12, ba=True)
-        nyquist = 200 * 0.5
+        nyquist = 100
         # calculate frequency response
-        w, h = sg.freqz(b, a, int(nyquist))
+        w, h = sg.freqz(b, a, nyquist)
         freq = w / np.pi * nyquist
         h_db = 20 * np.log10(abs(h))
         # be smaller than -96dB above lowpass frequency
