@@ -12,6 +12,7 @@ Various additional utilities for obspy.signal.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native
 
 from scipy import signal, fix, fftpack
 import ctypes as C
@@ -81,14 +82,14 @@ def nextpow2(i):
     """
     Find the next power of two
 
-    >>> nextpow2(5)
+    >>> int(nextpow2(5))
     8
-    >>> nextpow2(250)
+    >>> int(nextpow2(250))
     256
     """
     # do not use numpy here, math is much faster for single values
     buf = M.ceil(M.log(i) / M.log(2))
-    return int(M.pow(2, buf))
+    return native(int(M.pow(2, buf)))
 
 
 def prevpow2(i):
@@ -255,7 +256,7 @@ def _npts2nfft(npts, smart=True):
 
     >>> _npts2nfft(1800028)  # good nfft with minimum points
     3600056
-    >>> _npts2nfft(1800029)  # falls back to next power of 2
+    >>> int(_npts2nfft(1800029))  # falls back to next power of 2
     4194304
     >>> _npts2nfft(1800031)  # finds suitable nfft close to minimum npts
     3600082
