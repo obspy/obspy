@@ -2,9 +2,9 @@
 """
 The obspy.segy Seismic Unix test suite.
 """
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.segy import readSU, SEGYTraceReadingError

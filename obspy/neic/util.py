@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from datetime import datetime
 

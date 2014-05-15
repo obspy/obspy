@@ -2,8 +2,9 @@
 """
 The obspy.signal.trigger test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import zip
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from ctypes import ArgumentError
 from obspy import read, Stream, UTCDateTime

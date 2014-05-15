@@ -2,8 +2,10 @@
 """
 GSE2/GSE1 bindings to ObsPy core module.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
 from obspy import Trace, Stream
 from obspy.gse2 import libgse2, libgse1
 import numpy as np

@@ -3,9 +3,10 @@
 """
 The libgse1 test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
-from future.builtins import str  # NOQA @UnusedImport
 from obspy.gse2 import libgse1
 from obspy.gse2.libgse2 import ChksumError
 import os

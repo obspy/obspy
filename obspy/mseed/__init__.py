@@ -101,8 +101,9 @@ So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 >>> st.write('out.mseed', format='MSEED', reclen=512,  # doctest: +SKIP
 ...          encoding='STEIM1')
 """
-from __future__ import unicode_literals
-from __future__ import print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

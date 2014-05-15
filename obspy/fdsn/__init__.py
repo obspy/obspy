@@ -123,9 +123,9 @@ USP     http://sismo.iag.usp.br
 Please see the documentation for each method for further information and
 examples.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import PY2
 
 from .client import Client  # NOQA

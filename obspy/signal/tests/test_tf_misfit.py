@@ -3,8 +3,9 @@
 """
 The tf_misfit test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
     tfpg, teg, feg, fpg, tpg, tfeg, tpm

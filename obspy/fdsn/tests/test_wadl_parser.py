@@ -9,10 +9,11 @@ The obspy.fdsn.wadl_parser test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import open
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy import UTCDateTime
 
 from obspy.fdsn.wadl_parser import WADLParser

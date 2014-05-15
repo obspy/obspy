@@ -12,7 +12,10 @@ and should be removed once the datacenters are fully standard compliant.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
 from obspy.core import compatibility
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \

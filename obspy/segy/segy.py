@@ -10,12 +10,9 @@
 """
 Routines to read and write SEG Y rev 1 encoded seismic data files.
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core import compatibility
 from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \

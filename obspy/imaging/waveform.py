@@ -7,11 +7,9 @@
 #
 # Copyright (C) 2008-2012 Lion Krischer
 # --------------------------------------------------------------------
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import str
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from copy import copy

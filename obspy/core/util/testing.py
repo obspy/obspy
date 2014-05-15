@@ -8,10 +8,9 @@ Testing utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import super
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str, PY2
 
 from obspy.core.util.misc import get_untracked_files_from_git

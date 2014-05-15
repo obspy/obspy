@@ -8,12 +8,11 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
 from obspy.core import compatibility

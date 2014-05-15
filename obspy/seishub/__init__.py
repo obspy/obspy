@@ -81,7 +81,9 @@ Advanced Examples
  ('sensitivity', 2516800000.0),
  ('zeros', [0j, 0j])]
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.seishub.client import Client
 

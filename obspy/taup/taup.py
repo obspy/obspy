@@ -2,8 +2,10 @@
 """
 obspy.taup - Travel time calculation tool
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
 import numpy as np
 import os

@@ -81,14 +81,9 @@ and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import super
-from future.builtins import input
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES

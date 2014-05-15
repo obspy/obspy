@@ -2,14 +2,11 @@
 """
 Mini-SEED specific utilities.
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
     ENDIAN
 from obspy import UTCDateTime

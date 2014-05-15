@@ -3,8 +3,9 @@
 """
 The Filter test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal import bandpass, lowpass, highpass
 from obspy.signal.filter import envelope, lowpassCheby2

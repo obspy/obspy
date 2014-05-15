@@ -8,6 +8,10 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 # NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 from contextlib import contextmanager
 import os

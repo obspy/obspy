@@ -9,12 +9,11 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import warnings
-from future import standard_library  # NOQA
-from future.builtins import zip
-from future.builtins import str
-from future.builtins import open
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml

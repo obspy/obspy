@@ -3,7 +3,9 @@
 Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.segy import pack, unpack
 

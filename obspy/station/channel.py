@@ -9,9 +9,10 @@ Provides the Channel class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.station import BaseNode
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift

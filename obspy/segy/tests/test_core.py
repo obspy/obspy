@@ -2,8 +2,10 @@
 """
 The obspy.segy core test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import numpy as np
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile

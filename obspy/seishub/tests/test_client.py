@@ -3,7 +3,9 @@
 """
 The obspy.seishub.client test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.compatibility import urlopen
 from obspy.seishub import Client

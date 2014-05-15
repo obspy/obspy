@@ -9,13 +9,9 @@ Quick and dirty conversion routine from CSS 2.8 to Seismic Handler ASCII format
 - output written to stdout
 - shows plot for inspection (if matplotlib installed)
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import map
-from future.builtins import range
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import sys
 import struct

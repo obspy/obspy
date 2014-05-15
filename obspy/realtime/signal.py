@@ -20,11 +20,9 @@ in a previous packet, so has to be retrieved from memory see
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import math
 import sys

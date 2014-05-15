@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str  # NOQA @UnusedImport
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle

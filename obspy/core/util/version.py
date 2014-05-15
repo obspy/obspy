@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import unicode_literals
 # Author: Douglas Creager <dcreager@dcreager.net>
 # This file is placed into the public domain.
 
@@ -32,6 +30,9 @@ from __future__ import unicode_literals
 # contains the following line:
 #
 #   include RELEASE-VERSION
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 __all__ = ("get_git_version")
 

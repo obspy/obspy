@@ -3,7 +3,9 @@
 """
 The Rotate test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
     rotate_LQT_ZNE
