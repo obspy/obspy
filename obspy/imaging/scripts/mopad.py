@@ -1027,7 +1027,7 @@ class MomentTensor:
         lo_vectors = []
 
         # if list of vectors
-        if type(vectors) == list:
+        if isinstance(vectors, list):
             for vec in vectors:
                 if np.prod(np.shape(vec)) != 3:
                     print('\n please provide vector(s) from R³ \n ')
@@ -1040,6 +1040,7 @@ class MomentTensor:
 
             if np.shape(vectors)[0] == 3:
                 for ii in range(np.shape(vectors)[1]):
+                    from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
                     lo_vectors.append(vectors[:, ii])
             else:
                 for ii in range(np.shape(vectors)[0]):
