@@ -122,7 +122,7 @@ def attach_paz(tr, paz_file):
     ... 0.0 0.0
     ... 0.4""")
     >>> attach_paz(tr, f)
-    >>> print(round(tr.stats.paz.sensitivity, -4))
+    >>> print(round(tr.stats.paz.sensitivity / 10E3) * 10E3)
     671140000.0
     '''
     poles, zeros, seismometer_gain = readPaz(paz_file)

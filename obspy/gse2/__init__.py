@@ -59,7 +59,7 @@ attributes:
          _format: GSE2
 
 >>> for k, v in sorted(gse2.items()):
-...     print(k, v)
+...     print(k, v) #doctest: +NORMALIZE_WHITESPACE
 auxid RJOB
 calper 1.0
 coordsys
