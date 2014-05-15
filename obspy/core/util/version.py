@@ -58,8 +58,7 @@ def call_git_describe(abbrev=4):
         p.stdout.close()
     except:
         return None
-    path = os.path.normpath(path)
-    if path != OBSPY_ROOT:
+    if os.path.normpath(path) != OBSPY_ROOT:
         return None
     try:
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
@@ -82,7 +81,7 @@ def call_git_describe(abbrev=4):
 def read_release_version():
     try:
         with io.open(VERSION_FILE, "rt") as fh:
-            version = fh.readlines()[0]
+            version = fh.readline()
         return version.strip()
     except:
         return None
