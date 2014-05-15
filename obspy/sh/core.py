@@ -573,7 +573,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
         # write data in given byte order
         dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)
-        fh_data.write(np.frombuffer(data))
+        fh_data.write(np.getbuffer(data))
     fh.close()
     fh_data.close()
 
