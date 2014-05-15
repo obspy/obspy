@@ -13,6 +13,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
+from future import standard_library
+with standard_library.hooks():
+    import queue
 
 import copy
 import obspy
@@ -27,7 +30,6 @@ from obspy.core import compatibility
 
 import collections
 from lxml import etree
-import queue
 import threading
 import warnings
 import os
