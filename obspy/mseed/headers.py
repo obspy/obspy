@@ -3,41 +3,19 @@
 Defines the libmseed structures and blockettes.
 """
 from __future__ import unicode_literals
-from future.builtins import str
 from future.utils import native_str
 
-from distutils import sysconfig
 import ctypes as C
 import numpy as np
-import os
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.misc import _load_CDLL
 
 
 HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
-# Import shared libmseed depending on the platform.
-# create library names
-lib_names = [
-    # python3.3 platform specific library name
-    _get_lib_name('mseed', add_extension_suffix=True),
-    # fallback for pre-packaged libraries
-    'libmseed']
-# get default file extension for shared objects
-lib_extension, = sysconfig.get_config_vars('SO')
-# initialize library
-for lib_name in lib_names:
-    try:
-        clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                                        'lib', lib_name + lib_extension))
-        break
-    except Exception as e:
-        err_msg = str(e)
-        pass
-else:
-    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % err_msg
-    raise ImportError(msg)
+# Import shared libmseed
+clibmseed = _load_CDLL("mseed")
 
 
 # XXX: Do we still support Python 2.4 ????
