@@ -67,7 +67,7 @@ def call_git_describe(abbrev=4):
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
 
         p.stderr.close()
-        line = p.stdout.readline.decode()
+        line = p.stdout.readline().decode()
         p.stdout.close()
 
         # (this line prevents official releases)
