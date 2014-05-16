@@ -526,9 +526,6 @@ def run(interactive=True):
     filter.add_option("-x", "--exclude",
                       action="append", type="str", dest="module",
                       help="exclude given module from test")
-    filter.add_option("--tutorial", default=False,
-                      action="store_true", dest="tutorial",
-                      help="add doctests in tutorial")
     parser.add_option_group(filter)
     # timing / profile options
     timing = OptionGroup(parser, "Timing/Profile Options")
@@ -560,20 +557,26 @@ def run(interactive=True):
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
-    report.add_option("--keep-images", default=False,
+    parser.add_option_group(report)
+    # other options
+    others = OptionGroup(parser, "Additional Options")
+    others.add_option("--tutorial", default=False,
+                      action="store_true", dest="tutorial",
+                      help="add doctests in tutorial")
+    others.add_option("--no-flake8", default=False,
+                      dest="no_flake8", action="store_true",
+                      help="skip code formatting test")
+    others.add_option("--keep-images", default=False,
                       dest="keep_images", action="store_true",
                       help="store images created during image comparison "
                            "tests in subfolders of baseline images")
-    report.add_option("--keep-only-failed-images", default=False,
+    others.add_option("--keep-only-failed-images", default=False,
                       dest="keep_only_failed_images", action="store_true",
                       help="when storing images created during testing, only "
                            "store failed images and the corresponding diff "
                            "images (but not images that passed the "
                            "corresponding test).")
-    report.add_option("--no-flake8", default=False,
-                      dest="no_flake8", action="store_true",
-                      help="skip code formatting test")
-    parser.add_option_group(report)
+    parser.add_option_group(others)
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:
