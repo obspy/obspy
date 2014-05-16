@@ -17,9 +17,7 @@ import warnings
 # checking for matplotlib/basemap
 try:
     from matplotlib import rcParams
-    import mpl_toolkits.basemap
-    # avoid flake8 complaining about unused import
-    mpl_toolkits.basemap
+    import mpl_toolkits.basemap  # NOQA
     HAS_BASEMAP = True
 except ImportError:
     HAS_BASEMAP = False
@@ -463,7 +461,7 @@ class CatalogTestCase(unittest.TestCase):
         reltol = 1
         # some ticklabels are slightly offset on py 3.3.3 in travis..
         # e.g. see http://tests.obspy.org/13309/#1
-        if (sys.version_info[0], sys.version_info[1]) == (3, 3):
+        if (sys.version_info[0]) == 3:
             reltol = 5
         with ImageComparison(self.image_dir, "catalog3.png",
                              reltol=reltol) as ic:

@@ -14,9 +14,7 @@ from obspy.mseed.msstruct import _MSStruct
 
 import copy
 import numpy as np
-import io
 import os
-import sys
 import unittest
 import warnings
 
