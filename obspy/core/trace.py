@@ -342,6 +342,12 @@ class Trace(object):
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
+    def __nonzero__(self):
+        """
+        No data means no trace.
+        """
+        return bool(len(self.data))
+
     def __str__(self, id_length=None):
         """
         Returns short summary string of the current trace.

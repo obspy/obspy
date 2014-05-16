@@ -522,7 +522,10 @@ class Stream(object):
         ...
         """
         # get longest id
-        id_length = self and max(len(tr.id) for tr in self) or 0
+        if self.traces:
+            id_length = self and max(len(tr.id) for tr in self) or 0
+        else:
+            id_length = 0
         out = str(len(self.traces)) + ' Trace(s) in Stream:\n'
         if len(self.traces) <= 20 or extended is True:
             out = out + "\n".join([_i.__str__(id_length) for _i in self])
