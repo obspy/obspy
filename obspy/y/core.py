@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import Stream
+from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
@@ -325,9 +326,9 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
                 trace.stats.y.tag_station_response = params
             elif tag_type == 7:
                 # TAG_DATA_INT32
-                trace.data = np.frombuffer(
+                trace.data = frombuffer(
                     fh.read(np.dtype(np.int32).itemsize * count),
-                    dtype=np.int32).copy()
+                    dtype=np.int32)
                 # break loop as TAG_DATA_INT32 should be the last tag in file
                 break
             else:

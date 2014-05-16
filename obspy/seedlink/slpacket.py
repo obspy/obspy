@@ -15,6 +15,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
 from obspy.mseed.headers import clibmseed, HPTMODULUS, MSRecord
 from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray
@@ -108,7 +109,7 @@ class SLPacket(object):
     def getMSRecord(self):
         # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
-        pyobj = np.frombuffer(self.msrecord, dtype=np.uint8)
+        pyobj = frombuffer(self.msrecord, dtype=np.uint8)
         errcode = \
             clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
                                 len(pyobj), C.pointer(msr), -1, 1, 1)

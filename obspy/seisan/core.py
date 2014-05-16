@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import frombuffer
 import numpy as np
 
 
@@ -191,9 +192,9 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = np.frombuffer(
+            data = frombuffer(
                 fh.read((header['npts'] + 2) * dtype.itemsize),
-                dtype=dtype).copy()
+                dtype=dtype)
             # convert to system byte order
             data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))

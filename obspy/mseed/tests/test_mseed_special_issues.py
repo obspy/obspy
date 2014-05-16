@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime, Stream, Trace, read
+from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
@@ -154,8 +155,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
                 dtype = np.dtype('>f4')
-                bin_data = np.frombuffer(fp.read(7 * dtype.itemsize),
-                                         dtype=dtype)
+                bin_data = frombuffer(fp.read(7 * dtype.itemsize),
+                                      dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
             st2 = readMSEED(tempfile)
