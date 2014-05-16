@@ -29,7 +29,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import UTCDateTime
-from obspy.core.util.misc import _load_CDLL
+from obspy.core.util.libnames import _load_CDLL
 import ctypes as C
 import doctest
 import numpy as np

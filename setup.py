@@ -40,7 +40,6 @@ from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
 
-import __builtin__
 import glob
 import inspect
 import fnmatch
@@ -58,7 +57,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from misc import _get_lib_name  # @UnresolvedImport
+from libnames import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -88,7 +87,7 @@ KEYWORDS = [
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
-    'future>=0.11.4',
+    'future>=0.12.1',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
@@ -387,8 +386,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(__builtin__.str(_get_lib_name(
-        "gse2", add_extension_suffix=False)), files, **kwargs)
+    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
+                         files, **kwargs)
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
@@ -407,8 +406,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
-    config.add_extension(__builtin__.str(_get_lib_name(
-        "mseed", add_extension_suffix=False)), files, **kwargs)
+    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SEGY
     path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
@@ -418,8 +417,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(__builtin__.str(_get_lib_name(
-        "segy", add_extension_suffix=False)), files, **kwargs)
+    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SIGNAL
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -429,8 +428,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(__builtin__.str(_get_lib_name(
-        "signal", add_extension_suffix=False)), files, **kwargs)
+    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
+                         files, **kwargs)
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -442,12 +441,12 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    config.add_extension(__builtin__.str(_get_lib_name(
-        "evresp", add_extension_suffix=False)), files, **kwargs)
+    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
+                         files, **kwargs)
 
     # TAUP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = __builtin__.str(_get_lib_name("tau", add_extension_suffix=False))
+    libname = _get_lib_name("tau", add_extension_suffix=False)
     files = glob.glob(os.path.join(path, "*.f"))
     # compiler specific options
     kwargs = {'libraries': []}
@@ -499,7 +498,7 @@ def setupPackage():
     # setup package
     setup(
         name='obspy',
-        version=__builtin__.str(get_git_version()),
+        version=get_git_version(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="http://www.obspy.org",
