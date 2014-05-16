@@ -37,11 +37,14 @@ class FutureUsageTestCase(unittest.TestCase):
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
 
-        # There are currently only two exceptions. These files are imported
-        # during installation and thus cannot contain future imports.
+        # There are currently only three exceptions. Two files are imported
+        # during installation and thus cannot contain future imports. The
+        # third file is the compatibility layer which naturally also does
+        # not want to import future.
         exceptions = [
             os.path.join('core', 'util', 'libnames.py'),
-            os.path.join('core', 'util', 'version.py')
+            os.path.join('core', 'util', 'version.py'),
+            os.path.join('core', 'compatibility.py')
         ]
         exceptions = [os.path.join(obspy_dir, i) for i in exceptions]
 
