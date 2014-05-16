@@ -244,6 +244,7 @@ def get_untracked_files_from_git():
                   cwd=dir_, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         git_root_dir = p.stdout.readlines()[0].strip()
+        p.stdout.close()
         if git_root_dir != dir_:
             raise Exception
         p = Popen(['git', 'status', '-u', '--porcelain'],
