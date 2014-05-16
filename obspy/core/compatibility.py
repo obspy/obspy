@@ -31,7 +31,7 @@ if PY2:
         return np.frombuffer(data, dtype=dtype).copy()
 else:
     def frombuffer(data, dtype):
-        return np.array(memoryview(data)).view(dtype).copy()
+        return np.array(memoryview(data)).view(dtype).copy()  # NOQA
 
 
 def round_away(number):
