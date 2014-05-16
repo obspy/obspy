@@ -17,7 +17,7 @@ Basic Example
 >>> from obspy.seishub import Client
 >>> from obspy import UTCDateTime
 
->>> client = Client(timeout=2)
+>>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
 >>> st.sort()  # doctest: +ELLIPSIS
@@ -41,36 +41,6 @@ Advanced Examples
 >>> cha_ids = client.waveform.getChannelIds(network='BW', station='MANZ')
 >>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'LOG', 'SHE', 'SHN', 'SHZ']
-
->>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
-...                                  format='metadata')
->>> print(res)  # doctest: +NORMALIZE_WHITESPACE
-<?xml version="1.0" encoding="utf-8"?>
-<metadata>
-  <item title="Station Name">
-    <text text="Manzenberg,Bavaria, BW-Net"/>
-  </item>
-  <item title="Station ID">
-    <text text="MANZ"/>
-  </item>
-  <item title="Network ID">
-    <text text="BW"/>
-  </item>
-  <item title="Channel IDs">
-    <text text="EHZ"/>
-    <text text="EHN"/>
-    <text text="EHE"/>
-  </item>
-  <item title="Latitude (°)">
-    <text text="+49.986198"/>
-  </item>
-  <item title="Longitude (°)">
-    <text text="+12.108300"/>
-  </item>
-  <item title="Elevation (m)">
-    <text text="+635.0"/>
-  </item>
-</metadata>
 
 >>> paz = client.station.getPAZ('BW.MANZ..EHZ', UTCDateTime('20090808'))
 >>> paz = paz.items()

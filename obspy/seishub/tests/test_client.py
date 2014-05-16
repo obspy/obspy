@@ -6,8 +6,10 @@ The obspy.seishub.client test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
-from obspy.core.compatibility import urlopen
 from obspy.seishub import Client
 import unittest
 from obspy.core import UTCDateTime, AttribDict
@@ -17,7 +19,7 @@ from obspy.xseed.utils import SEEDParserException
 
 TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
 try:
-    code = urlopen(TESTSERVER, timeout=3).getcode()
+    code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
     assert(code == 200)
 except:
     TESTSERVER_REACHABLE = False
