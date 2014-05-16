@@ -492,8 +492,8 @@ def cleanse_pymodule_filename(filename):
      - http://stackoverflow.com/questions/7552311/
      - http://docs.python.org/2/reference/lexical_analysis.html#identifiers
 
-    >>> cleanse_pymodule_filename("0blup-bli.554_3!32")
-    '_blup_bli_554_3_32'
+    >>> print(cleanse_pymodule_filename("0blup-bli.554_3!32"))
+    _blup_bli_554_3_32
     """
     filename = re.sub(r'^[^a-zA-Z_]', "_", filename)
     filename = re.sub(r'[^a-zA-Z0-9_]', "_", filename)
