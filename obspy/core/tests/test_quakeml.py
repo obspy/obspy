@@ -649,11 +649,11 @@ class QuakeMLTestCase(unittest.TestCase):
                 continue
             # Assign clearer names.
             enum_name = module_item_name
-            enum_values = [_i.lower() for _i in list(module_item.keys())]
+            enum_values = [_i.lower() for _i in module_item.keys()]
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.items():
-            self.assertTrue(enum_name in list(all_enums.keys()))
+            self.assertTrue(enum_name in all_enums.keys())
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
