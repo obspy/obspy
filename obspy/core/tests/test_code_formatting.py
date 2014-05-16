@@ -37,6 +37,14 @@ class FutureUsageTestCase(unittest.TestCase):
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
 
+        # There are currently only two exceptions. These files are imported
+        # during installation and thus cannot contain future imports.
+        exceptions = [
+            os.path.join('core', 'util', 'libnames.py'),
+            os.path.join('core', 'util', 'version.py')
+        ]
+        exceptions = [os.path.join(obspy_dir, i) for i in exceptions]
+
         future_import_line = (
             "from __future__ import (absolute_import, division, "
             "print_function, unicode_literals)")
@@ -58,6 +66,8 @@ class FutureUsageTestCase(unittest.TestCase):
             filenames = [os.path.abspath(os.path.join(dirpath, i)) for i in
                          filenames if i.endswith(".py")]
             for filename in filenames:
+                if filename in exceptions:
+                    continue
                 with open(filename, "rt") as fh:
                     content = fh.read()
 

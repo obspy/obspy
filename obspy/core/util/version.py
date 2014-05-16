@@ -30,6 +30,9 @@
 # contains the following line:
 #
 #   include RELEASE-VERSION
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
 __all__ = ("get_git_version")
 
 # NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
