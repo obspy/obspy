@@ -6,7 +6,7 @@ from future.utils import native_str
 
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core import AttribDict
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
@@ -968,19 +968,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
 
         # Catch output.
-        sys.stdout = io.BytesIO()
-        sys.stderr = io.BytesIO()
-        st = read(filename, verbose=2)
-        sys.stdout.seek(0, 0)
-        stdout = sys.stdout.read()
-        sys.stdout.close()
-        sys.stderr.close()
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+        with CatchOutput() as out:
+            st = read(filename, verbose=2)
 
-        self.assertTrue(b"calling msr_parse with" in stdout)
-        self.assertTrue(b"buflen=512, reclen=-1, dataflag=0, verbose=2" in
-                        stdout)
+        self.assertTrue("calling msr_parse with" in out.stdout)
+        self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
+                        out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
 
