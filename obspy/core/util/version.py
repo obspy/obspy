@@ -37,6 +37,7 @@ from future.builtins import *  # NOQA
 __all__ = ("get_git_version")
 
 # NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
+import io
 import os
 import inspect
 from subprocess import Popen, PIPE
@@ -54,7 +55,7 @@ def call_git_describe(abbrev=4):
         p = Popen(['git', 'rev-parse', '--show-toplevel'],
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
-        path = p.stdout.readlines()[0].strip()
+        path = p.stdout.readline().decode().strip()
         p.stdout.close()
     except:
         return None
@@ -64,9 +65,11 @@ def call_git_describe(abbrev=4):
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
                    '--always', '--tags'],
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
+
         p.stderr.close()
-        line = p.stdout.readlines()[0]
+        line = p.stdout.readline().decode()
         p.stdout.close()
+
         # (this line prevents official releases)
         # should work again now, see #482 and obspy/obspy@b437f31
         if "-" not in line and "." not in line:
@@ -78,15 +81,16 @@ def call_git_describe(abbrev=4):
 
 def read_release_version():
     try:
-        version = open(VERSION_FILE, "rb").readlines()[0]
-        return version.strip().decode()
+        with io.open(VERSION_FILE, "rt") as fh:
+            version = fh.readline()
+        return version.strip()
     except:
         return None
 
 
 def write_release_version(version):
-    open(VERSION_FILE, "wb").write(
-        ("%s\n" % version).encode('ascii', 'strict'))
+    with io.open(VERSION_FILE, "wb") as fh:
+        fh.write(("%s\n" % version).encode('ascii', 'strict'))
 
 
 def get_git_version(abbrev=4):
