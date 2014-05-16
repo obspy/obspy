@@ -13,6 +13,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import UTCDateTime, Trace
+from obspy.core.compatibility import frombuffer
 from obspy.core.util import gps2DistAzimuth, AttribDict
 from obspy.core import compatibility
 import numpy as np
@@ -543,10 +544,10 @@ class SacIO(object):
         #    in strings. Store them in array (an convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = np.frombuffer(f.read(4 * 70), dtype='<f4').copy()
-        self.hi = np.frombuffer(f.read(4 * 40), dtype='<i4').copy()
+        self.hf = frombuffer(f.read(4 * 70), dtype='<f4')
+        self.hi = frombuffer(f.read(4 * 40), dtype='<i4')
         # read in the char values
-        self.hs = np.frombuffer(f.read(24 * 8), dtype='|S8').copy()
+        self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
@@ -558,10 +559,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 f.seek(0, 0)
-                self.hf = np.frombuffer(f.read(4 * 70), dtype='>f4').copy()
-                self.hi = np.frombuffer(f.read(4 * 40), dtype='>i4').copy()
+                self.hf = frombuffer(f.read(4 * 70), dtype='>f4')
+                self.hi = frombuffer(f.read(4 * 40), dtype='>i4')
                 # read in the char values
-                self.hs = np.frombuffer(f.read(24 * 8), dtype='|S8').copy()
+                self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
             except SacError as e:
@@ -607,9 +608,9 @@ class SacIO(object):
             f.seek(0, 0)  # set pointer to the file beginning
             try:
                 # write the header
-                f.write(np.getbuffer(self.hf))
-                f.write(np.getbuffer(self.hi))
-                f.write(np.getbuffer(self.hs))
+                f.write(self.hf.data)
+                f.write(self.hi.data)
+                f.write(self.hs.data)
             except Exception as e:
                 f.close()
                 raise SacError("Cannot write header to file: " + fname, e)
@@ -644,10 +645,10 @@ class SacIO(object):
         #    in strings. Store them in array (an convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = np.frombuffer(f.read(4 * 70), dtype='<f4').copy()
-        self.hi = np.frombuffer(f.read(4 * 40), dtype='<i4').copy()
+        self.hf = frombuffer(f.read(4 * 70), dtype='<f4')
+        self.hi = frombuffer(f.read(4 * 40), dtype='<i4')
         # read in the char values
-        self.hs = np.frombuffer(f.read(24 * 8), dtype='|S8').copy()
+        self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
@@ -660,10 +661,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 f.seek(0, 0)
-                self.hf = np.frombuffer(f.read(4 * 70), dtype='>f4').copy()
-                self.hi = np.frombuffer(f.read(4 * 40), dtype='>i4').copy()
+                self.hf = frombuffer(f.read(4 * 70), dtype='>f4')
+                self.hi = frombuffer(f.read(4 * 40), dtype='>i4')
                 # read in the char values
-                self.hs = np.frombuffer(f.read(24 * 8), dtype='|S8').copy()
+                self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
                 self.IsSACfile(fname, fsize)
                 self.byteorder = 'big'
             except SacError as e:
@@ -676,9 +677,9 @@ class SacIO(object):
         # actually, it's in the SAC manual
         npts = self.hi[9]
         if self.byteorder == 'big':
-            self.seis = np.frombuffer(f.read(npts * 4), dtype='>f4').copy()
+            self.seis = frombuffer(f.read(npts * 4), dtype='>f4')
         else:
-            self.seis = np.frombuffer(f.read(npts * 4), dtype='<f4').copy()
+            self.seis = frombuffer(f.read(npts * 4), dtype='<f4')
         if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
             f.close()
@@ -870,7 +871,7 @@ class SacIO(object):
             np.savetxt(f, np.reshape(self.hi, (8, 5)),
                        fmt=native_str("%10d%10d%10d%10d%10d"))
             for i in range(0, 24, 3):
-                f.write(np.getbuffer(self.hs[i:i + 3]))
+                f.write(self.hs[i:i + 3].data)
                 f.write(b'\n')
         except:
             f.close()
@@ -908,10 +909,10 @@ class SacIO(object):
             raise SacIOError("Cannot open file: " + ofname)
         try:
             self._chck_header()
-            f.write(np.getbuffer(self.hf))
-            f.write(np.getbuffer(self.hi))
-            f.write(np.getbuffer(self.hs))
-            f.write(np.getbuffer(self.seis))
+            f.write(self.hf.data)
+            f.write(self.hi.data)
+            f.write(self.hs.data)
+            f.write(self.seis.data)
         except Exception as e:
             f.close()
             msg = "Cannot write SAC-buffer to file: "
