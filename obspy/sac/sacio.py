@@ -720,7 +720,7 @@ class SacIO(object):
                 data = fh.read()
         except IOError:
             raise SacIOError("No such file: " + fname)
-        data = [_i.rstrip("\n\r") for _i in data.splitlines(True)]
+        data = [_i.rstrip(b"\n\r") for _i in data.splitlines(True)]
         if len(data) < 14 + 8 + 8:
             raise SacIOError("%s is not a valid SAC file:" % fname)
 
@@ -783,7 +783,7 @@ class SacIO(object):
                 data = fh.read()
         except IOError:
             raise SacIOError("No such file: " + fname)
-        data = [_i.rstrip("\n\r") for _i in data.splitlines(True)]
+        data = [_i.rstrip(b"\n\r") for _i in data.splitlines(True)]
         if len(data) < 14 + 8 + 8:
             raise SacIOError("%s is not a valid SAC file:" % fname)
 
