@@ -12,10 +12,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
 import obspy
 from obspy import __version__
-from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import deprecated_keywords
 from obspy.core.util.decorator import map_example_filename
@@ -153,7 +155,7 @@ class Parser(object):
         if isinstance(data, (str, native_str)):
             if "://" in data:
                 # some URL
-                data = compatibility.urlopen(data).read()
+                data = urllib.request.urlopen(data).read()
                 data = io.BytesIO(data)
             elif os.path.isfile(data):
                 # looks like a file - read it
