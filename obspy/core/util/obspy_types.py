@@ -12,6 +12,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import __builtin__
+
 # try native OrderDict implementations first (Python >= 2.7.x)
 try:
     from collections import OrderedDict
@@ -242,13 +244,13 @@ class Enum(object):
         return value.lower() in self.__enums
 
     def values(self):
-        return list(self.__enums.values())
+        return __builtin__.list(self.__enums.values())
 
     def keys(self):
-        return list(self.__enums.keys())
+        return __builtin__.list(self.__enums.keys())
 
     def items(self):
-        return list(self.__enums.items())
+        return __builtin__.list(self.__enums.items())
 
     def iteritems(self):
         return iter(self.__enums.items())
@@ -259,7 +261,7 @@ class Enum(object):
         >>> print(enum)
         Enum(["c", "a", "b"])
         """
-        keys = list(self.__enums.keys())
+        keys = __builtin__.list(self.__enums.keys())
         return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
 
 

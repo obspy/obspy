@@ -4701,7 +4701,7 @@ def main():
                     sec_colour_raw = fp_args[2].split(',')
                     if len(sec_colour_raw) == 1:
                         if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
-                            consistent_kwargs_dict['plot_faultplane_colour'] = \
+                            consistent_kwargs_dict['plot_faultplane_colour'] =\
                                 sec_colour_raw[0].lower()[0]
                         else:
                             raise
