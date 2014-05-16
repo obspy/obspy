@@ -33,6 +33,7 @@ GFZ     http://geofon.gfz-potsdam.de
 IRIS    http://service.iris.edu
 NCEDC   http://service.ncedc.org
 NERIES  http://www.seismicportal.eu
+ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
 USGS    http://comcat.cr.usgs.gov
 USP     http://sismo.iag.usp.br
