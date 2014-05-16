@@ -12,6 +12,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
@@ -24,7 +27,6 @@ from obspy.core.util import uncompressFile, _readFromPlugin, \
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
-from obspy.core import compatibility
 
 
 import io
@@ -106,7 +108,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(compatibility.urlopen(pathname_or_url).read())
+            fh.write(urllib.request.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:

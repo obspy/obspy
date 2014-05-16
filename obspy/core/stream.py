@@ -12,8 +12,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
 from glob import glob, has_magic
+from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -21,7 +25,6 @@ from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
-from obspy.core import compatibility
 from pkg_resources import load_entry_point
 import pickle
 import copy
@@ -166,10 +169,11 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from obspy.core.compatibility import urlopen
+        >>> from future import standard_library
+        >>> with standard_library.hooks(): from urllib import request
         >>> import io
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = io.BytesIO(urlopen(example_url).read())
+        >>> stringio_obj = io.BytesIO(request.urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -214,7 +218,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(compatibility.urlopen(pathname_or_url).read())
+            fh.write(urllib.request.urlopen(pathname_or_url).read())
             st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
         # some file name
