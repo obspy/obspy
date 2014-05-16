@@ -19,9 +19,11 @@ from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
 from obspy.segy.unpack import OnTheFlyDataUnpacker
-from struct import pack, unpack
+
+import io
 import numpy as np
 import os
+from struct import pack, unpack
 
 
 class SEGYError(Exception):

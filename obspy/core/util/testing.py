@@ -360,7 +360,7 @@ def check_flake8():
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
     flake8_style.options.ignore = tuple(set(flake8_style.options.ignore))
-    sys.stdout = io.StringIO()
+    sys.stdout = io.BytesIO()
     if PY2:
         files = [native_str(f) for f in files]
     report = flake8_style.check_files(files)

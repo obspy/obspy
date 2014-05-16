@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import UTCDateTime, Stream, Trace, read
-from obspy.core import AttribDict, compatibility
+from obspy.core import AttribDict
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED

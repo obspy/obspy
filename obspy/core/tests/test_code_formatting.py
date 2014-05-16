@@ -36,7 +36,6 @@ class FutureUsageTestCase(unittest.TestCase):
         """
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
-        print(os.path.abspath(obspy_dir))
 
         future_import_line = (
             "from __future__ import (absolute_import, division, "

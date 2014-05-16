@@ -56,7 +56,7 @@ def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
         default = Default(omit_nulls=omit_nulls)
         if pretty_print:
             kwargs.setdefault('indent', 2)
-        json_string = json.dumps(obj, default=default, **kwargs)
+        json_string = json.dumps(obj, default=default, **kwargs).decode()
         fh.write(json_string)
     finally:
         # Close if a file has been opened by this function.
