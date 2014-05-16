@@ -1334,9 +1334,9 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> from obspy import Trace
-    >>> from obspy.core import compatibility
+    >>> import io
     >>> tr = Trace()
-    >>> f = compatibility.StringIO("""ZEROS 3
+    >>> f = io.StringIO("""ZEROS 3
     ... -5.032 0.0
     ... POLES 6
     ... -0.02365 0.02365

@@ -29,6 +29,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import matplotlib.pyplot as plt
 from matplotlib import patches, collections, transforms, path as mplpath
 import numpy as np

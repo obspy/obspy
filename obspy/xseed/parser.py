@@ -161,9 +161,13 @@ class Parser(object):
                     data = f.read()
                 data = io.BytesIO(data)
             else:
-                if PY2:
+                try:
+                    data = data.encode()
+                except:
+                    pass
+                try:
                     data = io.BytesIO(data)
-                else:
+                except:
                     raise IOError("data is neither filename nor valid URL")
         # but could also be a big string with data
         elif isinstance(data, bytes):
