@@ -166,9 +166,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from obspy.core.compatibility import BytesIO, urlopen
+        >>> from obspy.core.compatibility import urlopen
+        >>> import io
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = BytesIO(urlopen(example_url).read())
+        >>> stringio_obj = io.BytesIO(urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:

@@ -19,6 +19,8 @@ from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, guessDelta
 from obspy.core import compatibility
+
+import io
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
@@ -285,7 +287,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
+            return readEvents(io.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -349,7 +351,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
+            return readEvents(io.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -410,7 +412,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
+            return readEvents(io.BytesIO(data), 'QUAKEML')
         else:
             return data
 

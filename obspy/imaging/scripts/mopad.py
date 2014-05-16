@@ -68,7 +68,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from io import StringIO
+import io
 import math
 import numpy as np
 import os
@@ -2061,9 +2061,9 @@ class BeachBall:
         pressure_colour = self._GMT_pressure_colour
 
         # build strings for possible GMT-output, used by 'psxy'
-        GMT_string_FH = StringIO()
-        GMT_linestring_FH = StringIO()
-        GMT_EVs_FH = StringIO()
+        GMT_string_FH = io.StringIO()
+        GMT_linestring_FH = io.StringIO()
+        GMT_EVs_FH = io.StringIO()
 
         self._add_2_GMT_string(GMT_EVs_FH, EV_2_plot, tension_colour)
         GMT_EVs_FH.flush()

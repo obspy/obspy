@@ -26,8 +26,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.decorator import map_example_filename
-from obspy.core import compatibility
+
 from datetime import timedelta
+import io
 import string as s
 import math
 import numpy as np
@@ -98,7 +99,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.fh = compatibility.BytesIO(string)
+        self.fh = io.BytesIO(string)
         self.filename = None
         return self._deserialize()
 

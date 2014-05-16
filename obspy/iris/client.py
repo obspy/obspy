@@ -16,6 +16,8 @@ from future.utils import native_str
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
 from obspy.core import compatibility
+
+import io
 import json
 import platform
 import warnings
@@ -1115,7 +1117,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(compatibility.BytesIO(data), ndlim=1)
+                return loadtxt(io.BytesIO(data), ndlim=1)
             else:
                 return self._toFileOrData(filename, data, binary=True)
 

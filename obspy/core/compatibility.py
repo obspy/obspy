@@ -48,14 +48,6 @@ except:
     pass
 
 if PY2:
-    from StringIO import StringIO
-    from StringIO import StringIO as BytesIO
-else:
-    import io
-    StringIO = io.StringIO
-    BytesIO = io.BytesIO
-
-if PY2:
     from string import maketrans
 else:
     maketrans = bytes.maketrans

@@ -7,12 +7,13 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
-from obspy.core import compatibility
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
+
 import ctypes as C
+import io
 import numpy as np
 import os
 import random
@@ -547,7 +548,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(10, dtype="int32"))
 
         # Test with little endian.
-        memfile = compatibility.BytesIO()
+        memfile = io.BytesIO()
         tr.write(memfile, format="mseed", byteorder="<")
         memfile.seek(0, 0)
         # Reading little endian should work just fine.
@@ -563,7 +564,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertRaises(ValueError, read, memfile, header_byteorder=">")
 
         # Same test with big endian
-        memfile = compatibility.BytesIO()
+        memfile = io.BytesIO()
         tr.write(memfile, format="mseed", byteorder=">")
         memfile.seek(0, 0)
         # Reading big endian should work just fine.
@@ -592,7 +593,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         years = list(range(1901, 2101, 5))
         for year in years:
             for byteorder in ["<", ">"]:
-                memfile = compatibility.BytesIO()
+                memfile = io.BytesIO()
                 # Get some random time with the year and byteorder as the seed.
                 random.seed(year + ord(byteorder))
                 tr.stats.starttime = UTCDateTime(

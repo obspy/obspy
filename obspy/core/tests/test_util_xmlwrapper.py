@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 from lxml import etree as lxml_etree
 from xml.etree import ElementTree as xml_etree
 from obspy.core.util.xmlwrapper import XMLParser, tostring
-from obspy.core import compatibility
+import io
 import os
 import unittest
 
@@ -52,8 +52,8 @@ class XMLWrapperTestCase(unittest.TestCase):
         fh = open(self.iris_xml, 'rt')
         XMLParser(fh)
         fh.close()
-        # 4 - StringIO
-        data = compatibility.BytesIO(XML_DOC)
+        # 4 - BytesIO
+        data = io.BytesIO(XML_DOC)
         XMLParser(data)
         # 5 - with xml parsed XML documents
         xml_doc = xml_etree.parse(self.iris_xml)

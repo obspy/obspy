@@ -25,6 +25,9 @@ from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
 from obspy.core import compatibility
+
+
+import io
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
@@ -97,7 +100,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     elif isinstance(pathname_or_url, bytes) and \
             pathname_or_url.strip().startswith(b'<'):
         # XML string
-        return _read(compatibility.BytesIO(pathname_or_url), format, **kwargs)
+        return _read(io.BytesIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any

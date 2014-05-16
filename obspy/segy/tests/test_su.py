@@ -8,7 +8,8 @@ from future.builtins import *  # NOQA
 
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.segy import readSU, SEGYTraceReadingError
-from obspy.core import compatibility
+
+import io
 import numpy as np
 import os
 import unittest
@@ -118,7 +119,7 @@ class SUTestCase(unittest.TestCase):
         filename = os.path.join(self.path, '1.su_first_trace')
         with open(filename, 'rb') as fp:
             data = fp.read()
-        st = readSU(compatibility.BytesIO(data))
+        st = readSU(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
 
 

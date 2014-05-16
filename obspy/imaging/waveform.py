@@ -12,14 +12,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from copy import copy
-from datetime import datetime
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
     getMatplotlibVersion, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
+
+from copy import copy
+from datetime import datetime
+import io
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -290,7 +291,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = compatibility.BytesIO()
+                imgdata = io.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)

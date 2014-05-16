@@ -29,6 +29,7 @@ from obspy.core.util.misc import wrap_long_string
 from obspy.core import compatibility
 
 import collections
+import io
 from lxml import etree
 import threading
 import warnings
@@ -1467,7 +1468,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
 
     code = url_obj.getcode()
     if return_string is False:
-        data = compatibility.BytesIO(url_obj.read())
+        data = io.BytesIO(url_obj.read())
     else:
         data = url_obj.read()
 

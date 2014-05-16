@@ -15,9 +15,10 @@ from future.utils import native_str, PY2
 
 from obspy.core.util.misc import get_untracked_files_from_git
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core import compatibility
+
 import fnmatch
 import inspect
+import io
 import sys
 import os
 import glob
@@ -359,7 +360,7 @@ def check_flake8():
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
     flake8_style.options.ignore = tuple(set(flake8_style.options.ignore))
-    sys.stdout = compatibility.StringIO()
+    sys.stdout = io.StringIO()
     if PY2:
         files = [native_str(f) for f in files]
     report = flake8_style.check_files(files)

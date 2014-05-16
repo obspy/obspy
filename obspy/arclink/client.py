@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from fnmatch import fnmatch
-from lxml import objectify, etree
 from obspy import read, UTCDateTime
 from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.core import compatibility
+
+from fnmatch import fnmatch
+import io
+from lxml import objectify, etree
 from telnetlib import Telnet
 import os
 import time
@@ -429,7 +430,7 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        file_stream = compatibility.BytesIO()
+        file_stream = io.BytesIO()
         self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)

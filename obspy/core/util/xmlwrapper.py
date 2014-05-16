@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.core import compatibility
+import io
 import warnings
 import os
 try:
@@ -71,7 +71,7 @@ class XMLParser:
         if isinstance(xml_doc, bytes):
             # some string - check if it starts with <?xml
             if xml_doc.strip()[0:5].upper().startswith(b'<?XML'):
-                xml_doc = compatibility.BytesIO(xml_doc)
+                xml_doc = io.BytesIO(xml_doc)
             # parse XML file
             self.xml_doc = etree.parse(xml_doc)
         elif isinstance(xml_doc, (str, native_str)):

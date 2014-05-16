@@ -11,8 +11,10 @@ from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
 from obspy.mseed.msstruct import _MSStruct
+
 import copy
 import numpy as np
+import io
 import os
 import sys
 import unittest
@@ -350,11 +352,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(len(st5), 1)
         st6 = readMSEED(testfile, sourcename='*.BLA')
         self.assertEqual(len(st6), 0)
-
-    def test_readFromStringIO(self):
-        """
-        Tests reading from a MiniSEED file in an StringIO object.
-        """
 
     def test_writeIntegers(self):
         """
@@ -971,8 +968,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
 
         # Catch output.
-        sys.stdout = compatibility.StringIO()
-        sys.stderr = compatibility.StringIO()
+        sys.stdout = io.StringIO()
+        sys.stderr = io.StringIO()
         st = read(filename, verbose=2)
         sys.stdout.seek(0, 0)
         stdout = sys.stdout.read()

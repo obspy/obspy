@@ -13,8 +13,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats, compatibility
+from obspy.core import Stats
 from obspy.core.util import loadtxt
+
+import io
 import numpy as np
 import os
 
@@ -129,7 +131,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     # read file and split text into channels
     channels = []
     headers = {}
-    data = compatibility.StringIO()
+    data = io.StringIO()
     for line in fh.readlines()[skip:]:
         if line.isspace():
             # blank line
@@ -141,7 +143,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             channels.append((headers, data))
             # create new channel
             headers = {}
-            data = compatibility.StringIO()
+            data = io.StringIO()
             if skip:
                 # if skip is set only one trace is read, everything else makes
                 # no sense.
@@ -249,7 +251,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
     if included_headers is None:
         included_headers = STANDARD_ASC_HEADERS
 
-    sio = compatibility.StringIO()
+    sio = io.StringIO()
     for trace in stream:
         # write headers
         sio.write("DELTA: %-.6e\n" % (trace.stats.delta))
