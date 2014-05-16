@@ -11,32 +11,6 @@ import inspect
 import numpy as np
 import sys
 
-if PY2:
-    import urllib2
-    urlopen = urllib2.urlopen
-    from urlparse import urlparse  # NOQA
-    from urllib import urlencode  # NOQA
-    from urllib2 import HTTPPasswordMgrWithDefaultRealm  # NOQA
-    from urllib2 import HTTPBasicAuthHandler  # NOQA
-    from urllib2 import HTTPDigestAuthHandler  # NOQA
-    from urllib2 import build_opener  # NOQA
-    from urllib2 import install_opener  # NOQA
-    from urllib2 import HTTPError  # NOQA
-    from urllib2 import Request  # NOQA
-    from httplib import HTTPConnection  # NOQA
-else:
-    import urllib.request
-    urlopen = urllib.request.urlopen
-    from urllib.parse import urlparse  # NOQA
-    from urllib.parse import urlencode  # NOQA
-    from urllib.request import HTTPPasswordMgrWithDefaultRealm  # NOQA
-    from urllib.request import HTTPBasicAuthHandler  # NOQA
-    from urllib.request import HTTPDigestAuthHandler  # NOQA
-    from urllib.request import build_opener  # NOQA
-    from urllib.request import install_opener  # NOQA
-    from urllib.request import HTTPError  # NOQA
-    from urllib.request import Request  # NOQA
-    from http.client import HTTPConnection  # NOQA
 
 # optional dependencies
 try:
