@@ -489,6 +489,12 @@ class Stream(object):
         """
         return list(self.traces).__iter__()
 
+    def __nonzero__(self):
+        """
+        A Stream is considered zero if has no Traces.
+        """
+        return bool(len(self.traces))
+
     def __len__(self):
         """
         Returns the number of Traces in the Stream object.

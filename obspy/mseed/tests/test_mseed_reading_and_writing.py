@@ -968,8 +968,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
 
         # Catch output.
-        sys.stdout = io.StringIO()
-        sys.stderr = io.StringIO()
+        sys.stdout = io.BytesIO()
+        sys.stderr = io.BytesIO()
         st = read(filename, verbose=2)
         sys.stdout.seek(0, 0)
         stdout = sys.stdout.read()
@@ -978,8 +978,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        self.assertTrue("calling msr_parse with" in stdout)
-        self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
+        self.assertTrue(b"calling msr_parse with" in stdout)
+        self.assertTrue(b"buflen=512, reclen=-1, dataflag=0, verbose=2" in
                         stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
