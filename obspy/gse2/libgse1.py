@@ -57,6 +57,7 @@ def read(fh, verify_chksum=True):
         verifyChecksum(fh, data, version=1)
     return header, data
 
+
 def readIntegerData(fh, npts):
     """
     Reads npts points of uncompressed integers from given file handler.
@@ -75,6 +76,7 @@ def readIntegerData(fh, npts):
         data.extend(buf.strip().split(b" "))
 
     return np.array(data, dtype=np.int32)
+
 
 def readHeader(fh):
     """

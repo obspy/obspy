@@ -1040,7 +1040,6 @@ class MomentTensor:
 
             if np.shape(vectors)[0] == 3:
                 for ii in range(np.shape(vectors)[1]):
-                    from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
                     lo_vectors.append(vectors[:, ii])
             else:
                 for ii in range(np.shape(vectors)[0]):

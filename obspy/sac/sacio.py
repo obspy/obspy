@@ -13,7 +13,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import UTCDateTime, Trace
-from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
+from obspy.core.util import gps2DistAzimuth, AttribDict
 from obspy.core import compatibility
 import numpy as np
 import os
