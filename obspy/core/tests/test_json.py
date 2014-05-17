@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.json import (Default, get_dump_kwargs, writeJSON)
 from obspy.core.quakeml import readQuakeML
-from obspy.core import compatibility
+
+import io
+import json
 import os
 import unittest
 import warnings
-import json
 
 warnings.filterwarnings("ignore")
 
@@ -61,14 +62,14 @@ class JSONTestCase(unittest.TestCase):
         self.assertTrue(len(s1) < len(s2))
 
     def test_write_json(self):
-        memfile = compatibility.StringIO()
+        memfile = io.StringIO()
         writeJSON(self.c, memfile)
         memfile.seek(0, 0)
         # Verify json module can load
         j = json.load(memfile)
         self.assertTrue(isinstance(j, dict))
         # Test registered method call
-        memfile = compatibility.StringIO()
+        memfile = io.StringIO()
         self.c.write(memfile, format="json")
         memfile.seek(0, 0)
         # Verify json module can load

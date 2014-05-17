@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Purpose: Core classes of ObsPy: Python for Seismological Observatories
 #   Author: Robert Barsch
 #           Moritz Beyreuther
@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2008-2012 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 obspy.core - Core classes of ObsPy
 ==================================
@@ -80,8 +80,9 @@ UTCDateTime(2009, 8, 24, 0, 20, 3)
 
 .. _NumPy: http://docs.scipy.org
 """
-from __future__ import unicode_literals
-from __future__ import print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime

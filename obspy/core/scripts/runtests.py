@@ -43,7 +43,7 @@ the names of all available test cases.
     or
 
     >>> import obspy.core
-    >>> obspy.core.runTests(verbosity=2)"  # DOCTEST: +SKIP
+    >>> obspy.core.runTests(verbosity=2)  # DOCTEST: +SKIP
 
 (4) Run tests of module :mod:`obspy.mseed`::
 
@@ -81,14 +81,9 @@ and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import super
-from future.builtins import input
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
@@ -177,7 +172,10 @@ def _getSuites(verbosity=1, names=[]):
 
 def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
-    from obspy.core import compatibility
+    from future import standard_library
+    with standard_library.hooks():
+        import urllib.parse
+        import http.client
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -296,7 +294,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     xml_doc = etree.tostring(root)
     print()
     # send result to report server
-    params = compatibility.urlencode({
+    params = urllib.parse.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
@@ -309,14 +307,14 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = compatibility.HTTPConnection(server)
+    conn = http.client.HTTPConnection(server)
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
-        o = compatibility.urlparse(response.msg['location'])
-        conn = compatibility.HTTPConnection(o.netloc)
+        o = urllib.parse.urlparse(response.msg['location'])
+        conn = http.client.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response
         response = conn.getresponse()

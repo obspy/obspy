@@ -5,8 +5,10 @@ USAGE: obspy-print [ -f format ] file1 file2 ...
 
 Print stream information for waveform data in local files
 """
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import read, Stream
 from obspy import __version__
 from optparse import OptionParser

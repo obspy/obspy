@@ -3,17 +3,18 @@
 """
 The InvSim test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
-from obspy.core import compatibility
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
 from obspy.signal.invsim import cosTaper
+
+import io
 import gzip
 import numpy as np
 import os
@@ -374,7 +375,7 @@ class InvSimTestCase(unittest.TestCase):
                            seedresp=seedresp)
 
         with open(respf, 'rb') as fh:
-            stringio = compatibility.BytesIO(fh.read())
+            stringio = io.BytesIO(fh.read())
         seedresp['filename'] = stringio
         tr2.data = seisSim(tr2.data, tr2.stats.sampling_rate,
                            seedresp=seedresp)

@@ -3,8 +3,9 @@
 """
 The psd test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import zip
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile

@@ -31,13 +31,15 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
-from obspy.core.compatibility import StringIO
+
+import io
 import numpy as np
 
 
@@ -128,7 +130,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
             elif line.startswith('TIMESERIES'):
                 # new header line
                 key = True
-                buf.append((line, StringIO()))
+                buf.append((line, io.StringIO()))
             elif headonly:
                 # skip data for option headonly
                 continue
@@ -193,7 +195,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
             elif line.startswith('TIMESERIES'):
                 # new header line
                 key = True
-                buf.append((line, StringIO()))
+                buf.append((line, io.StringIO()))
             elif headonly:
                 # skip data for option headonly
                 continue
@@ -442,7 +444,7 @@ def _parse_data(data, data_type):
     Simple function to read data contained in a StringIO object to a numpy
     array.
 
-    :type data: StringIO.StringIO object.
+    :type data: io.StringIO object.
     :param data: The actual data.
     :type data_type: String
     :param data_type: The data type of the expected data. Currently supported

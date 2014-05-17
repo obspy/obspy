@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Purpose: Convenience imports for obspy
 #   Author: Robert Barsch
 #           Moritz Beyreuther
@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2008-2014 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 ObsPy: A Python Toolbox for seismology/seismological observatories
 ==================================================================
@@ -27,6 +27,9 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA

@@ -2,8 +2,9 @@
 """
 The obspy.imaging.beachball test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import zip
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison

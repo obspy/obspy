@@ -23,14 +23,13 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import bytes
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import UTCDateTime
-from obspy.core.util.misc import _load_CDLL
+from obspy.core.util.libnames import _load_CDLL
 import ctypes as C
 import doctest
 import numpy as np

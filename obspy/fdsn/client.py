@@ -9,15 +9,17 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-import copy
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
-from future.builtins import map
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
+from future import standard_library
+with standard_library.hooks():
+    import queue
+    import urllib.parse
+    import urllib.request
+
+import copy
 import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.core.util.obspy_types import OrderedDict
@@ -26,11 +28,10 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
-from obspy.core import compatibility
 
 import collections
+import io
 from lxml import etree
-import queue
 import threading
 import warnings
 import os
@@ -117,12 +118,12 @@ class Client(object):
         # Authentication
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = compatibility.HTTPDigestAuthHandler(password_mgr)
-            opener = compatibility.build_opener(auth_handler)
+            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
+            opener = urllib.request.build_opener(auth_handler)
             # install globally
-            compatibility.install_opener(opener)
+            urllib.request.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -1093,7 +1094,8 @@ class Client(object):
 
             def _param_info_string(name):
                 param = self.services[service][name]
-                name = "%s (%s)" % (name, param["type"].__name__)
+                name = "%s (%s)" % (name, param["type"].__name__.replace(
+                    'new', ''))
                 req_def = ""
                 if param["required"]:
                     req_def = "Required Parameter"
@@ -1237,7 +1239,7 @@ class Client(object):
                             wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
-                    except compatibility.HTTPError as e:
+                    except urllib.request.HTTPError as e:
                         if e.code == 404:
                             wadl_queue.put((url, None))
                         else:
@@ -1426,7 +1428,7 @@ def build_url(base_url, service, major_version, resource_type,
                 parameters[key] = value.strip()
             except:
                 pass
-        url = "?".join((url, compatibility.urlencode(parameters)))
+        url = "?".join((url, urllib.parse.urlencode(parameters)))
     return url
 
 
@@ -1448,12 +1450,12 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print("Downloading %s" % url)
 
     try:
-        url_obj = compatibility.urlopen(
-            compatibility.Request(url=url, headers=headers),
+        url_obj = urllib.request.urlopen(
+            urllib.request.Request(url=url, headers=headers),
             timeout=timeout,
             data=data)
     # Catch HTTP errors.
-    except compatibility.HTTPError as e:
+    except urllib.request.HTTPError as e:
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())
@@ -1468,7 +1470,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
 
     code = url_obj.getcode()
     if return_string is False:
-        data = compatibility.BytesIO(url_obj.read())
+        data = io.BytesIO(url_obj.read())
     else:
         data = url_obj.read()
 

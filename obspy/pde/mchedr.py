@@ -12,14 +12,9 @@ Only supports file format revision of February 24, 2004.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import range
-from future.builtins import open
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
@@ -31,8 +26,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.decorator import map_example_filename
-from obspy.core import compatibility
+
 from datetime import timedelta
+import io
 import string as s
 import math
 import numpy as np
@@ -103,7 +99,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.fh = compatibility.BytesIO(string)
+        self.fh = io.BytesIO(string)
         self.filename = None
         return self._deserialize()
 

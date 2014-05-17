@@ -8,19 +8,18 @@ ArcLink/WebDC client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from fnmatch import fnmatch
-from lxml import objectify, etree
 from obspy import read, UTCDateTime
 from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.core import compatibility
+
+from fnmatch import fnmatch
+import io
+from lxml import objectify, etree
 from telnetlib import Telnet
 import os
 import time
@@ -167,7 +166,7 @@ class Client(object):
     def _reconnect(self):
         self._client.close()
         self._client.open(native_str(self._client.host),
-                          self._client.port,
+                          native_str(self._client.port),
                           self._client.timeout)
 
     def _writeln(self, buffer):
@@ -431,7 +430,7 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        file_stream = compatibility.BytesIO()
+        file_stream = io.BytesIO()
         self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)

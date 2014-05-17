@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import unicode_literals
 # Author: Douglas Creager <dcreager@dcreager.net>
 # This file is placed into the public domain.
 
@@ -32,15 +30,14 @@ from __future__ import unicode_literals
 # contains the following line:
 #
 #   include RELEASE-VERSION
-
 __all__ = ("get_git_version")
 
-# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
+# NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
+# installation time)
 import io
 import os
 import inspect
 from subprocess import Popen, PIPE
-# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
 script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
                                              inspect.currentframe())))

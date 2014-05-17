@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import super
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from lxml.etree import Element, SubElement
-from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
 from obspy.xseed.utils import setXPath, getXPath
+
+import io
+from lxml.etree import Element, SubElement
 import sys
 
 
@@ -75,7 +74,7 @@ class Blockette060(Blockette):
         # convert to stream for test issues
         if isinstance(data, bytes):
             length = len(data)
-            data = compatibility.BytesIO(data)
+            data = io.BytesIO(data)
         elif isinstance(data, (str, native_str)):
             raise TypeError("data must be bytes, not string")
         new_data = data.read(length)

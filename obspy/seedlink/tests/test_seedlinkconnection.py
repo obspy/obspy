@@ -2,6 +2,10 @@
 """
 The obspy.seedlink.client.seedlinkconnection test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.seedlink.client.slnetstation import SLNetStation
 from obspy.seedlink.seedlinkexception import SeedLinkException

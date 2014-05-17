@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import io
 import inspect
 import os
@@ -7,7 +11,6 @@ import unittest
 import warnings
 
 from obspy import readEvents, UTCDateTime
-from obspy.core.compatibility import StringIO, BytesIO
 from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException, \
     _parse_date_time
 
@@ -108,7 +111,7 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         with open(filename, "rt") as fh:
-            file_object = StringIO(fh.read())
+            file_object = io.StringIO(fh.read())
 
         cat = readEvents(file_object)
         file_object.close()
@@ -124,7 +127,7 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         with open(filename, "rb") as fh:
-            file_object = BytesIO(fh.read())
+            file_object = io.BytesIO(fh.read())
 
         cat = readEvents(file_object)
         file_object.close()
@@ -270,7 +273,7 @@ class NDKTestCase(unittest.TestCase):
             lines = [_i.rstrip() for _i in fh.readlines()]
 
         # Assemble anew and skip last line.
-        data = StringIO("\n".join(lines[:-1]))
+        data = io.StringIO("\n".join(lines[:-1]))
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -308,7 +311,7 @@ class NDKTestCase(unittest.TestCase):
             lines = [_i.rstrip() for _i in fh.readlines()]
 
         # Assemble anew and skip last line.
-        data = StringIO("\n".join(lines[:-1]))
+        data = io.StringIO("\n".join(lines[:-1]))
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

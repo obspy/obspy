@@ -64,14 +64,11 @@ USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
-from future.builtins import zip
-from io import StringIO
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import io
 import math
 import numpy as np
 import os
@@ -1030,7 +1027,7 @@ class MomentTensor:
         lo_vectors = []
 
         # if list of vectors
-        if type(vectors) == list:
+        if isinstance(vectors, list):
             for vec in vectors:
                 if np.prod(np.shape(vec)) != 3:
                     print('\n please provide vector(s) from R³ \n ')
@@ -2064,9 +2061,9 @@ class BeachBall:
         pressure_colour = self._GMT_pressure_colour
 
         # build strings for possible GMT-output, used by 'psxy'
-        GMT_string_FH = StringIO()
-        GMT_linestring_FH = StringIO()
-        GMT_EVs_FH = StringIO()
+        GMT_string_FH = io.StringIO()
+        GMT_linestring_FH = io.StringIO()
+        GMT_EVs_FH = io.StringIO()
 
         self._add_2_GMT_string(GMT_EVs_FH, EV_2_plot, tension_colour)
         GMT_EVs_FH.flush()

@@ -15,11 +15,10 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -28,8 +27,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
-from obspy.core import compatibility
+
 import inspect
+import io
 import os
 import warnings
 
@@ -89,7 +89,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(compatibility.BytesIO(string))
+        self.parser = XMLParser(io.BytesIO(string))
         return self._deserialize()
 
     def _xpath2obj(self, *args, **kwargs):
@@ -1512,7 +1512,7 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and not _validate(compatibility.BytesIO(xml_doc)):
+    if validate is True and not _validate(io.BytesIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
@@ -1542,7 +1542,7 @@ def readSeisHubEventXML(filename):
     lines.insert(3, b'  <eventParameters>')
     lines.append(b'  </eventParameters>\n')
     lines.append(b'</quakeml>\n')
-    temp = compatibility.BytesIO(b''.join(lines))
+    temp = io.BytesIO(b''.join(lines))
     return readQuakeML(temp)
 
 

@@ -8,15 +8,19 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA @UnusedImport
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
-from obspy.core import compatibility
+
+import io
 import json
 import platform
 import warnings
@@ -102,12 +106,12 @@ class Client(object):
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = compatibility.HTTPBasicAuthHandler(password_mgr)
-        opener = compatibility.build_opener(auth_handler)
+        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib.request.build_opener(auth_handler)
         # install globally
-        compatibility.install_opener(opener)
+        urllib.request.install_opener(opener)
 
     def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
@@ -128,13 +132,14 @@ class Client(object):
         if params:
             if options:
                 options += '&'
-            options += compatibility.urlencode(params)
+            options += urllib.parse.urlencode(params)
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
             print(('\nRequesting %s' % (remoteaddr)))
-        req = compatibility.Request(url=remoteaddr, data=data, headers=headers)
-        response = compatibility.urlopen(req, timeout=self.timeout)
+        req = urllib.request.Request(url=remoteaddr, data=data,
+                                     headers=headers)
+        response = urllib.request.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -397,7 +402,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("timeseries", param_list=filter, **kwargs)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -500,7 +505,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("resp", **kwargs)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -720,7 +725,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         try:
             data = self._fetch("distaz", headers=headers, stalat=stalat,
                                stalon=stalon, evtlat=evtlat, evtlon=evtlon)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -785,7 +790,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                               "lon=%s" % lon]
                 region = self._fetch(service, param_list=param_list).strip()
                 return (code, region.decode())
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -926,7 +931,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("traveltime", **kwargs)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -1116,7 +1121,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(compatibility.BytesIO(data), ndlim=1)
+                return loadtxt(io.BytesIO(data), ndlim=1)
             else:
                 return self._toFileOrData(filename, data, binary=True)
 

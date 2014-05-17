@@ -2,14 +2,9 @@
 """
 MSEED bindings to ObsPy core module.
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import zip
-from future.builtins import open
-from future.builtins import chr
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \

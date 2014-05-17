@@ -7,16 +7,14 @@
 #
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 # ------------------------------------------------------------------
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import map
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import UTCDateTime, Trace
-from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
+from obspy.core.compatibility import frombuffer
+from obspy.core.util import gps2DistAzimuth, AttribDict
 from obspy.core import compatibility
 import numpy as np
 import os
@@ -546,10 +544,10 @@ class SacIO(object):
         #    in strings. Store them in array (an convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = np.fromfile(f, dtype='<f4', count=70)
-        self.hi = np.fromfile(f, dtype='<i4', count=40)
+        self.hf = frombuffer(f.read(4 * 70), dtype='<f4')
+        self.hi = frombuffer(f.read(4 * 40), dtype='<i4')
         # read in the char values
-        self.hs = np.fromfile(f, dtype='|S8', count=24)
+        self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
@@ -561,10 +559,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 f.seek(0, 0)
-                self.hf = np.fromfile(f, dtype='>f4', count=70)
-                self.hi = np.fromfile(f, dtype='>i4', count=40)
+                self.hf = frombuffer(f.read(4 * 70), dtype='>f4')
+                self.hi = frombuffer(f.read(4 * 40), dtype='>i4')
                 # read in the char values
-                self.hs = np.fromfile(f, dtype='|S8', count=24)
+                self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
             except SacError as e:
@@ -610,9 +608,9 @@ class SacIO(object):
             f.seek(0, 0)  # set pointer to the file beginning
             try:
                 # write the header
-                self.hf.tofile(f)
-                self.hi.tofile(f)
-                self.hs.tofile(f)
+                f.write(self.hf.data)
+                f.write(self.hi.data)
+                f.write(self.hs.data)
             except Exception as e:
                 f.close()
                 raise SacError("Cannot write header to file: " + fname, e)
@@ -647,10 +645,10 @@ class SacIO(object):
         #    in strings. Store them in array (an convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = np.fromfile(f, dtype='<f4', count=70)
-        self.hi = np.fromfile(f, dtype='<i4', count=40)
+        self.hf = frombuffer(f.read(4 * 70), dtype='<f4')
+        self.hi = frombuffer(f.read(4 * 40), dtype='<i4')
         # read in the char values
-        self.hs = np.fromfile(f, dtype='|S8', count=24)
+        self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
@@ -663,10 +661,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 f.seek(0, 0)
-                self.hf = np.fromfile(f, dtype='>f4', count=70)
-                self.hi = np.fromfile(f, dtype='>i4', count=40)
+                self.hf = frombuffer(f.read(4 * 70), dtype='>f4')
+                self.hi = frombuffer(f.read(4 * 40), dtype='>i4')
                 # read in the char values
-                self.hs = np.fromfile(f, dtype='|S8', count=24)
+                self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
                 self.IsSACfile(fname, fsize)
                 self.byteorder = 'big'
             except SacError as e:
@@ -679,9 +677,9 @@ class SacIO(object):
         # actually, it's in the SAC manual
         npts = self.hi[9]
         if self.byteorder == 'big':
-            self.seis = np.fromfile(f, dtype='>f4', count=npts)
+            self.seis = frombuffer(f.read(npts * 4), dtype='>f4')
         else:
-            self.seis = np.fromfile(f, dtype='<f4', count=npts)
+            self.seis = frombuffer(f.read(npts * 4), dtype='<f4')
         if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
             f.close()
@@ -718,36 +716,38 @@ class SacIO(object):
         """
         # open the file
         try:
-            f = open(fname, 'rb')
+            with open(fname, 'rb') as fh:
+                data = fh.read()
         except IOError:
             raise SacIOError("No such file: " + fname)
-        try:
-            # --------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list). That's a total of 632 bytes.
-            # --------------------------------------------------------------
-            # read in the float values
-            self.hf = np.fromfile(f, dtype='<f4', count=70, sep=" ")
-            # read in the int values
-            self.hi = np.fromfile(f, dtype='<i4', count=40, sep=" ")
-            # reading in the string part is a bit more complicated
-            # because every string field has to be 8 characters long
-            # apart from the second field which is 16 characters long
-            # resulting in a total length of 192 characters
-            for i in range(0, 24, 3):
-                line = f.readline()
-                self.hs[i:i + 3] = np.fromstring(line, dtype='|S8', count=3)
-            # --------------------------------------------------------------
-            # read in the seismogram points
-            # --------------------------------------------------------------
-            self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
-        except IOError as e:
-            self.hf = self.hs = self.hi = self.seis = None
-            f.close()
-            raise SacIOError("%s is not a valid SAC file:" % fname, e)
+        data = [_i.rstrip(b"\n\r") for _i in data.splitlines(True)]
+        if len(data) < 14 + 8 + 8:
+            raise SacIOError("%s is not a valid SAC file:" % fname)
+
+        # --------------------------------------------------------------
+        # parse the header
+        #
+        # The sac header has 70 floats, 40 integers, then 192 bytes
+        #    in strings. Store them in array (an convert the char to a
+        #    list). That's a total of 632 bytes.
+        # --------------------------------------------------------------
+        # read in the float values
+        self.hf = np.array([i.split() for i in data[:14]], dtype='<f4').ravel()
+        # read in the int values
+        self.hi = np.array([i.split() for i in data[14: 14 + 8]],
+                           dtype='<i4').ravel()
+        # reading in the string part is a bit more complicated
+        # because every string field has to be 8 characters long
+        # apart from the second field which is 16 characters long
+        # resulting in a total length of 192 characters
+        for i, j in enumerate(range(0, 24, 3)):
+            line = data[14 + 8 + i]
+            self.hs[j:j + 3] = np.fromstring(line, dtype='|S8', count=3)
+        # --------------------------------------------------------------
+        # read in the seismogram points
+        # --------------------------------------------------------------
+        self.seis = np.array([i.split() for i in data[30:]], dtype='<f4')\
+            .ravel()
         try:
             self._get_date()
         except SacError:
@@ -757,7 +757,6 @@ class SacIO(object):
                 self._get_dist()
             except SacError:
                 pass
-        f.close()
 
     def ReadSacXYHeader(self, fname):
         """
@@ -780,36 +779,36 @@ class SacIO(object):
         """
         # open the file
         try:
-            f = open(fname, 'rb')
+            with open(fname, 'rb') as fh:
+                data = fh.read()
         except IOError:
             raise SacIOError("No such file: " + fname)
-        try:
-            # --------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list).
-            # --------------------------------------------------------------
-            # read in the float values
-            self.hf = np.fromfile(f, dtype='<f4', count=70, sep=" ")
-            # read in the int values
-            self.hi = np.fromfile(f, dtype='<i4', count=40, sep=" ")
-            # reading in the string part is a bit more complicated
-            # because every string field has to be 8 characters long
-            # apart from the second field which is 16 characters long
-            # resulting in a total length of 192 characters
-            for i in range(0, 24, 3):
-                self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
-                f.readline()  # strip the newline
-        except IOError as e:
-            self.hf = self.hs = self.hi = self.seis = None
-            f.close()
-            raise SacIOError("%s is not a valid SAC file:" % fname, e)
+        data = [_i.rstrip(b"\n\r") for _i in data.splitlines(True)]
+        if len(data) < 14 + 8 + 8:
+            raise SacIOError("%s is not a valid SAC file:" % fname)
+
+        # --------------------------------------------------------------
+        # parse the header
+        #
+        # The sac header has 70 floats, 40 integers, then 192 bytes
+        #    in strings. Store them in array (an convert the char to a
+        #    list). That's a total of 632 bytes.
+        # --------------------------------------------------------------
+        # read in the float values
+        self.hf = np.array([i.split() for i in data[:14]], dtype='<f4').ravel()
+        # read in the int values
+        self.hi = np.array([i.split() for i in data[14: 14 + 8]],
+                           dtype='<i4').ravel()
+        # reading in the string part is a bit more complicated
+        # because every string field has to be 8 characters long
+        # apart from the second field which is 16 characters long
+        # resulting in a total length of 192 characters
+        for i, j in enumerate(range(0, 24, 3)):
+            line = data[14 + 8 + i]
+            self.hs[j:j + 3] = np.fromstring(line, dtype='|S8', count=3)
         try:
             self.IsSACfile(fname, fsize=False)
         except SacError as e:
-            f.close()
             raise SacError(e)
         try:
             self._get_date()
@@ -820,7 +819,6 @@ class SacIO(object):
                 self._get_dist()
             except SacError:
                 pass
-        f.close()
 
     def readTrace(self, trace):
         """
@@ -873,7 +871,7 @@ class SacIO(object):
             np.savetxt(f, np.reshape(self.hi, (8, 5)),
                        fmt=native_str("%10d%10d%10d%10d%10d"))
             for i in range(0, 24, 3):
-                self.hs[i:i + 3].tofile(f)
+                f.write(self.hs[i:i + 3].data)
                 f.write(b'\n')
         except:
             f.close()
@@ -911,10 +909,10 @@ class SacIO(object):
             raise SacIOError("Cannot open file: " + ofname)
         try:
             self._chck_header()
-            self.hf.tofile(f)
-            self.hi.tofile(f)
-            self.hs.tofile(f)
-            self.seis.tofile(f)
+            f.write(self.hf.data)
+            f.write(self.hi.data)
+            f.write(self.hs.data)
+            f.write(self.seis.data)
         except Exception as e:
             f.close()
             msg = "Cannot write SAC-buffer to file: "
@@ -1337,9 +1335,9 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> from obspy import Trace
-    >>> from obspy.core import compatibility
+    >>> import io
     >>> tr = Trace()
-    >>> f = compatibility.StringIO("""ZEROS 3
+    >>> f = io.StringIO("""ZEROS 3
     ... -5.032 0.0
     ... POLES 6
     ... -0.02365 0.02365

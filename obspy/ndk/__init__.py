@@ -107,6 +107,9 @@ To see all events call 'print CatalogObject.__str__(print_all=True)'
     :align: center
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 if __name__ == '__main__':
     import doctest

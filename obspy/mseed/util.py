@@ -2,14 +2,11 @@
 """
 Mini-SEED specific utilities.
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
     ENDIAN
 from obspy import UTCDateTime
@@ -56,8 +53,8 @@ def getStartAndEndTime(file_or_file_object):
 
     And also with a Mini-SEED file stored in a BytesIO
 
-    >>> from obspy.core import compatibility
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> import io
+    >>> file_object = io.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -73,7 +70,7 @@ def getStartAndEndTime(file_or_file_object):
 
     The same is valid for a file-like object.
 
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> file_object = io.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -154,8 +151,8 @@ def getTimingAndDataQuality(file_or_file_object):
     ...     print(k, v)
     data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    >>> from obspy.core import compatibility
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> import io
+    >>> file_object = io.BytesIO(f.read())
     >>> f.close()
     >>> tq = getTimingAndDataQuality(file_object)
     >>> for k, v in tq.items():
@@ -202,7 +199,7 @@ def getTimingAndDataQuality(file_or_file_object):
     timing_quality_min 0.0
     timing_quality_upper_quantile 75.0
 
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> file_object = io.BytesIO(f.read())
     >>> f.close()
     >>> tq = getTimingAndDataQuality(file_object)
     >>> for k, v in sorted(tq.items()):

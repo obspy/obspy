@@ -2,8 +2,10 @@
 """
 CSS bindings to ObsPy core module.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
 import os
 import struct
 import numpy as np

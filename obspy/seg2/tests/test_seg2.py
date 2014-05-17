@@ -2,9 +2,10 @@
 """
 The obspy.seg2 test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
-from future.builtins import zip
 import numpy as np
 from obspy import read
 from obspy.core import AttribDict

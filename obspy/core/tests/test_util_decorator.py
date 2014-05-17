@@ -1,6 +1,8 @@
-from __future__ import unicode_literals
-from future.builtins import map
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import unittest
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util import getExampleFile

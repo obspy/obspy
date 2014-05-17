@@ -11,10 +11,11 @@
 Functions that will all take a file pointer and the sample count and return a
 numpy array with the unpacked values.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.segy.util import clibsegy
 
 import ctypes as C

@@ -8,14 +8,13 @@ Module for handling ObsPy Catalog and Event objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import super
-from future.builtins import str
-from future.builtins import bytes
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
@@ -28,7 +27,9 @@ from obspy.core.util import uncompressFile, _readFromPlugin, \
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
-from obspy.core import compatibility
+
+
+import io
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
@@ -101,13 +102,13 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     elif isinstance(pathname_or_url, bytes) and \
             pathname_or_url.strip().startswith(b'<'):
         # XML string
-        return _read(compatibility.BytesIO(pathname_or_url), format, **kwargs)
+        return _read(io.BytesIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(compatibility.urlopen(pathname_or_url).read())
+            fh.write(urllib.request.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:

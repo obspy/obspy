@@ -9,16 +9,17 @@ File dealing with the StationXML format.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import inspect
+import io
 from lxml import etree
 import os
 import warnings
 
 import obspy
-from obspy.core import compatibility
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
@@ -679,7 +680,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
     if validate is True:
-        buf = compatibility.BytesIO()
+        buf = io.BytesIO()
         tree.write(buf)
         buf.seek(0)
         validates, errors = validate_StationXML(buf)

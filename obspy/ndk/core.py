@@ -11,17 +11,18 @@ The format is an ASCII format but will internally handled by unicode routines.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-import traceback
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-import itertools
+from future import standard_library
+with standard_library.hooks():
+    import itertools
+
 import math
 import os
 import re
+import traceback
 import warnings
 import uuid
 

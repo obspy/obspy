@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.14</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.1</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?endbefore=2011-02-07T00%3A00%3A00.000000&amp;maxlongitude=-170.0&amp;startafter=2003-01-07T00%3A00%3A00.000000&amp;minlatitude=15.0&amp;maxlatitude=55.0&amp;minlongitude=170.0</ModuleURI>
- <Created>2014-04-10T15:31:21</Created>
+ <Created>2014-05-16T11:46:12</Created>
  <Network code="IM" startDate="1965-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>International Miscellaneous Stations</Description>
-  <TotalNumberStations>228</TotalNumberStations>
+  <TotalNumberStations>243</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
-  <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" alternateNetworkCodes="_US-REGIONAL,_US-BB+A,.UNRESTRICTED,_AFTAC,_GSN">
+  <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_US-REGIONAL,_US-BB+A,.UNRESTRICTED,_AFTAC,_GSN">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>
@@ -21,7 +21,7 @@
    <TotalNumberChannels>2</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_US-REF,_US-ALL,_US-REGIONAL,_US-BB+A,.UNRESTRICTED,_AFTAC,_US-BB,_GSN,_GSN-BROADBAND">
+  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes=".EARTHSCOPE,_US-REF,_US-ALL,_US-REGIONAL,_US-BB+A,.UNRESTRICTED,_AFTAC,_US-BB,_GSN,_GSN-BROADBAND">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>

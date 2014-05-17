@@ -10,23 +10,27 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, guessDelta
-from obspy.core import compatibility
+
+import functools
+import io
+import json
+import platform
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
-import functools
-import json
-import platform
 import warnings
 
 
@@ -139,13 +143,13 @@ class Client(object):
         self.user = user
         self.password = password
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, self.base_url, self.user,
                                   self.password)
-        auth_handler = compatibility.HTTPBasicAuthHandler(password_mgr)
-        opener = compatibility.build_opener(auth_handler)
+        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib.request.build_opener(auth_handler)
         # install globally
-        compatibility.install_opener(opener)
+        urllib.request.install_opener(opener)
 
     def _fetch(self, url, headers={}, **params):
         """
@@ -159,10 +163,10 @@ class Client(object):
         headers['User-Agent'] = self.user_agent
         # replace special characters
         remoteaddr = self.base_url + url + '?' + \
-            compatibility.urlencode(params)
+            urllib.parse.urlencode(params)
         if self.debug:
             print(('\nRequesting %s' % (remoteaddr)))
-        response = compatibility.urlopen(remoteaddr, timeout=self.timeout)
+        response = urllib.request.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -286,7 +290,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
+            return readEvents(io.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -350,7 +354,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
+            return readEvents(io.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -411,7 +415,7 @@ class Client(object):
         if format == "list":
             return self._json2list(data.decode())
         elif format == "catalog":
-            return readEvents(compatibility.BytesIO(data), 'QUAKEML')
+            return readEvents(io.BytesIO(data), 'QUAKEML')
         else:
             return data
 
@@ -771,7 +775,7 @@ class Client(object):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         for url in urls:
-            fh.write(compatibility.urlopen(url).read())
+            fh.write(urllib.request.urlopen(url).read())
         if isinstance(filename, (str, native_str)):
             fh.close()
         # clean up
