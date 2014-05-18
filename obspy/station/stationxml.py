@@ -773,13 +773,12 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
 
 def _float_to_str(x):
     """
-    Converts a float to str making sure no precision is lost in the string
-    representation.
+    Converts a float to str making. For most numbers this results in a
+    decimal representation (for xs:decimal) while for very large or very
+    small numbers this results in an exponential representation suitable for
+    xs:float and xs:double.
     """
-    text = ("%.20f" % x).rstrip("0").lstrip()
-    if text.endswith("."):
-        text += "0"
-    return text
+    return "%ls" % x
 
 
 def _write_polezero_list(parent, obj):
