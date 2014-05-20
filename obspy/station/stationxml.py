@@ -778,7 +778,7 @@ def _float_to_str(x):
     small numbers this results in an exponential representation suitable for
     xs:float and xs:double.
     """
-    return "%ls" % x
+    return "%s" % x
 
 
 def _write_polezero_list(parent, obj):
