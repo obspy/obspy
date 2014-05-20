@@ -391,21 +391,9 @@ class VelocityModel(object):
 
 
     @classmethod
-    def readTVelFile(cls, file_):
-        """ This method really does nothing but call the actual
-        reading-the-velocity-model method. For .tvel files."""
-        fileIn = FileReader(file_) # file_ = File(filename) just above
-        vmod = cls.readTVelFile_actually(fileIn, cls.getModelNameFromFileName(file_.__name__))
-        # NB right here it should say readTVelFile_0, looking at the java.
-        fileIn.close()
-        return vmod
-
-    # Merge these somehow!
-    # Or actually, just keep them separate for now until we can establish it works.
-    @classmethod
-    # @readTVelFile.register(object, Reader, str) ???
-    def readTVelFile_actually(cls, in_, modelName):
-        """      * This method reads in a velocity model from a "tvel" ASCII text file. The
+    def readTVelFile(cls, filename):
+        """   
+        * This method reads in a velocity model from a "tvel" ASCII text file. The
         * name of the model file for model "modelname" should be "modelname.tvel".
         * The format of the file is: comment line - generally info about the P
         * velocity model comment line - generally info about the S velocity model
@@ -425,93 +413,46 @@ class VelocityModel(object):
         *                occurs if an EOL should have been read but wasn't. This
         *                may indicate a poorly formatted tvel file.
         """
-        tokenIn = StreamTokenizer(in_)
-        tokenIn.commentChar('#') 	# '#' means ignore to end of line
-        tokenIn.slashStarComments(True)	# '/*...*/' means a comment
-        tokenIn.slashSlashComments(True)# '//' means ignore to end of line
-        tokenIn.eolIsSignificant(True)	# end of line is important
-        tokenIn.parseNumbers()		# Differentiate between words and numbers. 
-        				# Note 1.1e3 is considered a string 
-        				# instead of a number.
-	# Read until we get 2 end of lines.
-        while tokenIn.nextToken() != StreamTokenizer.TT_EOL:
-            pass
-        while tokenIn.nextToken() != StreamTokenizer.TT_EOL:
-            pass
-    	# Now we have passed both comment lines and are ready to read the
-        # velocity model.
-         
-        # Some temporary variables to store the current line from the file and
-        # the current layer.
-        myLayerNumber = 0
+        import itertools
+
         tempLayer = VelocityLayer()
-        
-        # topDepth = float()
-        # these and following are dropped. I quote "In Python, You don't create
-        # variables to hold a custom type. You don't create variables to hold any
-        # particular type. You don't "create" variables at all. You give names to objects."
-        
-        # Preload the first line of the model
-        tokenIn.nextToken()
-        topDepth = tokenIn.nval
-        tokenIn.nextToken()
-        topPVel = tokenIn.nval
-        tokenIn.nextToken()
-        topSVel = tokenIn.nval
-        if topSVel > topPVel:
-            raise VelocityModelException("S velocity, " + topSVel + " at depth " + topDepth + " is greater than the P velocity, " + topPVel)
-        tokenIn.nextToken()
-        if tokenIn.ttype != StreamTokenizer.TT_EOL:
-        # density is not used and so is optional
-            topDensity = tokenIn.nval
-            tokenIn.nextToken()
-        else:
-            topDensity = 5571.0
-        if tokenIn.ttype != StreamTokenizer.TT_EOL:
-        # this token should be an EOL, if not
-            raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
-        else:
-            tokenIn.nextToken()
-        layers = ArrayList()
-        while tokenIn.ttype != StreamTokenizer.TT_EOF:
-        # Loop until we hit the end of file
-            botDepth = tokenIn.nval
-            tokenIn.nextToken()
-            botPVel = tokenIn.nval
-            tokenIn.nextToken()
-            botSVel = tokenIn.nval
-            if botSVel > botPVel:
-                raise VelocityModelException("S velocity, " + botSVel + " at depth " + botDepth + " is greater than the P velocity, " + botPVel)
-            tokenIn.nextToken()
-            if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # density is not used and is optional
-                botDensity = tokenIn.nval
-                tokenIn.nextToken()
-            else:
-                botDensity = topDensity
-            tempLayer = VelocityLayer(myLayerNumber, topDepth, botDepth, topPVel, botPVel, topSVel, botSVel, topDensity, botDensity)
-            topDepth = botDepth
-            topPVel = botPVel
-            topSVel = botSVel
-            topDensity = botDensity
-            if tokenIn.ttype != StreamTokenizer.TT_EOL:
-            # this token should be an EOL, if not
-                raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
-            else:
-                tokenIn.nextToken()
-            if tempLayer.getTopDepth() != tempLayer.getBotDepth():
-            # Don't use zero thickness layers, first order discontinuities
-            # are taken care of by storing top and bottom depths.
-                layers.add(tempLayer)
-                myLayerNumber += 1
-        radiusOfEarth = topDepth
-        maxRadius = topDepth	# I assume that this is a whole earth model
+        myLayerNumber = 0
+
+        # must preread the first layer
+        with open(filename, 'rt') as f:
+            for line in itertools.islice(f, 2, None):  #skip first two lines
+                line = line.partition('#')[0]    #needs the other comment options
+                line = line.rstrip()     # or just .strip()?'
+                columns = line.split()
+                botDepth = float(columns[0])
+                botPVel = float(columns[1])
+                botSVel = float(columns[2])
+                if botSVel > botPVel:
+                    raise VelocityModelException("S velocity, " + botSVel + " at depth " + botDepth + " is greater than the P velocity, " + botPVel)
+                # if density is present, fix that somehow
+                botDensity = float(columns[3])
+                # else
+                # botDensity = topDensity
+                tempLayer = VelocityLayer(myLayerNumber, topDepth, botDepth, topPVel, botPVel, topSVel, botSVel, topDensity, botDensity)
+                topDepth = botDepth
+                topPVel = botPVel
+                topSVel = botSVel
+                topDensity = botDensity
+                if tempLayer.getTopDepth() != tempLayer.getBotDepth():
+                    # Don't use zero thickness layers, first order discontinuities
+                    # are taken care of by storing top and bottom depths.
+                    layers.add(tempLayer)
+                    myLayerNumber += 1
+                    
+                radiusOfEarth = topDepth
+                maxRadius = topDepth	# I assume that this is a whole earth model
         			# so the maximum depth is equal to the
         			# maximum radius is equal to the earth radius.
-        return VelocityModel(modelName, radiusOfEarth, cls.DEFAULT_MOHO, cls.DEFAULT_CMB, cls.DEFAULT_IOCB, 0, maxRadius, True, layers)
+                return VelocityModel(modelName, radiusOfEarth, cls.DEFAULT_MOHO, cls.DEFAULT_CMB, cls.DEFAULT_IOCB, 0, maxRadius, True, layers)
 
- 
-
+        
+        
+        
     @classmethod
     def readNDFile(cls, file_):
         """ generated source for method readNDFile """
