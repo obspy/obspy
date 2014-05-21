@@ -329,8 +329,8 @@ class VelocityModel(object):
 
     def __str__(self):
         """ generated source for method toString """
-        desc = "modelName=" + self.modelName + "\n" + "\n radiusOfEarth=" + self.radiusOfEarth + "\n mohoDepth=" + self.mohoDepth + "\n cmbDepth=" + self.cmbDepth + "\n iocbDepth=" + self.iocbDepth + "\n minRadius=" + self.minRadius + "\n maxRadius=" + self.maxRadius + "\n spherical=" + self.spherical
-        desc += "\ngetNumLayers()=" + self.getNumLayers() + "\n"
+        desc = "modelName=" + str(self.modelName) + "\n" + "\n radiusOfEarth=" + str(self.radiusOfEarth) + "\n mohoDepth=" + str(self.mohoDepth) + "\n cmbDepth=" + str(self.cmbDepth) + "\n iocbDepth=" + str(self.iocbDepth) + "\n minRadius=" + str(self.minRadius) + "\n maxRadius=" + str(self.maxRadius) + "\n spherical=" + str(self.isSpherical)
+        desc += "\ngetNumLayers()=" + str(self.getNumLayers()) + "\n"
         return desc
 
     def print_(self):
@@ -637,7 +637,7 @@ class VelocityModel(object):
         return changeMade
 
     def earthFlattenTransform(self):
-        """ Returns a flat velocity model object equivalent to the spherical 
+        """ Returns a flat velocity model object equivalent to the spherical
          velocity model via the earth flattening transform.
      	 
      	 @return the flattened VelocityModel object.
@@ -645,7 +645,7 @@ class VelocityModel(object):
      	                occurs ???. """
         newLayer = VelocityLayer()
         oldLayer = VelocityLayer()
-        spherical = False
+        isSpherical = False
         layers = ArrayList(self.vectorLength)
         i = 0
         while i < self.getNumLayers():
