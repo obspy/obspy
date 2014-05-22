@@ -69,7 +69,7 @@ export PATH=$BASEDIR/bin:$PATH
 # run develop.sh
 cd $GITDIR
 # export LDFLAGS="-lgcov"
-$BASEDIR/bin/python setup.py develop -N -U --verbose
+$BASEDIR/bin/python setup.py develop --verbose
 
 # make docs
 cd $GITDIR/misc/docs
