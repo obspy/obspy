@@ -13,14 +13,13 @@ The format is an ASCII format but will internally handled by unicode routines.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from future import standard_library
 with standard_library.hooks():
     import itertools
 
 import math
-import os
 import re
 import traceback
 import warnings
@@ -93,10 +92,10 @@ def is_ndk(filename):
     # Not a file-like object.
     if not hasattr(filename, "readline"):
         # Check if it exists, otherwise assume its a string.
-        if os.path.exists(filename):
+        try:
             with open(filename, "rt") as fh:
                 first_line = fh.readline()
-        else:
+        except:
             try:
                 filename = filename.decode()
             except:
@@ -140,7 +139,7 @@ def is_ndk(filename):
     return False
 
 
-def read_ndk(filename, *args, **kwargs):
+def read_ndk(filename, *args, **kwargs):  # @UnusedVariable
     """
     Reads an NDK file to a :class:`~obspy.core.event.Catalog` object.
 
@@ -151,10 +150,10 @@ def read_ndk(filename, *args, **kwargs):
     # much.
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
-        if os.path.exists(filename):
+        try:
             with open(filename, "rt") as fh:
                 data = fh.read()
-        else:
+        except:
             try:
                 data = filename.decode()
             except:
