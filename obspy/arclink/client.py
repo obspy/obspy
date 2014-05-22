@@ -10,7 +10,7 @@ ArcLink/WebDC client for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy import read, UTCDateTime
@@ -167,9 +167,15 @@ class Client(object):
 
     def _reconnect(self):
         self._client.close()
-        self._client.open(native_str(self._client.host),
-                          native_str(self._client.port),
-                          self._client.timeout)
+        try:
+            self._client.open(native_str(self._client.host),
+                              self._client.port,
+                              self._client.timeout)
+        except:
+            # Python 2.6: port needs to be native int or string -> not long
+            self._client.open(native_str(self._client.host),
+                              native_str(self._client.port),
+                              self._client.timeout)
 
     def _writeln(self, buffer):
         # Py3k: might be confusing, _writeln accepts str
