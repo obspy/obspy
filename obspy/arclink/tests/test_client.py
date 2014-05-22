@@ -288,6 +288,7 @@ class ClientTestCase(unittest.TestCase):
             'npts': 1370,
             'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
             'channel': 'EHZ'}
+        results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
         # example 2
         client = Client(user='test@obspy.org')
@@ -330,6 +331,7 @@ class ClientTestCase(unittest.TestCase):
             'calib': 1.0,
             'sampling_rate': 40.0,
             'channel': 'BHZ'}
+        results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
 
     def test_getNotExistingWaveform(self):
@@ -600,8 +602,10 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
-        poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
-                                         t).values())[0]
+        # original but deprecated call
+        # poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
+        #                                 t, t+30).values())[0]
+        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ", t)
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])
