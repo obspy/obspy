@@ -26,7 +26,10 @@ A command-line program that indexes seismogram files into a database.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
+from future import standard_library
+with standard_library.hooks():
+    import http.server
 
 from obspy import __version__
 from obspy.db.db import Base
@@ -35,7 +38,6 @@ from obspy.db.util import parseMappingData
 from optparse import OptionParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
-import http.server
 import logging
 import multiprocessing
 import select
