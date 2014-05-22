@@ -84,7 +84,9 @@ class Client(object):
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
         (default is ``0``).
-
+    :var status_delay: Delay in seconds between each status request (default is
+        ``0.5`` seconds).
+        
     .. rubric:: Notes
 
     The following ArcLink servers may be accessed (also see
