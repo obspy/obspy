@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
+import codecs
 import inspect
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import check_flake8
@@ -59,7 +60,7 @@ class FutureUsageTestCase(unittest.TestCase):
             flags=re.MULTILINE)
 
         builtin_pattern = re.compile(
-            r"^from future\.builtins import \*  # NOQA$",
+            r"^from future\.builtins import \*  # NOQA",
             flags=re.MULTILINE)
 
         failures = []
@@ -71,7 +72,7 @@ class FutureUsageTestCase(unittest.TestCase):
             for filename in filenames:
                 if filename in exceptions:
                     continue
-                with open(filename, "rt") as fh:
+                with codecs.open(filename, "r", encoding="utf-8") as fh:
                     content = fh.read()
 
                     if re.search(future_imports_pattern, content) is None:
