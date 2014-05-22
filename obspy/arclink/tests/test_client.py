@@ -466,7 +466,7 @@ class ClientTestCase(unittest.TestCase):
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
             with open(mseedfile, 'rb') as fp:
-                self.assertNotEquals(fp.read(8)[6:7], b"V")
+                self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertEqual(st[0].stats.network, 'GE')
             self.assertEqual(st[0].stats.station, 'APE')
