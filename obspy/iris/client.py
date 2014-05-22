@@ -10,7 +10,7 @@ IRIS Web service client for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 from future import standard_library
 with standard_library.hooks():
@@ -382,7 +382,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
         ...     filter=["correct", "demean", "lp=2.0"])
         >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [ -1.38267058e-06  -1.10900783e-06  -6.89020794e-07 ...
+        [ -1.57488682e-06  -1.26318002e-06  -7.84807128e-07 ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -632,9 +632,9 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         * INPUT UNIT        : M
         * OUTPUT UNIT       : COUNTS
         * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
-        * INSTGAIN          : 2.204000e+03 (M/S)
+        * INSTGAIN          : 1.935000e+03 (M/S)
         * COMMENT           :
-        * SENSITIVITY       : 9.244000e+08 (M/S)
+        * SENSITIVITY       : 8.115970e+08 (M/S)
         * A0                : 8.608300e+04
         * **********************************
         ZEROS    3
@@ -647,7 +647,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             -2.271210e+01    -2.710650e+01
             -4.800400e-03    +0.000000e+00
             -7.319900e-02    +0.000000e+00
-        CONSTANT    7.957513e+13
+        CONSTANT    6.986470e+13
         <BLANKLINE>
         <BLANKLINE>
         <BLANKLINE>
@@ -1047,7 +1047,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt,
             ...                        output='fap')
             >>> data[0]  # frequency, amplitude, phase of first point
-            array([  1.00000000e-05,   1.20280200e+04,   1.79200700e+02])
+            array([  1.00000000e-05,   1.05599900e+04,   1.79200700e+02])
 
         (2) Returning amplitude and phase plot.
 
