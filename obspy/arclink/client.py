@@ -86,7 +86,7 @@ class Client(object):
         (default is ``0``).
     :var status_delay: Delay in seconds between each status request (default is
         ``0.5`` seconds).
-        
+
     .. rubric:: Notes
 
     The following ArcLink servers may be accessed (also see
