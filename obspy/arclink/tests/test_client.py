@@ -4,7 +4,7 @@ The obspy.arclink.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import read
 from obspy.arclink import Client
@@ -601,7 +601,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
         poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
-                                         t, t + 30).values())[0]
+                                         t).values())[0]
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])
