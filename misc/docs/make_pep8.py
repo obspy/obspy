@@ -31,7 +31,7 @@ head = ("""
 PEP8
 ====
 
-.. image:: pep8.png
+.. image:: pep8.svg
 
 Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented
