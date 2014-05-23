@@ -2,10 +2,9 @@
 """
 Convenience class for handling MSRecord and MSFileparam.
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.mseed.headers import clibmseed, MSRecord, MSFileParam, \
     MS_NOERROR, HPTMODULUS

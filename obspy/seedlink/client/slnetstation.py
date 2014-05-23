@@ -11,8 +11,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.utcdatetime import UTCDateTime
 
@@ -35,11 +36,6 @@ class SLNetStation(object):
     :type btime: TTT
     """
     MAX_SELECTOR_SIZE = 8
-    net = None
-    station = None
-    selectors = []
-    seqnum = -1
-    btime = None
 
     def __init__(self, net, station, selectors, seqnum, timestamp):
         """
@@ -55,12 +51,16 @@ class SLNetStation(object):
         """
         self.net = str(net)
         self.station = str(station)
-        #print "DEBUG: selectors:", selectors
+        # print "DEBUG: selectors:", selectors
         if selectors is not None:
             self.selectors = selectors
+        else:
+            self.selectors = []
         self.seqnum = seqnum
         if timestamp is not None:
             self.btime = UTCDateTime(timestamp)
+        else:
+            self.btime = None
 
     def appendSelectors(self, newSelectors):
         """

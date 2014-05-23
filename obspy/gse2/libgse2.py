@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: libgse2.py
 #  Purpose: Python wrapper for gse_functions of Stefan Stange
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 """
 Lowlevel module internally used for handling GSE2 files
 
@@ -23,44 +23,20 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import str
-from future.builtins import bytes
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from distutils import sysconfig
 from obspy import UTCDateTime
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.libnames import _load_CDLL
 import ctypes as C
 import doctest
 import numpy as np
-import os
 import warnings
 
 # Import shared libgse2
-# create library names
-lib_names = [
-    # python3.3 platform specific library name
-    _get_lib_name("gse2"),
-    # fallback for pre-packaged libraries
-    'libgse2']
-# get default file extension for shared objects
-lib_extension, = sysconfig.get_config_vars('SO')
-# initialize library
-for lib_name in lib_names:
-    try:
-        clibgse2 = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                                       'lib', lib_name + lib_extension))
-        break
-    except Exception as e:
-        err_msg = str(e)
-        pass
-else:
-    msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (err_msg)
-    raise ImportError(msg)
-
+clibgse2 = _load_CDLL("gse2")
 
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
@@ -261,7 +237,7 @@ def uncompress_CM6(f, n_samps):
     :type n_samps: Int
     :param n_samps: Number of samples
     """
-    def read83(cbuf, vptr):
+    def read83(cbuf, vptr):  # @UnusedVariable
         line = f.readline()
         if line == b'':
             return None

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#--------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: cross_correlation.py
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.
 
@@ -16,8 +16,9 @@ Signal processing routines based on cross correlation techniques.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import warnings
@@ -414,7 +415,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         ax2.set_ylabel("correlation coefficient")
         ax2.set_ylim(-1, 1)
         ax2.legend(loc="lower right", prop={'size': "x-small"})
-        #plt.legend(loc="lower left")
+        # plt.legend(loc="lower left")
         if filename:
             fig.savefig(fname=filename)
         else:

@@ -9,12 +9,10 @@ Classes related to instrument responses.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import range
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import warnings
 import ctypes as C
 import numpy as np
@@ -151,14 +149,14 @@ class ResponseStage(ComparingObject):
             if self.output_units_description else "",
             gain=self.stage_gain,
             gain_freq=self.stage_gain_frequency,
-            decimation=
-            "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
-            "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
-            "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
-                self.decimation_input_sample_rate, self.decimation_factor,
-                self.decimation_offset, self.decimation_delay,
-                self.decimation_correction)
-            if self.decimation_input_sample_rate is not None else "")
+            decimation=(
+                "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
+                "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
+                "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
+                    self.decimation_input_sample_rate, self.decimation_factor,
+                    self.decimation_offset, self.decimation_delay,
+                    self.decimation_correction)
+                if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
 
 
@@ -1052,7 +1050,7 @@ class Response(ComparingObject):
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
         # XXX: Check if this is really not needed.
-        #output *= scale_factor[0]
+        # output *= scale_factor[0]
 
         return output, freqs
 

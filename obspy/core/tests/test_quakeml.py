@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
@@ -15,7 +12,8 @@ from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
-from obspy.core import compatibility
+
+import io
 from xml.etree.ElementTree import tostring, fromstring
 import difflib
 import math
@@ -365,6 +363,48 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
+    def test_data_used_in_moment_tensor(self):
+        """
+        Tests the data used objects in moment tensors.
+        """
+        filename = os.path.join(self.path, 'quakeml_1.2_data_used.xml')
+
+        # Test reading first.
+        catalog = readQuakeML(filename)
+        event = catalog[0]
+
+        self.assertTrue(len(event.focal_mechanisms), 2)
+        # First focmec contains only one data used element.
+        self.assertEqual(
+            len(event.focal_mechanisms[0].moment_tensor.data_used), 1)
+        du = event.focal_mechanisms[0].moment_tensor.data_used[0]
+        self.assertEqual(du.wave_type, "body waves")
+        self.assertEqual(du.station_count, 88)
+        self.assertEqual(du.component_count, 166)
+        self.assertEqual(du.shortest_period, 40.0)
+        # Second contains three. focmec contains only one data used element.
+        self.assertEqual(
+            len(event.focal_mechanisms[1].moment_tensor.data_used), 3)
+        du = event.focal_mechanisms[1].moment_tensor.data_used
+        self.assertEqual(du[0].wave_type, "body waves")
+        self.assertEqual(du[0].station_count, 88)
+        self.assertEqual(du[0].component_count, 166)
+        self.assertEqual(du[0].shortest_period, 40.0)
+        self.assertEqual(du[1].wave_type, "surface waves")
+        self.assertEqual(du[1].station_count, 96)
+        self.assertEqual(du[1].component_count, 189)
+        self.assertEqual(du[1].shortest_period, 50.0)
+        self.assertEqual(du[2].wave_type, "mantle waves")
+        self.assertEqual(du[2].station_count, 41)
+        self.assertEqual(du[2].component_count, 52)
+        self.assertEqual(du[2].shortest_period, 125.0)
+
+        # exporting back to XML should result in the same document
+        with open(filename, "rt") as fp:
+            original = fp.read()
+        processed = Pickler().dumps(catalog)
+        self._compareStrings(original, processed)
+
     def test_arrival(self):
         """
         Tests Arrival object.
@@ -612,11 +652,11 @@ class QuakeMLTestCase(unittest.TestCase):
                 continue
             # Assign clearer names.
             enum_name = module_item_name
-            enum_values = [_i.lower() for _i in list(module_item.keys())]
+            enum_values = [_i.lower() for _i in module_item.keys()]
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.items():
-            self.assertTrue(enum_name in list(all_enums.keys()))
+            self.assertTrue(enum_name in all_enums.keys())
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
@@ -710,7 +750,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # write QuakeML file
         cat = Catalog(events=[ev])
-        memfile = compatibility.BytesIO()
+        memfile = io.BytesIO()
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)
@@ -792,6 +832,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(amp.time_window.reference,
                          UTCDateTime("2007-10-10T14:40:39.055"))
 
+    @skipIf(not LXML_ETREE, "lxml too old to run this test.")
     def test_write_amplitude_time_window(self):
         """
         Tests writing an QuakeML Amplitude with TimeWindow.
@@ -810,26 +851,26 @@ class QuakeMLTestCase(unittest.TestCase):
                 lines = fh.readlines()
 
             firstline = 45
-            while "<amplitude " not in lines[firstline]:
+            while b"<amplitude " not in lines[firstline]:
                 firstline += 1
 
             got = [lines[i_].strip()
                    for i_ in range(firstline, firstline + 13)]
             expected = [
-                '<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
-                'amplitude/1/modified">',
-                '<genericAmplitude>',
-                '<value>1e-08</value>',
-                '</genericAmplitude>',
-                '<type>A</type>',
-                '<category>point</category>',
-                '<unit>m/s</unit>',
-                '<timeWindow>',
-                '<reference>2007-10-10T14:40:39.055000Z</reference>',
-                '<begin>0.0</begin>',
-                '<end>0.51424</end>',
-                '</timeWindow>',
-                '</amplitude>']
+                b'<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
+                b'amplitude/1/modified">',
+                b'<genericAmplitude>',
+                b'<value>1e-08</value>',
+                b'</genericAmplitude>',
+                b'<type>A</type>',
+                b'<category>point</category>',
+                b'<unit>m/s</unit>',
+                b'<timeWindow>',
+                b'<reference>2007-10-10T14:40:39.055000Z</reference>',
+                b'<begin>0.0</begin>',
+                b'<end>0.51424</end>',
+                b'</timeWindow>',
+                b'</amplitude>']
             self.assertEqual(got, expected)
 
     def test_write_with_extra_tags_and_read(self):

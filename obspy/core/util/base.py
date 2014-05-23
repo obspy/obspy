@@ -8,11 +8,11 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import map
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
@@ -27,15 +27,16 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css', 'y', 'pde', 'station']
+                   'realtime', 'datamark', 'css', 'y', 'pde', 'station',
+                   'ndk']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
-                            'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
+                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS']
 EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
@@ -317,8 +318,18 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
+            # If it is a file-like object, store the position and restore it
+            # later to avoid that the isFormat() functions move the file
+            # pointer.
+            if hasattr(filename, "tell") and hasattr(filename, "seek"):
+                position = filename.tell()
+            else:
+                position = None
             # check format
-            if isFormat(filename):
+            is_format = isFormat(filename)
+            if position is not None:
+                filename.seek(0, 0)
+            if is_format:
                 break
         else:
             raise TypeError('Unknown format for file %s' % filename)

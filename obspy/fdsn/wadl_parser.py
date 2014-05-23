@@ -12,21 +12,24 @@ and should be removed once the datacenters are fully standard compliant.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
-from obspy.core import compatibility
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
 
 from collections import defaultdict
+import io
 from lxml import etree
 import warnings
 
 
 class WADLParser(object):
     def __init__(self, wadl_string):
-        doc = etree.parse(compatibility.BytesIO(wadl_string)).getroot()
+        doc = etree.parse(io.BytesIO(wadl_string)).getroot()
         self.nsmap = doc.nsmap
         self._ns = self.nsmap.get(None, None)
         self.parameters = {}

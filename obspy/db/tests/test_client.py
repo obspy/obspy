@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.preview import createPreview
 from obspy.core.trace import Trace
@@ -17,8 +18,8 @@ class ClientTestCase(unittest.TestCase):
     Test suite for obspy.db.client.
     """
     # unfortunately no py2.6 syntax
-    #@classmethod
-    #def setUpClass(cls):
+    # @classmethod
+    # def setUpClass(cls):
     def __init__(self, *args, **kwargs):
         super(ClientTestCase, self).__init__(*args, **kwargs)
         # Create a in memory database only once for test suite

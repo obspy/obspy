@@ -2,16 +2,18 @@
 """
 obspy.taup - Travel time calculation tool
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
 import numpy as np
 import os
 import platform
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.libnames import _get_lib_name, _load_CDLL
 
 
-lib_name = _get_lib_name('tau')
+lib_name = _get_lib_name('tau', add_extension_suffix=False)
 
 # Import libtau in a platform specific way.
 try:
@@ -23,10 +25,7 @@ except ImportError:
     # windows using ctypes
     if platform.system() == "Windows":
         import ctypes as C
-        from distutils import sysconfig
-        lib_extension, = sysconfig.get_config_vars('SO')
-        libtau = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                        'lib', lib_name + lib_extension))
+        libtau = _load_CDLL("tau")
 
         def ttimes(delta, depth, modnam):
             delta = C.c_float(delta)
@@ -49,6 +48,8 @@ except ImportError:
                            dddp.ctypes.data_as(C.POINTER(C.c_float)))
             phase_names = np.array([p.value for p in phase_names])
             return phase_names, tt, toang, dtdd, dtdh, dddp
+    else:
+        raise
 
 
 # Directory of obspy.taup.

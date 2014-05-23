@@ -2,7 +2,10 @@
 """
 The obspy.imaging.mopad test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach

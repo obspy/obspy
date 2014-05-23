@@ -9,9 +9,10 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from pkg_resources import load_entry_point
 import obspy
 from obspy.core.util.base import ComparingObject
@@ -471,7 +472,9 @@ class Inventory(ComparingObject):
         from obspy.imaging.maps import plot_basemap
         import matplotlib.pyplot as plt
 
-        inv = self.select(time=time)
+        # The empty ones must be kept as otherwise inventory files without
+        # channels will end up with nothing.
+        inv = self.select(time=time, keep_empty=True)
 
         # lat/lon coordinates, magnitudes, dates
         lats = []

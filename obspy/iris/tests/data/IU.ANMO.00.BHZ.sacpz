@@ -3,7 +3,7 @@
 * STATION    (KSTNM): ANMO
 * LOCATION   (KHOLE): 00
 * CHANNEL   (KCMPNM): BHZ
-* CREATED           : 2011-09-15T03:00:04
+* CREATED           : 2014-05-22T17:39:42
 * START             : 2002-11-19T21:07:00
 * END               : 2008-06-30T00:00:00
 * DESCRIPTION       : Albuquerque, New Mexico, USA
@@ -17,9 +17,9 @@
 * INPUT UNIT        : M
 * OUTPUT UNIT       : COUNTS
 * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
-* INSTGAIN          : 2.204000e+03 (M/S)
+* INSTGAIN          : 1.935000e+03 (M/S)
 * COMMENT           : 
-* SENSITIVITY       : 9.244000e+08 (M/S)
+* SENSITIVITY       : 8.115970e+08 (M/S)
 * A0                : 8.608300e+04
 * **********************************
 ZEROS	3
@@ -32,6 +32,6 @@ POLES	5
 	-2.271210e+01	-2.710650e+01	
 	-4.800400e-03	+0.000000e+00	
 	-7.319900e-02	+0.000000e+00	
-CONSTANT	7.957513e+13
+CONSTANT	6.986470e+13
 
 

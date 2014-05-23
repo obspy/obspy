@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Filename: spectral_estimation.py
 #  Purpose: Various Routines Related to Spectral Estimation
 #   Author: Tobias Megies
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2011-2012 Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 Various Routines Related to Spectral Estimation
 
@@ -17,11 +17,9 @@ Various Routines Related to Spectral Estimation
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import zip
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import os
 import warnings
@@ -581,7 +579,7 @@ class PPSD():
                 t1 += (1 - self.overlap) * self.ppsd_length  # advance
 
             # enforce time limits, pad zeros if gaps
-            #tr.trim(t, t+PPSD_LENGTH, pad=True)
+            # tr.trim(t, t+PPSD_LENGTH, pad=True)
         return changed
 
     def __process(self, tr):

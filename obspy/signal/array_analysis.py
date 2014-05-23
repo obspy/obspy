@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: array.py
 #  Purpose: Functions for Array Analysis
 #   Author: Martin van Driel, Moritz Beyreuther
 #    Email: driel@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010 Martin van Driel, Moritz Beyreuther
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions for Array Analysis
 
@@ -17,11 +17,9 @@ Functions for Array Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import math
 import warnings
@@ -276,7 +274,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
             np.array([-eta * ss[2],
                      0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
 
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # define data covariance matrix Cd.
     # step 1 - define data differencing matrix D
     # dimension of D is (3*N) * (3*Nplus1)
@@ -311,7 +309,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # dim(Cd) is (3*N) * (3*N)
     Cd = np.dot(np.dot(D, Cu), D.T)
 
-    #---------------------------------------------------------
+    # ---------------------------------------------------------
     # form generalized inverse matrix g.  dim(g) is 6 x (3*N)
     Cdi = np.linalg.inv(Cd)
     AtCdiA = np.dot(np.dot(A.T, Cdi), A)
@@ -347,7 +345,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     udif = np.empty((3, N))
     udif.fill(np.NaN)
 
-    #---------------------------------------------------------------
+    # ---------------------------------------------------------------
     # here we define 4x6 Be and 3x6 Bw matrices.  these map the solution
     # ptilde to strain or to rotation.  These matrices will be used
     # in the calculation of the covariances of strain and rotation.
@@ -487,8 +485,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         ts_misfit[itime, 0:3 * N] = misfit.T
         ts_ptilde[itime, :] = ptilde.T
         #
-        #---------------------------------------------------------------
-        #populate the displacement gradient matrix U
+        # ---------------------------------------------------------------
+        # populate the displacement gradient matrix U
         U = np.zeros(9)
         U[:] = uij_vector
         U = U.reshape((3, 3))
@@ -515,7 +513,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         ts_tilt[itime] = np.sqrt(w[0] ** 2 + w[1] ** 2)
         # 7/21/06.II.6(19), amount of tilt in radians
 
-        #---------------------------------------------------------------
+        # ---------------------------------------------------------------
         #
         # Here I calculate horizontal quantities only
         # ts_dh is horizontal dilatation (+ --> expansion).
@@ -542,7 +540,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         ts_s[itime] = .5 * (max(eigvalt) - min(eigvalt))
         #
 
-    #=========================================================================
+    # =========================================================================
     #
     # (total) dilatation is a scalar times horizontal dilatation owing to there
     # free surface boundary condition
@@ -674,16 +672,16 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in y direction
     """
     # unoptimized version for reference
-    #nstat = len(geometry)  # last index are center coordinates
+    # nstat = len(geometry)  # last index are center coordinates
     #
-    #time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
-    #for k in xrange(grdpts_x):
+    # time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+    # for k in xrange(grdpts_x):
     #    sx = sll_x + k * sl_s
     #    for l in xrange(grdpts_y):
     #        sy = sll_y + l * sl_s
     #        time_shift_tbl[:,k,l] = sx * geometry[:, 0] + sy * geometry[:,1]
-    #time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
-    #return time_shift_tbl
+    # time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
+    # return time_shift_tbl
     # optimized version
     mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
     my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
@@ -889,7 +887,6 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
-    _BF, CAPON = 0, 1
     res = []
     eotr = True
 
@@ -959,14 +956,14 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         for i in range(nstat):
             for j in range(i, nstat):
                 R[:, i, j] = ft[i, :] * ft[j, :].conj()
-                if method == CAPON:
+                if method == 1:
                     R[:, i, j] /= np.abs(R[:, i, j].sum())
                 if i != j:
                     R[:, j, i] = R[:, i, j].conjugate()
                 else:
                     dpow += np.abs(R[:, i, j].sum())
         dpow *= nstat
-        if method == CAPON:
+        if method == 1:
             # P(f) = 1/(e.H R(f)^-1 e)
             for n in range(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)

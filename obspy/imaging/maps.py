@@ -8,13 +8,11 @@ Module for basemap related plotting in ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import zip
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.colorbar import Colorbar
@@ -192,7 +190,12 @@ def plot_basemap(lons, lats, size, color, labels=None,
             """
             dval = val2 - val1
             round_pos = int(round(-np.log10(1. * dval / N)))
-            delta = round(2. * dval / N, round_pos) / 2
+            # Fake negative rounding as not supported by future as of now.
+            if round_pos < 0:
+                factor = 10 ** (abs(round_pos))
+                delta = round(2. * dval / N / factor) * factor / 2
+            else:
+                delta = round(2. * dval / N, round_pos) / 2
             new_val1 = np.ceil(val1 / delta) * delta
             new_val2 = np.floor(val2 / delta) * delta
             N = (new_val2 - new_val1) / delta + 1

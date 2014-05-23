@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: tf_misfit.py
 #  Purpose: Various Time Frequency Misfit Functions
 #   Author: Martin van Driel
 #    Email: vandriel@sed.ethz.ch
 #
 # Copyright (C) 2012 Martin van Driel
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Time Frequency Misfit Functions based on [Kristekova2006]_ and
 [Kristekova2009]_.
@@ -18,8 +18,9 @@ Various Time Frequency Misfit Functions based on [Kristekova2006]_ and
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import numpy as np
 from obspy.signal import util
@@ -1015,6 +1016,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            TFEM[itr].shape[0]))
         img_TFEM = ax_TFEM.pcolormesh(x, y, TFEM[itr], cmap=cmap)
+        img_TFEM.set_rasterized(True)
         ax_TFEM.set_yscale("log")
         ax_TFEM.set_ylim(fmin, fmax)
 
@@ -1032,6 +1034,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
         x, y = np.meshgrid(t, f)
         img_TFPM = ax_TFPM.pcolormesh(x, y, TFPM[itr], cmap=cmap)
+        img_TFPM.set_rasterized(True)
         ax_TFPM.set_yscale("log")
         ax_TFPM.set_ylim(f[0], f[-1])
 
@@ -1291,6 +1294,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            TFEG[itr].shape[0]))
         img_TFEG = ax_TFEG.pcolormesh(x, y, TFEG[itr], cmap=cmap)
+        img_TFEG.set_rasterized(True)
         ax_TFEG.set_yscale("log")
         ax_TFEG.set_ylim(fmin, fmax)
 
@@ -1308,6 +1312,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
         x, y = np.meshgrid(t, f)
         img_TFPG = ax_TFPG.pcolormesh(x, y, TFPG[itr], cmap=cmap)
+        img_TFPG.set_rasterized(True)
         ax_TFPG.set_yscale("log")
         ax_TFPG.set_ylim(f[0], f[-1])
 
@@ -1533,6 +1538,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
             t, np.logspace(np.log10(fmin), np.log10(fmax),
                            TFR[itr].shape[0]))
         img_TFR = ax_TFR.pcolormesh(x, y, TFR[itr], cmap=cmap)
+        img_TFR.set_rasterized(True)
         ax_TFR.set_yscale("log")
         ax_TFR.set_ylim(fmin, fmax)
 

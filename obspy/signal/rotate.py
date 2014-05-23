@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: rotate.py
 #  Purpose: Various Seismogram Rotation Functions
 #   Author: Tobias Megies, Tom Richter, Lion Krischer
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009-2013 Tobias Megies, Tom Richter, Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Seismogram Rotation Functions
 
@@ -17,8 +17,9 @@ Various Seismogram Rotation Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from math import pi, sin, cos
 import numpy as np

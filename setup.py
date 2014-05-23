@@ -57,7 +57,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from misc import _get_lib_name  # @UnresolvedImport
+from libnames import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -79,15 +79,15 @@ KEYWORDS = [
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NERA', 'NERIES', 'observatory', 'ORFEUS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
+    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
+    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
     'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
-    'future',
+    'future>=0.12.1',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
@@ -222,6 +222,7 @@ ENTRY_POINTS = {
         'QUAKEML = obspy.core.quakeml',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
+        'NDK = obspy.ndk.core'
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -235,6 +236,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
     ],
+    'obspy.plugin.event.NDK': [
+        'isFormat = obspy.ndk.core:is_ndk',
+        'readFormat = obspy.ndk.core:read_ndk',
+        ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
     ],
@@ -323,12 +328,15 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    # support library paths containing spaces
-    def _library_dir_option(self, dir):
-        return '"/LIBPATH:%s"' % (dir)
-
+    import distutils
     from distutils.msvc9compiler import MSVCCompiler
-    MSVCCompiler.library_dir_option = _library_dir_option
+
+    # for Python 2.x only -> support library paths containing spaces
+    if distutils.__version__.startswith('2.'):
+        def _library_dir_option(self, dir):
+            return '/LIBPATH:"%s"' % (dir)
+
+        MSVCCompiler.library_dir_option = _library_dir_option
 
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):
@@ -378,7 +386,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2"), files, **kwargs)
+    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
+                         files, **kwargs)
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
@@ -397,7 +406,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
-    config.add_extension(_get_lib_name("mseed"), files, **kwargs)
+    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SEGY
     path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
@@ -407,7 +417,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy"), files, **kwargs)
+    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SIGNAL
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -417,7 +428,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal"), files, **kwargs)
+    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
+                         files, **kwargs)
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -429,11 +441,12 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    config.add_extension(_get_lib_name("evresp"), files, **kwargs)
+    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
+                         files, **kwargs)
 
     # TAUP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau")
+    libname = _get_lib_name("tau", add_extension_suffix=False)
     files = glob.glob(os.path.join(path, "*.f"))
     # compiler specific options
     kwargs = {'libraries': []}

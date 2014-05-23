@@ -22,11 +22,10 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -38,7 +37,9 @@ from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 from obspy.core.util import AttribDict
 import warnings
 from obspy.core import compatibility
+
 import inspect
+import io
 import os
 
 
@@ -102,7 +103,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(compatibility.BytesIO(string))
+        self.parser = XMLParser(io.BytesIO(string))
         return self._deserialize()
 
     def _xpath2obj(self, *args, **kwargs):
@@ -156,6 +157,7 @@ class Unpickler(object):
         elements = self._xpath("quality", parent)
         if len(elements) > 1:
             raise NotImplementedError("Only one OriginQuality allowed.")
+        # Do not add an element if it is not given in the XML file.
         elif len(elements) == 0:
             return None
         element = elements[0]
@@ -275,6 +277,7 @@ class Unpickler(object):
         elements = self._xpath("originUncertainty", parent)
         if len(elements) > 1:
             raise NotImplementedError("Only one OriginUncertainty allowed.")
+        # Do not add an element if it is not given in the XML file.
         elif len(elements) == 0:
             return None
         element = elements[0]
@@ -683,24 +686,28 @@ class Unpickler(object):
 
     def _data_used(self, parent):
         """
-        Converts an etree.Element into an DataUsed object.
+        Converts an etree.Element into a list of DataUsed objects.
 
         :type parent: etree.Element
-        :rtype: :class:`~obspy.core.event.DataUsed`
+        :rtype: list of :class:`~obspy.core.event.DataUsed`
         """
-        obj = DataUsed()
-        try:
-            sub_el = self._xpath('dataUsed', parent)[0]
-        except IndexError:
-            return obj
-        # required parameters
-        obj.wave_type = self._xpath2obj('waveType', sub_el)
-        # optional parameter
-        obj.station_count = self._xpath2obj('stationCount', sub_el, int)
-        obj.component_count = self._xpath2obj('componentCount', sub_el, int)
-        obj.shortest_period = self._xpath2obj('shortestPeriod', sub_el, float)
-        obj.longest_period = self._xpath2obj('longestPeriod', sub_el, float)
-        self._extra(sub_el, obj)
+        obj = []
+        for el in self._xpath('dataUsed', parent):
+            data_used = DataUsed()
+            # required parameters
+            data_used.wave_type = self._xpath2obj('waveType', el)
+            # optional parameter
+            data_used.station_count = \
+                self._xpath2obj('stationCount', el, int)
+            data_used.component_count = \
+                self._xpath2obj('componentCount', el, int)
+            data_used.shortest_period = \
+                self._xpath2obj('shortestPeriod', el, float)
+            data_used.longest_period = \
+                self._xpath2obj('longestPeriod', el, float)
+
+            self._extra(el, data_used)
+            obj.append(data_used)
         return obj
 
     def _moment_tensor(self, parent):
@@ -1525,9 +1532,8 @@ class Pickler(object):
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
         # optional parameter
         # Data Used
-        if moment_tensor.data_used:
+        for sub in moment_tensor.data_used:
             sub_el = etree.Element('dataUsed')
-            sub = moment_tensor.data_used
             self._str(sub.wave_type, sub_el, 'waveType')
             self._str(sub.station_count, sub_el, 'stationCount')
             self._str(sub.component_count, sub_el, 'componentCount')
@@ -1732,7 +1738,7 @@ def writeQuakeML(catalog, filename, validate=False, nsmap=None,
         nsmap_.update(nsmap)
     xml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
 
-    if validate is True and not _validate(compatibility.BytesIO(xml_doc)):
+    if validate is True and not _validate(io.BytesIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
@@ -1762,7 +1768,7 @@ def readSeisHubEventXML(filename):
     lines.insert(3, b'  <eventParameters>')
     lines.append(b'  </eventParameters>\n')
     lines.append(b'</quakeml>\n')
-    temp = compatibility.BytesIO(b''.join(lines))
+    temp = io.BytesIO(b''.join(lines))
     return readQuakeML(temp)
 
 

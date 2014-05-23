@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from copy import deepcopy
 from numpy.ma import is_masked
@@ -272,8 +272,7 @@ class TraceTestCase(unittest.TestCase):
         # returns one sample!
         tr = deepcopy(trace)
         tr._rtrim(4.995)
-        #XXX I do not understand why this fails!!!
-        #tr.verify()
+        tr.verify()
         np.testing.assert_array_equal(tr.data, np.array([0]))
         self.assertEqual(len(tr.data), 1)
         self.assertEqual(tr.stats.npts, 1)
@@ -714,7 +713,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(temp.stats.endtime, UTCDateTime(7))
         self.assertEqual(temp.stats.npts, 6)
         self.assertEqual(temp2.stats.npts, 7)
-        #self.assertEqual(temp.stats, temp2.stats)
+        # self.assertEqual(temp.stats, temp2.stats)
         np.testing.assert_array_equal(temp.data, temp2.data[:-1])
         # Create test array that allows for easy testing.
         # Check if the data is the same.
@@ -876,7 +875,7 @@ class TraceTestCase(unittest.TestCase):
         """
         Test __add__ method of the Trace object.
         """
-        #1
+        # 1
         # overlapping trace with differing data
         # Trace 1: 0000000
         # Trace 2:      1111111
@@ -893,7 +892,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
-        #2
+        # 2
         # overlapping trace with same data
         # Trace 1: 0000000
         # Trace 2:      0000000
@@ -908,7 +907,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr2 + tr1
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.zeros(12))
-        #3
+        # 3
         # contained trace with same data
         # Trace 1: 1111111111
         # Trace 2:      11
@@ -923,7 +922,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr2 + tr1
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.ones(10))
-        #4
+        # 4
         # contained trace with differing data
         # Trace 1: 0000000000
         # Trace 2:      11
@@ -940,7 +939,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 0, 0, 0])
-        #5
+        # 5
         # completely contained trace with same data until end
         # Trace 1: 1111111111
         # Trace 2: 1111111111
@@ -950,7 +949,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.ones(10))
-        #6
+        # 6
         # completely contained trace with differing data
         # Trace 1: 0000000000
         # Trace 2: 1111111111
@@ -1520,8 +1519,8 @@ class TraceTestCase(unittest.TestCase):
             .verify()\
             .filter("lowpass", freq=2.0)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            - 0.037004 - 0.037016j,
-                                            - 251.33 + 0j],
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\
@@ -1673,8 +1672,8 @@ class TraceTestCase(unittest.TestCase):
         tr.trim(trimming_starttime)
         tr.filter("lowpass", freq=2.0)
         tr.simulate(paz_remove={
-            'poles': [-0.037004 + 0.037016j, - 0.037004 - 0.037016j,
-                      - 251.33 + 0j],
+            'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                      -251.33 + 0j],
             'zeros': [0j, 0j],
             'gain': 60077000.0,
             'sensitivity': 2516778400.0})
@@ -1729,6 +1728,16 @@ class TraceTestCase(unittest.TestCase):
 
         self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
         self.assertEqual(tr.stats.processing, [info])
+
+    def test_meta(self):
+        """
+        Tests Trace.meta an alternative to Trace.stats
+        """
+        tr = Trace()
+        tr.meta = Stats({'network': 'NW'})
+        self.assertEqual(tr.stats.network, 'NW')
+        tr.stats = Stats({'network': 'BW'})
+        self.assertEqual(tr.meta.network, 'BW')
 
 
 def suite():

@@ -8,10 +8,9 @@ Decorator used in ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.util.base import NamedTemporaryFile
@@ -123,8 +122,8 @@ def skip_on_network_error(func):
         try:
             return func(*args, **kwargs)
         ###################################################
-        ## add more except clauses like this to add other
-        ## network errors that should be skipped
+        # add more except clauses like this to add other
+        # network errors that should be skipped
         except socket.timeout as e:
             if str(e) == "timed out":
                 raise unittest.SkipTest(str(e))

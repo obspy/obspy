@@ -3,7 +3,9 @@
 """
 The Rotate test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
     rotate_LQT_ZNE
@@ -33,7 +35,7 @@ class RotateTestCase(unittest.TestCase):
         f = gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz'))
         data_e = np.loadtxt(f)
         f.close()
-        #test different angles, one from each sector
+        # test different angles, one from each sector
         for angle in [30, 115, 185, 305]:
             # rotate traces
             datcorr_r, datcorr_t = rotate_NE_RT(data_n, data_e, angle)

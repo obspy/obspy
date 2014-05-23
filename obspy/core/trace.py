@@ -8,13 +8,11 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import range
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
@@ -286,6 +284,14 @@ class Trace(object):
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
 
+    @property
+    def meta(self):
+        return self.stats
+
+    @meta.setter
+    def meta(self, value):
+        self.stats = value
+
     def __eq__(self, other):
         """
         Implements rich comparison of Trace objects for "==" operator.
@@ -335,6 +341,12 @@ class Trace(object):
         Too ambiguous, throw an Error.
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __nonzero__(self):
+        """
+        No data means no trace.
+        """
+        return bool(len(self.data))
 
     def __str__(self, id_length=None):
         """
@@ -942,7 +954,12 @@ class Trace(object):
             self.data = np.empty(0, dtype=org_dtype)
             return
         elif delta > 0:
-            self.data = self.data[delta:]
+            try:
+                self.data = self.data[delta:]
+            except IndexError:
+                # a huge numbers for delta raises an IndexError
+                # here we just create empty array with same dtype
+                self.data = np.empty(0, dtype=org_dtype)
         return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):

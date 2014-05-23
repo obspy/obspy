@@ -30,12 +30,9 @@ the format is autodetected.
 See also the example in the Tutorial section:
 http://tutorial.obspy.org
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import str
-from future.builtins import map
-from future.builtins import zip
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import sys
 import os

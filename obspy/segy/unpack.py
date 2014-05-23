@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: unpack.py
 #  Purpose: Routines for unpacking SEG Y data formats.
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions that will all take a file pointer and the sample count and return a
 numpy array with the unpacked values.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.segy.util import clibsegy
 
 import ctypes as C
@@ -55,7 +56,7 @@ def unpack_4byte_IBM(file, count, endian='>'):
 
 # Old pure Python/NumPy code
 #
-#def unpack_4byte_IBM(file, count, endian='>'):
+# def unpack_4byte_IBM(file, count, endian='>'):
 #    """
 #    Unpacks 4 byte IBM floating points.
 #    """

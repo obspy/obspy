@@ -9,15 +9,17 @@ File dealing with the StationXML format.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
+import io
 from lxml import etree
 import os
 import warnings
 
 import obspy
-from obspy.core import compatibility
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
@@ -678,7 +680,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
     if validate is True:
-        buf = compatibility.BytesIO()
+        buf = io.BytesIO()
         tree.write(buf)
         buf.seek(0)
         validates, errors = validate_StationXML(buf)
@@ -771,13 +773,12 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
 
 def _float_to_str(x):
     """
-    Converts a float to str making sure no precision is lost in the string
-    representation.
+    Converts a float to str making. For most numbers this results in a
+    decimal representation (for xs:decimal) while for very large or very
+    small numbers this results in an exponential representation suitable for
+    xs:float and xs:double.
     """
-    text = ("%20f" % x).rstrip("0").lstrip()
-    if text.endswith("."):
-        text += "0"
-    return text
+    return "%s" % x
 
 
 def _write_polezero_list(parent, obj):
@@ -941,7 +942,8 @@ def _write_response(parent, resp):
         attr["resourceId"] = resp.resource_id
     parent = etree.SubElement(parent, "Response", attr)
     # write instrument sensitivity
-    if resp.instrument_sensitivity is not None:
+    if resp.instrument_sensitivity is not None and \
+            any(resp.instrument_sensitivity.__dict__.values()):
         ins_sens = resp.instrument_sensitivity
         sub = etree.SubElement(parent, "InstrumentSensitivity")
         etree.SubElement(sub, "Value").text = \
@@ -1002,9 +1004,12 @@ def _write_response_stage(parent, stage):
                        ResponseListResponseStage: "ResponseList",
                        FIRResponseStage: "FIR",
                        PolynomialResponseStage: "Polynomial"}
-        sub_ = etree.SubElement(sub, tagname_map[type(stage)],
-                                {'name': str(stage.name),
-                                 'resourceId': stage.resource_id2})
+        subel_attrs = {}
+        if stage.name is not None:
+            subel_attrs["name"] = str(stage.name)
+        if stage.resource_id2 is not None:
+            subel_attrs["resourceId"] = stage.resource_id2
+        sub_ = etree.SubElement(sub, tagname_map[type(stage)], subel_attrs)
         # write operations common to all stage types
         _obj2tag(sub_, "Description", stage.description)
         sub__ = etree.SubElement(sub_, "InputUnits")
@@ -1156,7 +1161,7 @@ def _tags2obj(element, tag, convert):
     values = []
     # make sure, only unicode
     if convert is str:
-        ### XXX: this warning if raised with python3
+        # XXX: this warning if raised with python3
         warnings.warn("overriding 'str' with 'unicode'.")
         convert = str
     for elem in element.findall(tag):

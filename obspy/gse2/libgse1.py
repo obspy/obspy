@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: libgse1.py
 #  Purpose: Python wrapper for reading GSE1 files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 """
 Low-level module internally used for handling GSE1 files
 
@@ -16,7 +16,9 @@ Low-level module internally used for handling GSE1 files
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
 from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum
@@ -61,13 +63,19 @@ def readIntegerData(fh, npts):
     Reads npts points of uncompressed integers from given file handler.
     """
     # find next DAT1 section within file
-    buf = fh.readline()
-    while buf:
-        if buf.startswith(b"DAT1"):
-            data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
-            break
+    data = []
+    in_data_section = False
+
+    while len(data) < npts:
         buf = fh.readline()
-    return data
+        if buf.startswith(b"DAT1"):
+            in_data_section = True
+            continue
+        if not in_data_section:
+            continue
+        data.extend(buf.strip().split(b" "))
+
+    return np.array(data, dtype=np.int32)
 
 
 def readHeader(fh):

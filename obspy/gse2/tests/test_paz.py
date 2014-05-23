@@ -1,10 +1,11 @@
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The paz test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.gse2 import paz
 import unittest

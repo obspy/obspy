@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
-from obspy.core import compatibility
+
+import io
 from pkg_resources import load_entry_point
 import numpy as np
 import os
@@ -96,13 +96,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             self.assertEqual(st[0].stats._format, format)
                             # BytesIO without format
                             with open(outfile, 'rb') as fp:
-                                temp = compatibility.BytesIO(fp.read())
+                                temp = io.BytesIO(fp.read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # BytesIO with format
                             with open(outfile, 'rb') as fp:
-                                temp = compatibility.BytesIO(fp.read())
+                                temp = io.BytesIO(fp.read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
@@ -231,7 +231,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
-                #for data in :
+                # for data in :
                 #    np.testing.assert_array_equal(values, original)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')

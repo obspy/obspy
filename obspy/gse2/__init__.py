@@ -59,15 +59,15 @@ attributes:
          _format: GSE2
 
 >>> for k, v in sorted(gse2.items()):
-...     print(k, v)
+...     print(k, v) #doctest: +NORMALIZE_WHITESPACE
 auxid RJOB
 calper 1.0
-coordsys 
+coordsys
 datatype CM6
 edepth -0.999
 elev -0.999
 hang -1.0
-instype 
+instype
 lat -99.0
 lon -999.0
 vang -1.0
@@ -86,8 +86,9 @@ You may export the data to the file system using the
 
 >>> st.write('GSE2-filename.gse', format='GSE2') #doctest: +SKIP
 """
-from __future__ import unicode_literals
-from __future__ import print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

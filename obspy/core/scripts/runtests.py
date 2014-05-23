@@ -43,7 +43,7 @@ the names of all available test cases.
     or
 
     >>> import obspy.core
-    >>> obspy.core.runTests(verbosity=2)"  # DOCTEST: +SKIP
+    >>> obspy.core.runTests(verbosity=2)  # DOCTEST: +SKIP
 
 (4) Run tests of module :mod:`obspy.mseed`::
 
@@ -81,14 +81,9 @@ and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import super
-from future.builtins import input
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
@@ -108,7 +103,7 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose']
+                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future']
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -123,7 +118,7 @@ Type "help" to see all available options.
 HOSTNAME = platform.node().split('.', 1)[0]
 
 
-#XXX: start of ugly monkey patch for Python 2.7
+# XXX: start of ugly monkey patch for Python 2.7
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
 class _WritelnDecorator(object):
     """
@@ -143,7 +138,7 @@ class _WritelnDecorator(object):
         self.write('\n')  # text-mode streams translate to \r\n if needed
 
 unittest._WritelnDecorator = _WritelnDecorator
-#XXX: end of ugly monkey patch
+# XXX: end of ugly monkey patch
 
 
 def _getSuites(verbosity=1, names=[]):
@@ -177,7 +172,10 @@ def _getSuites(verbosity=1, names=[]):
 
 def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
-    from obspy.core import compatibility
+    from future import standard_library
+    with standard_library.hooks():
+        import urllib.parse
+        import http.client
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -296,7 +294,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     xml_doc = etree.tostring(root)
     print()
     # send result to report server
-    params = compatibility.urlencode({
+    params = urllib.parse.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
@@ -309,14 +307,14 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = compatibility.HTTPConnection(server)
+    conn = http.client.HTTPConnection(server)
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
-        o = compatibility.urlparse(response.msg['location'])
-        conn = compatibility.HTTPConnection(o.netloc)
+        o = urllib.parse.urlparse(response.msg['location'])
+        conn = http.client.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response
         response = conn.getresponse()
@@ -526,9 +524,6 @@ def run(interactive=True):
     filter.add_option("-x", "--exclude",
                       action="append", type="str", dest="module",
                       help="exclude given module from test")
-    filter.add_option("--tutorial", default=False,
-                      action="store_true", dest="tutorial",
-                      help="add doctests in tutorial")
     parser.add_option_group(filter)
     # timing / profile options
     timing = OptionGroup(parser, "Timing/Profile Options")
@@ -560,20 +555,26 @@ def run(interactive=True):
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
-    report.add_option("--keep-images", default=False,
+    parser.add_option_group(report)
+    # other options
+    others = OptionGroup(parser, "Additional Options")
+    others.add_option("--tutorial", default=False,
+                      action="store_true", dest="tutorial",
+                      help="add doctests in tutorial")
+    others.add_option("--no-flake8", default=False,
+                      dest="no_flake8", action="store_true",
+                      help="skip code formatting test")
+    others.add_option("--keep-images", default=False,
                       dest="keep_images", action="store_true",
                       help="store images created during image comparison "
                            "tests in subfolders of baseline images")
-    report.add_option("--keep-only-failed-images", default=False,
+    others.add_option("--keep-only-failed-images", default=False,
                       dest="keep_only_failed_images", action="store_true",
                       help="when storing images created during testing, only "
                            "store failed images and the corresponding diff "
                            "images (but not images that passed the "
                            "corresponding test).")
-    report.add_option("--no-flake8", default=False,
-                      dest="no_flake8", action="store_true",
-                      help="skip code formatting test")
-    parser.add_option_group(report)
+    parser.add_option_group(others)
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:

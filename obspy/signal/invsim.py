@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
 #   Author: Moritz Beyreuther, Yannik Behr
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Yannik Behr
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Python Module for Instrument Correction (Seismology).
 PAZ (Poles and zeros) information must be given in SEED convention, correction
@@ -19,13 +19,9 @@ to m/s.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import zip
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.util.base import NamedTemporaryFile
@@ -123,7 +119,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     # at idx2 and idx3 equals one
     cos_win = np.zeros(npts)
     if halfcosine:
-        #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
+        # cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
         cos_win[idx1:idx2 + 1] = 0.5 * (
             1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /

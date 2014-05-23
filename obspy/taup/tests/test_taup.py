@@ -2,9 +2,10 @@
 """
 The obspy.taup test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.taup.taup import getTravelTimes
 import os
 import unittest
@@ -26,7 +27,7 @@ class TauPTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'sample_ttimes_ak135.lst')
         with open(filename, 'rt') as fp:
             data = fp.readlines()
-        #1
+        # 1
         tt = getTravelTimes(delta=52.474, depth=611.0, model='ak135')
         lines = data[5:29]
         self.assertEqual(len(tt), len(lines))
@@ -42,7 +43,7 @@ class TauPTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
                                    float(parts[5].strip()), 2)
-        #2
+        # 2
         tt = getTravelTimes(delta=50.0, depth=300.0, model='ak135')
         lines = data[34:59]
         self.assertEqual(len(tt), len(lines))
@@ -58,7 +59,7 @@ class TauPTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
                                    float(parts[5].strip()), 2)
-        #3
+        # 3
         tt = getTravelTimes(delta=150.0, depth=300.0, model='ak135')
         lines = data[61:88]
         self.assertEqual(len(tt), len(lines))
@@ -83,7 +84,7 @@ class TauPTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'sample_ttimes_iasp91.lst')
         with open(filename, 'rt') as fp:
             data = fp.readlines()
-        #1
+        # 1
         tt = getTravelTimes(delta=52.474, depth=611.0, model='iasp91')
         lines = data[5:29]
         self.assertEqual(len(tt), len(lines))
@@ -99,7 +100,7 @@ class TauPTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
                                    float(parts[5].strip()), 2)
-        #2
+        # 2
         tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')
         lines = data[34:59]
         self.assertEqual(len(tt), len(lines))
@@ -115,7 +116,7 @@ class TauPTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
                                    float(parts[5].strip()), 2)
-        #3
+        # 3
         tt = getTravelTimes(delta=150.0, depth=300.0, model='iasp91')
         lines = data[61:89]
         self.assertEqual(len(tt), len(lines))

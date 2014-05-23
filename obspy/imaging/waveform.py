@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: waveform.py
 #  Purpose: Waveform plotting for obspy.Stream objects
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Lion Krischer
-#---------------------------------------------------------------------
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import str
-from future.builtins import range
+# --------------------------------------------------------------------
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
-from copy import copy
-from datetime import datetime
+
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
     getMatplotlibVersion, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
+
+from copy import copy
+from datetime import datetime
+import io
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -291,7 +291,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = compatibility.BytesIO()
+                imgdata = io.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)
@@ -468,6 +468,7 @@ class WaveformPlotting(object):
                                      format="catalog",
                                      min_magnitude=events["min_magnitude"])
             except Exception as e:
+                events = None
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
                 warnings.warn(msg)
@@ -1101,10 +1102,10 @@ class WaveformPlotting(object):
                       for _i in tick_steps]
         self.axis[0].set_yticks(ticks)
         self.axis[0].set_yticklabels(ticklabels, size=self.y_labels_size)
-        #Show time zone label if request
+        # Show time zone label if request
         if self.show_y_UTC_label:
             self.axis[0].set_ylabel(label)
-        #In case of right verticals labels
+        # In case of right verticals labels
         if self.right_vertical_labels:
             yrange = self.axis[0].get_ylim()
             self.twin_x = self.axis[0].twinx()
@@ -1116,7 +1117,7 @@ class WaveformPlotting(object):
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
 
-    def plotSection(self, *args, **kwargs):
+    def plotSection(self, *args, **kwargs):  # @UnusedVariable
         """
         Plots multiple waveforms as a record section on a single plot.
         """
@@ -1201,8 +1202,8 @@ class WaveformPlotting(object):
                         self.stream[_tr].stats.coordinates.longitude,
                         self.ev_coord[0], self.ev_coord[1])
             except:
-                msg = 'Define latitude/longitude in trace.stats.coordinates' +\
-                    ' and ev_lat/ev_lon. See documentation.'
+                msg = 'Define latitude/longitude in trace.stats.' + \
+                    'coordinates and ev_lat/ev_lon. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
         if self.sect_offset_min is None:
@@ -1326,7 +1327,7 @@ class WaveformPlotting(object):
             # Normalize the whole stream
             self._tr_normfac.fill(self._tr_max_count_glob)
         else:
-            msg = 'Define a normalisation method. Valid normalisations' +\
+            msg = 'Define a normalisation method. Valid normalisations' + \
                 'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Filename: core.py
 #  Purpose: Python Class for transforming seismograms to audio WAV files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009-2012 Moritz Beyreuther
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 """
 WAV bindings to ObsPy core module.
 
@@ -16,9 +16,10 @@ WAV bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import division
-from __future__ import unicode_literals
 from obspy import Trace, Stream
 import numpy as np
 import os

@@ -40,8 +40,9 @@ Basic Usage
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from .client import Client  # NOQA
 

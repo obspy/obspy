@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import zip
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy import UTCDateTime, Stream, Trace, read
-from obspy.core import AttribDict, compatibility
-from obspy.core.util import NamedTemporaryFile
+from obspy.core import AttribDict
+from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
 from obspy.mseed.msstruct import _MSStruct
+
 import copy
 import numpy as np
 import os
-import sys
 import unittest
 import warnings
 
@@ -353,11 +350,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(len(st5), 1)
         st6 = readMSEED(testfile, sourcename='*.BLA')
         self.assertEqual(len(st6), 0)
-
-    def test_readFromStringIO(self):
-        """
-        Tests reading from a MiniSEED file in an StringIO object.
-        """
 
     def test_writeIntegers(self):
         """
@@ -974,19 +966,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
 
         # Catch output.
-        sys.stdout = compatibility.StringIO()
-        sys.stderr = compatibility.StringIO()
-        st = read(filename, verbose=2)
-        sys.stdout.seek(0, 0)
-        stdout = sys.stdout.read()
-        sys.stdout.close()
-        sys.stderr.close()
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+        with CatchOutput() as out:
+            st = read(filename, verbose=2)
 
-        self.assertTrue("calling msr_parse with" in stdout)
+        self.assertTrue("calling msr_parse with" in out.stdout)
         self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
-                        stdout)
+                        out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
 

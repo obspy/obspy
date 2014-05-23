@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import PY2
+
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
@@ -98,12 +100,12 @@ class UtilMiscTestCase(unittest.TestCase):
                 lines = fh.readlines()
             for i, line in enumerate(lines):
                 line = line.strip()
-                if line.startswith("#"):
+                if line.startswith(b"#"):
                     continue
-                if "from obspy" in line:
-                    if " import " in line:
+                if b"from obspy" in line:
+                    if b" import " in line:
                         self.fail(msg % (i, line))
-                if "import obspy" in line:
+                if b"import obspy" in line:
                     self.fail(msg % (i, line))
 
 

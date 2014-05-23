@@ -8,17 +8,16 @@ Testing utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import super
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str, PY2
-from obspy.core.util.misc import get_untracked_files_from_git
+
+from obspy.core.util.misc import get_untracked_files_from_git, CatchOutput
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core import compatibility
+
 import fnmatch
 import inspect
-import sys
 import os
 import glob
 import unittest
@@ -299,14 +298,12 @@ def get_matplotlib_defaul_tolerance():
     if getMatplotlibVersion() < [1, 3, 0]:
         return 2e-3
     else:
-        return 1
+        return 2
 
 
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
     ]
-# E265: block comment should start with '# '  (> 500 appearances)
-FLAKE8_IGNORE_CODES = ["E265"]
 
 try:
     import flake8
@@ -324,7 +321,7 @@ def check_flake8():
     # pyflakes autodetection of PY2 does not work with the future library.
     # Therefore, overwrite the pyflakes autodetection manually
     if PY2:
-        import pyflakes.checker
+        import pyflakes.checker  # @UnusedImport
         pyflakes.checker.PY2 = True
     import flake8.main
     from flake8.engine import get_style_guide
@@ -360,16 +357,13 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    flake8_style.options.ignore = \
-        tuple(set(flake8_style.options.ignore + tuple(FLAKE8_IGNORE_CODES)))
-    sys.stdout = compatibility.StringIO()
-    if PY2:
+    flake8_style.options.ignore = tuple(set(flake8_style.options.ignore))
+
+    with CatchOutput() as out:
         files = [native_str(f) for f in files]
-    report = flake8_style.check_files(files)
-    sys.stdout.seek(0)
-    message = sys.stdout.read()
-    sys.stdout = sys.__stdout__
-    return report, message
+        report = flake8_style.check_files(files)
+
+    return report, out.stdout
 
 
 if __name__ == '__main__':

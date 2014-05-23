@@ -8,17 +8,22 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.util import NamedTemporaryFile, loadtxt
-from obspy.core import compatibility
+
+import io
 import json
 import platform
+import warnings
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -89,6 +94,11 @@ class Client(object):
 
         See :mod:`obspy.iris` for all parameters.
         """
+        msg = ("Development and maintenance efforts will focus on the new "
+               "obspy.fdsn client. Please consider moving all code from using "
+               "obspy.iris to using obspy.fdsn.")
+        warnings.warn(msg, DeprecationWarning)
+
         self.base_url = base_url
         self.timeout = timeout
         self.debug = debug
@@ -96,12 +106,12 @@ class Client(object):
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
-        auth_handler = compatibility.HTTPBasicAuthHandler(password_mgr)
-        opener = compatibility.build_opener(auth_handler)
+        auth_handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib.request.build_opener(auth_handler)
         # install globally
-        compatibility.install_opener(opener)
+        urllib.request.install_opener(opener)
 
     def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
@@ -122,13 +132,14 @@ class Client(object):
         if params:
             if options:
                 options += '&'
-            options += compatibility.urlencode(params)
+            options += urllib.parse.urlencode(params)
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
             print(('\nRequesting %s' % (remoteaddr)))
-        req = compatibility.Request(url=remoteaddr, data=data, headers=headers)
-        response = compatibility.urlopen(req, timeout=self.timeout)
+        req = urllib.request.Request(url=remoteaddr, data=data,
+                                     headers=headers)
+        response = urllib.request.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -371,7 +382,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
         ...     filter=["correct", "demean", "lp=2.0"])
         >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [ -1.38267058e-06  -1.10900783e-06  -6.89020794e-07 ...
+        [ -1.57488682e-06  -1.26318002e-06  -7.84807128e-07 ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
@@ -391,7 +402,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("timeseries", param_list=filter, **kwargs)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -494,7 +505,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("resp", **kwargs)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -621,9 +632,9 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         * INPUT UNIT        : M
         * OUTPUT UNIT       : COUNTS
         * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
-        * INSTGAIN          : 2.204000e+03 (M/S)
+        * INSTGAIN          : 1.935000e+03 (M/S)
         * COMMENT           :
-        * SENSITIVITY       : 9.244000e+08 (M/S)
+        * SENSITIVITY       : 8.115970e+08 (M/S)
         * A0                : 8.608300e+04
         * **********************************
         ZEROS    3
@@ -636,7 +647,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             -2.271210e+01    -2.710650e+01
             -4.800400e-03    +0.000000e+00
             -7.319900e-02    +0.000000e+00
-        CONSTANT    7.957513e+13
+        CONSTANT    6.986470e+13
         <BLANKLINE>
         <BLANKLINE>
         <BLANKLINE>
@@ -714,7 +725,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         try:
             data = self._fetch("distaz", headers=headers, stalat=stalat,
                                stalon=stalon, evtlat=evtlat, evtlon=evtlon)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -779,7 +790,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                               "lon=%s" % lon]
                 region = self._fetch(service, param_list=param_list).strip()
                 return (code, region.decode())
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -920,7 +931,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # build up query
         try:
             data = self._fetch("traveltime", **kwargs)
-        except compatibility.HTTPError as e:
+        except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -1036,7 +1047,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt,
             ...                        output='fap')
             >>> data[0]  # frequency, amplitude, phase of first point
-            array([  1.00000000e-05,   1.20280200e+04,   1.79200700e+02])
+            array([  1.00000000e-05,   1.05599900e+04,   1.79200700e+02])
 
         (2) Returning amplitude and phase plot.
 
@@ -1110,7 +1121,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(compatibility.BytesIO(data), ndlim=1)
+                return loadtxt(io.BytesIO(data), ndlim=1)
             else:
                 return self._toFileOrData(filename, data, binary=True)
 

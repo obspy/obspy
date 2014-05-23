@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: filter.py
 #  Purpose: Various Seismogram Filtering Functions
 #   Author: Tobias Megies, Moritz Beyreuther, Yannik Behr
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009 Tobias Megies, Moritz Beyreuther, Yannik Behr
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Seismogram Filtering Functions
 
@@ -17,8 +17,9 @@ Various Seismogram Filtering Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import warnings
 from numpy import array, where, fft
@@ -31,15 +32,19 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandpass Filter.
 
-    Filter data from ``freqmin`` to ``freqmax`` using ``corners`` corners.
+    Filter data from ``freqmin`` to ``freqmax`` using ``corners``
+    corners.
+    The filter uses `func:scipy.signal.iirfilter` (for design)
+    and `func:scipy.signal.lfilter` (for applying the filter).
+
 
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners / orders.
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
-        This results in twice the number of corners but zero phase shift in
+        This results in twice the filter order but zero phase shift in
         the resulting filtered trace.
     :return: Filtered data.
     """
@@ -70,12 +75,14 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
 
     Filter data removing data between frequencies ``freqmin`` and ``freqmax``
     using ``corners`` corners.
+    The filter uses `func:scipy.signal.iirfilter` (for design)
+    and `func:scipy.signal.lfilter` (for applying the filter).
 
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Stop band low corner frequency.
     :param freqmax: Stop band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners / orders.
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -108,11 +115,13 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
+    The filter uses `func:scipy.signal.iirfilter` (for design)
+    and `func:scipy.signal.lfilter` (for applying the filter).
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners / orders.
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -141,11 +150,13 @@ def highpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data below certain frequency ``freq`` using
     ``corners`` corners.
+    The filter uses `func:scipy.signal.iirfilter` (for design)
+    and `func:scipy.signal.lfilter` (for applying the filter).
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners / orders.
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -346,7 +357,7 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
     # rp - maximum ripple of passband, rs - attenuation of stopband
     rp, rs, order = 1, 96, 1e99
     ws = freq / nyquist  # stop band frequency
-    wp = ws              # pass band frequency
+    wp = ws  # pass band frequency
     # raise for some bad scenarios
     if ws > 1:
         ws = 1.0

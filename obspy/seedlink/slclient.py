@@ -16,10 +16,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.seedlink.seedlinkexception import SeedLinkException
@@ -112,6 +111,7 @@ class SLClient(object):
         if not isinstance(numeric_level, int):
             raise ValueError('Invalid log level: %s' % loglevel)
         logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         self.slconn = None
         self.verbose = 0
@@ -139,7 +139,7 @@ class SLClient(object):
         optind = 1
         while optind < len(args):
             if args[optind] == "-V":
-                print((self.VERSION_INFO, sys.stderr))
+                print(self.VERSION_INFO, file=sys.stderr)
                 return 1
             elif args[optind] == "-h":
                 self.printUsage(False)
@@ -179,12 +179,12 @@ class SLClient(object):
                 optind += 1
                 self.infolevel = args[optind]
             elif args[optind].startswith("-"):
-                print(("Unknown option: " + args[optind], sys.stderr))
+                print("Unknown option: " + args[optind], file=sys.stderr)
                 return -1
             elif self.slconn.getSLAddress() is None:
                 self.slconn.setSLAddress(args[optind])
             else:
-                print(("Unknown option: " + args[optind], sys.stderr))
+                print("Unknown option: " + args[optind], file=sys.stderr)
                 return -1
             optind += 1
         return 0
@@ -234,7 +234,7 @@ class SLClient(object):
                 if terminate:
                     break
             except SeedLinkException as sle:
-                print((self.__class__.__name__ + ": " + sle.value))
+                print(self.__class__.__name__ + ": " + sle.value)
             if count >= sys.maxsize:
                 count = 1
                 print("DEBUG INFO: " + self.__class__.__name__ + ":", end=' ')
@@ -280,12 +280,12 @@ class SLClient(object):
 
         # can send an in-line INFO request here
         try:
-            #if (count % 100 == 0 and not self.slconn.state.expect_info):
+            # if (count % 100 == 0 and not self.slconn.state.expect_info):
             if (count % 100 == 0):
                 infostr = "ID"
                 self.slconn.requestInfo(infostr)
         except SeedLinkException as sle:
-            print((self.__class__.__name__ + ": " + sle.value))
+            print(self.__class__.__name__ + ": " + sle.value)
 
         # if here, must be a data blockette
         print(self.__class__.__name__ + ": packet seqnum:", end=' ')
@@ -313,8 +313,8 @@ class SLClient(object):
         """
         Prints the usage message for this class.
         """
-        print(("\nUsage: python %s [options] <[host]:port>" %
-              (self.__class__.__name__)))
+        print("\nUsage: python %s [options] <[host]:port>" %
+              (self.__class__.__name__))
         if concise:
             usage = "Use '-h' for detailed help"
         else:

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from lxml import etree as lxml_etree
 from xml.etree import ElementTree as xml_etree
 from obspy.core.util.xmlwrapper import XMLParser, tostring
-from obspy.core import compatibility
+import io
 import os
 import unittest
 
@@ -51,8 +52,8 @@ class XMLWrapperTestCase(unittest.TestCase):
         fh = open(self.iris_xml, 'rt')
         XMLParser(fh)
         fh.close()
-        # 4 - StringIO
-        data = compatibility.BytesIO(XML_DOC)
+        # 4 - BytesIO
+        data = io.BytesIO(XML_DOC)
         XMLParser(data)
         # 5 - with xml parsed XML documents
         xml_doc = xml_etree.parse(self.iris_xml)
@@ -186,15 +187,15 @@ class XMLWrapperTestCase(unittest.TestCase):
         """
         # xml + iris
         # XXX xml_etree is now C extension, skipping
-        #xml_doc = xml_etree.parse(self.iris_xml)
-        #p = XMLParser(xml_doc)
-        #ns = p._getFirstChildNamespace()
-        #result = p.xpath('*/event', namespace=ns)
-        #self.assertEqual(len(result), 2)
-        #self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
-        #result = p.xpath('eventParameters/event', namespace=ns)
-        #self.assertEqual(len(result), 2)
-        #self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
+        # xml_doc = xml_etree.parse(self.iris_xml)
+        # p = XMLParser(xml_doc)
+        # ns = p._getFirstChildNamespace()
+        # result = p.xpath('*/event', namespace=ns)
+        # self.assertEqual(len(result), 2)
+        # self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
+        # result = p.xpath('eventParameters/event', namespace=ns)
+        # self.assertEqual(len(result), 2)
+        # self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
@@ -207,15 +208,15 @@ class XMLWrapperTestCase(unittest.TestCase):
         self.assertTrue(isinstance(result[0], lxml_etree._Element))
         # xml + neries
         # XXX xml_etree is now C extension, skipping
-        #xml_doc = xml_etree.parse(self.neries_xml)
-        #p = XMLParser(xml_doc)
-        #ns = p._getFirstChildNamespace()
-        #result = p.xpath('*/event', namespace=ns)
-        #self.assertEqual(len(result), 3)
-        #self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
-        #result = p.xpath('eventParameters/event', namespace=ns)
-        #self.assertEqual(len(result), 3)
-        #self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
+        # xml_doc = xml_etree.parse(self.neries_xml)
+        # p = XMLParser(xml_doc)
+        # ns = p._getFirstChildNamespace()
+        # result = p.xpath('*/event', namespace=ns)
+        # self.assertEqual(len(result), 3)
+        # self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
+        # result = p.xpath('eventParameters/event', namespace=ns)
+        # self.assertEqual(len(result), 3)
+        # self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)

@@ -11,8 +11,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.seedlink.seedlinkexception import SeedLinkException
 from obspy.seedlink.slpacket import SLPacket
@@ -71,23 +72,23 @@ class SLState(object):
     KEEP_ALIVE_QUERY = 2
     BUFSIZE = 8192
 
-    state = SL_DOWN
-    query_mode = NO_QUERY
-    #AJL databuf = [str() for __idx0 in range(BUFSIZE)]
-    databuf = bytearray(BUFSIZE)
-    recptr = 0
-    sendptr = 0
-    expect_info = False
-    netto_trig = -1
-    netdly_trig = 0
-    keepalive_trig = -1
-    previous_time = 0.0
-    netto_time = 0.0
-    netdly_time = 0.0
-    keepalive_time = 0.0
-
     def __init__(self):
-        pass
+        self.state = SLState.SL_DOWN
+        self.query_mode = SLState.NO_QUERY
+        # AJL self.databuf = [str() for __idx0 in range(BUFSIZE)]
+        self.databuf = bytearray(SLState.BUFSIZE)
+        # AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
+        self.packed_buf = bytearray(SLState.BUFSIZE)
+        self.recptr = 0
+        self.sendptr = 0
+        self.expect_info = False
+        self.netto_trig = -1
+        self.netdly_trig = 0
+        self.keepalive_trig = -1
+        self.previous_time = 0.0
+        self.netto_time = 0.0
+        self.netdly_time = 0.0
+        self.keepalive_time = 0.0
 
     def getPacket(self):
         """
@@ -138,7 +139,7 @@ class SLState(object):
             raise SeedLinkException(msg)
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ERRORSIGNATURE)].lower() == \
-            SLPacket.ERRORSIGNATURE.lower()
+            SLPacket.ERRORSIGNATURE.lower()  # @UndefinedVariable
 
     def isEnd(self):
         """
@@ -153,7 +154,7 @@ class SLState(object):
             raise SeedLinkException(msg)
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ENDSIGNATURE)].lower() == \
-            SLPacket.ENDSIGNATURE.lower()
+            SLPacket.ENDSIGNATURE.lower()  # @UndefinedVariable
 
     def packetIsInfo(self):
         """
@@ -169,7 +170,7 @@ class SLState(object):
             raise SeedLinkException(msg)
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.INFOSIGNATURE)].lower() == \
-            SLPacket.INFOSIGNATURE.lower()
+            SLPacket.INFOSIGNATURE.lower()  # @UndefinedVariable
 
     def incrementSendPointer(self):
         """
@@ -178,15 +179,12 @@ class SLState(object):
         """
         self.sendptr += SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
 
-    #AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
-    packed_buf = bytearray(BUFSIZE)
-
     def packDataBuffer(self):
         """
         Packs the buffer by removing all sent packets and shifting remaining
         bytes to beginning of buffer.
         """
-        #AJL System.arraycopy(self.databuf, self.sendptr, self.packed_buf, 0,
+        # AJL System.arraycopy(self.databuf, self.sendptr, self.packed_buf, 0,
         #                     self.recptr - self.sendptr)
         self.packed_buf[0:self.recptr - self.sendptr] = \
             self.databuf[self.sendptr: self.recptr]
@@ -196,14 +194,13 @@ class SLState(object):
         self.recptr -= self.sendptr
         self.sendptr = 0
 
-    def appendBytes(self, bytes):
+    def appendBytes(self, bytes_):
         """
         Appends bytes to the receive buffer after the last received data.
         """
-        if self.bytesRemaining() < len(bytes):
+        if self.bytesRemaining() < len(bytes_):
             msg = "not enough bytes remaining in buffer to append new bytes"
             raise SeedLinkException(msg)
-        ## for-while
-        for i in range(len(bytes)):
-            self.databuf[self.recptr] = bytes[i]
-            self.recptr += 1
+
+        self.databuf[self.recptr:self.recptr + len(bytes_)] = bytes_
+        self.recptr += len(bytes_)

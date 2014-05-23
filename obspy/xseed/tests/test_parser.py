@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from lxml import etree
-import numpy as np
 import obspy
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core import compatibility
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
+
 import gzip
+import io
+from lxml import etree
+import numpy as np
 import os
 import unittest
 import warnings
@@ -325,7 +324,7 @@ class ParserTestCase(unittest.TestCase):
                 xseed_string = parser2.getXSEED(version=version)
                 del parser2
                 # Validate XSEED.
-                doc = etree.parse(compatibility.BytesIO(xseed_string))
+                doc = etree.parse(io.BytesIO(xseed_string))
                 self.assertTrue(xmlschema.validate(doc))
                 del doc
                 parser3 = Parser(xseed_string)
@@ -393,7 +392,7 @@ class ParserTestCase(unittest.TestCase):
         # And the same for yet another dataless file
         #
         filename = os.path.join(self.path, 'nied.dataless.gz')
-        f = compatibility.BytesIO(gzip.open(filename).read())
+        f = io.BytesIO(gzip.open(filename).read())
         sp = Parser(f)
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
@@ -510,7 +509,7 @@ class ParserTestCase(unittest.TestCase):
         """
         Tests RESP file creation from XML-SEED.
         """
-        ### example 1
+        # 1
         # parse Dataless SEED
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
@@ -522,7 +521,7 @@ class ParserTestCase(unittest.TestCase):
             sp2 = Parser(tempfile)
             # create RESP files
             sp2.getRESP()
-        ### example 2
+        # 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp1 = Parser(filename)

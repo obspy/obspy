@@ -1,17 +1,23 @@
 0.10.0:
  - general:
-   * support for Python 3.3
+   * support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
+ - obspy.fdsn:
+   * WADL files are cached per Python process.
+   * Bulk station downloading using POST requests.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.ndk:
+   * New submodule able to read NDK files from the Global CMT project.
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
+   * add get_coordinates method to inventory and network objects (see #740)
 
 0.9.2:
  - general:
@@ -27,16 +33,36 @@
    * bugfix: channel code now correctly read (4 hex char)
    * bugfix: channels can have different sampling rate
    * improvement: datawide 0.5 (4 bits) encoding now supported
+   * century of data can now be specified
  - obspy.fdsn:
    * time out errors get raised properly now. timeout can be specified at
      Client initialization now. (see #717)
    * for advanced users: endpoints of any particular service can now be
-     specified explicitely (see #754)
+     specified explicitly (see #754)
+   * new known FDSN providers: 'ORFEUS', 'GFZ', 'NERIES'
+   * more robust WADL parser
+   * the `attach_response=True` argument now uses a faster approach to
+     download the station data
  - obspy.imaging:
    * Fixing waveform plotting.
+ - obspy.sac:
+   * SAC files with two digit year header field are now interpreted as
+     "19xx", same as done by SAC (see #779)
+ - obspy.seedlink:
+   * bugfix: different instances of a SeedLink connection had a shared
+     state (see #561)
+   * multiple smaller bugfixes (see #777)
+   * trailing null characters are now stripped from INFO responses (see #778)
+ - obspy.seg2:
+   * numbers are now also recognized as months
+   * now filters non-printable chars from the header enabling it to read some
+     more files
+ - obspy.signal:
+   * the TF misfits now correctly use logarithmic axes instead of scaling an
+     image
  - obspy.station:
    * some bugfixes in the obspy.station object classes (see #710)
-   * add get_coordinates method to inventory and network objects (see #740)
+   * more robust writing of StationXML in case of missing elements
  - obspy.taup:
    * bugfix: avoid a bug that caused multiple calls to taup to result in
      spurious unexpected results (see #728)
@@ -103,8 +129,8 @@
      waveform files
    * check if ndim == 1 when setting Trace.data and raise if necessary,
      see #695
-   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
-     WaveformStreamID as specified in QuakeML docs (#633)
+   * change waveform_id parameter in obspy.core.event.FocalMechanism to list
+     of WaveformStreamID as specified in QuakeML docs (#633)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data

@@ -3,31 +3,23 @@ python:
   - 2.6
   - 2.7
   - 3.3
-virtualenv:
-  system_site_packages: true
+  - 3.4
 before_install:
   - lsb_release -a # get info on the operating system
   - sudo apt-get update
   - sudo apt-get install -qq gfortran
-  # numpy is installed anyway, even on py!=2.7 where system site-packages are never available. keep it here for completeness
-  - sudo apt-get install -qq python-numpy
-  - sudo apt-get install -qq libgeos-3.2.2 libgeos-dev libgeos-c1  # for matplotlib basemap
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy lxml sqlalchemy m2crypto; pip install mock; fi
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy scipy suds-jurko lxml sqlalchemy m2crypto mock nose
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install --use-mirrors geographiclib
   - pip install --use-mirrors suds-jurko
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib==1.3.1
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
-  #- pip install https://github.com/megies/basemap/archive/v1.0.7_geos_link_fix.zip
   - pip install --use-mirrors flake8
-  # Future 0.11.3 has some issues and essentially does not work under Python 2.x. Older
-  # versions have some other issues. The master more or less resolves them.
-  # XXX: Replace once a new future version has been released!
-  - pip install --use-mirrors https://github.com/PythonCharmers/python-future/archive/master.zip
+  - pip install --use-mirrors future
   - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
