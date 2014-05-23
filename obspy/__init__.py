@@ -30,6 +30,7 @@ for seismology.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
@@ -65,6 +66,7 @@ else:
 
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "readEvents", "Catalog", "read_inventory"]
+__all__ = [native_str(i) for i in __all__]
 
 
 if __name__ == '__main__':
