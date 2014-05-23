@@ -717,6 +717,29 @@ class PPSD():
         percentile_values = self.spec_bins[percentile_values]
         return (self.period_bin_centers, percentile_values)
 
+    def get_mode(self):
+        """
+        Returns periods and mode psd values (i.e. for each frequency the psd
+        value with the highest probability is selected).
+
+        :returns: (periods, psd mode values)
+        """
+        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
+        mode_ = db_bin_centers[self.hist_stack.argmax(axis=1)]
+        return (self.period_bin_centers, mode_)
+
+    def get_mean(self):
+        """
+        Returns periods and mean psd values (i.e. for each frequency the mean
+        psd value is selected).
+
+        :returns: (periods, psd mean values)
+        """
+        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
+        mean_ = (self.hist_stack * db_bin_centers /
+                 len(self.times_used)).sum(axis=1)
+        return (self.period_bin_centers, mean_)
+
     def __get_normalized_cumulative_histogram(self):
         """
         Returns the current histogram in a cumulative version normalized per
@@ -793,7 +816,8 @@ class PPSD():
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
-             max_percentage=30, period_lim=(0.01, 179)):
+             max_percentage=30, period_lim=(0.01, 179), show_mode=False,
+             show_mean=False):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -825,6 +849,10 @@ class PPSD():
         :param max_percentage: Maximum percentage to adjust the colormap.
         :type period_lim: tuple of 2 floats (optional)
         :param period_lim: Period limits to show in histogram.
+        :type show_mode: bool (optional)
+        :param show_mode: Enable/disable plotting of mode psd values.
+        :type show_mean: bool (optional)
+        :param show_mean: Enable/disable plotting of mean psd values.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -861,6 +889,14 @@ class PPSD():
                     self.get_percentile(percentile=percentile,
                                         hist_cum=hist_cum)
                 ax.plot(periods, percentile_values, color="black")
+
+        if show_mode:
+            periods, mode_ = self.get_mode()
+            ax.plot(periods, mode_, color="black")
+
+        if show_mean:
+            periods, mean_ = self.get_mean()
+            ax.plot(periods, mean_, color="black")
 
         if show_noise_models:
             model_periods, high_noise = get_NHNM()
