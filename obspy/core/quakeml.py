@@ -36,7 +36,6 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 from obspy.core.util import AttribDict
 import warnings
-from obspy.core import compatibility
 
 import inspect
 import io
