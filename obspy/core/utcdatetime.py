@@ -12,7 +12,7 @@ import datetime
 import time
 
 
-TIMESTAMP0 = datetime.datetime(1970, 1, 1)
+TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
 
 class UTCDateTime(object):
@@ -491,8 +491,7 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        return datetime.datetime.utcfromtimestamp(0) + \
-            datetime.timedelta(seconds=self.timestamp)
+        return TIMESTAMP0 + datetime.timedelta(seconds=self.timestamp)
 
     datetime = property(_getDateTime)
 
