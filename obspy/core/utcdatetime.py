@@ -490,7 +490,7 @@ class UTCDateTime(object):
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
         # datetime.utcfromtimestamp will cut off but not round
-        # avoid through adding timedelta - also avoids 2038 problem
+        # avoid through adding timedelta - also avoids the year 2038 problem
         return datetime.datetime.utcfromtimestamp(0) + \
             datetime.timedelta(seconds=self.timestamp)
 
