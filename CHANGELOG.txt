@@ -17,6 +17,12 @@
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
 
+0.9.3:
+ - obspy.core:
+   * fixed a problem with UTCDateTime with timestamps of far future
+     dates (larger than 2038, often seen in StationXML end dates,
+     see #805)
+
 0.9.2:
  - general:
    * fix installation on CygWin (see #755)
