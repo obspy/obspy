@@ -895,7 +895,7 @@ class SeedLinkConnection(object):
                             else:
                                 slpacket = self.state.getPacket()
                                 # construct info String
-                                type = slpacket.getType()
+                                packet_type = slpacket.getType()
                                 # print "DEBUG: slpacket.getType():",
                                 # print slpacket.getType()
                                 # print "DEBUG: SLPacket.TYPE_SLINF:",
@@ -905,7 +905,7 @@ class SeedLinkConnection(object):
                                 data = slpacket.getStringPayload()
                                 self.info_response_buffer.write(data)
 
-                                if (type == SLPacket.TYPE_SLINFT):
+                                if (packet_type == SLPacket.TYPE_SLINFT):
                                     # Terminated INFO response packet
                                     # -> build complete INFO response string,
                                     #    strip NULL bytes from the end
