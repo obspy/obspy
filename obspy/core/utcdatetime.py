@@ -489,7 +489,10 @@ class UTCDateTime(object):
         >>> dt.datetime
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        return datetime.datetime.utcfromtimestamp(self.timestamp)
+        # datetime.utcfromtimestamp will cut off but not round
+        # avoid through adding timedelta - also avoids 2038 problem
+        return datetime.datetime.utcfromtimestamp(0) + \
+            datetime.timedelta(seconds=self.timestamp)
 
     datetime = property(_getDateTime)
 
