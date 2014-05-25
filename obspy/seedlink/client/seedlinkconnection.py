@@ -902,8 +902,7 @@ class SeedLinkConnection(object):
                                 # print SLPacket.TYPE_SLINF
                                 # print "DEBUG: SLPacket.TYPE_SLINFT:",
                                 # print SLPacket.TYPE_SLINFT
-                                lenmsr = len(slpacket.msrecord)
-                                data = slpacket.msrecord[64:lenmsr]
+                                data = slpacket.getStringPayload()
                                 self.info_response_buffer.write(data)
 
                                 if (type == SLPacket.TYPE_SLINFT):
