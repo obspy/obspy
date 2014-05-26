@@ -22,13 +22,13 @@ class SLPacketTestCase(unittest.TestCase):
             data = f.read()
 
         return data
-    
+
     def test_getStringPayload(self):
         """
         Test parsing of SeedLink MiniSEED payload as XML string.
-        
+
         The GEOFON and the IRIS Ringserver packets differ in the size of bytes
-        used for MiniSEED headers (8 vs. 7 bytes). 
+        used for MiniSEED headers (8 vs. 7 bytes).
         """
         # Check the INFO CAPABILITIES response from GEOFON
         packet = self._read_data_file('info_packet_geofon.slink')
