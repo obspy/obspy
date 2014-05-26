@@ -35,7 +35,7 @@ class SLPacketTestCase(unittest.TestCase):
         packet = SLPacket(packet, 0)
         payload = packet.getStringPayload()
 
-        xml = '<?xml version="1.0"?>'
+        xml = b'<?xml version="1.0"?>'
         self.assertTrue(payload.startswith(xml))
         self.assertEqual(len(payload), 368)
 
@@ -44,7 +44,7 @@ class SLPacketTestCase(unittest.TestCase):
         packet = SLPacket(packet, 0)
         payload = packet.getStringPayload()
 
-        xml = '<?xml version="1.0" encoding="utf-8"?>'
+        xml = b'<?xml version="1.0" encoding="utf-8"?>'
         self.assertTrue(payload.startswith(xml))
         self.assertEqual(len(payload), 456)
 
