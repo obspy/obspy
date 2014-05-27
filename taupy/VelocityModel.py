@@ -74,6 +74,24 @@ class VelocityModel(object):
         discontinuities.append(self.layers[-1].botDepth)
 
         return discontinuities
+        
+    def getVelocityLayerClone(self, layerNum):
+        """ generated source for method getVelocityLayerClone """
+        return (self.layer.get(layerNum)).clone()
+
+    def getVelocityLayer(self, layerNum):
+        """ generated source for method getVelocityLayer """
+        return self.layer.get(layerNum)
+        
+
+	#  Returns the number of layers in this velocity model. 
+    def getNumLayers(self):
+        """ generated source for method getNumLayers """
+        return len(self.layer)
+
+    def getLayers(self):
+        """ generated source for method getLayers """
+        return self.layer.toArray([None]*0)
 
     def layerNumberAbove(self, depth):
         """
@@ -111,84 +129,46 @@ class VelocityModel(object):
         layer = self.layers[self.layerNumberAbove(depth)]
         return layer.evaluateAt(depth, materialProperty)
 
-    #
-    #      * returns the value of the given material property, usually P or S
-    #      * velocity, at the given depth. Note this returns the value at the top of
-    #      * the lower layer if the depth happens to be at a layer boundary.
-    #      *
-    #      * @return the value of the given material property
-    #      * @exception NoSuchLayerException
-    #      *                occurs if no layer contains the given depth.
-    #      * @exception NoSuchMatPropException
-    #      *                occurs if the material property is not recognized.
-    #
     def evaluateBelow(self, depth, materialProperty):
-        """ generated source for method evaluateBelow """
-        tempLayer = VelocityLayer()
-        tempLayer = self.getVelocityLayer(self.layerNumberBelow(depth))
-        return tempLayer.evaluateAt(depth, materialProperty)
+        """
+        returns the value of the given material property, usually P or S
+        velocity, at the given depth. Note this returns the value at the top
+        of the lower layer if the depth happens to be at a layer boundary.
 
-    #
-    #      * returns the value of the given material property, usually P or S
-    #      * velocity, at the top of the given layer.
-    #      *
-    #      * @return the value of the given material property
-    #      * @exception NoSuchMatPropException
-    #      *                occurs if the material property is not recognized.
-    #
-    def evaluateAtTop(self, layerNumber, materialProperty):
-        """ generated source for method evaluateAtTop """
-        tempLayer = VelocityLayer()
-        tempLayer = self.getVelocityLayer(layerNumber)
-        return tempLayer.evaluateAtTop(materialProperty)
+        :returns: the value of the given material property
+        """
+        layer = self.layers[self.layerNumberBelow(depth)]
+        return layer.evaluateAt(depth, materialProperty)
 
-    #
-    #      * returns the value of the given material property, usually P or S
-    #      * velocity, at the bottom of the given layer.
-    #      *
-    #      * @return the value of the given material property
-    #      * @exception NoSuchMatPropException
-    #      *                occurs if the material property is not recognized.
-    #
-    def evaluateAtBottom(self, layerNumber, materialProperty):
-        """ generated source for method evaluateAtBottom """
-        tempLayer = VelocityLayer()
-        tempLayer = self.getVelocityLayer(layerNumber)
-        return tempLayer.evaluateAtBottom(materialProperty)
-
-    #
-    #      * returns the depth at the top of the given layer.
-    #      *
-    #      * @return the depth.
-    #
+    # These two seem to be just WRONG even in the java code, let's see if they're necessary for anything before fixing
+    # def evaluateAtTop(self, layerNumber, materialProperty):
+    #    """ 
+    #    Returns the value of the given material property, usually P or S
+    #	velocity, at the top of the given layer.
+    #	"""
+    #    tempLayer = VelocityLayer()
+    #    tempLayer = self.getVelocityLayer(layerNumber)
+    #    return tempLayer.evaluateAtTop(materialProperty)
+    # def evaluateAtBottom(self, layerNumber, materialProperty):
+  
     def depthAtTop(self, layerNumber):
-        """ generated source for method depthAtTop """
-        tempLayer = VelocityLayer()
-        tempLayer = self.getVelocityLayer(layerNumber)
-        return tempLayer.getTopDepth()
-
-    #
-    #      * returns the depth at the bottom of the given layer.
-    #      *
-    #      * @return the depth.
-    #      * @exception NoSuchMatPropException
-    #      *                occurs if the material property is not recognized.
-    #
+        """ returns the depth at the top of the given layer. """
+        layer = self.layers[layerNumber]
+        return layer.getTopDepth()
+        
     def depthAtBottom(self, layerNumber):
-        """ generated source for method depthAtBottom """
-        tempLayer = VelocityLayer()
-        tempLayer = self.getVelocityLayer(layerNumber)
-        return tempLayer.getBotDepth()
+        """ returns the depth at the bottom of the given layer. """
+        layer = self.layers[layerNumber]
+        return layer.getBotDepth()
 
-    #
-    #      * replaces layers in the velocity model with new layers. The number of old
-    #      * and new layers need not be the same. @param matchTop false if the top
-    #      * should be a discontinuity, true if the top velocity should be forced to
-    #      * match the existing velocity at the top. @param matchBot similar for the
-    #      * bottom.
-    #
     def replaceLayers(self, newLayers, name, matchTop, matchBot):
-        """ generated source for method replaceLayers """
+        """ 
+        replaces layers in the velocity model with new layers. The number of old
+        and new layers need not be the same. @param matchTop false if the top
+    	should be a discontinuity, true if the top velocity should be forced to
+    	match the existing velocity at the top. @param matchBot similar for the
+    	bottom.
+    	"""
         topLayerNum = self.layerNumberBelow(newLayers[0].getTopDepth())
         topLayer = self.getVelocityLayer(topLayerNum)
         botLayerNum = self.layerNumberAbove(newLayers[len(newLayers)].getBotDepth())
@@ -235,7 +215,7 @@ class VelocityModel(object):
         while len(newLayers):
             outLayers.add(topLayerNum + i, newLayers[i])
             i += 1
-        outVMod = VelocityModel(name, self.getRadiusOfEarth(), self.getMohoDepth(), self.getCmbDepth(), self.getIocbDepth(), self.getMinRadius(), self.getMaxRadius(), self.getSpherical(), outLayers)
+        outVMod = VelocityModel(name, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), self.spherical(), outLayers)
         outVMod.fixDisconDepths()
         outVMod.validate()
         return outVMod
@@ -330,7 +310,7 @@ class VelocityModel(object):
     def __str__(self):
         """ generated source for method toString """
         desc = "modelName=" + str(self.modelName) + "\n" + "\n radiusOfEarth=" + str(self.radiusOfEarth) + "\n mohoDepth=" + str(self.mohoDepth) + "\n cmbDepth=" + str(self.cmbDepth) + "\n iocbDepth=" + str(self.iocbDepth) + "\n minRadius=" + str(self.minRadius) + "\n maxRadius=" + str(self.maxRadius) + "\n spherical=" + str(self.isSpherical)
-        desc += "\ngetNumLayers()=" + str(self.getNumLayers()) + "\n"
+        # desc += "\ngetNumLayers()=" + str(self.getNumLayers()) + "\n"
         return desc
 
     def print_(self):
@@ -653,4 +633,4 @@ class VelocityModel(object):
             newLayer = VelocityLayer(i, self.radiusOfEarth * Math.log(oldLayer.getTopDepth() / self.radiusOfEarth), self.radiusOfEarth * Math.log(oldLayer.getBotDepth() / self.radiusOfEarth), self.radiusOfEarth * oldLayer.getTopPVelocity() / oldLayer.getTopDepth(), self.radiusOfEarth * oldLayer.getBotPVelocity() / oldLayer.getBotDepth(), self.radiusOfEarth * oldLayer.getTopSVelocity() / oldLayer.getTopDepth(), self.radiusOfEarth * oldLayer.getBotSVelocity() / oldLayer.getBotDepth())
             layers.add(newLayer)
             i += 1
-        return VelocityModel(self.modelName, self.getRadiusOfEarth(), self.getMohoDepth(), self.getCmbDepth(), self.getIocbDepth(), self.getMinRadius(), self.getMaxRadius(), spherical, layers)
+        return VelocityModel(self.modelName, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), spherical, layers)
