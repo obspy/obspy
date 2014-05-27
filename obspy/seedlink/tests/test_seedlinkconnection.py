@@ -15,7 +15,7 @@ import unittest
 
 class SeedLinkConnectionTestCase(unittest.TestCase):
 
-    def test_issueXXX(self):
+    def test_issue777(self):
         """
         Regression tests for Github issue #777
         """
