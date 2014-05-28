@@ -74,19 +74,15 @@ class VelocityModel(object):
         discontinuities.append(self.layers[-1].botDepth)
 
         return discontinuities
-        
-    def getVelocityLayerClone(self, layerNum):
-        """ generated source for method getVelocityLayerClone """
-        return (self.layer.get(layerNum)).clone()
 
-    def getVelocityLayer(self, layerNum):
-        """ generated source for method getVelocityLayer """
-        return self.layer.get(layerNum)
-        
+#	No idea what this is meant to do. The self.layer.get(layerNum)
+#	has been replaced by self.layers[i] in a similar method.        
+#    def getVelocityLayerClone(self, layerNum):
+#        """ generated source for method getVelocityLayerClone """
+#        return (self.layer.get(layerNum)).clone()
 
-	#  Returns the number of layers in this velocity model. 
     def getNumLayers(self):
-        """ generated source for method getNumLayers """
+        """ Returns the number of layers in this velocity model. """
         return len(self.layer)
 
     def getLayers(self):
@@ -147,78 +143,80 @@ class VelocityModel(object):
     #	velocity, at the top of the given layer.
     #	"""
     #    tempLayer = VelocityLayer()
-    #    tempLayer = self.getVelocityLayer(layerNumber)
+    #    tempLayer = self.layers[layerNumber]
     #    return tempLayer.evaluateAtTop(materialProperty)
     # def evaluateAtBottom(self, layerNumber, materialProperty):
   
     def depthAtTop(self, layerNumber):
         """ returns the depth at the top of the given layer. """
         layer = self.layers[layerNumber]
-        return layer.getTopDepth()
+        return layer.topDepth
         
     def depthAtBottom(self, layerNumber):
         """ returns the depth at the bottom of the given layer. """
         layer = self.layers[layerNumber]
-        return layer.getBotDepth()
+        return layer.botDepth
 
-    def replaceLayers(self, newLayers, name, matchTop, matchBot):
-        """ 
-        replaces layers in the velocity model with new layers. The number of old
-        and new layers need not be the same. @param matchTop false if the top
-    	should be a discontinuity, true if the top velocity should be forced to
-    	match the existing velocity at the top. @param matchBot similar for the
-    	bottom.
-    	"""
-        topLayerNum = self.layerNumberBelow(newLayers[0].getTopDepth())
-        topLayer = self.getVelocityLayer(topLayerNum)
-        botLayerNum = self.layerNumberAbove(newLayers[len(newLayers)].getBotDepth())
-        botLayer = self.getVelocityLayer(botLayerNum)
-        outLayers = ArrayList()
-        outLayers.addAll(self.layer)
-        try:
-            if matchTop:
-                newLayers[0] = VelocityLayer(newLayers[0].getLayerNum(), newLayers[0].getTopDepth(), newLayers[0].getBotDepth(), topLayer.evaluateAt(newLayers[0].getTopDepth(), 'P'), newLayers[0].getBotPVelocity(), topLayer.evaluateAt(newLayers[0].getTopDepth(), 'S'), newLayers[0].getBotSVelocity(), newLayers[0].getTopDensity(), newLayers[0].getBotDensity(), newLayers[0].getTopQp(), newLayers[0].getBotQp(), newLayers[0].getTopQs(), newLayers[0].getBotQs())
-            if matchBot:
-                newLayers[len(newLayers)] = VelocityLayer(end.getLayerNum(), end.getTopDepth(), end.getBotDepth(), end.getTopPVelocity(), botLayer.evaluateAt(newLayers[len(newLayers)].getBotDepth(), 'P'), end.getTopSVelocity(), botLayer.evaluateAt(newLayers[len(newLayers)].getBotDepth(), 'S'), end.getTopDensity(), end.getBotDensity(), end.getTopQp(), end.getBotQp(), end.getTopQs(), end.getBotQs())
-        except NoSuchMatPropException as e:
-            raise RuntimeException(e)
-        if topLayer.getBotDepth() > newLayers[0].getTopDepth():
-            try:
-                topLayer = VelocityLayer(topLayer.getLayerNum(), topLayer.getTopDepth(), newLayers[0].getTopDepth(), topLayer.getTopPVelocity(), topLayer.evaluateAt(newLayers[0].getTopDepth(), 'P'), topLayer.getTopSVelocity(), topLayer.evaluateAt(newLayers[0].getTopDepth(), 'S'), topLayer.getTopDensity(), topLayer.getBotDensity())
-                outLayers.set(topIndex, topLayer)
-            except NoSuchMatPropException as e:
-                raise RuntimeException(e)
-            newVLayer.setTopPVelocity(topLayer.getBotPVelocity())
-            newVLayer.setTopSVelocity(topLayer.getBotSVelocity())
-            newVLayer.setTopDepth(topLayer.getBotDepth())
-            outLayers.add(topLayerNum + 1, newVLayer)
-            botLayerNum += 1
-            topLayerNum += 1
-        if botLayer.getBotDepth() > newLayers[len(newLayers)].getBotDepth():
-            try:
-                botLayer.setBotPVelocity(botLayer.evaluateAt(newLayers[len(newLayers)].getBotDepth(), 'P'))
-                botLayer.setBotSVelocity(botLayer.evaluateAt(newLayers[len(newLayers)].getBotDepth(), 'S'))
-                botLayer.setBotDepth(newLayers[len(newLayers)].getBotDepth())
-            except NoSuchMatPropException as e:
-                System.err.println("Caught NoSuchMatPropException: " + e.getMessage())
-                e.printStackTrace()
-            newVLayer.setTopPVelocity(botLayer.getBotPVelocity())
-            newVLayer.setTopSVelocity(botLayer.getBotSVelocity())
-            newVLayer.setTopDepth(botLayer.getBotDepth())
-            outLayers.add(botLayerNum + 1, newVLayer)
-            botLayerNum += 1
-        i = topLayerNum
-        while i <= botLayerNum:
-            outLayers.remove(topLayerNum)
-            i += 1
-        i = 0
-        while len(newLayers):
-            outLayers.add(topLayerNum + i, newLayers[i])
-            i += 1
-        outVMod = VelocityModel(name, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), self.spherical(), outLayers)
-        outVMod.fixDisconDepths()
-        outVMod.validate()
-        return outVMod
+    # TO DO#####################################
+    # def replaceLayers(self, newLayers, name, matchTop, matchBot):
+    #     """ 
+    #     replaces layers in the velocity model with new layers. The number of old
+    #     and new layers need not be the same. @param matchTop false if the top
+    # 	should be a discontinuity, true if the top velocity should be forced to
+    # 	match the existing velocity at the top. @param matchBot similar for the
+    # 	bottom.
+    # 	"""
+    #     topLayerNum = self.layerNumberBelow(newLayers[0].topDepth)
+    #     topLayer = self.layers[topLayerNum]
+    #     botLayerNum = self.layerNumberAbove(newLayers[len(newLayers)].botDepth)
+    #     botLayer = self.layers[botLayerNum]
+    #     outLayers = ArrayList()
+    #     outLayers.addAll(self.layer)
+    #     try:
+    #         if matchTop:
+    #             newLayers[0] = VelocityLayer(newLayers[0].getLayerNum(), newLayers[0].topDepth, newLayers[0].botDepth, topLayer.evaluateAt(newLayers[0].topDepth, 'P'), newLayers[0].botPVelocity, topLayer.evaluateAt(newLayers[0].topDepth, 'S'), newLayers[0].botSVelocity, newLayers[0].topDensity, newLayers[0].botDensity, newLayers[0].topQp, newLayers[0].botQp, newLayers[0].topQs, newLayers[0].botQs)
+    #         if matchBot:
+    #             newLayers[len(newLayers)] = VelocityLayer(end.getLayerNum(), end.topDepth, end.botDepth, end.topPVelocity, botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'P'), end.topSVelocity, botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'S'), end.topDensity, end.botDensity, end.topQp, end.botQp, end.topQs, end.botQs)
+    #     except NoSuchMatPropException as e:
+    #         raise RuntimeException(e)
+    #     if topLayer.botDepth > newLayers[0].topDepth:
+    #         try:
+    #             topLayer = VelocityLayer(topLayer.getLayerNum(), topLayer.topDepth, newLayers[0].topDepth, topLayer.topPVelocity, topLayer.evaluateAt(newLayers[0].topDepth, 'P'), topLayer.topSVelocity, topLayer.evaluateAt(newLayers[0].topDepth, 'S'), topLayer.topDensity, topLayer.botDensity)
+    #             outLayers.set(topIndex, topLayer)
+    #         except NoSuchMatPropException as e:
+    #             raise RuntimeException(e)
+    #         newVLayer.topPVelocity = topLayer.botPVelocity
+    #         newVLayer.topSVelocity = topLayer.botSVelocity
+    #         newVLayer.topDepth = topLayer.botDepth
+    #         outLayers.add(topLayerNum + 1, newVLayer)
+    #         botLayerNum += 1
+    #         topLayerNum += 1
+    #     if botLayer.botDepth > newLayers[len(newLayers)].botDepth:
+    #         try:
+    #             botLayer.botPVelocity = botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'P')
+    #             botLayer.botSVelocity = botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'S')
+    #             botLayer.botDepth = newLayers[len(newLayers)].botDepth
+    #         except NoSuchMatPropException as e:
+    #             print("Caught NoSuchMatPropException: " + e.getMessage(), file=sys.stderr)
+    #             e.printStackTrace()
+    #         newVLayer.topPVelocity = botLayer.botPVelocity
+    #         newVLayer.topSVelocity = botLayer.botSVelocity
+    #         newVLayer.topDepth = botLayer.botDepth
+    #         outLayers.add(botLayerNum + 1, newVLayer)
+    #         botLayerNum += 1
+    #     i = topLayerNum
+    #     while i <= botLayerNum:
+    #         outLayers.remove(topLayerNum)
+    #         i += 1
+    #     i = 0
+    #     while len(newLayers):
+    #         outLayers.add(topLayerNum + i, newLayers[i])
+    #         i += 1
+    #     outVMod = VelocityModel(name, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), self.spherical(), outLayers)
+    #     outVMod.fixDisconDepths()
+    #     outVMod.validate()
+    #     return outVMod
+    ################################################
         
 
 
@@ -240,71 +238,71 @@ class VelocityModel(object):
         prevVelocityLayer = VelocityLayer()
         #/* is radiusOfEarth positive? */
         if self.radiusOfEarth <= 0.0:
-            System.err.println("Radius of earth is not positive. radiusOfEarth = " + self.radiusOfEarth)
+            print("Radius of earth is not positive. radiusOfEarth = " + str(self.radiusOfEarth), file=sys.stderr)
             return False
     	#/* is mohoDepth non-negative? */
         if self.mohoDepth < 0.0:
-            System.err.println("mohoDepth is not non-negative. mohoDepth = " + self.mohoDepth)
+            print("mohoDepth is not non-negative. mohoDepth = " + str(self.mohoDepth), file=sys.stderr)
             return False
         #/* is cmbDepth >= mohoDepth? */
         if self.cmbDepth < self.mohoDepth:
-            System.err.println("cmbDepth < mohoDepth. cmbDepth = " + self.cmbDepth + " mohoDepth = " + self.mohoDepth)
+            print("cmbDepth < mohoDepth. cmbDepth = " + str(self.cmbDepth) + " mohoDepth = " + str(self.mohoDepth), file=sys.stderr)
             return False
         #/* is cmbDepth positive? */
         if self.cmbDepth <= 0.0:
-            System.err.println("cmbDepth is not positive. cmbDepth = " + self.cmbDepth)
+            print("cmbDepth is not positive. cmbDepth = " + (self.cmbDepth), file=sys.stderr)
             return False
         #/* is iocbDepth >= cmbDepth? */
         if self.iocbDepth < self.cmbDepth:
-            System.err.println("iocbDepth < cmbDepth. iocbDepth = " + self.iocbDepth + " cmbDepth = " + self.cmbDepth)
+            print("iocbDepth < cmbDepth. iocbDepth = " + str(self.iocbDepth) + " cmbDepth = " + str(self.cmbDepth), file=sys.stderr)
             return False
         #/* is iocbDepth positive? */
         if self.iocbDepth <= 0.0:
-            System.err.println("iocbDepth is not positive. iocbDepth = " + self.iocbDepth)
+            print("iocbDepth is not positive. iocbDepth = " + str(self.iocbDepth), file=sys.stderr)
             return False
         #/* is minRadius non-negative? */
         if self.minRadius < 0.0:
-            System.err.println("minRadius is not non-negative. minRadius = " + self.minRadius)
+            print("minRadius is not non-negative. minRadius = " + str(self.minRadius), file=sys.stderr)
             return False
         #/* is maxRadius positive? */
         if self.maxRadius <= 0.0:
-            System.err.println("maxRadius is not positive. maxRadius = " + self.maxRadius)
+            print("maxRadius is not positive. maxRadius = " + str(self.maxRadius), file=sys.stderr)
             return False
         #/* is maxRadius > minRadius? */
         if self.maxRadius <= self.minRadius:
-            System.err.println("maxRadius <= minRadius. maxRadius = " + self.maxRadius + " minRadius = " + self.minRadius)
+            print("maxRadius <= minRadius. maxRadius = " + str(self.maxRadius) + " minRadius = " + str(self.minRadius), file=sys.stderr)
             return False
-        currVelocityLayer = self.getVelocityLayer(0)
-        prevVelocityLayer = VelocityLayer(0, currVelocityLayer.getTopDepth(), currVelocityLayer.getTopDepth(), currVelocityLayer.getTopPVelocity(), currVelocityLayer.getTopPVelocity(), currVelocityLayer.getTopSVelocity(), currVelocityLayer.getTopSVelocity(), currVelocityLayer.getTopDensity(), currVelocityLayer.getTopDensity())
-        layerNum = 0
-        while layerNum < self.getNumLayers():
-            currVelocityLayer = self.getVelocityLayer(layerNum)
-            if prevVelocityLayer.getBotDepth() != currVelocityLayer.getTopDepth():
+            
+	# Iterate over all layers, comparing each to the previous one.            
+        currVelocityLayer = self.layers[0]
+        prevVelocityLayer = VelocityLayer(0, currVelocityLayer.topDepth, currVelocityLayer.topDepth, currVelocityLayer.topPVelocity(), currVelocityLayer.topPVelocity(), currVelocityLayer.topSVelocity(), currVelocityLayer.topSVelocity(), currVelocityLayer.topDensity(), currVelocityLayer.topDensity())
+        for layerNum in range(0, self.getNumLayers):
+            currVelocityLayer = self.layers[layerNum]
+            if prevVelocityLayer.botDepth != currVelocityLayer.topDepth:
             #* There is a gap in the velocity model!
-                System.err.println("There is a gap in the velocity model " + "between layers " + (layerNum - 1) + " and " + layerNum)
-                System.err.println("prevVelocityLayer=" + prevVelocityLayer)
-                System.err.println("currVelocityLayer=" + currVelocityLayer)
+                print("There is a gap in the velocity model between layers " + str((layerNum - 1)) + " and ", layerNum)
+                print("prevVelocityLayer=", prevVelocityLayer, file=sys.stderr)
+                print("currVelocityLayer=", currVelocityLayer, file=sys.stderr)
                 return False
-            if currVelocityLayer.getBotDepth() == currVelocityLayer.getTopDepth():
+            if currVelocityLayer.botDepth == currVelocityLayer.topDepth:
             #   more redundant comments in the original java
-                System.err.println("There is a zero thickness layer in the " + "velocity model at layer " + layerNum)
-                System.err.println("prevVelocityLayer=" + prevVelocityLayer)
-                System.err.println("currVelocityLayer=" + currVelocityLayer)
+                print("There is a zero thickness layer in the velocity model at layer " + layerNum, file=sys.stderr)
+                print("prevVelocityLayer=", prevVelocityLayer, file=sys.stderr)
+                print("currVelocityLayer=", currVelocityLayer, file=sys.stderr)
                 return False
-            if currVelocityLayer.getTopPVelocity() <= 0.0 or currVelocityLayer.getBotPVelocity() <= 0.0:
-                System.err.println("There is a negative P velocity layer in the " + "velocity model at layer " + layerNum)
+            if currVelocityLayer.topPVelocity() <= 0.0 or currVelocityLayer.botPVelocity() <= 0.0:
+                print("There is a negative P velocity layer in the velocity model at layer ", layerNum, file=sys.stderr)
                 return False
-            if currVelocityLayer.getTopSVelocity() < 0.0 or currVelocityLayer.getBotSVelocity() < 0.0:
-                System.err.println("There is a negative S velocity layer in the " + "velocity model at layer " + layerNum)
+            if currVelocityLayer.topSVelocity() < 0.0 or currVelocityLayer.botSVelocity() < 0.0:
+                print("There is a negative S velocity layer in the velocity model at layer " + layerNum, file=sys.stderr)
                 return False
-            if (currVelocityLayer.getTopPVelocity() != 0.0 and currVelocityLayer.getBotPVelocity() == 0.0) or (currVelocityLayer.getTopPVelocity() == 0.0 and currVelocityLayer.getBotPVelocity() != 0.0):
-                System.err.println("There is a layer that goes to zero P velocity " + "without a discontinuity in the " + "velocity model at layer " + layerNum + "\nThis would cause a divide by zero within this " + "depth range. Try making the velocity small, followed by a " + "discontinuity to zero velocity.")
+            if (currVelocityLayer.topPVelocity() != 0.0 and currVelocityLayer.botPVelocity() == 0.0) or (currVelocityLayer.topPVelocity() == 0.0 and currVelocityLayer.botPVelocity() != 0.0):
+                print("There is a layer that goes to zero P velocity without a discontinuity in the velocity model at layer " + str(layerNum) + "\nThis would cause a divide by zero within this depth range. Try making the velocity small, followed by a discontinuity to zero velocity.", file=sys.stderr)
                 return False
-            if (currVelocityLayer.getTopSVelocity() != 0.0 and currVelocityLayer.getBotSVelocity() == 0.0) or (currVelocityLayer.getTopSVelocity() == 0.0 and currVelocityLayer.getBotSVelocity() != 0.0):
-                System.err.println("There is a layer that goes to zero S velocity " + "without a discontinuity in the " + "velocity model at layer " + layerNum + "\nThis would cause a divide by zero within this " + "depth range. Try making the velocity small, followed by a " + "discontinuity to zero velocity.")
+            if (currVelocityLayer.topSVelocity() != 0.0 and currVelocityLayer.botSVelocity() == 0.0) or (currVelocityLayer.topSVelocity() == 0.0 and currVelocityLayer.botSVelocity() != 0.0):
+                print("There is a layer that goes to zero S velocity without a discontinuity in the velocity model at layer " + str(layerNum) + "\nThis would cause a divide by zero within this depth range. Try making the velocity small, followed by a discontinuity to zero velocity.", file=sys.stderr)
                 return False
             prevVelocityLayer = currVelocityLayer
-            layerNum += 1
         return True
 
     def __str__(self):
@@ -316,9 +314,8 @@ class VelocityModel(object):
     def print_(self):
         """ generated source for method print_ """
         i = 0
-        while i < self.getNumLayers():
-            print(self.getVelocityLayer(i))
-            i += 1
+        for i in range(0, self.getNumLayers):
+            print(self.layers[i])            
 
     @classmethod
     def getModelNameFromFileName(cls, filename):
@@ -418,7 +415,7 @@ class VelocityModel(object):
                 topPVel = botPVel
                 topSVel = botSVel
                 topDensity = botDensity
-                if tempLayer.getTopDepth() != tempLayer.getBotDepth():
+                if tempLayer.topDepth != tempLayer.botDepth:
                     # Don't use zero thickness layers, first order discontinuities
                     # are taken care of by storing top and bottom depths.
                     layers.add(tempLayer)
@@ -565,7 +562,7 @@ class VelocityModel(object):
                 raise VelocityModelException("Should have found an EOL but didn't" + " Layer=" + myLayerNumber + " tokenIn=" + tokenIn)
             else:
                 tokenIn.nextToken()
-            if tempLayer.getTopDepth() != tempLayer.getBotDepth():
+            if tempLayer.topDepth != tempLayer.botDepth:
             # Don't use zero thickness layers, first order discontinuities
             # are taken care of by storing top and bottom depths.
                 layers.add(tempLayer)
@@ -595,19 +592,19 @@ class VelocityModel(object):
         tempIocbDepth = self.radiusOfEarth
         layerNum = 0
         while layerNum < self.getNumLayers() - 1:
-            aboveLayer = self.getVelocityLayer(layerNum)
-            belowLayer = self.getVelocityLayer(layerNum + 1)
-            if aboveLayer.getBotPVelocity() != belowLayer.getTopPVelocity() or aboveLayer.getBotSVelocity() != belowLayer.getTopSVelocity():	# a discontinuity
+            aboveLayer = self.layers[layerNum]
+            belowLayer = self.layers[layerNum + 1]
+            if aboveLayer.botPVelocity != belowLayer.topPVelocity or aboveLayer.botSVelocity != belowLayer.topSVelocity:	# a discontinuity
             
-                if Math.abs(self.mohoDepth - aboveLayer.getBotDepth()) < mohoMin:
-                    tempMohoDepth = aboveLayer.getBotDepth()
-                    mohoMin = Math.abs(self.mohoDepth - aboveLayer.getBotDepth())
-                if Math.abs(self.cmbDepth - aboveLayer.getBotDepth()) < cmbMin:
-                    tempCmbDepth = aboveLayer.getBotDepth()
-                    cmbMin = Math.abs(self.cmbDepth - aboveLayer.getBotDepth())
-                if aboveLayer.getBotSVelocity() == 0.0 and belowLayer.getTopSVelocity() > 0.0 and Math.abs(self.iocbDepth - aboveLayer.getBotDepth()) < iocbMin:
-                    tempIocbDepth = aboveLayer.getBotDepth()
-                    iocbMin = Math.abs(self.iocbDepth - aboveLayer.getBotDepth())
+                if Math.abs(self.mohoDepth - aboveLayer.botDepth) < mohoMin:
+                    tempMohoDepth = aboveLayer.botDepth
+                    mohoMin = Math.abs(self.mohoDepth - aboveLayer.botDepth)
+                if Math.abs(self.cmbDepth - aboveLayer.botDepth) < cmbMin:
+                    tempCmbDepth = aboveLayer.botDepth
+                    cmbMin = Math.abs(self.cmbDepth - aboveLayer.botDepth)
+                if aboveLayer.botSVelocity == 0.0 and belowLayer.topSVelocity > 0.0 and Math.abs(self.iocbDepth - aboveLayer.botDepth) < iocbMin:
+                    tempIocbDepth = aboveLayer.botDepth
+                    iocbMin = Math.abs(self.iocbDepth - aboveLayer.botDepth)
             layerNum += 1
         if self.mohoDepth != tempMohoDepth or self.cmbDepth != tempCmbDepth or self.iocbDepth != tempIocbDepth:
             changeMade = True
@@ -629,8 +626,8 @@ class VelocityModel(object):
         layers = ArrayList(self.vectorLength)
         i = 0
         while i < self.getNumLayers():
-            oldLayer = self.getVelocityLayer(i)
-            newLayer = VelocityLayer(i, self.radiusOfEarth * Math.log(oldLayer.getTopDepth() / self.radiusOfEarth), self.radiusOfEarth * Math.log(oldLayer.getBotDepth() / self.radiusOfEarth), self.radiusOfEarth * oldLayer.getTopPVelocity() / oldLayer.getTopDepth(), self.radiusOfEarth * oldLayer.getBotPVelocity() / oldLayer.getBotDepth(), self.radiusOfEarth * oldLayer.getTopSVelocity() / oldLayer.getTopDepth(), self.radiusOfEarth * oldLayer.getBotSVelocity() / oldLayer.getBotDepth())
+            oldLayer = self.layers[i]
+            newLayer = VelocityLayer(i, self.radiusOfEarth * Math.log(oldLayer.topDepth / self.radiusOfEarth), self.radiusOfEarth * Math.log(oldLayer.botDepth / self.radiusOfEarth), self.radiusOfEarth * oldLayer.topPVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botPVelocity / oldLayer.botDepth, self.radiusOfEarth * oldLayer.topSVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botSVelocity / oldLayer.botDepth)
             layers.add(newLayer)
             i += 1
-        return VelocityModel(self.modelName, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), spherical, layers)
+        return VelocityModel(self.modelName, self.radiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), spherical, layers)

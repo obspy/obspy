@@ -11,7 +11,7 @@ class VelocityLayer(object):
     The VelocityLayer class stores and manipulates a singly layer. An
     entire velocity model is implemented as a vector of layers.
     """
-    def __init___(self, layer_number, topDepth, botDepth, topPVelocity,
+    def __init__(self, layer_number, topDepth, botDepth, topPVelocity,
                   botPVelocity, topSVelocity, botSVelocity, topDensity=2.6,
                   botDensity=2.6, topQp=1000, botQp=1000, topQs=2000,
                   botQs=2000):
@@ -73,7 +73,7 @@ class VelocityLayer(object):
     def __str__(self):
         description = "Layer %i (%.1f - %.1f)" % (
             self.layer_number, self.topDepth, self.botDepth)
-        description += " P " + self.topPVelocity + " " + self.botPVelocity
-        description += " S " + self.topSVelocity + " " + self.botSVelocity
-        description += " Density " + self.topDensity + " " + self.botDensity
+        description += " P " + str(self.topPVelocity) + " " + str(self.botPVelocity)
+        description += " S " + str(self.topSVelocity) + " " + str(self.botSVelocity)
+        description += " Density " + str(self.topDensity) + " " + str(self.botDensity)
         return description
