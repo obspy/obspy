@@ -4,6 +4,7 @@ Package for storage and manipulation of seismic earth models.
 """
 import itertools
 from header import TauPException
+from VelocityLayer import *
 
 class VelocityModel(object):
     # Some default values as class attributes [km]
@@ -71,7 +72,7 @@ class VelocityModel(object):
         discontinuities = []
         
         discontinuities.append(self.layers[0].topDepth)
-        for above_layer, below_layer in itertools.izip(self.layers[:-1],
+        for above_layer, below_layer in zip(self.layers[:-1],
                                                        self.layers[1:]):
             if above_layer.botPVelocity != below_layer.topPVelocity or \
                     above_layer.botSVelocity != below_layer.topSVelocity:
@@ -89,12 +90,8 @@ class VelocityModel(object):
 
     def getNumLayers(self):
         """ Returns the number of layers in this velocity model. """
-        return len(self.layer)
-    
-    def getLayers(self):
-        """ generated source for method getLayers """
-        return self.layer.toArray([None]*0)
-
+        return len(self.layers)
+ 
     def layerNumberAbove(self, depth):
         """
         Finds the layer containing the given depth. Note this returns the upper
@@ -196,7 +193,7 @@ class VelocityModel(object):
     #         newVLayer.topPVelocity = topLayer.botPVelocity
     #         newVLayer.topSVelocity = topLayer.botSVelocity
     #         newVLayer.topDepth = topLayer.botDepth
-    #         outLayers.add(topLayerNum + 1, newVLayer)
+    #         outLayers.append(topLayerNum + 1, newVLayer)
     #         botLayerNum += 1
     #         topLayerNum += 1
     #     if botLayer.botDepth > newLayers[len(newLayers)].botDepth:
@@ -210,7 +207,7 @@ class VelocityModel(object):
     #         newVLayer.topPVelocity = botLayer.botPVelocity
     #         newVLayer.topSVelocity = botLayer.botSVelocity
     #         newVLayer.topDepth = botLayer.botDepth
-    #         outLayers.add(botLayerNum + 1, newVLayer)
+    #         outLayers.append(botLayerNum + 1, newVLayer)
     #         botLayerNum += 1
     #     i = topLayerNum
     #     while i <= botLayerNum:
@@ -218,7 +215,7 @@ class VelocityModel(object):
     #         i += 1
     #     i = 0
     #     while len(newLayers):
-    #         outLayers.add(topLayerNum + i, newLayers[i])
+    #         outLayers.append(topLayerNum + i, newLayers[i])
     #         i += 1
     #     outVMod = VelocityModel(name, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), self.spherical(), outLayers)
     #     outVMod.fixDisconDepths()
@@ -242,8 +239,6 @@ class VelocityModel(object):
 
     def validate(self):
         """ Performs internal consistency checks on the velocity model. """
-        currVelocityLayer = VelocityLayer()
-        prevVelocityLayer = VelocityLayer()
         #/* is radiusOfEarth positive? */
         if self.radiusOfEarth <= 0.0:
             print("Radius of earth is not positive. radiusOfEarth = " + str(self.radiusOfEarth), file=sys.stderr)
@@ -283,8 +278,8 @@ class VelocityModel(object):
         
 	# Iterate over all layers, comparing each to the previous one.            
         currVelocityLayer = self.layers[0]
-        prevVelocityLayer = VelocityLayer(0, currVelocityLayer.topDepth, currVelocityLayer.topDepth, currVelocityLayer.topPVelocity(), currVelocityLayer.topPVelocity(), currVelocityLayer.topSVelocity(), currVelocityLayer.topSVelocity(), currVelocityLayer.topDensity(), currVelocityLayer.topDensity())
-        for layerNum in range(0, self.getNumLayers):
+        prevVelocityLayer = VelocityLayer(0, currVelocityLayer.topDepth, currVelocityLayer.topDepth, currVelocityLayer.topPVelocity, currVelocityLayer.topPVelocity, currVelocityLayer.topSVelocity, currVelocityLayer.topSVelocity, currVelocityLayer.topDensity, currVelocityLayer.topDensity)
+        for layerNum in range(0, self.getNumLayers()):
             currVelocityLayer = self.layers[layerNum]
             if prevVelocityLayer.botDepth != currVelocityLayer.topDepth:
             #* There is a gap in the velocity model!
@@ -298,20 +293,22 @@ class VelocityModel(object):
                 print("prevVelocityLayer=", prevVelocityLayer, file=sys.stderr)
                 print("currVelocityLayer=", currVelocityLayer, file=sys.stderr)
                 return False
-            if currVelocityLayer.topPVelocity() <= 0.0 or currVelocityLayer.botPVelocity() <= 0.0:
+            if currVelocityLayer.topPVelocity <= 0.0 or currVelocityLayer.botPVelocity <= 0.0:
                 print("There is a negative P velocity layer in the velocity model at layer ", layerNum, file=sys.stderr)
                 return False
-            if currVelocityLayer.topSVelocity() < 0.0 or currVelocityLayer.botSVelocity() < 0.0:
+            if currVelocityLayer.topSVelocity < 0.0 or currVelocityLayer.botSVelocity < 0.0:
                 print("There is a negative S velocity layer in the velocity model at layer " + layerNum, file=sys.stderr)
                 return False
-            if (currVelocityLayer.topPVelocity() != 0.0 and currVelocityLayer.botPVelocity() == 0.0) or (currVelocityLayer.topPVelocity() == 0.0 and currVelocityLayer.botPVelocity() != 0.0):
+            if (currVelocityLayer.topPVelocity != 0.0 and currVelocityLayer.botPVelocity == 0.0) or (currVelocityLayer.topPVelocity == 0.0 and currVelocityLayer.botPVelocity != 0.0):
                 print("There is a layer that goes to zero P velocity without a discontinuity in the velocity model at layer " + str(layerNum) + "\nThis would cause a divide by zero within this depth range. Try making the velocity small, followed by a discontinuity to zero velocity.", file=sys.stderr)
                 return False
-            if (currVelocityLayer.topSVelocity() != 0.0 and currVelocityLayer.botSVelocity() == 0.0) or (currVelocityLayer.topSVelocity() == 0.0 and currVelocityLayer.botSVelocity() != 0.0):
+            if (currVelocityLayer.topSVelocity != 0.0 and currVelocityLayer.botSVelocity == 0.0) or (currVelocityLayer.topSVelocity == 0.0 and currVelocityLayer.botSVelocity != 0.0):
                 print("There is a layer that goes to zero S velocity without a discontinuity in the velocity model at layer " + str(layerNum) + "\nThis would cause a divide by zero within this depth range. Try making the velocity small, followed by a discontinuity to zero velocity.", file=sys.stderr)
                 return False
             prevVelocityLayer = currVelocityLayer
         return True
+
+
     
     def __str__(self):
         """ generated source for method toString """
@@ -319,28 +316,30 @@ class VelocityModel(object):
         # desc += "\ngetNumLayers()=" + str(self.getNumLayers()) + "\n"
         return desc
     
-    def print_(self):
-        """ generated source for method print_ """
-        i = 0
-        for i in range(0, self.getNumLayers):
-            print(self.layers[i])            
+    # def print_(self):
+    #     """ generated source for method print_ """
+    #     i = 0
+    #     for i in range(0, self.getNumLayers):
+    #         print(self.layers[i])            
             
 #   This is screwed up, let's see if we even need it (substring doesn't exist of course)
-    @classmethod
-    def getModelNameFromFileName(cls, filename):
-        """ generated source for method getModelNameFromFileName """
-        j = filename.lastIndexOf(System.getProperty("file.separator"))
-        modelFilename = filename.substring(j + 1)
-        modelName = modelFilename
-        if modelFilename.endsWith(".tvel"):
-            modelName = modelFilename.substring(0, 5 - len(modelFilename))
-        elif modelFilename.endsWith(".nd"):
-            modelName = modelFilename.substring(0, 3 - len(modelFilename))
-        elif modelFilename.startsWith("GB."):
-            modelName = modelFilename.substring(3, len(modelFilename))
-        else:
-            modelName = modelFilename
-        return modelName
+    # @classmethod
+    # def getModelNameFromFileName(cls, filename):
+    #     """ generated source for method getModelNameFromFileName """
+    #     j = filename.lastIndexOf(System.getProperty("file.separator"))
+    #     modelFilename = filename.substring(j + 1)
+    #     modelName = modelFilename
+    #     if modelFilename.endswith(".tvel"):
+    #         modelName = modelFilename.substring(0, 5 - len(modelFilename))
+    #     elif modelFilename.endswith(".nd"):
+    #         modelName = modelFilename.substring(0, 3 - len(modelFilename))
+    #     elif modelFilename.startswith("GB."):
+    #         modelName = modelFilename.substring(3, len(modelFilename))
+    #     else:
+    #         modelName = modelFilename
+    #     return modelName
+
+
 
     @classmethod
     def readVelocityFile(cls, filename):
@@ -348,26 +347,25 @@ class VelocityModel(object):
         Raises exception if the type of file cannot be determined. """
         
         # filename formatting
-        if filename.endsWith(".nd"):
+        if filename.endswith(".nd"):
             fileType = ".nd"
-        elif filename.endsWith(".tvel"):
+        elif filename.endswith(".tvel"):
             fileType = ".tvel"
         else:
             raise TauPException("File type could not be determined, please rename your file to end with .tvel or .nd")
-        if fileType.startsWith("."):
+        if fileType.startswith("."):
             fileType = fileType[1:]
             
         # the actual reading of the velocity file
         if fileType.lower() == "nd":
-            vMod = readNDFile(filename)
+            vMod = cls.readNDFile(filename)
         elif fileType.lower() == "tvel":
-            vMod = readTVelFile(filename)
+            vMod = cls.readTVelFile(filename)
         else:
             raise TauPException("File type invalid")
 
         vMod.fixDisconDepths()
         return vMod
-    
 
 
 
@@ -404,7 +402,7 @@ class VelocityModel(object):
             header2 = f.readline()
             
             # Read the first line to provide initial top values.
-            line = f.readline
+            line = f.readline()
             line = line.partition('#')[0]    #needs the other comment options
             line = line.rstrip()     # or just .strip()?'
             columns = line.split()
@@ -446,27 +444,20 @@ class VelocityModel(object):
                 if tempLayer.topDepth != tempLayer.botDepth:
                     # Don't use zero thickness layers, first order discontinuities
                     # are taken care of by storing top and bottom depths.
-                    layers.add(tempLayer)
+                    layers.append(tempLayer)
                     myLayerNumber += 1
                                         
         radiusOfEarth = topDepth
         maxRadius = topDepth	
 	# I assume that this is a whole earth model
 	# so the maximum depth ==  maximum radius == earth radius.
-        modelname = filename[:-5]
+        modelName = filename[:-5]
         return VelocityModel(modelName, radiusOfEarth, cls.default_moho, cls.default_cmb, cls.default_iocb, 0, maxRadius, True, layers)
 
-        
-        
+
         
     @classmethod
     def readNDFile(cls, filename):
-        # """ generated source for method readNDFile """
-        # fileIn = FileReader(file_)
-        # vmod = cls.readNDFile_actually(fileIn, cls.getModelNameFromFileName(file_.__name__))
-        # fileIn.close()
-        # return vmod
-
         """      This method reads in a velocity model from a "nd" ASCII text file, the
         format used by Xgbm. The name of the model file for model "modelname"
         should be "modelname.nd". The format of the file is: depth pVel sVel
@@ -485,13 +476,9 @@ class VelocityModel(object):
         
         radiusOfEarth - the largest depth in the model
         
-        Also, because this method makes use of the string tokenizer, comments are
-        allowed. # as well as // signify that the rest of the line is a comment.
-        C style slash-star comments are also allowed.
+        Only # Comments are allowed
         
-        @exception VelocityModelException
-        occurs if an EOL should have been read but wasn't. This
-        may indicate a poorly formatted model file. 
+        TauPModelExceptions occur for various reasons. 
         """
 
         # Some  variables
@@ -571,7 +558,7 @@ class VelocityModel(object):
                 if tempLayer.topDepth != tempLayer.botDepth:
             # Don't use zero thickness layers, first order discontinuities
             # are taken care of by storing top and bottom depths.
-                    layers.add(tempLayer)
+                    layers.append(tempLayer)
                     myLayerNumber += 1               
         radiusOfEarth = topDepth
         maxRadius = topDepth	#I assume that this is a whole earth model
@@ -580,6 +567,8 @@ class VelocityModel(object):
         modelName = filename[:-3]
         return VelocityModel(modelName, radiusOfEarth, mohoDepth, cmbDepth, iocbDepth, 0, maxRadius, True, layers)
 
+
+    
     def fixDisconDepths(self):
         """ Resets depths of major discontinuities to match those existing in the
      	 input velocity model. The initial values are set such that if there is no
@@ -589,8 +578,6 @@ class VelocityModel(object):
      	 fluid to solid boundary and deeper than 100km to avoid problems with
      	 shallower fluid layers, eg oceans. """
         changeMade = False
-        aboveLayer = VelocityLayer()
-        belowLayer = VelocityLayer()
         mohoMin = 65.0
         cmbMin = self.radiusOfEarth
         iocbMin = self.radiusOfEarth - 100.0
@@ -603,15 +590,15 @@ class VelocityModel(object):
             belowLayer = self.layers[layerNum + 1]
             if aboveLayer.botPVelocity != belowLayer.topPVelocity or aboveLayer.botSVelocity != belowLayer.topSVelocity:	# a discontinuity
             
-                if Math.abs(self.mohoDepth - aboveLayer.botDepth) < mohoMin:
+                if abs(self.mohoDepth - aboveLayer.botDepth) < mohoMin:
                     tempMohoDepth = aboveLayer.botDepth
-                    mohoMin = Math.abs(self.mohoDepth - aboveLayer.botDepth)
-                if Math.abs(self.cmbDepth - aboveLayer.botDepth) < cmbMin:
+                    mohoMin = abs(self.mohoDepth - aboveLayer.botDepth)
+                if abs(self.cmbDepth - aboveLayer.botDepth) < cmbMin:
                     tempCmbDepth = aboveLayer.botDepth
-                    cmbMin = Math.abs(self.cmbDepth - aboveLayer.botDepth)
-                if aboveLayer.botSVelocity == 0.0 and belowLayer.topSVelocity > 0.0 and Math.abs(self.iocbDepth - aboveLayer.botDepth) < iocbMin:
+                    cmbMin = abs(self.cmbDepth - aboveLayer.botDepth)
+                if aboveLayer.botSVelocity == 0.0 and belowLayer.topSVelocity > 0.0 and abs(self.iocbDepth - aboveLayer.botDepth) < iocbMin:
                     tempIocbDepth = aboveLayer.botDepth
-                    iocbMin = Math.abs(self.iocbDepth - aboveLayer.botDepth)
+                    iocbMin = abs(self.iocbDepth - aboveLayer.botDepth)
             layerNum += 1
         if self.mohoDepth != tempMohoDepth or self.cmbDepth != tempCmbDepth or self.iocbDepth != tempIocbDepth:
             changeMade = True
@@ -620,21 +607,21 @@ class VelocityModel(object):
         self.iocbDepth = (tempIocbDepth if tempCmbDepth != tempIocbDepth else self.radiusOfEarth)
         return changeMade
 
-    def earthFlattenTransform(self):
-        """ Returns a flat velocity model object equivalent to the spherical
-         velocity model via the earth flattening transform.
+    # def earthFlattenTransform(self):
+    #     """ Returns a flat velocity model object equivalent to the spherical
+    #      velocity model via the earth flattening transform.
      	 
-     	 @return the flattened VelocityModel object.
-     	 @exception VelocityModelException
-     	                occurs ???. """
-        newLayer = VelocityLayer()
-        oldLayer = VelocityLayer()
-        isSpherical = False
-        layers = ArrayList(self.vectorLength)
-        i = 0
-        while i < self.getNumLayers():
-            oldLayer = self.layers[i]
-            newLayer = VelocityLayer(i, self.radiusOfEarth * Math.log(oldLayer.topDepth / self.radiusOfEarth), self.radiusOfEarth * Math.log(oldLayer.botDepth / self.radiusOfEarth), self.radiusOfEarth * oldLayer.topPVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botPVelocity / oldLayer.botDepth, self.radiusOfEarth * oldLayer.topSVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botSVelocity / oldLayer.botDepth)
-            layers.add(newLayer)
-            i += 1
-        return VelocityModel(self.modelName, self.radiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), spherical, layers)
+    #  	 @return the flattened VelocityModel object.
+    #  	 @exception VelocityModelException
+    #  	                occurs ???. """
+    #     newLayer = VelocityLayer()
+    #     oldLayer = VelocityLayer()
+    #     isSpherical = False
+    #     layers = ArrayList(self.vectorLength)
+    #     i = 0
+    #     while i < self.getNumLayers():
+    #         oldLayer = self.layers[i]
+    #         newLayer = VelocityLayer(i, self.radiusOfEarth * Math.log(oldLayer.topDepth / self.radiusOfEarth), self.radiusOfEarth * Math.log(oldLayer.botDepth / self.radiusOfEarth), self.radiusOfEarth * oldLayer.topPVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botPVelocity / oldLayer.botDepth, self.radiusOfEarth * oldLayer.topSVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botSVelocity / oldLayer.botDepth)
+    #         layers.append(newLayer)
+    #         i += 1
+    #     return VelocityModel(self.modelName, self.radiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), spherical, layers)
