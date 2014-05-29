@@ -1,0 +1,11 @@
+Try and keep track of the methods I replace, in case they are called somewhere later.
+
+in VelocityModel:
+
+self.getBotDepth()	-->	self.botDepth		(and many others)
+
+self.getVelocityLayer(i)	-->	self.layers[i]
+
+layer (as arg to class)	-->	layers		(makes more sense, but careful)	
+
+setTopSVelocity(bla)	-->	topSVelocity = bla	(oh Java why you so stupid)

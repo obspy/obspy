@@ -317,6 +317,7 @@ class VelocityModel(object):
         for i in range(0, self.getNumLayers):
             print(self.layers[i])            
 
+#   This is screwed up, let's see if we even need it.	
     @classmethod
     def getModelNameFromFileName(cls, filename):
         """ generated source for method getModelNameFromFileName """
@@ -334,32 +335,27 @@ class VelocityModel(object):
         return modelName
 
     @classmethod
-    def readVelocityFile(cls, filename, fileType):
-        """ Reads in a velocity file. The type of file is determined by the 
-	fileType parameter. Calls readTVelFile or readNDFile.
-        @exception VelocityModelException
-     	if the type of file cannot be determined. """
+    def readVelocityFile(cls, filename):
+        """ Reads in a velocity file by given file name (must be a string). The type of file is determined from the file name. Calls readTVelFile or readNDFile.
+        Raises exception if the type of file cannot be determined. """
 
         # filename formatting
-        if fileType == None or fileType == "":
-            if filename.endsWith(".nd"):
-                fileType = ".nd"
-            elif filename.endsWith(".tvel"):
-                fileType = ".tvel"
+        if filename.endsWith(".nd"):
+            fileType = ".nd"
+        elif filename.endsWith(".tvel"):
+            fileType = ".tvel"
+	else:
+	    raise TauPException("File type could not be determined, please rename your file to end with .tvel or .nd")
         if fileType.startsWith("."):
-            fileType = fileType.substring(1, len(fileType))
-        f = File(filename)
-        if not f.exists() and not filename.endsWith("." + fileType) and File(filename + "." + fileType).exists():
-            f = File(filename + "." + fileType)
-        vMod = VelocityModel()
-
+            fileType = fileType[1:]
+       
         # the actual reading of the velocity file
         if fileType.lower() == "nd":
-            vMod = readNDFile(f)
+            vMod = readNDFile(filename)
         elif fileType.lower() == "tvel":
-            vMod = readTVelFile(f)
+            vMod = readTVelFile(filename)
         else:
-            raise VelocityModelException("What type of velocity file, .tvel or .nd?")
+            raise TauPException("File type invalid")
 
         vMod.fixDisconDepths()
         return vMod
@@ -382,22 +378,41 @@ class VelocityModel(object):
         * dropped if present radiusOfEarth - the largest depth in the model
         * meanDensity - 5517.0 G - 6.67e-11
         * 
-        * Also, because this method makes use of the string tokenizer, comments are
-        * allowed. # as well as // signify that the rest of the line is a comment.
-        * C style slash-star comments are also allowed.
+        * Comments using # are also allowed.
         * 
         * @exception VelocityModelException
         *                occurs if an EOL should have been read but wasn't. This
         *                may indicate a poorly formatted tvel file.
         """
-        import itertools
 
-        tempLayer = VelocityLayer()
-        myLayerNumber = 0
+        myLayerNumber = 0	# needed for calling the layer maker later
 
-        # must preread the first layer
+        # Read all lines in the file. Each Layer needs top and bottom values,
+        # i.e. info from two lines.
         with open(filename, 'rt') as f:
-            for line in itertools.islice(f, 2, None):  #skip first two lines
+            # skip first two lines as they should be the header
+            # (for line in itertools.islice(f, 2, None): also works, but less elegant)  
+            header1 = f.readline()
+            header2 = f.readline()
+            
+            # Read the first line to provide initial top values.
+            line = f.readline
+            line = line.partition('#')[0]    #needs the other comment options
+            line = line.rstrip()     # or just .strip()?'
+	    columns = line.split()
+    	    topDepth = float(columns[0])
+    	    topPVel = float(columns[1])
+    	    topSVel = float(columns[2])
+    	    if topSVel > topPVel:
+    	        raise TauPException("S velocity, ",botSVel," at depth ",botDepth," is greater than the P velocity, ",botPVel)
+    	    # if density is present,read it.
+    	    if len(columns) == 4:
+    	    	topDensity = float(columns[3])
+    	    else:
+        	topDensity = 5571.0
+        	
+	    # Iterate over the rest of the file.
+            for line in f:  
                 line = line.partition('#')[0]    #needs the other comment options
                 line = line.rstrip()     # or just .strip()?'
                 columns = line.split()
@@ -405,11 +420,15 @@ class VelocityModel(object):
                 botPVel = float(columns[1])
                 botSVel = float(columns[2])
                 if botSVel > botPVel:
-                    raise VelocityModelException("S velocity, " + botSVel + " at depth " + botDepth + " is greater than the P velocity, " + botPVel)
-                # if density is present, fix that somehow
-                botDensity = float(columns[3])
-                # else
-                # botDensity = topDensity
+                    raise TauPException("S velocity, ",botSVel," at depth ",botDepth," is greater than the P velocity, ",botPVel)
+                # if density is present,read it.
+                if len(columns) == 4:
+                	botDensity = float(columns[3])
+                else:
+                	botDensity = topDensity
+        	if len(columns) > 4:
+        	    raise TauPException("Your file has too much information. Stick to 4 columns." 
+                	
                 tempLayer = VelocityLayer(myLayerNumber, topDepth, botDepth, topPVel, botPVel, topSVel, botSVel, topDensity, botDensity)
                 topDepth = botDepth
                 topPVel = botPVel
@@ -421,11 +440,11 @@ class VelocityModel(object):
                     layers.add(tempLayer)
                     myLayerNumber += 1
                     
-                radiusOfEarth = topDepth
-                maxRadius = topDepth	# I assume that this is a whole earth model
-        			# so the maximum depth is equal to the
-        			# maximum radius is equal to the earth radius.
-                return VelocityModel(modelName, radiusOfEarth, cls.DEFAULT_MOHO, cls.DEFAULT_CMB, cls.DEFAULT_IOCB, 0, maxRadius, True, layers)
+	radiusOfEarth = topDepth
+	maxRadius = topDepth	
+	# I assume that this is a whole earth model
+	# so the maximum depth ==  maximum radius == earth radius.
+	return VelocityModel(modelName, radiusOfEarth, cls.DEFAULT_MOHO, cls.DEFAULT_CMB, cls.DEFAULT_IOCB, 0, maxRadius, True, layers)
 
         
         
