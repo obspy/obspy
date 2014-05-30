@@ -1,0 +1,16 @@
+The parameters which have setters defined, via toolProps (uses PropertyLoader.java or the inbuilt Properties class), in the original TauP_Create (java) are: minDeltaP, maxDeltaP, maxDepthInterval, maxRangeInterval, maxInterpError, allowInnerCoreS.
+
+These setters are however also defined WITH THE SAME NAME in SlownessModel, along with the getters. Furthermore, 
+grep -n getMaxInterpError ../../TauP-2.1.2_java_from_their_website/src/main/java/edu/sc/seis/TauP/*
+and similar reveals that:
+    1) the setters are NEVER called anywhere in all the java source. Maybe 
+    somewhere in another part of the package??  
+    2) the getters are only called once in TauP_Create, for verbose printing.
+    
+When TauP_Create calls SphericalSModel, it actually tries to pass toolProps.getProperty(...maxRangeInterval) as arguments, i.e. read some properties (aka config) file. This MAY be provided by the user! If not, the values have never been set (see above) and the default values which are also provided in the call will kick in. Interestingly, SlownessModel (of which SphericalSModel is a subclass) defines its own default values for these parameters (and others) as class attributes, even citing Buland and Chapman for justification. The default values given in taup.pdf (the provided documentation) are different again.
+
+Hence, I will delete all the unnecessary getters and setters. 
+The references to toolProps must be changed to allow some kind of pythonic config file. Alternatively, I could just call the SphericalSModel with no arguments and change its __init__ to use its own class attributes as defaults, but I don't think that's a good idea.
+
+
+The value of modelFilename is hardcoded to iasp91.tvel, so it gets used as a default. It doesn't seem to get changed within TauP_Create, however a different filename can be provided as command line option. (e.g. ./taup_create -tvel ...ak135.tvel works in the java package)

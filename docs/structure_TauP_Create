@@ -1,6 +1,10 @@
 Structure of the program when calling TauP_Create. Remember names starting with uppercase are classes. 
 
 TauP_Create:
+    __init__:
+        PropertyLoader
+        OR if unsuccessful uses inbuilt Properties()
+        
     main:
         loadVMod
         start
@@ -20,6 +24,9 @@ TauP_Create:
         self.sMod = SphericalSModel(vMod, ...) 
         return TauModel(self.sMod)
         
+PropertyLoader:
+    finds taup.jar or something
+    
 SphericalSModel extends SlownessModel:
     I think there are three constructors; the middle one is called here
     (createTauModel passes 7 arguments after vmod)

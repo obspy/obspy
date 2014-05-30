@@ -13,3 +13,8 @@ setTopSVelocity(bla)	-->	topSVelocity = bla	(oh Java why you so stupid)
 getLayers(self)     -->     I think that just returned self.layers
 
 endsWith() or startsW.. --> endswith() and startswith() (string methods)
+
+in TauP_Create:
+cf the special notes file.
+Also removed get/setVelFileType, -ModelFilename, -Directory and DEBUG,
+as these appear to be never called ever, anywhere, either.
