@@ -1,45 +1,8 @@
 #!/usr/bin/env python
-""" generated source for module TauP_Create """
-# 
-#  * The TauP Toolkit: Flexible Seismic Travel-Time and Raypath Utilities.
-#  * Copyright (C) 1998-2000 University of South Carolina
-#  * 
-#  * This program is free software; you can redistribute it and/or modify it under
-#  * the terms of the GNU General Public License as published by the Free Software
-#  * Foundation; either version 2 of the License, or (at your option) any later
-#  * version.
-#  * 
-#  * This program is distributed in the hope that it will be useful, but WITHOUT
-#  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-#  * details.
-#  * 
-#  * You should have received a copy of the GNU General Public License along with
-#  * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-#  * Place - Suite 330, Boston, MA 02111-1307, USA.
-#  * 
-#  * The current version can be found at <A
-#  * HREF="www.seis.sc.edu">http://www.seis.sc.edu</A>
-#  * 
-#  * Bug reports and comments should be directed to H. Philip Crotwell,
-#  * crotwell@seis.sc.edu or Tom Owens, owens@seis.sc.edu
-#  * 
-#  
-# package: edu.sc.seis.TauP
-import java.io.BufferedInputStream
 
-import java.io.File
 
-import java.io.FileInputStream
-
-import java.io.IOException
-
-import java.io.PrintWriter
-
-import java.util.Properties
-
-# 
-#  * TauP_Create - Re-implementation of the seismic travel time calculation method
+class TauP_Create(object):
+    """#  * TauP_Create - Re-implementation of the seismic travel time calculation method
 #  * described in "The Computation of Seismic Travel Times" by Buland and Chapman,
 #  * BSSA vol. 73, No. 5, October 1983, pp 1271-1302. This creates the
 #  * SlownessModel and tau branches and saves them for later use.
@@ -49,9 +12,7 @@ import java.util.Properties
 #  * 
 #  * 
 #  * @author H. Philip Crotwell
-#  
-class TauP_Create(object):
-    """ generated source for class TauP_Create """
+#  """
     verbose = False
     modelFilename = "iasp91.tvel"
     overlayModelFilename = None
@@ -154,6 +115,9 @@ class TauP_Create(object):
         print "-nd modelfile       -- \"named discontinuities\" velocity file"
         print "-tvel modelfile     -- \".tvel\" velocity file, ala ttimes\n"
         print "--vplot file.gmt     -- plot velocity as a GMT script\n"
+        #// plotting sMod and tMod not yet implemented
+        #// System.out.println("--splot file.gmt     -- plot slowness as a GMT script\n");
+       #// System.out.println("--tplot file.gmt     -- plot tau as a GMT script\n");
         print "-debug              -- enable debugging output\n" + "-verbose            -- enable verbose output\n" + "-version            -- print the version\n" + "-help               -- print this out, but you already know that!\n\n"
 
     @classmethod
@@ -162,7 +126,7 @@ class TauP_Create(object):
         return TauP_Time.dashEquals(argName, arg)
 
     def parseCmdLineArgs(self, args):
-        """ generated source for method parseCmdLineArgs """
+        """ parses the command line args for TauP_Create. """
         i = 0
         noComprendoArgs = [None]*
         numNoComprendoArgs = 0
@@ -230,11 +194,14 @@ class TauP_Create(object):
                 self.velFileType = "tvel"
                 parseFileName(args[i])
             else:
+                # I don't know how to interpret this argument, so pass it
+                # java: noComprendoArgs[numNoComprendoArgs++] = args[i];
                 noComprendoArgs[__numNoComprendoArgs_3] = args[i]
             i += 1
         if self.modelFilename == None:
             print "Velocity model not specified, use one of -nd or -tvel"
             self.printUsage()
+            # bad, should do something else here...
             System.exit(1)
         if numNoComprendoArgs > 0:
             System.arraycopy(noComprendoArgs, 0, temp, 0, numNoComprendoArgs)
@@ -270,12 +237,14 @@ class TauP_Create(object):
     def loadVMod(self):
         """ generated source for method loadVMod """
         file_sep = System.getProperty("file.separator")
+        # Read the velocity model file.
         filename = self.directory + file_sep + self.modelFilename
         f = File(filename)
         if self.verbose:
             print "filename =" + self.directory + file_sep + self.modelFilename
         self.vMod = VelocityModel.readVelocityFile(filename, self.velFileType)
         if self.vMod == None:
+            # try and load internally
             self.vMod = TauModelLoader.loadVelocityModel(self.modelFilename)
         if self.vMod == None:
             raise IOException("Velocity model file not found: " + self.modelFilename + ", tried internally and from file: " + f)
@@ -310,8 +279,10 @@ class TauP_Create(object):
             print "Slow model " + " " + self.sMod.getNumLayers(True) + " P layers," + self.sMod.getNumLayers(False) + " S layers"
         if self.DEBUG:
             print self.sMod
+        # set the debug flags to value given here:
         TauModel.DEBUG = self.DEBUG
         SlownessModel.DEBUG = self.DEBUG
+        # Creates tau model from slownesses
         return TauModel(self.sMod)
 
     def start(self):
@@ -322,6 +293,13 @@ class TauP_Create(object):
                     self.vMod.printGMT(self.plotVmodFilename)
                     # not implemented yet: sMod and tMod plotting
             else:
+                # j2py screwed up here, and ignored the following:
+                # String file_sep = System.getProperty("file.separator");
+                # TauModel tMod = createTauModel(vMod);
+                # which I might translate to:
+                tMod = createTauModel(vMod)
+                # this reassigns tMod! Used to be TauModel() class, now it's
+                # an instance of it.
                 if self.DEBUG:
                     print "Done calculating Tau branches."
                 if self.DEBUG:

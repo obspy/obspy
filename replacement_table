@@ -11,3 +11,5 @@ layer (as arg to class)	-->	layers		(makes more sense, but careful)
 setTopSVelocity(bla)	-->	topSVelocity = bla	(oh Java why you so stupid)
 
 getLayers(self)     -->     I think that just returned self.layers
+
+endsWith() or startsW.. --> endswith() and startswith() (string methods)

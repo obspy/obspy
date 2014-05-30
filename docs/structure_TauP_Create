@@ -1,0 +1,73 @@
+Structure of the program when calling TauP_Create. Remember names starting with uppercase are classes. 
+
+TauP_Create:
+    main:
+        loadVMod
+        start
+        
+    loadVMod:
+        call either VelocityModel.readVelocityFile
+        or if that didn't work:
+        TauModelLoader.loadVelocityModel #for previously read model I think
+        (may call VelocityModel.replaceLayers btw)
+        
+    start:
+        tMod = createTauModel(vMod) #returns an instance of TauModel
+        set an outfile filename and
+        self.tMod.writeModel(outFile)
+    
+    createTauModel:
+        self.sMod = SphericalSModel(vMod, ...) 
+        return TauModel(self.sMod)
+        
+SphericalSModel extends SlownessModel:
+    I think there are three constructors; the middle one is called here
+    (createTauModel passes 7 arguments after vmod)
+    (note how the constructor calls its superclass constructors with super)
+
+TauModel:   
+    # doesn't want to be translated by j2py!
+    has 2 constructors, I believe the first is called (1 argument); however it
+    assumes the input to be a SlownessModel, NOT the SphericalSModel it is 
+    given. Probably works because latter is subclass of the former.
+    In the constructor:
+        calcTauIncFrom();
+        
+    calcTauIncFrom():
+        # calculates tau for each branch
+        # sMod refers now to Slowness-, not SphericalSModel
+        sMod.validate()
+        sMod.getRadiusOfEarth()
+        sMod.getNumCriticalDepths()
+        TauBranch   #called with: new TauBranch[some int], filled in later
+        sMod.getSlownessLayer
+            returns a SlownessLayer object
+        SlownessLayer.getTopP  (implicitly. also BotP of course)
+        sMod.getNumLayers
+        sMod.getCriticalDepth.getLayerNum
+        sMod.vMod.getMohoDepth etc, where vMod was given to sMod as a param
+
+    writeModel:
+        called by TauP_Create to write to file; looks simple
+
+SlownessLayer:
+        calls on VelocityLayer
+        
+SlownessModel:
+    the constructor isn't called directly as SphericalSModel is created instead
+    constructor requires DepthRange, CriticalDepth and SlownessLayer classes
+        validate:
+            DepthRange
+            DepthRange.size     # via highSlownessLayerDepths.size
+            DepthRange.get
+            DepthRange.get.topDepth     # and bot
+            getSlownessLayer.validate, .getTopDepth, .getBotP etc
+
+CriticalDepth:            
+    very simple.
+
+DepthRange:
+    also simple.
+    
+TauBranch:
+    nothing special in the constructors.
