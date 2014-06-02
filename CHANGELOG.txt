@@ -12,6 +12,8 @@
      obspy.imaging.maps.plot_basemap() (see #753).
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
+ - obspy.signal:
+   * Increased performance of PPSD plotting.
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
