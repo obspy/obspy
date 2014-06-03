@@ -843,7 +843,7 @@ class PPSD():
             ax = fig.add_subplot(111)
 
         if show_histogram:
-            ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
+            ppsd = ax.pcolormesh(X, Y, hist_stack.T, cmap=self.colormap)
             cb = plt.colorbar(ppsd, ax=ax)
             cb.set_label("[%]")
             color_limits = (0, max_percentage)

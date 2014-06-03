@@ -10,7 +10,7 @@ Module containing a UTC-based datetime class.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str, PY2
 
 import datetime
@@ -18,7 +18,7 @@ import time
 import math
 
 
-TIMESTAMP0 = datetime.datetime(1970, 1, 1)
+TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
 # Py3k compat, avoid circular import
 if not PY2:
@@ -498,12 +498,9 @@ class UTCDateTime(object):
         >>> dt.datetime
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        # we are exact at the border of floating point precision
         # datetime.utcfromtimestamp will cut off but not round
-        # avoid through adding extra timedelta
-        _fsec, _isec = math.modf(self.timestamp)
-        return datetime.datetime.utcfromtimestamp(_isec) + \
-            datetime.timedelta(seconds=_fsec)
+        # avoid through adding timedelta - also avoids the year 2038 problem
+        return TIMESTAMP0 + datetime.timedelta(seconds=self.timestamp)
 
     datetime = property(_getDateTime)
 

@@ -2765,6 +2765,9 @@ class Catalog(object):
             return False
         return True
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __getitem__(self, index):
         """
         __getitem__ method of the Catalog object.
