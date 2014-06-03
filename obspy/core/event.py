@@ -5,9 +5,7 @@ Module for handling ObsPy Catalog and Event objects.
 .. note::
 
     For handling additional information not covered by the QuakeML standard and
-    how to output it to QuakeML see the `ObsPy Tutorial
-    <http://docs.obspy.org/tutorial/code_snippets/\
-    quakeml_custom_tags.html>`_.
+    how to output it to QuakeML see the :ref:`ObsPy Tutorial <quakeml-extra>`.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -900,10 +898,9 @@ class CreationInfo(__CreationInfo):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -931,10 +928,9 @@ class TimeWindow(__TimeWindow):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -993,10 +989,9 @@ class CompositeTime(__CompositeTime):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1037,10 +1032,9 @@ class Comment(__Comment):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1281,10 +1275,9 @@ class Amplitude(__Amplitude):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1379,10 +1372,9 @@ class Pick(__Pick):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1477,10 +1469,9 @@ class Arrival(__Arrival):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1549,10 +1540,9 @@ class OriginQuality(__OriginQuality):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1590,10 +1580,9 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1645,10 +1634,9 @@ class OriginUncertainty(__OriginUncertainty):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1811,10 +1799,9 @@ class Origin(__Origin):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1845,10 +1832,9 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1939,10 +1925,9 @@ class Magnitude(__Magnitude):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1996,10 +1981,9 @@ class StationMagnitude(__StationMagnitude):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2030,10 +2014,9 @@ class EventDescription(__EventDescription):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2080,10 +2063,9 @@ class Tensor(__Tensor):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2123,10 +2105,9 @@ class DataUsed(__DataUsed):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2158,10 +2139,9 @@ class SourceTimeFunction(__SourceTimeFunction):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2192,10 +2172,9 @@ class NodalPlane(__NodalPlane):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2232,10 +2211,9 @@ class Axis(__Axis):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2264,10 +2242,9 @@ class NodalPlanes(__NodalPlanes):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2292,10 +2269,9 @@ class PrincipalAxes(__PrincipalAxes):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2395,10 +2371,9 @@ class MomentTensor(__MomentTensor):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2484,10 +2459,9 @@ class FocalMechanism(__FocalMechanism):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2595,10 +2569,9 @@ class Event(__Event):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
     def short_str(self):
         """
@@ -2684,10 +2657,9 @@ class Catalog(object):
 
     .. note::
 
-        For handling additional information not covered by the QuakeML standard
-        and how to output it to QuakeML see the `ObsPy Tutorial
-        <http://docs.obspy.org/tutorial/code_snippets/\
-        quakeml_custom_tags.html>`_.
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
     def __init__(self, events=None, **kwargs):
         if not events:
