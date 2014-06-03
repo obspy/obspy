@@ -904,7 +904,6 @@ class QuakeMLTestCase(unittest.TestCase):
         nsmap = {"ns0": r"http://test.org/xmlns/0.1",
                  "catalog": r'http://anss.org/xmlns/catalog/0.1'}
         cat[0].extra = my_extra.copy()
-        #cat[0].extra = my_extra
         # insert a pick with an extra field
         p = Pick()
         p.extra = {'weight': 2}
