@@ -1079,19 +1079,20 @@ class Pickler(object):
 
     def _extra(self, obj, element):
         """
-        Add information stored in obj.extra as custom tags in non-quakeml
-        namespace.
+        Add information stored in obj.extra as custom tags/attributes in
+        non-quakeml namespace.
         """
         if not hasattr(obj, "extra"):
             return
         for key, value in obj.extra.items():
             ns = None
             attrib = {}
+            type_ = "element"
             # check if a namespace is given
             if isinstance(value, dict):
                 ns = value.get("namespace")
                 attrib = value.get("attrib", {})
-                type_ = value.get("type")
+                type_ = value.get("type", "element")
                 value = value.get("value")
             # otherwise use default obspy namespace (and add it to
             if ns is None:
@@ -1100,19 +1101,25 @@ class Pickler(object):
                 ns_abbrev = None
             self._addNamespace(ns, ns_abbrev)
             tag = "{%s}%s" % (ns, key)
+            # add either as subelement or attribute
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = value
-            else:
+            elif type_.lower() == "element":
                 cls = type(value)
                 if cls.__module__ == "__builtin__":
-                    type_ = str(cls.__name__)
+                    pytype = str(cls.__name__)
                 else:
-                    type_ = ".".join((cls.__module__, cls.__name__))
-                attrib['pythonType'] = type_
+                    pytype = ".".join((cls.__module__, cls.__name__))
+                attrib['pythonType'] = pytype
                 if isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)
+            else:
+                msg = ("Invalid 'type' for custom QuakeML item: '%s'. "
+                       "Should be either 'element' or 'attribute or "
+                       "left empty.") % type_
+                raise ValueError(msg)
 
     def _getNamespaceMap(self):
         nsmap = self.ns_dict.copy()
