@@ -1091,6 +1091,7 @@ class Pickler(object):
             if isinstance(value, dict):
                 ns = value.get("namespace")
                 attrib = value.get("attrib", {})
+                type_ = value.get("type")
                 value = value.get("value")
             # otherwise use default obspy namespace (and add it to
             if ns is None:
@@ -1099,16 +1100,19 @@ class Pickler(object):
                 ns_abbrev = None
             self._addNamespace(ns, ns_abbrev)
             tag = "{%s}%s" % (ns, key)
-            cls = type(value)
-            if cls.__module__ == "__builtin__":
-                type_ = str(cls.__name__)
+            if type_.lower() in ("attribute", "attrib"):
+                element.attrib[tag] = value
             else:
-                type_ = ".".join((cls.__module__, cls.__name__))
-            attrib['pythonType'] = type_
-            if isinstance(value, bool):
-                self._bool(value, element, tag, attrib=attrib)
-            else:
-                self._str(value, element, tag, attrib=attrib)
+                cls = type(value)
+                if cls.__module__ == "__builtin__":
+                    type_ = str(cls.__name__)
+                else:
+                    type_ = ".".join((cls.__module__, cls.__name__))
+                attrib['pythonType'] = type_
+                if isinstance(value, bool):
+                    self._bool(value, element, tag, attrib=attrib)
+                else:
+                    self._str(value, element, tag, attrib=attrib)
 
     def _getNamespaceMap(self):
         nsmap = self.ns_dict.copy()
