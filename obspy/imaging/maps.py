@@ -153,8 +153,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
         else:
             max_lons = max(lons)
             min_lons = min(lons)
-        lat_0 = (max(lats) + min(lats)) / 2.
-        lon_0 = (max_lons + min_lons) / 2.
+        lat_0 = max(lats) / 2. + min(lats) / 2.
+        lon_0 = max_lons / 2. + min_lons / 2.
         if lon_0 > 180:
             lon_0 -= 360
         deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
