@@ -893,14 +893,18 @@ class QuakeMLTestCase(unittest.TestCase):
         my_extra = AttribDict(
             {'public': {'value': False,
                         'namespace': r"http://some-page.de/xmlns/1.0",
-                        'attrib': {"some_attrib": "some_value",
-                                   "another_attrib": "another_value"}},
+                        'attrib': {u"some_attrib": u"some_value",
+                                   u"another_attrib": u"another_value"}},
              'custom': {'value': u"True"},
              'new_tag': {'value': 1234,
                          'namespace': r"http://test.org/xmlns/0.1"},
-             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')}})
-        nsmap = {"ns0": r"http://test.org/xmlns/0.1"}
+             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')},
+             'dataid': {'namespace': r'http://anss.org/xmlns/catalog/0.1',
+                        'type': 'attribute', 'value': '00999999'}})
+        nsmap = {"ns0": r"http://test.org/xmlns/0.1",
+                 "catalog": r'http://anss.org/xmlns/catalog/0.1'}
         cat[0].extra = my_extra.copy()
+        #cat[0].extra = my_extra
         # insert a pick with an extra field
         p = Pick()
         p.extra = {'weight': 2}
@@ -916,6 +920,7 @@ class QuakeMLTestCase(unittest.TestCase):
             # check namespace definitions in root element
             got = sorted(lines[1].strip()[:-1].split())
             expected = ['<q:quakeml',
+                        'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
                         'xmlns:ns0="http://test.org/xmlns/0.1"',
                         'xmlns:ns1="http://some-page.de/xmlns/1.0"',
                         'xmlns:obspy="http://obspy.org/xmlns/0.1"',
@@ -943,7 +948,6 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - custom namespace abbreviations should attached to Catalog
         my_extra['custom']['namespace'] = r'http://obspy.org/xmlns/0.1'
         my_extra['tX']['namespace'] = r'http://obspy.org/xmlns/0.1'
-        my_extra['new_tag']['namespace'] = r'http://test.org/xmlns/0.1'
         self.assertTrue(hasattr(cat[0], "extra"))
         self.assertEqual(cat[0].extra, my_extra)
         self.assertTrue(hasattr(cat[0].picks[0], "extra"))
