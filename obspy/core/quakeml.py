@@ -879,7 +879,7 @@ class Unpickler(object):
 
     def _extra(self, element, obj):
         """
-        Add information stored in custom tags in obj.extra.
+        Add information stored in custom tags/attributes in obj.extra.
         """
         # search all namespaces in current scope
         for ns in element.nsmap.values():
@@ -937,6 +937,27 @@ class Unpickler(object):
                                'namespace': '%s' % ns}
                 if el.attrib:
                     extra[name]['attrib'] = el.attrib
+        # process all attributes of custom namespaces, if any
+        for key, value in element.attrib.items():
+            # no custom namespace
+            if "}" not in key:
+                continue
+            # separate namespace from tag name
+            ns, name = key.lstrip("{").split("}")
+            try:
+                extra = obj.setdefault("extra", AttribDict())
+            # Catalog object is not based on AttribDict..
+            except AttributeError:
+                if not isinstance(obj, Catalog):
+                    raise
+                if hasattr(obj, "extra"):
+                    extra = obj.extra
+                else:
+                    extra = AttribDict()
+                    obj.extra = extra
+            extra[name] = {'value': str(value),
+                           'namespace': '%s' % ns,
+                           'type': 'attribute'}
 
 
 class Pickler(object):
