@@ -19,9 +19,12 @@ with custom xml tags/attributes:
 
     extra = {'my_tag': {'value': True,
                         'namespace': r"http://some-page.de/xmlns/1.0"},
-             'my_tag_2': {'value': u"True"},
-             'my_tag_3': {'value': 1},
-             'my_tag_4': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')},
+             'my_tag_2': {'value': u"True",
+                          'namespace': r"http://some-page.de/xmlns/1.0"},
+             'my_tag_3': {'value': 1,
+                          'namespace': r"http://some-page.de/xmlns/1.0"},
+             'my_tag_4': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z'),
+                          'namespace': r"http://test.org/xmlns/0.1"},
              'my_attribute': {'value': 'my_attribute_value',
                               'type': 'attribute',
                               'namespace': r"http://test.org/xmlns/0.1"}}
@@ -32,14 +35,17 @@ with custom xml tags/attributes:
               nsmap={"my_ns": r"http://test.org/xmlns/0.1"})
 
 All custom information to be stored in the customized QuakeML has to
-be stored in form of an :class:`~obspy.core.util.attribdict.AttribDict`
+be stored in form of a :class:`dict` or
+:class:`~obspy.core.util.attribdict.AttribDict`
 object as the ``extra`` attribute of the object that should carry the
 additional custom information (e.g. ``Catalog``, ``Event``, ``Pick``). The
 keys are used as the name of the xml tag, the content of the xml tag is defined
 in a simple dictionary: ``'value'`` defines the content of the tag (the string
 representation of the object gets stored in the textual xml output).
-``'namespace'`` can be used to specify a custom namespace for the tag (if the
-``'namespace'`` key is missing a default ObsPy namespace is used.)
+``'namespace'`` has to specify a custom namespace for the tag.
+``'type'`` can be used to specify whether the extra information should be
+stored as a subelement (``'element'``, default) or as an attribute
+(``'attribute'``).
 If desired for better (human-)readability, namespace abbreviations in the
 output xml can be specified during output as QuakeML by providing a dictionary
 of namespace abbreviation mappings as `nsmap` parameter to
@@ -50,13 +56,12 @@ The xml output of the above example looks like:
 
     <?xml version='1.0' encoding='utf-8'?>
     <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:ns0="http://some-page.de/xmlns/1.0"
-               xmlns:obspy="http://obspy.org/xmlns/0.1" xmlns:my_ns="http://test.org/xmlns/0.1"
-               xmlns="http://quakeml.org/xmlns/bed/1.2">
-      <eventParameters publicID="smi:local/fce9424c-da39-4f1c-a691-f157bb55d486" my_ns:my_attribute="my_attribute_value">
+               xmlns:my_ns="http://test.org/xmlns/0.1" xmlns="http://quakeml.org/xmlns/bed/1.2">
+      <eventParameters publicID="smi:local/5d5a51a5-68c5-4d79-a75e-64407d42fdec" my_ns:my_attribute="my_attribute_value">
         <ns0:my_tag pythonType="bool">true</ns0:my_tag>
-        <obspy:my_tag_4 pythonType="obspy.core.utcdatetime.UTCDateTime">2013-01-02T13:12:14.600000Z</obspy:my_tag_4>
-        <obspy:my_tag_2 pythonType="unicode">True</obspy:my_tag_2>
-        <obspy:my_tag_3 pythonType="int">1</obspy:my_tag_3>
+        <my_ns:my_tag_4 pythonType="obspy.core.utcdatetime.UTCDateTime">2013-01-02T13:12:14.600000Z</my_ns:my_tag_4>
+        <ns0:my_tag_2 pythonType="unicode">True</ns0:my_tag_2>
+        <ns0:my_tag_3 pythonType="int">1</ns0:my_tag_3>
       </eventParameters>
     </q:quakeml>
 
@@ -77,12 +82,12 @@ in the xml above):
 
     AttribDict({u'my_tag': {u'namespace': u'http://some-page.de/xmlns/1.0',
                             u'value': True},
-                u'my_tag_4': {u'namespace': u'http://obspy.org/xmlns/0.1',
+                u'my_tag_4': {u'namespace': u'http://test.org/xmlns/0.1',
                               u'value': UTCDateTime(2013, 1, 2, 13, 12, 14, 600000)},
                 u'my_attribute': {u'type': u'attribute',
                                   u'namespace': u'http://test.org/xmlns/0.1',
                                   u'value': 'my_attribute_value'},
-                u'my_tag_2': {u'namespace': u'http://obspy.org/xmlns/0.1',
+                u'my_tag_2': {u'namespace': u'http://some-page.de/xmlns/1.0',
                               u'value': u'True'},
-                u'my_tag_3': {u'namespace': u'http://obspy.org/xmlns/0.1',
+                u'my_tag_3': {u'namespace': u'http://some-page.de/xmlns/1.0',
                               u'value': 1}})

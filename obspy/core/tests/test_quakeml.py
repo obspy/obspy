@@ -895,10 +895,12 @@ class QuakeMLTestCase(unittest.TestCase):
                         'namespace': r"http://some-page.de/xmlns/1.0",
                         'attrib': {u"some_attrib": u"some_value",
                                    u"another_attrib": u"another_value"}},
-             'custom': {'value': u"True"},
+             'custom': {'value': u"True",
+                        'namespace': r'http://test.org/xmlns/0.1'},
              'new_tag': {'value': 1234,
                          'namespace': r"http://test.org/xmlns/0.1"},
-             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z')},
+             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z'),
+                    'namespace': r'http://test.org/xmlns/0.1'},
              'dataid': {'namespace': r'http://anss.org/xmlns/catalog/0.1',
                         'type': 'attribute', 'value': '00999999'}})
         nsmap = {"ns0": r"http://test.org/xmlns/0.1",
@@ -906,7 +908,8 @@ class QuakeMLTestCase(unittest.TestCase):
         cat[0].extra = my_extra.copy()
         # insert a pick with an extra field
         p = Pick()
-        p.extra = {'weight': 2}
+        p.extra = {'weight': {'value': 2,
+                              'namespace': r"http://test.org/xmlns/0.1"}}
         cat[0].picks.append(p)
 
         with NamedTemporaryFile() as tf:
@@ -922,21 +925,21 @@ class QuakeMLTestCase(unittest.TestCase):
                         'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
                         'xmlns:ns0="http://test.org/xmlns/0.1"',
                         'xmlns:ns1="http://some-page.de/xmlns/1.0"',
-                        'xmlns:obspy="http://obspy.org/xmlns/0.1"',
                         'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
                         'xmlns="http://quakeml.org/xmlns/bed/1.2"']
             self.assertEqual(got, expected)
             # check additional tags
             got = sorted([lines[i_].strip() for i_ in xrange(85, 89)])
             expected = [
+                u'<ns0:custom pythonType="unicode">True</ns0:custom>',
                 u'<ns0:new_tag pythonType="int">1234</ns0:new_tag>',
+                u'<ns0:tX pythonType="obspy.core.utcdatetime.UTCDateTime">' +
+                u'2013-01-02T13:12:14.600000Z</ns0:tX>',
                 u'<ns1:public ' +
                 u'another_attrib="another_value" ' +
                 u'pythonType="bool" ' +
                 u'some_attrib="some_value">false</ns1:public>',
-                u'<obspy:custom pythonType="unicode">True</obspy:custom>',
-                u'<obspy:tX pythonType="obspy.core.utcdatetime.UTCDateTime">' +
-                u'2013-01-02T13:12:14.600000Z</obspy:tX>']
+                ]
             self.assertEqual(got, expected)
             # now, read again to test if its parsed correctly..
             cat = readQuakeML(tmpfile)
@@ -945,15 +948,13 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - we always end up with a namespace definition, even if it was
         #    omitted when originally setting the custom tag
         #  - custom namespace abbreviations should attached to Catalog
-        my_extra['custom']['namespace'] = r'http://obspy.org/xmlns/0.1'
-        my_extra['tX']['namespace'] = r'http://obspy.org/xmlns/0.1'
         self.assertTrue(hasattr(cat[0], "extra"))
         self.assertEqual(cat[0].extra, my_extra)
         self.assertTrue(hasattr(cat[0].picks[0], "extra"))
         self.assertEqual(
             cat[0].picks[0].extra,
             {'weight': {'value': 2,
-                        'namespace': r'http://obspy.org/xmlns/0.1'}})
+                        'namespace': r'http://test.org/xmlns/0.1'}})
         self.assertTrue(hasattr(cat, "nsmap"))
         self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])
 

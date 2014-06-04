@@ -42,7 +42,6 @@ import os
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
                  'q': "http://quakeml.org/xmlns/quakeml/1.2"}
-NAMESPACE_DEFAULT = ('obspy', "http://obspy.org/xmlns/0.1")
 
 
 def isQuakeML(filename):
@@ -1103,26 +1102,16 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, value in obj.extra.items():
-            ns = None
-            attrib = {}
-            type_ = "element"
-            # check if a namespace is given
-            if isinstance(value, dict):
-                ns = value.get("namespace")
-                attrib = value.get("attrib", {})
-                type_ = value.get("type", "element")
-                value = value.get("value")
-            # otherwise use default obspy namespace (and add it to
-            if ns is None:
-                ns_abbrev, ns = NAMESPACE_DEFAULT
-            else:
-                ns_abbrev = None
-            self._addNamespace(ns, ns_abbrev)
+        for key, item in obj.extra.items():
+            value = item["value"]
+            ns = item["namespace"]
+            attrib = item.get("attrib", {})
+            type_ = item.get("type", "element")
+            self._add_namespace(ns)
             tag = "{%s}%s" % (ns, key)
             # add either as subelement or attribute
             if type_.lower() in ("attribute", "attrib"):
-                element.attrib[tag] = value
+                element.attrib[tag] = str(value)
             elif type_.lower() == "element":
                 cls = type(value)
                 if cls.__module__ == "__builtin__":
@@ -1140,7 +1129,7 @@ class Pickler(object):
                        "left empty.") % type_
                 raise ValueError(msg)
 
-    def _getNamespaceMap(self):
+    def _get_namespace_map(self):
         nsmap = self.ns_dict.copy()
         _i = 0
         for ns in self.ns_set:
@@ -1153,25 +1142,8 @@ class Pickler(object):
             nsmap[ns_abbrev] = ns
         return nsmap
 
-    def _addNamespace(self, ns, ns_abbrev=None):
-        if ns_abbrev is None:
-            self.ns_set.add(ns)
-            return
-        # check if abbreviation is already in use
-        if ns_abbrev == "":
-            msg = ("Using empty namespace shortname is not allowed, falling "
-                   "back to a generic shortname.")
-            warnings.warn(msg)
-            self.ns_set.add(ns)
-            return
-        elif ns_abbrev in self.ns_dict:
-            msg = ("Namespace shortname already in use, falling back "
-                   "to a generic shortname.")
-            if self.ns_dict[ns_abbrev] != ns:
-                warnings.warn(msg)
-                self.ns_set.add(ns)
-                return
-        self.ns_dict[ns_abbrev] = ns
+    def _add_namespace(self, ns):
+        self.ns_set.add(ns)
         return
 
     def _arrival(self, arrival):
@@ -1708,7 +1680,7 @@ class Pickler(object):
             # add event node to catalog
             catalog_el.append(event_el)
         self._extra(catalog, catalog_el)
-        nsmap = self._getNamespaceMap()
+        nsmap = self._get_namespace_map()
         root_el = etree.Element('{%s}quakeml' % NSMAP_QUAKEML['q'],
                                 nsmap=nsmap)
         root_el.append(catalog_el)
