@@ -931,13 +931,11 @@ class QuakeMLTestCase(unittest.TestCase):
             # check additional tags
             got = sorted([lines[i_].strip() for i_ in xrange(85, 89)])
             expected = [
-                u'<ns0:custom pythonType="unicode">True</ns0:custom>',
-                u'<ns0:new_tag pythonType="int">1234</ns0:new_tag>',
-                u'<ns0:tX pythonType="obspy.core.utcdatetime.UTCDateTime">' +
-                u'2013-01-02T13:12:14.600000Z</ns0:tX>',
+                u'<ns0:custom>True</ns0:custom>',
+                u'<ns0:new_tag>1234</ns0:new_tag>',
+                u'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
                 u'<ns1:public ' +
                 u'another_attrib="another_value" ' +
-                u'pythonType="bool" ' +
                 u'some_attrib="some_value">false</ns1:public>',
                 ]
             self.assertEqual(got, expected)
@@ -949,11 +947,22 @@ class QuakeMLTestCase(unittest.TestCase):
         #    omitted when originally setting the custom tag
         #  - custom namespace abbreviations should attached to Catalog
         self.assertTrue(hasattr(cat[0], "extra"))
+
+        def _tostr(x):
+            if isinstance(x, bool):
+                if x:
+                    return str("true")
+                else:
+                    return str("false")
+            return str(x)
+
+        for key, value in my_extra.items():
+            my_extra[key]['value'] = _tostr(value['value'])
         self.assertEqual(cat[0].extra, my_extra)
         self.assertTrue(hasattr(cat[0].picks[0], "extra"))
         self.assertEqual(
             cat[0].picks[0].extra,
-            {'weight': {'value': 2,
+            {'weight': {'value': '2',
                         'namespace': r'http://test.org/xmlns/0.1'}})
         self.assertTrue(hasattr(cat, "nsmap"))
         self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])

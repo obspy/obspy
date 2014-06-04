@@ -18,7 +18,9 @@ with custom xml tags/attributes:
     from obspy import Catalog, UTCDateTime
 
     extra = {'my_tag': {'value': True,
-                        'namespace': r"http://some-page.de/xmlns/1.0"},
+                        'namespace': r"http://some-page.de/xmlns/1.0",
+                        'attrib': {r"{http://some-page.de/xmlns/1.0}my_attrib1": "123.4",
+                                   r"{http://some-page.de/xmlns/1.0}my_attrib2": "567"}},
              'my_tag_2': {'value': u"True",
                           'namespace': r"http://some-page.de/xmlns/1.0"},
              'my_tag_3': {'value': 1,
@@ -45,7 +47,8 @@ representation of the object gets stored in the textual xml output).
 ``'namespace'`` has to specify a custom namespace for the tag.
 ``'type'`` can be used to specify whether the extra information should be
 stored as a subelement (``'element'``, default) or as an attribute
-(``'attribute'``).
+(``'attribute'``). Attributes to custom subelements can be provided in form of
+a dictionary as ``'attrib'``.
 If desired for better (human-)readability, namespace abbreviations in the
 output xml can be specified during output as QuakeML by providing a dictionary
 of namespace abbreviation mappings as `nsmap` parameter to
@@ -57,19 +60,17 @@ The xml output of the above example looks like:
     <?xml version='1.0' encoding='utf-8'?>
     <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:ns0="http://some-page.de/xmlns/1.0"
                xmlns:my_ns="http://test.org/xmlns/0.1" xmlns="http://quakeml.org/xmlns/bed/1.2">
-      <eventParameters publicID="smi:local/5d5a51a5-68c5-4d79-a75e-64407d42fdec" my_ns:my_attribute="my_attribute_value">
-        <ns0:my_tag pythonType="bool">true</ns0:my_tag>
-        <my_ns:my_tag_4 pythonType="obspy.core.utcdatetime.UTCDateTime">2013-01-02T13:12:14.600000Z</my_ns:my_tag_4>
-        <ns0:my_tag_2 pythonType="unicode">True</ns0:my_tag_2>
-        <ns0:my_tag_3 pythonType="int">1</ns0:my_tag_3>
+      <eventParameters publicID="smi:local/b425518c-9445-40c7-8284-d1f299ed2eac" my_ns:my_attribute="my_attribute_value">
+        <ns0:my_tag ns0:my_attrib1="123.4" ns0:my_attrib2="567">true</ns0:my_tag>
+        <my_ns:my_tag_4>2013-01-02T13:12:14.600000Z</my_ns:my_tag_4>
+        <ns0:my_tag_2>True</ns0:my_tag_2>
+        <ns0:my_tag_3>1</ns0:my_tag_3>
       </eventParameters>
     </q:quakeml>
 
 When reading the above xml again, the custom tags get parsed and attached to
 the respective Event type objects (in this example to the Catalog object) as
-``.extra``, Python types are restored correctly when possible
-(note the 'pythonType' attribute that automatically stores the original type
-in the xml above):
+``.extra``:
 
 .. code-block:: python
 
@@ -80,14 +81,16 @@ in the xml above):
 
 .. code-block:: python
 
-    AttribDict({u'my_tag': {u'namespace': u'http://some-page.de/xmlns/1.0',
-                            u'value': True},
+    AttribDict({u'my_tag': {u'attrib': {'{http://some-page.de/xmlns/1.0}my_attrib2': '567',
+                                        '{http://some-page.de/xmlns/1.0}my_attrib1': '123.4'},
+                            u'namespace': u'http://some-page.de/xmlns/1.0',
+                            u'value': 'true'},
                 u'my_tag_4': {u'namespace': u'http://test.org/xmlns/0.1',
-                              u'value': UTCDateTime(2013, 1, 2, 13, 12, 14, 600000)},
+                              u'value': '2013-01-02T13:12:14.600000Z'},
                 u'my_attribute': {u'type': u'attribute',
                                   u'namespace': u'http://test.org/xmlns/0.1',
                                   u'value': 'my_attribute_value'},
                 u'my_tag_2': {u'namespace': u'http://some-page.de/xmlns/1.0',
-                              u'value': u'True'},
+                              u'value': 'True'},
                 u'my_tag_3': {u'namespace': u'http://some-page.de/xmlns/1.0',
-                              u'value': 1}})
+                              u'value': '1'}})

@@ -889,36 +889,6 @@ class Unpickler(object):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
                 value = el.text
-                # try to reconstruct original python type from attribute
-                type_ = el.attrib.pop("pythonType", None)
-                if type_ is not None:
-                    try:
-                        try:
-                            # Check if it's a builtin type
-                            module = __import__('__builtin__')
-                            cls = getattr(module, type_)
-                        except AttributeError:
-                            # try to import non builtin class
-                            # (e.g. UTCDateTime)
-                            module, type_ = type_.rsplit(".", 1)
-                            module = __import__(module, fromlist=[""])
-                            cls = getattr(module, type_)
-                        if cls is bool:
-                            if value in ("0", "false"):
-                                value = False
-                            elif value in ("1", "true"):
-                                value = True
-                            else:
-                                msg = ("XML string representation of type "
-                                       "bool must be either '1'/'true' or "
-                                       "'0'/'false' (got: %s)." % value)
-                                raise Exception(msg)
-                        else:
-                            value = cls(value)
-                    except Exception as e:
-                        msg = ("Failed to automatically convert extra tag to "
-                               "correct Python type: %s" % str(e))
-                        warnings.warn(msg)
                 try:
                     extra = obj.setdefault("extra", AttribDict())
                 # Catalog object is not based on AttribDict..
@@ -1113,19 +1083,13 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
-                cls = type(value)
-                if cls.__module__ == "__builtin__":
-                    pytype = str(cls.__name__)
-                else:
-                    pytype = ".".join((cls.__module__, cls.__name__))
-                attrib['pythonType'] = pytype
                 if isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)
             else:
                 msg = ("Invalid 'type' for custom QuakeML item: '%s'. "
-                       "Should be either 'element' or 'attribute or "
+                       "Should be either 'element' or 'attribute' or "
                        "left empty.") % type_
                 raise ValueError(msg)
 
