@@ -1057,7 +1057,7 @@ class Stream(object):
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform(*args, **kwargs)
 
-    def spectrogram(self, *args, **kwargs):
+    def spectrogram(self, **kwargs):
         """
         Creates a spectrogram plot for each trace in the stream.
 
@@ -1078,7 +1078,7 @@ class Stream(object):
         """
         spec_list = []
         for tr in self:
-            spec = tr.spectrogram(*args, **kwargs)
+            spec = tr.spectrogram(**kwargs)
             spec_list.append(spec)
 
         return spec_list
