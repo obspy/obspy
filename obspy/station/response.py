@@ -174,9 +174,11 @@ class PolesZerosResponseStage(ResponseStage):
     :type pz_transfer_function_type: String
     :param pz_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
+
             * ``LAPLACE (RADIANS/SECOND)``
             * ``LAPLACE (HERTZ)``
             * ``DIGITAL (Z-TRANSFORM)``
+
         The function tries to match inputs to one of three types if it can.
     :type normalization_frequency: float
     :param normalization_frequency: The frequency at which the normalization
@@ -305,9 +307,11 @@ class CoefficientsTypeResponseStage(ResponseStage):
     :type cf_transfer_function_type: String
     :param cf_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
+
             * ``ANALOG (RADIANS/SECOND)``
             * ``ANALOG (HERTZ)``
             * ``DIGITAL``
+
         The function tries to match inputs to one of three types if it can.
     :type numerator: list of
         :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`

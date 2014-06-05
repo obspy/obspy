@@ -62,8 +62,7 @@ class Channel(BaseNode):
             channel flags in SEED blockette 52. The SEED volume producer could
             use the first letter of an Output value as the SEED channel flag.
             Possible values: TRIGGERED, CONTINUOUS, HEALTH, GEOPHYSICAL,
-                WEATHER, FLAG, SYNTHESIZED, INPUT, EXPERIMENTAL, MAINTENANCE,
-                BEAM
+            WEATHER, FLAG, SYNTHESIZED, INPUT, EXPERIMENTAL, MAINTENANCE, BEAM
         :type external_references: List of
             :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as

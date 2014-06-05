@@ -314,7 +314,7 @@ class Person(ComparingObject):
         :param emails: Self-explanatory. Multiple emails allowed. Optional.
         :type phones: list of :class:`PhoneNumber`
         :param phones: Self-explanatory. Multiple phone numbers allowed.
-        Optional.
+            Optional.
         """
         self.names = names or []
         self.agencies = agencies or []
