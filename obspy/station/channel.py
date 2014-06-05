@@ -65,7 +65,7 @@ class Channel(BaseNode):
                 WEATHER, FLAG, SYNTHESIZED, INPUT, EXPERIMENTAL, MAINTENANCE,
                 BEAM
         :type external_references: List of
-            :class:`~obspy.station.util.ExternalRefernce`, optional
+            :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as
             data quality reports.
         :type sample_rate: float, optional
@@ -95,15 +95,15 @@ class Channel(BaseNode):
         :type calibration_units_description: String
         :param calibration_units_description: Description of units, e.g.
             "Velocity in meters per second", ...
-        :type sensor: :class:~`obspy.station.util.Equipment`
+        :type sensor: :class:`~obspy.station.util.Equipment`
         :param sensor: The sensor
-        :type pre_amplifier: :class:~`obspy.station.util.Equipment`
+        :type pre_amplifier: :class:`~obspy.station.util.Equipment`
         :param pre_amplifier: The pre-amplifier
-        :type data_logger: :class:~`obspy.station.util.Equipment`
+        :type data_logger: :class:`~obspy.station.util.Equipment`
         :param data_logger: The data-logger
-        :type equipment: :class:~`obspy.station.util.Equipment`
+        :type equipment: :class:`~obspy.station.util.Equipment`
         :param equipment: Other station equipment
-        :type response: :class:~`obspy.station.response.Response`, optional
+        :type response: :class:`~obspy.station.response.Response`, optional
         :param response: The response of the channel
         :type description: String, optional
         :param description: A description of the resource

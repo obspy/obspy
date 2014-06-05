@@ -66,7 +66,7 @@ class Inventory(ComparingObject):
         :param source: Network ID of the institution sending the message.
         :type sender: String
         :param sender: Name of the institution sending this message. Optional.
-        :type created: :class:`~obspy.core.utcddatetime.UTCDateTime`
+        :type created: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param created: The time when the document was created. Will be set to
             the current time if not given. Optional.
         :type module: String

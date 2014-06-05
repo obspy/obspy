@@ -37,7 +37,7 @@ class BaseNode(ComparingObject):
         :param code: The SEED network, station, or channel code
         :type description: String, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: List of :class:`Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
@@ -202,11 +202,12 @@ class Equipment(ComparingObject):
         :param model: The model of the equipment
         :type serial_number: String
         :param serial_number: The serial number of the equipment
-        :type installation_date: `obspy.UTCDateTime`
+        :type installation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param installation_date: The installation date of the equipment
-        :type removal_date: `obspy.UTCDateTime`
+        :type removal_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param removal_date: The removal data of the equipment
-        :type calibration_dates: list of `obspy.UTCDateTime`
+        :type calibration_dates: list of
+            :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param calibration_dates: A list with all calibration dates of the
             equipment.
         :type resource_id: String
@@ -263,7 +264,7 @@ class Operator(ComparingObject):
         """
         :type agencies: A list of strings.
         :param agencies: The agencies of the operator.
-        :type contacts: A list of `obspy.station.Person`
+        :type contacts: A list of :class:`Person`
         :param contacts: One or more contact persons, optional
         :type website: str
         :param website: The website, optional
@@ -311,7 +312,7 @@ class Person(ComparingObject):
         :param agencies: Self-explanatory. Multiple agencies allowed. Optional.
         :type emails: list of strings
         :param emails: Self-explanatory. Multiple emails allowed. Optional.
-        :type phones: list of `obspy.stations.PhoneNumber`
+        :type phones: list of :class:`PhoneNumber`
         :param phones: Self-explanatory. Multiple phone numbers allowed.
         Optional.
         """
@@ -435,7 +436,7 @@ class Comment(ComparingObject):
         :param begin_effective_time: The effective start date, Optional.
         :type end_effective_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param end_effective_time: The effective end date. Optional.
-        :type authors: List of :class:`~obspy.station.util.Person` objects.
+        :type authors: List of :class:`Person` objects.
         :param authors: The authors of this comment. Optional.
         """
         self.value = value

@@ -38,7 +38,7 @@ class Station(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type channels: A list of :class:`obspy.station.channel.Channel`
+        :type channels: A list of :class:`~obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
         :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: The latitude of the station
