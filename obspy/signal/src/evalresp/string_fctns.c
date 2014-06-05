@@ -176,7 +176,7 @@ int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) 
   int  lcl_blkt, lcl_fld, test;
   int tmpint;
   char tmpstr[200];
-  int i;
+  size_t slen, i;
 
   test = fgetc(fptr);
   
@@ -202,7 +202,8 @@ int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) 
       return 0;
     }
 
-  for (i = 0; i < strlen(line); i++)
+  slen = strlen(line);
+  for (i = 0; i < slen; i++)
   {
     if ('\t' == line[i])
       line[i] = ' ';
