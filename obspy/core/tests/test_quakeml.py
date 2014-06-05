@@ -921,22 +921,22 @@ class QuakeMLTestCase(unittest.TestCase):
                 lines = fh.readlines()
             # check namespace definitions in root element
             got = sorted(lines[1].strip()[:-1].split())
-            expected = ['<q:quakeml',
-                        'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
-                        'xmlns:ns0="http://test.org/xmlns/0.1"',
-                        'xmlns:ns1="http://some-page.de/xmlns/1.0"',
-                        'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
-                        'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            expected = [b'<q:quakeml',
+                        b'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
+                        b'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        b'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
             self.assertEqual(got, expected)
             # check additional tags
-            got = sorted([lines[i_].strip() for i_ in xrange(85, 89)])
+            got = sorted([lines[i_].strip() for i_ in range(85, 89)])
             expected = [
-                u'<ns0:custom>True</ns0:custom>',
-                u'<ns0:new_tag>1234</ns0:new_tag>',
-                u'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
-                u'<ns1:public ' +
-                u'another_attrib="another_value" ' +
-                u'some_attrib="some_value">false</ns1:public>',
+                b'<ns0:custom>True</ns0:custom>',
+                b'<ns0:new_tag>1234</ns0:new_tag>',
+                b'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
+                b'<ns1:public ' +
+                b'another_attrib="another_value" ' +
+                b'some_attrib="some_value">false</ns1:public>',
                 ]
             self.assertEqual(got, expected)
             # now, read again to test if its parsed correctly..
