@@ -23,9 +23,7 @@
 
 
 
-int main(argc, argv)
-int  argc;
-char *argv[];
+int main(int argc, char *argv[])
 {
   char *sta_list, *cha_list, units[MAXFLDLEN], *file, *verbose;
   char *net_code, *locid, *type, rtype[MAXFLDLEN];
