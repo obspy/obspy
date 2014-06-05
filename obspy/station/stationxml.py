@@ -43,7 +43,7 @@ def is_StationXML(path_or_file_object):
 
     This is simply done by validating against the StationXML schema.
 
-    :param path_of_file_object: Filename or file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     return validate_StationXML(path_or_file_object)[0]
 
@@ -56,7 +56,7 @@ def validate_StationXML(path_or_object):
     was successful or not. The second item is a list of all found validation
     errors, if existant.
 
-    :path_or_object: Filename of file like object. Can also be an etree
+    :param path_or_object: Filename or file like object. Can also be an etree
         element.
     """
     # Get the schema location.
@@ -86,7 +86,7 @@ def read_StationXML(path_or_file_object):
     """
     Function reading a StationXML file.
 
-    :path_or_file_object: Filename of file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
