@@ -1050,7 +1050,7 @@ class SacIO(object):
         :param f: filename (SAC binary)
         :type hn: string
         :param hn: header variable name
-        :type hv: string, float or integer
+        :type hv: string, float or int
         :param hv: header variable value (numeric or string value to be
             assigned to hn)
         :return: None

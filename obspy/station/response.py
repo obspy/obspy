@@ -40,9 +40,9 @@ class ResponseStage(ComparingObject):
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
         """
-        :type stage_sequence_number: integer greater or equal to zero
-        :param stage_sequence_number: Stage sequence number. This is used in
-            all the response SEED blockettes.
+        :type stage_sequence_number: int
+        :param stage_sequence_number: Stage sequence number, greater or equal
+            to zero. This is used in all the response SEED blockettes.
         :type stage_gain: float
         :param stage_gain: Value of stage gain.
         :type stage_gain_frequency: float
@@ -89,9 +89,9 @@ class ResponseStage(ComparingObject):
         :type decimation_input_sample_rate:  float, optional
         :param decimation_input_sample_rate: The sampling rate before the
             decimation in samples per second.
-        :type decimation_factor: integer, optional
+        :type decimation_factor: int, optional
         :param decimation_factor: The applied decimation factor.
-        :type decimation_offset: integer, optional
+        :type decimation_offset: int, optional
         :param decimation_offset: The sample chosen for use. 0 denotes the
             first sample, 1 the second, and so forth.
         :type decimation_delay: float, optional

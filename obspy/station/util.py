@@ -374,11 +374,11 @@ class PhoneNumber(ComparingObject):
     def __init__(self, area_code, phone_number, country_code=None,
                  description=None):
         """
-        :type area_code: Integer
+        :type area_code: int
         :param area_code: The area code
         :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
         :param phone_number: The phone number minus the country and area code.
-        :type country_code: Integer
+        :type country_code: int
         :param country_code: The country code, optional
         :type description: String
         :param description: Any additional information, optional.

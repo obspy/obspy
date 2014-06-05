@@ -153,7 +153,8 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     :param bandwidth: float > 0.0
         Determines the width of the smoothing peak. Lower values result in a
         broader peak. Defaults to 40.
-    :param count: integer, optional
+    :type count: int, optional
+    :param count:
         How often the apply the filter. For very noisy spectra it is useful to
         apply is more than once. Defaults to 1.
     :param enforce_no_matrix: boolean, optional
@@ -161,7 +162,8 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         used in case more than one spectra is to be smoothed or one spectrum is
         to be smoothed more than once if enough memory is available. This flag
         disables the matrix algorithm altogether. Defaults to False
-    :param max_memory_usage: integer, optional
+    :type max_memory_usage: int, optional
+    :param max_memory_usage:
         Set the maximum amount of extra memory in MB for this method. Decides
         whether or not the matrix multiplication method is used. Defaults to
         512 MB.

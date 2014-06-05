@@ -34,7 +34,7 @@ class SLState(object):
     :var NO_QUERY: INFO query state NO_QUERY.
     :type NO_QUERY: int
     :var INFO_QUERY: INFO query state INFO_QUERY.
-    :type INFO_QUERY: int.
+    :type INFO_QUERY: int
     :var KEEP_ALIVE_QUERY: INFO query state KEEP_ALIVE_QUERY.
     :type KEEP_ALIVE_QUERY: int
     :var query_mode: INFO query state.

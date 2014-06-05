@@ -64,10 +64,10 @@ class Station(BaseNode):
         :param termination_date: Date and time (UTC) when the station was
             terminated or will be terminated. A blank value should be assumed
             to mean that the station is still active. Optional
-        :type total_number_of_channels: Integer
+        :type total_number_of_channels: int
         :param total_number_of_channels: Total number of channels recorded at
             this station. Optional.
-        :type selected_number_of_channels: Integer
+        :type selected_number_of_channels: int
         :param selected_number_of_channels: Number of channels recorded at this
             station and selected by the query that produced this document.
             Optional.

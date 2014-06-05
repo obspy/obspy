@@ -27,7 +27,7 @@ def createPreview(trace, delta=60):
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
 
-    :type delta: integer, optional
+    :type delta: int, optional
     :param delta: Difference between two preview points. Defaults to ``60``.
     :rtype: :class:`~obspy.core.Trace`
     :return: New Trace object.

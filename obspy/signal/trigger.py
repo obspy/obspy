@@ -47,9 +47,9 @@ def recSTALTA(a, nsta, nlta):
     :note: This version directly uses a C version via CTypes
     :type a: numpy.ndarray dtype float64
     :param a: Seismic Trace, numpy.ndarray dtype float64
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
     :rtype: numpy.ndarray dtype float64
     :return: Characteristic function of recursive STA/LTA
@@ -76,9 +76,9 @@ def recSTALTAPy(a, nsta, nlta):
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
     :rtype: NumPy ndarray
     :return: Characteristic function of recursive STA/LTA
@@ -117,9 +117,9 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
     :type ration: Float
     :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
@@ -174,9 +174,9 @@ def classicSTALTA(a, nsta, nlta):
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
     :rtype: NumPy ndarray
     :return: Characteristic function of classic STA/LTA
@@ -209,9 +209,9 @@ def classicSTALTAPy(a, nsta, nlta):
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
     :rtype: NumPy ndarray
     :return: Characteristic function of classic STA/LTA
@@ -253,9 +253,9 @@ def delayedSTALTA(a, nsta, nlta):
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
     :rtype: NumPy ndarray
     :return: Characteristic function of delayed STA/LTA
@@ -318,7 +318,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     :type thres2: Float
     :param thres2: Value below which trigger (of characteristic function)
         is deactivated (lower threshold)
-    :type max_len: Int
+    :type max_len: int
     :param max_len: Maximum length of triggered event in samples. A new
                     event will be triggered as soon as the signal reaches
                     again above thres1.

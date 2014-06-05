@@ -1046,12 +1046,12 @@ class Stream(object):
         :type ev_coord: tuple or None, optional
         :param ev_coord: Event's coordinates as tuple
             ``(latitude, longitude)``.
-        :type plot_dx: integer, optional
+        :type plot_dx: int, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
             Either km or degree, depending on ``azim_dist``
-        :type recordstart: integer, optional
+        :type recordstart: int, optional
         :param recordstart: Seconds to crop from the beginning.
-        :type recordlength: integer, optional
+        :type recordlength: int, optional
         :param recordlength: Length of the record section in seconds.
         :type alpha: float, optional
         :param alpha: Transparancy of the traces between 0.0 - 1.0.

@@ -234,7 +234,7 @@ def uncompress_CM6(f, n_samps):
 
     :type f: File Pointer
     :param f: File Pointer
-    :type n_samps: Int
+    :type n_samps: int
     :param n_samps: Number of samples
     """
     def read83(cbuf, vptr):  # @UnusedVariable
@@ -296,7 +296,7 @@ def verifyChecksum(fh, data, version=2):
 
     :type fh: File Pointer
     :param fh: File Pointer
-    :type version: Int
+    :type version: int
     :param version: GSE version, either 1 or 2, defaults to 2.
     """
     chksum_data = clibgse2.check_sum(data, len(data), C.c_int32(0))

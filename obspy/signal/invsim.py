@@ -50,7 +50,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     """
     Cosine Taper.
 
-    :type npts: Int
+    :type npts: int
     :param npts: Number of points of cosine taper.
     :type p: Float
     :param p: Decimal percentage of cosine taper (ranging from 0 to 1). Default
@@ -283,7 +283,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :param scale_fac: Gain factor
     :type t_samp: Float
     :param t_samp: Sampling interval in seconds
-    :type nfft: Integer
+    :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
     :rtype: numpy.ndarray complex128
     :return: Frequency response of PAZ of length nfft
