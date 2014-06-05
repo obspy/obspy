@@ -177,7 +177,7 @@ lil_free(LinkedIDList * lil)
 }
 
 // Print function that does nothing.
-void empty_print(char *string) {}
+void empty_print(const char *string) {}
 
 
 // Function that reads from a MiniSEED binary file from a char buffer and
@@ -186,7 +186,7 @@ LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
                  int header_byteorder, long (*allocData) (int, char),
-                 void (*diag_print) (char*), void (*log_print) (char*))
+                 void (*diag_print) (const char*), void (*log_print) (const char*))
 {
     int retcode = 0;
     int retval = 0;

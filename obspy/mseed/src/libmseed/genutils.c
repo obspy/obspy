@@ -1232,7 +1232,7 @@ ms_ratapprox (double real, int *num, int *den, int maxval, double precision)
  * Returns 0 if the host is little endian, otherwise 1.
  ***************************************************************************/
 int
-ms_bigendianhost ()
+ms_bigendianhost (void)
 {
   int16_t host = 1;
   return !(*((int8_t *)(&host)));
