@@ -38,7 +38,7 @@ class Station(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type channels: A list of :class:`~obspy.station.channel.Channel`
+        :type channels: list of :class:`~obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
         :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: The latitude of the station
@@ -51,7 +51,7 @@ class Station(BaseNode):
             etc
         :param geology: Type of rock and/or geologic formation.
         :param equiment: Equipment used by all channels at a station.
-        :type operators: A list of :class:`~obspy.station.util.Operator`
+        :type operators: list of :class:`~obspy.station.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
             Operator tag. Since the Contact element is a generic type that
@@ -77,7 +77,7 @@ class Station(BaseNode):
             IRIS data reports or dataless SEED volumes. Optional.
         :type description: String, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional

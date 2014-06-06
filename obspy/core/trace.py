@@ -2183,7 +2183,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             (acceleration, output unit is meters/second**2).
         :type water_level: float
         :param water_level: Water level for deconvolution.
-        :type pre_filt: List or tuple of four float
+        :type pre_filt: list or tuple of four float
         :param pre_filt: Apply a bandpass filter in frequency domain to the
             data before deconvolution. The list or tuple defines
             the four corner frequencies `(f1, f2, f3, f4)` of a cosine taper

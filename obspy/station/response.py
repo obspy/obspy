@@ -183,9 +183,9 @@ class PolesZerosResponseStage(ResponseStage):
     :type normalization_frequency: float
     :param normalization_frequency: The frequency at which the normalization
         factor is normalized.
-    :type zeros: A list of complex numbers.
+    :type zeros: list of complex numbers.
     :param zeros: All zeros of the stage.
-    :type poles: A list of complex numbers.
+    :type poles: list of complex numbers.
     :param poles: All poles of the stage.
     :type normalization_factor: float, optional
     :param normalization_factor:
@@ -694,7 +694,7 @@ class Response(ComparingObject):
         :param instrument_polynomial: The total sensitivity for the given
             channel, representing the complete acquisition system expressed as
             a polynomial.
-        :type response_stages: List of
+        :type response_stages: list of
             :class:`~obspy.station.response.ResponseStage` objects
         :param response_stages: A list of the response stages. Covers SEED
             blockettes 53 to 56.

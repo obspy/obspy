@@ -59,7 +59,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     :return: Cosine taper array/vector of length npts.
     :type freqs: NumPy :class:`~numpy.ndarray`
     :param freqs: Frequencies as, for example, returned by fftfreq
-    :type flimit: List or tuple of floats
+    :type flimit: list or tuple of floats
     :param flimit: The list or tuple defines the four corner frequencies
         (f1, f2, f3, f4) of the cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
@@ -275,9 +275,9 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
 
-    :type poles: List of complex numbers
+    :type poles: list of complex numbers
     :param poles: The poles of the transfer function
-    :type zeros: List of complex numbers
+    :type zeros: list of complex numbers
     :param zeros: The zeros of the transfer function
     :type scale_fac: float
     :param scale_fac: Gain factor
@@ -395,7 +395,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: float
     :param taper_fraction: Taper fraction of cosine taper to use
-    :type pre_filt: List or tuple of floats
+    :type pre_filt: list or tuple of floats
     :param pre_filt: Apply a bandpass filter to the data trace before
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and

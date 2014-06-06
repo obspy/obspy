@@ -133,7 +133,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
         component_id codes are ignored)
     :type shift_len: int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type components: List of strings
+    :type components: list of strings
     :param components: List of components to use in cross-correlation, defaults
         to ``['Z', 'N', 'E']``.
     :type full_xcorr: bool

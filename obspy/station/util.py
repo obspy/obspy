@@ -37,7 +37,7 @@ class BaseNode(ComparingObject):
         :param code: The SEED network, station, or channel code
         :type description: String, optional
         :param description: A description of the resource
-        :type comments: List of :class:`Comment`, optional
+        :type comments: list of :class:`Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
@@ -262,9 +262,9 @@ class Operator(ComparingObject):
     """
     def __init__(self, agencies, contacts=None, website=None):
         """
-        :type agencies: A list of strings.
+        :type agencies: list of strings.
         :param agencies: The agencies of the operator.
-        :type contacts: A list of :class:`Person`
+        :type contacts: list of :class:`Person`
         :param contacts: One or more contact persons, optional
         :type website: str
         :param website: The website, optional
@@ -436,7 +436,7 @@ class Comment(ComparingObject):
         :param begin_effective_time: The effective start date, Optional.
         :type end_effective_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param end_effective_time: The effective end date. Optional.
-        :type authors: List of :class:`Person` objects.
+        :type authors: list of :class:`Person` objects.
         :param authors: The authors of this comment. Optional.
         """
         self.value = value

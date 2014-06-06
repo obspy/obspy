@@ -49,7 +49,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     """
     Plot a benchmark plot from given SU files.
 
-    :type sufiles: List of SU file names or :class:`~obspy.segy.segy.SUFile`
+    :type sufiles: list of SU file names or :class:`~obspy.segy.segy.SUFile`
         objects.
     :param sufiles: SU files to plot.
     :type normalize: ``None``, ``'stream'`` or ``'traces'``, optional

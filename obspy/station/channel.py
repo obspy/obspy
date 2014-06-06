@@ -57,13 +57,13 @@ class Channel(BaseNode):
         :param azimuth: Azimuth of the sensor in degrees from north, clockwise.
         :type dip: float, optional
         :param dip: Dip of the instrument in degrees, down from horizontal.
-        :type types: List of strings, optional
+        :type types: list of strings, optional
         :param types: The type of data this channel collects. Corresponds to
             channel flags in SEED blockette 52. The SEED volume producer could
             use the first letter of an Output value as the SEED channel flag.
             Possible values: TRIGGERED, CONTINUOUS, HEALTH, GEOPHYSICAL,
             WEATHER, FLAG, SYNTHESIZED, INPUT, EXPERIMENTAL, MAINTENANCE, BEAM
-        :type external_references: List of
+        :type external_references: list of
             :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as
             data quality reports.
@@ -106,7 +106,7 @@ class Channel(BaseNode):
         :param response: The response of the channel
         :type description: String, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional

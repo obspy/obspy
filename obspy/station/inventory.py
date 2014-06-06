@@ -60,7 +60,7 @@ class Inventory(ComparingObject):
     def __init__(self, networks, source, sender=None, created=None,
                  module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
         """
-        :type networks: List of :class:`~obspy.station.network.Network`
+        :type networks: list of :class:`~obspy.station.network.Network`
         :param networks: A list of networks part of this inventory.
         :type source: String
         :param source: Network ID of the institution sending the message.
