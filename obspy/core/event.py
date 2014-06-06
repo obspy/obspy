@@ -549,7 +549,8 @@ class ResourceIdentifier(object):
     >>> assert(id(ref_c.getReferredObject()) == obj_id)
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
-    the convertIDToQuakeMLURI() method. The resulting id will be of the form
+    the convertIDToQuakeMLURI() method. The resulting id will be of the form::
+
         smi:authority_id/prefix/id
 
     >>> res_id = ResourceIdentifier(prefix='origin')
@@ -1186,11 +1187,13 @@ class Amplitude(__Amplitude):
     :type type: str, optional
     :param type: Describes the type of amplitude using the nomenclature from
         Storchak et al. (2003). Possible values are:
+
             * unspecified amplitude reading (``'A'``),
             * amplitude reading for local magnitude (``'AML'``),
             * amplitude reading for body wave magnitude (``'AMB'``),
             * amplitude reading for surface wave magnitude (``'AMS'``), and
             * time of visible end of record for duration magnitude (``'END'``).
+
     :type category: str, optional
     :param category:  Amplitude category.  This attribute describes the way the
         waveform trace is evaluated to derive an amplitude value. This can be
@@ -1199,18 +1202,21 @@ class Amplitude(__Amplitude):
         time interval (integral), specifying just a time interval (duration),
         or evaluating a period (period).
         Possible values are:
+
             * ``"point"``,
             * ``"mean"``,
             * ``"duration"``,
             * ``"period"``,
             * ``"integral"``,
             * ``"other"``
+
     :type unit: str, optional
     :param unit: Amplitude unit. This attribute provides the most likely
         measurement units for the physical quantity described in the
         genericAmplitude attribute. Possible values are specified as
         combinations of SI base units.
         Possible values are:
+
             * ``"m"``,
             * ``"s"``,
             * ``"m/s"``,
@@ -1218,6 +1224,7 @@ class Amplitude(__Amplitude):
             * ``"m*s"``,
             * ``"dimensionless"``,
             * ``"other"``
+
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Describes the method of amplitude determination.
     :type period: float, optional
@@ -1247,6 +1254,7 @@ class Amplitude(__Amplitude):
         for.  This is a free-text field because it is impossible to cover all
         existing magnitude type designations with an enumeration. Possible
         values are:
+
             * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
@@ -1255,20 +1263,25 @@ class Amplitude(__Amplitude):
             * duration magnitude (``'Md'``)
             * coda magnitude (``'Mc'``)
             * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Amplitude. Allowed values are
         the following:
+
             * ``"manual"``
             * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Amplitude. Allowed values
         are the following:
+
             * ``"preliminary"``
             * ``"confirmed"``
             * ``"reviewed"``
             * ``"final"``
             * ``"rejected"``
             * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
@@ -1341,32 +1354,40 @@ class Pick(__Pick):
     :type onset: str, optional
     :param onset: Flag that roughly categorizes the sharpness of the onset.
         Allowed values are:
+
             * ``"emergent"``
             * ``"impulsive"``
             * ``"questionable"``
+
     :type phase_hint: str, optional
     :param phase_hint: Tentative phase identification as specified by the
         picker.
     :type polarity: str, optional
     :param polarity: Indicates the polarity of first motion, usually from
         impulsive onsets. Allowed values are:
+
             * ``"positive"``
             * ``"negative"``
             * ``"undecidable"``
+
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Pick. Allowed values are the
         following:
+
             * ``"manual"``
             * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Pick. Allowed values are
         the following:
+
             * ``"preliminary"``
             * ``"confirmed"``
             * ``"reviewed"``
             * ``"final"``
             * ``"rejected"``
             * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
@@ -1627,9 +1648,11 @@ class OriginUncertainty(__OriginUncertainty):
     :type preferred_description: str, optional
     :param preferred_description: Preferred uncertainty description. Allowed
         values are the following:
+
             * horizontal uncertainty
             * uncertainty ellipse
             * confidence ellipsoid
+
     :type confidence_level: float, optional
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
@@ -1703,6 +1726,7 @@ class Origin(__Origin):
     :type depth_type: str, optional
     :param depth_type: Type of depth determination. Allowed values are the
         following:
+
             * ``"from location"``
             * ``"from moment tensor inversion"``
             * ``"from modeling of broad-band P waveforms"``
@@ -1711,6 +1735,7 @@ class Origin(__Origin):
             * ``"constrained by depth and direct phases"``
             * ``"operator assigned"``
             * ``"other"``
+
     :type time_fixed: bool, optional
     :param time_fixed: True if focal time was kept fixed for computation of the
         Origin.
@@ -1744,12 +1769,14 @@ class Origin(__Origin):
     :type origin_type: str, optional
     :param origin_type: Describes the origin type. Allowed values are the
         following:
+
             * ``"hypocenter"``
             * ``"centroid"``
             * ``"amplitude"``
             * ``"macroseismic"``
             * ``"rupture start"``
             * ``"rupture end"``
+
     :type origin_uncertainty: :class:`~obspy.core.event.OriginUncertainty`,
         optional
     :param origin_uncertainty: Describes the location uncertainties of an
@@ -1764,17 +1791,21 @@ class Origin(__Origin):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Origin. Allowed values are the
         following:
+
             * ``"manual"``
             * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Origin. Allowed values are
         the following:
+
             * ``"preliminary"``
             * ``"confirmed"``
             * ``"reviewed"``
             * ``"final"``
             * ``"rejected"``
             * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
@@ -1879,6 +1910,7 @@ class Magnitude(__Magnitude):
     :param magnitude_type: Describes the type of magnitude. This is a free-text
         field because it is impossible to cover all existing magnitude type
         designations with an enumeration. Possible values are:
+
             * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
@@ -1887,6 +1919,7 @@ class Magnitude(__Magnitude):
             * duration magnitude (``'Md'``)
             * coda magnitude (``'Mc'``)
             * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+
     :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param origin_id: Reference to an origin’s resource_id if the magnitude has
         an associated Origin.
@@ -1903,18 +1936,22 @@ class Magnitude(__Magnitude):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Magnitude. Allowed values are
         the following:
+
             * ``"manual"``
             * ``"automatic"``
+
     :type evaluation_status:
         :class:`~obspy.core.event_header.EvaluationStatus`, optional
     :param evaluation_status: Evaluation status of Magnitude. Allowed values
         are the following:
+
             * ``"preliminary"``
             * ``"confirmed"``
             * ``"reviewed"``
             * ``"final"``
             * ``"rejected"``
             * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type station_magnitude_contributions: list of
@@ -2006,6 +2043,7 @@ class EventDescription(__EventDescription):
     :type type: str, optional
     :param type: Category of earthquake description. Values
         can be taken from the following:
+
             * ``"felt report"``
             * ``"Flinn-Engdahl region"``
             * ``"local time"``
@@ -2088,12 +2126,14 @@ class DataUsed(__DataUsed):
     :type wave_type: str
     :param wave_type: Type of waveform data. This can be one of the following
         values:
+
             * ``"P waves"``,
             * ``"body waves"``,
             * ``"surface waves"``,
             * ``"mantle waves"``,
             * ``"combined"``,
             * ``"unknown"``
+
     :type station_count: int, optional
     :param station_count: Number of stations that have contributed data of the
         type given in wave_type.
@@ -2128,10 +2168,12 @@ class SourceTimeFunction(__SourceTimeFunction):
     :type type: str
     :param type: Type of source time function. Values can be taken from the
         following:
+
             * ``"box car"``,
             * ``"triangle"``,
             * ``"trapezoid"``,
             * ``"unknown"``
+
     :type duration: float
     :param duration: Source time function duration. Unit: s
     :type rise_time: float, optional
@@ -2356,15 +2398,19 @@ class MomentTensor(__MomentTensor):
     :type category: str, optional
     :param category: Moment tensor category. Values can be taken from the
         following:
+
             * ``"teleseismic"``,
             * ``"regional"``
+
     :type inversion_type: str, optional
     :param inversion_type: Moment tensor inversion type. Users should avoid to
         give contradictory information in inversion_type and method_id. Values
         can be taken from the following:
+
             * ``"general"``,
             * ``"zero trace"``,
             * ``"double couple"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
@@ -2440,17 +2486,21 @@ class FocalMechanism(__FocalMechanism):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of FocalMechanism. Allowed values
         are the following:
+
             * ``"manual"``
             * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of FocalMechanism. Allowed
         values are the following:
+
             * ``"preliminary"``
             * ``"confirmed"``
             * ``"reviewed"``
             * ``"final"``
             * ``"rejected"``
             * ``"reported"``
+
     :type moment_tensor: :class:`~obspy.core.event.MomentTensor`, optional
     :param moment_tensor: Moment tensor description for this focal mechanism.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
@@ -2497,6 +2547,7 @@ class Event(__Event):
     :type event_type: str, optional
     :param event_type: Describes the type of an event. Allowed values are the
         following:
+
             * ``"not existing"``
             * ``"not reported"``
             * ``"earthquake"``
@@ -2541,11 +2592,14 @@ class Event(__Event):
             * ``"rockslide"``
             * ``"meteorite"``
             * ``"volcanic eruption"``
+
     :type event_type_certainty: str, optional
     :param event_type_certainty: Denotes how certain the information on event
         type is. Allowed values are the following:
+
             * ``"suspected"``
             * ``"known"``
+
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
@@ -3102,19 +3156,23 @@ class Catalog(object):
         Creates preview map of all events in current Catalog object.
 
         :type projection: str, optional
-        :param projection: The map projection. Currently supported are
+        :param projection: The map projection. Currently supported are:
+
                 * ``"cyl"`` (Will plot the whole world.)
                 * ``"ortho"`` (Will center around the mean lat/long.)
                 * ``"local"`` (Will plot around local events)
+
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are
+            based directly to the basemap module. Possible values are:
+
                 * ``"c"`` (crude)
                 * ``"l"`` (low)
                 * ``"i"`` (intermediate)
                 * ``"h"`` (high)
                 * ``"f"`` (full)
+
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
@@ -3124,15 +3182,19 @@ class Catalog(object):
             Defaults to ``"white"``.
         :type label: str, optional
         :param label: Events will be labeld based on the chosen property.
-            Possible values are
+            Possible values are:
+
                 * ``"magnitude"``
                 * ``None``
+
             Defaults to ``"magnitude"``
         :type color: str, optional
         :param color: The events will be color-coded based on the chosen
-            property. Possible values are
+            property. Possible values are:
+
                 * ``"date"``
                 * ``"depth"``
+
             Defaults to ``"depth"``
         :type colormap: str, optional, any matplotlib colormap
         :param colormap: The colormap for color-coding the events.
