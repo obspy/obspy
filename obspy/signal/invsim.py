@@ -368,13 +368,13 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
-    :type paz_remove: Dictionary, None
+    :type paz_remove: dict, None
     :param paz_remove: Dictionary containing keys 'poles', 'zeros', 'gain'
         (A0 normalization factor). poles and zeros must be a list of complex
         floating point numbers, gain must be of type float. Poles and Zeros are
         assumed to correct to m/s, SEED convention. Use None for no inverse
         filtering.
-    :type paz_simulate: Dictionary, None
+    :type paz_simulate: dict, None
     :param paz_simulate: Dictionary containing keys 'poles', 'zeros', 'gain'.
         Poles and zeros must be a list of complex floating point numbers, gain
         must be of type float. Or None for no simulation.
@@ -400,7 +400,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
-    :type seedresp: Dictionary, None
+    :type seedresp: dict, None
     :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
         'filename' is the path to a RESP-file generated from a dataless SEED
         volume (or a file like object with RESP information);

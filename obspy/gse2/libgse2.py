@@ -372,7 +372,7 @@ def write(headdict, data, f, inplace=False):
     :param inplace: If True, do compression not on a copy of the data but
                     on the data itself --- note this will change the data
                     values and make them therefore unusable
-    :type headdict: Dictionary
+    :type headdict: dict
     :param headdict: Obspy Header
     """
     N = len(data)
