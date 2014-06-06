@@ -121,9 +121,9 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     :param nsta: Length of short time average window in samples
     :type nlta: int
     :param nlta: Length of long time average window in samples
-    :type ration: Float
+    :type ration: float
     :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
-    :type quiet: Float
+    :type quiet: float
     :param quiet: as quiet gets smaller, carlSTATrig gets more sensitive
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
@@ -312,10 +312,10 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
 
     :type charfct: NumPy :class:`~numpy.ndarray`
     :param charfct: Characteristic function of e.g. STA/LTA trigger
-    :type thres1: Float
+    :type thres1: float
     :param thres1: Value above which trigger (of characteristic function)
                    is activated (higher threshold)
-    :type thres2: Float
+    :type thres2: float
     :param thres2: Value below which trigger (of characteristic function)
         is deactivated (lower threshold)
     :type max_len: int

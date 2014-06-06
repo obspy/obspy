@@ -40,7 +40,7 @@ def _nearestPow2(x):
     >>> _nearestPow2(15)
     16.0
 
-    :type x: Float
+    :type x: float
     :param x: Number
     :rtype: Int
     :return: Nearest power of 2 to x

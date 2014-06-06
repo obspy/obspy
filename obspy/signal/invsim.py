@@ -52,7 +52,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
 
     :type npts: int
     :param npts: Number of points of cosine taper.
-    :type p: Float
+    :type p: float
     :param p: Decimal percentage of cosine taper (ranging from 0 to 1). Default
         is 0.1 (10%) which tapers 5% from the beginning and 5% form the end.
     :rtype: float NumPy :class:`~numpy.ndarray`
@@ -279,9 +279,9 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :param poles: The poles of the transfer function
     :type zeros: List of complex numbers
     :param zeros: The zeros of the transfer function
-    :type scale_fac: Float
+    :type scale_fac: float
     :param scale_fac: Gain factor
-    :type t_samp: Float
+    :type t_samp: float
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
@@ -366,7 +366,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
 
     :type data: NumPy :class:`~numpy.ndarray`
     :param data: Seismogram, detrend before hand (e.g. zero mean)
-    :type samp_rate: Float
+    :type samp_rate: float
     :param samp_rate: Sample Rate of Seismogram
     :type paz_remove: dict, None
     :param paz_remove: Dictionary containing keys 'poles', 'zeros', 'gain'
@@ -387,13 +387,13 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param simulate_sensitivity: Determines if data is multiplied with
         `paz_simulate['sensitivity']` to simulate overall sensitivity of
         new instrument (seismometer/digitizer) during instrument simulation.
-    :type water_level: Float
+    :type water_level: float
     :param water_level: Water_Level for spectrum to simulate
     :type zero_mean: bool
     :param zero_mean: If true the mean of the data is subtracted
     :type taper: bool
     :param taper: If true a cosine taper is applied.
-    :type taper_fraction: Float
+    :type taper_fraction: float
     :param taper_fraction: Taper fraction of cosine taper to use
     :type pre_filt: List or tuple of floats
     :param pre_filt: Apply a bandpass filter to the data trace before

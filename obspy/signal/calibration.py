@@ -40,11 +40,11 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     :type calib_file: String
     :param calib_file: file name of calibration file containing the PAZ of the
         known instrument in GSE2 standard.
-    :type window_len: Float
+    :type window_len: float
     :param window_len: length of sliding window in seconds
     :type overlap_frac: float
     :param overlap_frac: fraction of overlap, defaults to fifty percent (0.5)
-    :type smooth: Float
+    :type smooth: float
     :param smooth: variable that defines if the Konno-Ohmachi taper is used or
         not. default = 0 -> no taper generally used in geopsy: smooth = 40
     :type save_data: bool

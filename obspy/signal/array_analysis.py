@@ -47,9 +47,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     .. note::
         ts\_ below means "time series"
 
-    :type vp: Float
+    :type vp: float
     :param vp: P wave speed in the soil under the array (km/s)
-    :type vs: Float
+    :type vs: float
     :param vs: S wave speed in the soil under the array Note - vp and vs may be
         any unit (e.g. miles/week), and this unit need not be related to the
         units of the station coordinates or ground motions, but the units of vp
@@ -75,7 +75,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     :param ts2: same as ts1, but for the x2 component of motion.
     :type ts3: numpy.ndarray
     :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion.
-    :type sigmau: Float or :class:`numpy.ndarray`
+    :type sigmau: float or :class:`numpy.ndarray`
     :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
         corresponds to sigma-sub-u in S95 lines above eqn (A5).
         NOTE: This may be entered as a scalar, vector, or matrix!
@@ -853,27 +853,27 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         contain an :class:`~obspy.core.util.attribdict.AttribDict` with
         'latitude', 'longitude' (in degrees) and 'elevation' (in km), or 'x',
         'y', 'elevation' (in km) items/attributes. See param ``coordsys``.
-    :type win_len: Float
+    :type win_len: float
     :param win_len: Sliding window length in seconds
-    :type win_frac: Float
+    :type win_frac: float
     :param win_frac: Fraction of sliding window to use for step
-    :type sll_x: Float
+    :type sll_x: float
     :param sll_x: slowness x min (lower)
-    :type slm_x: Float
+    :type slm_x: float
     :param slm_x: slowness x max
-    :type sll_y: Float
+    :type sll_y: float
     :param sll_y: slowness y min (lower)
-    :type slm_y: Float
+    :type slm_y: float
     :param slm_y: slowness y max
-    :type sl_s: Float
+    :type sl_s: float
     :param sl_s: slowness step
-    :type semb_thres: Float
+    :type semb_thres: float
     :param semb_thres: Threshold for semblance
-    :type vel_thres: Float
+    :type vel_thres: float
     :param vel_thres: Threshold for velocity
-    :type frqlow: Float
+    :type frqlow: float
     :param frqlow: lower frequency for fk/capon
-    :type frqhigh: Float
+    :type frqhigh: float
     :param frqhigh: higher frequency for fk/capon
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param stime: Start time of interest
