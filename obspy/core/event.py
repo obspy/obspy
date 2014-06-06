@@ -1712,11 +1712,11 @@ class Origin(__Origin):
             * ``"operator assigned"``
             * ``"other"``
     :type time_fixed: bool, optional
-    :param time_fixed: Boolean flag. True if focal time was kept fixed for
-        computation of the Origin.
+    :param time_fixed: True if focal time was kept fixed for computation of the
+        Origin.
     :type epicenter_fixed: bool, optional
-    :param epicenter_fixed: Boolean flag. True if epicenter was kept fixed for
-        computation of Origin.
+    :param epicenter_fixed: True if epicenter was kept fixed for computation of
+        Origin.
     :type reference_system_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param reference_system_id: Identifies the reference system used for

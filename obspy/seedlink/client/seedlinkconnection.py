@@ -72,7 +72,7 @@ class SeedLinkConnection(object):
     :type statefile: str
     :var lastpkttime: Flag to control last packet time usage,
         if true, begin_time is appended to DATA command (Default is False).
-    :type lastpkttime: boolean
+    :type lastpkttime: bool
 
     Protected parameters
 
@@ -83,13 +83,13 @@ class SeedLinkConnection(object):
     :var end_time: End of time window.
     :type end_time: str
     :var resume: Flag to control resuming with sequence numbers.
-    :type resume: boolean
+    :type resume: bool
     :var multistation: Flag to indicate multistation mode.
-    :type multistation: boolean
+    :type multistation: bool
     :var dialup: Flag to indicate dial-up mode.
-    :type dialup: boolean
+    :type dialup: bool
     :var terminate_flag: Flag to control connection termination.
-    :type terminate_flag: boolean
+    :type terminate_flag: bool
     :var server_id: ID of the remote SeedLink server.
     :type server_id: str
     :var server_version: Version of the remote SeedLink server.

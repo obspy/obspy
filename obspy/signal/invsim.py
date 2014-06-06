@@ -63,10 +63,10 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     :param flimit: The list or tuple defines the four corner frequencies
         (f1, f2, f3, f4) of the cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
-    :type halfcosine: Boolean
+    :type halfcosine: bool
     :param halfcosine: If True the taper is a half cosine function. If False it
         is a quarter cosine function.
-    :type sactaper: Boolean
+    :type sactaper: bool
     :param sactaper: If set to True the cosine taper already tapers at the
         corner frequency (SAC behaviour). By default, the taper has a value
         of 1.0 at the corner frequencies.
@@ -378,20 +378,20 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param paz_simulate: Dictionary containing keys 'poles', 'zeros', 'gain'.
         Poles and zeros must be a list of complex floating point numbers, gain
         must be of type float. Or None for no simulation.
-    :type remove_sensitivity: Boolean
+    :type remove_sensitivity: bool
     :param remove_sensitivity: Determines if data is divided by
         `paz_remove['sensitivity']` to correct for overall sensitivity of
         recording instrument (seismometer/digitizer) during instrument
         correction.
-    :type simulate_sensitivity: Boolean
+    :type simulate_sensitivity: bool
     :param simulate_sensitivity: Determines if data is multiplied with
         `paz_simulate['sensitivity']` to simulate overall sensitivity of
         new instrument (seismometer/digitizer) during instrument simulation.
     :type water_level: Float
     :param water_level: Water_Level for spectrum to simulate
-    :type zero_mean: Boolean
+    :type zero_mean: bool
     :param zero_mean: If true the mean of the data is subtracted
-    :type taper: Boolean
+    :type taper: bool
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: Float
     :param taper_fraction: Taper fraction of cosine taper to use
@@ -410,19 +410,19 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         then be used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
-    :type nfft_pow2: Boolean
+    :type nfft_pow2: bool
     :param nfft_pow2: Number of frequency points to use for FFT. If True,
         the exact power of two is taken (default in PITSA). If False the
         data are not zeropadded to the next power of two which makes a
         slower FFT but is then much faster for e.g. evalresp which scales
         with the FFT points.
-    :type pitsasim: Boolean
+    :type pitsasim: bool
     :param pitsasim: Choose parameters to match
         instrument correction as done by PITSA.
-    :type sacsim: Boolean
+    :type sacsim: bool
     :param sacsim: Choose parameters to match
         instrument correction as done by SAC.
-    :type shsim: Boolean
+    :type shsim: bool
     :param shsim: Choose parameters to match
         instrument correction as done by Seismic Handler.
     :return: The corrected data are returned as :class:`numpy.ndarray` float64

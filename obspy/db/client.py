@@ -37,7 +37,7 @@ class Client(object):
             information about database dialects and urls.
         :type session: :class:`sqlalchemy.orm.session.Session`, optional
         :param session: An existing database session object.
-        :type debug: boolean, optional
+        :type debug: bool, optional
         :param debug: Enables verbose output.
         """
         if url:

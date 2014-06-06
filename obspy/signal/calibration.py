@@ -47,7 +47,7 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     :type smooth: Float
     :param smooth: variable that defines if the Konno-Ohmachi taper is used or
         not. default = 0 -> no taper generally used in geopsy: smooth = 40
-    :type save_data: Boolean
+    :type save_data: bool
     :param save_data: Whether or not to save the result to a file. If True, two
         output files will be created:
         * The new response in station_name.window_length.resp

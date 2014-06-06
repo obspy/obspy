@@ -127,7 +127,7 @@ class Client(object):
         :type timeout: int, optional
         :param timeout: Seconds before a connection timeout is raised (default
             is 10 seconds). Available only for Python >= 2.6.x.
-        :type debug: boolean, optional
+        :type debug: bool, optional
         :param debug: Enables verbose output.
         :type user_agent: str, optional
         :param user_agent: Sets an client identification string which may be
@@ -506,7 +506,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type instruments: boolean, optional
+        :type instruments: bool, optional
         :param instruments: Include instrument data. Default is ``True``.
         :type min_latitude: float, optional
         :param min_latitude: Minimum latitude, defaults to ``-90.0``

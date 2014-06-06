@@ -78,12 +78,12 @@ class Parser(object):
 
         :param data: Filename, URL, XSEED/SEED string, file pointer or
             BytesIO.
-        :type debug: Boolean.
+        :type debug: bool
         :param debug: Enables a verbose debug log during parsing of SEED file.
-        :type strict: Boolean.
+        :type strict: bool
         :param strict: Parser will raise an exception if SEED files does not
             stay within the SEED specifications.
-        :type compact: Boolean.
+        :type compact: bool
         :param compact: SEED volume will contain compact data strings. Missing
             time strings will be filled with 00:00:00.0000 if this option is
             disabled.
@@ -196,7 +196,7 @@ class Parser(object):
 
         :type version: float, optional
         :param version: XSEED version string (default is ``1.1``).
-        :type split_stations: boolean, optional
+        :type split_stations: bool, optional
         :param split_stations: Splits stations containing multiple channels
             into multiple documents.
         :rtype: str or dict

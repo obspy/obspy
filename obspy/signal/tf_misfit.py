@@ -91,8 +91,9 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: time frequency representation of Envelope Misfit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
@@ -154,8 +155,9 @@ def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: time frequency representation of Phase Misfit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
@@ -217,8 +219,9 @@ def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Time-dependent Envelope Misfit, type numpy.ndarray with shape
         (len(st1),) for single component data and (number of components,
@@ -280,8 +283,9 @@ def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Time-dependent Phase Misfit, type numpy.ndarray with shape
         (len(st1),) for single component data and (number of components,
@@ -344,8 +348,9 @@ def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray with shape
         (nf,) for single component data and (number of components, nf) for
@@ -408,8 +413,9 @@ def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray with shape
         (nf,) for single component data and (number of components, nf) for
@@ -472,8 +478,9 @@ def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Single Valued Envelope Misfit
     """
@@ -533,8 +540,9 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Single Valued Phase Misfit
     """
@@ -596,8 +604,9 @@ def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -628,8 +637,9 @@ def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -660,8 +670,9 @@ def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -692,8 +703,9 @@ def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -724,8 +736,9 @@ def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -756,8 +769,9 @@ def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -788,8 +802,9 @@ def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -818,8 +833,9 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
 
@@ -851,8 +867,9 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param left: plot distance from the left of the figure
     :param bottom: plot distance from the bottom of the figure
     :param h_1: height of the signal axes
@@ -1143,8 +1160,9 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param A: Maximum value of Goodness-Of-Fit for perfect agreement
     :param k: sensitivity of Goodness-Of-Fit to the misfit
     :param left: plot distance from the left of the figure

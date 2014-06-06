@@ -42,9 +42,9 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
 
     :type filename: string
     :param filename: GSE2 file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If True read only head of GSE2 file.
-    :type verify_chksum: boolean, optional
+    :type verify_chksum: bool, optional
     :param verify_chksum: If True verify Checksum and raise Exception if
         it is not correct.
     :rtype: :class:`~obspy.core.stream.Stream`
@@ -84,7 +84,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     :param stream: The ObsPy Stream object to write.
     :type filename: string
     :param filename: Name of file to write.
-    :type inplace: boolean, optional
+    :type inplace: bool, optional
     :param inplace: If True, do compression not on a copy of the data but
         on the data itself - note this will change the data values and make
         them therefore unusable!
@@ -143,9 +143,9 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
 
     :type filename: string
     :type param: GSE2 file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.
-    :type verify_chksum: boolean, optional
+    :type verify_chksum: bool, optional
     :param verify_chksum: If True verify Checksum and raise Exception if
         it is not correct.
     :rtype: :class:`~obspy.core.stream.Stream`

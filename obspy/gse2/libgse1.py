@@ -38,7 +38,7 @@ def read(fh, verify_chksum=True):
     :type fh: File Pointer
     :param fh: Open file pointer of GSE1 file to read, opened in binary mode,
         e.g. fh = open('myfile','rb')
-    :type verify_chksum: Bool
+    :type verify_chksum: bool
     :param verify_chksum: If True verify Checksum and raise Exception if not
         correct
     :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32

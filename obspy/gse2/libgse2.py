@@ -335,7 +335,7 @@ def read(f, verify_chksum=True):
     :type f: File Pointer
     :param f: Open file pointer of GSE2 file to read, opened in binary mode,
               e.g. f = open('myfile','rb')
-    :type test_chksum: Bool
+    :type test_chksum: bool
     :param verify_chksum: If True verify Checksum and raise Exception if it
                           is not correct
     :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
@@ -368,7 +368,7 @@ def write(headdict, data, f, inplace=False):
     :type f: File Pointer
     :param f: Open file pointer of GSE2 file to write, opened in binary
               mode, e.g. f = open('myfile','wb')
-    :type inplace: Bool
+    :type inplace: bool
     :param inplace: If True, do compression not on a copy of the data but
                     on the data itself --- note this will change the data
                     values and make them therefore unusable

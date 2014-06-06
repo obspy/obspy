@@ -328,7 +328,7 @@ class PPSD():
         :type parser: :class:`obspy.xseed.parser.Parser` (optional)
         :param parser: Parser instance with response information (e.g. read
                 from a Dataless SEED volume)
-        :type skip_on_gaps: Boolean (optional)
+        :type skip_on_gaps: bool (optional)
         :param skip_on_gaps: Determines whether time segments with gaps should
                 be skipped entirely. [McNamara2004]_ merge gappy
                 traces by filling with zeros. This results in a clearly
@@ -336,7 +336,7 @@ class PPSD():
                 `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than `ppsd_length` not
                 used in the PPSD.
-        :type is_rotational_data: Boolean (optional)
+        :type is_rotational_data: bool (optional)
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
         :type db_bins: Tuple of three ints/floats

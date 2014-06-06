@@ -143,7 +143,7 @@ class Client(object):
         :type timeout: int, optional
         :param timeout: Seconds before a connection timeout is raised (default
             is 10 seconds). Available only for Python >= 2.6.x.
-        :type debug: boolean, optional
+        :type debug: bool, optional
         :param debug: Enables verbose output.
         :type retries: int
         :param retries: Number of retries for failing requests.

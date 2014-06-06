@@ -568,7 +568,7 @@ class Trace(object):
             the number of samples which are used to interpolate between
             overlapping traces. Defaults to ``0``. If set to ``-1`` all
             overlapping samples are interpolated.
-        :type sanity_checks: boolean, optional
+        :type sanity_checks: bool, optional
         :param sanity_checks: Enables some sanity checks before merging traces.
             Defaults to ``True``.
 

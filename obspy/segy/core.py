@@ -130,7 +130,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
 
     :type filename: str
     :param filename: SEG Y rev1 file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If set to True, read only the header and omit the waveform
         data.
     :type byteorder: ``'<'``, ``'>'``, or ``None``
@@ -462,7 +462,7 @@ def readSU(filename, headonly=False, byteorder=None,
 
     :type filename: str
     :param filename: SU file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If set to True, read only the header and omit the waveform
         data.
     :type byteorder: ``'<'``, ``'>'``, or ``None``

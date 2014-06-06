@@ -647,7 +647,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     :type inventory: :class:`~obspy.station.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
-    :type validate: Boolean
+    :type validate: bool
     :type validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.

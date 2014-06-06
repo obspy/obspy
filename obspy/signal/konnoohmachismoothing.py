@@ -71,7 +71,7 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
         broader peak. Must be greater than 0. Defaults to 40.
-    :type normalize: boolean, optional
+    :type normalize: bool, optional
     :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
@@ -125,7 +125,7 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
         broader peak. Must be greater than 0. Defaults to 40.
-    :type normalize: boolean, optional
+    :type normalize: bool, optional
     :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
@@ -168,7 +168,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     :param count:
         How often the apply the filter. For very noisy spectra it is useful to
         apply is more than once. Defaults to 1.
-    :type enforce_no_matrix: boolean, optional
+    :type enforce_no_matrix: bool, optional
     :param enforce_no_matrix:
         An efficient but memory intensive matrix-multiplication algorithm is
         used in case more than one spectra is to be smoothed or one spectrum is
@@ -179,7 +179,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         Set the maximum amount of extra memory in MB for this method. Decides
         whether or not the matrix multiplication method is used. Defaults to
         512 MB.
-    :type normalize: boolean, optional
+    :type normalize: bool, optional
     :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.

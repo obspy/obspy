@@ -41,7 +41,7 @@ class UTCDateTime(object):
     :param args: The creation of a new `UTCDateTime` object depends from the
         given input parameters. All possible options are summarized in the
         `Examples`_ section below.
-    :type iso8601: boolean, optional
+    :type iso8601: bool, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
     :type precision: int, optional
@@ -1315,7 +1315,7 @@ class UTCDateTime(object):
         """
         Returns string representation for a SEED volume.
 
-        :type compact: boolean, optional
+        :type compact: bool, optional
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
         :rtype: string

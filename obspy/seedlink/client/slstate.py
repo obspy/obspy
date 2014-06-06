@@ -48,7 +48,7 @@ class SLState(object):
     :var sendptr: Send pointer for databuf.
     :type sendptr: int
     :var expect_info: Flag to indicate if an INFO response is expected.
-    :type expect_info: boolean
+    :type expect_info: bool
     :var netto_trig: Network timeout trigger.netto_trig
     :type netto_trig: int
     :var netdly_trig: Network re-connect delay trigger.

@@ -428,7 +428,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :param tests: Test suites to run. If no suite is given all installed tests
         suites will be started (default is a empty list).
         Example ``['obspy.core.tests.suite']``.
-    :type report: boolean, optional
+    :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
     :type log: string, optional
     :param log: Filename of install log file to append to report.

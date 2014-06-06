@@ -78,7 +78,7 @@ class SLClient(object):
     :var verbose: Verbosity level, 0 is lowest.
     :type verbose: int
     :var ppackets: Flag to indicate show detailed packet information.
-    :type  ppackets: boolean
+    :type  ppackets: bool
     :var streamfile: Name of file containing stream list for multi-station
         mode.
     :type  streamfile: str
@@ -256,8 +256,10 @@ class SLClient(object):
         :param count:  Packet counter.
         :type slpack: :class:`~obspy.seedlink.slpacket.SLPacket`
         :param slpack: packet to process.
-        :return: Boolean true if connection to SeedLink server should be
-            closed and session terminated, false otherwise.
+
+        :rtype: bool
+        :return: True if connection to SeedLink server should be closed and
+            session terminated, False otherwise.
         """
         # check if not a complete packet
         if slpack is None or (slpack == SLPacket.SLNOPACKET) or \

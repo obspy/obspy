@@ -322,7 +322,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     :param max_len: Maximum length of triggered event in samples. A new
                     event will be triggered as soon as the signal reaches
                     again above thres1.
-    :type max_len_delete: Bool
+    :type max_len_delete: bool
     :param max_len_delete: Do not write events longer than max_len into
                            report file.
     :rtype: List

@@ -153,7 +153,7 @@ class Client(object):
             will be returned.
         :type data: String or Bytes
         :param data: The data being written or returned.
-        :type binary: Boolean, optional
+        :type binary: bool, optional
         :param binary: Whether to write the data as binary or text. Defaults to
             binary.
         """
