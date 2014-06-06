@@ -887,7 +887,7 @@ class CreationInfo(__CreationInfo):
     :param author: Name describing the author of a resource.
     :type author_uri: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param author_uri: Resource Identifier of the author of a resource.
-    :type creation_time: UTCDateTime, optional
+    :type creation_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param creation_time: Time of creation of a resource.
     :type version: str, optional
     :param version: Version string of a resource
@@ -957,28 +957,28 @@ class CompositeTime(__CompositeTime):
 
     :type year: int
     :param year: Year or range of years of the event’s focal time.
-    :type year_errors: :class:`~obspy.core.util.AttribDict`
+    :type year_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param year_errors: AttribDict containing error quantities.
     :type month: int
     :param month: Month or range of months of the event’s focal time.
-    :type month_errors: :class:`~obspy.core.util.AttribDict`
+    :type month_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param month_errors: AttribDict containing error quantities.
     :type day: int
     :param day: Day or range of days of the event’s focal time.
-    :type day_errors: :class:`~obspy.core.util.AttribDict`
+    :type day_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param day_errors: AttribDict containing error quantities.
     :type hour: int
     :param hour: Hour or range of hours of the event’s focal time.
-    :type hour_errors: :class:`~obspy.core.util.AttribDict`
+    :type hour_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param hour_errors: AttribDict containing error quantities.
     :type minute: int
     :param minute: Minute or range of minutes of the event’s focal time.
-    :type minute_errors: :class:`~obspy.core.util.AttribDict`
+    :type minute_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param minute_errors: AttribDict containing error quantities.
     :type second: float
     :param second: Second and fraction of seconds or range of seconds with
         fraction of the event’s focal time.
-    :type second_errors: :class:`~obspy.core.util.AttribDict`
+    :type second_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param second_errors: AttribDict containing error quantities.
 
     >>> print(CompositeTime(2011, 1, 1))
@@ -1180,7 +1180,8 @@ class Amplitude(__Amplitude):
         attribute unit provides the most likely units that could be needed
         here. For clarity, using the optional unit attribute is highly
         encouraged.
-    :type generic_amplitude_errors: :class:`~obspy.core.util.AttribDict`
+    :type generic_amplitude_errors:
+        :class:`~obspy.core.util.attribdict.AttribDict`
     :param generic_amplitude_errors: AttribDict containing error quantities.
     :type type: str, optional
     :param type: Describes the type of amplitude using the nomenclature from
@@ -1237,9 +1238,9 @@ class Amplitude(__Amplitude):
     :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by ``waveform_id``.
-    :type scaling_time: :class:`~obspy.core.UTCDateTime`, optional
+    :type scaling_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param scaling_time: Scaling time for amplitude measurement.
-    :type scaling_time_errors: :class:`~obspy.core.util.AttribDict`
+    :type scaling_time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param scaling_time_errors: AttribDict containing error quantities.
     :type magnitude_hint: str, optional
     :param magnitude_hint: Type of magnitude the amplitude measurement is used
@@ -1310,9 +1311,9 @@ class Pick(__Pick):
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type time: :class:`~obspy.core.UTCDateTime`
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param time: Observed onset time of signal (“pick time”).
-    :type time_errors: :class:`~obspy.core.util.AttribDict`
+    :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
     :param waveform_id: Identifes the waveform stream.
@@ -1325,12 +1326,13 @@ class Pick(__Pick):
     :type horizontal_slowness: float, optional
     :param horizontal_slowness: Observed horizontal slowness of the signal.
         Most relevant in array measurements. Unit: s·deg^(−1)
-    :type horizontal_slowness_errors: :class:`~obspy.core.util.AttribDict`
+    :type horizontal_slowness_errors:
+        :class:`~obspy.core.util.attribdict.AttribDict`
     :param horizontal_slowness_errors: AttribDict containing error quantities.
     :type backazimuth: float, optional
     :param backazimuth: Observed backazimuth of the signal. Most relevant in
         array measurements. Unit: deg
-    :type backazimuth_errors: :class:`~obspy.core.util.AttribDict`
+    :type backazimuth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param backazimuth_errors: AttribDict containing error quantities.
     :type slowness_method_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
@@ -1432,7 +1434,7 @@ class Arrival(__Arrival):
     :type takeoff_angle: float, optional
     :param takeoff_angle: Angle of emerging ray at the source, measured against
         the downward normal direction. Unit: deg
-    :type takeoff_angle_errors: :class:`~obspy.core.util.AttribDict`
+    :type takeoff_angle_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param takeoff_angle_errors: AttribDict containing error quantities.
     :type time_residual: float, optional
     :param time_residual: Residual between observed and expected arrival time
@@ -1674,19 +1676,19 @@ class Origin(__Origin):
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type time: :class:`~obspy.core.UTCDateTime`
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param time: Focal time.
-    :type time_errors: :class:`~obspy.core.util.AttribDict`
+    :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param time_errors: AttribDict containing error quantities.
     :type longitude: float
     :param longitude: Hypocenter longitude, with respect to the World Geodetic
         System 1984 (WGS84) reference system. Unit: deg
-    :type longitude_errors: :class:`~obspy.core.util.AttribDict`
+    :type longitude_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param longitude_errors: AttribDict containing error quantities.
     :type latitude: float
     :param latitude: Hypocenter latitude, with respect to the WGS84 reference
         system. Unit: deg
-    :type latitude_errors: :class:`~obspy.core.util.AttribDict`
+    :type latitude_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param latitude_errors: AttribDict containing error quantities.
     :type depth: float, optional
     :param depth: Depth of hypocenter with respect to the nominal sea level
@@ -1696,7 +1698,7 @@ class Origin(__Origin):
         As an example, GSE2.0, defines depth with respect to the local surface.
         If event data is converted from other formats to QuakeML, depth values
         may have to be modified accordingly. Unit: m
-    :type depth_errors: :class:`~obspy.core.util.AttribDict`
+    :type depth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param depth_errors: AttribDict containing error quantities.
     :type depth_type: str, optional
     :param depth_type: Type of depth determination. Allowed values are the
@@ -1871,7 +1873,7 @@ class Magnitude(__Magnitude):
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
         available, this value can represent the reported magnitude.
-    :type mag_errors: :class:`~obspy.core.util.AttribDict`
+    :type mag_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param mag_errors: AttribDict containing error quantities.
     :type magnitude_type: str, optional
     :param magnitude_type: Describes the type of magnitude. This is a free-text
@@ -1903,8 +1905,8 @@ class Magnitude(__Magnitude):
         the following:
             * ``"manual"``
             * ``"automatic"``
-    :type evaluation_status: :class:`~obspy.core.event.EvaluationStatus`,
-        optional
+    :type evaluation_status:
+        :class:`~obspy.core.event_header.EvaluationStatus`, optional
     :param evaluation_status: Evaluation status of Magnitude. Allowed values
         are the following:
             * ``"preliminary"``
@@ -1958,7 +1960,7 @@ class StationMagnitude(__StationMagnitude):
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: float
     :param mag: Estimated magnitude.
-    :type mag_errors: :class:`~obspy.core.util.AttribDict`
+    :type mag_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param mag_errors: AttribDict containing error quantities.
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: See :class:`~obspy.core.event.Magnitude`
@@ -2038,27 +2040,27 @@ class Tensor(__Tensor):
 
     :type m_rr: float
     :param m_rr: Moment-tensor element Mrr. Unit: Nm
-    :type m_rr_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_rr_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_rr_errors: AttribDict containing error quantities.
     :type m_tt: float
     :param m_tt: Moment-tensor element Mtt. Unit: Nm
-    :type m_tt_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_tt_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_tt_errors: AttribDict containing error quantities.
     :type m_pp: float
     :param m_pp: Moment-tensor element Mpp. Unit: Nm
-    :type m_pp_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_pp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_pp_errors: AttribDict containing error quantities.
     :type m_rt: float
     :param m_rt: Moment-tensor element Mrt. Unit: Nm
-    :type m_rt_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_rt_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_rt_errors: AttribDict containing error quantities.
     :type m_rp: float
     :param m_rp: Moment-tensor element Mrp. Unit: Nm
-    :type m_rp_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_rp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_rp_errors: AttribDict containing error quantities.
     :type m_tp: float
     :param m_tp: Moment-tensor element Mtp. Unit: Nm
-    :type m_tp_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_tp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_tp_errors: AttribDict containing error quantities.
 
     .. note::
@@ -2159,15 +2161,15 @@ class NodalPlane(__NodalPlane):
 
     :type strike: float
     :param strike: Strike angle of nodal plane. Unit: deg
-    :type strike_errors: :class:`~obspy.core.util.AttribDict`
+    :type strike_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param strike_errors: AttribDict containing error quantities.
     :type dip: float
     :param dip: Dip angle of nodal plane. Unit: deg
-    :type dip_errors: :class:`~obspy.core.util.AttribDict`
+    :type dip_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param dip_errors: AttribDict containing error quantities.
     :type rake: float
     :param rake: Rake angle of nodal plane. Unit: deg
-    :type rake_errors: :class:`~obspy.core.util.AttribDict`
+    :type rake_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param rake_errors: AttribDict containing error quantities.
 
     .. note::
@@ -2195,18 +2197,18 @@ class Axis(__Axis):
     :param azimuth: Azimuth of eigenvector of moment tensor expressed in
         principal-axes system. Measured clockwise from South-North direction at
         epicenter. Unit: deg
-    :type azimuth_errors: :class:`~obspy.core.util.AttribDict`
+    :type azimuth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param azimuth_errors: AttribDict containing error quantities.
     :type plunge: float
     :param plunge: Plunge of eigenvector of moment tensor expressed in
         principal-axes system. Measured against downward vertical direction at
         epicenter. Unit: deg
-    :type plunge_errors: :class:`~obspy.core.util.AttribDict`
+    :type plunge_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param plunge_errors: AttribDict containing error quantities.
     :type length: float
     :param length: Eigenvalue of moment tensor expressed in principal-axes
         system. Unit: Nm
-    :type length_errors: :class:`~obspy.core.util.AttribDict`
+    :type length_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param length_errors: AttribDict containing error quantities.
 
     .. note::
@@ -2317,7 +2319,7 @@ class MomentTensor(__MomentTensor):
     :type scalar_moment: float, optional
     :param scalar_moment: Scalar moment as derived in moment tensor inversion.
         Unit: Nm
-    :type scalar_moment_errors: :class:`~obspy.core.util.AttribDict`
+    :type scalar_moment_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param scalar_moment_errors: AttribDict containing error quantities.
     :type tensor: :class:`~obspy.core.event.Tensor`, optional
     :param tensor: Tensor object holding the moment tensor elements.
@@ -2878,7 +2880,7 @@ class Catalog(object):
         Use ``inverse=True`` to return the Events that *do not* match the
         specified filter rultes.
 
-        :rtype: :class:`~obspy.core.stream.Catalog`
+        :rtype: :class:`Catalog`
         :return: Filtered catalog. A new Catalog object with filtered
             Events as references to the original Events.
 

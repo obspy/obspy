@@ -691,7 +691,7 @@ class Stream(object):
         """
         Extends the current Stream object with a list of Trace objects.
 
-        :param trace_list: list of :class:`~obspy.core.stream.Trace` objects or
+        :param trace_list: list of :class:`~obspy.core.trace.Trace` objects or
             :class:`~obspy.core.stream.Stream`.
 
         .. rubric:: Example

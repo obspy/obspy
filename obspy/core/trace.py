@@ -2008,7 +2008,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def _addProcessingInfo(self, info):
         """
         Adds the given informational string to the `processing` field in the
-        trace's :class:`~obspy.core.trace.stats.Stats` object.
+        trace's :class:`~obspy.core.trace.Stats` object.
         """
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
