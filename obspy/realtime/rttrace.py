@@ -160,7 +160,7 @@ class RtTrace(Trace):
         """
         Too ambiguous, throw an Error.
 
-        .. seealso:: :meth:`obspy.realtime.RtTrace.append`.
+        .. seealso:: :meth:`obspy.realtime.rttrace.RtTrace.append`.
         """
         msg = "Too ambiguous for realtime trace data. Try: RtTrace.append()"
         raise NotImplementedError(msg)
@@ -186,8 +186,8 @@ class RtTrace(Trace):
             (default is ``True``).
         :type verbose: bool, optional
         :param verbose: Print additional information to stdout
-        :return: NumPy :class:`np.ndarray` object containing processed trace
-            data from appended Trace object.
+        :return: NumPy :class:`~numpy.ndarray` object containing processed
+            trace data from appended Trace object.
         """
         if not isinstance(trace, Trace):
             # only add Trace objects

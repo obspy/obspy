@@ -58,7 +58,7 @@ class RtMemory:
             RtMemory object to update.
         :type data: numpy.ndarray
         :param data:  Data array to use for update.
-        :return: NumPy :class:`np.ndarray` object containing updated
+        :return: NumPy :class:`~numpy.ndarray` object containing updated
             memory array (input or output).
         """
         if data.size >= np.size(memory_array):
