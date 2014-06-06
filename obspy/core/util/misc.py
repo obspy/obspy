@@ -198,7 +198,7 @@ numpy.version.version
 # import numpy loadtxt and check if ndmin parameter is available
 try:
     from numpy import loadtxt
-    loadtxt(np.array([]), ndmin=1)
+    loadtxt(np.array([0]), ndmin=1)
 except TypeError:
     # otherwise redefine loadtxt
     def loadtxt(*args, **kwargs):
