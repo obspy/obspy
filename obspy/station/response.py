@@ -47,12 +47,12 @@ class ResponseStage(ComparingObject):
         :param stage_gain: Value of stage gain.
         :type stage_gain_frequency: float
         :param stage_gain_frequency: Frequency of stage gain.
-        :param input_units: string
+        :type input_units: string
         :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :param output_units: string
+        :type output_units: string
         :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
@@ -72,7 +72,7 @@ class ResponseStage(ComparingObject):
             types (e.g. the poles and zeros part or the FIR part).
         :type name: string
         :param name: A name given to the filter stage.
-        :param input_units_description: string, optional
+        :type input_units_description: string, optional
         :param input_units_description: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.

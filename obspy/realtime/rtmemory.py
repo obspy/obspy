@@ -27,8 +27,8 @@ class RtMemory:
         """
         Create and initialize input and output arrays for this RtMemory object.
 
-        :type data_type: data-type
-        :param trace:  Desired array data-type.
+        :type data_type: numpy.dtype
+        :param data_type: Desired array data-type.
         :type length_input: int
         :param length_input: length of the input memory array.
         :type length_output: int

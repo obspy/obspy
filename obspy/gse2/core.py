@@ -142,7 +142,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: string
-    :type param: GSE2 file to be read.
+    :param filename: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.
     :type verify_chksum: bool, optional

@@ -597,7 +597,7 @@ master/seishub/plugins/seismology/waveform.py
         Gets a preview of a ObsPy Stream object.
 
         :type trace_ids: list
-        :type trace_ids: List of trace IDs, e.g. ``['BW.MANZ..EHE']``.
+        :param trace_ids: List of trace IDs, e.g. ``['BW.MANZ..EHE']``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`

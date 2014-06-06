@@ -339,7 +339,7 @@ class PPSD():
         :type is_rotational_data: bool (optional)
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
-        :type db_bins: Tuple of three ints/floats
+        :type db_bins: tuple of three ints/floats
         :param db_bins: Specify the lower and upper boundary and the width of
                 the db bins. The bin width might get adjusted to fit  a number
                 of equally spaced bins in between the given boundaries.

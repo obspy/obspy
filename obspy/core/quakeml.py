@@ -559,7 +559,8 @@ class Unpickler(object):
         Converts an etree.Element into an Axis object.
 
         :type parent: etree.Element
-        :type name: tag name of axis
+        :type name: str
+        :param name: tag name of axis
         :rtype: :class:`~obspy.core.event.Axis`
         """
         obj = Axis()
@@ -599,7 +600,8 @@ class Unpickler(object):
         Converts an etree.Element into an NodalPlane object.
 
         :type parent: etree.Element
-        :type name: tag name of sub nodal plane
+        :type name: str
+        :param name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
         obj = NodalPlane()

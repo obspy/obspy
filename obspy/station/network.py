@@ -36,7 +36,7 @@ class Network(BaseNode):
                  historical_code=None):
         """
         :type code: String
-        :type code: The SEED network code.
+        :param code: The SEED network code.
         :type total_number_of_stations: int
         :param total_number_of_stations: The total number of stations
             contained in this networkork, including inactive or terminated
