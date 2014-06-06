@@ -436,7 +436,7 @@ class Trace(object):
         """
         Creates a new Stream containing num copies of this trace.
 
-        :rtype num: int
+        :type num: int
         :param num: Number of copies.
         :returns: New ObsPy Stream object.
 

@@ -104,78 +104,89 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         "Essentially" because permuting subarray sequence changes the d vector,
         yielding a slightly different numerical result.
     :return: Dictionary with fields:
-        | **A:** (array, dimension 3N x 6) - data mapping matrix 'A' of
-        |     S95(A4)
-        | **g:** (array, dimension 6 x 3N) - generalized inverse matrix
-        |     relating ptilde and data vector, in S95(A5)
-        | **Ce:** (4 x 4) covariance matrix of the 4 independent strain
-        |     tensor elements e11, e21, e22, e33
-        | **ts_d:** (array, length nt) - dilatation
-        |     (trace of the 3x3 strain tensor) as a function of time
-        | **sigmad:** scalar, standard deviation of dilatation
-        | **ts_dh:** (array, length nt) - horizontal dilatation (also
-        |     known as areal strain) (eEE+eNN) as a function of time
-        | **sigmadh:** scalar, standard deviation of horizontal dilatation
-        |     (areal strain)
-        | **ts_e:** (array, dimension nt x 3 x 3) - strain tensor
-        | **ts_s:** (array, length nt) -  maximum strain
-        |     ( .5*(max eigval of e - min eigval of e) as a
-        |     function of time, where e is the 3x3 strain tensor
-        | **Cgamma:** (4 x 4) covariance matrix of the 4 independent shear
-        |     strain tensor elements g11, g12, g22, g33 (includes full
-        |     covariance effects). gamma is traceless part of e.
-        | **ts_sh:** (array, length nt) - maximum horizontal strain
-        |     ( .5*(max eigval of eh - min eigval of eh)
-        |     as a function of time, where eh is e(1:2,1:2)
-        | **Cgammah:** (3 x 3) covariance matrix of the 3 independent
-        |     horizontal shear strain tensor elements gamma11, gamma12,
-        |     gamma22 gamma is traceless part of e.
-        | **ts_wmag:** (array, length nt) -  total rotation
-        |     angle (radians) as a function of time.  I.e. if the
-        |     rotation vector at the j'th time step is
-        |     w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
-        |     positive for right-handed rotation
-        | **Cw:** (3 x 3) covariance matrix of the 3 independent
-        |     rotation tensor elements w21, w31, w32
-        | **ts_w1:** (array, length nt) - rotation
-        |     (rad) about the x1 axis, positive for right-handed rotation
-        | **sigmaw1:** scalar, standard deviation of the ts_w1
-        |     (sigma-omega-1 in SF08)
-        | **ts_w2:** (array, length nt) - rotation
-        |     (rad) about the x2 axis, positive for right-handed rotation
-        | **sigmaw2:** scalar, standard deviation of ts_w2
-        |     (sigma-omega-2 in SF08)
-        | **ts_w3:** (array, length nt) - "torsion", rotation
-        |     (rad) about a vertical up or down axis, i.e. x3, positive
-        |     for right-handed rotation
-        | **sigmaw3:** scalar, standard deviation of the torsion
-        |     (sigma-omega-3 in SF08)
-        | **ts_tilt:** (array, length nt) - tilt (rad)
-        |     (rotation about a horizontal axis, positive for right
-        |     handed rotation)
-        |     as a function of time.  tilt = sqrt( w1^2 + w2^2)
-        | **sigmat:** scalar, standard deviation of the tilt
-        |     (not defined in SF08, From Papoulis (1965, p. 195,
-        |     example 7.8))
-        | **ts_data:** (array, shape (nt x 3N)). time series of
-        |     the observed displacement
-        |     differences, which are the di in S95 eqn A1.
-        | **ts_pred:** (array, shape (nt x 3N)) time series of
-        |     the fitted model's predicted displacement difference
-        |     Note that the fitted model displacement
-        |     differences correspond to linalg.dot(A, ptilde), where A
-        |     is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5.
-        | **ts_misfit:** (array, shape (nt x 3N)) time series of the
-        |     residuals (fitted model displacement differences minus
-        |     observed displacement differences). Note that the fitted
-        |     model displacement differences correspond to
-        |     linalg.dot(A, ptilde), where A is the big
-        |     matrix in S95 eqn A4 and ptilde is S95 eqn A5.
-        | **ts_M:** (array, length nt) Time series of M, misfit
-        |     ratio of S95, p. 688.
-        | **ts_ptilde:** (array, shape (nt x 6)) - solution
-        |     vector p-tilde (from S95 eqn A5) as a function of time
-        | **Cp:** 6x6 solution covariance matrix defined in SF08.
+
+        **A:** (array, dimension 3N x 6)
+            data mapping matrix 'A' of S95(A4)
+        **g:** (array, dimension 6 x 3N)
+            generalized inverse matrix relating ptilde and data vector, in
+            S95(A5)
+        **Ce:** (4 x 4)
+            covariance matrix of the 4 independent strain tensor elements e11,
+            e21, e22, e33
+        **ts_d:** (array, length nt)
+            dilatation (trace of the 3x3 strain tensor) as a function of time
+        **sigmad:** (scalar)
+            standard deviation of dilatation
+        **ts_dh:** (array, length nt)
+            horizontal dilatation (also known as areal strain) (eEE+eNN) as a
+            function of time
+        **sigmadh:** (scalar)
+            standard deviation of horizontal dilatation (areal strain)
+        **ts_e:** (array, dimension nt x 3 x 3)
+            strain tensor
+        **ts_s:** (array, length nt)
+            maximum strain ( .5*(max eigval of e - min eigval of e) as a
+            function of time, where e is the 3x3 strain tensor
+        **Cgamma:** (4 x 4)
+            covariance matrix of the 4 independent shear strain tensor elements
+            g11, g12, g22, g33 (includes full covariance effects). gamma is
+            traceless part of e.
+        **ts_sh:** (array, length nt)
+            maximum horizontal strain ( .5*(max eigval of eh - min eigval of
+            eh) as a function of time, where eh is e(1:2,1:2)
+        **Cgammah:** (3 x 3)
+            covariance matrix of the 3 independent horizontal shear strain
+            tensor elements gamma11, gamma12, gamma22 gamma is traceless part
+            of e.
+        **ts_wmag:** (array, length nt)
+            total rotation angle (radians) as a function of time.  I.e. if the
+            rotation vector at the j'th time step is
+            w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
+            positive for right-handed rotation
+        **Cw:** (3 x 3)
+            covariance matrix of the 3 independent rotation tensor elements
+            w21, w31, w32
+        **ts_w1:** (array, length nt)
+            rotation (rad) about the x1 axis, positive for right-handed
+            rotation
+        **sigmaw1:** (scalar)
+            standard deviation of the ts_w1 (sigma-omega-1 in SF08)
+        **ts_w2:** (array, length nt)
+            rotation (rad) about the x2 axis, positive for right-handed
+            rotation
+        **sigmaw2:** (scalar)
+            standard deviation of ts_w2 (sigma-omega-2 in SF08)
+        **ts_w3:** (array, length nt)
+            "torsion", rotation (rad) about a vertical up or down axis, i.e.
+            x3, positive for right-handed rotation
+        **sigmaw3:** (scalar)
+            standard deviation of the torsion (sigma-omega-3 in SF08)
+        **ts_tilt:** (array, length nt)
+            tilt (rad) (rotation about a horizontal axis, positive for right
+            handed rotation) as a function of time
+            tilt = sqrt( w1^2 + w2^2)
+        **sigmat:** (scalar)
+            standard deviation of the tilt (not defined in SF08, From
+            Papoulis (1965, p. 195, example 7.8))
+        **ts_data:** (array, shape (nt x 3N))
+            time series of the observed displacement differences, which are
+            the di in S95 eqn A1
+        **ts_pred:** (array, shape (nt x 3N))
+            time series of the fitted model's predicted displacement difference
+            Note that the fitted model displacement differences correspond
+            to linalg.dot(A, ptilde), where A is the big matrix in S95 eqn A4
+            and ptilde is S95 eqn A5
+        **ts_misfit:** (array, shape (nt x 3N))
+            time series of the residuals (fitted model displacement differences
+            minus observed displacement differences). Note that the fitted
+            model displacement differences correspond to linalg.dot(A, ptilde),
+            where A is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5
+        **ts_M:** (array, length nt)
+            Time series of M, misfit ratio of S95, p. 688
+        **ts_ptilde:** (array, shape (nt x 6))
+            solution vector p-tilde (from S95 eqn A5) as a function of time
+        **Cp:** (6 x 6)
+            solution covariance matrix defined in SF08
 
     .. rubric:: Warnings
 

@@ -3123,14 +3123,14 @@ class Catalog(object):
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type label: str, optional
-        :param label:Events will be labeld based on the chosen property.
+        :param label: Events will be labeld based on the chosen property.
             Possible values are
                 * ``"magnitude"``
                 * ``None``
             Defaults to ``"magnitude"``
         :type color: str, optional
-        :param color:The events will be color-coded based on the chosen
-            proberty. Possible values are
+        :param color: The events will be color-coded based on the chosen
+            property. Possible values are
                 * ``"date"``
                 * ``"depth"``
             Defaults to ``"depth"``

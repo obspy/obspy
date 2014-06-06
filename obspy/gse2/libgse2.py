@@ -122,8 +122,8 @@ def isGse2(f):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
 
-    :type f : file pointer
-    :param f : file pointer to start of GSE2 file to be checked.
+    :type f: file pointer
+    :param f: file pointer to start of GSE2 file to be checked.
     """
     pos = f.tell()
     widi = f.read(4)

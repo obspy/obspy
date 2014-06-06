@@ -90,7 +90,7 @@ class SLClient(object):
     :var statefile: Name of file for reading (if exists) and storing state.
     :type  statefile: str
     :var begin_time: Beginning of time window for read start in past.
-    :type  begin_time :str
+    :type  begin_time: str
     :var end_time: End of time window for reading windowed data.
     :type  end_time: str
     :var infolevel: INFO LEVEL for info request only.
