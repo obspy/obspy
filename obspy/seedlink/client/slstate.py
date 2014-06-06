@@ -96,7 +96,7 @@ class SLState(object):
 
         :return: last received packet if data buffer contains a full packet to
             send.
-        :raise: SeedLinkException if there is not a packet ready to send.
+        :raise SeedLinkException: if there is not a packet ready to send.
 
         See also: :meth:`packetAvailable`
         """
@@ -131,7 +131,7 @@ class SLState(object):
 
         :return: true if next send packet is a SeedLink ERROR packet
 
-        :raise: SeedLinkException if there are not enough bytes to determine
+        :raise SeedLinkException: if there are not enough bytes to determine
 
         """
         if self.recptr - self.sendptr < len(SLPacket.ERRORSIGNATURE):
@@ -147,7 +147,7 @@ class SLState(object):
 
         :return: true if next send packet is a SeedLink END packet
 
-        :raise: SeedLinkException if there are not enough bytes to determine
+        :raise SeedLinkException: if there are not enough bytes to determine
         """
         if self.recptr - self.sendptr < len(SLPacket.ENDSIGNATURE):
             msg = "not enough bytes to determine packet type"
@@ -162,7 +162,7 @@ class SLState(object):
 
         :return: true if next send packet is a SeedLink INFO packet
 
-        :raise: SeedLinkException if there are not enough bytes to determine
+        :raise SeedLinkException: if there are not enough bytes to determine
             packet type
         """
         if self.recptr - self.sendptr < len(SLPacket.INFOSIGNATURE):
