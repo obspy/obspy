@@ -586,7 +586,7 @@ def toUTCDateTime(value):
 
     :type value: str
     :param value: A Date time string.
-    :return: Converted :class:`~obspy.core.UTCDateTime` object.
+    :return: Converted :class:`~obspy.core.utcdatetime.UTCDateTime` object.
 
     .. rubric:: Example
 
@@ -636,7 +636,7 @@ def fromUTCDateTime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
-    :type dt: :class:`~obspy.core.UTCDateTime`
+    :type dt: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param dt: A UTCDateTime object.
     :return: Converted date time string usable by Seismic Handler.
 

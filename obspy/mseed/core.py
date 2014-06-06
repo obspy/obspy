@@ -113,10 +113,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     :param mseed_object: Filename or open file like object that contains the
         binary Mini-SEED data. Any object that provides a read() method will be
         considered to be a file like object.
-    :type starttime: UTCDateTime
-    :param starttime: Only read data samples after or at the starttime.
-    :type endtime: UTCDateTime
-    :param endtime: Only read data samples before or at the starttime.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param starttime: Only read data samples after or at the start time.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: Only read data samples before or at the end time.
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :type sourcename: str

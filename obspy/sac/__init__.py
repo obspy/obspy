@@ -14,7 +14,7 @@ defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
 Reading
 -------
 Similiar to reading any other waveform data format using
-:func:`~obspy.core.read`:
+:func:`~obspy.core.stream.read()`:
 
 >>> from obspy import read
 >>> st = read('/path/to/test.sac')

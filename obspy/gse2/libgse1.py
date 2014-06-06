@@ -41,7 +41,7 @@ def read(fh, verify_chksum=True):
     :type verify_chksum: Bool
     :param verify_chksum: If True verify Checksum and raise Exception if not
         correct
-    :rtype: Dictionary, Numpy.ndarray int32
+    :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     header = readHeader(fh)

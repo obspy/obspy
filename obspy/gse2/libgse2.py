@@ -264,7 +264,7 @@ def compress_CM6(data):
     """
     CM6 compress data
 
-    :type data: i4 numpy array
+    :type data: :class:`numpy.ndarray`, dtype=int32
     :param data: the data to write
     :returns: numpy chararray containing compressed samples
     """
@@ -338,7 +338,7 @@ def read(f, verify_chksum=True):
     :type test_chksum: Bool
     :param verify_chksum: If True verify Checksum and raise Exception if it
                           is not correct
-    :rtype: Dictionary, Numpy.ndarray int32
+    :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     headdict = readHeader(f)
@@ -363,7 +363,7 @@ def write(headdict, data, f, inplace=False):
 
     :note: headdict dictionary entries C{'datatype', 'n_samps',
            'samp_rate'} are absolutely necessary
-    :type data: numpy.ndarray dtype int32
+    :type data: :class:`numpy.ndarray`, dtype=int32
     :param data: Contains the data.
     :type f: File Pointer
     :param f: Open file pointer of GSE2 file to write, opened in binary
