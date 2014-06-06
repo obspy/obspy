@@ -1449,11 +1449,11 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     :param clim: limits of the colorbars
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
-    :param mode: 'absolute' for absolute value of TFR, 'power' for |TFR|^2
-    :param fft_zero_pad_fac: integer, if > 0, the signal is zero padded to nfft
-        = nextpow2(len(st)) * fft_zero_pad_fac to get smoother spectrum in the
-        low frequencies (has no effect on the TFR and might make
-        demeaning/tapering necessary to avoid artefacts)
+    :param mode: 'absolute' for absolute value of TFR, 'power' for ``|TFR|^2``
+    :param fft_zero_pad_fac: integer, if > 0, the signal is zero padded to
+        ``nfft = nextpow2(len(st)) * fft_zero_pad_fac`` to get smoother
+        spectrum in the low frequencies (has no effect on the TFR and might
+        make demeaning/tapering necessary to avoid artifacts)
 
     :return: If show is False, returns a maplotlib.pyplot.figure object (single
         component data) or a list of figure objects (multi component data)

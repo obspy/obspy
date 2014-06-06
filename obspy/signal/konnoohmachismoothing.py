@@ -33,12 +33,12 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     frequencies.
 
     Returns the smoothing window around the center frequency with one value per
-    input frequency defined as follows (see [Konno1998]_):
+    input frequency defined as follows (see [Konno1998]_)::
 
-    [sin(b * log_10(f/f_c)) / (b * log_10(f/f_c)]^4
-        b   = bandwidth
-        f   = frequency
-        f_c = center frequency
+        [sin(b * log_10(f/f_c)) / (b * log_10(f/f_c)]^4
+            b   = bandwidth
+            f   = frequency
+            f_c = center frequency
 
     The bandwidth of the smoothing function is constant on a logarithmic scale.
     A small value will lead to a strong smoothing, while a large value of will
@@ -53,12 +53,12 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     This function might raise some numpy warnings due to divisions by zero and
     logarithms of zero. This is intentional and faster than prefiltering the
     special cases. You can disable numpy warnings (they usually do not show up
-    anyways) with:
+    anyways) with::
 
-    temp = np.geterr()
-    np.seterr(all='ignore')
-    ...code that raises numpy warning due to division by zero...
-    np.seterr(**temp)
+        temp = np.geterr()
+        np.seterr(all='ignore')
+        ...code that raises numpy warning due to division by zero...
+        np.seterr(**temp)
 
     :type frequencies: :class:`numpy.ndarray` (float32 or float64)
     :param frequencies:
@@ -109,7 +109,8 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     Ohmachi window for each frequency as the center frequency.
 
     Any spectrum with the same frequency bins as this matrix can later be
-    smoothed by a simple matrix multiplication with this matrix:
+    smoothed by a simple matrix multiplication with this matrix::
+
         smoothed_spectrum = np.dot(spectrum, smoothing_matrix)
 
     This also works for many spectra stored in one large matrix and is even
