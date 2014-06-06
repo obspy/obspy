@@ -180,9 +180,11 @@ class RtTrace(Trace):
         :type gap_overlap_check: bool, optional
         :param gap_overlap_check: Action to take when there is a gap or overlap
             between the end of this RtTrace and start of appended Trace:
-                If True, raise TypeError.
-                If False, all trace processing memory will be re-initialized to
-                    prevent false signal in processed trace.
+
+                * If True, raise TypeError.
+                * If False, all trace processing memory will be re-initialized
+                  to prevent false signal in processed trace.
+
             (default is ``True``).
         :type verbose: bool, optional
         :param verbose: Print additional information to stdout
