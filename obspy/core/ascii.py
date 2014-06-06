@@ -463,7 +463,7 @@ def _parse_data(data, data_type):
     if len(data.read(1)) == 0:
         return np.array([], dtype=dtype)
     data.seek(0)
-    return loadtxt(data, dtype=dtype, ndlim=1)
+    return loadtxt(data, dtype=dtype, ndmin=1)
 
 
 if __name__ == '__main__':
