@@ -180,7 +180,7 @@ def toIntOrZero(value):
 
     :param value: Arbitrary data type.
     :rtype: int
-numpy.version.version
+
     .. rubric:: Example
 
     >>> toIntOrZero("12")

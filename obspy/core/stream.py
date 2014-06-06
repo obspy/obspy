@@ -959,9 +959,11 @@ class Stream(object):
             Defaults to ``'local time'``.
         :param localization_dict: Enables limited localization of the dayplot
             through the usage of a dictionary. To change the labels to, e.g.
-            German, use the following:
+            German, use the following::
+
                 localization_dict={'time in': 'Zeit in', 'seconds': 'Sekunden',
                                    'minutes': 'Minuten', 'hours': 'Stunden'}
+
         :param data_unit: If given, the scale of the data will be drawn on the
             right hand side in the form "%f {data_unit}". The unit is supposed
             to be a string containing the actual unit of the data. Can be a
@@ -976,15 +978,19 @@ class Stream(object):
             UTCDateTime object with the origin time of the event. Furthermore
             every event can have an optional "text" key which will then be
             displayed as an annotation.
-            Example:
+            Example::
+
                 events=[{"time": UTCDateTime(...), "text": "Event A"}, {...}]
+
             It can also be a :class:`~obspy.core.event.Catalog` object. In this
             case each event will be annotated with its corresponding
             Flinn-Engdahl region and the magnitude.
             Events can also be automatically downloaded with the help of
             obspy.neries. Just pass a dictionary with a "min_magnitude" key,
-            e.g.
+            e.g. ::
+
                 events={"min_magnitude": 5.5}
+
             Defaults to ``[]``.
         :param x_labels_size: Size of x labels in points or fontsize.
             Defaults to ``8``.
@@ -2376,6 +2382,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type method: string
         :param method: Determines the rotation method.
+
             ``'NE->RT'``: Rotates the North- and East-components of a
                 seismogram to radial and transverse components.
             ``'RT->NE'``: Rotates the radial and transverse components of a
@@ -2384,6 +2391,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 to LQT, e.g. right-handed ray coordinate system.
             ``'LQR->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
                 system to left handed Z, North, and East system.
+
         :type back_azimuth: float, optional
         :param angle: Depends on the chosen method.
             A single float, the back azimuth from station to source in degrees.
