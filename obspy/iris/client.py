@@ -148,7 +148,7 @@ class Client(object):
         Either writes data into a file if filename is given or directly returns
         it.
 
-        :type filename: String or open file-like object.
+        :type filename: String or open file-like object
         :param filename: File or object being written to. If None, a string
             will be returned.
         :type data: String or Bytes

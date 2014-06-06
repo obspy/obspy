@@ -262,7 +262,7 @@ class Operator(ComparingObject):
     """
     def __init__(self, agencies, contacts=None, website=None):
         """
-        :type agencies: list of strings.
+        :type agencies: list of strings
         :param agencies: The agencies of the operator.
         :type contacts: list of :class:`Person`
         :param contacts: One or more contact persons, optional
@@ -377,7 +377,7 @@ class PhoneNumber(ComparingObject):
         """
         :type area_code: int
         :param area_code: The area code
-        :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
+        :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678
         :param phone_number: The phone number minus the country and area code.
         :type country_code: int
         :param country_code: The country code, optional
@@ -436,7 +436,7 @@ class Comment(ComparingObject):
         :param begin_effective_time: The effective start date, Optional.
         :type end_effective_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param end_effective_time: The effective end date. Optional.
-        :type authors: list of :class:`Person` objects.
+        :type authors: list of :class:`Person` objects
         :param authors: The authors of this comment. Optional.
         """
         self.value = value

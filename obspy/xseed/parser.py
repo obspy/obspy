@@ -144,7 +144,7 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Filename, URL, Basestring or BytesIO object.
+        :type data: Filename, URL, Basestring or BytesIO object
         :param data: Filename, URL or XSEED/SEED string as file pointer or
             BytesIO.
         """
@@ -602,7 +602,7 @@ class Parser(object):
 
         It will always parse the whole file and skip any time span data.
 
-        :type data: File pointer or BytesIO object.
+        :type data: File pointer or BytesIO object
         """
         # Jump to the beginning of the file.
         data.seek(0)
@@ -738,7 +738,7 @@ class Parser(object):
         """
         Parse a XML-SEED string.
 
-        :type data: File pointer or BytesIO object.
+        :type data: File pointer or BytesIO object
         """
         data.seek(0)
         root = xmlparse(data).getroot()

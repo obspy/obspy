@@ -23,7 +23,7 @@ def getStartAndEndTime(file_or_file_object):
     """
     Returns the start- and endtime of a Mini-SEED file or file-like object.
 
-    :type file_or_file_object: basestring or open file-like object.
+    :type file_or_file_object: basestring or open file-like object
     :param file_or_file_object: Mini-SEED file name or open file-like object
         containing a Mini-SEED record.
     :return: tuple (start time of first record, end time of last record)
@@ -92,7 +92,7 @@ def getTimingAndDataQuality(file_or_file_object):
     Counts all data quality flags of the given Mini-SEED file and returns
     statistics about the timing quality if applicable.
 
-    :type file_or_file_object: basestring or open file-like object.
+    :type file_or_file_object: basestring or open file-like object
     :param file_or_file_object: Mini-SEED file name or open file-like object
         containing a Mini-SEED record.
 

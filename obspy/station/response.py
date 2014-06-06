@@ -183,9 +183,9 @@ class PolesZerosResponseStage(ResponseStage):
     :type normalization_frequency: float
     :param normalization_frequency: The frequency at which the normalization
         factor is normalized.
-    :type zeros: list of complex numbers.
+    :type zeros: list of complex numbers
     :param zeros: All zeros of the stage.
-    :type poles: list of complex numbers.
+    :type poles: list of complex numbers
     :param poles: All poles of the stage.
     :type normalization_factor: float, optional
     :param normalization_factor:
