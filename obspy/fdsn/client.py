@@ -244,10 +244,12 @@ class Client(object):
         :type orderby: str, optional
         :param orderby: Order the result by time or magnitude with the
             following possibilities:
+
                 * time: order by origin descending time
                 * time-asc: order by origin ascending time
                 * magnitude: order by descending magnitude
                 * magnitude-asc: order by ascending magnitude
+
         :type catalog: str, optional
         :param catalog: Limit to events from a specified catalog
         :type contributor: str, optional
@@ -400,7 +402,7 @@ class Client(object):
             are comma-separated.
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. As a special case “--“ (two
+            identifiers are comma-separated. As a special case ``“--“`` (two
             dashes) will be translated to a string of two space characters to
             match blank location IDs.
         :type channel: str
@@ -426,7 +428,7 @@ class Client(object):
         :type minradius: float
         :param minradius: Limit results to stations within the specified
             minimum number of degrees from the geographic point defined by the
-                    latitude and longitude parameters.
+            latitude and longitude parameters.
         :type maxradius: float
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
@@ -1510,19 +1512,19 @@ def parse_simple_xml(xml_string):
     Simple helper function for parsing the Catalog and Contributor availability
     files.
 
-    Parses XMLs of the form
+    Parses XMLs of the form::
 
-    <Bs>
-        <total>4</total>
-        <B>1</B>
-        <B>2</B>
-        <B>3</B>
-        <B>4</B>
-    <Bs>
+        <Bs>
+            <total>4</total>
+            <B>1</B>
+            <B>2</B>
+            <B>3</B>
+            <B>4</B>
+        </Bs>
 
-    and return a dictionary with a single item:
+    and return a dictionary with a single item::
 
-    {"Bs": set(("1", "2", "3", "4"))}
+        {"Bs": set(("1", "2", "3", "4"))}
     """
     root = etree.fromstring(xml_string.strip())
 

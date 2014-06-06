@@ -327,17 +327,16 @@ class SeedLinkConnection(object):
         If 'defselect' is not null it will be used as the default selectors
         for entries will no specific selectors indicated.
 
-        The file is expected to be repeating lines of the form:
-        <PRE>
-          <NET> <STA> [selectors]
-        </PRE>
-        For example:
-        <PRE>
-        # Comment lines begin with a '#' or '*'
-        GE ISP  BH?.D
-        NL HGN
-        MN AQU  BH?  HH?
-        </PRE>
+        The file is expected to be repeating lines of the form::
+
+            <NET> <STA> [selectors]
+
+        For example::
+
+            # Comment lines begin with a '#' or '*'
+            GE ISP  BH?.D
+            NL HGN
+            MN AQU  BH?  HH?
 
         :param streamfile: name of file containing list of streams and
             selectors.
@@ -414,13 +413,13 @@ class SeedLinkConnection(object):
         Parse a string of streams and selectors and add them to the stream
         chain for configuring a multi-station connection.
 
-        The string should be of the following form:
-        "stream1[:selectors1],stream2[:selectors2],..."
+        The string should be of the following form::
 
-        For example:
-        <PRE>
-        "IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D"
-        </PRE>
+            "stream1[:selectors1],stream2[:selectors2],..."
+
+        For example::
+
+            "IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D"
 
         :param streamlist: list of streams and selectors.
         :param defselect: default selectors.

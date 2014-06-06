@@ -815,11 +815,14 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                   Physics of the Earth's Interior
                 * ``'prem'`` - Preliminary Reference Earth Model
                 * ``'ak135'``
+
         :type phases: list of str, optional
         :param phases: Comma separated list of phases. The default is as
             follows::
+
                 ['p','s','P','S','Pn','Sn','PcP','ScS','Pdiff','Sdiff',
                  'PKP','SKS','PKiKP','SKiKS','PKIKP','SKIKS']
+
             Invalid phases will be ignored. Valid arbitrary phases can be made
             up e.g. sSKJKP. See
             `TauP documentation <http://www.seis.sc.edu/TauP/>`_ for more
@@ -863,6 +866,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
             .. note:: Travel times are produced in ascending order regardless
                 of the order in which the phases are specified
+
         :type rayparamonly: bool, optional
         :param rayparamonly: Returns a space-separated list of ray parameters,
             in sec/deg.. Defaults to ``False``.
