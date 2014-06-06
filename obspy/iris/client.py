@@ -1033,7 +1033,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
-        :rtype: numpy.ndarray, str or `None`
+        :rtype: :class:`numpy.ndarray`, str or `None`
         :returns: Returns either a NumPy :class:`~numpy.ndarray`, image string
             or nothing, depending on the ``output`` parameter.
 

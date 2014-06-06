@@ -35,7 +35,7 @@ class Client(object):
             arguments. See
             http://docs.sqlalchemy.org/en/latest/core/engines.html for more
             information about database dialects and urls.
-        :type session: class:`sqlalchemy.orm.session.Session`, optional
+        :type session: :class:`sqlalchemy.orm.session.Session`, optional
         :param session: An existing database session object.
         :type debug: boolean, optional
         :param debug: Enables verbose output.
