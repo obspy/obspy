@@ -151,6 +151,17 @@ class TauPTestCase(unittest.TestCase):
         # Both should be equal if everything is alright.
         self.assertEqual(tt_1, tt_2)
 
+    def test_unrealistic_origin_depth_kills_python(self):
+        """
+        See #757
+
+        It should of course not kill python...
+        """
+        # This just barely works.
+        getTravelTimes(10, 804.95)
+        # This raises an error.
+        self.assertRaises(ValueError, getTravelTimes, 10, 804.96)
+
 
 def suite():
     return unittest.makeSuite(TauPTestCase, 'test')
