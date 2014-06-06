@@ -38,7 +38,8 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     and `func:scipy.signal.lfilter` (for applying the filter).
 
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
     :param df: Sampling rate in Hz.
@@ -78,7 +79,8 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freqmin: Stop band low corner frequency.
     :param freqmax: Stop band high corner frequency.
     :param df: Sampling rate in Hz.
@@ -118,7 +120,8 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
     :param corners: Filter corners / order.
@@ -153,7 +156,8 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     The filter uses `func:scipy.signal.iirfilter` (for design)
     and `func:scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
     :param corners: Filter corners / order.
@@ -186,7 +190,8 @@ def envelope(data):
     and then taking the square-root. (See [Kanasewich1981]_)
     The envelope at the start/end should not be taken too seriously.
 
-    :param data: Data to make envelope of, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to make envelope of.
     :return: Envelope of input data.
     """
     hilb = hilbert(data)
@@ -200,7 +205,8 @@ def remezFIR(data, freqmin, freqmax, df):
 
     .. warning:: This is experimental code. Use with caution!
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freqmin: Low corner frequency.
     :param freqmax: High corner frequency.
     :param df: Sampling rate in Hz.
@@ -274,7 +280,8 @@ def lowpassFIR(data, freq, df, winlen=2048):
 
     Filter data by passing data only below a certain frequency.
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: Data below this frequency pass.
     :param df: Sampling rate in Hz.
     :param winlen: Window length for filter in samples, must be power of 2;
@@ -316,6 +323,7 @@ def integerDecimation(data, decimation_factor):
     lowpass filter beforehand!
     New sampling rate is old sampling rate divided by decimation_factor.
 
+    :type data: numpy.ndarray
     :param data: Data to filter.
     :param decimation_factor: Integer decimation factor
     :return: Downsampled data (array length: old length / decimation_factor)
@@ -342,7 +350,8 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
     band frequency is determined dynamically, such that the
     values above the stop band frequency are lower than -96dB.
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: The frequency above which signals are attenuated
         with 95 dB
     :param df: Sampling rate in Hz.

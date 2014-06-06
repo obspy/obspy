@@ -75,7 +75,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     :param ts2: same as ts1, but for the x2 component of motion.
     :type ts3: numpy.ndarray
     :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion.
-    :type sigmau: Float or numpy.ndarray
+    :type sigmau: Float or :class:`numpy.ndarray`
     :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
         corresponds to sigma-sub-u in S95 lines above eqn (A5).
         NOTE: This may be entered as a scalar, vector, or matrix!
@@ -598,13 +598,13 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
     Method to calculate the array geometry and the center coordinates in km
 
     :param stream: Stream object, the trace.stats dict like class must
-        contain a obspy.core.util.attribdict with 'latitude', 'longitude' (in
-        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
-        items/attributes. See param coordsys
+        contain an :class:`~obspy.core.util.attribdict.AttribDict` with
+        'latitude', 'longitude' (in degrees) and 'elevation' (in km), or 'x',
+        'y', 'elevation' (in km) items/attributes. See param ``coordsys``
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
     :param return_center: Retruns the center coordinates as extra tuple
-    :return: Returns the geometry of the stations as 2d numpy.ndarray
+    :return: Returns the geometry of the stations as 2d :class:`numpy.ndarray`
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
             values of [lat, lon, elev] in km
@@ -696,8 +696,10 @@ def get_spoint(stream, stime, etime):
     Calculates start and end offsets relative to stime and etime for each
     trace in stream in samples.
 
-    :param stime: UTCDateTime to start
-    :param etime: UTCDateTime to end
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param stime: Start time
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: End time
     :returns: start and end sample offset arrays
     """
     spoint = np.empty(len(stream), dtype="int32", order="C")
@@ -837,9 +839,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
     :param stream: Stream object, the trace.stats dict like class must
-        contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
-        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
-        items/attributes. See param coordsys
+        contain an :class:`~obspy.core.util.attribdict.AttribDict` with
+        'latitude', 'longitude' (in degrees) and 'elevation' (in km), or 'x',
+        'y', 'elevation' (in km) items/attributes. See param ``coordsys``.
     :type win_len: Float
     :param win_len: Sliding window length in seconds
     :type win_frac: Float
@@ -862,10 +864,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :param frqlow: lower frequency for fk/capon
     :type frqhigh: Float
     :param frqhigh: higher frequency for fk/capon
-    :type stime: UTCDateTime
-    :param stime: Starttime of interest
-    :type etime: UTCDateTime
-    :param etime: Endtime of interest
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param stime: Start time of interest
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: End time of interest
     :type prewhiten: int
     :param prewhiten: Do prewhitening, values: 1 or 0
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
@@ -884,8 +886,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         second arguments and the iteration number as third argument. Useful for
         storing or plotting the map for each iteration. For this purpose the
         dump function of this module can be used.
-    :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
-        backazimut, slowness
+    :return: :class:`numpy.ndarray` of timestamp, relative relpow, absolute
+        relpow, backazimuth, slowness
     """
     res = []
     eotr = True

@@ -55,9 +55,9 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     :type p: Float
     :param p: Decimal percentage of cosine taper (ranging from 0 to 1). Default
         is 0.1 (10%) which tapers 5% from the beginning and 5% form the end.
-    :rtype: float NumPy ndarray
+    :rtype: float NumPy :class:`~numpy.ndarray`
     :return: Cosine taper array/vector of length npts.
-    :type freqs: NumPy ndarray
+    :type freqs: NumPy :class:`~numpy.ndarray`
     :param freqs: Frequencies as, for example, returned by fftfreq
     :type flimit: List or tuple of floats
     :param flimit: The list or tuple defines the four corner frequencies
@@ -186,7 +186,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param filename: SEED RESP-filename or open file like object with RESP
         information. Any object that provides a read() method will be
         considered to be a file like object.
-    :type date: UTCDateTime
+    :type date: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param date: Date of interest
     :type station: str
     :param station: Station id
@@ -200,7 +200,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param units: Units to return response in. Can be either DIS, VEL or ACC
     :type debug: bool
     :param debug: Verbose output to stdout. Disabled by default.
-    :rtype: numpy.ndarray complex128
+    :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
     if isinstance(filename, (str, native_str)):
@@ -285,7 +285,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :rtype: numpy.ndarray complex128
+    :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response of PAZ of length nfft
 
     .. note::
@@ -332,7 +332,7 @@ def specInv(spec, wlev):
     amplitude. The water-level is given in db scale.
 
     :note: In place operations on spec, translated from PITSA spr_sinv.c
-    :param spec: Spectrum as returned by numpy.fft.rfft
+    :param spec: Spectrum as returned by :func:`numpy.fft.rfft`
     :param wlev: Water level to use
     """
     # Calculated waterlevel in the scale of spec
@@ -364,7 +364,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     """
     Simulate/Correct seismometer.
 
-    :type data: NumPy ndarray
+    :type data: NumPy :class:`~numpy.ndarray`
     :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
@@ -404,10 +404,10 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
         'filename' is the path to a RESP-file generated from a dataless SEED
         volume (or a file like object with RESP information);
-        'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
-        that the response function should be extracted for (can be omitted when
-        calling simulate() on Trace/Stream. the Trace's starttime will then be
-        used);
+        'date' is a :class:`~obspy.core.utcdatetime.UTCDateTime` object for the
+        date that the response function should be extracted for (can be omitted
+        when calling simulate() on Trace/Stream. the Trace's starttime will
+        then be used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
     :type nfft_pow2: Boolean
@@ -425,7 +425,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type shsim: Boolean
     :param shsim: Choose parameters to match
         instrument correction as done by Seismic Handler.
-    :return: The corrected data are returned as numpy.ndarray float64
+    :return: The corrected data are returned as :class:`numpy.ndarray` float64
         array. float64 is chosen to avoid numerical instabilities.
 
     This function works in the frequency domain, where nfft is the next power

@@ -149,7 +149,7 @@ def cfrequency_unwindowed(data, fs):
 
     The central frequency is returned in Hz.
 
-    :type data: :class:`~numpy.array`
+    :type data: :class:`~numpy.ndarray`
     :param data: Data to estimate central frequency from.
     :param fs: Sampling frequency in Hz.
     :return: **cfreq** - Central frequency in Hz

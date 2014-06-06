@@ -45,13 +45,13 @@ def recSTALTA(a, nsta, nlta):
     Fast version written in C.
 
     :note: This version directly uses a C version via CTypes
-    :type a: numpy.ndarray dtype float64
+    :type a: :class:`numpy.ndarray`, dtype=float64
     :param a: Seismic Trace, numpy.ndarray dtype float64
     :type nsta: int
     :param nsta: Length of short time average window in samples
     :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: numpy.ndarray dtype float64
+    :rtype: :class:`numpy.ndarray`, dtype=float64
     :return: Characteristic function of recursive STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -74,13 +74,13 @@ def recSTALTAPy(a, nsta, nlta):
         There exists a faster version of this trigger wrapped in C
         called :func:`~obspy.signal.trigger.recSTALTA` in this module!
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
     :type nsta: int
     :param nsta: Length of short time average window in samples
     :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of recursive STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -115,7 +115,7 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
     :type nsta: int
     :param nsta: Length of short time average window in samples
@@ -125,7 +125,7 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
     :type quiet: Float
     :param quiet: as quiet gets smaller, carlSTATrig gets more sensitive
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
     m = len(a)
@@ -172,13 +172,13 @@ def classicSTALTA(a, nsta, nlta):
 
     Fast version written in C.
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
     :type nsta: int
     :param nsta: Length of short time average window in samples
     :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
     data = a
@@ -207,13 +207,13 @@ def classicSTALTAPy(a, nsta, nlta):
         There exists a faster version of this trigger wrapped in C
         called :func:`~obspy.signal.trigger.classicSTALTA` in this module!
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
     :type nsta: int
     :param nsta: Length of short time average window in samples
     :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
     # XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
@@ -251,13 +251,13 @@ def delayedSTALTA(a, nsta, nlta):
     """
     Delayed STA/LTA.
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
     :type nsta: int
     :param nsta: Length of short time average window in samples
     :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of delayed STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -310,7 +310,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     are more then 1e6 triggerings ("on" AND "off") in charfct --- normally
     this does not happen.
 
-    :type charfct: NumPy ndarray
+    :type charfct: NumPy :class:`~numpy.ndarray`
     :param charfct: Characteristic function of e.g. STA/LTA trigger
     :type thres1: Float
     :param thres1: Value above which trigger (of characteristic function)

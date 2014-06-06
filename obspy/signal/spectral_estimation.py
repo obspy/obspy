@@ -694,7 +694,7 @@ class PPSD():
         :type percentile: int
         :param percentile: percentile for which to return approximate psd
                 value. (e.g. a value of 50 is equal to the median.)
-        :type hist_cum: `numpy.ndarray` (optional)
+        :type hist_cum: :class:`numpy.ndarray` (optional)
         :param hist_cum: if it was already computed beforehand, the normalized
                 cumulative histogram can be provided here (to avoid computing
                 it again), otherwise it is computed from the currently stored

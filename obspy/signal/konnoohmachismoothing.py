@@ -60,14 +60,19 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     ...code that raises numpy warning due to division by zero...
     np.seterr(**temp)
 
-    :param frequencies: numpy.ndarray (float32 or float64)
+    :type frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param frequencies:
         All frequencies for which the smoothing window will be returned.
-    :param center_frequency: float >= 0.0
-        The frequency around which the smoothing is performed.
-    :param bandwidth: float > 0.0
+    :type center_frequency: float
+    :param center_frequency:
+        The frequency around which the smoothing is performed. Must be greater
+        or equal to 0.
+    :type bandwidth: float
+    :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
-        broader peak. Defaults to 40.
-    :param normalize: boolean, optional
+        broader peak. Must be greater than 0. Defaults to 40.
+    :type normalize: boolean, optional
+    :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
@@ -113,12 +118,15 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     This makes it very efficient for smoothing the same spectra again and again
     but it comes with a high memory consumption for larger frequency arrays!
 
-    :param frequencies: numpy.ndarray (float32 or float64)
+    :type frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param frequencies:
         The input frequencies.
-    :param bandwidth: float > 0.0
+    :type bandwidth: float
+    :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
-        broader peak. Defaults to 40.
-    :param normalize: boolean, optional
+        broader peak. Must be greater than 0. Defaults to 40.
+    :type normalize: boolean, optional
+    :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
@@ -145,19 +153,23 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     This method first will estimate the memory usage and then either use a fast
     and memory intensive method or a slow one with a better memory usage.
 
-    :param spectra: numpy.ndarray (float32 or float64)
+    :type spectra: :class:`numpy.ndarray` (float32 or float64)
+    :param spectra:
         One or more spectra per row. If more than one the first spectrum has to
         be accessible via spectra[0], the next via spectra[1], ...
-    :param frequencies: numpy.ndarray (float32 or float64)
+    :type frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param frequencies:
         Contains the frequencies for the spectra.
-    :param bandwidth: float > 0.0
+    :type bandwidth: float
+    :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
-        broader peak. Defaults to 40.
+        broader peak. Must be greater than 0. Defaults to 40.
     :type count: int, optional
     :param count:
         How often the apply the filter. For very noisy spectra it is useful to
         apply is more than once. Defaults to 1.
-    :param enforce_no_matrix: boolean, optional
+    :type enforce_no_matrix: boolean, optional
+    :param enforce_no_matrix:
         An efficient but memory intensive matrix-multiplication algorithm is
         used in case more than one spectra is to be smoothed or one spectrum is
         to be smoothed more than once if enough memory is available. This flag
@@ -167,7 +179,8 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         Set the maximum amount of extra memory in MB for this method. Decides
         whether or not the matrix multiplication method is used. Defaults to
         512 MB.
-    :param normalize: boolean, optional
+    :type normalize: boolean, optional
+    :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
