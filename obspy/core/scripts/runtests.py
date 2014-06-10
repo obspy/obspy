@@ -86,7 +86,6 @@ from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from optparse import OptionParser, OptionGroup
-import importlib
 import types
 import copy
 import doctest
@@ -404,7 +403,12 @@ class _TextTestRunner:
             if id in MODULE_TEST_SKIP_CHECKS:
                 # acquire function specified by string
                 mod, func = MODULE_TEST_SKIP_CHECKS[id].rsplit(".", 1)
-                mod = importlib.import_module(mod)
+                try:
+                    import importlib
+                    mod = importlib.import_module(mod)
+                # Py 2.6 workaround
+                except:
+                    mod = __import__(mod, fromlist=["obspy"])
                 func = getattr(mod, func)
                 msg = func()
             # we encountered an error message, so skip all tests with given
