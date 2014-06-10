@@ -1,4 +1,11 @@
 0.9.3:
+ - obspy.core:
+   * fixed a problem with UTCDateTime with timestamps of far future
+     dates (larger than 2038, often seen in StationXML end dates,
+     see #805)
+ - obspy.seedlink:
+   * bugfix: INFO responses from the IRIS ringserver are now parsed
+     correctly (see #807)
  - obspy.seishub:
    * use specified timeout in all requests to server (see #786)
 

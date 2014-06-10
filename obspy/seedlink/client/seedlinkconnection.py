@@ -892,13 +892,12 @@ class SeedLinkConnection(object):
                                 #print SLPacket.TYPE_SLINF
                                 #print "DEBUG: SLPacket.TYPE_SLINFT:",
                                 #print SLPacket.TYPE_SLINFT
-                                lenmsr = len(slpacket.msrecord)
                                 if (type == SLPacket.TYPE_SLINF):
                                     self.infoStrBuf += \
-                                        str(slpacket.msrecord)[64: lenmsr]
+                                        slpacket.getStringPayload()
                                 elif (type == SLPacket.TYPE_SLINFT):
                                     self.infoStrBuf += \
-                                        str(slpacket.msrecord)[64: lenmsr]
+                                        slpacket.getStringPayload()
                                     self.info_string = \
                                         self.createInfoString(self.infoStrBuf)
                                     self.infoStrBuf = ""

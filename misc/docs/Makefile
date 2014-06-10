@@ -14,7 +14,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext coverage coverager pep8
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latex-png-images latexpdf-png-images latexpdf text man changes linkcheck doctest gettext coverage coverager pep8
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -62,7 +62,7 @@ c_coverage:
 
 pep8:
 	@python make_pep8.py 1
-	@pep8 --show-source source/tutorial
+	@pep8 --show-source source/tutorial; echo
 
 citations:
 	@python make_citations.py
@@ -130,11 +130,15 @@ latex:
 	@echo "Run \`make' in that directory to run these through (pdf)latex" \
 	      "(use \`make latexpdf' here to do that automatically)."
 
-latexpdf:
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+latex-png-images: latex
+	bash $(BUILDDIR)/../tex_replace_pdf_suffix.sh $(BUILDDIR)/latex
+
+latexpdf: latex
 	@echo "Running LaTeX files through pdflatex..."
 	make -C $(BUILDDIR)/latex all-pdf
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+latexpdf-png-images: latex-png-images latexpdf
 
 text:
 	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
