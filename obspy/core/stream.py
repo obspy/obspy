@@ -2273,6 +2273,25 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.taper(*args, **kwargs)
         return self
 
+    def interpolate(self, *args, **kwargs):
+        """
+        Method to interpolate all Traces in a Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.interpolate` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.interpolate(*args, **kwargs)
+        return self
+
     def std(self):
         """
         Method to get the standard deviations of amplitudes in all trace in the

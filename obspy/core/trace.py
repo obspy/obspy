@@ -2040,6 +2040,72 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             trace_list.append(tr)
         return Stream(trace_list)
 
+    @skipIfNoData
+    @raiseIfMasked
+    @_add_processing_info
+    def interpolate(self, sampling_rate, type="linear", starttime=None,
+                    npts=None):
+        """
+        Interpolate the data using various interpolation techniques.
+
+        No filter, antialiasing, ... is applied so make sure the data is
+        suitable to operation to be performed.  :meth:`.decimate` and
+        :meth:`.resample` will be the more appropriate methods for many use
+        cases.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~.copy` to create
+            a copy of your trace object.
+
+        :param sampling_rate: The new sampling rate in ``Hz`` The new
+            sampling rate in ``Hz``
+        :param type: The kind of interpolation to performa as a string (
+            ``linear``, ``nearest``, ``zero``, ``slinear``, ``quadratic``,
+            ``cubic`` where ``slinear``, ``quadratic`` and ``cubic`` refer to a
+            spline interpolation of first,  second or third order) or as an
+            integer specifying the order of the spline interpolator to use.
+            Default is ``linear``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
+        :param starttime: The starttime (or timestamp) for the new
+            interpolated stream. Will be set to current starttime of the
+            trace if not given.
+        :type npts: int
+        :param npts: The new number of samples. Will be set to the best
+            fitting  number to retain the current endtime of the trace if
+            not given.
+        """
+        type = type.lower()
+        dt = 1.0 / float(sampling_rate)
+
+        if isinstance(type, int) or type in ["linear", "nearest", "zero",
+                                             "slinear", "quadratic", "cubic"]:
+            func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
+        else:
+            func = _getFunctionFromEntryPoint('interpolate', type)
+        old_start = self.stats.starttime.timestamp
+        old_dt = self.stats.delta
+
+        if starttime is not None:
+            try:
+                starttime = starttime.timestamp
+            except AttributeError:
+                pass
+        else:
+            starttime = self.stats.starttime.timestamp
+
+        if npts is None:
+            npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
+                                  dt))
+        self.data = func(self.data, old_start, old_dt, starttime, dt, npts,
+                         type=type)
+        self.stats.starttime = UTCDateTime(starttime)
+        self.stats.delta = dt
+
+        return self
+
     def times(self):
         """
         For convenient plotting compute a Numpy array of seconds since

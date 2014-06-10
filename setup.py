@@ -272,6 +272,9 @@ ENTRY_POINTS = {
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
     ],
+    'obspy.plugin.interpolate': [
+        'interpolate_1d = obspy.signal.interpolate:interpolate_1d',
+    ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
         'rotate_RT_NE = obspy.signal:rotate_RT_NE',
