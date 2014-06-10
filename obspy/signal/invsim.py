@@ -239,7 +239,11 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
                                 stop_stage, stdio_flag, C.c_int(0))
         # optimizing performance, see
         # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
-        nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
+        try:
+            nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
+        except ValueError:
+            msg = "evalresp failed to calculate a response."
+            raise ValueError(msg)
         h = np.empty(nfreqs, dtype='complex128')
         f = np.empty(nfreqs, dtype='float64')
         for i in range(nfreqs):

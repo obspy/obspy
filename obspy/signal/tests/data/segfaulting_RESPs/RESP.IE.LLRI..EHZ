@@ -1,0 +1,2061 @@
+#
+###################################################################################
+#
+B050F03     Station:     LLRI
+B050F16     Network:     IE
+B052F03     Location:    ??
+B052F04     Channel:     EHZ
+B052F22     Start date:  2002,001,00:00:00
+B052F23     End date:    2599,365,23:59:59
+#
+#                  +-----------------------------------+
+#                  |    Response (Poles and Zeros)     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B053F03     Transfer function type:                A
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S - velocity in meters per second
+B053F06     Response out units lookup:             V - emf in volts
+B053F07     A0 normalization factor:               +1.00195E+00
+B053F08     Normalization frequency:               +4.00000E+00
+B053F09     Number of zeroes:                      2
+B053F14     Number of poles:                       2
+#              Complex zeroes:
+#              i  real          imag          real_error    imag_error
+B053F10-13     0  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+B053F10-13     1  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+#              Complex poles:
+#              i  real          imag          real_error    imag_error
+B053F15-18     0  -4.44300E+00  +4.44300E+00  +0.00000E+00  +0.00000E+00
+B053F15-18     1  -4.44300E+00  -4.44300E+00  +0.00000E+00  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 1
+B058F04     Sensitivity:                           +3.44328E+02
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |    Response (Poles and Zeros)     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B053F03     Transfer function type:                A
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S - velocity in meters per second
+B053F06     Response out units lookup:             V - emf in volts
+B053F07     A0 normalization factor:               +1.00195E+00
+B053F08     Normalization frequency:               +4.00000E+00
+B053F09     Number of zeroes:                      2
+B053F14     Number of poles:                       2
+#              Complex zeroes:
+#              i  real          imag          real_error    imag_error
+B053F10-13     0  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+B053F10-13     1  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+#              Complex poles:
+#              i  real          imag          real_error    imag_error
+B053F15-18     0  -4.44300E+00  +4.44300E+00  +0.00000E+00  +0.00000E+00
+B053F15-18     1  -4.44300E+00  -4.44300E+00  +0.00000E+00  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - emf in volts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  2
+B057F04     Input sample rate (HZ):                 1.0240E+05
+B057F05     Decimation factor:                      00001
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +0.0000E+00
+B057F08     Correction applied (seconds):          +0.0000E+00
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 2
+B058F04     Sensitivity:                           +6.29330E+05
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |    Response (Poles and Zeros)     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B053F03     Transfer function type:                A
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S - velocity in meters per second
+B053F06     Response out units lookup:             V - emf in volts
+B053F07     A0 normalization factor:               +1.00195E+00
+B053F08     Normalization frequency:               +4.00000E+00
+B053F09     Number of zeroes:                      2
+B053F14     Number of poles:                       2
+#              Complex zeroes:
+#              i  real          imag          real_error    imag_error
+B053F10-13     0  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+B053F10-13     1  +0.00000E+00  +0.00000E+00  +0.00000E+00  +0.00000E+00
+#              Complex poles:
+#              i  real          imag          real_error    imag_error
+B053F15-18     0  -4.44300E+00  +4.44300E+00  +0.00000E+00  +0.00000E+00
+B053F15-18     1  -4.44300E+00  -4.44300E+00  +0.00000E+00  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  29
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +9.76562E-04  +0.00000E+00
+B054F08-09     2  +2.44141E-03  +0.00000E+00
+B054F08-09     3  +4.88281E-03  +0.00000E+00
+B054F08-09     4  +8.54492E-03  +0.00000E+00
+B054F08-09     5  +1.36719E-02  +0.00000E+00
+B054F08-09     6  +2.05078E-02  +0.00000E+00
+B054F08-09     7  +2.92969E-02  +0.00000E+00
+B054F08-09     8  +3.93066E-02  +0.00000E+00
+B054F08-09     9  +4.98047E-02  +0.00000E+00
+B054F08-09    10  +6.00586E-02  +0.00000E+00
+B054F08-09    11  +6.93359E-02  +0.00000E+00
+B054F08-09    12  +7.69043E-02  +0.00000E+00
+B054F08-09    13  +8.20312E-02  +0.00000E+00
+B054F08-09    14  +8.39844E-02  +0.00000E+00
+B054F08-09    15  +8.20312E-02  +0.00000E+00
+B054F08-09    16  +7.69043E-02  +0.00000E+00
+B054F08-09    17  +6.93359E-02  +0.00000E+00
+B054F08-09    18  +6.00586E-02  +0.00000E+00
+B054F08-09    19  +4.98047E-02  +0.00000E+00
+B054F08-09    20  +3.93066E-02  +0.00000E+00
+B054F08-09    21  +2.92969E-02  +0.00000E+00
+B054F08-09    22  +2.05078E-02  +0.00000E+00
+B054F08-09    23  +1.36719E-02  +0.00000E+00
+B054F08-09    24  +8.54492E-03  +0.00000E+00
+B054F08-09    25  +4.88281E-03  +0.00000E+00
+B054F08-09    26  +2.44141E-03  +0.00000E+00
+B054F08-09    27  +9.76562E-04  +0.00000E+00
+B054F08-09    28  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  3
+B057F04     Input sample rate (HZ):                 1.0240E+05
+B057F05     Decimation factor:                      00008
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.3672E-04
+B057F08     Correction applied (seconds):          +1.3672E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 3
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 4
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  4
+B057F04     Input sample rate (HZ):                 1.2800E+04
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +4.6875E-04
+B057F08     Correction applied (seconds):          +4.6875E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 4
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 5
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  5
+B057F04     Input sample rate (HZ):                 6.4000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +9.3750E-04
+B057F08     Correction applied (seconds):          +9.3750E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 5
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 6
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  6
+B057F04     Input sample rate (HZ):                 3.2000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.8750E-03
+B057F08     Correction applied (seconds):          +1.8750E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 6
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 7
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  7
+B057F04     Input sample rate (HZ):                 1.6000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +3.7500E-03
+B057F08     Correction applied (seconds):          +3.7500E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 7
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 8
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  8
+B057F04     Input sample rate (HZ):                 8.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +7.5000E-03
+B057F08     Correction applied (seconds):          +7.5000E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 8
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 9
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  101
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  -3.09847E-06  +0.00000E+00
+B054F08-09     1  -2.94355E-05  +0.00000E+00
+B054F08-09     2  -9.79595E-05  +0.00000E+00
+B054F08-09     3  -1.62312E-04  +0.00000E+00
+B054F08-09     4  -9.99854E-05  +0.00000E+00
+B054F08-09     5  +1.20602E-04  +0.00000E+00
+B054F08-09     6  +2.61821E-04  +0.00000E+00
+B054F08-09     7  +2.52645E-05  +0.00000E+00
+B054F08-09     8  -4.10309E-04  +0.00000E+00
+B054F08-09     9  -3.66693E-04  +0.00000E+00
+B054F08-09    10  +3.76107E-04  +0.00000E+00
+B054F08-09    11  +8.54225E-04  +0.00000E+00
+B054F08-09    12  +3.05081E-05  +0.00000E+00
+B054F08-09    13  -1.27621E-03  +0.00000E+00
+B054F08-09    14  -9.10951E-04  +0.00000E+00
+B054F08-09    15  +1.27669E-03  +0.00000E+00
+B054F08-09    16  +2.15165E-03  +0.00000E+00
+B054F08-09    17  -4.61554E-04  +0.00000E+00
+B054F08-09    18  -3.33765E-03  +0.00000E+00
+B054F08-09    19  -1.40933E-03  +0.00000E+00
+B054F08-09    20  +3.77072E-03  +0.00000E+00
+B054F08-09    21  +4.19414E-03  +0.00000E+00
+B054F08-09    22  -2.64288E-03  +0.00000E+00
+B054F08-09    23  -7.20121E-03  +0.00000E+00
+B054F08-09    24  -6.44006E-04  +0.00000E+00
+B054F08-09    25  +9.18400E-03  +0.00000E+00
+B054F08-09    26  +6.08445E-03  +0.00000E+00
+B054F08-09    27  -8.57824E-03  +0.00000E+00
+B054F08-09    28  -1.27401E-02  +0.00000E+00
+B054F08-09    29  +3.98225E-03  +0.00000E+00
+B054F08-09    30  +1.86261E-02  +0.00000E+00
+B054F08-09    31  +5.20520E-03  +0.00000E+00
+B054F08-09    32  -2.09407E-02  +0.00000E+00
+B054F08-09    33  -1.81629E-02  +0.00000E+00
+B054F08-09    34  +1.66669E-02  +0.00000E+00
+B054F08-09    35  +3.22448E-02  +0.00000E+00
+B054F08-09    36  -3.46588E-03  +0.00000E+00
+B054F08-09    37  -4.29528E-02  +0.00000E+00
+B054F08-09    38  -1.93265E-02  +0.00000E+00
+B054F08-09    39  +4.43090E-02  +0.00000E+00
+B054F08-09    40  +4.97909E-02  +0.00000E+00
+B054F08-09    41  -2.94164E-02  +0.00000E+00
+B054F08-09    42  -8.26078E-02  +0.00000E+00
+B054F08-09    43  -9.34166E-03  +0.00000E+00
+B054F08-09    44  +1.07552E-01  +0.00000E+00
+B054F08-09    45  +8.16604E-02  +0.00000E+00
+B054F08-09    46  -1.03110E-01  +0.00000E+00
+B054F08-09    47  -2.04208E-01  +0.00000E+00
+B054F08-09    48  -3.12231E-05  +0.00000E+00
+B054F08-09    49  +3.90433E-01  +0.00000E+00
+B054F08-09    50  +5.89958E-01  +0.00000E+00
+B054F08-09    51  +3.90433E-01  +0.00000E+00
+B054F08-09    52  -3.12231E-05  +0.00000E+00
+B054F08-09    53  -2.04208E-01  +0.00000E+00
+B054F08-09    54  -1.03110E-01  +0.00000E+00
+B054F08-09    55  +8.16604E-02  +0.00000E+00
+B054F08-09    56  +1.07552E-01  +0.00000E+00
+B054F08-09    57  -9.34166E-03  +0.00000E+00
+B054F08-09    58  -8.26078E-02  +0.00000E+00
+B054F08-09    59  -2.94164E-02  +0.00000E+00
+B054F08-09    60  +4.97909E-02  +0.00000E+00
+B054F08-09    61  +4.43090E-02  +0.00000E+00
+B054F08-09    62  -1.93265E-02  +0.00000E+00
+B054F08-09    63  -4.29528E-02  +0.00000E+00
+B054F08-09    64  -3.46588E-03  +0.00000E+00
+B054F08-09    65  +3.22448E-02  +0.00000E+00
+B054F08-09    66  +1.66669E-02  +0.00000E+00
+B054F08-09    67  -1.81629E-02  +0.00000E+00
+B054F08-09    68  -2.09407E-02  +0.00000E+00
+B054F08-09    69  +5.20520E-03  +0.00000E+00
+B054F08-09    70  +1.86261E-02  +0.00000E+00
+B054F08-09    71  +3.98225E-03  +0.00000E+00
+B054F08-09    72  -1.27401E-02  +0.00000E+00
+B054F08-09    73  -8.57824E-03  +0.00000E+00
+B054F08-09    74  +6.08445E-03  +0.00000E+00
+B054F08-09    75  +9.18400E-03  +0.00000E+00
+B054F08-09    76  -6.44006E-04  +0.00000E+00
+B054F08-09    77  -7.20121E-03  +0.00000E+00
+B054F08-09    78  -2.64288E-03  +0.00000E+00
+B054F08-09    79  +4.19414E-03  +0.00000E+00
+B054F08-09    80  +3.77072E-03  +0.00000E+00
+B054F08-09    81  -1.40933E-03  +0.00000E+00
+B054F08-09    82  -3.33765E-03  +0.00000E+00
+B054F08-09    83  -4.61554E-04  +0.00000E+00
+B054F08-09    84  +2.15165E-03  +0.00000E+00
+B054F08-09    85  +1.27669E-03  +0.00000E+00
+B054F08-09    86  -9.10951E-04  +0.00000E+00
+B054F08-09    87  -1.27621E-03  +0.00000E+00
+B054F08-09    88  +3.05081E-05  +0.00000E+00
+B054F08-09    89  +8.54225E-04  +0.00000E+00
+B054F08-09    90  +3.76107E-04  +0.00000E+00
+B054F08-09    91  -3.66693E-04  +0.00000E+00
+B054F08-09    92  -5.27932E-05  +0.00000E+00
+B054F08-09    93  +1.43006E-06  +0.00000E+00
+B054F08-09    94  +2.34769E-05  +0.00000E+00
+B054F08-09    95  +1.43006E-06  +0.00000E+00
+B054F08-09    96  -4.64771E-06  +0.00000E+00
+B054F08-09    97  -4.31403E-05  +0.00000E+00
+B054F08-09    98  -2.62179E-06  +0.00000E+00
+B054F08-09    99  -5.60109E-06  +0.00000E+00
+B054F08-09   100  -7.15032E-07  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  9
+B057F04     Input sample rate (HZ):                 4.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.2500E-01
+B057F08     Correction applied (seconds):          +1.2500E-01
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 9
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 10
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  95
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  -4.70420E-05  +0.00000E+00
+B054F08-09     1  -1.86167E-04  +0.00000E+00
+B054F08-09     2  -2.92263E-04  +0.00000E+00
+B054F08-09     3  -1.45131E-04  +0.00000E+00
+B054F08-09     4  +2.12191E-04  +0.00000E+00
+B054F08-09     5  +3.10279E-04  +0.00000E+00
+B054F08-09     6  -1.24111E-04  +0.00000E+00
+B054F08-09     7  -5.23471E-04  +0.00000E+00
+B054F08-09     8  -1.14103E-04  +0.00000E+00
+B054F08-09     9  +6.92624E-04  +0.00000E+00
+B054F08-09    10  +5.34481E-04  +0.00000E+00
+B054F08-09    11  -6.95627E-04  +0.00000E+00
+B054F08-09    12  -1.09999E-03  +0.00000E+00
+B054F08-09    13  +4.06366E-04  +0.00000E+00
+B054F08-09    14  +1.69853E-03  +0.00000E+00
+B054F08-09    15  +2.73246E-04  +0.00000E+00
+B054F08-09    16  -2.13993E-03  +0.00000E+00
+B054F08-09    17  -1.36523E-03  +0.00000E+00
+B054F08-09    18  +2.18096E-03  +0.00000E+00
+B054F08-09    19  +2.77850E-03  +0.00000E+00
+B054F08-09    20  -1.56841E-03  +0.00000E+00
+B054F08-09    21  -4.27885E-03  +0.00000E+00
+B054F08-09    22  +1.08097E-04  +0.00000E+00
+B054F08-09    23  +5.49495E-03  +0.00000E+00
+B054F08-09    24  +2.26304E-03  +0.00000E+00
+B054F08-09    25  -5.95036E-03  +0.00000E+00
+B054F08-09    26  -5.41087E-03  +0.00000E+00
+B054F08-09    27  +5.13563E-03  +0.00000E+00
+B054F08-09    28  +8.95507E-03  +0.00000E+00
+B054F08-09    29  -2.60134E-03  +0.00000E+00
+B054F08-09    30  -1.22651E-02  +0.00000E+00
+B054F08-09    31  -1.93975E-03  +0.00000E+00
+B054F08-09    32  +1.44780E-02  +0.00000E+00
+B054F08-09    33  +8.51968E-03  +0.00000E+00
+B054F08-09    34  -1.45601E-02  +0.00000E+00
+B054F08-09    35  -1.68652E-02  +0.00000E+00
+B054F08-09    36  +1.13402E-02  +0.00000E+00
+B054F08-09    37  +2.63838E-02  +0.00000E+00
+B054F08-09    38  -3.44610E-03  +0.00000E+00
+B054F08-09    39  -3.62236E-02  +0.00000E+00
+B054F08-09    40  -1.11030E-02  +0.00000E+00
+B054F08-09    41  +4.53779E-02  +0.00000E+00
+B054F08-09    42  +3.66400E-02  +0.00000E+00
+B054F08-09    43  -5.28236E-02  +0.00000E+00
+B054F08-09    44  -8.88721E-02  +0.00000E+00
+B054F08-09    45  +5.76880E-02  +0.00000E+00
+B054F08-09    46  +3.12634E-01  +0.00000E+00
+B054F08-09    47  +4.41072E-01  +0.00000E+00
+B054F08-09    48  +3.12634E-01  +0.00000E+00
+B054F08-09    49  +5.76880E-02  +0.00000E+00
+B054F08-09    50  -8.88721E-02  +0.00000E+00
+B054F08-09    51  -5.28236E-02  +0.00000E+00
+B054F08-09    52  +3.66400E-02  +0.00000E+00
+B054F08-09    53  +4.53779E-02  +0.00000E+00
+B054F08-09    54  -1.11030E-02  +0.00000E+00
+B054F08-09    55  -3.62236E-02  +0.00000E+00
+B054F08-09    56  -3.44610E-03  +0.00000E+00
+B054F08-09    57  +2.63838E-02  +0.00000E+00
+B054F08-09    58  +1.13402E-02  +0.00000E+00
+B054F08-09    59  -1.68652E-02  +0.00000E+00
+B054F08-09    60  -1.45601E-02  +0.00000E+00
+B054F08-09    61  +8.51968E-03  +0.00000E+00
+B054F08-09    62  +1.44780E-02  +0.00000E+00
+B054F08-09    63  -1.93975E-03  +0.00000E+00
+B054F08-09    64  -1.22651E-02  +0.00000E+00
+B054F08-09    65  -2.60134E-03  +0.00000E+00
+B054F08-09    66  +8.95507E-03  +0.00000E+00
+B054F08-09    67  +5.13563E-03  +0.00000E+00
+B054F08-09    68  -5.41087E-03  +0.00000E+00
+B054F08-09    69  -5.95036E-03  +0.00000E+00
+B054F08-09    70  +2.26304E-03  +0.00000E+00
+B054F08-09    71  +5.49495E-03  +0.00000E+00
+B054F08-09    72  +1.08097E-04  +0.00000E+00
+B054F08-09    73  -4.27885E-03  +0.00000E+00
+B054F08-09    74  -1.56841E-03  +0.00000E+00
+B054F08-09    75  +2.77850E-03  +0.00000E+00
+B054F08-09    76  +2.18096E-03  +0.00000E+00
+B054F08-09    77  -1.36523E-03  +0.00000E+00
+B054F08-09    78  -2.13993E-03  +0.00000E+00
+B054F08-09    79  +2.73246E-04  +0.00000E+00
+B054F08-09    80  +1.69853E-03  +0.00000E+00
+B054F08-09    81  +4.06366E-04  +0.00000E+00
+B054F08-09    82  -1.09999E-03  +0.00000E+00
+B054F08-09    83  -6.95627E-04  +0.00000E+00
+B054F08-09    84  +5.34481E-04  +0.00000E+00
+B054F08-09    85  +6.92624E-04  +0.00000E+00
+B054F08-09    86  -1.14103E-04  +0.00000E+00
+B054F08-09    87  -5.23471E-04  +0.00000E+00
+B054F08-09    88  -1.24111E-04  +0.00000E+00
+B054F08-09    89  +3.10279E-04  +0.00000E+00
+B054F08-09    90  +2.12191E-04  +0.00000E+00
+B054F08-09    91  -1.45131E-04  +0.00000E+00
+B054F08-09    92  -2.92263E-04  +0.00000E+00
+B054F08-09    93  -1.86167E-04  +0.00000E+00
+B054F08-09    94  -4.70420E-05  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  10
+B057F04     Input sample rate (HZ):                 2.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +2.3500E-01
+B057F08     Correction applied (seconds):          +2.3500E-01
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 10
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - emf in volts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  2
+B057F04     Input sample rate (HZ):                 1.0240E+05
+B057F05     Decimation factor:                      00001
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +0.0000E+00
+B057F08     Correction applied (seconds):          +0.0000E+00
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 1
+B058F04     Sensitivity:                           +3.44328E+02
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  29
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +9.76562E-04  +0.00000E+00
+B054F08-09     2  +2.44141E-03  +0.00000E+00
+B054F08-09     3  +4.88281E-03  +0.00000E+00
+B054F08-09     4  +8.54492E-03  +0.00000E+00
+B054F08-09     5  +1.36719E-02  +0.00000E+00
+B054F08-09     6  +2.05078E-02  +0.00000E+00
+B054F08-09     7  +2.92969E-02  +0.00000E+00
+B054F08-09     8  +3.93066E-02  +0.00000E+00
+B054F08-09     9  +4.98047E-02  +0.00000E+00
+B054F08-09    10  +6.00586E-02  +0.00000E+00
+B054F08-09    11  +6.93359E-02  +0.00000E+00
+B054F08-09    12  +7.69043E-02  +0.00000E+00
+B054F08-09    13  +8.20312E-02  +0.00000E+00
+B054F08-09    14  +8.39844E-02  +0.00000E+00
+B054F08-09    15  +8.20312E-02  +0.00000E+00
+B054F08-09    16  +7.69043E-02  +0.00000E+00
+B054F08-09    17  +6.93359E-02  +0.00000E+00
+B054F08-09    18  +6.00586E-02  +0.00000E+00
+B054F08-09    19  +4.98047E-02  +0.00000E+00
+B054F08-09    20  +3.93066E-02  +0.00000E+00
+B054F08-09    21  +2.92969E-02  +0.00000E+00
+B054F08-09    22  +2.05078E-02  +0.00000E+00
+B054F08-09    23  +1.36719E-02  +0.00000E+00
+B054F08-09    24  +8.54492E-03  +0.00000E+00
+B054F08-09    25  +4.88281E-03  +0.00000E+00
+B054F08-09    26  +2.44141E-03  +0.00000E+00
+B054F08-09    27  +9.76562E-04  +0.00000E+00
+B054F08-09    28  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  3
+B057F04     Input sample rate (HZ):                 1.0240E+05
+B057F05     Decimation factor:                      00008
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.3672E-04
+B057F08     Correction applied (seconds):          +1.3672E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 2
+B058F04     Sensitivity:                           +6.29330E+05
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 4
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  4
+B057F04     Input sample rate (HZ):                 1.2800E+04
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +4.6875E-04
+B057F08     Correction applied (seconds):          +4.6875E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 3
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 5
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  5
+B057F04     Input sample rate (HZ):                 6.4000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +9.3750E-04
+B057F08     Correction applied (seconds):          +9.3750E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 4
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 6
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  6
+B057F04     Input sample rate (HZ):                 3.2000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.8750E-03
+B057F08     Correction applied (seconds):          +1.8750E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 5
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 7
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  7
+B057F04     Input sample rate (HZ):                 1.6000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +3.7500E-03
+B057F08     Correction applied (seconds):          +3.7500E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 6
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 8
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  8
+B057F04     Input sample rate (HZ):                 8.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +7.5000E-03
+B057F08     Correction applied (seconds):          +7.5000E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 7
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 9
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  101
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  -3.09847E-06  +0.00000E+00
+B054F08-09     1  -2.94355E-05  +0.00000E+00
+B054F08-09     2  -9.79595E-05  +0.00000E+00
+B054F08-09     3  -1.62312E-04  +0.00000E+00
+B054F08-09     4  -9.99854E-05  +0.00000E+00
+B054F08-09     5  +1.20602E-04  +0.00000E+00
+B054F08-09     6  +2.61821E-04  +0.00000E+00
+B054F08-09     7  +2.52645E-05  +0.00000E+00
+B054F08-09     8  -4.10309E-04  +0.00000E+00
+B054F08-09     9  -3.66693E-04  +0.00000E+00
+B054F08-09    10  +3.76107E-04  +0.00000E+00
+B054F08-09    11  +8.54225E-04  +0.00000E+00
+B054F08-09    12  +3.05081E-05  +0.00000E+00
+B054F08-09    13  -1.27621E-03  +0.00000E+00
+B054F08-09    14  -9.10951E-04  +0.00000E+00
+B054F08-09    15  +1.27669E-03  +0.00000E+00
+B054F08-09    16  +2.15165E-03  +0.00000E+00
+B054F08-09    17  -4.61554E-04  +0.00000E+00
+B054F08-09    18  -3.33765E-03  +0.00000E+00
+B054F08-09    19  -1.40933E-03  +0.00000E+00
+B054F08-09    20  +3.77072E-03  +0.00000E+00
+B054F08-09    21  +4.19414E-03  +0.00000E+00
+B054F08-09    22  -2.64288E-03  +0.00000E+00
+B054F08-09    23  -7.20121E-03  +0.00000E+00
+B054F08-09    24  -6.44006E-04  +0.00000E+00
+B054F08-09    25  +9.18400E-03  +0.00000E+00
+B054F08-09    26  +6.08445E-03  +0.00000E+00
+B054F08-09    27  -8.57824E-03  +0.00000E+00
+B054F08-09    28  -1.27401E-02  +0.00000E+00
+B054F08-09    29  +3.98225E-03  +0.00000E+00
+B054F08-09    30  +1.86261E-02  +0.00000E+00
+B054F08-09    31  +5.20520E-03  +0.00000E+00
+B054F08-09    32  -2.09407E-02  +0.00000E+00
+B054F08-09    33  -1.81629E-02  +0.00000E+00
+B054F08-09    34  +1.66669E-02  +0.00000E+00
+B054F08-09    35  +3.22448E-02  +0.00000E+00
+B054F08-09    36  -3.46588E-03  +0.00000E+00
+B054F08-09    37  -4.29528E-02  +0.00000E+00
+B054F08-09    38  -1.93265E-02  +0.00000E+00
+B054F08-09    39  +4.43090E-02  +0.00000E+00
+B054F08-09    40  +4.97909E-02  +0.00000E+00
+B054F08-09    41  -2.94164E-02  +0.00000E+00
+B054F08-09    42  -8.26078E-02  +0.00000E+00
+B054F08-09    43  -9.34166E-03  +0.00000E+00
+B054F08-09    44  +1.07552E-01  +0.00000E+00
+B054F08-09    45  +8.16604E-02  +0.00000E+00
+B054F08-09    46  -1.03110E-01  +0.00000E+00
+B054F08-09    47  -2.04208E-01  +0.00000E+00
+B054F08-09    48  -3.12231E-05  +0.00000E+00
+B054F08-09    49  +3.90433E-01  +0.00000E+00
+B054F08-09    50  +5.89958E-01  +0.00000E+00
+B054F08-09    51  +3.90433E-01  +0.00000E+00
+B054F08-09    52  -3.12231E-05  +0.00000E+00
+B054F08-09    53  -2.04208E-01  +0.00000E+00
+B054F08-09    54  -1.03110E-01  +0.00000E+00
+B054F08-09    55  +8.16604E-02  +0.00000E+00
+B054F08-09    56  +1.07552E-01  +0.00000E+00
+B054F08-09    57  -9.34166E-03  +0.00000E+00
+B054F08-09    58  -8.26078E-02  +0.00000E+00
+B054F08-09    59  -2.94164E-02  +0.00000E+00
+B054F08-09    60  +4.97909E-02  +0.00000E+00
+B054F08-09    61  +4.43090E-02  +0.00000E+00
+B054F08-09    62  -1.93265E-02  +0.00000E+00
+B054F08-09    63  -4.29528E-02  +0.00000E+00
+B054F08-09    64  -3.46588E-03  +0.00000E+00
+B054F08-09    65  +3.22448E-02  +0.00000E+00
+B054F08-09    66  +1.66669E-02  +0.00000E+00
+B054F08-09    67  -1.81629E-02  +0.00000E+00
+B054F08-09    68  -2.09407E-02  +0.00000E+00
+B054F08-09    69  +5.20520E-03  +0.00000E+00
+B054F08-09    70  +1.86261E-02  +0.00000E+00
+B054F08-09    71  +3.98225E-03  +0.00000E+00
+B054F08-09    72  -1.27401E-02  +0.00000E+00
+B054F08-09    73  -8.57824E-03  +0.00000E+00
+B054F08-09    74  +6.08445E-03  +0.00000E+00
+B054F08-09    75  +9.18400E-03  +0.00000E+00
+B054F08-09    76  -6.44006E-04  +0.00000E+00
+B054F08-09    77  -7.20121E-03  +0.00000E+00
+B054F08-09    78  -2.64288E-03  +0.00000E+00
+B054F08-09    79  +4.19414E-03  +0.00000E+00
+B054F08-09    80  +3.77072E-03  +0.00000E+00
+B054F08-09    81  -1.40933E-03  +0.00000E+00
+B054F08-09    82  -3.33765E-03  +0.00000E+00
+B054F08-09    83  -4.61554E-04  +0.00000E+00
+B054F08-09    84  +2.15165E-03  +0.00000E+00
+B054F08-09    85  +1.27669E-03  +0.00000E+00
+B054F08-09    86  -9.10951E-04  +0.00000E+00
+B054F08-09    87  -1.27621E-03  +0.00000E+00
+B054F08-09    88  +3.05081E-05  +0.00000E+00
+B054F08-09    89  +8.54225E-04  +0.00000E+00
+B054F08-09    90  +3.76107E-04  +0.00000E+00
+B054F08-09    91  -3.66693E-04  +0.00000E+00
+B054F08-09    92  -5.27932E-05  +0.00000E+00
+B054F08-09    93  +1.43006E-06  +0.00000E+00
+B054F08-09    94  +2.34769E-05  +0.00000E+00
+B054F08-09    95  +1.43006E-06  +0.00000E+00
+B054F08-09    96  -4.64771E-06  +0.00000E+00
+B054F08-09    97  -4.31403E-05  +0.00000E+00
+B054F08-09    98  -2.62179E-06  +0.00000E+00
+B054F08-09    99  -5.60109E-06  +0.00000E+00
+B054F08-09   100  -7.15032E-07  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  9
+B057F04     Input sample rate (HZ):                 4.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.2500E-01
+B057F08     Correction applied (seconds):          +1.2500E-01
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 8
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 10
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  95
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  -4.70420E-05  +0.00000E+00
+B054F08-09     1  -1.86167E-04  +0.00000E+00
+B054F08-09     2  -2.92263E-04  +0.00000E+00
+B054F08-09     3  -1.45131E-04  +0.00000E+00
+B054F08-09     4  +2.12191E-04  +0.00000E+00
+B054F08-09     5  +3.10279E-04  +0.00000E+00
+B054F08-09     6  -1.24111E-04  +0.00000E+00
+B054F08-09     7  -5.23471E-04  +0.00000E+00
+B054F08-09     8  -1.14103E-04  +0.00000E+00
+B054F08-09     9  +6.92624E-04  +0.00000E+00
+B054F08-09    10  +5.34481E-04  +0.00000E+00
+B054F08-09    11  -6.95627E-04  +0.00000E+00
+B054F08-09    12  -1.09999E-03  +0.00000E+00
+B054F08-09    13  +4.06366E-04  +0.00000E+00
+B054F08-09    14  +1.69853E-03  +0.00000E+00
+B054F08-09    15  +2.73246E-04  +0.00000E+00
+B054F08-09    16  -2.13993E-03  +0.00000E+00
+B054F08-09    17  -1.36523E-03  +0.00000E+00
+B054F08-09    18  +2.18096E-03  +0.00000E+00
+B054F08-09    19  +2.77850E-03  +0.00000E+00
+B054F08-09    20  -1.56841E-03  +0.00000E+00
+B054F08-09    21  -4.27885E-03  +0.00000E+00
+B054F08-09    22  +1.08097E-04  +0.00000E+00
+B054F08-09    23  +5.49495E-03  +0.00000E+00
+B054F08-09    24  +2.26304E-03  +0.00000E+00
+B054F08-09    25  -5.95036E-03  +0.00000E+00
+B054F08-09    26  -5.41087E-03  +0.00000E+00
+B054F08-09    27  +5.13563E-03  +0.00000E+00
+B054F08-09    28  +8.95507E-03  +0.00000E+00
+B054F08-09    29  -2.60134E-03  +0.00000E+00
+B054F08-09    30  -1.22651E-02  +0.00000E+00
+B054F08-09    31  -1.93975E-03  +0.00000E+00
+B054F08-09    32  +1.44780E-02  +0.00000E+00
+B054F08-09    33  +8.51968E-03  +0.00000E+00
+B054F08-09    34  -1.45601E-02  +0.00000E+00
+B054F08-09    35  -1.68652E-02  +0.00000E+00
+B054F08-09    36  +1.13402E-02  +0.00000E+00
+B054F08-09    37  +2.63838E-02  +0.00000E+00
+B054F08-09    38  -3.44610E-03  +0.00000E+00
+B054F08-09    39  -3.62236E-02  +0.00000E+00
+B054F08-09    40  -1.11030E-02  +0.00000E+00
+B054F08-09    41  +4.53779E-02  +0.00000E+00
+B054F08-09    42  +3.66400E-02  +0.00000E+00
+B054F08-09    43  -5.28236E-02  +0.00000E+00
+B054F08-09    44  -8.88721E-02  +0.00000E+00
+B054F08-09    45  +5.76880E-02  +0.00000E+00
+B054F08-09    46  +3.12634E-01  +0.00000E+00
+B054F08-09    47  +4.41072E-01  +0.00000E+00
+B054F08-09    48  +3.12634E-01  +0.00000E+00
+B054F08-09    49  +5.76880E-02  +0.00000E+00
+B054F08-09    50  -8.88721E-02  +0.00000E+00
+B054F08-09    51  -5.28236E-02  +0.00000E+00
+B054F08-09    52  +3.66400E-02  +0.00000E+00
+B054F08-09    53  +4.53779E-02  +0.00000E+00
+B054F08-09    54  -1.11030E-02  +0.00000E+00
+B054F08-09    55  -3.62236E-02  +0.00000E+00
+B054F08-09    56  -3.44610E-03  +0.00000E+00
+B054F08-09    57  +2.63838E-02  +0.00000E+00
+B054F08-09    58  +1.13402E-02  +0.00000E+00
+B054F08-09    59  -1.68652E-02  +0.00000E+00
+B054F08-09    60  -1.45601E-02  +0.00000E+00
+B054F08-09    61  +8.51968E-03  +0.00000E+00
+B054F08-09    62  +1.44780E-02  +0.00000E+00
+B054F08-09    63  -1.93975E-03  +0.00000E+00
+B054F08-09    64  -1.22651E-02  +0.00000E+00
+B054F08-09    65  -2.60134E-03  +0.00000E+00
+B054F08-09    66  +8.95507E-03  +0.00000E+00
+B054F08-09    67  +5.13563E-03  +0.00000E+00
+B054F08-09    68  -5.41087E-03  +0.00000E+00
+B054F08-09    69  -5.95036E-03  +0.00000E+00
+B054F08-09    70  +2.26304E-03  +0.00000E+00
+B054F08-09    71  +5.49495E-03  +0.00000E+00
+B054F08-09    72  +1.08097E-04  +0.00000E+00
+B054F08-09    73  -4.27885E-03  +0.00000E+00
+B054F08-09    74  -1.56841E-03  +0.00000E+00
+B054F08-09    75  +2.77850E-03  +0.00000E+00
+B054F08-09    76  +2.18096E-03  +0.00000E+00
+B054F08-09    77  -1.36523E-03  +0.00000E+00
+B054F08-09    78  -2.13993E-03  +0.00000E+00
+B054F08-09    79  +2.73246E-04  +0.00000E+00
+B054F08-09    80  +1.69853E-03  +0.00000E+00
+B054F08-09    81  +4.06366E-04  +0.00000E+00
+B054F08-09    82  -1.09999E-03  +0.00000E+00
+B054F08-09    83  -6.95627E-04  +0.00000E+00
+B054F08-09    84  +5.34481E-04  +0.00000E+00
+B054F08-09    85  +6.92624E-04  +0.00000E+00
+B054F08-09    86  -1.14103E-04  +0.00000E+00
+B054F08-09    87  -5.23471E-04  +0.00000E+00
+B054F08-09    88  -1.24111E-04  +0.00000E+00
+B054F08-09    89  +3.10279E-04  +0.00000E+00
+B054F08-09    90  +2.12191E-04  +0.00000E+00
+B054F08-09    91  -1.45131E-04  +0.00000E+00
+B054F08-09    92  -2.92263E-04  +0.00000E+00
+B054F08-09    93  -1.86167E-04  +0.00000E+00
+B054F08-09    94  -4.70420E-05  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  10
+B057F04     Input sample rate (HZ):                 2.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +2.3500E-01
+B057F08     Correction applied (seconds):          +2.3500E-01
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 9
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - emf in volts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  2
+B057F04     Input sample rate (HZ):                 1.0240E+05
+B057F05     Decimation factor:                      00001
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +0.0000E+00
+B057F08     Correction applied (seconds):          +0.0000E+00
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 10
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  29
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +9.76562E-04  +0.00000E+00
+B054F08-09     2  +2.44141E-03  +0.00000E+00
+B054F08-09     3  +4.88281E-03  +0.00000E+00
+B054F08-09     4  +8.54492E-03  +0.00000E+00
+B054F08-09     5  +1.36719E-02  +0.00000E+00
+B054F08-09     6  +2.05078E-02  +0.00000E+00
+B054F08-09     7  +2.92969E-02  +0.00000E+00
+B054F08-09     8  +3.93066E-02  +0.00000E+00
+B054F08-09     9  +4.98047E-02  +0.00000E+00
+B054F08-09    10  +6.00586E-02  +0.00000E+00
+B054F08-09    11  +6.93359E-02  +0.00000E+00
+B054F08-09    12  +7.69043E-02  +0.00000E+00
+B054F08-09    13  +8.20312E-02  +0.00000E+00
+B054F08-09    14  +8.39844E-02  +0.00000E+00
+B054F08-09    15  +8.20312E-02  +0.00000E+00
+B054F08-09    16  +7.69043E-02  +0.00000E+00
+B054F08-09    17  +6.93359E-02  +0.00000E+00
+B054F08-09    18  +6.00586E-02  +0.00000E+00
+B054F08-09    19  +4.98047E-02  +0.00000E+00
+B054F08-09    20  +3.93066E-02  +0.00000E+00
+B054F08-09    21  +2.92969E-02  +0.00000E+00
+B054F08-09    22  +2.05078E-02  +0.00000E+00
+B054F08-09    23  +1.36719E-02  +0.00000E+00
+B054F08-09    24  +8.54492E-03  +0.00000E+00
+B054F08-09    25  +4.88281E-03  +0.00000E+00
+B054F08-09    26  +2.44141E-03  +0.00000E+00
+B054F08-09    27  +9.76562E-04  +0.00000E+00
+B054F08-09    28  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  3
+B057F04     Input sample rate (HZ):                 1.0240E+05
+B057F05     Decimation factor:                      00008
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.3672E-04
+B057F08     Correction applied (seconds):          +1.3672E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 1
+B058F04     Sensitivity:                           +3.44328E+02
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 4
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  4
+B057F04     Input sample rate (HZ):                 1.2800E+04
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +4.6875E-04
+B057F08     Correction applied (seconds):          +4.6875E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 2
+B058F04     Sensitivity:                           +6.29330E+05
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 5
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  5
+B057F04     Input sample rate (HZ):                 6.4000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +9.3750E-04
+B057F08     Correction applied (seconds):          +9.3750E-04
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 3
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 6
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  6
+B057F04     Input sample rate (HZ):                 3.2000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.8750E-03
+B057F08     Correction applied (seconds):          +1.8750E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 4
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 7
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  7
+B057F04     Input sample rate (HZ):                 1.6000E+03
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +3.7500E-03
+B057F08     Correction applied (seconds):          +3.7500E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 5
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 8
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  13
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  +2.44141E-04  +0.00000E+00
+B054F08-09     1  +2.92969E-03  +0.00000E+00
+B054F08-09     2  +1.61133E-02  +0.00000E+00
+B054F08-09     3  +5.37109E-02  +0.00000E+00
+B054F08-09     4  +1.20850E-01  +0.00000E+00
+B054F08-09     5  +1.93359E-01  +0.00000E+00
+B054F08-09     6  +2.25586E-01  +0.00000E+00
+B054F08-09     7  +1.93359E-01  +0.00000E+00
+B054F08-09     8  +1.20850E-01  +0.00000E+00
+B054F08-09     9  +5.37109E-02  +0.00000E+00
+B054F08-09    10  +1.61133E-02  +0.00000E+00
+B054F08-09    11  +2.92969E-03  +0.00000E+00
+B054F08-09    12  +2.44141E-04  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  8
+B057F04     Input sample rate (HZ):                 8.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +7.5000E-03
+B057F08     Correction applied (seconds):          +7.5000E-03
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 6
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 9
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  101
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  -3.09847E-06  +0.00000E+00
+B054F08-09     1  -2.94355E-05  +0.00000E+00
+B054F08-09     2  -9.79595E-05  +0.00000E+00
+B054F08-09     3  -1.62312E-04  +0.00000E+00
+B054F08-09     4  -9.99854E-05  +0.00000E+00
+B054F08-09     5  +1.20602E-04  +0.00000E+00
+B054F08-09     6  +2.61821E-04  +0.00000E+00
+B054F08-09     7  +2.52645E-05  +0.00000E+00
+B054F08-09     8  -4.10309E-04  +0.00000E+00
+B054F08-09     9  -3.66693E-04  +0.00000E+00
+B054F08-09    10  +3.76107E-04  +0.00000E+00
+B054F08-09    11  +8.54225E-04  +0.00000E+00
+B054F08-09    12  +3.05081E-05  +0.00000E+00
+B054F08-09    13  -1.27621E-03  +0.00000E+00
+B054F08-09    14  -9.10951E-04  +0.00000E+00
+B054F08-09    15  +1.27669E-03  +0.00000E+00
+B054F08-09    16  +2.15165E-03  +0.00000E+00
+B054F08-09    17  -4.61554E-04  +0.00000E+00
+B054F08-09    18  -3.33765E-03  +0.00000E+00
+B054F08-09    19  -1.40933E-03  +0.00000E+00
+B054F08-09    20  +3.77072E-03  +0.00000E+00
+B054F08-09    21  +4.19414E-03  +0.00000E+00
+B054F08-09    22  -2.64288E-03  +0.00000E+00
+B054F08-09    23  -7.20121E-03  +0.00000E+00
+B054F08-09    24  -6.44006E-04  +0.00000E+00
+B054F08-09    25  +9.18400E-03  +0.00000E+00
+B054F08-09    26  +6.08445E-03  +0.00000E+00
+B054F08-09    27  -8.57824E-03  +0.00000E+00
+B054F08-09    28  -1.27401E-02  +0.00000E+00
+B054F08-09    29  +3.98225E-03  +0.00000E+00
+B054F08-09    30  +1.86261E-02  +0.00000E+00
+B054F08-09    31  +5.20520E-03  +0.00000E+00
+B054F08-09    32  -2.09407E-02  +0.00000E+00
+B054F08-09    33  -1.81629E-02  +0.00000E+00
+B054F08-09    34  +1.66669E-02  +0.00000E+00
+B054F08-09    35  +3.22448E-02  +0.00000E+00
+B054F08-09    36  -3.46588E-03  +0.00000E+00
+B054F08-09    37  -4.29528E-02  +0.00000E+00
+B054F08-09    38  -1.93265E-02  +0.00000E+00
+B054F08-09    39  +4.43090E-02  +0.00000E+00
+B054F08-09    40  +4.97909E-02  +0.00000E+00
+B054F08-09    41  -2.94164E-02  +0.00000E+00
+B054F08-09    42  -8.26078E-02  +0.00000E+00
+B054F08-09    43  -9.34166E-03  +0.00000E+00
+B054F08-09    44  +1.07552E-01  +0.00000E+00
+B054F08-09    45  +8.16604E-02  +0.00000E+00
+B054F08-09    46  -1.03110E-01  +0.00000E+00
+B054F08-09    47  -2.04208E-01  +0.00000E+00
+B054F08-09    48  -3.12231E-05  +0.00000E+00
+B054F08-09    49  +3.90433E-01  +0.00000E+00
+B054F08-09    50  +5.89958E-01  +0.00000E+00
+B054F08-09    51  +3.90433E-01  +0.00000E+00
+B054F08-09    52  -3.12231E-05  +0.00000E+00
+B054F08-09    53  -2.04208E-01  +0.00000E+00
+B054F08-09    54  -1.03110E-01  +0.00000E+00
+B054F08-09    55  +8.16604E-02  +0.00000E+00
+B054F08-09    56  +1.07552E-01  +0.00000E+00
+B054F08-09    57  -9.34166E-03  +0.00000E+00
+B054F08-09    58  -8.26078E-02  +0.00000E+00
+B054F08-09    59  -2.94164E-02  +0.00000E+00
+B054F08-09    60  +4.97909E-02  +0.00000E+00
+B054F08-09    61  +4.43090E-02  +0.00000E+00
+B054F08-09    62  -1.93265E-02  +0.00000E+00
+B054F08-09    63  -4.29528E-02  +0.00000E+00
+B054F08-09    64  -3.46588E-03  +0.00000E+00
+B054F08-09    65  +3.22448E-02  +0.00000E+00
+B054F08-09    66  +1.66669E-02  +0.00000E+00
+B054F08-09    67  -1.81629E-02  +0.00000E+00
+B054F08-09    68  -2.09407E-02  +0.00000E+00
+B054F08-09    69  +5.20520E-03  +0.00000E+00
+B054F08-09    70  +1.86261E-02  +0.00000E+00
+B054F08-09    71  +3.98225E-03  +0.00000E+00
+B054F08-09    72  -1.27401E-02  +0.00000E+00
+B054F08-09    73  -8.57824E-03  +0.00000E+00
+B054F08-09    74  +6.08445E-03  +0.00000E+00
+B054F08-09    75  +9.18400E-03  +0.00000E+00
+B054F08-09    76  -6.44006E-04  +0.00000E+00
+B054F08-09    77  -7.20121E-03  +0.00000E+00
+B054F08-09    78  -2.64288E-03  +0.00000E+00
+B054F08-09    79  +4.19414E-03  +0.00000E+00
+B054F08-09    80  +3.77072E-03  +0.00000E+00
+B054F08-09    81  -1.40933E-03  +0.00000E+00
+B054F08-09    82  -3.33765E-03  +0.00000E+00
+B054F08-09    83  -4.61554E-04  +0.00000E+00
+B054F08-09    84  +2.15165E-03  +0.00000E+00
+B054F08-09    85  +1.27669E-03  +0.00000E+00
+B054F08-09    86  -9.10951E-04  +0.00000E+00
+B054F08-09    87  -1.27621E-03  +0.00000E+00
+B054F08-09    88  +3.05081E-05  +0.00000E+00
+B054F08-09    89  +8.54225E-04  +0.00000E+00
+B054F08-09    90  +3.76107E-04  +0.00000E+00
+B054F08-09    91  -3.66693E-04  +0.00000E+00
+B054F08-09    92  -5.27932E-05  +0.00000E+00
+B054F08-09    93  +1.43006E-06  +0.00000E+00
+B054F08-09    94  +2.34769E-05  +0.00000E+00
+B054F08-09    95  +1.43006E-06  +0.00000E+00
+B054F08-09    96  -4.64771E-06  +0.00000E+00
+B054F08-09    97  -4.31403E-05  +0.00000E+00
+B054F08-09    98  -2.62179E-06  +0.00000E+00
+B054F08-09    99  -5.60109E-06  +0.00000E+00
+B054F08-09   100  -7.15032E-07  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  9
+B057F04     Input sample rate (HZ):                 4.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +1.2500E-01
+B057F08     Correction applied (seconds):          +1.2500E-01
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 7
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Response (Coefficients)      |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 10
+B054F05     Response in units lookup:              COUNTS - digital counts
+B054F06     Response out units lookup:             COUNTS - digital counts
+B054F07     Number of numerators:                  95
+B054F10     Number of denominators:                0
+#              Numerator coefficients:
+#              i  coefficient   error
+B054F08-09     0  -4.70420E-05  +0.00000E+00
+B054F08-09     1  -1.86167E-04  +0.00000E+00
+B054F08-09     2  -2.92263E-04  +0.00000E+00
+B054F08-09     3  -1.45131E-04  +0.00000E+00
+B054F08-09     4  +2.12191E-04  +0.00000E+00
+B054F08-09     5  +3.10279E-04  +0.00000E+00
+B054F08-09     6  -1.24111E-04  +0.00000E+00
+B054F08-09     7  -5.23471E-04  +0.00000E+00
+B054F08-09     8  -1.14103E-04  +0.00000E+00
+B054F08-09     9  +6.92624E-04  +0.00000E+00
+B054F08-09    10  +5.34481E-04  +0.00000E+00
+B054F08-09    11  -6.95627E-04  +0.00000E+00
+B054F08-09    12  -1.09999E-03  +0.00000E+00
+B054F08-09    13  +4.06366E-04  +0.00000E+00
+B054F08-09    14  +1.69853E-03  +0.00000E+00
+B054F08-09    15  +2.73246E-04  +0.00000E+00
+B054F08-09    16  -2.13993E-03  +0.00000E+00
+B054F08-09    17  -1.36523E-03  +0.00000E+00
+B054F08-09    18  +2.18096E-03  +0.00000E+00
+B054F08-09    19  +2.77850E-03  +0.00000E+00
+B054F08-09    20  -1.56841E-03  +0.00000E+00
+B054F08-09    21  -4.27885E-03  +0.00000E+00
+B054F08-09    22  +1.08097E-04  +0.00000E+00
+B054F08-09    23  +5.49495E-03  +0.00000E+00
+B054F08-09    24  +2.26304E-03  +0.00000E+00
+B054F08-09    25  -5.95036E-03  +0.00000E+00
+B054F08-09    26  -5.41087E-03  +0.00000E+00
+B054F08-09    27  +5.13563E-03  +0.00000E+00
+B054F08-09    28  +8.95507E-03  +0.00000E+00
+B054F08-09    29  -2.60134E-03  +0.00000E+00
+B054F08-09    30  -1.22651E-02  +0.00000E+00
+B054F08-09    31  -1.93975E-03  +0.00000E+00
+B054F08-09    32  +1.44780E-02  +0.00000E+00
+B054F08-09    33  +8.51968E-03  +0.00000E+00
+B054F08-09    34  -1.45601E-02  +0.00000E+00
+B054F08-09    35  -1.68652E-02  +0.00000E+00
+B054F08-09    36  +1.13402E-02  +0.00000E+00
+B054F08-09    37  +2.63838E-02  +0.00000E+00
+B054F08-09    38  -3.44610E-03  +0.00000E+00
+B054F08-09    39  -3.62236E-02  +0.00000E+00
+B054F08-09    40  -1.11030E-02  +0.00000E+00
+B054F08-09    41  +4.53779E-02  +0.00000E+00
+B054F08-09    42  +3.66400E-02  +0.00000E+00
+B054F08-09    43  -5.28236E-02  +0.00000E+00
+B054F08-09    44  -8.88721E-02  +0.00000E+00
+B054F08-09    45  +5.76880E-02  +0.00000E+00
+B054F08-09    46  +3.12634E-01  +0.00000E+00
+B054F08-09    47  +4.41072E-01  +0.00000E+00
+B054F08-09    48  +3.12634E-01  +0.00000E+00
+B054F08-09    49  +5.76880E-02  +0.00000E+00
+B054F08-09    50  -8.88721E-02  +0.00000E+00
+B054F08-09    51  -5.28236E-02  +0.00000E+00
+B054F08-09    52  +3.66400E-02  +0.00000E+00
+B054F08-09    53  +4.53779E-02  +0.00000E+00
+B054F08-09    54  -1.11030E-02  +0.00000E+00
+B054F08-09    55  -3.62236E-02  +0.00000E+00
+B054F08-09    56  -3.44610E-03  +0.00000E+00
+B054F08-09    57  +2.63838E-02  +0.00000E+00
+B054F08-09    58  +1.13402E-02  +0.00000E+00
+B054F08-09    59  -1.68652E-02  +0.00000E+00
+B054F08-09    60  -1.45601E-02  +0.00000E+00
+B054F08-09    61  +8.51968E-03  +0.00000E+00
+B054F08-09    62  +1.44780E-02  +0.00000E+00
+B054F08-09    63  -1.93975E-03  +0.00000E+00
+B054F08-09    64  -1.22651E-02  +0.00000E+00
+B054F08-09    65  -2.60134E-03  +0.00000E+00
+B054F08-09    66  +8.95507E-03  +0.00000E+00
+B054F08-09    67  +5.13563E-03  +0.00000E+00
+B054F08-09    68  -5.41087E-03  +0.00000E+00
+B054F08-09    69  -5.95036E-03  +0.00000E+00
+B054F08-09    70  +2.26304E-03  +0.00000E+00
+B054F08-09    71  +5.49495E-03  +0.00000E+00
+B054F08-09    72  +1.08097E-04  +0.00000E+00
+B054F08-09    73  -4.27885E-03  +0.00000E+00
+B054F08-09    74  -1.56841E-03  +0.00000E+00
+B054F08-09    75  +2.77850E-03  +0.00000E+00
+B054F08-09    76  +2.18096E-03  +0.00000E+00
+B054F08-09    77  -1.36523E-03  +0.00000E+00
+B054F08-09    78  -2.13993E-03  +0.00000E+00
+B054F08-09    79  +2.73246E-04  +0.00000E+00
+B054F08-09    80  +1.69853E-03  +0.00000E+00
+B054F08-09    81  +4.06366E-04  +0.00000E+00
+B054F08-09    82  -1.09999E-03  +0.00000E+00
+B054F08-09    83  -6.95627E-04  +0.00000E+00
+B054F08-09    84  +5.34481E-04  +0.00000E+00
+B054F08-09    85  +6.92624E-04  +0.00000E+00
+B054F08-09    86  -1.14103E-04  +0.00000E+00
+B054F08-09    87  -5.23471E-04  +0.00000E+00
+B054F08-09    88  -1.24111E-04  +0.00000E+00
+B054F08-09    89  +3.10279E-04  +0.00000E+00
+B054F08-09    90  +2.12191E-04  +0.00000E+00
+B054F08-09    91  -1.45131E-04  +0.00000E+00
+B054F08-09    92  -2.92263E-04  +0.00000E+00
+B054F08-09    93  -1.86167E-04  +0.00000E+00
+B054F08-09    94  -4.70420E-05  +0.00000E+00
+#
+#                  +-----------------------------------+
+#                  |            Decimation             |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B057F03     Stage sequence number:                  10
+B057F04     Input sample rate (HZ):                 2.0000E+02
+B057F05     Decimation factor:                      00002
+B057F06     Decimation offset:                      00000
+B057F07     Estimated delay (seconds):             +2.3500E-01
+B057F08     Correction applied (seconds):          +2.3500E-01
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 8
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 9
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 10
+B058F04     Sensitivity:                           +1.00000E+00
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           +2.16695E+08
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           +4.79777E+07
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0
+#
+#                  +-----------------------------------+
+#                  |      Channel Sensitivity/Gain     |
+#                  |        IE  LLRI       EHZ         |
+#                  |     01/01/2002 to 12/31/2599      |
+#                  +-----------------------------------+
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           +2.16695E+08
+B058F05     Frequency of sensitivity:              +4.00000E+00
+B058F06     Number of calibrations:                0

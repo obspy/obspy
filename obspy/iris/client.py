@@ -1121,7 +1121,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         else:
             # ASCII data
             if filename is None:
-                return loadtxt(io.BytesIO(data), ndlim=1)
+                return loadtxt(io.BytesIO(data), ndmin=1)
             else:
                 return self._toFileOrData(filename, data, binary=True)
 

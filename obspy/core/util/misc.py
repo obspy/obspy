@@ -195,24 +195,24 @@ numpy.version.version
         return 0
 
 
-# import numpy loadtxt and check if ndlim parameter is available
+# import numpy loadtxt and check if ndmin parameter is available
 try:
     from numpy import loadtxt
-    loadtxt(np.array([]), ndlim=1)
+    loadtxt(np.array([0]), ndmin=1)
 except TypeError:
     # otherwise redefine loadtxt
     def loadtxt(*args, **kwargs):
         """
-        Replacement for older numpy.loadtxt versions not supporting ndlim
+        Replacement for older numpy.loadtxt versions not supporting ndmin
         parameter.
         """
-        if 'ndlim' not in kwargs:
+        if 'ndmin' not in kwargs:
             return np.loadtxt(*args, **kwargs)
-        # ok we got a ndlim param
-        if kwargs['ndlim'] != 1:
+        # ok we got a ndmin param
+        if kwargs['ndmin'] != 1:
             # for now we support only one dimensional arrays
             raise NotImplementedError('Upgrade your NumPy version!')
-        del kwargs['ndlim']
+        del kwargs['ndmin']
         dtype = kwargs.get('dtype', None)
         # lets get the data
         try:

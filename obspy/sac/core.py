@@ -74,7 +74,7 @@ def isSAC(filename):
                 return False
             if delta <= 0:
                 return False
-            if leven != 0 and leven != 1:
+            if leven != 0 and leven != 1 and leven != -12345:
                 return False
             if lpspol != 0 and lpspol != 1 and lpspol != -12345:
                 return False

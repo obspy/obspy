@@ -98,6 +98,10 @@ def getTravelTimes(delta, depth, model='iasp91'):
     {'phase_name': 'P', 'dT/dD': 7.1050525, 'take-off angle': 45.169445,
      'time': 497.53741, 'd2T/dD2': -0.0044748308, 'dT/dh': -0.070258446}
     """
+    # Raise an error, otherwise libtau sends an EXIT signal. Depends on the
+    # model but 800 km works for the included models.
+    if depth > 800.00:
+        raise ValueError("Source depth of %.2f km is too deep." % depth)
     model_path = os.path.join(_taup_dir, 'tables', model)
     if not os.path.exists(model_path + os.path.extsep + 'hed') or \
        not os.path.exists(model_path + os.path.extsep + 'tbl'):

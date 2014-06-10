@@ -252,7 +252,8 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
   struct scn *scn;
   struct string_array *sta_list, *chan_list;
   struct string_array *locid_list;
-  int i, j, k, count = 0, which_matched, test = 1, mode, new_file;
+  int i, j, k, count = 0, which_matched, mode, new_file;
+  volatile int test = 1;
   int  err_type;
   char  out_name[MAXLINELEN], locid[LOCIDLEN+1];
   char *locid_ptr, *end_locid_ptr;
