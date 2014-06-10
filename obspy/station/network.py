@@ -463,16 +463,16 @@ class Network(BaseNode):
             (acceleration, output unit is meters/second**2).
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
-            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"L44*"``, ``"L4?A"``,
+            ``"[LM]44A``"; see :func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard stations active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`

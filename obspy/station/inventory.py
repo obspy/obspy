@@ -381,7 +381,7 @@ class Inventory(ComparingObject):
                 * ``"ortho"`` (Will center around the mean lat/long.)
                 * ``"local"`` (Will plot around local events)
 
-            Defaults to "cyl"
+            Defaults to ``"cyl"``
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:
@@ -409,18 +409,19 @@ class Inventory(ComparingObject):
         :param color: Face color of marker symbol (see
             :func:`matplotlib.pyplot.scatter`).
         :type color_per_network: bool (or dict)
-        :param color_per_network: If set to `True`, each network will be drawn
-            in a different color. A dictionary can be provided that maps
+        :param color_per_network: If set to ``True``, each network will be
+            drawn in a different color. A dictionary can be provided that maps
             network codes to color values (e.g.
-            `color_per_network={"GR": "black", "II": "green"}).
+            ``color_per_network={"GR": "black", "II": "green"}``).
         :type colormap: str, optional, any matplotlib colormap
-        :param colormap: Only ued if `color_per_network=True`. Specifies which
-            colormap is used to draw the colors for the individual networks.
-        :type legend: str or `None`
+        :param colormap: Only used if ``color_per_network=True``. Specifies
+            which colormap is used to draw the colors for the individual
+            networks.
+        :type legend: str or None
         :param legend: Location string for legend, if networks are plotted in
-            different colors (i.e. option `color_per_network` in use). See
+            different colors (i.e. option ``color_per_network`` in use). See
             :func:`matplotlib.pyplot.legend` for possible values for
-            legend location string. To disable legend set to `None`.
+            legend location string. To disable legend set to ``None``.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only plot stations available at given point in time.
         :type show: bool
@@ -559,20 +560,20 @@ class Inventory(ComparingObject):
 
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style
-            patterns and wildcards (e.g. "G*", "*[ER]"; see
+            patterns and wildcards (e.g. ``"G*"``, ``"*[ER]"``; see
             :func:`~fnmatch.fnmatch`)
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
-            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"L44*"``, ``"L4?A"``,
+            ``"[LM]44A"``; see :func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard networks/stations/channels active at given
             point in time.
