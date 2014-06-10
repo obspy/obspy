@@ -334,19 +334,23 @@ class Network(BaseNode):
         Creates a preview map of all stations in current network object.
 
         :type projection: str, optional
-        :param projection: The map projection. Currently supported are
-            * ``"cyl"`` (Will plot the whole world.)
-            * ``"ortho"`` (Will center around the mean lat/long.)
-            * ``"local"`` (Will plot around local events)
+        :param projection: The map projection. Currently supported are:
+
+                * ``"cyl"`` (Will plot the whole world.)
+                * ``"ortho"`` (Will center around the mean lat/long.)
+                * ``"local"`` (Will plot around local events)
+
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are
-            * ``"c"`` (crude)
-            * ``"l"`` (low)
-            * ``"i"`` (intermediate)
-            * ``"h"`` (high)
-            * ``"f"`` (full)
+            based directly to the basemap module. Possible values are:
+
+                * ``"c"`` (crude)
+                * ``"l"`` (low)
+                * ``"i"`` (intermediate)
+                * ``"h"`` (high)
+                * ``"f"`` (full)
+
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to

@@ -375,19 +375,23 @@ class Inventory(ComparingObject):
         object.
 
         :type projection: str, optional
-        :param projection: The map projection. Currently supported are
-            * ``"cyl"`` (Will plot the whole world.)
-            * ``"ortho"`` (Will center around the mean lat/long.)
-            * ``"local"`` (Will plot around local events)
+        :param projection: The map projection. Currently supported are:
+
+                * ``"cyl"`` (Will plot the whole world.)
+                * ``"ortho"`` (Will center around the mean lat/long.)
+                * ``"local"`` (Will plot around local events)
+
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are
-            * ``"c"`` (crude)
-            * ``"l"`` (low)
-            * ``"i"`` (intermediate)
-            * ``"h"`` (high)
-            * ``"f"`` (full)
+            based directly to the basemap module. Possible values are:
+
+                * ``"c"`` (crude)
+                * ``"l"`` (low)
+                * ``"i"`` (intermediate)
+                * ``"h"`` (high)
+                * ``"f"`` (full)
+
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
@@ -547,9 +551,12 @@ class Inventory(ComparingObject):
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+                * ``"DISP"`` -- displacement, output unit is meters;
+                * ``"VEL"`` -- velocity, output unit is meters/second; or,
+                * ``"ACC"`` -- acceleration, output unit is meters/second**2.
+
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style
             patterns and wildcards (e.g. "G*", "*[ER]"; see

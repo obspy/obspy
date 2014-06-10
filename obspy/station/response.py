@@ -517,9 +517,11 @@ class FIRResponseStage(ResponseStage):
 
     :type symmetry: String
     :param symmetry: A string describing the symmetry. Can be one of:
+
             * ``NONE``
             * ``EVEN``
             * ``ODD``
+
     :type coefficients: list of floats
     :param coefficients: List of FIR coefficients.
     """
