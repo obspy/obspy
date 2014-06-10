@@ -1,5 +1,5 @@
 #from VelocityLayer import *
-from .VelocityModel import *
+from taupy.VelocityModel import *
 
 test = VelocityModel()
 
@@ -9,8 +9,8 @@ test2 = VelocityModel.readVelocityFile('iasp91.tvel') # test_file.tvel is shorte
 
 print(test2)
 
-for i, layer in enumerate(test2.layers):
-    print(layer)
+#for i, layer in enumerate(test2.layers):
+#    print(layer)
 
 print(test2.validate())
 
@@ -22,11 +22,13 @@ print(test2.getDisconDepths())
 print(test2.layerNumberAbove(30))
 print(test2.layerNumberBelow(0))
 
-print(test2.evaluateAbove(20, 'p'))
-print(test2.evaluateBelow(30, 'D'))
+#eval at cmb
+print(test2.evaluateAbove(2889.0, 'p'))
+print(test2.evaluateBelow(2889.0, 'D'))
 
-print(test2.depthAtTop(0))
-print(test2.depthAtBottom(0))
+
+print(test2.depthAtTop(50))
+print(test2.depthAtBottom(50))
 
 print(test2.mohoDepth, test2.iocbDepth, test2.cmbDepth)
 print(test2.fixDisconDepths())
