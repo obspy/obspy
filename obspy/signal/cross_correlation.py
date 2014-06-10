@@ -224,7 +224,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     picks the following can be tried::
 
         t_before=0.05, t_after=0.2, cc_maxlag=0.10,
-        filter="bandpass", filter_options={'filter_low': 1, 'filter_high': 20}
+        filter="bandpass", filter_options={'freqmin': 1, 'freqmax': 20}
 
     The appropriate parameter sets can and should be determined/verified
     visually using the option `show=True` on a representative set of picks.

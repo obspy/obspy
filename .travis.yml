@@ -2,22 +2,19 @@ language: python
 python:
   - 2.6
   - 2.7
-virtualenv:
-  system_site_packages: true
 before_install:
   - lsb_release -a # get info on the operating system
   - sudo apt-get update
   - sudo apt-get install -qq gfortran
-  # numpy is installed anyway, even on py!=2.7 where system site-packages are never available. keep it here for completeness
-  - sudo apt-get install -qq python-numpy
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy suds lxml sqlalchemy m2crypto; pip install mock; fi
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy scipy suds lxml sqlalchemy m2crypto mock nose
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib==1.3.1
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap
   - pip install --use-mirrors flake8
   - pip freeze
 install:
