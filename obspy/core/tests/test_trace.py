@@ -1799,6 +1799,62 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(int_tr.stats.delta, 2.0)
             self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
 
+    def test_interpolation_arguments(self):
+        """
+        Test case for the interpolation arguments.
+        """
+        tr = read()[0]
+        tr.stats.sampling_rate = 1.0
+        tr.data = tr.data[:50]
+
+        for inter_type in ["linear", "nearest", "zero", "slinear",
+                           "quadratic", "cubic", 1, 2, 3,
+                           "weighted_average_slopes"]:
+            # If only the sampling rate is specified, the endtime will be very
+            # close to the original endtime but never bigger.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              type=inter_type)
+            self.assertEqual(tr.stats.starttime, interp_tr.stats.starttime)
+            self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
+                            tr.stats.endtime - (1.0 / 0.3))
+
+            # If the starttime is modified the new starttime will used but
+            # the endtime will again be modified as little as possible.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              type=inter_type,
+                                              starttime=tr.stats.starttime +
+                                              5.0)
+            self.assertEqual(tr.stats.starttime + 5.0,
+                             interp_tr.stats.starttime)
+            self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
+                            tr.stats.endtime - (1.0 / 0.3))
+
+            # If npts is given it will be used to modify the endtime.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              type=inter_type, npts=10)
+            self.assertEqual(tr.stats.starttime,
+                             interp_tr.stats.starttime)
+            self.assertEqual(interp_tr.stats.npts, 10)
+
+            # If npts and starttime are given, both will be modified.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              type=inter_type,
+                                              starttime=tr.stats.starttime +
+                                              5.0, npts=10)
+            self.assertEqual(tr.stats.starttime + 5.0,
+                             interp_tr.stats.starttime)
+            self.assertEqual(interp_tr.stats.npts, 10)
+
+            # An earlier starttime with raise an exception. No extrapolation
+            # is supported
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=1.0,
+                              starttime=tr.stats.starttime - 10.0)
+            # As will too many samples that would overstep the endtime bound.
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=1.0,
+                              npts=tr.stats.npts * 1E6)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

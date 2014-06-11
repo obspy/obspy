@@ -2105,7 +2105,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         if npts is None:
             npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
-                                  dt))
+                                  dt)) + 1
         self.data = func(self.data, old_start, old_dt, starttime, dt, npts,
                          type=type)
         self.stats.starttime = UTCDateTime(starttime)
