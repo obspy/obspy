@@ -23,6 +23,9 @@ def _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts):
 
     Returns the old and the new end.
     """
+    if new_dt <= 0.0:
+        raise ValueError("The time step must be positive.")
+
     # Check for 1D array.
     if data.ndim != 1 or not len(data) or not data.shape[-1]:
         raise ValueError("Not a 1D array.")

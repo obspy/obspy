@@ -1855,6 +1855,12 @@ class TraceTestCase(unittest.TestCase):
                               sampling_rate=1.0,
                               npts=tr.stats.npts * 1E6)
 
+            # A negative or zero desired sampling rate should raise.
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=0.0)
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=-1.0)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

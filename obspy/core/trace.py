@@ -2085,7 +2085,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             type = type.lower()
         except:
             pass
-        dt = 1.0 / float(sampling_rate)
+
+        dt = float(sampling_rate)
+        if dt <= 0.0:
+            raise ValueError("The time step must be positive.")
+        dt = 1.0 / sampling_rate
 
         if isinstance(type, int) or type in ["linear", "nearest", "zero",
                                              "slinear", "quadratic", "cubic"]:
