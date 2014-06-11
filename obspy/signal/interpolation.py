@@ -124,8 +124,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     old_time_array = np.linspace(old_start, old_end, len(data))
 
     m = np.diff(data) / old_dt
-    # Epsilon must be small relative to the average value of the slope.
-    epsilon = max(0.001 * np.mean(data), np.spacing(1))
+    epsilon = np.spacing(1)
     # Calculate the weight for each slope.
     w = np.clip(1.0 / np.abs(m), epsilon, np.inf)
 
@@ -133,6 +132,12 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     slope[0] = m[0]
     slope[1:-1] = (w[:-1] * m[:-1] + w[1:] * m[1:]) / (w[:-1] + w[1:])
     slope[-1] = m[-1]
+
+    # If m_i and m_{i+1} have opposite signs then set the slope to zero.
+    # This forces the curve to have extrema at the sample points and not
+    # in-between.
+    sign_change = np.diff(np.sign(m)).astype(np.bool)
+    slope[1:-1][sign_change] = 0.0
 
     derivatives = np.empty((len(data), 2), dtype="float64")
     derivatives[:, 0] = data
