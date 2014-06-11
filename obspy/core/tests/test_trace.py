@@ -1784,9 +1784,20 @@ class TraceTestCase(unittest.TestCase):
                                    rtol=1E-5)
 
         # Also test the other interpolation methods mainly by assuring the
-        # correct scipy function is called and they stay internally
+        # correct scipy function is called and everything stays internally
         # consistent. Scipy's functions are tested enough to be sure that
         # they work.
+        for inter_type in ["linear", "nearest", "zero", "slinear",
+                           "quadratic", "cubic", 1, 2, 3]:
+            with mock.patch("scipy.interpolate.interp1d") as patch:
+                patch.return_value = lambda x: x
+                org_tr.copy().interpolate(sampling_rate=0.5, type=inter_type)
+                self.assertEqual(patch.call_count, 1)
+                self.assertEqual(patch.call_args[1]["kind"], inter_type)
+            int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
+                                               type=inter_type)
+            self.assertEqual(int_tr.stats.delta, 2.0)
+            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
 
 
 def suite():

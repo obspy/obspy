@@ -2081,7 +2081,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             fitting  number to retain the current endtime of the trace if
             not given.
         """
-        type = type.lower()
+        try:
+            type = type.lower()
+        except:
+            pass
         dt = 1.0 / float(sampling_rate)
 
         if isinstance(type, int) or type in ["linear", "nearest", "zero",

@@ -70,7 +70,7 @@ def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
     new_time_array = np.linspace(new_start, new_end, new_npts)
     old_time_array = np.linspace(old_start, old_end, len(data))
 
-    new_data = scipy.interpolate.interp1d(old_time_array, data, kind=1)(
+    new_data = scipy.interpolate.interp1d(old_time_array, data, kind=type)(
         new_time_array)
     return new_data
 
