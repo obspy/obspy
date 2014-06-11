@@ -2043,8 +2043,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @skipIfNoData
     @raiseIfMasked
     @_add_processing_info
-    def interpolate(self, sampling_rate, type="linear", starttime=None,
-                    npts=None):
+    def interpolate(self, sampling_rate, type="weighted_average_slopes",
+                    starttime=None, npts=None):
         """
         Interpolate the data using various interpolation techniques.
 
@@ -2062,12 +2062,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :param sampling_rate: The new sampling rate in ``Hz`` The new
             sampling rate in ``Hz``
-        :param type: The kind of interpolation to performa as a string (
+        :param type: The kind of interpolation to perform as a string (
             ``linear``, ``nearest``, ``zero``, ``slinear``, ``quadratic``,
-            ``cubic`` where ``slinear``, ``quadratic`` and ``cubic`` refer to a
-            spline interpolation of first,  second or third order) or as an
-            integer specifying the order of the spline interpolator to use.
-            Default is ``linear``.
+            ``cubic``, or ``weighted_average_slopes`` where ``slinear``,
+            ``quadratic`` and ``cubic`` refer  to a spline interpolation of
+            first,  second or third order) or as an integer specifying the
+            order of the spline interpolator to use.
+            Defaults to ``weighted_average_slopes`` which is the
+            interpolation technique used by SAC. Refer to
+            :func:`~obspy.signal.interpolation.weighted_average_slopes` for
+            more details.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
         :param starttime: The starttime (or timestamp) for the new
             interpolated stream. Will be set to current starttime of the

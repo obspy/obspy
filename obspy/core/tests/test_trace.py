@@ -1739,6 +1739,52 @@ class TraceTestCase(unittest.TestCase):
         tr.stats = Stats({'network': 'BW'})
         self.assertEqual(tr.meta.network, 'BW')
 
+    def test_interpolate(self):
+        """
+        Tests the interpolate function.
+        """
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        # Load the prepared data. The data has been created using SAC.
+        org_tr = read(os.path.join(
+            path,
+            "interpolation_test_random_waveform_delta_0.01_npts_50.sac"))[0]
+        interp_delta_0_003 = read(os.path.join(
+            path,
+            "interpolation_test_interpolated_delta_0.003.sac"))[0]
+        interp_delta_0_077 = read(os.path.join(
+            path,
+            "interpolation_test_interpolated_delta_0.077.sac"))[0]
+
+        # Perform the same interpolation as in Python with ObsPy.
+        int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.003,
+                                           type="weighted_average_slopes")
+        # Assert that the sampling rate has been set correctly.
+        self.assertEqual(int_tr.stats.delta, 0.003)
+        # Assert that the new endtime is smaller than the old one. SAC at
+        # times performs some extrapolation which we do not want to do here.
+        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        # Sac extrapolates a bit which we don't want here. The deviations
+        # to SAC are likely due to the fact that we use double precision
+        # math while SAC uses single precision math.
+        np.testing.assert_allclose(int_tr.data,
+                                   interp_delta_0_003.data[:int_tr.stats.npts],
+                                   rtol=1E-3)
+
+        int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.077,
+                                           type="weighted_average_slopes")
+        # Assert that the sampling rate has been set correctly.
+        self.assertEqual(int_tr.stats.delta, 0.077)
+        # Assert that the new endtime is smaller than the old one. SAC at
+        # times performs some extrapolation which we do not want to do here.
+        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        np.testing.assert_allclose(int_tr.data, interp_delta_0_077.data,
+                                   rtol=1E-5)
+
+        # Also test the other interploation methods mainly by assuring the
+        # correct scipy function is called and they stay internally
+        # consistent. Scipy's functions are tested enough to be sure that
+        # they work.
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

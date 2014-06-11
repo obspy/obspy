@@ -274,6 +274,8 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolate:interpolate_1d',
+        'weighted_average_slopes = '
+        'obspy.signal.interpolate:weighted_average_slopes',
     ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
