@@ -124,9 +124,8 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     old_time_array = np.linspace(old_start, old_end, len(data))
 
     m = np.diff(data) / old_dt
-    epsilon = np.spacing(1)
-    # Calculate the weight for each slope.
-    w = np.clip(1.0 / np.abs(m), epsilon, np.inf)
+    w = np.abs(m)
+    w = 1.0 / np.clip(w, np.spacing(1), w.max())
 
     slope = np.empty(len(data), dtype="float64")
     slope[0] = m[0]

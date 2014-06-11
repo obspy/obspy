@@ -1846,7 +1846,7 @@ class TraceTestCase(unittest.TestCase):
                              interp_tr.stats.starttime)
             self.assertEqual(interp_tr.stats.npts, 10)
 
-            # An earlier starttime with raise an exception. No extrapolation
+            # An earlier starttime will raise an exception. No extrapolation
             # is supported
             self.assertRaises(ValueError, tr.copy().interpolate,
                               sampling_rate=1.0,
