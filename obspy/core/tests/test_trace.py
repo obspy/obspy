@@ -1778,10 +1778,11 @@ class TraceTestCase(unittest.TestCase):
         # Assert that the sampling rate has been set correctly.
         self.assertEqual(int_tr.stats.delta, 0.077)
         # Assert that the new endtime is smaller than the old one. SAC at
-        # times performs some extrapolation which we do not want to do here.
+        # calculates one sample less in this case.
         self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
-        np.testing.assert_allclose(int_tr.data, interp_delta_0_077.data,
-                                   rtol=1E-5)
+        np.testing.assert_allclose(
+            int_tr.data[:interp_delta_0_077.stats.npts],
+            interp_delta_0_077.data, rtol=1E-5)
 
         # Also test the other interpolation methods mainly by assuring the
         # correct scipy function is called and everything stays internally
