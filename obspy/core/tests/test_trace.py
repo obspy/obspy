@@ -1742,6 +1742,9 @@ class TraceTestCase(unittest.TestCase):
     def test_interpolate(self):
         """
         Tests the interpolate function.
+
+        This also tests the interpolation in obspy.signal. No need to repeat
+        the same test twice I guess.
         """
         path = os.path.join(os.path.dirname(__file__), 'data')
         # Load the prepared data. The data has been created using SAC.
@@ -1780,7 +1783,7 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_allclose(int_tr.data, interp_delta_0_077.data,
                                    rtol=1E-5)
 
-        # Also test the other interploation methods mainly by assuring the
+        # Also test the other interpolation methods mainly by assuring the
         # correct scipy function is called and they stay internally
         # consistent. Scipy's functions are tested enough to be sure that
         # they work.
