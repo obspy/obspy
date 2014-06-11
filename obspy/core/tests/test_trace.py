@@ -1788,13 +1788,33 @@ class TraceTestCase(unittest.TestCase):
         # correct scipy function is called and everything stays internally
         # consistent. Scipy's functions are tested enough to be sure that
         # they work.
-        for inter_type in ["linear", "nearest", "zero", "slinear",
-                           "quadratic", "cubic", 1, 2, 3]:
+        for inter_type in ["linear", "nearest", "zero"]:
             with mock.patch("scipy.interpolate.interp1d") as patch:
                 patch.return_value = lambda x: x
                 org_tr.copy().interpolate(sampling_rate=0.5, type=inter_type)
-                self.assertEqual(patch.call_count, 1)
-                self.assertEqual(patch.call_args[1]["kind"], inter_type)
+            self.assertEqual(patch.call_count, 1)
+            self.assertEqual(patch.call_args[1]["kind"], inter_type)
+
+            int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
+                                               type=inter_type)
+            self.assertEqual(int_tr.stats.delta, 2.0)
+            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+
+        for inter_type in ["slinear", "quadratic", "cubic", 1, 2, 3]:
+            with mock.patch("scipy.interpolate.InterpolatedUnivariateSpline") \
+                    as patch:
+                patch.return_value = lambda x: x
+                org_tr.copy().interpolate(sampling_rate=0.5, type=inter_type)
+            s_map = {
+                "slinear": 1,
+                "quadratic": 2,
+                "cubic": 3
+            }
+            if inter_type in s_map:
+                inter_type = s_map[inter_type]
+            self.assertEqual(patch.call_count, 1)
+            self.assertEqual(patch.call_args[1]["k"], inter_type)
+
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
                                                type=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)

@@ -43,7 +43,7 @@ def _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts):
 def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
                    type="linear", *args, **kwargs):
     """
-    Wrapper around scipy.interpolate.interp1d.
+    Wrapper around some scipy interpolation functions.
 
     :type data: array like
     :param data: Array to interpolate.
@@ -73,8 +73,26 @@ def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
     new_time_array = np.linspace(new_start, new_end, new_npts)
     old_time_array = np.linspace(old_start, old_end, len(data))
 
-    new_data = scipy.interpolate.interp1d(old_time_array, data, kind=type)(
-        new_time_array)
+    s_map = {
+        "slinear": 1,
+        "quadratic": 2,
+        "cubic": 3
+    }
+    if type in s_map:
+        type = s_map[type]
+
+    # InterpolatedUnivariateSpline uses a sane amount of memory for splines.
+    # interp1d can easily require 50 GB of memory which is clearly
+    # not acceptable.
+    if isinstance(type, int):
+        new_data = scipy.interpolate.InterpolatedUnivariateSpline(
+            old_time_array, data, k=type)(new_time_array)
+    # interp1d is used for the "linear", "nearest", and "zero" interpolation
+    # methods.
+    else:
+        new_data = scipy.interpolate.interp1d(old_time_array, data, kind=type)(
+            new_time_array)
+
     return new_data
 
 
