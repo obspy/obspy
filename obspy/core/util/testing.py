@@ -141,7 +141,7 @@ class ImageComparison(NamedTemporaryFile):
     :type image_name: str
     :param image_name: Filename (with suffix, without directory path) of the
         baseline image
-    :type reltol: float (optional)
+    :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
 

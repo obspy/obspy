@@ -594,7 +594,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` optional
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param endtime: End date and time. Requires starttime parameter.

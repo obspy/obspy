@@ -306,15 +306,14 @@ class Person(ComparingObject):
     """
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
-        :type names: list of strings
-        :param names: Self-explanatory. Multiple names allowed. Optional.
-        :type agencies: list of strings
-        :param agencies: Self-explanatory. Multiple agencies allowed. Optional.
-        :type emails: list of strings
-        :param emails: Self-explanatory. Multiple emails allowed. Optional.
-        :type phones: list of :class:`PhoneNumber`
+        :type names: list of strings, optional
+        :param names: Self-explanatory. Multiple names allowed.
+        :type agencies: list of strings, optional
+        :param agencies: Self-explanatory. Multiple agencies allowed.
+        :type emails: list of strings, optional
+        :param emails: Self-explanatory. Multiple emails allowed.
+        :type phones: list of :class:`PhoneNumber`, optional
         :param phones: Self-explanatory. Multiple phone numbers allowed.
-            Optional.
         """
         self.names = names or []
         self.agencies = agencies or []
@@ -432,12 +431,13 @@ class Comment(ComparingObject):
         :type id: int
         :param id: ID of comment, must be 0 or greater.
         :type begin_effective_time:
-            :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param begin_effective_time: The effective start date, Optional.
-        :type end_effective_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_effective_time: The effective end date. Optional.
-        :type authors: list of :class:`Person` objects
-        :param authors: The authors of this comment. Optional.
+            :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param begin_effective_time: The effective start date.
+        :type end_effective_time:
+            :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param end_effective_time: The effective end date.
+        :type authors: list of :class:`Person` objects, optional
+        :param authors: The authors of this comment.
         """
         self.value = value
         self.begin_effective_time = begin_effective_time

@@ -60,21 +60,21 @@ class Station(BaseNode):
         :type creation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param creation_date: Date and time (UTC) when the station was first
             installed
-        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
         :param termination_date: Date and time (UTC) when the station was
             terminated or will be terminated. A blank value should be assumed
-            to mean that the station is still active. Optional
-        :type total_number_of_channels: int
+            to mean that the station is still active.
+        :type total_number_of_channels: int, optional
         :param total_number_of_channels: Total number of channels recorded at
-            this station. Optional.
-        :type selected_number_of_channels: int
+            this station.
+        :type selected_number_of_channels: int, optional
         :param selected_number_of_channels: Number of channels recorded at this
             station and selected by the query that produced this document.
-            Optional.
         :type external_references: list of
-            :class:`~obspy.station.util.ExternalReference`
+            :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as
-            IRIS data reports or dataless SEED volumes. Optional.
+            IRIS data reports or dataless SEED volumes.
         :type description: String, optional
         :param description: A description of the resource
         :type comments: list of :class:`~obspy.station.util.Comment`, optional

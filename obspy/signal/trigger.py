@@ -544,7 +544,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param thr_coincidence_sum: Threshold for coincidence sum. The network
         coincidence sum has to be at least equal to this value for a trigger to
         be included in the returned trigger list.
-    :type trace_ids: list or dict (optional)
+    :type trace_ids: list or dict, optional
     :param trace_ids: Trace IDs to be used in the network coincidence sum. A
         dictionary with trace IDs as keys and weights as values can
         be provided. If a list of trace IDs is provided, all
@@ -555,17 +555,17 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param max_trigger_length: Maximum single station trigger length (in
         seconds). ``delete_long_trigger`` controls what happens to single
         station triggers longer than this value.
-    :type delete_long_trigger: bool (optional)
+    :type delete_long_trigger: bool, optional
     :param delete_long_trigger: If ``False`` (default), single station
         triggers are manually released at ``max_trigger_length``, although the
         characteristic function has not dropped below ``thr_off``. If set to
         ``True``, all single station triggers longer than
         ``max_trigger_length`` will be removed and are excluded from
         coincidence sum computation.
-    :type trigger_off_extension: int or float (optional)
+    :type trigger_off_extension: int or float, optional
     :param trigger_off_extension: Extends search window for next trigger
         on-time after last trigger off-time in coincidence sum computation.
-    :type details: bool (optional)
+    :type details: bool, optional
     :param details: If set to ``True`` the output coincidence triggers contain
         more detailed information: A list with the trace IDs (in addition to
         only the station names), as well as lists with single station
