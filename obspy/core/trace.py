@@ -2092,7 +2092,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         dt = 1.0 / sampling_rate
 
         if isinstance(method, int) or method in ["linear", "nearest", "zero",
-                                             "slinear", "quadratic", "cubic"]:
+                                                 "slinear", "quadratic",
+                                                 "cubic"]:
             func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
         else:
             func = _getFunctionFromEntryPoint('interpolate', method)

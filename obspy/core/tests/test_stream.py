@@ -2135,7 +2135,7 @@ class StreamTestCase(unittest.TestCase):
 
         self.assertEqual(len(st), patch.call_count)
         self.assertEqual({"sampling_rate": 1.0,
-                          "type": "weighted_average_slopes"},
+                          "method": "weighted_average_slopes"},
                          patch.call_args[1])
 
 
