@@ -27,10 +27,10 @@
  void hermite_interpolation(double *y_in, double *slope, double *x_out,
                             double *y_out, int len_in, int len_out, double h,
                             double x_start) {
-    int i_0, i_1;
+    int i_0, i_1, idx;
     double i, t, a_0, a_1, b_minus_1, b_plus_1, b_0, c_0, c_1, d_0;
 
-    for (int idx=0; idx < len_out; idx++) {
+    for (idx=0; idx < len_out; idx++) {
         i = (x_out[idx] - x_start) / h;
         i_0 = (int)i;
         i_1 = i_0 + 1;
