@@ -4,6 +4,7 @@
    * More generic processing history for most Stream and Trace methods.
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
+   * `interpolate()` method for Stream/Trace objects.
  - obspy.fdsn:
    * WADL files are cached per Python process.
    * Bulk station downloading using POST requests.
@@ -16,6 +17,8 @@
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.signal:
    * Increased performance of PPSD plotting.
+   * Interpolating methods. Wrappers around routines from scipy and a custom
+     `weighted average slopes` method from Wiggins 1976.
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
