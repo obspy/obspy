@@ -420,10 +420,7 @@ class WaveformPlotting(object):
                                  top=self.subplots_adjust_top,
                                  bottom=self.subplots_adjust_bottom)
         # Create x_value_array.
-        aranged_array = np.arange(self.width)
-        x_values = np.empty(2 * self.width)
-        x_values[0::2] = aranged_array
-        x_values[1::2] = aranged_array
+        x_values = np.repeat(np.arange(self.width), 2)
         intervals = self.extreme_values.shape[0]
         # Loop over each step.
         for _i in range(intervals):
@@ -797,10 +794,7 @@ class WaveformPlotting(object):
                            minmax[:, 0].min(),
                            minmax[:, 1].max()])
         # Finally plot the data.
-        x_values = np.empty(2 * self.width)
-        aranged = np.arange(self.width)
-        x_values[0::2] = aranged
-        x_values[1::2] = aranged
+        x_values = np.repeat(np.arange(self.width), 2)
         # Initialize completely masked array. This version is a little bit
         # slower than first creating an empty array and then setting the mask
         # to True. But on NumPy 1.1 this results in a 0-D array which can not
