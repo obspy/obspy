@@ -105,11 +105,6 @@ class Stats(AttribDict):
         >>> stats.endtime
         UTCDateTime(2009, 1, 1, 12, 0, 29, 500000)
 
-        .. note::
-            The attribute ``endtime`` is currently calculated as
-            ``endtime = starttime + (npts-1) * delta``. This behaviour may
-            change in the future to ``endtime = starttime + npts * delta``.
-
     (3) The attribute ``endtime`` is read only and can not be modified.
 
         >>> stats = Stats()
