@@ -789,11 +789,11 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
         to use
     :param slim: either a float to use symmetric limits for slowness
         differences or the tupel (sxmin, sxmax, symin, symax)
-    :type fmin: double
+    :type fmin: float
     :param fmin: minimum frequency in signal
-    :type fmax: double
+    :type fmax: float
     :param fmin: maximum frequency in signal
-    :type fstep: double
+    :type fstep: float
     :param fmin: frequency sample distance
     """
     coords = get_geometry(coords, coordsys)
