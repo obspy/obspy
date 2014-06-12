@@ -109,7 +109,8 @@ class Network(BaseNode):
         """
         Returns a dictionary containing the contents of the object.
 
-        Example
+        .. rubric:: Example
+
         >>> from obspy import read_inventory
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
@@ -248,9 +249,9 @@ class Network(BaseNode):
                starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
         """
-        Returns the :class:`Network` object only with these
-        :class:`~obspy.station.station.Station`s /
-        :class:`~obspy.station.channel.Channel`s that match the given
+        Returns the :class:`Network` object with only the
+        :class:`~obspy.station.station.Station`\ s /
+        :class:`~obspy.station.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -261,7 +262,7 @@ class Network(BaseNode):
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
-        .. rubric:: Examples
+        .. rubric:: Example
 
         >>> from obspy import read_inventory, UTCDateTime
         >>> net = read_inventory()[0]

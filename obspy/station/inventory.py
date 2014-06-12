@@ -118,7 +118,8 @@ class Inventory(ComparingObject):
         """
         Returns a dictionary containing the contents of the object.
 
-        Example
+        .. rubric:: Example
+
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
         >>> inventory.get_contents()  \
@@ -282,10 +283,10 @@ class Inventory(ComparingObject):
                time=None, starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
         """
-        Returns the :class:`Inventory` object only with these
-        :class:`~obspy.station.network.Network`s /
-        :class:`~obspy.station.station.Station`s /
-        :class:`~obspy.station.channel.Channel`s that match the given
+        Returns the :class:`Inventory` object with only the
+        :class:`~obspy.station.network.Network`\ s /
+        :class:`~obspy.station.station.Station`\ s /
+        :class:`~obspy.station.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -296,7 +297,7 @@ class Inventory(ComparingObject):
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
-        .. rubric:: Examples
+        .. rubric:: Example
 
         >>> from obspy import read_inventory, UTCDateTime
         >>> inv = read_inventory()
