@@ -1761,7 +1761,7 @@ class TraceTestCase(unittest.TestCase):
 
         # Perform the same interpolation as in Python with ObsPy.
         int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.003,
-                                           type="weighted_average_slopes")
+                                           method="weighted_average_slopes")
         # Assert that the sampling rate has been set correctly.
         self.assertEqual(int_tr.stats.delta, 0.003)
         # Assert that the new endtime is smaller than the old one. SAC at
@@ -1775,7 +1775,7 @@ class TraceTestCase(unittest.TestCase):
                                    rtol=1E-3)
 
         int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.077,
-                                           type="weighted_average_slopes")
+                                           method="weighted_average_slopes")
         # Assert that the sampling rate has been set correctly.
         self.assertEqual(int_tr.stats.delta, 0.077)
         # Assert that the new endtime is smaller than the old one. SAC at
@@ -1792,12 +1792,12 @@ class TraceTestCase(unittest.TestCase):
         for inter_type in ["linear", "nearest", "zero"]:
             with mock.patch("scipy.interpolate.interp1d") as patch:
                 patch.return_value = lambda x: x
-                org_tr.copy().interpolate(sampling_rate=0.5, type=inter_type)
+                org_tr.copy().interpolate(sampling_rate=0.5, method=inter_type)
             self.assertEqual(patch.call_count, 1)
             self.assertEqual(patch.call_args[1]["kind"], inter_type)
 
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
-                                               type=inter_type)
+                                               method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
             self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
 
@@ -1805,7 +1805,7 @@ class TraceTestCase(unittest.TestCase):
             with mock.patch("scipy.interpolate.InterpolatedUnivariateSpline") \
                     as patch:
                 patch.return_value = lambda x: x
-                org_tr.copy().interpolate(sampling_rate=0.5, type=inter_type)
+                org_tr.copy().interpolate(sampling_rate=0.5, method=inter_type)
             s_map = {
                 "slinear": 1,
                 "quadratic": 2,
@@ -1817,7 +1817,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(patch.call_args[1]["k"], inter_type)
 
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
-                                               type=inter_type)
+                                               method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
             self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
 
@@ -1835,7 +1835,7 @@ class TraceTestCase(unittest.TestCase):
             # If only the sampling rate is specified, the endtime will be very
             # close to the original endtime but never bigger.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
-                                              type=inter_type)
+                                              method=inter_type)
             self.assertEqual(tr.stats.starttime, interp_tr.stats.starttime)
             self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
                             tr.stats.endtime - (1.0 / 0.3))
@@ -1843,7 +1843,7 @@ class TraceTestCase(unittest.TestCase):
             # If the starttime is modified the new starttime will used but
             # the endtime will again be modified as little as possible.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
-                                              type=inter_type,
+                                              method=inter_type,
                                               starttime=tr.stats.starttime +
                                               5.0)
             self.assertEqual(tr.stats.starttime + 5.0,
@@ -1853,14 +1853,14 @@ class TraceTestCase(unittest.TestCase):
 
             # If npts is given it will be used to modify the endtime.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
-                                              type=inter_type, npts=10)
+                                              method=inter_type, npts=10)
             self.assertEqual(tr.stats.starttime,
                              interp_tr.stats.starttime)
             self.assertEqual(interp_tr.stats.npts, 10)
 
             # If npts and starttime are given, both will be modified.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
-                                              type=inter_type,
+                                              method=inter_type,
                                               starttime=tr.stats.starttime +
                                               5.0, npts=10)
             self.assertEqual(tr.stats.starttime + 5.0,

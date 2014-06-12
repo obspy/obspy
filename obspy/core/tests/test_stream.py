@@ -2131,7 +2131,7 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         with mock.patch("obspy.core.trace.Trace.interpolate") as patch:
-            st.interpolate(sampling_rate=1.0, type="weighted_average_slopes")
+            st.interpolate(sampling_rate=1.0, method="weighted_average_slopes")
 
         self.assertEqual(len(st), patch.call_count)
         self.assertEqual({"sampling_rate": 1.0,

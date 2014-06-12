@@ -2043,7 +2043,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @skipIfNoData
     @raiseIfMasked
     @_add_processing_info
-    def interpolate(self, sampling_rate, type="weighted_average_slopes",
+    def interpolate(self, sampling_rate, method="weighted_average_slopes",
                     starttime=None, npts=None):
         """
         Interpolate the data using various interpolation techniques.
@@ -2062,7 +2062,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :param sampling_rate: The new sampling rate in ``Hz`` The new
             sampling rate in ``Hz``
-        :param type: The kind of interpolation to perform as a string (
+        :param method: The kind of interpolation to perform as a string (
             ``linear``, ``nearest``, ``zero``, ``slinear``, ``quadratic``,
             ``cubic``, or ``weighted_average_slopes`` where ``slinear``,
             ``quadratic`` and ``cubic`` refer  to a spline interpolation of
@@ -2082,7 +2082,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             not given.
         """
         try:
-            type = type.lower()
+            method = method.lower()
         except:
             pass
 
@@ -2091,11 +2091,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("The time step must be positive.")
         dt = 1.0 / sampling_rate
 
-        if isinstance(type, int) or type in ["linear", "nearest", "zero",
+        if isinstance(method, int) or method in ["linear", "nearest", "zero",
                                              "slinear", "quadratic", "cubic"]:
             func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
         else:
-            func = _getFunctionFromEntryPoint('interpolate', type)
+            func = _getFunctionFromEntryPoint('interpolate', method)
         old_start = self.stats.starttime.timestamp
         old_dt = self.stats.delta
 
@@ -2111,7 +2111,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
                                   dt)) + 1
         self.data = func(np.require(self.data, dtype="float64"), old_start,
-                         old_dt, starttime, dt, npts, type=type)
+                         old_dt, starttime, dt, npts, type=method)
         self.stats.starttime = UTCDateTime(starttime)
         self.stats.delta = dt
 
