@@ -1746,7 +1746,8 @@ class TraceTestCase(unittest.TestCase):
         This also tests the interpolation in obspy.signal. No need to repeat
         the same test twice I guess.
         """
-        path = os.path.join(os.path.dirname(__file__), 'data')
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+            __file__))), 'sac', 'tests', 'data')
         # Load the prepared data. The data has been created using SAC.
         org_tr = read(os.path.join(
             path,
