@@ -50,14 +50,14 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     reasons and therefore any negative parameters might have unexpected
     results.
 
-    This function might raise some numpy warnings due to divisions by zero and
+    This function might raise some NumPy warnings due to divisions by zero and
     logarithms of zero. This is intentional and faster than prefiltering the
-    special cases. You can disable numpy warnings (they usually do not show up
+    special cases. You can disable NumPy warnings (they usually do not show up
     anyways) with::
 
         temp = np.geterr()
         np.seterr(all='ignore')
-        ...code that raises numpy warning due to division by zero...
+        ...code that raises NumPy warning due to division by zero...
         np.seterr(**temp)
 
     :type frequencies: :class:`numpy.ndarray` (float32 or float64)
@@ -145,7 +145,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
                           enforce_no_matrix=False, max_memory_usage=512,
                           normalize=False):
     """
-    Smoothes a matrix containing one spectra per row with the Konno-Ohmachi
+    Smooths a matrix containing one spectra per row with the Konno-Ohmachi
     smoothing window.
 
     All spectra need to have frequency bins corresponding to the same
@@ -211,7 +211,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     # spectrum is to be smoothed.
     if enforce_no_matrix is False and (len(spectra.shape) > 1 or count > 1) \
        and approx_mem_usage < max_memory_usage:
-        # Disable numpy warnings due to possible divisions by zero/logarithms
+        # Disable NumPy warnings due to possible divisions by zero/logarithms
         # of zero.
         temp = np.geterr()
         np.seterr(all='ignore')
@@ -228,7 +228,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         new_spec = np.empty(spectra.shape, spectra.dtype)
         # Separate case for just one spectrum.
         if len(new_spec.shape) == 1:
-            # Disable numpy warnings due to possible divisions by
+            # Disable NumPy warnings due to possible divisions by
             # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')
@@ -240,7 +240,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             np.seterr(**temp)
         # Reuse smoothing window if more than one spectrum.
         else:
-            # Disable numpy warnings due to possible divisions by
+            # Disable NumPy warnings due to possible divisions by
             # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')

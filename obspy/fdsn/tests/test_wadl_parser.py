@@ -312,7 +312,7 @@ class WADLParserTestCase(unittest.TestCase):
             self.assertTrue("minimumlength" in msg)
             self.assertTrue("longestonly" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
@@ -342,7 +342,7 @@ class WADLParserTestCase(unittest.TestCase):
             self.assertTrue("includeallorigins" in msg)
             self.assertTrue("updatedafter" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)

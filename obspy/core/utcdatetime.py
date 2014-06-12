@@ -152,7 +152,7 @@ class UTCDateTime(object):
 
     (5) Using the following keyword arguments: `year, month, day, julday, hour,
         minute, second, microsecond`. Either the combination of year, month and
-        day, or year and julday are required.
+        day, or year and Julian day are required.
 
         >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
         UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
@@ -1128,7 +1128,7 @@ class UTCDateTime(object):
 
         :type format: str
         :param format: Format string.
-        :return: Formated string representing the date and time.
+        :return: Formatted string representing the date and time.
 
         Format codes referring to hours, minutes or seconds will see 0 values.
         See methods :meth:`~datetime.datetime.strftime()` and

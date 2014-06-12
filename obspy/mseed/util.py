@@ -21,7 +21,7 @@ import warnings
 
 def getStartAndEndTime(file_or_file_object):
     """
-    Returns the start- and endtime of a Mini-SEED file or file-like object.
+    Returns the start and end time of a Mini-SEED file or file-like object.
 
     :type file_or_file_object: basestring or open file-like object
     :param file_or_file_object: Mini-SEED file name or open file-like object
@@ -32,7 +32,7 @@ def getStartAndEndTime(file_or_file_object):
     of the last record. Keep in mind that it will not return the correct result
     if the records in the Mini-SEED file do not have a chronological ordering.
 
-    The returned endtime is the time of the last data sample and not the
+    The returned end time is the time of the last data sample and not the
     time that the last sample covers.
 
     .. rubric:: Example
@@ -259,7 +259,7 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
     """
     Returns record information about given files and file-like object.
 
-    :param endian: If given, the byteorder will be enforced. Can be either "<"
+    :param endian: If given, the byte order will be enforced. Can be either "<"
         or ">". If None, it will be determined automatically.
         Defaults to None.
 
@@ -301,7 +301,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     If offset is given, the Mini-SEED record is assumed to start at current
     position + offset in file_object.
 
-    :param endian: If given, the byteorder will be enforced. Can be either "<"
+    :param endian: If given, the byte order will be enforced. Can be either "<"
         or ">". If None, it will be determined automatically.
         Defaults to None.
     """
@@ -355,7 +355,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
             record_start += rec_len
             file_object.seek(record_start, 0)
 
-    # Use the date to figure out the byteorder.
+    # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
@@ -383,7 +383,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
         except:
-            msg = ("Invalid starttime found. The passed byteorder is likely "
+            msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
             raise ValueError(msg)
     npts = values[6]

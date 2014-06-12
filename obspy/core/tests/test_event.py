@@ -580,7 +580,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         NEVER modify the __resource_id_weak_dict!
 
         Only those ResourceIdentifiers that have a reference to an object that
-        is refered to somewhere else should stay in the dictionary.
+        is referred to somewhere else should stay in the dictionary.
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         _r1 = ResourceIdentifier()  # NOQA

@@ -579,7 +579,7 @@ def run(interactive=True):
     # set correct verbosity level
     if options.verbose:
         verbosity = 2
-        # raise all numpy warnings
+        # raise all NumPy warnings
         np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
@@ -627,7 +627,7 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
-    # catch and ignore a numpy deprecation warning
+    # catch and ignore a NumPy deprecation warning
     with warnings.catch_warnings(record=True):
         warnings.filterwarnings(
             "ignore", 'The compiler package is deprecated and removed in '

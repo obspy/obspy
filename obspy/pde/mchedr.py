@@ -212,7 +212,7 @@ angles-between-two-n-dimensional-vectors-in-python
     def _latErrToDeg(self, latitude_stderr):
         """
         Convert latitude error from km to degrees
-        using a simple fomula
+        using a simple formula
         """
         if latitude_stderr is not None:
             return round(latitude_stderr / 111.1949, 4)
@@ -222,7 +222,7 @@ angles-between-two-n-dimensional-vectors-in-python
     def _lonErrToDeg(self, longitude_stderr, latitude):
         """
         Convert longitude error from km to degrees
-        using a simple fomula
+        using a simple formula
         """
         if longitude_stderr is not None and latitude is not None:
             return round(longitude_stderr /
@@ -376,7 +376,7 @@ angles-between-two-n-dimensional-vectors-in-python
         # This is called "intermediate_axis_length",
         # but it is definitively a "semi_intermediate_axis_length",
         # since in most cases:
-        #   (intermediate_axis_length / 2) < semi_minor_axis_lenght
+        #   (intermediate_axis_length / 2) < semi_minor_axis_length
         intermediate_axis_length = self._float(line[32:40])
         semi_minor_axis_azimuth = self._float(line[40:46])
         semi_minor_axis_plunge = self._float(line[46:51])

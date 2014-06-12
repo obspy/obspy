@@ -335,7 +335,7 @@ def specInv(spec, wlev):
     :param spec: Spectrum as returned by :func:`numpy.fft.rfft`
     :param wlev: Water level to use
     """
-    # Calculated waterlevel in the scale of spec
+    # Calculated water level in the scale of spec
     swamp = waterlevel(spec, wlev)
 
     # Find length in real fft frequency domain, spec is complex
@@ -413,7 +413,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type nfft_pow2: bool
     :param nfft_pow2: Number of frequency points to use for FFT. If True,
         the exact power of two is taken (default in PITSA). If False the
-        data are not zeropadded to the next power of two which makes a
+        data are not zero-padded to the next power of two which makes a
         slower FFT but is then much faster for e.g. evalresp which scales
         with the FFT points.
     :type pitsasim: bool
@@ -437,7 +437,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     beforehand. If paz_simulate=None only the instrument correction is done.
     In the latter case, a broadband filter can be applied to the data trace
     using pre_filt. This restricts the signal to the valid frequency band and
-    thereby avoids artefacts due to amplification of frequencies outside of the
+    thereby avoids artifacts due to amplification of frequencies outside of the
     instrument's passband (for a detailed discussion see
     *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
 

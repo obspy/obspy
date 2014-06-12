@@ -84,8 +84,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :param dbscale: If True 10 * log10 of color values is taken, if False the
         sqrt is taken.
     :type mult: float
-    :param mult: Pad zeros to lengh mult * wlen. This will make the spectrogram
-        smoother. Available for matplotlib > 0.99.0.
+    :param mult: Pad zeros to length mult * wlen. This will make the
+        spectrogram smoother. Available for matplotlib > 0.99.0.
     :type cmap: :class:`matplotlib.colors.Colormap`
     :param cmap: Specify a custom colormap instance
     :type zorder: float
@@ -174,7 +174,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         time -= halfbin_time
         freq -= halfbin_freq
         # pcolormesh issue was fixed in matplotlib r5716 (2008-07-07)
-        # inbetween tags 0.98.2 and 0.98.3
+        # between tags 0.98.2 and 0.98.3
         # see:
         #  - http://matplotlib.svn.sourceforge.net/viewvc/...
         #    matplotlib?revision=5716&view=revision

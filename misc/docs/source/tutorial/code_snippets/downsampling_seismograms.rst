@@ -3,7 +3,7 @@ Downsampling Seismograms
 ========================
 
 The following script shows how to downsample a seismogram. Currently, a simple
-integer decimation is supported. If not explicitely disabled, a low-pass filter
+integer decimation is supported. If not explicitly disabled, a low-pass filter
 is applied prior to decimation in order to prevent aliasing. For comparison,
 the non-decimated but filtered data is plotted as well. Applied processing
 steps are documented in ``trace.stats.processing`` of every single Trace. Note

@@ -172,7 +172,7 @@ class Client(object):
 
     def _json2list(self, data):
         """
-        Converts a JSON formated string into a event/origin list.
+        Converts a JSON formatted string into a event/origin list.
         """
         results = json.loads(data)
         events = []

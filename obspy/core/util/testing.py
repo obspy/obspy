@@ -232,8 +232,8 @@ class ImageComparison(NamedTemporaryFile):
         environment variable is set.
         """
         try:
-            # only compare images if no exception occured in the with
-            # statement. this avoids masking previously occured exceptions (as
+            # only compare images if no exception occurred in the with
+            # statement. this avoids masking previously occurred exceptions (as
             # an exception may occur in compare()). otherwise we only clean up
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:

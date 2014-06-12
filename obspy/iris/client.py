@@ -31,7 +31,7 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
-DEPR_WARN = ("This service was shut down on the server side in december "
+DEPR_WARN = ("This service was shut down on the server side in December "
              "2013, please use %s instead. Further information: "
              "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
@@ -186,7 +186,7 @@ class Client(object):
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -200,7 +200,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -214,7 +214,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -227,7 +227,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -357,7 +357,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             ``'audio'``
                 audio WAV file
             ``'miniseed'``
-                IRIS miniSEED format
+                IRIS MiniSEED format
             ``'plot'``
                 A simple plot of the timeseries
             ``'saca'``
@@ -444,17 +444,19 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         **Temporal constraints**
 
-        The following three parameters impose time constrants on the query.
+        The following three parameters impose time constraints on the query.
         Time may be requested through the use of either time OR the start and
         end times. If no time is specified, then the current time is assumed.
 
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param time: Find the response for the given time. Time cannot be used
-            with starttime or endtime parameters
+            with ``starttime`` or ``endtime`` parameters
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Start time, may be used in conjunction with endtime.
+        :param starttime: Start time, may be used in conjunction with
+            ``endtime``.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End time, may be used in conjunction with starttime.
+        :param endtime: End time, may be used in conjunction with
+            ``starttime``.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -517,7 +519,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -531,7 +533,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -545,7 +547,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -564,7 +566,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -597,7 +599,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End date and time. Requires starttime parameter.
+        :param endtime: End date and time. Requires ``starttime`` parameter.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -1133,7 +1135,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:

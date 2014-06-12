@@ -111,7 +111,7 @@ Local normalization
 -------------------
 
 Local normalization allows to resolve frequency and time ranges away from the
-largest ampiltude waves, but tend to produce artifacts in regions where there
+largest amplitude waves, but tend to produce artifacts in regions where there
 is no energy at all. In this analytical example e.g. for the high frequencies
 before the onset of the signal. Manual setting of the limits is thus necessary:
 

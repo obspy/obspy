@@ -1329,9 +1329,9 @@ class Pick(__Pick):
     :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
-    :param waveform_id: Identifes the waveform stream.
+    :param waveform_id: Identifies the waveform stream.
     :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
-    :param filter_id: dentifies the filter or filter setup used for filtering
+    :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by waveform_id.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Identifies the picker that produced the pick. This can be
@@ -1782,7 +1782,7 @@ class Origin(__Origin):
     :param origin_uncertainty: Describes the location uncertainties of an
         origin.
     :type region: str, optional
-    :param region: Can be used to decribe the geographical region of the
+    :param region: Can be used to describe the geographical region of the
         epicenter location. Useful if an event has multiple origins from
         different agencies, and these have different region designations. Note
         that an event-wide region can be defined in the description attribute
@@ -2002,9 +2002,9 @@ class StationMagnitude(__StationMagnitude):
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: See :class:`~obspy.core.event.Magnitude`
     :type amplitude_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
-    :param amplitude_id: dentifies the data source of the StationMagnitude. For
-        magnitudes derived from amplitudes in waveforms (e.g., local magnitude
-        ML), amplitudeID points to publicID in class Amplitude.
+    :param amplitude_id: Identifies the data source of the StationMagnitude.
+        For magnitudes derived from amplitudes in waveforms (e.g., local
+        magnitude ML), amplitudeID points to publicID in class Amplitude.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: See :class:`~obspy.core.event.Magnitude`
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
@@ -2932,7 +2932,7 @@ class Catalog(object):
         * used_phase_count.
 
         Use ``inverse=True`` to return the Events that *do not* match the
-        specified filter rultes.
+        specified filter rules.
 
         :rtype: :class:`Catalog`
         :return: Filtered catalog. A new Catalog object with filtered
@@ -3181,7 +3181,7 @@ class Catalog(object):
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type label: str, optional
-        :param label: Events will be labeld based on the chosen property.
+        :param label: Events will be labelled based on the chosen property.
             Possible values are:
 
                 * ``"magnitude"``

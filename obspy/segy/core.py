@@ -694,8 +694,8 @@ class LazyTraceHeaderAttribDict(AttribDict):
     """
     This version of AttribDict will unpack header values only if needed.
 
-    This saves a huge amount of memory. The disadvantage is that it is no more
-    possible to use tab completion in e.g. ipython.
+    This saves a huge amount of memory. The disadvantage is that it is no
+    longer possible to use tab completion in e.g. ipython.
 
     This version is used for the SEGY/SU trace headers.
     """

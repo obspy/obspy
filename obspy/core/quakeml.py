@@ -962,7 +962,7 @@ class Pickler(object):
         :type catalog: :class:`~obspy.core.event.Catalog`
         :param catalog: ObsPy Catalog object.
         :rtype: str
-        :returns: QuakeML formated string.
+        :returns: QuakeML formatted string.
         """
         return self._serialize(catalog)
 

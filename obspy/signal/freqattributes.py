@@ -372,7 +372,7 @@ def pgm(data, delta, freq, damp=0.1):
     Data must be displacement
 
     :type data: :class:`~numpy.ndarray`
-    :param data: Data in dispalcement to convolve with pendulum at freq.
+    :param data: Data in displacement to convolve with pendulum at freq.
     :type delta: float
     :param delta: Sampling interval
     :type freq: float

@@ -120,14 +120,14 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :type sourcename: str
-    :param sourcename: Sourcename has to have the structure
+    :param sourcename: Source name has to have the structure
         'network.station.location.channel' and can contain globbing characters.
         Defaults to ``None``.
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
     :type recinfo: bool, optional
-    :param recinfo: If ``True`` the byteorder, record length and the
+    :param recinfo: If ``True`` the byte order, record length and the
         encoding of the file will be read and stored in every Trace's
         stats.mseed AttribDict. These stored attributes will also be used while
         writing a Mini-SEED file. Only the very first record of the file will
@@ -149,8 +149,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         optional
     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
-        native byteorder. Used to enforce the header byteorder. Useful in some
-        rare cases where the automatic byte order detection fails.
+        native byte order. Used to enforce the header byte order. Useful in
+        some rare cases where the automatic byte order detection fails.
 
     .. rubric:: Example
 
@@ -181,7 +181,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         warnings.warn(msg)
         reclen = -1
 
-    # Determine the byteorder.
+    # Determine the byte order.
     if header_byteorder == "=":
         header_byteorder = NATIVE_BYTEORDER
 
@@ -201,7 +201,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
     # Parse some information about the file.
     if recinfo:
-        # Pass the byteorder if enforced.
+        # Pass the byte order if enforced.
         if header_byteorder == 0:
             bo = "<"
         elif header_byteorder > 0:
@@ -427,7 +427,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     :type byteorder: [``0`` or ``'<'`` | ``1`` or ``'>'`` | ``'='``], optional
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
-        native byteorder. If ``-1`` it will be passed directly to libmseed
+        native byte order. If ``-1`` it will be passed directly to libmseed
         which will also default it to big endian. Defaults to big endian.
     :type flush: int, optional
     :param flush: If it is not zero all of the data will be packed into
@@ -438,9 +438,10 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         diagnostic output.
 
     .. note::
-        The reclen, encoding and byteorder keyword arguments can be set
-        in the stats.mseed of each :class:`~obspy.core.trace.Trace` as well as
-        as kwargs of this function. If both are given the kwargs will be used.
+        The ``reclen``, ``encoding`` and ``byteorder`` keyword arguments can be
+        set in the ``stats.mseed`` of each :class:`~obspy.core.trace.Trace` as
+        well as ``kwargs`` of this function. If both are given the ``kwargs``
+        will be used.
 
     .. rubric:: Example
 
@@ -462,7 +463,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         elif byteorder == '>':
             byteorder = 1
         else:
-            msg = "Invalid byteorder. It must be either '<', '>', '=', " + \
+            msg = "Invalid byte order. It must be either '<', '>', '=', " + \
                   "0, 1 or -1"
             raise ValueError(msg)
 
@@ -555,7 +556,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         else:
             trace_attr['reclen'] = 4096
 
-        # Handle the byteorder.
+        # Handle the byte order.
         if byteorder is not None:
             trace_attr['byteorder'] = byteorder
         elif hasattr(stats, 'mseed') and \
@@ -645,7 +646,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             trace_data.append(trace.data)
 
     # Do some final sanity checks and raise a warning if a file will be written
-    # with more than one different encoding, record length or byteorder.
+    # with more than one different encoding, record length or byte order.
     encodings = set([_i['encoding'] for _i in trace_attributes])
     reclens = set([_i['reclen'] for _i in trace_attributes])
     byteorders = set([_i['byteorder'] for _i in trace_attributes])
@@ -782,7 +783,7 @@ class MST(object):
         self.mst.contents.numsamples = trace.stats.npts
         self.mst.contents.sampletype = sampletype.encode('ascii', 'strict')
 
-        # libmseed expects data in the native byteorder.
+        # libmseed expects data in the native byte order.
         if data.dtype.byteorder != "=":
             data = data.byteswap()
 

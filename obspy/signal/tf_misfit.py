@@ -852,7 +852,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                   d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
                   clim=0., cmap=None):
     """
-    Plot all timefrequency misfits and the time series in one plot (per
+    Plot all time frequency misfits and the time series in one plot (per
     component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
@@ -887,8 +887,9 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
 
-    :return: If show is False, returns a maplotlib.pyplot.figure object (single
-        component data) or a list of figure objects (multi component data)
+    :return: If show is False, returns a matplotlib.pyplot.figure object
+        (single component data) or a list of figure objects (multi component
+        data)
 
     .. rubric:: Example
 
@@ -1145,8 +1146,8 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
                ylim=0., clim=0., cmap=None):
     """
-    Plot all timefrequency Goodnes-Of-Fits and the time series in one plot (per
-    component).
+    Plot all time frequency Goodness-Of-Fits and the time series in one plot
+    (per component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
         shape (number of components, number of time samples) or (number of
@@ -1182,8 +1183,9 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
 
-    :return: If show is False, returns a maplotlib.pyplot.figure object (single
-        component data) or a list of figure objects (multi component data)
+    :return: If show is False, returns a matplotlib.pyplot.figure object
+        (single component data) or a list of figure objects (multi component
+        data)
 
     .. rubric:: Example
 
@@ -1455,8 +1457,9 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         spectrum in the low frequencies (has no effect on the TFR and might
         make demeaning/tapering necessary to avoid artifacts)
 
-    :return: If show is False, returns a maplotlib.pyplot.figure object (single
-        component data) or a list of figure objects (multi component data)
+    :return: If show is False, returns a matplotlib.pyplot.figure object
+        (single component data) or a list of figure objects (multi component
+        data)
 
     .. rubric:: Example
 

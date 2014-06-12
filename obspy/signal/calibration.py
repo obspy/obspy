@@ -167,7 +167,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
     # extra calculations.  We return the unaveraged Pxy, freqs, and t.
     same_data = y is x
 
-    # Make sure we're dealing with a numpy array. If y and x were the same
+    # Make sure we're dealing with a NumPy array. If y and x were the same
     # object to start with, keep them that way
 
     x = np.asarray(x)

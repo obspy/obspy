@@ -1442,7 +1442,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
     The first one is the returned HTTP code and the second the data as
     string.
 
-    Will return a touple of Nones if the service could not be found.
+    Will return a tuple of Nones if the service could not be found.
     All encountered exceptions will get raised unless `debug=True` is
     specified.
 

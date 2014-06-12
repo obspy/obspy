@@ -363,7 +363,7 @@ class SEGYBinaryFileHeader(object):
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # The other value are the unassigned values. As it is unclear how
-            # these are formated they will be stored as strings.
+            # these are formatted they will be stored as strings.
             elif name.startswith('unassigned'):
                 # These are only the unassigned fields.
                 format = 'h' * (length // 2)
@@ -521,7 +521,7 @@ class SEGYTrace(object):
             msg = """
                   Too little data left in the file to unpack it according to
                   its trace header. This is most likely either due to a wrong
-                  byteorder or a corrupt file.
+                  byte order or a corrupt file.
                   """.strip()
             raise SEGYTraceReadingError(msg)
         if headonly:
@@ -1049,10 +1049,10 @@ def autodetectEndianAndSanityCheckSU(file):
     elif length == 1:
         return still_working_byteorders[0]
     else:
-        # XXX: In the unlikely case both byteorders pass the sanity checks
+        # XXX: In the unlikely case both byte orders pass the sanity checks
         # something else should be checked. Currently it is not.
         msg = """
-            Both possible byteorders passed all sanity checks. Please contact
+            Both possible byte orders passed all sanity checks. Please contact
             the ObsPy developers so they can implement additional tests.
             """.strip()
         raise Exception(msg)

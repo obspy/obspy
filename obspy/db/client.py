@@ -131,7 +131,7 @@ class Client(object):
     def getEndtimes(self, network=None, station=None, location=None,
                     channel=None):
         """
-        Generates a list of last endtimes for each channel.
+        Generates a list of last end times for each channel.
         """
         # build up query
         session = self.session()

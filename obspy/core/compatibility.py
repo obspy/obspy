@@ -24,7 +24,7 @@ else:
     maketrans = bytes.maketrans
 
 
-# Numpy does not offer the frombuffer method under Python 3 and instead
+# NumPy does not offer the frombuffer method under Python 3 and instead
 # relies on the built-in memoryview object.
 if PY2:
     def frombuffer(data, dtype):

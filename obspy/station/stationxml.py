@@ -54,7 +54,7 @@ def validate_StationXML(path_or_object):
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
-    errors, if existant.
+    errors, if existent.
 
     :param path_or_object: Filename or file like object. Can also be an etree
         element.

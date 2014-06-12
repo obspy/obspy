@@ -46,7 +46,7 @@ Customized Plots
 ----------------
 
 This example shows the options to adjust the color of the graph, the number of
-ticks shown, their format and rotation and how to set the start- and endtime of
+ticks shown, their format and rotation and how to set the start and end time of
 the plot. Please see the documentation of method
 :meth:`~obspy.core.stream.Stream.plot` for more details on all parameters.
 

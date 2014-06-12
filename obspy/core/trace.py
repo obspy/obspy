@@ -777,7 +777,7 @@ class Trace(object):
             # use fixed value or interpolate in between
             gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
-        # merge traces depending on numpy array type
+        # merge traces depending on NumPy array type
         if True in [isinstance(_i, np.ma.masked_array) for _i in data]:
             data = np.ma.concatenate(data)
         else:
@@ -1467,8 +1467,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``True``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         .. note::
 
@@ -1532,8 +1532,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         Currently a simple integer decimation is implemented.
         Only every ``decimation_factor``-th sample remains in the trace, all
@@ -1542,8 +1542,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         filtering can be deactivated with ``no_filter=True``.
 
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. To
-        abort downsampling in case of changing endtimes set
+        zero then the end time of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing end times set
         ``strict_length=True``.
 
         .. note::
@@ -1625,7 +1625,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :return: Standard deviation of ``trace.data``.
 
-        Standard deviation is calculated by numpy method
+        Standard deviation is calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data``.
 
         .. rubric:: Example
@@ -1718,7 +1718,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('integrate', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # scipy needs to set dx keyword if not given in options
+            # SciPy needs to set dx keyword if not given in options
             if 'dx' not in options:
                 options['dx'] = self.stats.delta
             args = [self.data]
@@ -1767,7 +1767,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('detrend', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # scipy need to set the type keyword
+            # SciPy need to set the type keyword
             if type == 'demean':
                 type = 'constant'
             options['type'] = type
@@ -2042,7 +2042,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def times(self):
         """
-        For convenient plotting compute a Numpy array of seconds since
+        For convenient plotting compute a NumPy array of seconds since
         starttime corresponding to the samples in Trace.
 
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
@@ -2280,7 +2280,7 @@ def _data_sanity_checks(value):
         msg = "Trace.data must be a NumPy array."
         raise ValueError(msg)
     if value.ndim != 1:
-        msg = ("Numpy array for Trace.data has bad shape ('%s'). Only 1-d "
+        msg = ("NumPy array for Trace.data has bad shape ('%s'). Only 1-d "
                "arrays are allowed for initialization.") % str(value.shape)
         raise ValueError(msg)
 

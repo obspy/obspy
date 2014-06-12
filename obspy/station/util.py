@@ -524,7 +524,7 @@ class Site(ComparingObject):
         :type region: String, optional
         :param region: The state, province, or region of this site.
         :type country: String, optional
-        :param country: THe country.
+        :param country: The country.
         """
         self.name = name
         self.description = description

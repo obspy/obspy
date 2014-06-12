@@ -441,7 +441,7 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
 
 def _parse_data(data, data_type):
     """
-    Simple function to read data contained in a StringIO object to a numpy
+    Simple function to read data contained in a StringIO object to a NumPy
     array.
 
     :type data: io.StringIO object

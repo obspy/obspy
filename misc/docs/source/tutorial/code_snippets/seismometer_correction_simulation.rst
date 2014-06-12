@@ -57,7 +57,7 @@ can also be used. For each trace the respective RESP response data is extracted
 internally then. When using
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`'s
 :meth:`~obspy.core.trace.Trace.simulate` convenience methods the "date"
-parameter can be omitted (each trace's starttime is used internally).
+parameter can be omitted (each trace's start time is used internally).
 
 .. include:: seismometer_correction_simulation_4.py
    :literal:

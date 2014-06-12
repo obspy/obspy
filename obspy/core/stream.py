@@ -737,10 +737,10 @@ class Stream(object):
 
         The returned list contains one item in the following form for each gap/
         overlap: [network, station, location, channel, starttime of the gap,
-        endtime of the gap, duration of the gap, number of missing samples]
+        end time of the gap, duration of the gap, number of missing samples]
 
         Please be aware that no sorting and checking of stations, channels, ...
-        is done. This method only compares the start- and endtimes of the
+        is done. This method only compares the start and end times of the
         Traces.
 
         .. rubric:: Example
@@ -858,11 +858,11 @@ class Stream(object):
             If no outfile is specified but a format is, than a binary
             imagestring will be returned.
             Defaults to ``None``.
-        :param starttime: Starttime of the graph as a
+        :param starttime: Start time of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted from the beginning.
             Defaults to ``None``.
-        :param endtime: Endtime of the graph as a
+        :param endtime: End time of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted until the end.
             Defaults to ``None``.
@@ -887,10 +887,10 @@ class Stream(object):
             '#0E01FF')`` for ``type='dayplot'``.
         :param bgcolor: Background color of the graph.
             Defaults to ``'white'``.
-        :param face_color: Facecolor of the matplotlib canvas.
+        :param face_color: Face color of the matplotlib canvas.
             Defaults to ``'white'``.
         :param transparent: Make all backgrounds transparent (True/False). This
-            will overwrite the bgcolor and face_color arguments.
+            will overwrite the ``bgcolor`` and ``face_color`` arguments.
             Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
             Defaults to ``4``.
@@ -969,7 +969,7 @@ class Stream(object):
             to be a string containing the actual unit of the data. Can be a
             LaTeX expression if matplotlib has been built with LaTeX support,
             e.g. "$\\\\frac{m}{s}$". Be careful to escape the backslashes, or
-            use r-prepended strings, e.g. r"$\\\\frac{m}{s}$".
+            use r-prefixed strings, e.g. r"$\\\\frac{m}{s}$".
             Defaults to ``None``, meaning no scale is drawn.
         :param events: An optional list of events can be drawn on the plot if
             given.  They will be displayed as yellow stars with optional
@@ -1060,10 +1060,10 @@ class Stream(object):
         :type recordlength: int, optional
         :param recordlength: Length of the record section in seconds.
         :type alpha: float, optional
-        :param alpha: Transparancy of the traces between 0.0 - 1.0.
+        :param alpha: Transparency of the traces between 0.0 - 1.0.
             Defaults to ``0.5``.
         :type time_down: bool, optional
-        :param time_down: Flip the plot horizontaly, time goes down.
+        :param time_down: Flip the plot horizontally, time goes down.
             Defaults to ``False``, i.e., time goes up.
 
         **Relative Parameters**
@@ -2055,8 +2055,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``True``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         .. note::
 
@@ -2102,8 +2102,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         Currently a simple integer decimation is implemented.
         Only every decimation_factor-th sample remains in the trace, all other
@@ -2112,8 +2112,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         filtering can be deactivated with ``no_filter=True``.
 
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. To
-        abort downsampling in case of changing endtimes set
+        zero then the end time of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing end times set
         ``strict_length=True``.
 
         .. note::

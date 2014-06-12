@@ -311,7 +311,7 @@ class RtTrace(Trace):
 
         Processing function must be one of:
             %s. % REALTIME_PROCESS_FUNCTIONS.keys()
-            or a non-recursive, time-domain np or obspy function which takes
+            or a non-recursive, time-domain NumPy or ObsPy function which takes
             a single array as an argument and returns an array
 
         :type process: str or function

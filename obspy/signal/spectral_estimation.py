@@ -525,7 +525,7 @@ class PPSD():
     def add(self, stream, verbose=False):
         """
         Process all traces with compatible information and add their spectral
-        estimates to the histogram containg the probabilistic psd.
+        estimates to the histogram containing the probabilistic psd.
         Also ensures that no piece of data is inserted twice.
 
         :type stream: :class:`~obspy.core.stream.Stream` or

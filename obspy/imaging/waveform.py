@@ -1174,7 +1174,7 @@ class WaveformPlotting(object):
         Arrange the trace data used for plotting.
 
         If necessary the data is resampled before
-        beeing collected in a continuous list.
+        being collected in a continuous list.
         """
         # Extract distances from st[].stats.distance
         # or from st.[].stats.coordinates.latitude...
@@ -1298,7 +1298,7 @@ class WaveformPlotting(object):
         self.__sectNormalizeTraces()
         # Calculate scaling factor
         self.__sectScaleTraces()
-        # ax.plot() prefered over containers
+        # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
             # Scale, normalize and shift traces by offset
             # for plotting

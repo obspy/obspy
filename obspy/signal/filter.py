@@ -214,7 +214,7 @@ def remezFIR(data, freqmin, freqmax, df):
 
     Finite impulse response (FIR) filter whose transfer function minimizes
     the maximum error between the desired gain and the realized gain in the
-    specified bands using the remez exchange algorithm.
+    specified bands using the Remez exchange algorithm.
 
     .. versionadded:: 0.6.2
     """

@@ -890,7 +890,7 @@ class Response(ComparingObject):
                         msg = ("When no denominators are given it must "
                                "be a digital FIR filter.")
                         raise ValueError(msg)
-                    # Set the type to an assymetric FIR blockette.
+                    # Set the type to an asymmetric FIR blockette.
                     blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
                     fir = blkt.blkt_info.fir
                     fir.h0 = 1.0
@@ -1115,7 +1115,7 @@ class Response(ComparingObject):
             calculation, if it is not known, just provide the highest frequency
             that should be plotted times two.
         :type unwrap_phase: bool
-        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.

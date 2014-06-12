@@ -61,7 +61,7 @@ class XMLParser:
     """
     def __init__(self, xml_doc, namespace=None):
         """
-        Initializes a XMLPaser object.
+        Initializes a XMLParser object.
 
         :type xml_doc: str, filename, file-like object, parsed XML document
         :param xml_doc: XML document

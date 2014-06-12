@@ -486,7 +486,7 @@ class Network(BaseNode):
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
         :type unwrap_phase: bool
-        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.

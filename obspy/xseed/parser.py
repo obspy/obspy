@@ -1114,8 +1114,8 @@ class Parser(object):
             stations.append(station)
         # Make abbreviations.
         abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
-        abbr_lenght = len(abbreviations)
-        cur_count = 1 + abbr_lenght
+        abbr_length = len(abbreviations)
+        cur_count = 1 + abbr_length
         while True:
             blkt11 = blockette.Blockette011()
             blkt11.number_of_stations = len(self.stations)
@@ -1132,7 +1132,7 @@ class Parser(object):
                 blkt12.number_of_spans_in_table = 0
                 self.volume.append(blkt12)
             volume = self._createCutAndFlushRecord(self.volume, 'V')
-            if cur_count - abbr_lenght < len(volume):
+            if cur_count - abbr_length < len(volume):
                 cur_count += len(volume) - 1
                 self._deleteBlockettes11and12()
                 continue

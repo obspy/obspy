@@ -41,7 +41,7 @@ class SeedLinkConnection(object):
     or by creating a new class and invoking the methods of SeedLinkConnection.
 
     :var SEEDLINK_PROTOCOL_PREFIX: URI/URL prefix for seedlink
-        servers ("seedlnk://").
+        servers ("seedlink://").
     :type SEEDLINK_PROTOCOL_PREFIX: str
     :var UNISTATION: The station code used for uni-station mode.
     :type UNISTATION: str
@@ -65,7 +65,7 @@ class SeedLinkConnection(object):
     :type netto: int
     :var netdly: Network reconnect delay (seconds)  (default is 30 sec).
     :type netdly: int
-    :var info_string: String containing concatination of contents of last
+    :var info_string: String containing concatenation of contents of last
         terminated set of INFO packets.
     :type info_string: str
     :var statefile: File name for storing state information.
@@ -1560,7 +1560,7 @@ class SeedLinkConnection(object):
         """
         Update the appropriate stream chain entry given a Mini-SEED record.
 
-        :param slpacket: the packet conaining a Mini-SEED record.
+        :param slpacket: the packet containing a Mini-SEED record.
 
         :raise SeedLinkException: on error.
         """

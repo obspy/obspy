@@ -64,9 +64,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         order.
     :type ts1: numpy.ndarray
     :param ts1: array of x1-component seismograms, dimension nt x Na.
-        ts1[j,k], j in arange(nt), k in arange(Na) contains the kth time sample
-        of the x1 component ground motion at station k. NOTE that the
-        seismogram in column k must correspond to the station whos coordinates
+        ts1[j,k], j in arange(nt), k in arange(Na) contains the k'th time
+        sample of the x1 component ground motion at station k. NOTE that the
+        seismogram in column k must correspond to the station whose coordinates
         are in row k of in.array_coords. nt is the number of time samples in
         the seismograms.  Seismograms may be displacement, velocity,
         acceleration, jerk, etc.  See the "Discussion of input and output
@@ -614,7 +614,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         'y', 'elevation' (in km) items/attributes. See param ``coordsys``
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
-    :param return_center: Retruns the center coordinates as extra tuple
+    :param return_center: Returns the center coordinates as extra tuple
     :return: Returns the geometry of the stations as 2d :class:`numpy.ndarray`
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
@@ -741,7 +741,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
         to use
     :param klim: either a float to use symmetric limits for wavenumber
-        differences or the tupel (kxmin, kxmax, kymin, kymax)
+        differences or the tuple (kxmin, kxmax, kymin, kymax)
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(klim, float):
@@ -885,10 +885,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         attributes to use for coordinates
     :type timestamp: string
     :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
-        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
+        the timestamp in seconds since 1970-01-01T00:00:00, 'mlabday'
         returns the timestamp in days (decimals represent hours, minutes
         and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlibs num2date)
+        date plotting (see e.g. matplotlib's num2date)
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
     :type store: function

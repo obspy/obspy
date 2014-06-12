@@ -103,7 +103,7 @@ GSE2_FIELDS = [
     ('minute', 19, 21, int),
     ('second', 22, 24, int),
     ('microsecond', 25, 28, int),
-    # global obspy stats names
+    # global ObsPy stats names
     ('station', 29, 34, _str),
     ('channel', 35, 38, lambda s: s.strip().upper()),
     ('gse2.auxid', 39, 43, _str),
@@ -186,15 +186,15 @@ def writeHeader(f, headdict):
     Rewriting the write_header Function of gse_functions.c
 
     Different operating systems are delivering different output for the
-    scientific format of floats (fprinf libc6). Here we ensure to deliver
+    scientific format of floats (fprintf libc6). Here we ensure to deliver
     in a for GSE2 valid format independent of the OS. For speed issues we
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
     This fails for numbers XX>99, but should not occur.
 
     :type f: File pointer
     :param f: File pointer to to GSE2 file to write
-    :type headdict: obspy header
-    :param headdict: obspy header
+    :type headdict: ObsPy header
+    :param headdict: ObsPy header
     """
     calib = "%10.2e" % (headdict['calib'])
     date = headdict['starttime']
@@ -266,7 +266,7 @@ def compress_CM6(data):
 
     :type data: :class:`numpy.ndarray`, dtype=int32
     :param data: the data to write
-    :returns: numpy chararray containing compressed samples
+    :returns: NumPy chararray containing compressed samples
     """
     data = np.require(data, 'int32', ['C_CONTIGUOUS'])
     N = len(data)
@@ -373,13 +373,13 @@ def write(headdict, data, f, inplace=False):
                     on the data itself --- note this will change the data
                     values and make them therefore unusable
     :type headdict: dict
-    :param headdict: Obspy Header
+    :param headdict: ObsPy Header
     """
     N = len(data)
     #
     chksum = clibgse2.check_sum(data, N, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
-    # do this after chksum as chksum does the type checking for numpy array
+    # do this after chksum as chksum does the type checking for NumPy array
     # for you
     if not inplace:
         data = data.copy()

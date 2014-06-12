@@ -47,7 +47,7 @@ class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacement for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str

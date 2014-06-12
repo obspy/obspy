@@ -127,7 +127,7 @@ class SLClient(object):
 
     def parseCmdLineArgs(self, args):
         """
-        Parses the commmand line arguments.
+        Parses the command line arguments.
 
         :type args: list
         :param args: main method arguments.

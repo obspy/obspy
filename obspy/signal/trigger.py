@@ -182,7 +182,7 @@ def classicSTALTA(a, nsta, nlta):
     :return: Characteristic function of classic STA/LTA
     """
     data = a
-    # initialize C struct / numpy structed array
+    # initialize C struct / NumPy structured array
     head = np.empty(1, dtype=head_stalta_t)
     head[:] = (len(data), nsta, nlta)
     # ensure correct type and contiguous of data
@@ -216,7 +216,7 @@ def classicSTALTAPy(a, nsta, nlta):
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
-    # XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
+    # XXX From NumPy 1.3 use numpy.lib.stride_tricks.as_strided
     #    This should be faster then the for loops in this fct
     #    Currently debian lenny ships 1.1.1
     m = len(a)
@@ -433,7 +433,7 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     :param m_s: number of AR coefficients for sarrival
     :param l_p: length of variance window for parrival in seconds
     :param l_s: length of variance window for sarrival in seconds
-    :param s_pick: if true pick also S phase, elso only P
+    :param s_pick: if true pick also S phase, else only P
     :return: (ptime, stime) parrival and sarrival
     """
     # be nice and adapt type if necessary
@@ -530,7 +530,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
         further details. If set to None no triggering routine is applied, i.e.
-        data in traces is supposed to be a precomputed chracteristic function
+        data in traces is supposed to be a precomputed characteristic function
         on which the trigger thresholds are evaluated.
     :type trigger_type: str or None
     :type thr_on: float

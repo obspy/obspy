@@ -448,7 +448,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
 
     >>> from obspy import read, UTCDateTime
     >>> import numpy as np
-    >>> np.random.seed(123)  # make test reproducable
+    >>> np.random.seed(123)  # make test reproducible
     >>> st = read()
     >>> t = UTCDateTime(2009, 8, 24, 0, 20, 7, 700000)
     >>> templ = st.copy().slice(t, t+5)
