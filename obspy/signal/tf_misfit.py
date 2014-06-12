@@ -589,7 +589,7 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True, A=10., k=1.):
     """
-    Time Frequency Envelope Goodness-Of-Fit
+    Time Frequency Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -607,10 +607,10 @@ def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time frequency representation of Envelope Goodness-Of-Fit,
+    :return: time frequency representation of Envelope Goodness-of-Fit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
         and (number of components, nf, len(st1)) for multicomponent data
     """
@@ -622,7 +622,7 @@ def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True, A=10., k=1.):
     """
-    Time Frequency Phase Goodness-Of-Fit
+    Time Frequency Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -640,10 +640,10 @@ def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time frequency representation of Phase Goodness-Of-Fit,
+    :return: time frequency representation of Phase Goodness-of-Fit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
         and (number of components, nf, len(st1)) for multicomponent data
     """
@@ -655,7 +655,7 @@ def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Time Dependent Envelope Goodness-Of-Fit
+    Time-dependent Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -673,10 +673,10 @@ def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time dependent Envelope Goodness-Of-Fit, type numpy.ndarray with
+    :return: time dependent Envelope Goodness-of-Fit, type numpy.ndarray with
         shape (len(st1),) for single component data and (number of components,
         len(st1)) for multicomponent data
     """
@@ -688,7 +688,7 @@ def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Time Dependent Phase Goodness-Of-Fit
+    Time-dependent Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -706,10 +706,10 @@ def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time dependent Phase Goodness-Of-Fit, type numpy.ndarray with
+    :return: time dependent Phase Goodness-of-Fit, type numpy.ndarray with
         shape (len(st1),) for single component data and (number of components,
         len(st1)) for multicomponent data
     """
@@ -721,7 +721,7 @@ def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Frequency Dependent Envelope Goodness-Of-Fit
+    Frequency-dependent Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -739,10 +739,10 @@ def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: frequency dependent Envelope Goodness-Of-Fit, type numpy.ndarray
+    :return: frequency dependent Envelope Goodness-of-Fit, type numpy.ndarray
         with shape (nf,) for single component data and (number of components,
         nf) for multicomponent data
     """
@@ -754,7 +754,7 @@ def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Frequency Dependent Phase Goodness-Of-Fit
+    Frequency-dependent Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -772,10 +772,10 @@ def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: frequency dependent Phase Goodness-Of-Fit, type numpy.ndarray
+    :return: frequency dependent Phase Goodness-of-Fit, type numpy.ndarray
         with shape (nf,) for single component data and (number of components,
         nf) for multicomponent data
     """
@@ -787,7 +787,7 @@ def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True, A=10., k=1.):
     """
-    Single Valued Envelope Goodness-Of-Fit
+    Single Valued Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -805,10 +805,10 @@ def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: Single Valued Envelope Goodness-Of-Fit
+    :return: Single Valued Envelope Goodness-of-Fit
     """
     EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
             st2_isref=st2_isref)
@@ -818,7 +818,7 @@ def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True, A=10., k=1.):
     """
-    Single Valued Phase Goodness-Of-Fit
+    Single Valued Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -836,10 +836,10 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: Single Valued Phase Goodness-Of-Fit
+    :return: Single Valued Phase Goodness-of-Fit
     """
     PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
             st2_isref=st2_isref)
@@ -1146,7 +1146,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
                ylim=0., clim=0., cmap=None):
     """
-    Plot all time frequency Goodness-Of-Fits and the time series in one plot
+    Plot all time frequency Goodness-of-Fits and the time series in one plot
     (per component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
@@ -1164,8 +1164,8 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
     :param left: plot distance from the left of the figure
     :param bottom: plot distance from the bottom of the figure
     :param h_1: height of the signal axes
@@ -1425,7 +1425,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
             mode='absolute', fft_zero_pad_fac=0):
     """
-    Plot time-frequency representation, spectrum and time series of the signal.
+    Plot time frequency representation, spectrum and time series of the signal.
 
     :param st: signal, type numpy.ndarray with shape (number of components,
         number of time samples) or (number of timesamples, ) for single
