@@ -160,9 +160,39 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     derivatives[:, 0] = data
     derivatives[:, 1] = slope
 
-    # Evaluate as a piecewise continuous cubic polynomial.
-    return scipy.interpolate.piecewise_polynomial_interpolate(
-        old_time_array, derivatives, new_time_array, orders=3)
+    # Create interpolated value using hermite interpolation. In this case
+    # it is directly applicable as the first derivatives are known.
+    # Using scipy.interpolate.piecewise_polynomial_interpolate() is to
+    # memory intensive
+    return_data = np.empty(len(new_time_array), dtype="float64")
+    for idx, value in enumerate(new_time_array):
+        # Find the value on the old time array.
+        i = (value - old_start) / old_dt
+        i_0 = int(i)
+        i_1 = i_0 + 1
+
+        # No need to interpolate if exactly on one of the points.
+        if i == i_0:
+            return_data[idx] = data[i_0]
+            continue
+        elif i == i_1:
+            return_data[idx] = data[i_1]
+            continue
+
+        h = old_dt
+        t = i - i_0
+        a_0 = data[i_0]
+        a_1 = data[i_1]
+        b_minus_1 = h * slope[i_0]
+        b_plus_1 = h * slope[i_1]
+        b_0 = a_1 - a_0
+        c_0 = b_0 - b_minus_1
+        c_1 = b_plus_1 - b_0
+        d_0 = c_1 - c_0
+
+        return_data[idx] = a_0 + (b_0 + (c_0 + d_0 * t) * (t - 1)) * t
+
+    return return_data
 
 
 if __name__ == '__main__':
