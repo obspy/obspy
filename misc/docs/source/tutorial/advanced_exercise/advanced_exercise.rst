@@ -39,15 +39,15 @@ a) Use the file `LKBD_WA_CUT.MSEED
    seismometer (in meter) and trimmed to the right time span. Compute the
    absolute maximum for both North and East component and use the larger value
    as the zero-to-peak amplitude estimate.  Estimate the local magnitude
-   :math:`M_{lh}` used at the `Swiss Seismological Service (SED)
+   :math:`M_\text{lh}` used at the `Swiss Seismological Service (SED)
    <http://www.seismo.ethz.ch/index_EN>`_ using a epicentral distance of
-   :math:`d_{epi}=20` (km), :math:`a=0.018` and :math:`b=2.17` with the
+   :math:`d_\text{epi}=20` (km), :math:`a=0.018` and :math:`b=2.17` with the
    following formula (mathematical functions are available in Python's
    :mod:`python:math` module):
 
 .. math::
-    M_{lh} = \log_{10}\left(amp \cdot 1000\mathrm{\frac{mm}{m}}\right) +
-    a \cdot d_{epi} + b
+    M_\text{lh} = \log_{10}\left(amp \cdot 1000\mathrm{\frac{mm}{m}}\right) +
+    a \cdot d_\text{epi} + b
 
 b) Calculate the epicentral distance from the station coordinates (46.387°N,
    7.627°E) and catalog epicenter fetched above (46.218°N, 7.706°E). Some useful
@@ -68,8 +68,8 @@ a) Modify the existing code and use the file `LKBD.MSEED
    *water_level* is not too high, to avoid overamplified low frequency noise at
    short-period stations. After the instrument simulation, trim the waveform to
    a shorter time window around the origin time (*2012-04-03T02:45:03*) and
-   calculate :math:`M_{lh}` like before.  Use the following values for the PAZ
-   dictionaries:
+   calculate :math:`M_\text{lh}` like before.  Use the following values for the
+   PAZ dictionaries:
 
         ===========  ===============  =================
         --           LE3D-5s          Wood-Anderson            
@@ -104,7 +104,7 @@ a) Modify the existing code and fetch waveform data around the origin time given
    all traces in the returned Stream object during the waveform request
    automatically. During instrument simulation use keyword argument
    *paz_remove='self'* to use every trace's attached PAZ information fetched from
-   `WebDC <http://www.webdc.eu>`_. Calculate :math:`M_{lh}` like before.
+   `WebDC <http://www.webdc.eu>`_. Calculate :math:`M_\text{lh}` like before.
    
 b) Use a list of station names (e.g. *LKBD*, *SIMPL*, *DIX*) and perform the
    magnitude estimation in a loop for each station. Use a wildcarded
