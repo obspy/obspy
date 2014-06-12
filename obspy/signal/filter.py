@@ -34,8 +34,8 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
 
     Filter data from ``freqmin`` to ``freqmax`` using ``corners``
     corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design)
-    and `func:scipy.signal.lfilter` (for applying the filter).
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
 
     :type data: numpy.ndarray
@@ -76,8 +76,8 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
 
     Filter data removing data between frequencies ``freqmin`` and ``freqmax``
     using ``corners`` corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design)
-    and `func:scipy.signal.lfilter` (for applying the filter).
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
@@ -117,8 +117,8 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design)
-    and `func:scipy.signal.lfilter` (for applying the filter).
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
@@ -153,8 +153,8 @@ def highpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data below certain frequency ``freq`` using
     ``corners`` corners.
-    The filter uses `func:scipy.signal.iirfilter` (for design)
-    and `func:scipy.signal.lfilter` (for applying the filter).
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
