@@ -109,8 +109,6 @@ clibsignal.hermite_interpolation.argtypes = [
                            flags=native_str('C_CONTIGUOUS')),
     np.ctypeslib.ndpointer(dtype='f8', ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int, C.c_double, C.c_double]
 clibsignal.hermite_interpolation.restype = C.c_void_p
 

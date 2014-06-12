@@ -6,19 +6,26 @@
 # Copyright (C) 2014 L. Krischer
 #---------------------------------------------------------------------*/
 
-/* Converts an array of 32 bit IBM floating point numbers to IEEE
- * floating point numbers.
+/* Hermite interpolation when zeroth and first derivatives are given for each
+ * time step.
  *
  * Parameters:
- *	x_in:
- *	y_in:
+ *
+ *	y_in: The data values to be interpolated.
+ *	slope: The desired slope at each data point.
+ *	x_out: The point at which to interpolate.
+ *	y_out: Array to write the interpolated data to.
+ *
+ * len_in: Length of y_in, and slope.
+ * len_out: Length of x_out and y_out.
+ * h: The sample interval for y_in.
+ * x_start: Time of the first sample in y_in.
  *
  * Output will be written to y_out.
  */
 
- void hermite_interpolation(double *x_in, double *y_in, double *slope,
-                            double *x_out, double *y_out,
-                            int len_in, int len_out, double h,
+ void hermite_interpolation(double *y_in, double *slope, double *x_out,
+                            double *y_out, int len_in, int len_out, double h,
                             double x_start) {
     int i_0, i_1;
     double i, t, a_0, a_1, b_minus_1, b_plus_1, b_0, c_0, c_1, d_0;

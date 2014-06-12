@@ -141,7 +141,6 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
                                             new_start, new_dt, new_npts)
     # In almost all cases the unit will be in time.
     new_time_array = np.linspace(new_start, new_end, new_npts)
-    old_time_array = np.linspace(old_start, old_end, len(data))
 
     m = np.diff(data) / old_dt
     w = np.abs(m)
@@ -167,9 +166,9 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     # Using scipy.interpolate.piecewise_polynomial_interpolate() is to
     # memory intensive
     return_data = np.empty(len(new_time_array), dtype="float64")
-    clibsignal.hermite_interpolation(old_time_array, data, slope,
-                                     new_time_array, return_data, len(data),
-                                     len(return_data), old_dt, old_start)
+    clibsignal.hermite_interpolation(data, slope, new_time_array, return_data,
+                                     len(data), len(return_data), old_dt,
+                                     old_start)
     return return_data
 
 
