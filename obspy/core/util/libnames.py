@@ -81,7 +81,7 @@ def _load_CDLL(name):
     Helper function to load a shared library built during ObsPy installation
     with ctypes.
 
-    :type name: unicode
+    :type name: str
     :param name: Name of the library to load (e.g. 'mseed').
     :rtype: :class:`ctypes.CDLL`
     """

@@ -62,17 +62,17 @@ class Inventory(ComparingObject):
         """
         :type networks: list of :class:`~obspy.station.network.Network`
         :param networks: A list of networks part of this inventory.
-        :type source: String
+        :type source: str
         :param source: Network ID of the institution sending the message.
-        :type sender: String, optional
+        :type sender: str, optional
         :param sender: Name of the institution sending this message.
         :type created: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param created: The time when the document was created. Will be set to
             the current time if not given.
-        :type module: String
+        :type module: str
         :param module: Name of the software module that generated this
             document, defaults to ObsPy related information.
-        :type module_uri: String
+        :type module_uri: str
         :param module_uri: This is the address of the query that generated the
             document, or, if applicable, the address of the software that
             generated this document, defaults to ObsPy related information.

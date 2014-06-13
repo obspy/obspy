@@ -72,10 +72,10 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
-    :type outfile: String
+    :type outfile: str
     :param outfile: String for the filename of output file, if None
         interactive plotting is activated.
-    :type fmt: String
+    :type fmt: str
     :param fmt: Format of image to save
     :type axes: :class:`matplotlib.axes.Axes`
     :param axes: Plot into given axes, this deactivates the fmt and
@@ -91,7 +91,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type zorder: float
     :param zorder: Specify the zorder of the plot. Only of importance if other
         plots in the same axes are executed.
-    :type title: String
+    :type title: str
     :param title: Set the plot title
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way, further

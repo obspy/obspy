@@ -35,7 +35,7 @@ class Network(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type code: String
+        :type code: str
         :param code: The SEED network code.
         :type total_number_of_stations: int
         :param total_number_of_stations: The total number of stations
@@ -46,7 +46,7 @@ class Network(BaseNode):
             document, even if the stations do not appear in the document. (This
             might happen if the user only wants a document that goes contains
             only information at the Network level.)
-        :type description: String, optional
+        :type description: str, optional
         :param description: A description of the resource
         :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
@@ -55,12 +55,12 @@ class Network(BaseNode):
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """

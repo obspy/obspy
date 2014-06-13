@@ -1690,7 +1690,7 @@ def writeQuakeML(catalog, filename, validate=False, nsmap=None,
 
     :type catalog: :class:`~obspy.core.stream.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: string or open file-like object
+    :type filename: str or open file-like object
     :param filename: Filename to write or open file-like object.
     :type validate: bool, optional
     :param validate: If True, the final QuakeML file will be validated against

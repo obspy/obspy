@@ -33,9 +33,9 @@ class BaseNode(ComparingObject):
                  end_date=None, restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type code: String
+        :type code: str
         :param code: The SEED network, station, or channel code
-        :type description: String, optional
+        :type description: str, optional
         :param description: A description of the resource
         :type comments: list of :class:`Comment`, optional
         :param comments: An arbitrary number of comments to the resource
@@ -44,12 +44,12 @@ class BaseNode(ComparingObject):
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """
@@ -190,17 +190,17 @@ class Equipment(ComparingObject):
                  installation_date=None, removal_date=None,
                  calibration_dates=None, resource_id=None):
         """
-        :type type: String
+        :type type: str
         :param type: The equipment type
-        :type description: String
+        :type description: str
         :param description: Description of the equipment
-        :type manufacturer: String
+        :type manufacturer: str
         :param manufacturer: The manufacturer of the equipment
-        :type vendor: String
+        :type vendor: str
         :param vendor: The vendor of the equipment
-        :type model: String
+        :type model: str
         :param model: The model of the equipment
-        :type serial_number: String
+        :type serial_number: str
         :param serial_number: The serial number of the equipment
         :type installation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param installation_date: The installation date of the equipment
@@ -210,7 +210,7 @@ class Equipment(ComparingObject):
             :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param calibration_dates: A list with all calibration dates of the
             equipment.
-        :type resource_id: String
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
@@ -262,7 +262,7 @@ class Operator(ComparingObject):
     """
     def __init__(self, agencies, contacts=None, website=None):
         """
-        :type agencies: list of strings
+        :type agencies: list of str
         :param agencies: The agencies of the operator.
         :type contacts: list of :class:`Person`
         :param contacts: One or more contact persons, optional
@@ -306,11 +306,11 @@ class Person(ComparingObject):
     """
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
-        :type names: list of strings, optional
+        :type names: list of str, optional
         :param names: Self-explanatory. Multiple names allowed.
-        :type agencies: list of strings, optional
+        :type agencies: list of str, optional
         :param agencies: Self-explanatory. Multiple agencies allowed.
-        :type emails: list of strings, optional
+        :type emails: list of str, optional
         :param emails: Self-explanatory. Multiple emails allowed.
         :type phones: list of :class:`PhoneNumber`, optional
         :param phones: Self-explanatory. Multiple phone numbers allowed.
@@ -376,11 +376,12 @@ class PhoneNumber(ComparingObject):
         """
         :type area_code: int
         :param area_code: The area code
-        :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678
+        :type phone_number: str
         :param phone_number: The phone number minus the country and area code.
+            Must be in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
         :type country_code: int
         :param country_code: The country code, optional
-        :type description: String
+        :type description: str
         :param description: Any additional information, optional.
         """
         self.country_code = country_code
@@ -408,9 +409,9 @@ class ExternalReference(ComparingObject):
     """
     def __init__(self, uri, description):
         """
-        :type uri: String
+        :type uri: str
         :param uri: The URI to the external data.
-        :type description: String
+        :type description: str
         :param description: A description of the external data.
         """
         self.uri = uri
@@ -426,7 +427,7 @@ class Comment(ComparingObject):
     def __init__(self, value, id=None, begin_effective_time=None,
                  end_effective_time=None, authors=None):
         """
-        :type value: String
+        :type value: str
         :param value: The actual comment string
         :type id: int
         :param id: ID of comment, must be 0 or greater.
@@ -510,20 +511,20 @@ class Site(ComparingObject):
     def __init__(self, name, description=None, town=None, county=None,
                  region=None, country=None):
         """
-        :type name: String
+        :type name: str
         :param name: The commonly used name of this station, equivalent to the
             SEED blockette 50, field 9.
-        :type description: String, optional
+        :type description: str, optional
         :param description: A longer description of the location of this
             station, e.g.  "NW corner of Yellowstone National Park" or "20
             miles west of Highway 40."
-        :type town: String, optional
+        :type town: str, optional
         :param town: The town or city closest to the station.
-        :type county: String, optional
+        :type county: str, optional
         :param county: The county.
-        :type region: String, optional
+        :type region: str, optional
         :param region: The state, province, or region of this site.
-        :type country: String, optional
+        :type country: str, optional
         :param country: The country.
         """
         self.name = name

@@ -3100,9 +3100,9 @@ class Catalog(object):
         """
         Saves catalog into a file.
 
-        :type filename: string
+        :type filename: str
         :param filename: The name of the file to write.
-        :type format: string
+        :type format: str
         :param format: The file format to use (e.g. ``"QUAKEML"``). See the
             `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying

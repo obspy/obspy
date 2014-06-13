@@ -144,7 +144,7 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Filename, URL, Basestring or BytesIO object
+        :type data: str, bytes, or io.BytesIO
         :param data: Filename, URL or XSEED/SEED string as file pointer or
             BytesIO.
         """

@@ -237,14 +237,14 @@ class Client(object):
         """
         Send a HTTP request via urllib2.
 
-        :type url: String
+        :type url: str
         :param url: Complete URL of resource
-        :type method: String
+        :type method: str
         :param method: HTTP method of request, e.g. "PUT"
         :type headers: dict
         :param headers: Header information for request, e.g.
                 {'User-Agent': "obspyck"}
-        :type xml_string: String
+        :type xml_string: str
         :param xml_string: XML for a send request (PUT/POST)
         """
         if method not in HTTP_ACCEPTED_METHODS:

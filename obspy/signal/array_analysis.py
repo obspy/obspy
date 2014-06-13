@@ -737,7 +737,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km
-    :type coordsys: string
+    :type coordsys: str
     :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
         to use
     :param klim: either a float to use symmetric limits for wavenumber
@@ -784,7 +784,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km
-    :type coordsys: string
+    :type coordsys: str
     :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
         to use
     :param slim: either a float to use symmetric limits for slowness
@@ -883,7 +883,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :param prewhiten: Do prewhitening, values: 1 or 0
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
-    :type timestamp: string
+    :type timestamp: str
     :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
         the timestamp in seconds since 1970-01-01T00:00:00, 'mlabday'
         returns the timestamp in days (decimals represent hours, minutes

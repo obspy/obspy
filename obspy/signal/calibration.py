@@ -37,7 +37,7 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
 
     :param st1: Stream or Trace object, (known)
     :param st2: Stream or Trace object, (unknown)
-    :type calib_file: String
+    :type calib_file: str
     :param calib_file: file name of calibration file containing the PAZ of the
         known instrument in GSE2 standard.
     :type window_len: float
@@ -140,7 +140,7 @@ def _calcresp(calfile, nfft, sampfreq):
     """
     Calculate transfer function of known system.
 
-    :type calfile: String
+    :type calfile: str
     :param calfile: file containing poles, zeros and scale factor for known
         system
     :returns: complex transfer function, array of frequencies

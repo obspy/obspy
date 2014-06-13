@@ -242,7 +242,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
     :param included_headers: If set to a list, only these header entries will
         be written to file. DELTA and LENGTH are written in any case. If it's
         set to None, a basic set will be included.
-    :type custom_format: string, optional
+    :type custom_format: str, optional
     :param custom_format: Parameter for number formatting of samples, defaults
         to "%-.6e".
     :type append: bool, optional

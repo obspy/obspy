@@ -33,7 +33,7 @@ def isMSEED(filename):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: Mini-SEED/full SEED file to be checked.
     :rtype: bool
     :return: ``True`` if a Mini-SEED file.

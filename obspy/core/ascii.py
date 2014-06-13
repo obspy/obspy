@@ -446,7 +446,7 @@ def _parse_data(data, data_type):
 
     :type data: io.StringIO object
     :param data: The actual data.
-    :type data_type: String
+    :type data_type: str
     :param data_type: The data type of the expected data. Currently supported
         are 'INTEGER' and 'FLOAT'.
     """

@@ -38,9 +38,9 @@ class Channel(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type code: String
+        :type code: str
         :param code: The SEED channel code for this channel
-        :type location_code: String
+        :type location_code: str
         :param location_code: The SEED location code for this channel
         :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: Latitude coordinate of this channel's sensor.
@@ -57,7 +57,7 @@ class Channel(BaseNode):
         :param azimuth: Azimuth of the sensor in degrees from north, clockwise.
         :type dip: float, optional
         :param dip: Dip of the instrument in degrees, down from horizontal.
-        :type types: list of strings, optional
+        :type types: list of str, optional
         :param types: The type of data this channel collects. Corresponds to
             channel flags in SEED blockette 52. The SEED volume producer could
             use the first letter of an Output value as the SEED channel flag.
@@ -82,16 +82,16 @@ class Channel(BaseNode):
         :param channel.sample_rate_ratio_number_seconds: The sample rate
             expressed as number of samples in a number of seconds. This is the
             number of seconds.
-        :type storage_format: string, optional
+        :type storage_format: str, optional
         :param storage_format: The storage format of the recorded data (e.g.
             SEED)
         :type clock_drift_in_seconds_per_sample: float, optional
         :param clock_drift_in_seconds_per_sample: A tolerance value, measured
             in seconds per sample, used as a threshold for time error detection
             in data from the channel.
-        :type calibration_units: String
+        :type calibration_units: str
         :param calibration_units: Name of units , e.g. "M/S", "M", ...
-        :type calibration_units_description: String
+        :type calibration_units_description: str
         :param calibration_units_description: Description of units, e.g.
             "Velocity in meters per second", ...
         :type sensor: :class:`~obspy.station.util.Equipment`
@@ -104,7 +104,7 @@ class Channel(BaseNode):
         :param equipment: Other station equipment
         :type response: :class:`~obspy.station.response.Response`, optional
         :param response: The response of the channel
-        :type description: String, optional
+        :type description: str, optional
         :param description: A description of the resource
         :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
@@ -113,12 +113,12 @@ class Channel(BaseNode):
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """

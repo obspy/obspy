@@ -1024,7 +1024,7 @@ class SacIO(object):
         Quick access to a specific header item in specified file.
 
         :param f: filename (SAC binary)
-        :type hn: string
+        :type hn: str
         :param hn: header variable name
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
@@ -1048,9 +1048,9 @@ class SacIO(object):
         Quick access to change a specific header item in a specified file.
 
         :param f: filename (SAC binary)
-        :type hn: string
+        :type hn: str
         :param hn: header variable name
-        :type hv: string, float or int
+        :type hv: str, float or int
         :param hv: header variable value (numeric or string value to be
             assigned to hn)
         :return: None

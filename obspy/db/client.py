@@ -30,7 +30,7 @@ class Client(object):
         """
         Initializes the client.
 
-        :type url: string, optional
+        :type url: str, optional
         :param url: A string that indicates database dialect and connection
             arguments. See
             http://docs.sqlalchemy.org/en/latest/core/engines.html for more
@@ -66,7 +66,7 @@ class Client(object):
         """
         Fetches all possible station id's.
 
-        :type network: string, optional
+        :type network: str, optional
         :param network: Filter result by given network id if given. Defaults
             to ``None``.
         """
@@ -83,10 +83,10 @@ class Client(object):
         """
         Fetches all possible location id's.
 
-        :type network: string, optional
+        :type network: str, optional
         :param network: Filter result by given network id if given. Defaults
             to ``None``.
-        :type station: string, optional
+        :type station: str, optional
         :param station: Filter result by given station id if given. Defaults
             to ``None``.
         """
@@ -105,13 +105,13 @@ class Client(object):
         """
         Fetches all possible channel id's.
 
-        :type network: string, optional
+        :type network: str, optional
         :param network: Filter result by given network id if given. Defaults
             to ``None``.
-        :type station: string, optional
+        :type station: str, optional
         :param station: Filter result by given station id if given. Defaults
             to ``None``.
-        :type location: string, optional
+        :type location: str, optional
         :param location: Filter result by given location id if given. Defaults
             to ``None``.
         """

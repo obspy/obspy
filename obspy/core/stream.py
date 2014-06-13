@@ -58,7 +58,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
         object will be returned.
-    :type format: string, optional
+    :type format: str, optional
     :param format: Format of the file to read (e.g. ``"MSEED"``). See
         the `Supported Formats`_ section below for a list of supported formats.
         If format is set to ``None`` it will be automatically detected which
@@ -1035,7 +1035,7 @@ class Stream(object):
             Defaults to ``1.0``.
         :type vred: float, optional
         :param vred: Perform velocity reduction, in m/s.
-        :type norm: string, optional
+        :type norm: str, optional
         :param norm: Defines how the traces are normalized,
             either against each ``trace`` or against the global
             maximum ``stream``.
@@ -1341,9 +1341,9 @@ class Stream(object):
         """
         Saves stream into a file.
 
-        :type filename: string
+        :type filename: str
         :param filename: The name of the file to write.
-        :type format: string
+        :type format: str
         :param format: The file format to use (e.g. ``"MSEED"``). See
             the `Supported Formats`_ section below for a list of supported
             formats.
@@ -2047,7 +2047,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
-        :type window: array_like, callable, string, float, or tuple, optional
+        :type window: array_like, callable, str, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
@@ -2380,7 +2380,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Convenience method for rotating stream objects.
 
-        :type method: string
+        :type method: str
         :param method: Determines the rotation method.
 
             ``'NE->RT'``: Rotates the North- and East-components of a

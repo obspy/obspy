@@ -424,15 +424,15 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of strings, optional
+    :type tests: list of str, optional
     :param tests: Test suites to run. If no suite is given all installed tests
         suites will be started (default is a empty list).
         Example ``['obspy.core.tests.suite']``.
     :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
-    :type log: string, optional
+    :type log: str, optional
     :param log: Filename of install log file to append to report.
-    :type server: string, optional
+    :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     if all:

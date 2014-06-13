@@ -15,7 +15,7 @@ def isGSE2(filename):
     """
     Checks whether a file is GSE2 or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE2 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE2 file.
@@ -40,7 +40,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only head of GSE2 file.
@@ -82,7 +82,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
 
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
-    :type filename: string
+    :type filename: str
     :param filename: Name of file to write.
     :type inplace: bool, optional
     :param inplace: If True, do compression not on a copy of the data but
@@ -114,7 +114,7 @@ def isGSE1(filename):
     """
     Checks whether a file is GSE1 or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE1 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE1 file.
@@ -141,7 +141,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE2 file to be read.
     :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.

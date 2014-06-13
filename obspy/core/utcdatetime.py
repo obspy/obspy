@@ -37,7 +37,7 @@ class UTCDateTime(object):
     specification and some additional string patterns during object
     initialization.
 
-    :type args: int, float, string, :class:`datetime.datetime`, optional
+    :type args: int, float, str, :class:`datetime.datetime`, optional
     :param args: The creation of a new `UTCDateTime` object depends from the
         given input parameters. All possible options are summarized in the
         `Examples`_ section below.

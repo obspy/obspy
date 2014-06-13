@@ -75,7 +75,7 @@ class Station(BaseNode):
             :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as
             IRIS data reports or dataless SEED volumes.
-        :type description: String, optional
+        :type description: str, optional
         :param description: A description of the resource
         :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
@@ -84,12 +84,12 @@ class Station(BaseNode):
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """

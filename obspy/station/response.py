@@ -47,17 +47,17 @@ class ResponseStage(ComparingObject):
         :param stage_gain: Value of stage gain.
         :type stage_gain_frequency: float
         :param stage_gain_frequency: Frequency of stage gain.
-        :type input_units: string
+        :type input_units: str
         :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :type output_units: string
+        :type output_units: str
         :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
@@ -65,26 +65,26 @@ class ResponseStage(ComparingObject):
             GENERATOR:Meaningful ID. As a common behaviour equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type resource_id2: string
+        :type resource_id2: str
         :param resource_id2: This field contains a string that should serve as
             a unique resource identifier. Resource identifier of the subgroup
             of the response stage that varies across different response stage
             types (e.g. the poles and zeros part or the FIR part).
-        :type name: string
+        :type name: str
         :param name: A name given to the filter stage.
-        :type input_units_description: string, optional
+        :type input_units_description: str, optional
         :param input_units_description: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type description: string, optional
+        :type description: str, optional
         :param description: A short description of of the filter.
         :type decimation_input_sample_rate:  float, optional
         :param decimation_input_sample_rate: The sampling rate before the
@@ -171,7 +171,7 @@ class PolesZerosResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type pz_transfer_function_type: String
+    :type pz_transfer_function_type: str
     :param pz_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
 
@@ -304,7 +304,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type cf_transfer_function_type: String
+    :type cf_transfer_function_type: str
     :param cf_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
 
@@ -515,7 +515,7 @@ class FIRResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type symmetry: String
+    :type symmetry: str
     :param symmetry: A string describing the symmetry. Can be one of:
 
             * ``NONE``
@@ -678,7 +678,7 @@ class Response(ComparingObject):
     def __init__(self, resource_id=None, instrument_sensitivity=None,
                  instrument_polynomial=None, response_stages=None):
         """
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
@@ -1273,7 +1273,7 @@ class InstrumentSensitivity(ComparingObject):
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
@@ -1342,7 +1342,7 @@ class InstrumentPolynomial(ComparingObject):
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
@@ -1350,7 +1350,7 @@ class InstrumentPolynomial(ComparingObject):
             GENERATOR:Meaningful ID. As a common behaviour equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type name: string
+        :type name: str
         :param name: A name given to the filter stage.
         :param input_units_description: string, optional
         :param input_units_description: The units of the data as input from the
@@ -1358,13 +1358,13 @@ class InstrumentPolynomial(ComparingObject):
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type description: string, optional
+        :type description: str, optional
         :param description: A short description of of the filter.
         """
         self.input_units = input_units
