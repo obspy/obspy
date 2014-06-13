@@ -264,10 +264,10 @@ class Operator(ComparingObject):
         """
         :type agencies: list of str
         :param agencies: The agencies of the operator.
-        :type contacts: list of :class:`Person`
-        :param contacts: One or more contact persons, optional
-        :type website: str
-        :param website: The website, optional
+        :type contacts: list of :class:`Person`, optional
+        :param contacts: One or more contact persons.
+        :type website: str, optional
+        :param website: The website.
         """
         self.agencies = agencies
         self.contacts = contacts or []
@@ -375,14 +375,14 @@ class PhoneNumber(ComparingObject):
                  description=None):
         """
         :type area_code: int
-        :param area_code: The area code
+        :param area_code: The area code.
         :type phone_number: str
         :param phone_number: The phone number minus the country and area code.
             Must be in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
-        :type country_code: int
-        :param country_code: The country code, optional
-        :type description: str
-        :param description: Any additional information, optional.
+        :type country_code: int, optional
+        :param country_code: The country code.
+        :type description: str, optional
+        :param description: Any additional information.
         """
         self.country_code = country_code
         self.area_code = area_code
