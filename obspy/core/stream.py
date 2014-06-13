@@ -1720,15 +1720,14 @@ class Stream(object):
         """
         Merges ObsPy Trace objects with same IDs.
 
-        :type method: ``-1``, ``0`` or ``1``, optional
+        :type method: int, optional
         :param method: Methodology to handle overlaps of traces. Defaults
             to ``0``.
             See :meth:`obspy.core.trace.Trace.__add__` for details on
             methods ``0`` and ``1``,
             see :meth:`obspy.core.stream.Stream._cleanup` for details on
             method ``-1``.
-        :type fill_value: int or float, ``'latest'`` or ``'interpolate'``,
-            optional
+        :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
             gaps are present. The value ``'latest'`` will use the latest value
@@ -2173,7 +2172,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to differentiate all traces with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: str, optional
         :param type: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
@@ -2207,7 +2206,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.integrate` method of
         :class:`~obspy.core.trace.Trace`.
 
-        :type type: str
+        :type type: str, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
             further details.
@@ -2230,8 +2229,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to remove a linear trend from all traces.
 
-        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
-            optional
+        :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
 

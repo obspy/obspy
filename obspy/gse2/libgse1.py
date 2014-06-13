@@ -35,7 +35,7 @@ def read(fh, verify_chksum=True):
     for correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
 
-    :type fh: File Pointer
+    :type fh: file
     :param fh: Open file pointer of GSE1 file to read, opened in binary mode,
         e.g. fh = open('myfile','rb')
     :type verify_chksum: bool

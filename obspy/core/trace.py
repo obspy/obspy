@@ -546,11 +546,10 @@ class Trace(object):
         """
         Adds another Trace object to current trace.
 
-        :type method: ``0`` or ``1``, optional
+        :type method: int, optional
         :param method: Method to handle overlaps of traces. Defaults to ``0``.
             See the `Handling Overlaps`_ section below for further details.
-        :type fill_value: int or float, ``'latest'`` or ``'interpolate'``,
-            optional
+        :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
             gaps are present. If the keyword ``'latest'`` is provided it will
@@ -1640,7 +1639,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to differentiate the trace with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: str, optional
         :param type: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
@@ -1675,7 +1674,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to integrate the trace with respect to time.
 
-        :type type: ``'cumtrapz'``, optional
+        :type type: str, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See the `Supported Methods`_ section below for
             further details.
@@ -1730,8 +1729,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to remove a linear trend from the trace.
 
-        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
-            optional
+        :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
 

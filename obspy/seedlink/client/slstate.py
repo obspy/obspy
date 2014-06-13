@@ -54,7 +54,7 @@ class SLState(object):
     :var netdly_trig: Network re-connect delay trigger.
     :type netdly_trig: int
     :var keepalive_trig: Send keepalive trigger.
-    :type keepalive_trig: TTT
+    :type keepalive_trig: int
     :var previous_time: Time stamp of last state update.
     :type previous_time: float
     :var netto_time: Network timeout time stamp.

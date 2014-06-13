@@ -2280,7 +2280,7 @@ class NodalPlanes(__NodalPlanes):
     :type nodal_plane_2: :class:`~obspy.core.event.NodalPlane`, optional
     :param nodal_plane_2: Second nodal plane of double-couple moment tensor
         solution.
-    :type preferred_plane: ``1`` or ``2``, optional
+    :type preferred_plane: int, optional
     :param preferred_plane: Indicator for preferred nodal plane of moment
         tensor solution. It can take integer values ``1`` or ``2``.
 
@@ -3196,7 +3196,7 @@ class Catalog(object):
                 * ``"depth"``
 
             Defaults to ``"depth"``
-        :type colormap: str, optional, any matplotlib colormap
+        :type colormap: str, any matplotlib colormap, optional
         :param colormap: The colormap for color-coding the events.
             The event with the smallest property will have the
             color of one end of the colormap and the event with the biggest

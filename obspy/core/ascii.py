@@ -444,7 +444,7 @@ def _parse_data(data, data_type):
     Simple function to read data contained in a StringIO object to a NumPy
     array.
 
-    :type data: io.StringIO object
+    :type data: io.StringIO
     :param data: The actual data.
     :type data_type: str
     :param data_type: The data type of the expected data. Currently supported

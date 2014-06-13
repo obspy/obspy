@@ -108,10 +108,11 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     :param skip: Number of lines to be skipped from top of file. If defined
         only one trace is read from file.
     :type delta: float, optional
-    :param delta: If "skip" is used, "delta" defines sample offset in seconds.
+    :param delta: If ``skip`` is used, ``delta`` defines sample offset in
+        seconds.
     :type length: int, optional
-    :param length: If "skip" is used, "length" defines the number of values to
-        be read.
+    :param length: If ``skip`` is used, ``length`` defines the number of values
+        to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -337,11 +338,12 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     :type data_directory: str, optional
     :param data_directory: Data directory where the corresponding QBN file can
         be found.
-    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
+    :type byteorder: str, optional
     :param byteorder: Enforce byte order for data file. This is important for
         Q files written in older versions of Seismic Handler, which don't
-        explicit state the `BYTEORDER` flag within the header file. Defaults
-        to ``'='`` (local byte order).
+        explicit state the `BYTEORDER` flag within the header file. Can be
+        little endian (``'<'``), big endian (``'>'``), or native byte order
+        (``'='``). Defaults to ``'='``.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -490,9 +492,10 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     :type data_directory: str, optional
     :param data_directory: Data directory where the corresponding QBN will be
         written.
-    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
-    :param byteorder: Enforce byte order for data file. Defaults to ``'='``
-        (local byte order).
+    :type byteorder: str, optional
+    :param byteorder: Enforce byte order for data file. Can be little endian
+        (``'<'``), big endian (``'>'``), or native byte order (``'='``).
+        Defaults to ``'='``.
     :type append: bool, optional
     :param append: If filename exists append all data to file, default False.
     """

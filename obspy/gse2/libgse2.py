@@ -122,7 +122,7 @@ def isGse2(f):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
 
-    :type f: file pointer
+    :type f: file
     :param f: file pointer to start of GSE2 file to be checked.
     """
     pos = f.tell()
@@ -191,9 +191,9 @@ def writeHeader(f, headdict):
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
     This fails for numbers XX>99, but should not occur.
 
-    :type f: File pointer
+    :type f: file
     :param f: File pointer to to GSE2 file to write
-    :type headdict: ObsPy header
+    :type headdict: dict
     :param headdict: ObsPy header
     """
     calib = "%10.2e" % (headdict['calib'])
@@ -232,7 +232,7 @@ def uncompress_CM6(f, n_samps):
     """
     Uncompress n_samps of CM6 compressed data from file pointer fp.
 
-    :type f: File Pointer
+    :type f: file
     :param f: File Pointer
     :type n_samps: int
     :param n_samps: Number of samples
@@ -294,7 +294,7 @@ def verifyChecksum(fh, data, version=2):
     """
     Calculate checksum from data, as in gse_driver.c line 60
 
-    :type fh: File Pointer
+    :type fh: file
     :param fh: File Pointer
     :type version: int
     :param version: GSE version, either 1 or 2, defaults to 2.
@@ -332,7 +332,7 @@ def read(f, verify_chksum=True):
     correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
 
-    :type f: File Pointer
+    :type f: file
     :param f: Open file pointer of GSE2 file to read, opened in binary mode,
               e.g. f = open('myfile','rb')
     :type test_chksum: bool
@@ -365,7 +365,7 @@ def write(headdict, data, f, inplace=False):
            'samp_rate'} are absolutely necessary
     :type data: :class:`numpy.ndarray`, dtype=int32
     :param data: Contains the data.
-    :type f: File Pointer
+    :type f: file
     :param f: Open file pointer of GSE2 file to write, opened in binary
               mode, e.g. f = open('myfile','wb')
     :type inplace: bool

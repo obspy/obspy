@@ -233,7 +233,7 @@ class Client(object):
             suggested to be the preferred magnitude only.
         :type includearrivals: bool, optional
         :param includearrivals: Specify if phase arrivals should be included.
-        :type eventid: str or int (dependent on data center), optional
+        :type eventid: str or int, optional
         :param eventid: Select a specific event by ID; event identifiers are
             data center specific.
         :type limit: int, optional
@@ -258,7 +258,7 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param updatedafter: Limit to events updated after the specified time.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -446,7 +446,7 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param updatedafter: Limit to metadata updated after specified date;
             updates are data center specific.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -553,7 +553,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -717,7 +717,7 @@ class Client(object):
             information to each trace. This can be used to remove response
             using :meth:`~obspy.core.stream.Stream.remove_response`.
 
-        :type bulk: str, file-like object or list of lists
+        :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
@@ -731,7 +731,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel. Ignored when `bulk` is provided as a request string/file.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -871,7 +871,7 @@ class Client(object):
                     GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
 
-        :type bulk: str, file-like object or list of lists
+        :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
@@ -885,7 +885,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel. Ignored when `bulk` is provided as a request string/file.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.

@@ -49,13 +49,19 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     """
     Plot a benchmark plot from given SU files.
 
-    :type sufiles: list of SU file names or :class:`~obspy.segy.segy.SUFile`
-        objects.
+    :type sufiles: list of str or :class:`~obspy.segy.segy.SUFile`
     :param sufiles: SU files to plot.
-    :type normalize: ``None``, ``'stream'`` or ``'traces'``, optional
-    :param normalize: If ``'stream'`` is given it will normalize per stream.
-        The keyword ``'traces'`` normalizes all traces in all streams. ``None``
-        will skip normalization. Defaults to ``'traces'``.
+    :type normalize: str or ``None``, optional
+    :param normalize: Normalization method to perform:
+
+        ``'stream'``
+            Normalize per stream.
+        ``'traces'``
+            Normalizes all traces in all streams.
+        ``None``
+            Skip normalization.
+
+        Defaults to ``'traces'``.
     :type clip_partial_traces: bool, optional
     :param clip_partial_traces: Clips traces which are not completely plotted.
         Defaults to ``True``.
@@ -77,7 +83,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     :param ymin: Minimum of offset axis.
     :type ymax: float, optional
     :param ymax: Maximum of offset axis.
-    :type fig: :class:`matplotlib.figure.Figure`
+    :type fig: :class:`matplotlib.figure.Figure`, optional
     :param fig: Use an existing matplotlib figure instance.
         Default to ``None``.
     :type size: tuple, optional

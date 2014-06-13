@@ -409,12 +409,12 @@ class Inventory(ComparingObject):
         :type color: str
         :param color: Face color of marker symbol (see
             :func:`matplotlib.pyplot.scatter`).
-        :type color_per_network: bool (or dict)
+        :type color_per_network: bool or dict
         :param color_per_network: If set to ``True``, each network will be
             drawn in a different color. A dictionary can be provided that maps
             network codes to color values (e.g.
             ``color_per_network={"GR": "black", "II": "green"}``).
-        :type colormap: str, optional, any matplotlib colormap
+        :type colormap: str, any matplotlib colormap, optional
         :param colormap: Only used if ``color_per_network=True``. Specifies
             which colormap is used to draw the colors for the individual
             networks.

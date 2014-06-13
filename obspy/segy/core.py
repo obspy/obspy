@@ -133,14 +133,15 @@ def readSEGY(filename, headonly=False, byteorder=None,
     :type headonly: bool, optional
     :param headonly: If set to True, read only the header and omit the waveform
         data.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If it is ``None``, it will try
         to autodetect the endianness. The endianness is always valid for the
         whole file. Defaults to ``None``.
-    :type textual_header_encoding: ``'EBCDIC'``, ``'ASCII'`` or ``None``
-    :param textual_header_encoding: The encoding of the textual header. If it
-        is ``None``, autodetection will be attempted. Defaults to ``None``.
+    :type textual_header_encoding: str or ``None``
+    :param textual_header_encoding: The encoding of the textual header. Can be
+        ``'EBCDIC'``, ``'ASCII'`` or ``None``. If it is ``None``, autodetection
+        will be attempted. Defaults to ``None``.
     :type unpack_trace_headers: bool, optional
     :param unpack_trace_headers: Determines whether or not all trace header
         values will be unpacked during reading. If ``False`` it will greatly
@@ -281,17 +282,17 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         point numbers) will be used. Different data encodings for different
         traces are currently not supported because these will most likely not
         be readable by other software.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If is ``None``, it will either
         be the endianness of the first Trace or if that is also not set, it
         will be big endian. A mix between little and big endian for the headers
         and traces is currently not supported.
-    :type textual_header_encoding: ``'EBCDIC'``, ``'ASCII'`` or ``None``
-    :param textual_header_encoding: The encoding of the textual header. If it
-        is ``None``, the textual_file_header_encoding attribute in the
-        stats.segy dictionary of the first Trace is used and if that is not
-        set, ASCII will be used.
+    :type textual_header_encoding: str or ``None``
+    :param textual_header_encoding: The encoding of the textual header. Can be
+        ``'EBCDIC'``, ``'ASCII'`` or ``None``. If it is ``None``, the
+        textual_file_header_encoding attribute in the stats.segy dictionary of
+        the first Trace is used and if that is not set, ASCII will be used.
 
     This function will automatically set the data encoding field of the binary
     file header so the user does not need to worry about it.
@@ -465,7 +466,7 @@ def readSU(filename, headonly=False, byteorder=None,
     :type headonly: bool, optional
     :param headonly: If set to True, read only the header and omit the waveform
         data.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If it is ``None``, it will try
         to autodetect the endianness. The endianness is always valid for the
@@ -571,7 +572,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     :param stream: The ObsPy Stream object to write.
     :type filename: str
     :param filename: Name of file to write.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If is ``None``, it will either
         be the endianness of the first Trace or if that is also not set, it

@@ -128,7 +128,7 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         the seismogram (default is 7000).
     :type rescale: bool, optional
     :param rescale: Maximum to maximal representable number
-    :type width: int, optimal
+    :type width: int, optional
     :param width: dtype to write, 1 for '<u1', 2 for '<i2' or 4 for '<i4'.
     """
     i = 0

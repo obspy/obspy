@@ -36,7 +36,7 @@ def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
 
     :type obj: :mod:`~obspy.core.event` class object
     :param obj: The ObsPy Event-type object to write.
-    :type filename: str or open file-like object
+    :type filename: str or file
     :param filename: Filename to write or open file-like object.
     :type omit_nulls: bool
     :param omit_nulls: Don't include empty-valued attributes

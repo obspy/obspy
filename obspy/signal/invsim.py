@@ -182,7 +182,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :type filename: str (or open file like object)
+    :type filename: str or file
     :param filename: SEED RESP-filename or open file like object with RESP
         information. Any object that provides a read() method will be
         considered to be a file like object.
@@ -275,9 +275,9 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
 
-    :type poles: list of complex numbers
+    :type poles: list of complex
     :param poles: The poles of the transfer function
-    :type zeros: list of complex numbers
+    :type zeros: list of complex
     :param zeros: The zeros of the transfer function
     :type scale_fac: float
     :param scale_fac: Gain factor

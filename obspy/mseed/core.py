@@ -145,8 +145,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         information: 1 == Step Calibration, 2 == Sine Calibration, 3 ==
         Pseudo-random Calibration, 4 == Generic Calibration and -2 ==
         Calibration Abort.
-    :type header_byteorder: [``0`` or ``'<'`` | ``1`` or ``'>'`` | ``'='``],
-        optional
+    :type header_byteorder: int or str, optional
     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. Used to enforce the header byte order. Useful in
@@ -424,7 +423,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         which must be expressible as 2 raised to the power of X where X is
         between (and including) 8 to 20.
         Defaults to 4096
-    :type byteorder: [``0`` or ``'<'`` | ``1`` or ``'>'`` | ``'='``], optional
+    :type byteorder: int or str, optional
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. If ``-1`` it will be passed directly to libmseed

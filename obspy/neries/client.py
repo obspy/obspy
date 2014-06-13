@@ -117,9 +117,11 @@ class Client(object):
         :param user: The user name used for identification with the Web
             service. This entry in form of a email address is required for
             using the following methods:
-            * :meth:`~obspy.neries.client.Client.saveWaveform`
-            * :meth:`~obspy.neries.client.Client.getWaveform`
-            * :meth:`~obspy.neries.client.Client.getInventory`
+
+                * :meth:`~obspy.neries.client.Client.saveWaveform`
+                * :meth:`~obspy.neries.client.Client.getWaveform`
+                * :meth:`~obspy.neries.client.Client.getInventory`
+
             Defaults to ``''``.
         :type password: str, optional
         :param password: A password used for authentication with the Web
@@ -201,8 +203,8 @@ class Client(object):
 
         :type min_datetime: str, optional
         :param min_datetime: Earliest date and time for search.
-            ISO 8601-formatted, in UTC: yyyy-MM-dd['T'HH:mm:ss].
-            e.g.: ``"2002-05-17"`` or ``"2002-05-17T05:24:00"``
+            ISO 8601-formatted, in UTC: yyyy-MM-dd['T'HH:mm:ss],
+            e.g. ``"2002-05-17"`` or ``"2002-05-17T05:24:00"``.
         :type max_datetime: str, optional
         :param max_datetime: Latest date and time for search.
         :type min_latitude: int or float, optional
@@ -228,16 +230,18 @@ class Client(object):
             ``"mb"``.
         :type author: str, optional
         :param author: Origin author. Examples: ``"CSEM"``, ``"LDG"``, ...
-        :type max_results: int (maximum: 2500)
-        :param max_results: Maximum number of returned results.
+        :type max_results: int
+        :param max_results: Maximum number of returned results. Absolute
+            maximum is 2500 results.
         :type sort_by: str
         :param sort_by: Field to sort by. Options: ``"datetime"``,
             ``"magnitude"``, ``"flynn_region"``, ``"depth"``. Only available if
             attribute ``format`` is set to ``"list"``.
         :type sort_direction: str
         :param sort_direction: Sort direction. Format: ``"ASC"`` or ``"DESC"``.
-        :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
-        :param format: Format of returned results. Defaults to ``'list'``.
+        :type format: str, optional
+        :param format: Format of returned results. Can be one of ``'list'``,
+            ``'xml'`` or ``'catalog'``. Defaults to ``'list'``.
 
             .. note::
                 The JSON-formatted queries only look at preferred origin
@@ -306,8 +310,9 @@ class Client(object):
                 Unfortunately you can't rely on this number due to an
                 implementation error in the NERIES web service.
 
-        :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
-        :param format: Format of returned results. Defaults to ``'xml'``.
+        :type format: str, optional
+        :param format: Format of returned results. Can be one of ``'list'``,
+            ``'xml'`` or ``'catalog'``. Defaults to ``'xml'``.
         :rtype: :class:`~obspy.core.event.Catalog`, list or str
         :return: Method will return either an ObsPy
             :class:`~obspy.core.event.Catalog` object, a list of event
@@ -366,8 +371,9 @@ class Client(object):
         :param uri: Event identifier as either a EMSC event unique identifier,
             e.g. ``"19990817_0000001"`` or a QuakeML-formatted event URI, e.g.
             ``"quakeml:eu.emsc/event#19990817_0000001"``.
-        :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
-        :param format: Format of returned results. Defaults to ``'xml'``.
+        :type format: str, optional
+        :param format: Format of returned results. Can be one of ``'list'``,
+            ``'xml'`` or ``'catalog'``. Defaults to ``'xml'``.
         :rtype: :class:`~obspy.core.event.Catalog`, list or str
         :return: Method will return either an ObsPy
             :class:`~obspy.core.event.Catalog` object, a list of event
@@ -434,8 +440,9 @@ class Client(object):
         :type locations: list of tuples
         :param locations: Each tuple contains a pair of (latitude, longitude)
             of a station.
-        :type model: ``'iasp91'``, ``'ak135'``, or ``'qdt'``, optional
-        :param model: Velocity model, defaults to 'iasp91'.
+        :type model: str, optional
+        :param model: Velocity model, one of ``'iasp91'``, ``'ak135'``, or
+            ``'qdt'``. Defaults to ``'iasp91'``.
         :return: List of dicts containing phase name and arrival times in ms.
 
         .. seealso:: http://www.orfeus-eu.org/wsdl/taup/taup.wsdl
@@ -509,20 +516,21 @@ class Client(object):
         :type instruments: bool, optional
         :param instruments: Include instrument data. Default is ``True``.
         :type min_latitude: float, optional
-        :param min_latitude: Minimum latitude, defaults to ``-90.0``
+        :param min_latitude: Minimum latitude, defaults to ``-90.0``.
         :type max_latitude: float, optional
-        :param max_latitude: Maximum latitude, defaults to ``90.0``
+        :param max_latitude: Maximum latitude, defaults to ``90.0``.
         :type min_longitude: float, optional
-        :param min_longitude: Minimum longitude, defaults to ``-180.0``
+        :param min_longitude: Minimum longitude, defaults to ``-180.0``.
         :type max_longitude: float, optional
         :param max_longitude: Maximum longitude, defaults to ``180.0``.
         :type modified_after: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param modified_after: Returns only data modified after given date.
             Default is ``None``, returning all available data.
-        :type format: ``'XML'`` or ``'SUDS'``, optional
-        :param format: Output format. Either returns a XML document or a
-            parsed SUDS object. Defaults to ``SUDS``.
+        :type format: str, optional
+        :param format: Output format, either ``'XML'`` or ``'SUDS'``. Either
+            returns a XML document or a parsed SUDS object. Defaults to
+            ``'SUDS'``.
         :return: XML document or a parsed SUDS object containing inventory
             information.
 
@@ -624,13 +632,13 @@ class Client(object):
         :param location: Location code, e.g. ``'01'``. Location code may
             contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
-            contain wild cards.
+        :param channel: Channel code, e.g. ``'EHE'``. Channel code may contain
+            wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :return: ObsPy :class:`~obspy.core.stream.Stream` object.
@@ -668,7 +676,7 @@ class Client(object):
         This method ensures the storage of the unmodified waveform data
         delivered by the NERIES Web service, e.g. preserving the record based
         quality flags of MiniSEED files which would be neglected reading it
-        with obspy.mseed.
+        with :mod:`obspy.mseed`.
 
         :type filename: str
         :param filename: Name of the output file.
@@ -680,13 +688,13 @@ class Client(object):
         :param location: Location code, e.g. ``'01'``. Location code may
             contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+        :param channel: Channel code, e.g. ``'EHE'``. Channel code may
             contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :return: None

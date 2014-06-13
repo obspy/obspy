@@ -148,7 +148,7 @@ class Client(object):
         Either writes data into a file if filename is given or directly returns
         it.
 
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: File or object being written to. If None, a string
             will be returned.
         :type data: str or bytes
@@ -752,8 +752,9 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :param lat: Latitude of interest.
         :type lon: float
         :param lon: Longitude of interest.
-        :type rtype: ``'code'``, ``'region'`` or ``'both'``
-        :param rtype: Return type. Defaults to ``'both'``.
+        :type rtype: str, optional
+        :param rtype: Return type. Can be one of ``'code'``, ``'region'`` or
+            ``'both'``. Defaults to ``'both'``.
         :rtype: int, str, or tuple
         :returns: Returns Flinn-Engdahl region code or name or both, depending
             on the request type parameter ``rtype``.
@@ -982,7 +983,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             Must be a positive integer no greater than ``10000``. The
             instrument response is evaluated on a equally spaced logarithmic
             scale. Defaults to ``200``.
-        :type units:  ``'def'``, ``'dis'``, ``'vel'``, ``'acc'``, optional
+        :type units:  str, optional
         :param units: Output Unit. Defaults to ``'def'``.
 
             ``'def'``

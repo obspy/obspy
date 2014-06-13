@@ -399,7 +399,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :type compressed: bool, optional
@@ -512,7 +512,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
 
@@ -978,7 +978,7 @@ class Client(object):
         """
         Writes response information into a file.
 
-        :type filename: str or file like object
+        :type filename: str or file
         :param filename: Name of the output file or open file like object.
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -992,9 +992,9 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'SEED'``, optional
-        :param format: Output format. Currently only Dataless SEED is
-            supported.
+        :type format: str, optional
+        :param format: Output format. Currently only Dataless SEED (``'SEED'``)
+            is supported.
         :return: None
 
         .. rubric:: Example

@@ -437,7 +437,7 @@ class Comment(ComparingObject):
         :type end_effective_time:
             :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_effective_time: The effective end date.
-        :type authors: list of :class:`Person` objects, optional
+        :type authors: list of :class:`Person`, optional
         :param authors: The authors of this comment.
         """
         self.value = value
