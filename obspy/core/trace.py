@@ -2171,9 +2171,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.plot()
 
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
         :type water_level: float
         :param water_level: Water level for deconvolution.
         :type pre_filt: list or tuple of four float
