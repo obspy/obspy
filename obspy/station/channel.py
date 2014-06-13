@@ -22,7 +22,7 @@ from obspy.core.util.obspy_types import FloatWithUncertainties
 class Channel(BaseNode):
     """
     From the StationXML definition:
-        Equivalent to SEED blockette 52 and parent element for the related the
+        Equivalent to SEED blockette 52 and parent element for the related
         response blockettes.
     """
     def __init__(self, code, location_code, latitude, longitude,
@@ -54,7 +54,7 @@ class Channel(BaseNode):
             under the surface ground level. For underground vaults, the
             distance from the instrument to the local ground level above.
         :type azimuth: float, optional
-        :param azimuth: Azimuth of the sensor in degrees from north, clockwise.
+        :param azimuth: Azimuth of the sensor in degrees from North, clockwise.
         :type dip: float, optional
         :param dip: Dip of the instrument in degrees, down from horizontal.
         :type types: list of str, optional
@@ -306,17 +306,16 @@ class Channel(BaseNode):
                 acceleration, output unit is meters/second**2
 
         :type start_stage: int, optional
-        :param start_stage: Stage sequence number of first stage that will be
-            used (disregarding all earlier stages).
+        :param start_stage: Sequence number of first stage that will be used
+            (disregarding all earlier stages).
         :type end_stage: int, optional
-        :param end_stage: Stage sequence number of last stage that will be
-            used (disregarding all later stages).
+        :param end_stage: Sequence number of last stage that will be used
+            (disregarding all later stages).
         :type label: str
         :param label: Label string for legend.
         :type axes: list of 2 :class:`matplotlib.axes.Axes`
-        :param axes: List/tuple of two axes instances to plot the
-            amplitude/phase spectrum into. If not specified, a new figure is
-            opened.
+        :param axes: List/tuple of two axes instances on which to plot the
+            amplitude/phase spectrum. If not specified, a new figure is opened.
         :type unwrap_phase: bool
         :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
@@ -324,7 +323,7 @@ class Channel(BaseNode):
             used to do further customization of the plot before showing it.
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
-            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option; image
             will not be displayed interactively. The given path/filename is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends

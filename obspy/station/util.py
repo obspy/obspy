@@ -216,7 +216,7 @@ class Equipment(ComparingObject):
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
-            same ID should contains the same information/be derived from the
+            same ID should contain the same information/be derived from the
             same base instruments.
         """
         self.type = type
@@ -255,8 +255,8 @@ class Equipment(ComparingObject):
 
 class Operator(ComparingObject):
     """
-    An operating agency and associated contact persons. If there multiple
-    operators, each one should be encapsulated within an Operator tag. Since
+    An operating agency and associated contact persons. If there are multiple
+    operators, each one should be encapsulated within an Operator object. Since
     the Contact element is a generic type that represents any contact person,
     it also has its own optional Agency element.
     """
