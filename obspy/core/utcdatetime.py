@@ -181,7 +181,7 @@ class UTCDateTime(object):
     >>> dt == dt3  # 7th digit will be neglected
     True
 
-    You may change that behaviour either by,
+    You may change that behavior either by,
 
     (1) using the ``precision`` keyword during object initialization:
 
@@ -939,7 +939,7 @@ class UTCDateTime(object):
         >>> t1.timestamp == t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 == t2
@@ -969,7 +969,7 @@ class UTCDateTime(object):
         >>> t1.timestamp != t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 != t2
@@ -996,7 +996,7 @@ class UTCDateTime(object):
         >>> t1.timestamp < t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 < t2
@@ -1026,7 +1026,7 @@ class UTCDateTime(object):
         >>> t1.timestamp <= t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 <= t2
@@ -1056,7 +1056,7 @@ class UTCDateTime(object):
         >>> t1.timestamp > t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 > t2
@@ -1086,7 +1086,7 @@ class UTCDateTime(object):
         >>> t1.timestamp >= t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 >= t2

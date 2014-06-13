@@ -62,7 +62,7 @@ class ResponseStage(ComparingObject):
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
         :type resource_id2: str
@@ -683,7 +683,7 @@ class Response(ComparingObject):
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
         :type instrument_sensitivity:
@@ -1347,7 +1347,7 @@ class InstrumentPolynomial(ComparingObject):
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
         :type name: str

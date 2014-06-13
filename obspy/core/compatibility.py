@@ -41,7 +41,7 @@ def round_away(number):
     only works up machine precision. This should hopefully behave like the
     round() function in Python 2.
 
-    This is potentially desired behaviour in the trim functions but some more
+    This is potentially desired behavior in the trim functions but some more
     thought should be poured into it.
 
     The np.round() function rounds towards the even nearest even number in case

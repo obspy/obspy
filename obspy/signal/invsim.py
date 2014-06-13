@@ -68,7 +68,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
         is a quarter cosine function.
     :type sactaper: bool
     :param sactaper: If set to True the cosine taper already tapers at the
-        corner frequency (SAC behaviour). By default, the taper has a value
+        corner frequency (SAC behavior). By default, the taper has a value
         of 1.0 at the corner frequencies.
 
     .. rubric:: Example

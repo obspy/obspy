@@ -194,9 +194,9 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
     # The quality flag is no more supported. Raise a warning.
     if 'quality' in kwargs:
-        msg = 'The quality flag is no more supported in this version of ' + \
+        msg = 'The quality flag is no longer supported in this version of ' + \
             'obspy.mseed. obspy.mseed.util has some functions with similar' + \
-            ' behaviour.'
+            ' behavior.'
         warnings.warn(msg, category=DeprecationWarning)
 
     # Parse some information about the file.
