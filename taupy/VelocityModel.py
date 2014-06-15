@@ -2,6 +2,7 @@
 """
 Package for storage and manipulation of seismic earth models.
 """
+import os
 import itertools
 
 from .header import TauPException
@@ -15,37 +16,38 @@ class VelocityModel(object):
     default_cmb = 2889.0
     default_iocb = 5153.9
 
-    def __init__(self, modelName="unknown", radiusOfEarth=radiusOfEarth,
-                 mohoDepth=default_moho, cmbDepth=default_cmb, iocbDepth=default_iocb,
+    def __init__(self, modelName="unknown",
+                 radiusOfEarth=radiusOfEarth, mohoDepth=default_moho,
+                 cmbDepth=default_cmb, iocbDepth=default_iocb,
                  minRadius=0.0, maxRadius=6371.0, isSpherical=True,
                  layers=None):
         """
         :type modelName: str
         :param modelName: name of the velocity model.
         :type radiusOfEarth: float
-        :param radiusOfEarth: reference radius (km), usually radius of the
-            earth.
+        :param radiusOfEarth: reference radius (km), usually radius of
+            the earth.
         :type mohoDepth: float
-        :param mohoDepth: Depth (km) of the moho. It can be input from velocity
-            model (*.nd) or should be explicitly set. By default it is 35
-            kilometers (from Iasp91).  For phase naming, the tau model will
-            choose the closest 1st order discontinuity. Thus for most simple
-            earth models these values are satisfactory. Take proper care if
-            your model has a thicker crust and a discontinuity near 35 km
-            depth.
+        :param mohoDepth: Depth (km) of the moho. It can be input from
+            velocity model (*.nd) or should be explicitly set. By
+            default it is 35 kilometers (from Iasp91).  For phase
+            naming, the tau model will choose the closest 1st order
+            discontinuity. Thus for most simple earth models these
+            values are satisfactory. Take proper care if your model
+            has a thicker crust and a discontinuity near 35 km depth.
         :type cmbDepth: float
-        :param cmbDepth: Depth (km) of the cmb (core mantle boundary). It can
-            be input from velocity model (*.nd) or should be explicitly set. By
-            default it is 2889 kilometers (from Iasp91). For phase naming, the
-            tau model will choose the closest 1st order discontinuity. Thus for
-            most simple earth models these values are satisfactory.
+        :param cmbDepth: Depth (km) of the cmb (core mantle
+            boundary). It can be input from velocity model (*.nd) or
+            should be explicitly set. By default it is 2889 kilometers
+            (from Iasp91). For phase naming, the tau model will choose
+            the closest 1st order discontinuity. Thus for most simpleearth models these values are satisfactory.
         :type iocbDepth: float
-        :param iocbDepth: Depth (km) of the iocb (inner core outer core
-            boundary). It can be input from velocity model (*.nd) or should be
-            explicitly set. By default it is 5153.9 kilometers (from Iasp91).
-            For phase naming, the tau model will choose the closest 1st order
-            discontinuity. Thus for most simple earth models these values are
-            satisfactory.
+        :param iocbDepth: Depth (km) of the iocb (inner core outer
+            core boundary). It can be input from velocity model (*.nd)
+            or should be explicitly set. By default it is 5153.9
+            kilometers (from Iasp91).  For phase naming, the tau model
+            will choose the closest 1st order discontinuity. Thus for
+            most simple earth models these values are satisfactory.
         :type minRadius: float
         :param minRadius: Minimum radius of the model (km).
         :type maxRadius: float
@@ -166,75 +168,18 @@ class VelocityModel(object):
 
     # TO DO#####################################
     # def replaceLayers(self, newLayers, name, matchTop, matchBot):
-    #     """
-    #     replaces layers in the velocity model with new layers. The number of old
-    #     and new layers need not be the same. @param matchTop false if the top
-    # 	should be a discontinuity, true if the top velocity should be forced to
-    # 	match the existing velocity at the top. @param matchBot similar for the
-    # 	bottom.
-    # 	"""
-    #     topLayerNum = self.layerNumberBelow(newLayers[0].topDepth)
-    #     topLayer = self.layers[topLayerNum]
-    #     botLayerNum = self.layerNumberAbove(newLayers[len(newLayers)].botDepth)
-    #     botLayer = self.layers[botLayerNum]
-    #     outLayers = ArrayList()
-    #     outLayers.addAll(self.layer)
-    #     try:
-    #         if matchTop:
-    #             newLayers[0] = VelocityLayer(newLayers[0].getLayerNum(), newLayers[0].topDepth, newLayers[0].botDepth, topLayer.evaluateAt(newLayers[0].topDepth, 'P'), newLayers[0].botPVelocity, topLayer.evaluateAt(newLayers[0].topDepth, 'S'), newLayers[0].botSVelocity, newLayers[0].topDensity, newLayers[0].botDensity, newLayers[0].topQp, newLayers[0].botQp, newLayers[0].topQs, newLayers[0].botQs)
-    #         if matchBot:
-    #             newLayers[len(newLayers)] = VelocityLayer(end.getLayerNum(), end.topDepth, end.botDepth, end.topPVelocity, botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'P'), end.topSVelocity, botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'S'), end.topDensity, end.botDensity, end.topQp, end.botQp, end.topQs, end.botQs)
-    #     except NoSuchMatPropException as e:
-    #         raise RuntimeException(e)
-    #     if topLayer.botDepth > newLayers[0].topDepth:
-    #         try:
-    #             topLayer = VelocityLayer(topLayer.getLayerNum(), topLayer.topDepth, newLayers[0].topDepth, topLayer.topPVelocity, topLayer.evaluateAt(newLayers[0].topDepth, 'P'), topLayer.topSVelocity, topLayer.evaluateAt(newLayers[0].topDepth, 'S'), topLayer.topDensity, topLayer.botDensity)
-    #             outLayers.set(topIndex, topLayer)
-    #         except NoSuchMatPropException as e:
-    #             raise RuntimeException(e)
-    #         newVLayer.topPVelocity = topLayer.botPVelocity
-    #         newVLayer.topSVelocity = topLayer.botSVelocity
-    #         newVLayer.topDepth = topLayer.botDepth
-    #         outLayers.append(topLayerNum + 1, newVLayer)
-    #         botLayerNum += 1
-    #         topLayerNum += 1
-    #     if botLayer.botDepth > newLayers[len(newLayers)].botDepth:
-    #         try:
-    #             botLayer.botPVelocity = botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'P')
-    #             botLayer.botSVelocity = botLayer.evaluateAt(newLayers[len(newLayers)].botDepth, 'S')
-    #             botLayer.botDepth = newLayers[len(newLayers)].botDepth
-    #         except NoSuchMatPropException as e:
-    #             print("Caught NoSuchMatPropException: " + e.getMessage(), file=sys.stderr)
-    #             e.printStackTrace()
-    #         newVLayer.topPVelocity = botLayer.botPVelocity
-    #         newVLayer.topSVelocity = botLayer.botSVelocity
-    #         newVLayer.topDepth = botLayer.botDepth
-    #         outLayers.append(botLayerNum + 1, newVLayer)
-    #         botLayerNum += 1
-    #     i = topLayerNum
-    #     while i <= botLayerNum:
-    #         outLayers.remove(topLayerNum)
-    #         i += 1
-    #     i = 0
-    #     while len(newLayers):
-    #         outLayers.append(topLayerNum + i, newLayers[i])
-    #         i += 1
-    #     outVMod = VelocityModel(name, self.getRadiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), self.spherical(), outLayers)
-    #     outVMod.fixDisconDepths()
-    #     outVMod.validate()
-    #     return outVMod
-    ################################################
-
-
+    #     """ replaces layers in the velocity model with new
+    #     layers. The number of old and new layers need not be the
+    #     same. @param matchTop false if the top should be a
+    #     discontinuity, true if the top velocity should be forced to
+    #     match the existing velocity at the top. @param matchBot
+    #     similar for the bottom.  """
 
     # The GMT methods aren't necessary for now, copy them in again from the j2py code when needed.
     # def printGMT(self, filename):
-
     # @printGMT.register(object, PrintWriter)
     # def printGMT_0(self, dos):
-
     # def printGMTforP(self, dos):
-
     # def printGMTforS(self, dos):
 
 
@@ -243,44 +188,62 @@ class VelocityModel(object):
         """ Performs internal consistency checks on the velocity model. """
         #/* is radiusOfEarth positive? */
         if self.radiusOfEarth <= 0.0:
-            print("Radius of earth is not positive. radiusOfEarth = " + str(self.radiusOfEarth), file=sys.stderr)
+            print("Radius of earth is not positive. radiusOfEarth = "
+            + str(self.radiusOfEarth), file=sys.stderr)
             return False
     	#/* is mohoDepth non-negative? */
         if self.mohoDepth < 0.0:
-            print("mohoDepth is not non-negative. mohoDepth = " + str(self.mohoDepth), file=sys.stderr)
+            print("mohoDepth is not non-negative. mohoDepth = " +
+            str(self.mohoDepth), file=sys.stderr)
             return False
         #/* is cmbDepth >= mohoDepth? */
         if self.cmbDepth < self.mohoDepth:
-            print("cmbDepth < mohoDepth. cmbDepth = " + str(self.cmbDepth) + " mohoDepth = " + str(self.mohoDepth), file=sys.stderr)
+            print("cmbDepth < mohoDepth. cmbDepth = " +
+            str(self.cmbDepth) + " mohoDepth = " +
+            str(self.mohoDepth), file=sys.stderr)
             return False
         #/* is cmbDepth positive? */
         if self.cmbDepth <= 0.0:
-            print("cmbDepth is not positive. cmbDepth = " + (self.cmbDepth), file=sys.stderr)
+            print("cmbDepth is not positive. cmbDepth = " +
+            (self.cmbDepth), file=sys.stderr)
             return False
         #/* is iocbDepth >= cmbDepth? */
         if self.iocbDepth < self.cmbDepth:
-            print("iocbDepth < cmbDepth. iocbDepth = " + str(self.iocbDepth) + " cmbDepth = " + str(self.cmbDepth), file=sys.stderr)
+            print("iocbDepth < cmbDepth. iocbDepth = " +
+            str(self.iocbDepth) + " cmbDepth = " + str(self.cmbDepth),
+            file=sys.stderr)
             return False
         #/* is iocbDepth positive? */
         if self.iocbDepth <= 0.0:
-            print("iocbDepth is not positive. iocbDepth = " + str(self.iocbDepth), file=sys.stderr)
+            print("iocbDepth is not positive. iocbDepth = " +
+            str(self.iocbDepth), file=sys.stderr)
             return False
         #/* is minRadius non-negative? */
         if self.minRadius < 0.0:
-            print("minRadius is not non-negative. minRadius = " + str(self.minRadius), file=sys.stderr)
+            print("minRadius is not non-negative. minRadius = " +
+            str(self.minRadius), file=sys.stderr)
             return False
         #/* is maxRadius positive? */
         if self.maxRadius <= 0.0:
-            print("maxRadius is not positive. maxRadius = " + str(self.maxRadius), file=sys.stderr)
+            print("maxRadius is not positive. maxRadius = " +
+            str(self.maxRadius), file=sys.stderr)
             return False
         #/* is maxRadius > minRadius? */
         if self.maxRadius <= self.minRadius:
-            print("maxRadius <= minRadius. maxRadius = " + str(self.maxRadius) + " minRadius = " + str(self.minRadius), file=sys.stderr)
+            print("maxRadius <= minRadius. maxRadius = " +
+            str(self.maxRadius) + " minRadius = " +
+            str(self.minRadius), file=sys.stderr)
             return False
 
 	# Iterate over all layers, comparing each to the previous one.
         currVelocityLayer = self.layers[0]
-        prevVelocityLayer = VelocityLayer(0, currVelocityLayer.topDepth, currVelocityLayer.topDepth, currVelocityLayer.topPVelocity, currVelocityLayer.topPVelocity, currVelocityLayer.topSVelocity, currVelocityLayer.topSVelocity, currVelocityLayer.topDensity, currVelocityLayer.topDensity)
+        prevVelocityLayer = VelocityLayer(0,
+        currVelocityLayer.topDepth, currVelocityLayer.topDepth,
+        currVelocityLayer.topPVelocity,
+        currVelocityLayer.topPVelocity,
+        currVelocityLayer.topSVelocity,
+        currVelocityLayer.topSVelocity, currVelocityLayer.topDensity,
+        currVelocityLayer.topDensity)
         for layerNum in range(0, self.getNumLayers()):
             currVelocityLayer = self.layers[layerNum]
             if prevVelocityLayer.botDepth != currVelocityLayer.topDepth:
@@ -324,28 +287,11 @@ class VelocityModel(object):
     #     for i in range(0, self.getNumLayers):
     #         print(self.layers[i])
 
-#   This is screwed up, let's see if we even need it (substring doesn't exist of course)
-    # @classmethod
-    # def getModelNameFromFileName(cls, filename):
-    #     """ generated source for method getModelNameFromFileName """
-    #     j = filename.lastIndexOf(System.getProperty("file.separator"))
-    #     modelFilename = filename.substring(j + 1)
-    #     modelName = modelFilename
-    #     if modelFilename.endswith(".tvel"):
-    #         modelName = modelFilename.substring(0, 5 - len(modelFilename))
-    #     elif modelFilename.endswith(".nd"):
-    #         modelName = modelFilename.substring(0, 3 - len(modelFilename))
-    #     elif modelFilename.startswith("GB."):
-    #         modelName = modelFilename.substring(3, len(modelFilename))
-    #     else:
-    #         modelName = modelFilename
-    #     return modelName
-
-
-
     @classmethod
     def readVelocityFile(cls, filename):
-        """ Reads in a velocity file by given file name (must be a string). The type of file is determined from the file name. Calls readTVelFile or readNDFile.
+        """ Reads in a velocity file by given file name (must be a
+        string). The type of file is determined from the file name
+        (changed from the java!). Calls readTVelFile or readNDFile.
         Raises exception if the type of file cannot be determined. """
 
         # filename formatting
@@ -354,9 +300,8 @@ class VelocityModel(object):
         elif filename.endswith(".tvel"):
             fileType = ".tvel"
         else:
-            raise TauPException("File type could not be determined, please rename your file to end with .tvel or .nd")
-        if fileType.startswith("."):
-            fileType = fileType[1:]
+            raise TauPException("File type could not be determined,            please rename your file to end with .tvel or .nd")
+        fileType = fileType[1:]
 
         # the actual reading of the velocity file
         if fileType.lower() == "nd":
@@ -373,24 +318,20 @@ class VelocityModel(object):
 
     @classmethod
     def readTVelFile(cls, filename):
-        """
-        * This method reads in a velocity model from a "tvel" ASCII text file. The
-        * name of the model file for model "modelname" should be "modelname.tvel".
-        * The format of the file is: comment line - generally info about the P
-        * velocity model comment line - generally info about the S velocity model
-        * depth pVel sVel Density depth pVel sVel Density . . .
-        *
-        * The velocities are assumed to be linear between sample points. Because
-        * this type of model file doesn't give complete information we make the
-        * following assumptions: modelname - from the filename, with ".tvel"
-        * dropped if present radiusOfEarth - the largest depth in the model
-        * meanDensity - 5517.0 G - 6.67e-11
-        *
-        * Comments using # are also allowed.
-        *
-        * @exception VelocityModelException
-        *                occurs if an EOL should have been read but wasn't. This
-        *                may indicate a poorly formatted tvel file.
+        """ This method reads in a velocity model from a "tvel" ASCII
+        text file. The name of the model file for model g"modelname"
+        should be "modelname.tvel".  The format of the file is:
+        comment line - generally info about the P velocity model
+        comment line - generally info about the S velocity model depth
+        pVel sVel Density depth pVel sVel Density
+
+        The velocities are assumed to be linear between sample
+        points. Because this type of model file doesn't give complete
+        information we make the following assumptions:
+        modelname - from the filename, with ".tvel" dropped if present
+        radiusOfEarth - the largest depth in the model
+        meanDensity - 5517.0 G - 6.67e-11
+        Comments using # are also allowed.
         """
         layers = []
         myLayerNumber = 0	# needed for calling the layer maker later
@@ -451,9 +392,11 @@ class VelocityModel(object):
 
         radiusOfEarth = topDepth
         maxRadius = topDepth
-	# I assume that this is a whole earth model
+        modelName = os.path.basename(filename) #remove leading path
+        modelName = modelName[:-5]             #strip .tvel
+
+        # I assume that this is a whole earth model
 	# so the maximum depth ==  maximum radius == earth radius.
-        modelName = filename[:-5]
         return VelocityModel(modelName, radiusOfEarth, cls.default_moho, cls.default_cmb, cls.default_iocb, 0, maxRadius, True, layers)
 
 
@@ -563,10 +506,13 @@ class VelocityModel(object):
                     layers.append(tempLayer)
                     myLayerNumber += 1
         radiusOfEarth = topDepth
-        maxRadius = topDepth	#I assume that this is a whole earth model
-        			# so the maximum depth is equal to the
-        			# maximum radius is equal to the earth radius.
-        modelName = filename[:-3]
+        maxRadius = topDepth
+        # I assume that this is a whole earth model so the maximum
+        # depth is equal to the maximum radius is equal to the earth
+        # radius.
+
+        modelName = os.path.basename(filename) #remove leading path
+        modelName = modelName[:-3]             #strip .nd
         return VelocityModel(modelName, radiusOfEarth, mohoDepth, cmbDepth, iocbDepth, 0, maxRadius, True, layers)
 
 
@@ -609,21 +555,9 @@ class VelocityModel(object):
         self.iocbDepth = (tempIocbDepth if tempCmbDepth != tempIocbDepth else self.radiusOfEarth)
         return changeMade
 
+    # This is useless atm, as TauP_Create doesn't even know how to
+    # handle it:
     # def earthFlattenTransform(self):
-    #     """ Returns a flat velocity model object equivalent to the spherical
-    #      velocity model via the earth flattening transform.
-
-    #  	 @return the flattened VelocityModel object.
-    #  	 @exception VelocityModelException
-    #  	                occurs ???. """
-    #     newLayer = VelocityLayer()
-    #     oldLayer = VelocityLayer()
-    #     isSpherical = False
-    #     layers = ArrayList(self.vectorLength)
-    #     i = 0
-    #     while i < self.getNumLayers():
-    #         oldLayer = self.layers[i]
-    #         newLayer = VelocityLayer(i, self.radiusOfEarth * Math.log(oldLayer.topDepth / self.radiusOfEarth), self.radiusOfEarth * Math.log(oldLayer.botDepth / self.radiusOfEarth), self.radiusOfEarth * oldLayer.topPVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botPVelocity / oldLayer.botDepth, self.radiusOfEarth * oldLayer.topSVelocity / oldLayer.topDepth, self.radiusOfEarth * oldLayer.botSVelocity / oldLayer.botDepth)
-    #         layers.append(newLayer)
-    #         i += 1
-    #     return VelocityModel(self.modelName, self.radiusOfEarth(), self.mohoDepth(), self.cmbDepth(), self.iocbDepth(), self.minRadius(), self.maxRadius(), spherical, layers)
+    #     """ Returns a flat velocity model object equivalent to the
+    #     sphericalvelocity model via the earth flattening transform.
+    #     """

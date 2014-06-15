@@ -14,3 +14,7 @@ The references to toolProps must be changed to allow some kind of pythonic confi
 
 
 The value of modelFilename is hardcoded to iasp91.tvel, so it gets used as a default. It doesn't seem to get changed within TauP_Create, however a different filename can be provided as command line option. (e.g. ./taup_create -tvel ...ak135.tvel works in the java package)
+
+
+
+The DEBUG and verbose flags really do the same, so delete one.

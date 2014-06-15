@@ -21,11 +21,11 @@ TauP_Create:
         self.tMod.writeModel(outFile)
     
     createTauModel:
-        self.sMod = SphericalSModel(vMod, ...) 
+        self.sMod = SphericalSModel(vMod, ... (sneaky call to a SlownessModel class default value)) 
         return TauModel(self.sMod)
         
 PropertyLoader:
-    finds taup.jar or something
+    finds taup.jar, reads a config file (called properties here)
     
 SphericalSModel extends SlownessModel:
     I think there are three constructors; the middle one is called here

@@ -154,6 +154,11 @@ class TauP_Create(object):
         print "-nd modelfile       -- \"named discontinuities\" velocity file"
         print "-tvel modelfile     -- \".tvel\" velocity file, ala ttimes\n"
         print "--vplot file.gmt     -- plot velocity as a GMT script\n"
+
+        # The following commentary is from the java file:
+        # \\plotting sMod and tMod not yet implemented
+        # \\System.out.println("--splot file.gmt     -- plot slowness as a GMT script\n");
+       # \\System.out.println("--tplot file.gmt     -- plot tau as a GMT script\n");
         print "-debug              -- enable debugging output\n" + "-verbose            -- enable verbose output\n" + "-version            -- print the version\n" + "-help               -- print this out, but you already know that!\n\n"
 
     @classmethod
@@ -230,11 +235,14 @@ class TauP_Create(object):
                 self.velFileType = "tvel"
                 parseFileName(args[i])
             else:
+                # I don't know how to interpret this argument, so pass it
+                # java: noComprendoArgs[numNoComprendoArgs++] = args[i];
                 noComprendoArgs[__numNoComprendoArgs_3] = args[i]
             i += 1
         if self.modelFilename == None:
             print "Velocity model not specified, use one of -nd or -tvel"
             self.printUsage()
+            # bad, should do something else here...
             System.exit(1)
         if numNoComprendoArgs > 0:
             System.arraycopy(noComprendoArgs, 0, temp, 0, numNoComprendoArgs)
@@ -322,11 +330,17 @@ class TauP_Create(object):
                     self.vMod.printGMT(self.plotVmodFilename)
                     # not implemented yet: sMod and tMod plotting
             else:
+                # j2py screwed up here, and ignored the following:
+                # String file_sep =
+                # System.getProperty("file.separator"); TauModel tMod
+                # = createTauModel(vMod);
+
+
                 if self.DEBUG:
                     print "Done calculating Tau branches."
                 if self.DEBUG:
                     self.tMod.print_()
-                if self.directory == ".":
+                    if self.directory == ".":
                     outFile = self.directory + file_sep + self.vMod.getModelName() + ".taup"
                 else:
                     outFile = self.vMod.getModelName() + ".taup"

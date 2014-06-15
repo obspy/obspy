@@ -23,7 +23,7 @@ class TestVelocityModel(unittest.TestCase):
 
             # test_file.tvel is shorter
             test2 = VelocityModel.readVelocityFile(velocity_model)
-            #print(test2)
+            # print(test2)
             
             self.assertEqual(len(test2.layers), 129)
             self.assertEqual(len(test2), 129)

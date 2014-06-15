@@ -1,4 +1,4 @@
 *.pyc
-.DS_Store
 *~
 *.egg-info
+class_attribs_and_methods.py

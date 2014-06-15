@@ -1,0 +1,20 @@
+Differences between modelName, modelFileName, filename, directory and how I will try to handle them.
+
+
+In TauP_Create, these two are currently just set as default, but should eventually be user-supplied:
+
+self.directory = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), "data")
+--> gives './data'. Used as input (v model) AND output directory (tau model)
+
+self.modelFilename = "iasp91.tvel"
+--> used directly e.g. in this call to read an 'internally stored file':
+    self.vMod = TauModelLoader.loadVelocityModel(self.modelFilename)
+
+filename = os.path.join(self.directory, self.modelFilename)
+--> whole (relative or absolute, dependds) path, e.g. ./data/iasp91.tvel
+
+modelName = os.path.basename(filename)  to strip the directory path
+modelName = modelName[:-5]    (in the case of .tvel)
+--> e.g. iasp91. Used so far in VelocityModel.
+
