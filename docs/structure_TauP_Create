@@ -21,7 +21,8 @@ TauP_Create:
         self.tMod.writeModel(outFile)
     
     createTauModel:
-        self.sMod = SphericalSModel(vMod, ... (sneaky call to a SlownessModel class default value)) 
+        self.sMod = SphericalSModel(vMod, ... (sneaky call to a 
+        SlownessModel class default value)) 
         return TauModel(self.sMod)
         
 PropertyLoader:

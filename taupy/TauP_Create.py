@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import inspect
+import argparse
 from taupy.VelocityModel import VelocityModel
 from taupy.SphericalSModel import SphericalSModel
 from taupy.SlownessModel import SlownessModel
@@ -21,7 +22,7 @@ class TauP_Create(object):
 
     overlayModelFilename = None
     velFileType = "tvel"
-    DEBUG = True
+    
     GUI = False
     plotVmod = False
     plotSmod = False
@@ -30,11 +31,30 @@ class TauP_Create(object):
     #  "constructor"
     def __init__(self):
         """ generated source for method __init__ """
-        print("Can't load properties yet, will use defaults.")
-        # assume data is in ./data:
-        self.directory = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
-        self.modelFilename = "iasp91.tvel"
+        
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-v', '--verbose', '-d','--debug', action='store_true',
+                            help='increase output verbosity')
+        parser.add_argument('-i', '--input_dir',
+                            help = 'set directory of input velocity models (default: ./data/)')
+        parser.add_argument('-o', '--output_dir',
+                            help = 'set where to write the .taup model - be careful, this will
+                            overwrite any previous models of the same name (default: current dir)')
+        parser.add_argument('-f', '--filename',
+                            help = 'the velocity model name (default: iasp91.tvel)')
+        args = parser.parse_args()
+                
+        self.DEBUG = args.verbose
+        self.directory = args.input_dir
+        self.outdir = args.output_dir
+        self.modelFilename = args.filename
+
+        if self.directory == None:
+            # if no directory given, assume data is in ./data:
+            self.directory = os.path.join(os.path.dirname(os.path.abspath(
+                inspect.getfile(inspect.currentframe()))), "data")
+        if self.modelFilename == None:
+            self.modelFilename = "iasp91.tvel"
 
     # def printUsage(self):
 
@@ -47,6 +67,7 @@ class TauP_Create(object):
     @classmethod
     def main(cls):
         """ Do loadVMod, then start. """
+
         print("TauP_Create starting...")
         tauPCreate = TauP_Create()
         #noComprendoArgs = tauPCreate.parseCmdLineArgs(args)
@@ -152,8 +173,12 @@ class TauP_Create(object):
                 # file was pretty silly. It stored the out file to the
                 # working dir, but in two different ways. Here, just store to current dir:
                 outModelFileName = self.vMod.modelName + ".taup"
-                outFile = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), outModelFileName)
-                self.tMod.writeModel(outFile)
+                if self.outdir == None:
+                    outFile = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), outModelFileName)
+                    self.tMod.writeModel(outFile)
+                else:
+                    outFile = os.path.join(self.outdir, outModelFileName)
+                    self.tMod.writeModel(outFile)
                 if self.DEBUG:
                     print("Done Saving " + outFile)
         except IOException as e:
