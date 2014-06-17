@@ -20,7 +20,8 @@ before_install:
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
   - pip install --use-mirrors flake8
   - pip install --use-mirrors future
-  - pip install --use-mirrors pyimgur
+  # current pyimgur stable release has a py2.6 incompatibility
+  - pip install https://github.com/megies/PyImgur/archive/py26.zip
   - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
