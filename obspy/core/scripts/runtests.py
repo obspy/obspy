@@ -83,7 +83,7 @@ and report everything, you would run::
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
@@ -103,7 +103,8 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future']
+                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future',
+                "flake8", "pyflakes", "pyimgur"]
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -170,7 +171,7 @@ def _getSuites(verbosity=1, names=[]):
     return suites, status
 
 
-def _createReport(ttrs, timetaken, log, server, hostname):
+def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -181,6 +182,8 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     from xml.etree import ElementTree as etree
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
+    result['slowest_tests'] = [("%0.3fs" % dt, "%s" % desc)
+                               for (desc, dt) in sorted_tests[:20]]
     result['timetaken'] = timetaken
     if log:
         try:
@@ -466,19 +469,21 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     # run test suites
     ttr, total_time, errors = _TextTestRunner(verbosity=verbosity,
                                               timeit=timeit).run(suites)
+    # sort tests by time taken
+    mydict = {}
+    # loop over modules
+    for mod in list(ttr.values()):
+        mydict.update(dict(mod.timer))
+    sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
+    sorted_tests = sorted_tests[::-1]
+
     if slowest:
-        mydict = {}
-        # loop over modules
-        for mod in list(ttr.values()):
-            mydict.update(dict(mod.timer))
-        sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
-        sorted_tests = sorted_tests[::-1][:slowest]
-        sorted_tests = ["%0.3fs: %s" % (dt, desc)
-                        for (desc, dt) in sorted_tests]
+        slowest_tests = ["%0.3fs: %s" % (dt, desc)
+                         for (desc, dt) in sorted_tests[:slowest]]
         print()
         print("Slowest Tests")
         print("-------------")
-        print(os.linesep.join(sorted_tests))
+        print(os.linesep.join(slowest_tests))
         print()
         print()
     if interactive and not report:
@@ -487,7 +492,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server, hostname)
+        _createReport(ttr, total_time, log, server, hostname, sorted_tests)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
