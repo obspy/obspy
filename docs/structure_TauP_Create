@@ -29,10 +29,16 @@ PropertyLoader:
     finds taup.jar, reads a config file (called properties here)
     
 SphericalSModel extends SlownessModel:
-    I think there are three constructors; the middle one is called here
-    (createTauModel passes 7 arguments after vmod)
-    (note how the constructor calls its superclass constructors with super)
+    There are three constructors; the middle one is called here, as
+    createTauModel passes 7 arguments after vmod. I only vmod was supplied, the 
+    first constructor would would call the middle one with some default 
+    arguments. The middle constructor calls its superclass (i.e. SlownessModel) 
+    constructor with super()!
 
+    interpolate method is defined here (only abstract in SlownessModel)
+    toSlownessLayer (also abstract in superclass)
+        returns new SlownessLayer instance
+        
 TauModel:   
     # doesn't want to be translated by j2py!
     has 2 constructors, I believe the first is called (1 argument); however it
@@ -62,15 +68,82 @@ SlownessLayer:
         calls on VelocityLayer
         
 SlownessModel:
-    the constructor isn't called directly as SphericalSModel is created instead
-    constructor requires DepthRange, CriticalDepth and SlownessLayer classes
-        validate:
+    The first constructor is called from SphericalSModel. Does not yet 
+    require DepthRange, CriticalDepth and SlownessLayer classes!
+        calls createSample()
+
+    createSample()
+        vMod.validate
+        vMod.getNumLayers
+        vMod.getVelocityLayer(0).getTopSVelocity()
+        findCriticalPoints
+        coarseSample
+        rayParamIncCheck
+        depthIncCheck
+        distanceCheck
+        fixCriticalPoints
+        also calls validate if DEBUG
+    
+    findCriticalPoints
+        DepthRange
+        CriticalDepth
+        
+        findDepth
+        toSlownessLayer
+
+        vMod.getVelocityLayerClone
+        currVLayer.getTopDepth (this is a VelocityLayer method)        
+        getTopP (SlownessLayer method)        
+
+        criticalDepths.add   (methods of CriticalDepth)
+        criticalDepths.clear()
+
+        highSlownessLayerDepthsP.clear()  (instances (so methods) of DepthRange)
+        highSlownessLayerDepthsS.add
+        fluidLayerDepths.clear()  
+        highSlownessLayerDepthsP.size
+        highSlownessLayerDepthsP.get(layerNum)
+        
+        
+                
+    findDepth
+        some vMod/Layer methods
+        interpolate
+
+    interpolate
+        Here, it's only an abstract method: no implementation is provided (body 
+        of method is empty). However, subclasses must provide an implementation; 
+        this is done in SphericalSModel. Not sure how this class knows about its 
+        subclass though...        
+
+    toSlownessLayer
+        also an abstract method.
+          
+    coarseSample
+        some vlayer, slayer methods and PLayers.clear, where PLayers is simply a 
+        list of SlownessLayers, screwing up the nomenclature
+        depthInFluid
+        addSlowness
+    
+    depthInFluid
+    addSlowness
+    rayParamIncCheck
+    depthIncCheck
+    distanceCheck
+    fixCriticalPoints
+
+
+
+    
+
+    validate:
             DepthRange
             DepthRange.size     # via highSlownessLayerDepths.size
             DepthRange.get
             DepthRange.get.topDepth     # and bot
-            getSlownessLayer.validate, .getTopDepth, .getBotP etc
-
+            getSlownessLayer.validate, .getTopDepth, .getBotP etc}
+    not needed (?)
+    
 CriticalDepth:            
     very simple.
 

@@ -6,11 +6,17 @@ class TauModel(object):
     def __init__(self, sMod):
         
         self.sMod = sMod
+        calcTauIncFrom()
+
         print("This is the init method of TauModel clocking in. Hello!")
         print("The debug flag for TauModel is set to:"+str(self.DEBUG), 
               "the default here is false but it should have been modified TauP_Create.")
 
         
+
+    def calcTauIncFrom(self):
+        pass
+
     def writeModel(self, outfile):
         with open(outfile, 'w') as f:
             f.write("A tau model should be here")
