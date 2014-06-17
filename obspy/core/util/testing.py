@@ -231,17 +231,24 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
+        msg = ""
         try:
             # only compare images if no exception occured in the with
             # statement. this avoids masking previously occured exceptions (as
             # an exception may occur in compare()). otherwise we only clean up
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:
-                self.compare()
+                msg = self.compare()
         except:
             failed = True
             raise
         else:
+            if msg:
+                msg2 = self._upload_images()
+                if msg2:
+                    msg = "\n".join([msg, msg2])
+                failed = True
+                raise ImageComparisonException(msg)
             failed = False
         finally:
             import matplotlib.pyplot as plt
@@ -250,6 +257,7 @@ class ImageComparison(NamedTemporaryFile):
             if self.keep_output:
                 if not (self.keep_only_failed and not failed):
                     self._copy_tempfiles()
+            # delete temporary files
             os.remove(self.name)
             if os.path.exists(self.diff_filename):
                 os.remove(self.diff_filename)
@@ -266,8 +274,7 @@ class ImageComparison(NamedTemporaryFile):
             raise ImageComparisonException(msg)
         msg = compare_images(native_str(self.baseline_image),
                              native_str(self.name), tol=self.tol)
-        if msg:
-            raise ImageComparisonException(msg)
+        return msg
 
     def _copy_tempfiles(self):
         """
@@ -287,6 +294,35 @@ class ImageComparison(NamedTemporaryFile):
             shutil.copy(self.diff_filename, os.path.join(directory,
                                                          diff_filename_new))
         shutil.copy(self.name, os.path.join(directory, self.image_name))
+
+    def _upload_images(self):
+        """
+        Uploads images to imgur.
+        """
+        # try to import pyimgur
+        try:
+            import pyimgur
+        except ImportError:
+            msg = ("Upload to imgur not possible (python package "
+                   "'pyimgur' not installed).")
+            warnings.warn(msg)
+            return ""
+        # try to get imgur client id from environment
+        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
+        if imgur_clientid is None:
+            msg = ("Upload to imgur not possible (environment "
+                   "variable OBSPY_IMGUR_CLIENTID not set).")
+            warnings.warn(msg)
+            return ""
+        # upload images and return urls
+        imgur = pyimgur.Imgur(imgur_clientid)
+        up = imgur.upload_image(self.baseline_image, title=self.name)
+        up1 = imgur.upload_image(self.name, title=self.name)
+        up2 = imgur.upload_image(self.diff_filename, title=self.diff_filename)
+        msg = "\n".join(["Baseline image: " + up.link,
+                         "Failed image:   " + up1.link,
+                         "Diff image:     " + up2.link])
+        return msg
 
 
 def get_matplotlib_defaul_tolerance():
