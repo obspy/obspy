@@ -239,17 +239,29 @@ class ImageComparison(NamedTemporaryFile):
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:
                 msg = self.compare()
+        # we can still upload images if comparison fails on two different sized
+        # images
+        except ValueError as e:
+            failed = True
+            if "operands could not be broadcast together" in e.message:
+                msg = e.message
+                msg = self._upload_and_append_message(msg)
+                raise ImageComparisonException(msg)
+            raise
+        # simply reraise on any other unhandled exceptions
         except:
             failed = True
             raise
+        # if image comparison not raises by itself, the test failed if we get a
+        # message back or the test passed if we get an empty message
         else:
             if msg:
-                msg2 = self._upload_images()
-                if msg2:
-                    msg = "\n".join([msg, msg2])
+                msg = self._upload_and_append_message(msg)
                 failed = True
                 raise ImageComparisonException(msg)
             failed = False
+        # finalle clean up after the image test, whether failed or not.
+        # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
             self.close()
@@ -295,6 +307,17 @@ class ImageComparison(NamedTemporaryFile):
                                                          diff_filename_new))
         shutil.copy(self.name, os.path.join(directory, self.image_name))
 
+    def _upload_and_append_message(self, msg):
+        """
+        Takes an error message from image comparison, uploads any output images
+        and appends the corresponding imgur links to the original error
+        message.
+        """
+        msg_ = self._upload_images()
+        if msg_:
+            msg = "\n".join([msg, msg_])
+        return msg
+
     def _upload_images(self):
         """
         Uploads images to imgur.
@@ -316,13 +339,18 @@ class ImageComparison(NamedTemporaryFile):
             return ""
         # upload images and return urls
         imgur = pyimgur.Imgur(imgur_clientid)
-        up = imgur.upload_image(self.baseline_image, title=self.name)
-        up1 = imgur.upload_image(self.name, title=self.name)
-        up2 = imgur.upload_image(self.diff_filename, title=self.diff_filename)
-        msg = "\n".join(["Baseline image: " + up.link,
-                         "Failed image:   " + up1.link,
-                         "Diff image:     " + up2.link])
-        return msg
+        msg = []
+        if os.path.exists(self.baseline_image):
+            up = imgur.upload_image(self.baseline_image, title=self.name)
+            msg.append("Baseline image: " + up.link)
+        if os.path.exists(self.name):
+            up = imgur.upload_image(self.name, title=self.name)
+            msg.append("Failed image:   " + up.link)
+        if os.path.exists(self.diff_filename):
+            up = imgur.upload_image(self.diff_filename,
+                                    title=self.diff_filename)
+            msg.append("Diff image:     " + up.link)
+        return "\n".join(msg)
 
 
 def get_matplotlib_defaul_tolerance():
@@ -400,6 +428,17 @@ def check_flake8():
         report = flake8_style.check_files(files)
 
     return report, out.stdout
+
+
+# this dictionary contains the locations of checker routines that determine
+# whether the module's tests can be executed or not (e.g. because test server
+# is unreachable, necessary ports are blocked, etc.).
+# A checker routine should return either an empty string (tests can and will
+# be executed) or a message explaining why tests can not be executed (all
+# tests of corresponding module will be skipped).
+MODULE_TEST_SKIP_CHECKS = {
+    'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
+    }
 
 
 if __name__ == '__main__':
