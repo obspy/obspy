@@ -96,7 +96,8 @@ INSTALL_REQUIRES = [
     'suds-jurko']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose']}
+              'nose',
+              'pyimgur']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
