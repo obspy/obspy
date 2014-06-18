@@ -2044,36 +2044,35 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Interpolate the data using various interpolation techniques.
 
         No filter, antialiasing, ... is applied so make sure the data is
-        suitable to operation to be performed.  :meth:`.decimate` and
+        suitable for the operation to be performed.  :meth:`.decimate` and
         :meth:`.resample` will be the more appropriate methods for many use
         cases.
 
         .. note::
 
             This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~.copy` to create
-            a copy of your trace object.
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~.copy` to create a copy of your Trace
+            object.
 
-        :param sampling_rate: The new sampling rate in ``Hz`` The new
-            sampling rate in ``Hz``
+        :param sampling_rate: The new sampling rate in ``Hz``.
         :param method: The kind of interpolation to perform as a string (
-            ``linear``, ``nearest``, ``zero``, ``slinear``, ``quadratic``,
-            ``cubic``, or ``weighted_average_slopes`` where ``slinear``,
-            ``quadratic`` and ``cubic`` refer  to a spline interpolation of
-            first,  second or third order) or as an integer specifying the
-            order of the spline interpolator to use.
-            Defaults to ``weighted_average_slopes`` which is the
+            ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``,
+            ``"quadratic"``, ``"cubic"``, or ``"weighted_average_slopes"``
+            where ``"slinear"``, ``"quadratic"`` and ``"cubic"`` refer  to a
+            spline interpolation of first,  second or third order) or as an
+            integer specifying the order of the spline interpolator to use.
+            Defaults to ``"weighted_average_slopes"`` which is the
             interpolation technique used by SAC. Refer to
             :func:`~obspy.signal.interpolation.weighted_average_slopes` for
             more details.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
-        :param starttime: The starttime (or timestamp) for the new
-            interpolated stream. Will be set to current starttime of the
+        :param starttime: The start time (or timestamp) for the new
+            interpolated stream. Will be set to current start time of the
             trace if not given.
         :type npts: int
         :param npts: The new number of samples. Will be set to the best
-            fitting  number to retain the current endtime of the trace if
+            fitting  number to retain the current end time of the trace if
             not given.
         """
         try:

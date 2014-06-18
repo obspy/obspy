@@ -1422,7 +1422,7 @@ class Stream(object):
         .. note::
 
             This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
+            raw data will no longer be accessible afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
 

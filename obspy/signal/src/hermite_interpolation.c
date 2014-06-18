@@ -11,15 +11,15 @@
  *
  * Parameters:
  *
- *	y_in: The data values to be interpolated.
- *	slope: The desired slope at each data point.
- *	x_out: The point at which to interpolate.
- *	y_out: Array to write the interpolated data to.
+ *    y_in: The data values to be interpolated.
+ *    slope: The desired slope at each data point.
+ *    x_out: The point at which to interpolate.
+ *    y_out: Array to write the interpolated data to.
  *
- * len_in: Length of y_in, and slope.
- * len_out: Length of x_out and y_out.
- * h: The sample interval for y_in.
- * x_start: Time of the first sample in y_in.
+ *    len_in: Length of y_in, and slope.
+ *    len_out: Length of x_out and y_out.
+ *    h: The sample interval for y_in.
+ *    x_start: Time of the first sample in y_in.
  *
  * Output will be written to y_out.
  */

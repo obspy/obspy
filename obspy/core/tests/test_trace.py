@@ -1767,7 +1767,7 @@ class TraceTestCase(unittest.TestCase):
         # Assert that the new endtime is smaller than the old one. SAC at
         # times performs some extrapolation which we do not want to do here.
         self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
-        # Sac extrapolates a bit which we don't want here. The deviations
+        # SAC extrapolates a bit which we don't want here. The deviations
         # to SAC are likely due to the fact that we use double precision
         # math while SAC uses single precision math.
         np.testing.assert_allclose(int_tr.data,
@@ -1778,7 +1778,7 @@ class TraceTestCase(unittest.TestCase):
                                            method="weighted_average_slopes")
         # Assert that the sampling rate has been set correctly.
         self.assertEqual(int_tr.stats.delta, 0.077)
-        # Assert that the new endtime is smaller than the old one. SAC at
+        # Assert that the new endtime is smaller than the old one. SAC
         # calculates one sample less in this case.
         self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
         np.testing.assert_allclose(
@@ -1786,8 +1786,8 @@ class TraceTestCase(unittest.TestCase):
             interp_delta_0_077.data, rtol=1E-5)
 
         # Also test the other interpolation methods mainly by assuring the
-        # correct scipy function is called and everything stays internally
-        # consistent. Scipy's functions are tested enough to be sure that
+        # correct SciPy function is called and everything stays internally
+        # consistent. SciPy's functions are tested enough to be sure that
         # they work.
         for inter_type in ["linear", "nearest", "zero"]:
             with mock.patch("scipy.interpolate.interp1d") as patch:
@@ -1840,7 +1840,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
                             tr.stats.endtime - (1.0 / 0.3))
 
-            # If the starttime is modified the new starttime will used but
+            # If the starttime is modified the new starttime will be used but
             # the endtime will again be modified as little as possible.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
                                               method=inter_type,

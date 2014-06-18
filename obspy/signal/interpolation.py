@@ -47,7 +47,7 @@ def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
     """
     Wrapper around some scipy interpolation functions.
 
-    :type data: array like
+    :type data: array_like
     :param data: Array to interpolate.
     :type old_start: float
     :param old_start: The start of the array as a number.
@@ -57,7 +57,7 @@ def interpolate_1d(data, old_start, old_dt, new_start, new_dt, new_npts,
     :param new_start: The start of the interpolated array. Must be greater
         or equal to the current start of the array.
     :type new_dt: float
-    :param new_dt: The desired ewn time delta.
+    :param new_dt: The desired new time delta.
     :type new_npts: int
     :param new_npts: The new number of samples.
     :type type: str or int
@@ -123,7 +123,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     piecewise continuous cubic polynomial used to evaluate the interpolated
     sample points.
 
-    :type data: array like
+    :type data: array_like
     :param data: Array to interpolate.
     :type old_start: float
     :param old_start: The start of the array as a number.
@@ -133,7 +133,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     :param new_start: The start of the interpolated array. Must be greater
         or equal to the current start of the array.
     :type new_dt: float
-    :param new_dt: The desired ewn time delta.
+    :param new_dt: The desired new time delta.
     :type new_npts: int
     :param new_npts: The new number of samples.
     """
