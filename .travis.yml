@@ -18,10 +18,10 @@ before_install:
   - pip install --use-mirrors flake8
   - pip freeze
 install:
+  - git version
   - git remote add obspy git://github.com/obspy/obspy.git
-  - git fetch obspy --tags
-  - git fetch origin --tags
-  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done # continue fetching more older commits until git describe is able to reach the last tagged version
+  - git fetch origin --tags --unshallow
+  - git fetch obspy --tags --unshallow
   - git status
   - pip install --no-deps --use-mirrors .
   - git status
