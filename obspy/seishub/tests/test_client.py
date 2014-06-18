@@ -18,16 +18,23 @@ from obspy.xseed.utils import SEEDParserException
 
 
 TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
-try:
-    code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
-    assert(code == 200)
-except:
-    TESTSERVER_REACHABLE = False
-else:
-    TESTSERVER_REACHABLE = True
+TESTSERVER_UNREACHABLE_MSG = "Seishub test server not reachable."
 
 
-@skipIf(not TESTSERVER_REACHABLE, "Seishub test server not reachable.")
+def _check_server_availability():
+    """
+    Returns an empty string if server is reachable or failure message
+    otherwise.
+    """
+    try:
+        code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
+        assert(code == 200)
+    except:
+        return TESTSERVER_UNREACHABLE_MSG
+    return ""
+
+
+@skipIf(_check_server_availability(), TESTSERVER_UNREACHABLE_MSG)
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for the SeisHub client.

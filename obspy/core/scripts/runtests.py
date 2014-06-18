@@ -88,7 +88,9 @@ from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
+from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from optparse import OptionParser, OptionGroup
+import types
 import copy
 import doctest
 import glob
@@ -345,6 +347,45 @@ class _TextTestResult(unittest._TextTestResult):
         self.timer.append((test, time.time() - self.start))
 
 
+def _skip_test(test_case, msg):
+    """
+    Helper method intended to be bound to a `unittest.TestCase`
+    instance overwriting the `setUp()` method to immediately and
+    unconditionally skip the test when executed.
+
+    :type test_case: unittest.TestCase
+    :type msg: str
+    :param msg: Reason for unconditionally skipping the test.
+    """
+    # python 2.6 does not provide `skipTest`
+    try:
+        test_case.skipTest(msg)
+    except AttributeError:
+        raise Exception(msg)
+
+
+def _recursive_skip(test_suite, msg):
+    """
+    Helper method to recursively skip all tests aggregated in `test_suite`
+    with the the specified message.
+
+    :type test_suite: unittest.TestSuite
+    :type msg: str
+    :param msg: Reason for unconditionally skipping the tests.
+    """
+    def _custom_skip_test(testcase):
+        _skip_test(testcase, msg)
+
+    if isinstance(test_suite, unittest.TestSuite):
+        for obj in test_suite:
+            _recursive_skip(obj, msg)
+    elif isinstance(test_suite, unittest.TestCase):
+        # overwrite setUp method
+        test_suite.setUp = types.MethodType(_custom_skip_test, test_suite)
+    else:
+        raise NotImplementedError()
+
+
 class _TextTestRunner:
     def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
                  timeit=False):
@@ -365,6 +406,24 @@ class _TextTestRunner:
         keys = sorted(suites.keys())
         for id in keys:
             test = suites[id]
+            # run checker routine if any,
+            # to see if module's tests can be executed
+            msg = None
+            if id in MODULE_TEST_SKIP_CHECKS:
+                # acquire function specified by string
+                mod, func = MODULE_TEST_SKIP_CHECKS[id].rsplit(".", 1)
+                try:
+                    import importlib
+                    mod = importlib.import_module(mod)
+                # Py 2.6 workaround
+                except:
+                    mod = __import__(mod, fromlist=["obspy"])
+                func = getattr(mod, func)
+                msg = func()
+            # we encountered an error message, so skip all tests with given
+            # message
+            if msg:
+                _recursive_skip(test, msg)
             result = self._makeResult()
             start = time.time()
             test(result)

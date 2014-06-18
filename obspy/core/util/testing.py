@@ -402,5 +402,16 @@ def check_flake8():
     return report, out.stdout
 
 
+# this dictionary contains the locations of checker routines that determine
+# whether the module's tests can be executed or not (e.g. because test server
+# is unreachable, necessary ports are blocked, etc.).
+# A checker routine should return either an empty string (tests can and will
+# be executed) or a message explaining why tests can not be executed (all
+# tests of corresponding module will be skipped).
+MODULE_TEST_SKIP_CHECKS = {
+    'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
+    }
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
