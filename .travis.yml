@@ -24,7 +24,10 @@ before_install:
   - pip install https://github.com/megies/PyImgur/archive/py26.zip
   - pip freeze
 install:
+  - git version
+  - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch origin --tags --unshallow
+  - git fetch obspy --tags --unshallow
   - git status
   - pip install --no-deps --use-mirrors .
   - git status
