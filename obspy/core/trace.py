@@ -1956,7 +1956,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             norm = self.max()
 
-        self.data = self.data.astype("float64")
+        self.data = self.data.astype(np.float64)
         self.data /= abs(norm)
 
         return self
@@ -2229,7 +2229,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             return self
 
         # use evalresp
-        data = self.data.astype("float64")
+        data = self.data.astype(np.float64)
         npts = len(data)
         # time domain pre-processing
         if zero_mean:

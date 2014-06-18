@@ -59,7 +59,7 @@ def recSTALTA(a, nsta, nlta):
     # be nice and adapt type if necessary
     a = np.require(a, 'float64', ['C_CONTIGUOUS'])
     ndat = len(a)
-    charfct = np.empty(ndat, dtype='float64')
+    charfct = np.empty(ndat, dtype=np.float64)
     # do not use pointer here:
     clibsignal.recstalta(a, charfct, ndat, nsta, nlta)
     return charfct
@@ -130,10 +130,10 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     """
     m = len(a)
     #
-    sta = np.zeros(len(a), dtype='float64')
-    lta = np.zeros(len(a), dtype='float64')
-    star = np.zeros(len(a), dtype='float64')
-    ltar = np.zeros(len(a), dtype='float64')
+    sta = np.zeros(len(a), dtype=np.float64)
+    lta = np.zeros(len(a), dtype=np.float64)
+    star = np.zeros(len(a), dtype=np.float64)
+    ltar = np.zeros(len(a), dtype=np.float64)
     pad_sta = np.zeros(nsta)
     pad_lta = np.zeros(nlta)  # avoid for 0 division 0/1=0
     #
@@ -186,9 +186,9 @@ def classicSTALTA(a, nsta, nlta):
     head = np.empty(1, dtype=head_stalta_t)
     head[:] = (len(data), nsta, nlta)
     # ensure correct type and contiguous of data
-    data = np.require(data, dtype='f8', requirements=['C_CONTIGUOUS'])
+    data = np.require(data, dtype=np.float64, requirements=['C_CONTIGUOUS'])
     # all memory should be allocated by python
-    charfct = np.empty(len(data), dtype='f8')
+    charfct = np.empty(len(data), dtype=np.float64)
     # run and check the error-code
     errcode = clibsignal.stalta(head, data, charfct)
     if errcode != 0:
@@ -224,7 +224,7 @@ def classicSTALTAPy(a, nsta, nlta):
     nsta_1 = nsta - 1
     nlta_1 = nlta - 1
     # compute the short time average (STA)
-    sta = np.zeros(len(a), dtype='float64')
+    sta = np.zeros(len(a), dtype=np.float64)
     pad_sta = np.zeros(nsta_1)
     # Tricky: Construct a big window of length len(a)-nsta. Now move this
     # window nsta points, i.e. the window "sees" every point in a at least
@@ -234,7 +234,7 @@ def classicSTALTAPy(a, nsta, nlta):
     sta = sta / nsta
     #
     # compute the long time average (LTA)
-    lta = np.zeros(len(a), dtype='float64')
+    lta = np.zeros(len(a), dtype=np.float64)
     pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
     for i in range(nlta):  # window size to smooth over
         lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
@@ -266,8 +266,8 @@ def delayedSTALTA(a, nsta, nlta):
     #
     # compute the short time average (STA) and long time average (LTA)
     # don't start for STA at nsta because it's muted later anyway
-    sta = np.zeros(m, dtype='float64')
-    lta = np.zeros(m, dtype='float64')
+    sta = np.zeros(m, dtype=np.float64)
+    lta = np.zeros(m, dtype=np.float64)
     for i in range(m):
         sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
@@ -288,7 +288,7 @@ def zDetect(a, nsta):
     m = len(a)
     #
     # Z-detector given by Swindell and Snell (1977)
-    sta = np.zeros(len(a), dtype='float64')
+    sta = np.zeros(len(a), dtype=np.float64)
     # Standard Sta
     pad_sta = np.zeros(nsta)
     for i in range(nsta):  # window size to smooth over
@@ -473,7 +473,7 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
     import matplotlib.pyplot as plt
     df = trace.stats.sampling_rate
     npts = trace.stats.npts
-    t = np.arange(npts, dtype='float32') / df
+    t = np.arange(npts, dtype=np.float32) / df
     fig = plt.figure()
     ax1 = fig.add_subplot(211)
     ax1.plot(t, trace.data, 'k')

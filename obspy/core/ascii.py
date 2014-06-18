@@ -451,9 +451,9 @@ def _parse_data(data, data_type):
         are 'INTEGER' and 'FLOAT'.
     """
     if data_type == "INTEGER":
-        dtype = "int"
+        dtype = np.int_
     elif data_type == "FLOAT":
-        dtype = "float32"
+        dtype = np.float32
     else:
         raise NotImplementedError
     # Seek to the beginning of the StringIO.

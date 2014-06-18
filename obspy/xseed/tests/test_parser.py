@@ -705,9 +705,9 @@ class ParserTestCase(unittest.TestCase):
         tr_r_e = st_r.select(channel="BHE")[0]
 
         # Convert all components to float for easier assertions.
-        tr_z.data = np.require(tr_z.data, dtype="float64")
-        tr_1.data = np.require(tr_1.data, dtype="float64")
-        tr_2.data = np.require(tr_2.data, dtype="float64")
+        tr_z.data = np.require(tr_z.data, dtype=np.float64)
+        tr_1.data = np.require(tr_1.data, dtype=np.float64)
+        tr_2.data = np.require(tr_2.data, dtype=np.float64)
 
         # The total energy should not be different.
         energy_before = np.sum((tr_z.data ** 2) + (tr_1.data ** 2) +

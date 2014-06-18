@@ -529,8 +529,8 @@ def _unpackSteim1(data_string, npts, swapflag=0, verbose=0):
     dbuf = data_string
     datasize = len(dbuf)
     samplecnt = npts
-    datasamples = np.empty(npts, dtype='int32')
-    diffbuff = np.empty(npts, dtype='int32')
+    datasamples = np.empty(npts, dtype=np.int32)
+    diffbuff = np.empty(npts, dtype=np.int32)
     x0 = C.c_int32()
     xn = C.c_int32()
     nsamples = clibmseed.msr_unpack_steim1(
@@ -554,8 +554,8 @@ def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
     dbuf = data_string
     datasize = len(dbuf)
     samplecnt = npts
-    datasamples = np.empty(npts, dtype='int32')
-    diffbuff = np.empty(npts, dtype='int32')
+    datasamples = np.empty(npts, dtype=np.int32)
+    diffbuff = np.empty(npts, dtype=np.int32)
     x0 = C.c_int32()
     xn = C.c_int32()
     nsamples = clibmseed.msr_unpack_steim2(
@@ -628,7 +628,7 @@ def shiftTimeOfFile(input_file, output_file, timeshift):
 
     # This is in this scenario somewhat easier to use than BytesIO because one
     # can directly modify the data array.
-    data = np.fromfile(input_file, dtype="uint8")
+    data = np.fromfile(input_file, dtype=np.uint8)
     array_length = len(data)
     record_offset = 0
     # Loop over every record.

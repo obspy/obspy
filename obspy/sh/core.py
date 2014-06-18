@@ -208,7 +208,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = loadtxt(data, dtype='float32', ndmin=1)
+            data = loadtxt(data, dtype=np.float32, ndmin=1)
 
             # cut data if requested
             if skip and length:

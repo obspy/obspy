@@ -135,7 +135,7 @@ class LibGSE2TestCase(unittest.TestCase):
         Test that exception is raised when data values exceed the maximum
         of 2^26
         """
-        data = np.array([2 ** 26 + 1], dtype='int32')
+        data = np.array([2 ** 26 + 1], dtype=np.int32)
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
@@ -160,7 +160,7 @@ class LibGSE2TestCase(unittest.TestCase):
             with open(testfile, 'wb') as f:
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
                                   f)
-            data = np.array([2, 26, 1], dtype='f')
+            data = np.array([2, 26, 1], dtype=np.float32)
             with open(testfile, 'wb') as f:
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
                                   f)

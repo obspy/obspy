@@ -51,7 +51,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.random.seed(815)  # make test reproducable
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            data = np.random.randint(-1000, 1000, npts).astype('int32')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int32)
             st = Stream([Trace(data=data)])
             # Writing should fail with invalid record lengths.
             # Not a power of 2.
@@ -72,7 +72,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.random.seed(815)  # make test reproducable
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            data = np.random.randint(-1000, 1000, npts).astype('int32')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int32)
             st = Stream([Trace(data=data)])
             # Writing should fail with invalid record lengths.
             # Wrong number.
@@ -192,11 +192,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # int64
-            data = np.random.randint(-1000, 1000, npts).astype('int64')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int64)
             st = Stream([Trace(data=data)])
             self.assertRaises(Exception, st.write, tempfile, format="MSEED")
             # int8
-            data = np.random.randint(-1000, 1000, npts).astype('int8')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int8)
             st = Stream([Trace(data=data)])
             self.assertRaises(Exception, st.write, tempfile, format="MSEED")
 
@@ -211,7 +211,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             # Read the data and convert them to float
             st = read(file)
-            st[0].data = st[0].data.astype('float32') + .5
+            st[0].data = st[0].data.astype(np.float32) + .5
             # Type is not consistent float32 cannot be compressed with STEIM1,
             # therefore a exception should be raised.
             self.assertRaises(Exception, st.write, tempfile, format="MSEED",
@@ -229,7 +229,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             # Read the data and convert them to float
             st = read(file)
-            st[0].data = st[0].data.astype('float32') + .5
+            st[0].data = st[0].data.astype(np.float32) + .5
             # Type is not consistent float32 cannot be compressed with STEIM1,
             # therefore a warning should be raised.
             self.assertEqual(st[0].stats.mseed.encoding, 'STEIM1')
@@ -326,7 +326,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 1 - transform to np.float64 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('float64')
+                tr.data = tr.data.astype(np.float64)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -338,7 +338,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 2 - transform to np.float32 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('float32')
+                tr.data = tr.data.astype(np.float32)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -350,7 +350,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 3 - transform to np.int32 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('int32')
+                tr.data = tr.data.astype(np.int32)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -370,7 +370,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 4 - transform to np.int16 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('int16')
+                tr.data = tr.data.astype(np.int16)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -494,7 +494,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             st = read()
             tr = st[0]
-            tr.data = tr.data.astype('float64') + .5
+            tr.data = tr.data.astype(np.float64) + .5
             tr.stats.mseed = {'encoding': 0}
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
@@ -546,7 +546,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         Quite simple. It just checks if reading with the correct byteorder
         works and reading with the wrong byteorder fails.
         """
-        tr = Trace(data=np.arange(10, dtype="int32"))
+        tr = Trace(data=np.arange(10, dtype=np.int32))
 
         # Test with little endian.
         memfile = io.BytesIO()
@@ -584,7 +584,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Tests reading and writing years 1900 to 2100.
         """
-        tr = Trace(np.arange(5, dtype="float32"))
+        tr = Trace(np.arange(5, dtype=np.float32))
 
         # Year 2056 is non-deterministic for days 1, 256 and 257. These three
         # dates are simply simply not supported right now. See the libmseed

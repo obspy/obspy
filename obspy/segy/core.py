@@ -584,7 +584,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     # Check that the dtype for every Trace is correct.
     for trace in stream:
         # Check the dtype.
-        if trace.data.dtype != 'float32':
+        if trace.data.dtype != np.float32:
             msg = """
             The dtype of the data is not float32.  You need to manually convert
             the dtype. Please refer to the obspy.segy manual for more details.

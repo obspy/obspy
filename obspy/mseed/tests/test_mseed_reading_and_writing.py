@@ -358,7 +358,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         npts = 1000
         # data array of integers - float won't work!
         np.random.seed(815)  # make test reproducable
-        data = np.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -415,7 +415,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # libmseed instance.
         npts = 6000
         np.random.seed(815)  # make test reproducable
-        data = np.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         # Loop over some record lengths.
@@ -462,7 +462,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests whether the header is correctly written and read.
         """
         np.random.seed(815)  # make test reproducable
-        data = np.random.randint(-1000, 1000, 50).astype('int32')
+        data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         stats = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed': {'record_length': 512, 'encoding': 'STEIM2',
@@ -490,7 +490,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         npts = 6000
         np.random.seed(815)  # make test reproducable
-        data = np.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         # Test all possible combinations of record length, encoding and
         # byteorder.
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
@@ -658,7 +658,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         path = os.path.join(self.path, "data", "encoding")
         # Dictionary. The key is the filename, the value a tuple: dtype,
         # sampletype, encoding, content
-        def_content = np.arange(1, 51, dtype='int32')
+        def_content = np.arange(1, 51, dtype=np.int32)
         files = {
             os.path.join(path, "smallASCII.mseed"):
             ('|S1', 'a', 0, np.fromstring('ABCDEFGH', dtype='|S1')),
@@ -670,17 +670,17 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
-            ('int32', 'i', 1, def_content.astype('int16')),
+            (np.int32, 'i', 1, def_content.astype(np.int16)),
             os.path.join(path, "int32_INT32.mseed"):
-            ('int32', 'i', 3, def_content),
+            (np.int32, 'i', 3, def_content),
             os.path.join(path, "int32_Steim1.mseed"):
-            ('int32', 'i', 10, def_content),
+            (np.int32, 'i', 10, def_content),
             os.path.join(path, "int32_Steim2.mseed"):
-            ('int32', 'i', 11, def_content),
+            (np.int32, 'i', 11, def_content),
             os.path.join(path, "float32_Float32.mseed"):
-            ('float32', 'f', 4, def_content.astype('float32')),
+            (np.float32, 'f', 4, def_content.astype(np.float32)),
             os.path.join(path, "float64_Float64.mseed"):
-            ('float64', 'd', 5, def_content.astype('float64'))
+            (np.float64, 'd', 5, def_content.astype(np.float64))
         }
         # Loop over all files and read them.
         for file in list(files.keys()):
@@ -743,7 +743,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         write it in here.
         """
         np.random.seed(800)  # make test reproducable
-        data = np.random.randint(-1000, 1000, 50).astype('int32')
+        data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                   'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -856,7 +856,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         npts = 1000
         np.random.seed(815)  # make test reproducable
-        data = np.random.randn(npts).astype('float64') * 1e3 + .5
+        data = np.random.randn(npts).astype(np.float64) * 1e3 + .5
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
         for encoding, value in ENCODINGS.items():
@@ -909,8 +909,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         Tests writing empty Traces should raise an exception.
         """
-        tr1 = Trace(data=np.array([12], dtype='int32'))
-        tr2 = Trace(data=np.array([], dtype='int32'))
+        tr1 = Trace(data=np.array([12], dtype=np.int32))
+        tr2 = Trace(data=np.array([], dtype=np.int32))
         st = Stream([tr1, tr2])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name

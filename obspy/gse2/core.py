@@ -100,7 +100,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     with open(filename, 'wb') as f:
         # write multiple gse2 parts
         for trace in stream:
-            dt = np.dtype('int32')
+            dt = np.dtype(np.int32)
             if trace.data.dtype.name == dt.name:
                 trace.data = np.require(trace.data, dt, ['C_CONTIGUOUS'])
             else:

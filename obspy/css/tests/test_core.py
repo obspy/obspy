@@ -36,7 +36,7 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, '201101311155.10.ascii.gz')
         # no with due to py 2.6
         fp = gzip.open(filename, 'rb')
-        data = np.loadtxt(fp, dtype='int')
+        data = np.loadtxt(fp, dtype=np.int_)
         fp.close()
         # traces in the test files are sorted ZEN
         st = Stream()

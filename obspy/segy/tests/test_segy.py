@@ -136,8 +136,8 @@ class SEGYTestCase(unittest.TestCase):
                 # to get 4 byte numbers.
                 packed_data_copy = packed_data.copy()
                 new_packed_data_copy = new_packed_data.copy()
-                packed_data_copy.dtype = 'int32'
-                new_packed_data_copy.dtype = 'int32'
+                packed_data_copy.dtype = np.int32
+                new_packed_data_copy.dtype = np.int32
                 # Equalize the non normalized parts.
                 packed_data_copy[non_normalized] = \
                     new_packed_data_copy[non_normalized]
@@ -148,7 +148,7 @@ class SEGYTestCase(unittest.TestCase):
                 # same.
                 data = data[non_normalized]
                 # Unpack the data again.
-                new_packed_data.dtype = 'int32'
+                new_packed_data.dtype = np.int32
                 new_packed_data = new_packed_data[non_normalized]
                 length = len(new_packed_data)
                 f = io.BytesIO()
@@ -157,7 +157,7 @@ class SEGYTestCase(unittest.TestCase):
                 new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
                     f, length, endian)
                 f.close()
-                packed_data.dtype = 'int32'
+                packed_data.dtype = np.int32
                 packed_data = packed_data[non_normalized]
                 length = len(packed_data)
                 f = io.BytesIO()

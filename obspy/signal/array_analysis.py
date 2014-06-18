@@ -674,7 +674,7 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     # unoptimized version for reference
     # nstat = len(geometry)  # last index are center coordinates
     #
-    # time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+    # time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype=np.float32)
     # for k in xrange(grdpts_x):
     #    sx = sll_x + k * sl_s
     #    for l in xrange(grdpts_y):
@@ -688,7 +688,7 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     return np.require(
         mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
         my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
-        dtype='float32')
+        dtype=np.float32)
 
 
 def get_spoint(stream, stime, etime):
@@ -700,8 +700,8 @@ def get_spoint(stream, stime, etime):
     :param etime: UTCDateTime to end
     :returns: start and end sample offset arrays
     """
-    spoint = np.empty(len(stream), dtype="int32", order="C")
-    epoint = np.empty(len(stream), dtype="int32", order="C")
+    spoint = np.empty(len(stream), dtype=np.int32, order="C")
+    epoint = np.empty(len(stream), dtype=np.int32, order="C")
     for i, tr in enumerate(stream):
         if tr.stats.starttime > stime:
             msg = "Specified stime %s is smaller than starttime %s in stream"
@@ -929,16 +929,16 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
     # to spead up the routine a bit we estimate all steering vectors in advance
-    steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
+    steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                          deltaf, time_shift_table, steer)
-    R = np.empty((nf, nstat, nstat), dtype='c16')
-    ft = np.empty((nstat, nf), dtype='c16')
+    R = np.empty((nf, nstat, nstat), dtype=np.complex128)
+    ft = np.empty((nstat, nf), dtype=np.complex128)
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
-    relpow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
-    abspow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
+    relpow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
+    abspow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
     while eotr:
         try:
             for i, tr in enumerate(stream):

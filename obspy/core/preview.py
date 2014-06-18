@@ -73,7 +73,7 @@ def createPreview(trace, delta=60):
     if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)
     data = np.concatenate([first_diff, diff, last_diff])
-    data = np.require(data, dtype="float32")
+    data = np.require(data, dtype=np.float32)
     tr = Trace(data=data, header=trace.stats)
     tr.stats.delta = delta
     tr.stats.npts = len(data)

@@ -74,7 +74,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
 
     .. rubric:: Example
 
-    >>> tr1 = np.random.randn(10000).astype('float32')
+    >>> tr1 = np.random.randn(10000).astype(np.float32)
     >>> tr2 = tr1.copy()
     >>> a, b = xcorr(tr1, tr2, 1000)
     >>> a
@@ -99,7 +99,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     # be nice and adapt type if necessary
     tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
     tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
-    corp = np.empty(2 * shift_len + 1, dtype='float64', order='C')
+    corp = np.empty(2 * shift_len + 1, dtype=np.float64, order='C')
 
     shift = C.c_int()
     coe_p = C.c_double()
@@ -158,7 +158,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
                  for st in streams for component in components]:
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
-    corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
+    corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
 
     for component in components:
         xx = xcorr(streams[0].select(component=component)[0],
@@ -309,7 +309,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
             warnings.warn(msg)
         # apply signal processing and take correct slice of data
         if filter:
-            tr.data = tr.data.astype("float64")
+            tr.data = tr.data.astype(np.float64)
             tr.detrend(type='demean')
             tr.data *= cosTaper(len(tr), 0.1)
             tr.filter(type=filter, **filter_options)

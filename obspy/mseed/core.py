@@ -221,9 +221,9 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # If its a filename just read it.
     if isinstance(mseed_object, (str, native_str)):
         # Read to NumPy array which is used as a buffer.
-        buffer = np.fromfile(mseed_object, dtype='b')
+        buffer = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
-        buffer = np.fromstring(mseed_object.read(), dtype='b')
+        buffer = np.fromstring(mseed_object.read(), dtype=np.int8)
 
     # Get the record length
     try:
@@ -622,13 +622,13 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = None
         # automatically detect encoding if no encoding is given.
         if not trace_attr['encoding']:
-            if trace.data.dtype.type == np.dtype("int32"):
+            if trace.data.dtype.type == np.dtype(np.int32):
                 trace_attr['encoding'] = 11
-            elif trace.data.dtype.type == np.dtype("float32"):
+            elif trace.data.dtype.type == np.dtype(np.float32):
                 trace_attr['encoding'] = 4
-            elif trace.data.dtype.type == np.dtype("float64"):
+            elif trace.data.dtype.type == np.dtype(np.float64):
                 trace_attr['encoding'] = 5
-            elif trace.data.dtype.type == np.dtype("int16"):
+            elif trace.data.dtype.type == np.dtype(np.int16):
                 trace_attr['encoding'] = 1
             elif trace.data.dtype.type == np.dtype('|S1').type:
                 trace_attr['encoding'] = 0

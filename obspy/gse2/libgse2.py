@@ -40,31 +40,31 @@ clibgse2 = _load_CDLL("gse2")
 
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
 clibgse2.decomp_6b_buffer.restype = C.c_int
 
 clibgse2.rem_2nd_diff.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int]
 clibgse2.rem_2nd_diff.restype = C.c_int
 
 clibgse2.check_sum.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int32]
 clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
 clibgse2.diff_2nd.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int]
 clibgse2.diff_2nd.restype = C.c_void_p
 
 clibgse2.compress_6b_buffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.CFUNCTYPE(C.c_int, C.c_char)]
@@ -249,10 +249,10 @@ def uncompress_CM6(f, n_samps):
 
     cread83 = C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p)(read83)
     if n_samps == 0:
-        data = np.empty(0, dtype='int32')
+        data = np.empty(0, dtype=np.int32)
     else:
         # aborts with segmentation fault when n_samps == 0
-        data = np.empty(n_samps, dtype='int32')
+        data = np.empty(n_samps, dtype=np.int32)
         n = clibgse2.decomp_6b_buffer(n_samps, data, cread83, None)
         if n != n_samps:
             raise GSEUtiError("Mismatching length in lib.decomp_6b")

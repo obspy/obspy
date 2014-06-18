@@ -37,13 +37,13 @@ def pack_4byte_IBM(file, data, endian='>'):
     internally uses little endian byteorders.
     """
     # Check the dtype and raise exception otherwise!
-    if data.dtype != 'float64' and data.dtype != 'float32':
+    if data.dtype != np.float64 and data.dtype != np.float32:
         raise WrongDtypeException
     # Calculate the values. The theory is explained in
     # http://www.codeproject.com/KB/applications/libnumber.aspx
 
     # Calculate the signs.
-    signs = np.empty(len(data), dtype='uint8')
+    signs = np.empty(len(data), dtype=np.uint8)
     temp_signs = np.sign(data)
     # Negative numbers are encoded as sign bit 1, positive ones as bit 0.
     signs[temp_signs == 1] = 0
@@ -58,7 +58,7 @@ def pack_4byte_IBM(file, data, endian='>'):
     data[zeros] += 1e-32
 
     # Calculate the exponent for the IBM data format.
-    exponent = ((np.log10(data) / LOG2) * 0.25 + 65).astype('uint32')
+    exponent = ((np.log10(data) / LOG2) * 0.25 + 65).astype(np.uint32)
 
     # Now calculate the fraction using single precision.
     fraction = np.require(
@@ -113,7 +113,7 @@ def pack_4byte_IBM(file, data, endian='>'):
     else:
         raise Exception
     # Write the zeros again.
-    new_data.dtype = 'uint32'
+    new_data.dtype = np.uint32
     new_data[zeros] = 0
     # Write to file.
     file.write(new_data.tostring())
@@ -124,7 +124,7 @@ def pack_4byte_Integer(file, data, endian='>'):
     Packs 4 byte integers.
     """
     # Check the dtype and raise exception otherwise!
-    if data.dtype != 'int32':
+    if data.dtype != np.int32:
         raise WrongDtypeException
     # Swap the byteorder if necessary.
     if BYTEORDER != endian:
@@ -138,7 +138,7 @@ def pack_2byte_Integer(file, data, endian='>'):
     Packs 2 byte integers.
     """
     # Check the dtype and raise exception otherwise!
-    if data.dtype != 'int16':
+    if data.dtype != np.int16:
         raise WrongDtypeException
     # Swap the byteorder if necessary.
     if BYTEORDER != endian:
@@ -156,7 +156,7 @@ def pack_4byte_IEEE(file, data, endian='>'):
     Packs 4 byte IEEE floating points.
     """
     # Check the dtype and raise exception otherwise!
-    if data.dtype != 'float32':
+    if data.dtype != np.float32:
         raise WrongDtypeException
     # Swap the byteorder if necessary.
     if BYTEORDER != endian:
