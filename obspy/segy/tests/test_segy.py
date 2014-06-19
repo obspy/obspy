@@ -101,9 +101,9 @@ class SEGYTestCase(unittest.TestCase):
                 # Read the data as uint8 to be able to directly access the
                 # different bytes.
                 # Original data.
-                packed_data = np.fromstring(packed_data, 'uint8')
+                packed_data = np.fromstring(packed_data, np.uint8)
                 # Newly written.
-                new_packed_data = np.fromstring(new_packed_data, 'uint8')
+                new_packed_data = np.fromstring(new_packed_data, np.uint8)
 
                 # Figure out the non normalized fractions in the original data
                 # because these cannot be compared directly.
@@ -360,8 +360,8 @@ class SEGYTestCase(unittest.TestCase):
             # tested again here.
             if len(non_normalized_samples) != 0:
                 # Convert to 4 byte integers. Any 4 byte numbers work.
-                org_data = np.fromstring(org_data, 'int32')
-                new_data = np.fromstring(new_data, 'int32')
+                org_data = np.fromstring(org_data, np.int32)
+                new_data = np.fromstring(new_data, np.int32)
                 # Skip the header (4*960 bytes) and replace the non normalized
                 # data samples.
                 org_data[960:][non_normalized_samples] = \

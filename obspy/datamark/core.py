@@ -131,16 +131,16 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                 if datawide == 0.5:
                     for i in range(srate // 2):
                         idata2 = output[chanum][-1] + \
-                            np.fromstring(sdata[i:i + 1], 'b')[0] >> 4
+                            np.fromstring(sdata[i:i + 1], np.int8)[0] >> 4
                         output[chanum].append(idata2)
                         idata2 = idata2 +\
                             (np.fromstring(sdata[i:i + 1],
-                                           'b')[0] << 4) >> 4
+                                           np.int8)[0] << 4) >> 4
                         output[chanum].append(idata2)
                 elif datawide == 1:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[i:i + 1], 'b')[0]
+                            np.fromstring(sdata[i:i + 1], np.int8)[0]
                         output[chanum].append(idata2)
                 elif datawide == 2:
                     for i in range((xlen // datawide)):
