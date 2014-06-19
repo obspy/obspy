@@ -3,6 +3,7 @@
 Package for storage and manipulation of seismic earth models.
 """
 import os
+import sys
 import itertools
 
 from .header import TauPException

@@ -6,7 +6,7 @@ class TauModel(object):
     def __init__(self, sMod):
         
         self.sMod = sMod
-        calcTauIncFrom()
+        self.calcTauIncFrom()
 
         print("This is the init method of TauModel clocking in. Hello!")
         print("The debug flag for TauModel is set to:"+str(self.DEBUG), 

@@ -38,6 +38,7 @@ SphericalSModel extends SlownessModel:
     interpolate method is defined here (only abstract in SlownessModel)
     toSlownessLayer (also abstract in superclass)
         returns new SlownessLayer instance
+    toSlowness, toVelocity also defined here
         
 TauModel:   
     # doesn't want to be translated by j2py!
@@ -66,10 +67,10 @@ TauModel:
 
 SlownessLayer:
         calls on VelocityLayer
+        remove, add, get top/btm depths etc
         
 SlownessModel:
-    The first constructor is called from SphericalSModel. Does not yet 
-    require DepthRange, CriticalDepth and SlownessLayer classes!
+    The first constructor is called from SphericalSModel.
         calls createSample()
 
     createSample()
@@ -129,13 +130,21 @@ SlownessModel:
     addSlowness
     rayParamIncCheck
     depthIncCheck
+        toSlowness
+    toSlowness
+        is abstract, def'd in SphericalSModel
     distanceCheck
+        uses TimeDist
+        getSlownessLayer
+        depthInHighSlowness
+        approxDistance
+    getSlownessLayer
+    depthInHighSlowness
+        DepthRange.rayParam    
+    approxDistance
+        getNumLayers    
     fixCriticalPoints
-
-
-
-    
-
+    getNumLayers
     validate:
             DepthRange
             DepthRange.size     # via highSlownessLayerDepths.size
@@ -148,7 +157,10 @@ CriticalDepth:
     very simple.
 
 DepthRange:
-    also simple.
+    clear, add, size, rayParam
     
+TimeDist ('implements cloneable')
+    simples. maybe combine some of these really short classes?
+    add, time, distRadian
 TauBranch:
     nothing special in the constructors.

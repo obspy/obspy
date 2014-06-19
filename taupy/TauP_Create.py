@@ -5,7 +5,6 @@ import sys
 import inspect
 import argparse
 from taupy.VelocityModel import VelocityModel
-from taupy.SphericalSModel import SphericalSModel
 from taupy.SlownessModel import SlownessModel
 from taupy.TauModel import TauModel
 
@@ -104,7 +103,7 @@ class TauP_Create(object):
         return self.vMod
 
     def createTauModel(self, vMod):
-        """ Takes a v model and makes a SphericalSModel out of it,
+        """ Takes a v model and makes a SlownessModel out of it,
         then passes that to TauModel """
         if vMod == None:
             raise ValueError("vMod cannot be null")
@@ -114,14 +113,14 @@ class TauP_Create(object):
 
         
         if self.DEBUG:
-            print("Using parameters provided in TauP_config.ini (or defaults if not) to call SphericalSModel...")
+            print("Using parameters provided in TauP_config.ini (or defaults if not) to call SlownessModel...")
         import configparser
         config = configparser.ConfigParser()
         try:
             config.read('TauP_config.ini')
-            ssm=config['SphericalSModel_created_from_VelocityModel']
+            ssm=config['SlownessModel_created_from_VelocityModel']
         except KeyError:
-            raise SystemExit('Error reading config file: TauP_config must exist in working dir and have section named SphericalSModel_created_from_VelocityModel! It can be empty otherwise.')
+            raise SystemExit('Error reading config file: TauP_config must exist in working dir and have section named SlownessModel_created_from_VelocityModel! It can be empty otherwise.')
             
         # Read values from the appropriate section if defined, else use default values
         minDeltaP = float(ssm.get('mindeltaP', 0.1)) # (are actually case-insensitive)
@@ -133,7 +132,8 @@ class TauP_Create(object):
         
 
         from math import pi
-        self.sMod = SphericalSModel(vMod,
+        # note the separate SlownessModel class has been deemed pointless
+        self.sMod = SlownessModel(vMod,
                                     minDeltaP, maxDeltaP, maxDepthInterval, maxRangeInterval * pi / 180, maxInterpError, allowInnerCoreS, SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
 
         if self.DEBUG:
