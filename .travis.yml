@@ -19,9 +19,9 @@ before_install:
   - pip freeze
 install:
   - git version
-  - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch origin --tags --unshallow
-  - git fetch obspy --tags --unshallow
+  - git remote add obspy git://github.com/obspy/obspy.git
+  - git fetch obspy --tags
   - git status
   - pip install --no-deps --use-mirrors .
   - git status
