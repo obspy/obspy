@@ -190,7 +190,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
 
-            dt = np.dtype(np.int_)
+            dt = np.int_
             if format in ('MSEED', 'GSE2'):
                 dt = np.int32
             tr = Trace(data=data.astype(dt))

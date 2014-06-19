@@ -110,7 +110,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> createEmptyDataChunk(6, np.dtype(np.complex128), 0)
+    >>> createEmptyDataChunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE

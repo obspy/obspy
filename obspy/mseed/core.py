@@ -622,13 +622,13 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = None
         # automatically detect encoding if no encoding is given.
         if not trace_attr['encoding']:
-            if trace.data.dtype.type == np.dtype(np.int32):
+            if trace.data.dtype.type == np.int32:
                 trace_attr['encoding'] = 11
-            elif trace.data.dtype.type == np.dtype(np.float32):
+            elif trace.data.dtype.type == np.float32:
                 trace_attr['encoding'] = 4
-            elif trace.data.dtype.type == np.dtype(np.float64):
+            elif trace.data.dtype.type == np.float64:
                 trace_attr['encoding'] = 5
-            elif trace.data.dtype.type == np.dtype(np.int16):
+            elif trace.data.dtype.type == np.int16:
                 trace_attr['encoding'] = 1
             elif trace.data.dtype.type == np.dtype('|S1').type:
                 trace_attr['encoding'] = 0
