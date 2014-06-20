@@ -243,8 +243,8 @@ class ImageComparison(NamedTemporaryFile):
         # images
         except ValueError as e:
             failed = True
-            if "operands could not be broadcast together" in e.message:
-                msg = e.message
+            msg = str(e)
+            if "operands could not be broadcast together" in msg:
                 msg = self._upload_and_append_message(msg)
                 raise ImageComparisonException(msg)
             raise
@@ -260,7 +260,7 @@ class ImageComparison(NamedTemporaryFile):
                 failed = True
                 raise ImageComparisonException(msg)
             failed = False
-        # finalle clean up after the image test, whether failed or not.
+        # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
