@@ -2046,13 +2046,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`.resample` will be the more appropriate methods for many use
         cases.
 
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data will no longer be accessible afterwards. To keep your
-            original data, use :meth:`~.copy` to create a copy of your Trace
-            object.
-
         :param sampling_rate: The new sampling rate in ``Hz``.
         :param method: The kind of interpolation to perform as a string (
             ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``,
@@ -2072,6 +2065,32 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param npts: The new number of samples. Will be set to the best
             fitting  number to retain the current end time of the trace if
             not given.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~.copy` to create a copy of your Trace
+            object.
+
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> tr.interpolate(sampling_rate=111.1)
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+
+        Setting ``starttime`` and/or ``npts`` will interpolate to sampling
+        points with the given start time and/or number of samples.
+        Extrapolation will not be performed.
+
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> tr.interpolate(sampling_rate=111.1,
+        ...                starttime=tr.stats.starttime + 10)
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:13... - ... | 111.1 Hz, 2221 samples
         """
         try:
             method = method.lower()

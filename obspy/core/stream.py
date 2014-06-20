@@ -2291,6 +2291,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raw data will no longer be accessible afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> st.interpolate(sampling_rate=111.1)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
         """
         for tr in self:
             tr.interpolate(*args, **kwargs)
