@@ -87,7 +87,7 @@ def nextpow2(i):
     >>> int(nextpow2(250))
     256
     """
-    # do not use numpy here, math is much faster for single values
+    # do not use NumPy here, math is much faster for single values
     buf = M.ceil(M.log(i) / M.log(2))
     return native(int(M.pow(2, buf)))
 
@@ -101,7 +101,7 @@ def prevpow2(i):
     >>> prevpow2(250)
     128
     """
-    # do not use numpy here, math is much faster for single values
+    # do not use NumPy here, math is much faster for single values
     return int(M.pow(2, M.floor(M.log(i, 2))))
 
 
@@ -155,7 +155,7 @@ def enframe(x, win, inc):
 
 def smooth(x, smoothie):
     """
-    Smoothes a given signal by computing a central moving average.
+    Smooths a given signal by computing a central moving average.
 
     :param x: signal to smooth
     :param smoothie: number of past/future values to calculate moving average

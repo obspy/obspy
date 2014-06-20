@@ -37,10 +37,12 @@ class MySLClient(SLClient):
 
         :type count: int
         :param count:  Packet counter.
-        :type slpack: :class:`~obspy.seedlink.SLPacket`
+        :type slpack: :class:`~obspy.seedlink.slpacket.SLPacket`
         :param slpack: packet to process.
-        :return: Boolean true if connection to SeedLink server should be \
-            closed and session terminated, false otherwise.
+
+        :rtype: bool
+        :return: True if connection to SeedLink server should be closed and
+            session terminated, False otherwise.
         """
         # check if not a complete packet
         if slpack is None or (slpack == SLPacket.SLNOPACKET) or \

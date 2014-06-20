@@ -151,7 +151,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         encoding_strings = {}
         for key, value in ENCODINGS.items():
             encoding_strings[value[0]] = key
-        # Test the encodings and byteorders.
+        # Test the encodings and byte orders.
         path = os.path.join(self.path, "data", "encoding")
         files = ['float32_Float32_bigEndian.mseed',
                  'float32_Float32_littleEndian.mseed',
@@ -357,7 +357,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         npts = 1000
         # data array of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         st = Stream([Trace(data=data)])
         with NamedTemporaryFile() as tf:
@@ -414,7 +414,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         # libmseed instance.
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         st = Stream([Trace(data=data)])
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
@@ -461,7 +461,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         Tests whether the header is correctly written and read.
         """
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -489,10 +489,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         trace.stats.mseed.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         # Test all possible combinations of record length, encoding and
-        # byteorder.
+        # byte order.
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         byteorders = ['>', '<']
         encodings = [value[0] for value in list(ENCODINGS.values())]
@@ -692,8 +692,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 np.testing.assert_array_equal(st[0].data, files[file][3])
                 # Check the dtype.
                 self.assertEqual(st[0].data.dtype, files[file][0])
-                # Check byteorder. Should always be native byteorder. Byteorder
-                # does not apply to ASCII arrays.
+                # Check byte order. Should always be native byte order. Byte
+                # order does not apply to ASCII arrays.
                 if 'ASCII' in cur_file:
                     self.assertEqual(st[0].data.dtype.byteorder, '|')
                 else:
@@ -742,7 +742,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         corresponding test in test_libmseed.py as it is just more convenient to
         write it in here.
         """
-        np.random.seed(800)  # make test reproducable
+        np.random.seed(800)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
@@ -855,7 +855,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         methods.
         """
         npts = 1000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randn(npts).astype('float64') * 1e3 + .5
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
@@ -931,7 +931,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info
-        # timing_quality splits the stream additionaly when timing quality
+        # timing_quality splits the stream additionally when timing quality
         # changes, sum of all points in stream must stay the same
         self.assertEqual(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]

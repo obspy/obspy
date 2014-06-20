@@ -125,8 +125,8 @@ class AttribDict(collections.MutableMapping):
         """
         Return better readable string representation of AttribDict object.
 
-        :type priorized_keys: List of str, optional
-        :param priorized_keys: Keywords of current AttribtDict which will be
+        :type priorized_keys: list of str, optional
+        :param priorized_keys: Keywords of current AttribDict which will be
             shown before all other keywords. Those keywords must exists
             otherwise an exception will be raised. Defaults to empty list.
         :type min_label_length: int, optional

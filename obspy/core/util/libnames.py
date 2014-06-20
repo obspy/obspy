@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Library name handling for obspy.
+Library name handling for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -45,7 +45,7 @@ def _get_lib_name(lib, add_extension_suffix):
     filename.
 
     :type add_extension_suffix: bool
-    :param add_extension_suffix: Numpy distutils adds a suffix to
+    :param add_extension_suffix: NumPy distutils adds a suffix to
         the filename we specify to build internally (as specified by Python
         builtin `sysconfig.get_config_var("EXT_SUFFIX")`. So when loading the
         file we have to add this suffix, but not during building.
@@ -55,7 +55,7 @@ def _get_lib_name(lib, add_extension_suffix):
         lib, platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
     libname = cleanse_pymodule_filename(libname)
-    # numpy distutils adds extension suffix by itself during build (#771, #755)
+    # NumPy distutils adds extension suffix by itself during build (#771, #755)
     if add_extension_suffix:
         # append any extension suffix defined by Python for current platform
         ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
@@ -78,10 +78,10 @@ def _get_lib_name(lib, add_extension_suffix):
 
 def _load_CDLL(name):
     """
-    Helper function to load a shared library built during obspy installation
+    Helper function to load a shared library built during ObsPy installation
     with ctypes.
 
-    :type name: unicode
+    :type name: str
     :param name: Name of the library to load (e.g. 'mseed').
     :rtype: :class:`ctypes.CDLL`
     """

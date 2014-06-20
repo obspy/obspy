@@ -34,7 +34,7 @@ class SLState(object):
     :var NO_QUERY: INFO query state NO_QUERY.
     :type NO_QUERY: int
     :var INFO_QUERY: INFO query state INFO_QUERY.
-    :type INFO_QUERY: int.
+    :type INFO_QUERY: int
     :var KEEP_ALIVE_QUERY: INFO query state KEEP_ALIVE_QUERY.
     :type KEEP_ALIVE_QUERY: int
     :var query_mode: INFO query state.
@@ -48,13 +48,13 @@ class SLState(object):
     :var sendptr: Send pointer for databuf.
     :type sendptr: int
     :var expect_info: Flag to indicate if an INFO response is expected.
-    :type expect_info: boolean
+    :type expect_info: bool
     :var netto_trig: Network timeout trigger.netto_trig
     :type netto_trig: int
     :var netdly_trig: Network re-connect delay trigger.
     :type netdly_trig: int
     :var keepalive_trig: Send keepalive trigger.
-    :type keepalive_trig: TTT
+    :type keepalive_trig: int
     :var previous_time: Time stamp of last state update.
     :type previous_time: float
     :var netto_time: Network timeout time stamp.
@@ -96,7 +96,7 @@ class SLState(object):
 
         :return: last received packet if data buffer contains a full packet to
             send.
-        :raise: SeedLinkException if there is not a packet ready to send.
+        :raise SeedLinkException: if there is not a packet ready to send.
 
         See also: :meth:`packetAvailable`
         """
@@ -131,7 +131,7 @@ class SLState(object):
 
         :return: true if next send packet is a SeedLink ERROR packet
 
-        :raise: SeedLinkException if there are not enough bytes to determine
+        :raise SeedLinkException: if there are not enough bytes to determine
 
         """
         if self.recptr - self.sendptr < len(SLPacket.ERRORSIGNATURE):
@@ -147,7 +147,7 @@ class SLState(object):
 
         :return: true if next send packet is a SeedLink END packet
 
-        :raise: SeedLinkException if there are not enough bytes to determine
+        :raise SeedLinkException: if there are not enough bytes to determine
         """
         if self.recptr - self.sendptr < len(SLPacket.ENDSIGNATURE):
             msg = "not enough bytes to determine packet type"
@@ -162,7 +162,7 @@ class SLState(object):
 
         :return: true if next send packet is a SeedLink INFO packet
 
-        :raise: SeedLinkException if there are not enough bytes to determine
+        :raise SeedLinkException: if there are not enough bytes to determine
             packet type
         """
         if self.recptr - self.sendptr < len(SLPacket.INFOSIGNATURE):

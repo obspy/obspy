@@ -63,7 +63,7 @@ class StationXMLTestCase(unittest.TestCase):
             self.assertEqual(org_line, new_line)
 
         # Assert the line length at the end to find trailing non-equal lines.
-        # If it is done before the line comparision it is oftentimes not very
+        # If it is done before the line comparison it is oftentimes not very
         # helpful as you do not know which line is missing.
         self.assertEqual(len(new_lines), len(org_lines))
 

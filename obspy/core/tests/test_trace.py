@@ -730,7 +730,7 @@ class TraceTestCase(unittest.TestCase):
         # Alter the new stats to make sure the old one stays intact.
         temp.stats.starttime = UTCDateTime(1000)
         self.assertEqual(org_stats, tr.stats)
-        # Check if the data adress is not the same, that is it is a copy
+        # Check if the data address is not the same, that is it is a copy
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data)
         # Make sure the original Trace object did not change.
@@ -800,7 +800,7 @@ class TraceTestCase(unittest.TestCase):
         # Alter the new stats to make sure the old one stays intact.
         temp.stats.starttime = UTCDateTime(1000)
         self.assertEqual(org_stats, tr.stats)
-        # Check if the data adress is not the same, that is it is a copy
+        # Check if the data address is not the same, that is it is a copy
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data[2:13])
         # Make sure the original Trace object did not change.

@@ -76,14 +76,15 @@ class Parser(object):
         """
         Initializes the SEED parser.
 
+        :type data: str, bytes, io.BytesIO or file
         :param data: Filename, URL, XSEED/SEED string, file pointer or
             BytesIO.
-        :type debug: Boolean.
+        :type debug: bool
         :param debug: Enables a verbose debug log during parsing of SEED file.
-        :type strict: Boolean.
+        :type strict: bool
         :param strict: Parser will raise an exception if SEED files does not
             stay within the SEED specifications.
-        :type compact: Boolean.
+        :type compact: bool
         :param compact: SEED volume will contain compact data strings. Missing
             time strings will be filled with 00:00:00.0000 if this option is
             disabled.
@@ -144,7 +145,7 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Filename, URL, Basestring or BytesIO object.
+        :type data: str, bytes, io.BytesIO or file
         :param data: Filename, URL or XSEED/SEED string as file pointer or
             BytesIO.
         """
@@ -196,7 +197,7 @@ class Parser(object):
 
         :type version: float, optional
         :param version: XSEED version string (default is ``1.1``).
-        :type split_stations: boolean, optional
+        :type split_stations: bool, optional
         :param split_stations: Splits stations containing multiple channels
             into multiple documents.
         :rtype: str or dict
@@ -602,7 +603,7 @@ class Parser(object):
 
         It will always parse the whole file and skip any time span data.
 
-        :type data: File pointer or BytesIO object.
+        :type data: file or io.BytesIO
         """
         # Jump to the beginning of the file.
         data.seek(0)
@@ -738,7 +739,7 @@ class Parser(object):
         """
         Parse a XML-SEED string.
 
-        :type data: File pointer or BytesIO object.
+        :type data: file or io.BytesIO
         """
         data.seek(0)
         root = xmlparse(data).getroot()
@@ -1114,8 +1115,8 @@ class Parser(object):
             stations.append(station)
         # Make abbreviations.
         abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
-        abbr_lenght = len(abbreviations)
-        cur_count = 1 + abbr_lenght
+        abbr_length = len(abbreviations)
+        cur_count = 1 + abbr_length
         while True:
             blkt11 = blockette.Blockette011()
             blkt11.number_of_stations = len(self.stations)
@@ -1132,7 +1133,7 @@ class Parser(object):
                 blkt12.number_of_spans_in_table = 0
                 self.volume.append(blkt12)
             volume = self._createCutAndFlushRecord(self.volume, 'V')
-            if cur_count - abbr_lenght < len(volume):
+            if cur_count - abbr_length < len(volume):
                 cur_count += len(volume) - 1
                 self._deleteBlockettes11and12()
                 continue

@@ -33,7 +33,7 @@ class FutureUsageTestCase(unittest.TestCase):
     def test_future_imports_in_every_file(self):
         """
         Tests that every single Python file includes the appropriate future
-        headers to enforce consistent behaviour.
+        headers to enforce consistent behavior.
         """
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))

@@ -35,13 +35,13 @@ def read(fh, verify_chksum=True):
     for correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
 
-    :type fh: File Pointer
+    :type fh: file
     :param fh: Open file pointer of GSE1 file to read, opened in binary mode,
         e.g. fh = open('myfile','rb')
-    :type verify_chksum: Bool
+    :type verify_chksum: bool
     :param verify_chksum: If True verify Checksum and raise Exception if not
         correct
-    :rtype: Dictionary, Numpy.ndarray int32
+    :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     header = readHeader(fh)

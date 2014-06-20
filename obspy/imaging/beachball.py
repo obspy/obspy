@@ -596,7 +596,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     if D2 >= 90:
         D2 = 89.9999
 
-    # arange checked for numerical stablility, np.pi is not multiple of 0.1
+    # arange checked for numerical stability, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
     l1 = np.sqrt(
         np.power(90 - D1, 2) / (

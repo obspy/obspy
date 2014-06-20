@@ -33,7 +33,7 @@ class SLNetStation(object):
     :var seqnum: SeedLink sequence number of last packet received.
     :type seqnum: int
     :var btime: Time stamp of last packet received.
-    :type btime: TTT
+    :type btime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     """
     MAX_SELECTOR_SIZE = 8
 

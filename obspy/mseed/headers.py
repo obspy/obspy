@@ -52,7 +52,7 @@ VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 
 # allowed encodings:
-# SEED id: SEED name, SEED sampletype a, i, f or d, default numpy type)}
+# SEED id: SEED name, SEED sampletype a, i, f or d, default NumPy type)}
 ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
              1: ("INT16", "i", np.dtype("int16")),
              3: ("INT32", "i", np.dtype("int32")),

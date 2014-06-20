@@ -23,7 +23,7 @@ def isSAC(filename):
     """
     Checks whether a file is a SAC file or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a SAC file.
@@ -91,7 +91,7 @@ def isSACXY(filename):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: Alphanumeric SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.

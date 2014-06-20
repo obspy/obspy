@@ -33,8 +33,8 @@ st2 = st1.copy()
 
 # generate analytical signal (hilbert transform) and add phase shift
 st1p = hilbert(st1)
-st1p = np.real(np.abs(st1p) * \
-        np.exp((np.angle(st1p) + phase_shift * np.pi) * 1j))
+st1p = np.real(np.abs(st1p) *
+               np.exp((np.angle(st1p) + phase_shift * np.pi) * 1j))
 
 # signal with amplitude error
 st1a = st1 * amp_fac

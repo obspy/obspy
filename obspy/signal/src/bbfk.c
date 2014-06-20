@@ -3,7 +3,7 @@
 #  Purpose: FK Array Analysis module (Seismology)
 #   Author: Matthias Ohrnberger, Joachim Wassermann, Moritz Beyreuther
 #    Email: beyreuth@geophysik.uni-muenchen.de
-#  Changes: 8.2010 now using numpy fftpack instead of realft (Moritz)
+#  Changes: 8.2010 now using NumPy fftpack instead of realft (Moritz)
 #           8.2010 changed window and trace to doubles due to fftpack (Moritz)
 #           8.2010 removed group_index_list (Moritz)
 #           8.2010 passing rffti from command line for speed (Moritz)
