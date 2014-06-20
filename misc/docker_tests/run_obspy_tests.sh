@@ -46,7 +46,7 @@ printf "\nSTEP 2: EXECUTING THE TESTS\n"
 
 # Loop over all ObsPy Docker images.
 for image_name in $(docker images | grep obspy | awk '{print $2}'); do
-    if [ $# ] && [[ "$*" != *$image_name* ]]; then
+    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
         continue
     fi
     printf 'Running Tests for image "'$image_name'"...\n'
