@@ -45,13 +45,13 @@ def recSTALTA(a, nsta, nlta):
     Fast version written in C.
 
     :note: This version directly uses a C version via CTypes
-    :type a: numpy.ndarray dtype float64
+    :type a: :class:`numpy.ndarray`, dtype=float64
     :param a: Seismic Trace, numpy.ndarray dtype float64
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: numpy.ndarray dtype float64
+    :rtype: :class:`numpy.ndarray`, dtype=float64
     :return: Characteristic function of recursive STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -74,13 +74,13 @@ def recSTALTAPy(a, nsta, nlta):
         There exists a faster version of this trigger wrapped in C
         called :func:`~obspy.signal.trigger.recSTALTA` in this module!
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of recursive STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -115,17 +115,17 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :type ration: Float
+    :type ration: float
     :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
-    :type quiet: Float
+    :type quiet: float
     :param quiet: as quiet gets smaller, carlSTATrig gets more sensitive
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
     m = len(a)
@@ -172,17 +172,17 @@ def classicSTALTA(a, nsta, nlta):
 
     Fast version written in C.
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
     data = a
-    # initialize C struct / numpy structed array
+    # initialize C struct / NumPy structured array
     head = np.empty(1, dtype=head_stalta_t)
     head[:] = (len(data), nsta, nlta)
     # ensure correct type and contiguous of data
@@ -207,16 +207,16 @@ def classicSTALTAPy(a, nsta, nlta):
         There exists a faster version of this trigger wrapped in C
         called :func:`~obspy.signal.trigger.classicSTALTA` in this module!
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
-    # XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
+    # XXX From NumPy 1.3 use numpy.lib.stride_tricks.as_strided
     #    This should be faster then the for loops in this fct
     #    Currently debian lenny ships 1.1.1
     m = len(a)
@@ -251,13 +251,13 @@ def delayedSTALTA(a, nsta, nlta):
     """
     Delayed STA/LTA.
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of delayed STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -310,19 +310,19 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     are more then 1e6 triggerings ("on" AND "off") in charfct --- normally
     this does not happen.
 
-    :type charfct: NumPy ndarray
+    :type charfct: NumPy :class:`~numpy.ndarray`
     :param charfct: Characteristic function of e.g. STA/LTA trigger
-    :type thres1: Float
+    :type thres1: float
     :param thres1: Value above which trigger (of characteristic function)
                    is activated (higher threshold)
-    :type thres2: Float
+    :type thres2: float
     :param thres2: Value below which trigger (of characteristic function)
         is deactivated (lower threshold)
-    :type max_len: Int
+    :type max_len: int
     :param max_len: Maximum length of triggered event in samples. A new
                     event will be triggered as soon as the signal reaches
                     again above thres1.
-    :type max_len_delete: Bool
+    :type max_len_delete: bool
     :param max_len_delete: Do not write events longer than max_len into
                            report file.
     :rtype: List
@@ -433,7 +433,7 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     :param m_s: number of AR coefficients for sarrival
     :param l_p: length of variance window for parrival in seconds
     :param l_s: length of variance window for sarrival in seconds
-    :param s_pick: if true pick also S phase, elso only P
+    :param s_pick: if true pick also S phase, else only P
     :return: (ptime, stime) parrival and sarrival
     """
     # be nice and adapt type if necessary
@@ -530,7 +530,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
         further details. If set to None no triggering routine is applied, i.e.
-        data in traces is supposed to be a precomputed chracteristic function
+        data in traces is supposed to be a precomputed characteristic function
         on which the trigger thresholds are evaluated.
     :type trigger_type: str or None
     :type thr_on: float
@@ -544,7 +544,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param thr_coincidence_sum: Threshold for coincidence sum. The network
         coincidence sum has to be at least equal to this value for a trigger to
         be included in the returned trigger list.
-    :type trace_ids: list or dict (optional)
+    :type trace_ids: list or dict, optional
     :param trace_ids: Trace IDs to be used in the network coincidence sum. A
         dictionary with trace IDs as keys and weights as values can
         be provided. If a list of trace IDs is provided, all
@@ -555,17 +555,17 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param max_trigger_length: Maximum single station trigger length (in
         seconds). ``delete_long_trigger`` controls what happens to single
         station triggers longer than this value.
-    :type delete_long_trigger: bool (optional)
+    :type delete_long_trigger: bool, optional
     :param delete_long_trigger: If ``False`` (default), single station
         triggers are manually released at ``max_trigger_length``, although the
         characteristic function has not dropped below ``thr_off``. If set to
         ``True``, all single station triggers longer than
         ``max_trigger_length`` will be removed and are excluded from
         coincidence sum computation.
-    :type trigger_off_extension: int or float (optional)
+    :type trigger_off_extension: int or float, optional
     :param trigger_off_extension: Extends search window for next trigger
         on-time after last trigger off-time in coincidence sum computation.
-    :type details: bool (optional)
+    :type details: bool, optional
     :param details: If set to ``True`` the output coincidence triggers contain
         more detailed information: A list with the trace IDs (in addition to
         only the station names), as well as lists with single station

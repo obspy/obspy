@@ -28,4 +28,4 @@ For more information visit http://www.obspy.org.
 
 Dependencies
 ------------
-* numpy
+* NumPy

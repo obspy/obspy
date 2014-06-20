@@ -3,7 +3,7 @@ Plotting Spectrograms
 =====================
 
 The following lines of code demonstrate how to make a spectrogram plot of an
-Obspy :class:`~obspy.core.stream.Stream` object.
+ObsPy :class:`~obspy.core.stream.Stream` object.
 
 Lots of options can be customized, see
 :func:`~obspy.imaging.spectrogram.spectrogram` for more details. For

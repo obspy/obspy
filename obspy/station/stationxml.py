@@ -43,7 +43,7 @@ def is_StationXML(path_or_file_object):
 
     This is simply done by validating against the StationXML schema.
 
-    :param path_of_file_object: Filename or file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     return validate_StationXML(path_or_file_object)[0]
 
@@ -54,9 +54,9 @@ def validate_StationXML(path_or_object):
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
-    errors, if existant.
+    errors, if existent.
 
-    :path_or_object: Filename of file like object. Can also be an etree
+    :param path_or_object: Filename or file like object. Can also be an etree
         element.
     """
     # Get the schema location.
@@ -86,7 +86,7 @@ def read_StationXML(path_or_file_object):
     """
     Function reading a StationXML file.
 
-    :path_or_file_object: Filename of file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
@@ -647,8 +647,8 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     :type inventory: :class:`~obspy.station.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
-    :type validate: Boolean
-    :type validate: If True, the created document will be validated with the
+    :type validate: bool
+    :param validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
     """

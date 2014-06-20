@@ -13,8 +13,8 @@ defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
 
 Reading
 -------
-Similiar to reading any other waveform data format using
-:func:`~obspy.core.read`:
+Similar to reading any other waveform data format using
+:func:`~obspy.core.stream.read()`:
 
 >>> from obspy import read
 >>> st = read('/path/to/test.sac')
@@ -26,7 +26,7 @@ Similiar to reading any other waveform data format using
 
 The format will be determined automatically. As SAC-files can contain only one
 data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
-'st[0]' will have a stats attribute containing the issential meta data (station
+'st[0]' will have a stats attribute containing the essential meta data (station
 name, channel, location, start time, end time, sampling rate, number of
 points). Additionally, when reading a SAC-file it will have one additional
 attribute, 'sac', which contains all SAC-specific attributes (SAC header
@@ -48,7 +48,7 @@ values).
 >>> print(st[0].stats.sac.dist)
 -12345.0
 
-The data is stored in the data attribut.
+The data is stored in the data attribute.
 
 >>> st[0].data #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 array([ -8.74227766e-08,  -3.09016973e-01,..., 3.09007347e-01], dtype=float32)

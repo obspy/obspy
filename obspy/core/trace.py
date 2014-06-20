@@ -431,7 +431,7 @@ class Trace(object):
         """
         Creates a new Stream containing num copies of this trace.
 
-        :rtype num: int
+        :type num: int
         :param num: Number of copies.
         :returns: New ObsPy Stream object.
 
@@ -546,11 +546,10 @@ class Trace(object):
         """
         Adds another Trace object to current trace.
 
-        :type method: ``0`` or ``1``, optional
+        :type method: int, optional
         :param method: Method to handle overlaps of traces. Defaults to ``0``.
             See the `Handling Overlaps`_ section below for further details.
-        :type fill_value: int or float, ``'latest'`` or ``'interpolate'``,
-            optional
+        :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
             gaps are present. If the keyword ``'latest'`` is provided it will
@@ -563,7 +562,7 @@ class Trace(object):
             the number of samples which are used to interpolate between
             overlapping traces. Defaults to ``0``. If set to ``-1`` all
             overlapping samples are interpolated.
-        :type sanity_checks: boolean, optional
+        :type sanity_checks: bool, optional
         :param sanity_checks: Enables some sanity checks before merging traces.
             Defaults to ``True``.
 
@@ -772,7 +771,7 @@ class Trace(object):
             # use fixed value or interpolate in between
             gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
-        # merge traces depending on numpy array type
+        # merge traces depending on NumPy array type
         if True in [isinstance(_i, np.ma.masked_array) for _i in data]:
             data = np.ma.concatenate(data)
         else:
@@ -868,9 +867,9 @@ class Trace(object):
         """
         Saves current trace into a file.
 
-        :type filename: string
+        :type filename: str
         :param filename: The name of the file to write.
-        :type format: string
+        :type format: str
         :param format: The format to write must be specified. One of
             ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
             ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
@@ -1454,7 +1453,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
-        :type window: array_like, callable, string, float, or tuple, optional
+        :type window: array_like, callable, str, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults to ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
@@ -1462,8 +1461,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``True``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         .. note::
 
@@ -1527,8 +1526,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         Currently a simple integer decimation is implemented.
         Only every ``decimation_factor``-th sample remains in the trace, all
@@ -1537,8 +1536,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         filtering can be deactivated with ``no_filter=True``.
 
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. To
-        abort downsampling in case of changing endtimes set
+        zero then the end time of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing end times set
         ``strict_length=True``.
 
         .. note::
@@ -1620,7 +1619,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :return: Standard deviation of ``trace.data``.
 
-        Standard deviation is calculated by numpy method
+        Standard deviation is calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data``.
 
         .. rubric:: Example
@@ -1640,7 +1639,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to differentiate the trace with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: str, optional
         :param type: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
@@ -1675,7 +1674,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to integrate the trace with respect to time.
 
-        :type type: ``'cumtrapz'``, optional
+        :type type: str, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See the `Supported Methods`_ section below for
             further details.
@@ -1713,7 +1712,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('integrate', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # scipy needs to set dx keyword if not given in options
+            # SciPy needs to set dx keyword if not given in options
             if 'dx' not in options:
                 options['dx'] = self.stats.delta
             args = [self.data]
@@ -1730,8 +1729,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to remove a linear trend from the trace.
 
-        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
-            optional
+        :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
 
@@ -1762,7 +1760,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('detrend', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # scipy need to set the type keyword
+            # SciPy need to set the type keyword
             if type == 'demean':
                 type = 'constant'
             options['type'] = type
@@ -2003,7 +2001,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def _addProcessingInfo(self, info):
         """
         Adds the given informational string to the `processing` field in the
-        trace's :class:`~obspy.core.trace.stats.Stats` object.
+        trace's :class:`~obspy.core.trace.Stats` object.
         """
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
@@ -2114,7 +2112,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def times(self):
         """
-        For convenient plotting compute a Numpy array of seconds since
+        For convenient plotting compute a NumPy array of seconds since
         starttime corresponding to the samples in Trace.
 
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
@@ -2250,12 +2248,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.plot()
 
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
         :type water_level: float
         :param water_level: Water level for deconvolution.
-        :type pre_filt: List or tuple of four float
+        :type pre_filt: list or tuple of four float
         :param pre_filt: Apply a bandpass filter in frequency domain to the
             data before deconvolution. The list or tuple defines
             the four corner frequencies `(f1, f2, f3, f4)` of a cosine taper
@@ -2352,7 +2356,7 @@ def _data_sanity_checks(value):
         msg = "Trace.data must be a NumPy array."
         raise ValueError(msg)
     if value.ndim != 1:
-        msg = ("Numpy array for Trace.data has bad shape ('%s'). Only 1-d "
+        msg = ("NumPy array for Trace.data has bad shape ('%s'). Only 1-d "
                "arrays are allowed for initialization.") % str(value.shape)
         raise ValueError(msg)
 

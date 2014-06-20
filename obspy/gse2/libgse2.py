@@ -103,7 +103,7 @@ GSE2_FIELDS = [
     ('minute', 19, 21, int),
     ('second', 22, 24, int),
     ('microsecond', 25, 28, int),
-    # global obspy stats names
+    # global ObsPy stats names
     ('station', 29, 34, _str),
     ('channel', 35, 38, lambda s: s.strip().upper()),
     ('gse2.auxid', 39, 43, _str),
@@ -122,8 +122,8 @@ def isGse2(f):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
 
-    :type f : file pointer
-    :param f : file pointer to start of GSE2 file to be checked.
+    :type f: file
+    :param f: file pointer to start of GSE2 file to be checked.
     """
     pos = f.tell()
     widi = f.read(4)
@@ -186,15 +186,15 @@ def writeHeader(f, headdict):
     Rewriting the write_header Function of gse_functions.c
 
     Different operating systems are delivering different output for the
-    scientific format of floats (fprinf libc6). Here we ensure to deliver
+    scientific format of floats (fprintf libc6). Here we ensure to deliver
     in a for GSE2 valid format independent of the OS. For speed issues we
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
     This fails for numbers XX>99, but should not occur.
 
-    :type f: File pointer
+    :type f: file
     :param f: File pointer to to GSE2 file to write
-    :type headdict: obspy header
-    :param headdict: obspy header
+    :type headdict: dict
+    :param headdict: ObsPy header
     """
     calib = "%10.2e" % (headdict['calib'])
     date = headdict['starttime']
@@ -232,9 +232,9 @@ def uncompress_CM6(f, n_samps):
     """
     Uncompress n_samps of CM6 compressed data from file pointer fp.
 
-    :type f: File Pointer
+    :type f: file
     :param f: File Pointer
-    :type n_samps: Int
+    :type n_samps: int
     :param n_samps: Number of samples
     """
     def read83(cbuf, vptr):  # @UnusedVariable
@@ -264,9 +264,9 @@ def compress_CM6(data):
     """
     CM6 compress data
 
-    :type data: i4 numpy array
+    :type data: :class:`numpy.ndarray`, dtype=int32
     :param data: the data to write
-    :returns: numpy chararray containing compressed samples
+    :returns: NumPy chararray containing compressed samples
     """
     data = np.require(data, 'int32', ['C_CONTIGUOUS'])
     N = len(data)
@@ -294,9 +294,9 @@ def verifyChecksum(fh, data, version=2):
     """
     Calculate checksum from data, as in gse_driver.c line 60
 
-    :type fh: File Pointer
+    :type fh: file
     :param fh: File Pointer
-    :type version: Int
+    :type version: int
     :param version: GSE version, either 1 or 2, defaults to 2.
     """
     chksum_data = clibgse2.check_sum(data, len(data), C.c_int32(0))
@@ -332,13 +332,13 @@ def read(f, verify_chksum=True):
     correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
 
-    :type f: File Pointer
+    :type f: file
     :param f: Open file pointer of GSE2 file to read, opened in binary mode,
               e.g. f = open('myfile','rb')
-    :type test_chksum: Bool
+    :type test_chksum: bool
     :param verify_chksum: If True verify Checksum and raise Exception if it
                           is not correct
-    :rtype: Dictionary, Numpy.ndarray int32
+    :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     headdict = readHeader(f)
@@ -363,23 +363,23 @@ def write(headdict, data, f, inplace=False):
 
     :note: headdict dictionary entries C{'datatype', 'n_samps',
            'samp_rate'} are absolutely necessary
-    :type data: numpy.ndarray dtype int32
+    :type data: :class:`numpy.ndarray`, dtype=int32
     :param data: Contains the data.
-    :type f: File Pointer
+    :type f: file
     :param f: Open file pointer of GSE2 file to write, opened in binary
               mode, e.g. f = open('myfile','wb')
-    :type inplace: Bool
+    :type inplace: bool
     :param inplace: If True, do compression not on a copy of the data but
                     on the data itself --- note this will change the data
                     values and make them therefore unusable
-    :type headdict: Dictionary
-    :param headdict: Obspy Header
+    :type headdict: dict
+    :param headdict: ObsPy Header
     """
     N = len(data)
     #
     chksum = clibgse2.check_sum(data, N, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
-    # do this after chksum as chksum does the type checking for numpy array
+    # do this after chksum as chksum does the type checking for NumPy array
     # for you
     if not inplace:
         data = data.copy()

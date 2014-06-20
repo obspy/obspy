@@ -184,7 +184,7 @@ class Client(object):
         :rtype: list
         :return: List of tuples with information on the available data. One
             tuple consists of network, station, location, channel
-            (all strings), starttime and endtime
+            (all strings), start time and end time
             (both as :class:`~obspy.core.utcdatetime.UTCDateTime`).
 
         .. rubric:: Example
@@ -221,7 +221,7 @@ class Client(object):
         # reorder items and convert time info to UTCDateTime
         response = [(x[3], x[1], x[4], x[2], UTCDateTime(x[5]),
                      UTCDateTime(x[6])) for x in response]
-        # restrict results acording to user input
+        # restrict results according to user input
         response = [x for x in response if fnmatch(".".join(x[:4]), pattern)]
         return response
 

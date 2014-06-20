@@ -366,7 +366,7 @@ class ClientTestCase(unittest.TestCase):
             got.module = None
             expected.module = None
 
-            # XXX Py3k: the objects differ in direct comparision, however,
+            # XXX Py3k: the objects differ in direct comparison, however,
             # the strings of them are equal
             self.assertEqual(str(got), str(expected), failmsg(got, expected))
 

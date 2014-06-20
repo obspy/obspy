@@ -3928,7 +3928,7 @@ class BeachBall:
 
         # plot 4 fake points, guaranteeing full visibilty of the sphere
         ax.plot([0, 1.05, 0, -1.05], [1.05, 0, -1.05, 0], ',', alpha=0.)
-        # scaling behaviour
+        # scaling behavior
         ax.autoscale_view(tight=True, scalex=True, scaley=True)
 
         return plotfig

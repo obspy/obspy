@@ -53,7 +53,7 @@ class tracebuf2:
     """
     byteswap = False
     ndata = 0           # number of samples in instance
-    inputType = None    # numpy data type
+    inputType = None    # NumPy data type
 
     def readTB2(self, tb2):
         """

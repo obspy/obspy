@@ -135,7 +135,7 @@ def flatnotmaskedContiguous(a):
     Find contiguous unmasked data in a masked array along the given axis.
 
     This function is taken from
-    :func:`numpy.ma.extras.flatnotmasked_contiguous`.
+    :func:`numpy.ma.flatnotmasked_contiguous`.
 
     Copyright (c) Pierre Gerard-Marchant
     """
@@ -180,7 +180,7 @@ def toIntOrZero(value):
 
     :param value: Arbitrary data type.
     :rtype: int
-numpy.version.version
+
     .. rubric:: Example
 
     >>> toIntOrZero("12")

@@ -133,7 +133,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
         component_id codes are ignored)
     :type shift_len: int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type components: List of strings
+    :type components: list of str
     :param components: List of components to use in cross-correlation, defaults
         to ``['Z', 'N', 'E']``.
     :type full_xcorr: bool
@@ -257,7 +257,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     :type cc_maxlag: float
     :param cc_maxlag: Maximum lag time tested during cross correlation in
             seconds.
-    :type filter: string
+    :type filter: str
     :param filter: None for no filtering or name of filter type
             as passed on to :meth:`~obspy.core.Trace.trace.filter` if filter
             should be used. To avoid artifacts in filtering provide
@@ -269,7 +269,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     :param plot: Determines if pick is refined automatically (default, ""),
             if an informative matplotlib plot is shown ("plot"), or if an
             interactively changeable PyQt Window is opened ("interactive").
-    :type filename: string
+    :type filename: str
     :param filename: If plot option is selected, specifying a filename here
             (e.g. 'myplot.pdf' or 'myplot.png') will output the plot to a file
             instead of opening a plot window.
@@ -448,7 +448,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
 
     >>> from obspy import read, UTCDateTime
     >>> import numpy as np
-    >>> np.random.seed(123)  # make test reproducable
+    >>> np.random.seed(123)  # make test reproducible
     >>> st = read()
     >>> t = UTCDateTime(2009, 8, 24, 0, 20, 7, 700000)
     >>> templ = st.copy().slice(t, t+5)

@@ -322,8 +322,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
         recordCurrent->record = msr;
 
-        // Determine the byteorder swapflag only for the very first record. The byteorder
-        // should not change within the file.
+        // Determine the byte order swapflag only for the very first record.
+        // The byte order should not change within the file.
         // XXX: Maybe check for every record?
         if (swapflag <= 0) {
             // Returns 0 if the host is little endian, otherwise 1.

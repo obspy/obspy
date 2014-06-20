@@ -80,7 +80,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 * http://docs.scipy.org
    NumPy and SciPy are the matrix based computation modules of Python. The
    allow fast array manipulation (functions in C). NumPy and SciPy provide
-   access to fft, lapack, atlas or blas. That is svd, eigenvalues...
+   access to FFTW, LAPACK, ATLAS or BLAS. That is svd, eigenvalues...
    ObsPy uses the numpy.ndarrays for storing the data (e.g. tr.data).
 * http://matplotlib.sourceforge.net/gallery.html
    matplotlib is the 2-D plotting package for Python. The gallery is the market

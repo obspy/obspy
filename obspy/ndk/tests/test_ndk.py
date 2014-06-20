@@ -286,10 +286,10 @@ class NDKTestCase(unittest.TestCase):
         # Only five events will have been read.
         self.assertEqual(len(cat), 5)
 
-    def test_reading_event_with_faulty_but_often_occuring_timestamp(self):
+    def test_reading_event_with_faulty_but_often_occurring_timestamp(self):
         """
         The timestamp "O-00000000000000" is not valid according to the NDK
-        definition but is occuring a lot in the GCMT catalog thus we include it
+        definition but occurs a lot in the GCMT catalog thus we include it
         here.
         """
         filename = os.path.join(self.datapath, "faulty_cmt_timestamp.ndk")
@@ -338,7 +338,7 @@ class NDKTestCase(unittest.TestCase):
         self.assertEqual(_parse_date_time(date, time),
                          UTCDateTime(2013, 3, 2, 7, 53, 43, int(8E5)))
 
-        # Some more tests for 60s. The tested values are all values occuring
+        # Some more tests for 60s. The tested values are all values occurring
         # in a big NDK test file.
         date, time = "1998/09/27", "00:57:60.0"
         self.assertEqual(_parse_date_time(date, time),

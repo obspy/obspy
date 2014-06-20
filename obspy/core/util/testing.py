@@ -141,7 +141,7 @@ class ImageComparison(NamedTemporaryFile):
     :type image_name: str
     :param image_name: Filename (with suffix, without directory path) of the
         baseline image
-    :type reltol: float (optional)
+    :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
 
@@ -233,8 +233,8 @@ class ImageComparison(NamedTemporaryFile):
         """
         msg = ""
         try:
-            # only compare images if no exception occured in the with
-            # statement. this avoids masking previously occured exceptions (as
+            # only compare images if no exception occurred in the with
+            # statement. this avoids masking previously occurred exceptions (as
             # an exception may occur in compare()). otherwise we only clean up
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:

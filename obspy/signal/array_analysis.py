@@ -47,9 +47,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     .. note::
         ts\_ below means "time series"
 
-    :type vp: Float
+    :type vp: float
     :param vp: P wave speed in the soil under the array (km/s)
-    :type vs: Float
+    :type vs: float
     :param vs: S wave speed in the soil under the array Note - vp and vs may be
         any unit (e.g. miles/week), and this unit need not be related to the
         units of the station coordinates or ground motions, but the units of vp
@@ -64,9 +64,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         order.
     :type ts1: numpy.ndarray
     :param ts1: array of x1-component seismograms, dimension nt x Na.
-        ts1[j,k], j in arange(nt), k in arange(Na) contains the kth time sample
-        of the x1 component ground motion at station k. NOTE that the
-        seismogram in column k must correspond to the station whos coordinates
+        ts1[j,k], j in arange(nt), k in arange(Na) contains the k'th time
+        sample of the x1 component ground motion at station k. NOTE that the
+        seismogram in column k must correspond to the station whose coordinates
         are in row k of in.array_coords. nt is the number of time samples in
         the seismograms.  Seismograms may be displacement, velocity,
         acceleration, jerk, etc.  See the "Discussion of input and output
@@ -75,7 +75,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     :param ts2: same as ts1, but for the x2 component of motion.
     :type ts3: numpy.ndarray
     :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion.
-    :type sigmau: Float or numpy.ndarray
+    :type sigmau: float or :class:`numpy.ndarray`
     :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
         corresponds to sigma-sub-u in S95 lines above eqn (A5).
         NOTE: This may be entered as a scalar, vector, or matrix!
@@ -104,78 +104,89 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         "Essentially" because permuting subarray sequence changes the d vector,
         yielding a slightly different numerical result.
     :return: Dictionary with fields:
-        | **A:** (array, dimension 3N x 6) - data mapping matrix 'A' of
-        |     S95(A4)
-        | **g:** (array, dimension 6 x 3N) - generalized inverse matrix
-        |     relating ptilde and data vector, in S95(A5)
-        | **Ce:** (4 x 4) covariance matrix of the 4 independent strain
-        |     tensor elements e11, e21, e22, e33
-        | **ts_d:** (array, length nt) - dilatation
-        |     (trace of the 3x3 strain tensor) as a function of time
-        | **sigmad:** scalar, standard deviation of dilatation
-        | **ts_dh:** (array, length nt) - horizontal dilatation (also
-        |     known as areal strain) (eEE+eNN) as a function of time
-        | **sigmadh:** scalar, standard deviation of horizontal dilatation
-        |     (areal strain)
-        | **ts_e:** (array, dimension nt x 3 x 3) - strain tensor
-        | **ts_s:** (array, length nt) -  maximum strain
-        |     ( .5*(max eigval of e - min eigval of e) as a
-        |     function of time, where e is the 3x3 strain tensor
-        | **Cgamma:** (4 x 4) covariance matrix of the 4 independent shear
-        |     strain tensor elements g11, g12, g22, g33 (includes full
-        |     covariance effects). gamma is traceless part of e.
-        | **ts_sh:** (array, length nt) - maximum horizontal strain
-        |     ( .5*(max eigval of eh - min eigval of eh)
-        |     as a function of time, where eh is e(1:2,1:2)
-        | **Cgammah:** (3 x 3) covariance matrix of the 3 independent
-        |     horizontal shear strain tensor elements gamma11, gamma12,
-        |     gamma22 gamma is traceless part of e.
-        | **ts_wmag:** (array, length nt) -  total rotation
-        |     angle (radians) as a function of time.  I.e. if the
-        |     rotation vector at the j'th time step is
-        |     w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
-        |     positive for right-handed rotation
-        | **Cw:** (3 x 3) covariance matrix of the 3 independent
-        |     rotation tensor elements w21, w31, w32
-        | **ts_w1:** (array, length nt) - rotation
-        |     (rad) about the x1 axis, positive for right-handed rotation
-        | **sigmaw1:** scalar, standard deviation of the ts_w1
-        |     (sigma-omega-1 in SF08)
-        | **ts_w2:** (array, length nt) - rotation
-        |     (rad) about the x2 axis, positive for right-handed rotation
-        | **sigmaw2:** scalar, standard deviation of ts_w2
-        |     (sigma-omega-2 in SF08)
-        | **ts_w3:** (array, length nt) - "torsion", rotation
-        |     (rad) about a vertical up or down axis, i.e. x3, positive
-        |     for right-handed rotation
-        | **sigmaw3:** scalar, standard deviation of the torsion
-        |     (sigma-omega-3 in SF08)
-        | **ts_tilt:** (array, length nt) - tilt (rad)
-        |     (rotation about a horizontal axis, positive for right
-        |     handed rotation)
-        |     as a function of time.  tilt = sqrt( w1^2 + w2^2)
-        | **sigmat:** scalar, standard deviation of the tilt
-        |     (not defined in SF08, From Papoulis (1965, p. 195,
-        |     example 7.8))
-        | **ts_data:** (array, shape (nt x 3N)). time series of
-        |     the observed displacement
-        |     differences, which are the di in S95 eqn A1.
-        | **ts_pred:** (array, shape (nt x 3N)) time series of
-        |     the fitted model's predicted displacement difference
-        |     Note that the fitted model displacement
-        |     differences correspond to linalg.dot(A, ptilde), where A
-        |     is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5.
-        | **ts_misfit:** (array, shape (nt x 3N)) time series of the
-        |     residuals (fitted model displacement differences minus
-        |     observed displacement differences). Note that the fitted
-        |     model displacement differences correspond to
-        |     linalg.dot(A, ptilde), where A is the big
-        |     matrix in S95 eqn A4 and ptilde is S95 eqn A5.
-        | **ts_M:** (array, length nt) Time series of M, misfit
-        |     ratio of S95, p. 688.
-        | **ts_ptilde:** (array, shape (nt x 6)) - solution
-        |     vector p-tilde (from S95 eqn A5) as a function of time
-        | **Cp:** 6x6 solution covariance matrix defined in SF08.
+
+        **A:** (array, dimension 3N x 6)
+            data mapping matrix 'A' of S95(A4)
+        **g:** (array, dimension 6 x 3N)
+            generalized inverse matrix relating ptilde and data vector, in
+            S95(A5)
+        **Ce:** (4 x 4)
+            covariance matrix of the 4 independent strain tensor elements e11,
+            e21, e22, e33
+        **ts_d:** (array, length nt)
+            dilatation (trace of the 3x3 strain tensor) as a function of time
+        **sigmad:** (scalar)
+            standard deviation of dilatation
+        **ts_dh:** (array, length nt)
+            horizontal dilatation (also known as areal strain) (eEE+eNN) as a
+            function of time
+        **sigmadh:** (scalar)
+            standard deviation of horizontal dilatation (areal strain)
+        **ts_e:** (array, dimension nt x 3 x 3)
+            strain tensor
+        **ts_s:** (array, length nt)
+            maximum strain ( .5*(max eigval of e - min eigval of e) as a
+            function of time, where e is the 3x3 strain tensor
+        **Cgamma:** (4 x 4)
+            covariance matrix of the 4 independent shear strain tensor elements
+            g11, g12, g22, g33 (includes full covariance effects). gamma is
+            traceless part of e.
+        **ts_sh:** (array, length nt)
+            maximum horizontal strain ( .5*(max eigval of eh - min eigval of
+            eh) as a function of time, where eh is e(1:2,1:2)
+        **Cgammah:** (3 x 3)
+            covariance matrix of the 3 independent horizontal shear strain
+            tensor elements gamma11, gamma12, gamma22 gamma is traceless part
+            of e.
+        **ts_wmag:** (array, length nt)
+            total rotation angle (radians) as a function of time.  I.e. if the
+            rotation vector at the j'th time step is
+            w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
+            positive for right-handed rotation
+        **Cw:** (3 x 3)
+            covariance matrix of the 3 independent rotation tensor elements
+            w21, w31, w32
+        **ts_w1:** (array, length nt)
+            rotation (rad) about the x1 axis, positive for right-handed
+            rotation
+        **sigmaw1:** (scalar)
+            standard deviation of the ts_w1 (sigma-omega-1 in SF08)
+        **ts_w2:** (array, length nt)
+            rotation (rad) about the x2 axis, positive for right-handed
+            rotation
+        **sigmaw2:** (scalar)
+            standard deviation of ts_w2 (sigma-omega-2 in SF08)
+        **ts_w3:** (array, length nt)
+            "torsion", rotation (rad) about a vertical up or down axis, i.e.
+            x3, positive for right-handed rotation
+        **sigmaw3:** (scalar)
+            standard deviation of the torsion (sigma-omega-3 in SF08)
+        **ts_tilt:** (array, length nt)
+            tilt (rad) (rotation about a horizontal axis, positive for right
+            handed rotation) as a function of time
+            tilt = sqrt( w1^2 + w2^2)
+        **sigmat:** (scalar)
+            standard deviation of the tilt (not defined in SF08, From
+            Papoulis (1965, p. 195, example 7.8))
+        **ts_data:** (array, shape (nt x 3N))
+            time series of the observed displacement differences, which are
+            the di in S95 eqn A1
+        **ts_pred:** (array, shape (nt x 3N))
+            time series of the fitted model's predicted displacement difference
+            Note that the fitted model displacement differences correspond
+            to linalg.dot(A, ptilde), where A is the big matrix in S95 eqn A4
+            and ptilde is S95 eqn A5
+        **ts_misfit:** (array, shape (nt x 3N))
+            time series of the residuals (fitted model displacement differences
+            minus observed displacement differences). Note that the fitted
+            model displacement differences correspond to linalg.dot(A, ptilde),
+            where A is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5
+        **ts_M:** (array, length nt)
+            Time series of M, misfit ratio of S95, p. 688
+        **ts_ptilde:** (array, shape (nt x 6))
+            solution vector p-tilde (from S95 eqn A5) as a function of time
+        **Cp:** (6 x 6)
+            solution covariance matrix defined in SF08
 
     .. rubric:: Warnings
 
@@ -598,13 +609,13 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
     Method to calculate the array geometry and the center coordinates in km
 
     :param stream: Stream object, the trace.stats dict like class must
-        contain a obspy.core.util.attribdict with 'latitude', 'longitude' (in
-        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
-        items/attributes. See param coordsys
+        contain an :class:`~obspy.core.util.attribdict.AttribDict` with
+        'latitude', 'longitude' (in degrees) and 'elevation' (in km), or 'x',
+        'y', 'elevation' (in km) items/attributes. See param ``coordsys``
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
-    :param return_center: Retruns the center coordinates as extra tuple
-    :return: Returns the geometry of the stations as 2d numpy.ndarray
+    :param return_center: Returns the center coordinates as extra tuple
+    :return: Returns the geometry of the stations as 2d :class:`numpy.ndarray`
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
             values of [lat, lon, elev] in km
@@ -696,8 +707,10 @@ def get_spoint(stream, stime, etime):
     Calculates start and end offsets relative to stime and etime for each
     trace in stream in samples.
 
-    :param stime: UTCDateTime to start
-    :param etime: UTCDateTime to end
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param stime: Start time
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: End time
     :returns: start and end sample offset arrays
     """
     spoint = np.empty(len(stream), dtype="int32", order="C")
@@ -724,11 +737,11 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km
-    :type coordsys: string
+    :type coordsys: str
     :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
         to use
     :param klim: either a float to use symmetric limits for wavenumber
-        differences or the tupel (kxmin, kxmax, kymin, kymax)
+        differences or the tuple (kxmin, kxmax, kymin, kymax)
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(klim, float):
@@ -771,16 +784,16 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km
-    :type coordsys: string
+    :type coordsys: str
     :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
         to use
     :param slim: either a float to use symmetric limits for slowness
         differences or the tupel (sxmin, sxmax, symin, symax)
-    :type fmin: double
+    :type fmin: float
     :param fmin: minimum frequency in signal
-    :type fmax: double
+    :type fmax: float
     :param fmin: maximum frequency in signal
-    :type fstep: double
+    :type fstep: float
     :param fmin: frequency sample distance
     """
     coords = get_geometry(coords, coordsys)
@@ -837,45 +850,45 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
     :param stream: Stream object, the trace.stats dict like class must
-        contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
-        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
-        items/attributes. See param coordsys
-    :type win_len: Float
+        contain an :class:`~obspy.core.util.attribdict.AttribDict` with
+        'latitude', 'longitude' (in degrees) and 'elevation' (in km), or 'x',
+        'y', 'elevation' (in km) items/attributes. See param ``coordsys``.
+    :type win_len: float
     :param win_len: Sliding window length in seconds
-    :type win_frac: Float
+    :type win_frac: float
     :param win_frac: Fraction of sliding window to use for step
-    :type sll_x: Float
+    :type sll_x: float
     :param sll_x: slowness x min (lower)
-    :type slm_x: Float
+    :type slm_x: float
     :param slm_x: slowness x max
-    :type sll_y: Float
+    :type sll_y: float
     :param sll_y: slowness y min (lower)
-    :type slm_y: Float
+    :type slm_y: float
     :param slm_y: slowness y max
-    :type sl_s: Float
+    :type sl_s: float
     :param sl_s: slowness step
-    :type semb_thres: Float
+    :type semb_thres: float
     :param semb_thres: Threshold for semblance
-    :type vel_thres: Float
+    :type vel_thres: float
     :param vel_thres: Threshold for velocity
-    :type frqlow: Float
+    :type frqlow: float
     :param frqlow: lower frequency for fk/capon
-    :type frqhigh: Float
+    :type frqhigh: float
     :param frqhigh: higher frequency for fk/capon
-    :type stime: UTCDateTime
-    :param stime: Starttime of interest
-    :type etime: UTCDateTime
-    :param etime: Endtime of interest
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param stime: Start time of interest
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: End time of interest
     :type prewhiten: int
     :param prewhiten: Do prewhitening, values: 1 or 0
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
-    :type timestamp: string
+    :type timestamp: str
     :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
-        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
+        the timestamp in seconds since 1970-01-01T00:00:00, 'mlabday'
         returns the timestamp in days (decimals represent hours, minutes
         and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlibs num2date)
+        date plotting (see e.g. matplotlib's num2date)
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
     :type store: function
@@ -884,8 +897,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         second arguments and the iteration number as third argument. Useful for
         storing or plotting the map for each iteration. For this purpose the
         dump function of this module can be used.
-    :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
-        backazimut, slowness
+    :return: :class:`numpy.ndarray` of timestamp, relative relpow, absolute
+        relpow, backazimuth, slowness
     """
     res = []
     eotr = True

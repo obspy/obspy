@@ -14,7 +14,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latex-png-images latexpdf-png-images latexpdf text man changes linkcheck doctest gettext coverage coverager pep8
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latex-png-images latexpdf-png-images latexpdf text man changes linkcheck doctest gettext coverage coverager pep8 citations credits
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -41,6 +41,7 @@ help:
 	@echo "  coverager  to make create coverage HTML files and report test"
 	@echo "  pep8       to check PEP8 of tutorial"
 	@echo "  citations  to generate citations page"
+	@echo "  credits    to generate credits page"
 
 clean:
 	@rm -rf $(BUILDDIR)/*
@@ -66,6 +67,9 @@ pep8:
 
 citations:
 	@python make_citations.py
+
+credits:
+	@python make_credits.py
 
 html:
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi

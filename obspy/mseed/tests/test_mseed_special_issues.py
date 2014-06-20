@@ -48,7 +48,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         An invalid record length should raise an exception.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             data = np.random.randint(-1000, 1000, npts).astype('int32')
@@ -69,7 +69,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         An invalid encoding should raise an exception.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             data = np.random.randint(-1000, 1000, npts).astype('int32')
@@ -188,7 +188,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         Writing data of type int64 and int16 are not supported.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # int64
@@ -540,11 +540,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
     def test_enforcing_reading_byteorder(self):
         """
-        Tests if setting the byteorder of the header for reading is passed to
+        Tests if setting the byte order of the header for reading is passed to
         the C functions.
 
-        Quite simple. It just checks if reading with the correct byteorder
-        works and reading with the wrong byteorder fails.
+        Quite simple. It just checks if reading with the correct byte order
+        works and reading with the wrong byte order fails.
         """
         tr = Trace(data=np.arange(10, dtype="int32"))
 
@@ -561,7 +561,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Wrong byteorder raises.
+        # Wrong byte order raises.
         self.assertRaises(ValueError, read, memfile, header_byteorder=">")
 
         # Same test with big endian
@@ -577,7 +577,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Wrong byteorder raises.
+        # Wrong byte order raises.
         self.assertRaises(ValueError, read, memfile, header_byteorder="<")
 
     def test_long_year_range(self):
@@ -595,7 +595,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         for year in years:
             for byteorder in ["<", ">"]:
                 memfile = io.BytesIO()
-                # Get some random time with the year and byteorder as the seed.
+                # Get some random time with the year and the byte order as the
+                # seed.
                 random.seed(year + ord(byteorder))
                 tr.stats.starttime = UTCDateTime(
                     year,

@@ -40,6 +40,7 @@ if "%1" == "help" (
 	echo.  coverager  to make create coverage HTML files and report test
 	echo.  pep8       to check PEP8 of tutorial
 	echo.  citations  to generate citations page
+    echo.  credits    to generate credits page
 	goto end
 )
 
@@ -72,6 +73,11 @@ if "%1" == "pep8" (
 if "%1" == "citations" (
 	python make_citations.py
 	goto end
+)
+
+if "%1" == "credits" (
+    python make_credits.py
+    goto end
 )
 
 if "%1" == "html" (

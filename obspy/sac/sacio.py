@@ -192,7 +192,7 @@ class SacIO(object):
     iztype       I    Reference time equivalence:
                           * IUNKN (5): Unknown
                           * IB (9): Begin time
-                          * IDAY (10): Midnight of refernece GMT day
+                          * IDAY (10): Midnight of reference GMT day
                           * IO (11): Event origin time
                           * IA (12): First arrival time
                           * ITn (13-22): User defined time pick n, n=0,9
@@ -236,7 +236,7 @@ class SacIO(object):
     imagsrc      I    Source of magnitude information:
                           * INEIC (National Earthquake Information Center)
                           * IPDE (Preliminary Determination of Epicenter)
-                          * IISC (Internation Seismological Centre)
+                          * IISC (International Seismological Centre)
                           * IREB (Reviewed Event Bulletin)
                           * IUSGS (US Geological Survey)
                           * IBRK (UC Berkeley)
@@ -1024,7 +1024,7 @@ class SacIO(object):
         Quick access to a specific header item in specified file.
 
         :param f: filename (SAC binary)
-        :type hn: string
+        :type hn: str
         :param hn: header variable name
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
@@ -1048,9 +1048,9 @@ class SacIO(object):
         Quick access to change a specific header item in a specified file.
 
         :param f: filename (SAC binary)
-        :type hn: string
+        :type hn: str
         :param hn: header variable name
-        :type hv: string, float or integer
+        :type hv: str, float or int
         :param hv: header variable value (numeric or string value to be
             assigned to hn)
         :return: None

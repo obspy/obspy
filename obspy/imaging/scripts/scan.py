@@ -18,7 +18,7 @@ In case of memory problems during plotting with very large datasets, the
 options --nox and --nogaps can help to reduce the size of the plot
 considerably.
 
-Gap data can be written to a numpy npz file. This file can be loaded later
+Gap data can be written to a NumPy npz file. This file can be loaded later
 for optionally adding more data and plotting.
 
 Supported formats: All formats supported by ObsPy modules (currently: MSEED,
@@ -61,7 +61,7 @@ def compressStartend(x, stop_iteration):
             break
         i += 1
         first_ind = np.nonzero(inds)[0][0]
-        # to use fast numpy methods currently we only can merge two consecutive
+        # to use fast NumPy methods currently we only can merge two consecutive
         # pieces, so we set every second entry to False
         inds[first_ind + 1::2] = False
         inds_next = np.roll(inds, 1)

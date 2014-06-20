@@ -130,7 +130,7 @@ Citations
    | *Bulletin of the Seismological Society of America*, 89 (5), 1345-1351.
    | http://www.bssaonline.org/content/89/5/1345.abstract
 .. [Tsuboi2004]
-   | {Tsuboi}, S., {Tromp}, J., and {Komatitsch}, D. (2004),
+   | Tsuboi, S., Tromp, J., and Komatitsch, D. (2004),
    | **An XML-SEED Format for the Exchange of Synthetic Seismograms**,
    | *AGU Fall Meeting Abstracts*, B3.
 .. [Wiggins1976]
