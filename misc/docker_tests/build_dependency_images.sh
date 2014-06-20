@@ -1,0 +1,1 @@
+docker build -t obspy:dependencies_centos_6 obspy_dependencies_centos_6
