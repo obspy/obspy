@@ -78,10 +78,10 @@ class Channel(BaseNode):
         :param sample_rate_ratio_number_samples: The sample rate expressed as
             number of samples in a number of seconds. This is the number of
             samples.
-        :type channel.sample_rate_ratio_number_seconds: int, optional
-        :param channel.sample_rate_ratio_number_seconds: The sample rate
-            expressed as number of samples in a number of seconds. This is the
-            number of seconds.
+        :type sample_rate_ratio_number_seconds: int, optional
+        :param sample_rate_ratio_number_seconds: The sample rate expressed as
+            number of samples in a number of seconds. This is the number of
+            seconds.
         :type storage_format: str, optional
         :param storage_format: The storage format of the recorded data (e.g.
             SEED)
