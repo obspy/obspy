@@ -21,6 +21,8 @@
        ~invsim.cosTaper
        ~trigger.delayedSTALTA
        ~filter.envelope
+       ~interpolation.interpolate_1d
+       ~interpolation.weighted_average_slopes
        ~invsim.estimateMagnitude
        ~invsim.evalresp
        ~filter.highpass
@@ -54,6 +56,7 @@
        freqattributes
        hoctavbands
        invsim
+       interpolation
        konnoohmachismoothing
        polarization
        spectral_estimation
