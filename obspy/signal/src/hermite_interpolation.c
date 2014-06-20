@@ -40,10 +40,6 @@
             y_out[idx] = y_in[i_0];
             continue;
         }
-        if (i == (double)i_1)  {
-            y_out[idx] = y_in[i_1];
-            continue;
-        }
 
         t = i - (double)i_0;
 
