@@ -35,7 +35,7 @@
         i_0 = (int)i;
         i_1 = i_0 + 1;
 
-        // No need to interpolate if exactly at the points.
+        // No need to interpolate if exactly at start of the interval.
         if (i == (double)i_0)  {
             y_out[idx] = y_in[i_0];
             continue;
