@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
 # 1. Build all the base images if they do not yet exist.
@@ -26,6 +26,9 @@ printf "STEP 1: CREATING BASE IMAGES\n"
 
 for image_path in $DOCKERFILE_FOLDER/*; do
     image_name=$(basename $image_path)
+    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
+        continue
+    fi
     has_image=$(docker images | grep obspy | grep $image_name)
     if [ "$has_image" ]; then
         echo "Image '$image_name already exists."
@@ -41,6 +44,9 @@ printf "\nSTEP 2: EXECUTING THE TESTS\n"
 # Loop over all obspy images.
 
 for image_name in $(docker images | grep obspy | awk '{print $2}'); do
+    if [ $# ] && [[ "$*" != *$image_name* ]]; then
+        continue
+    fi
     printf 'Running Tests for image "'$image_name'"...\n'
     # Copy dockerfile and render template.
     sed 's/{{IMAGE_NAME}}/'$image_name'/g' scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
