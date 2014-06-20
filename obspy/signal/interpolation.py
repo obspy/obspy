@@ -117,7 +117,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
 
     .. math::
 
-        w = 1 / max \left\{ \left| m_i \right|, \epsilon \right\}
+        w = 1 / max \left\{ \left\| m_i \\right\|, \epsilon \\right\}
 
     The value at each data point and the slope are then plugged into a
     piecewise continuous cubic polynomial used to evaluate the interpolated

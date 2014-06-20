@@ -1466,6 +1466,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
@@ -1539,6 +1548,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         zero then the end time of the trace is changing on sub-sample scale. To
         abort downsampling in case of changing end times set
         ``strict_length=True``.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -2042,9 +2060,24 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Interpolate the data using various interpolation techniques.
 
         No filter, antialiasing, ... is applied so make sure the data is
-        suitable for the operation to be performed.  :meth:`.decimate` and
-        :meth:`.resample` will be the more appropriate methods for many use
-        cases.
+        suitable for the operation to be performed.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~.copy` to create a copy of your Trace
+            object.
+
 
         :param sampling_rate: The new sampling rate in ``Hz``.
         :param method: The kind of interpolation to perform as a string (
@@ -2066,12 +2099,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             fitting  number to retain the current end time of the trace if
             not given.
 
-        .. note::
+        .. rubric:: _`Usage Examples`
 
-            This operation is performed in place on the actual data arrays. The
-            raw data will no longer be accessible afterwards. To keep your
-            original data, use :meth:`~.copy` to create a copy of your Trace
-            object.
 
         >>> from obspy import read
         >>> tr = read()[0]

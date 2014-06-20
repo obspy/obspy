@@ -2059,6 +2059,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
@@ -2114,6 +2123,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         zero then the end time of the trace is changing on sub-sample scale. To
         abort downsampling in case of changing end times set
         ``strict_length=True``.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -2284,6 +2302,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.interpolate` method of
         :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
