@@ -41,7 +41,7 @@ printf "\nSTEP 2: EXECUTING THE TESTS\n"
 # Loop over all obspy images.
 
 for image_name in $(docker images | grep obspy | awk '{print $2}'); do
-    printf 'Running Tests for image "'$image_name'"...'
+    printf 'Running Tests for image "'$image_name'"...\n'
     # Copy dockerfile and render template.
     sed 's/{{IMAGE_NAME}}/'$image_name'/g' scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
 
