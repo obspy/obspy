@@ -2299,7 +2299,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
-        >>> st.interpolate(sampling_rate=111.1)
+        >>> st.interpolate(sampling_rate=111.1)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples

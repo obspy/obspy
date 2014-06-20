@@ -2073,10 +2073,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~.copy` to create a copy of your Trace
             object.
 
+        >>> from obspy import read
         >>> tr = read()[0]
         >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
-        >>> tr.interpolate(sampling_rate=111.1)
+        >>> tr.interpolate(sampling_rate=111.1)  # doctest: +ELLIPSIS
+        <obspy.core.trace.Trace object at 0x...>
         >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
 
@@ -2088,7 +2090,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
         >>> tr.interpolate(sampling_rate=111.1,
-        ...                starttime=tr.stats.starttime + 10)
+        ...                starttime=tr.stats.starttime + 10) \
+        # doctest:  +ELLIPSIS
+        <obspy.core.trace.Trace object at 0x...>
         >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:13... - ... | 111.1 Hz, 2221 samples
         """
