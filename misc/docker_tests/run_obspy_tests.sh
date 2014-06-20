@@ -11,16 +11,15 @@ DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 rm -rf $TEMP_PATH
 mkdir -p $TEMP_PATH
 
-# Copy ObsPy
+# Copy ObsPy to the temp path. This path is the execution context of the Docker images.
 mkdir -p $NEW_OBSPY_PATH
 cp -r $OBSPY_PATH/obspy $NEW_OBSPY_PATH/obspy/
 cp $OBSPY_PATH/setup.py $NEW_OBSPY_PATH/setup.py
 cp $OBSPY_PATH/MANIFEST.in $NEW_OBSPY_PATH/MANIFEST.in
 rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
 
-# Copy install script
+# Copy the install script.
 cp scripts/install_and_run_tests_on_image.sh $TEMP_PATH/install_and_run_tests_on_image.sh
-
 
 printf "STEP 1: CREATING BASE IMAGES\n"
 
@@ -38,11 +37,14 @@ for image_path in $DOCKERFILE_FOLDER/*; do
     fi
 done
 
+# Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
+# file.
+python -c "import obspy"
+
 # 2. Execute the ObsPy
 printf "\nSTEP 2: EXECUTING THE TESTS\n"
 
-# Loop over all obspy images.
-
+# Loop over all ObsPy Docker images.
 for image_name in $(docker images | grep obspy | awk '{print $2}'); do
     if [ $# ] && [[ "$*" != *$image_name* ]]; then
         continue
