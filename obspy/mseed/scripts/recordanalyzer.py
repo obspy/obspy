@@ -10,8 +10,6 @@
 # Copyright (C) 2010-2012 Lion Krischer
 # --------------------------------------------------------------------
 """
-USAGE: obspy-mseed-recordanalyzer filename.mseed
-
 A command-line tool to analyze Mini-SEED records.
 
 :copyright:
@@ -28,7 +26,7 @@ from copy import deepcopy
 from obspy import UTCDateTime
 from obspy.core.util import OrderedDict
 from obspy import __version__
-from optparse import OptionParser
+from argparse import ArgumentParser
 from struct import unpack
 
 
@@ -283,22 +281,24 @@ def main():
     """
     Entry point for setup.py.
     """
-    usage = "USAGE: %prog /path/to/file.mseed\n\n"
-    parser = OptionParser(usage.strip(), version="%prog " + __version__)
-    parser.add_option("-n", default=0, type='int', dest="n",
-                      help="show info about N-th record")
-    (options, args) = parser.parse_args()
-    if len(args) > 0:
-        filename = args[0]
-        rec = RecordAnalyser(filename)
-        i = 0
-        try:
-            while i < options.n:
-                i += 1
-                next(rec)
-        except:
-            pass
-        print(rec)
+    parser = ArgumentParser(prog='obspy-mseed-recordanalyzer',
+                            description=__doc__.split('\n')[0])
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-n', default=0, type=int,
+                        help='show info about N-th record (default: 0)')
+    parser.add_argument('filename', help='file to analyze')
+    args = parser.parse_args()
+
+    rec = RecordAnalyser(args.filename)
+    i = 0
+    try:
+        while i < args.n:
+            i += 1
+            next(rec)
+    except:
+        pass
+    print(rec)
 
 
 if __name__ == "__main__":
