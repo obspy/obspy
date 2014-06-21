@@ -23,6 +23,24 @@
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
+ - scripts:
+   * All scripts now require argparse instead of optparse.
+   * All scripts now accept -V or --version to print version information.
+   * obspy-indexer: Options have been modified or amended slightly:
+     * --db-uri is a new alias to -u.
+     * --log is a new alias to -l.
+     * --poll-interval is a new alias to -i.
+     * --recent is a new alias to -r.
+     * -a is a new alias to --all-files.
+     * -f is a new alias to --force-reindex.
+     * -H is a new alias to --host.
+     * -p is a new alias to --port.
+     * --mapping_file is renamed to --mapping-file.
+     * --run_once is renamed to --run-once.
+     * --check_duplicates is renamed to --check-duplicates.
+     * --drop_database is renamed to --drop-database.
+   * obspy-plot: --format option is accepted as an alias of -f.
+   * obspy-print: --format option is accepted as an alias of -f.
 
 0.9.3:
  - obspy.core:
