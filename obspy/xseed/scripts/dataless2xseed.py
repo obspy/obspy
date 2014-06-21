@@ -8,19 +8,17 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from glob import glob
+from obspy import __version__
 from obspy.xseed.parser import Parser
-from optparse import OptionParser
+from argparse import ArgumentParser
 import os
 import sys
 
 
 def dataless2xseed(filename, options):
-    if isinstance(filename, list):
-        files = []
-        for item in filename:
-            files.extend(glob(item))
-    else:
-        files = glob(filename)
+    files = []
+    for item in filename:
+        files.extend(glob(item))
     outdir = False
     outfile = False
     if options.output:
@@ -70,31 +68,26 @@ def dataless2xseed(filename, options):
 
 
 def main():
-    usage = "USAGE: %prog [options] filename"
-    parser = OptionParser(usage)
-    parser.add_option("-s", "--split-stations", default=False,
-                      action="store_true", dest="split_stations",
-                      help="split multiple stations within one dataless file "
-                           "into multiple XML-SEED files, labeled with the "
-                           "start time of the volume.")
-    parser.add_option("-d", "--debug", default=False,
-                      action="store_true", dest="debug",
-                      help="show debugging information")
-    parser.add_option("-q", "--quiet", default=True,
-                      action="store_false", dest="verbose",
-                      help="non verbose mode")
-    parser.add_option("-o", "--output", dest="output", default=None,
-                      help="output filename or directory")
-    parser.add_option("-v", "--version", dest="version", default=1.1,
-                      help="XML-SEED version, 1.0 or 1.1", type="float")
-    (options, args) = parser.parse_args()
-    if len(args) == 0:
-        parser.print_help()
-        return
-    filenames = args
-    if len(filenames) == 1:
-        filenames = filenames[0]
-    dataless2xseed(filenames, options)
+    parser = ArgumentParser(prog='obspy-dataless2xseed',
+                            description=__doc__.strip())
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-s', '--split-stations', action='store_true',
+                        help='split multiple stations within one dataless '
+                             'file into multiple XML-SEED files, labeled with '
+                             'the start time of the volume.')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='show debugging information')
+    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose',
+                        help='non verbose mode')
+    parser.add_argument('-o', '--output', default=None,
+                        help='output filename or directory')
+    parser.add_argument('-x', '--xml-version', dest='version', default=1.1,
+                        help='XML-SEED version, 1.0 or 1.1', type=float)
+    parser.add_argument('files', nargs='+', help='files to process')
+    args = parser.parse_args()
+
+    dataless2xseed(args.files, args)
 
 
 if __name__ == "__main__":
