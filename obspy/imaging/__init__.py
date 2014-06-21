@@ -10,8 +10,8 @@ beachballs. The module :mod:`obspy.imaging` depends on the plotting module
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 
 Seismograms

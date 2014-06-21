@@ -7,9 +7,18 @@
 #
 # Copyright (C) 2008-2012 Lion Krischer
 # --------------------------------------------------------------------
+"""
+Waveform plotting for obspy.Stream objects.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy import UTCDateTime, Stream, Trace
@@ -27,15 +36,7 @@ import matplotlib.patches as patches
 import numpy as np
 import scipy.signal as signal
 import warnings
-"""
-Waveform plotting for obspy.Stream objects.
 
-:copyright:
-    The ObsPy Development Team (devs@obspy.org)
-:license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
-"""
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 

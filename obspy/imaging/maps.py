@@ -10,7 +10,7 @@ Module for basemap related plotting in ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import matplotlib.pyplot as plt
@@ -233,7 +233,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
     # plot labels
     if labels:
         if 100 > len(lons) > 1:
-            for name, xpt, ypt, colorpt in zip(labels, x, y, color):
+            for name, xpt, ypt, _colorpt in zip(labels, x, y, color):
                 # Check if the point can actually be seen with the current bmap
                 # projection. The bmap object will set the coordinates to very
                 # large values if it cannot project a point.
@@ -268,7 +268,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
             if datetimeplot:
                 locator = AutoDateLocator()
                 formatter = AutoDateFormatter(locator)
-                formatter.scaled[1/(24.*60.)] = '%H:%M:%S'
+                formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
             else:
                 locator = None
                 formatter = None

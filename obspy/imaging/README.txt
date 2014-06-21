@@ -3,8 +3,7 @@ package obspy.imaging
 
 Copyright
 ---------
-GNU General Public License (GPL)
-(http://www.gnu.org/licenses/gpl.txt)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
 Copyright (c) 2008-2013 by:
     * Robert Barsch
