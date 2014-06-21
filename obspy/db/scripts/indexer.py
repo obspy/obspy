@@ -35,7 +35,7 @@ from obspy import __version__
 from obspy.db.db import Base
 from obspy.db.indexer import worker, WaveformFileCrawler
 from obspy.db.util import parseMappingData
-from optparse import OptionParser
+from argparse import ArgumentParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import logging
@@ -119,11 +119,11 @@ def _runIndexer(options):
         if not paths:
             return
         # prepare map file
-        if options.map_file:
-            data = open(options.map_file, 'r').readlines()
+        if options.mapping_file:
+            data = open(options.mapping_file, 'r').readlines()
             mappings = parseMappingData(data)
             logging.info("Parsed %d lines from mapping file %s" %
-                         (len(data), options.map_file))
+                         (len(data), options.mapping_file))
         else:
             mappings = {}
         # create file queue and worker processes
@@ -166,14 +166,18 @@ def _runIndexer(options):
 
 
 def main():
-    usage = "USAGE: %prog [options]\n\n" + \
-            "\n".join(__doc__.split("\n")[3:])
-    parser = OptionParser(usage.strip(), version="%prog " + __version__)
-    parser.add_option(
-        "-d", default='data=*.*', type="string", dest="data",
+    parser = ArgumentParser(prog='obspy-indexer',
+                            description='\n'.join(__doc__.split('\n')[:3]))
+    parser.add_argument('-V', '--version', action='version',
+                        version="%(prog)s " + __version__)
+    parser.add_argument(
+        '-v', '--verbose', action='store_true',
+        help='Verbose output.')
+    parser.add_argument(
+        '-d', '--data', default='data=*.*',
         help="""Path, search patterns and feature plug-ins of waveform files.
-The indexer will crawl recursive through all sub-directories within each given
-path. Multiple paths have to be separated with a comma, e.g.
+The indexer will crawl recursively through all sub-directories within each
+given path. Multiple paths have to be separated with a comma, e.g.
 '/first/path=*.*,/second/path,/third/path=*.gse'.
 File patterns are given as space-separated list of wildcards after a equal
 sign, e.g.
@@ -183,83 +187,73 @@ Feature plug-ins may be added using the hash (#) character, e.g.
 Be aware that features must be provided behind file patterns (if any)! There is
 no default feature enabled.
 Default path option is 'data=*.*'.""")
-    parser.add_option(
-        "-u", default='sqlite:///indexer.sqlite', type="string",
-        dest="db_uri",
+    parser.add_argument(
+        '-u', '--db-uri', default='sqlite:///indexer.sqlite',
         help="Database connection URI, such as "
-             "postgresql://scott:tiger@localhost/mydatabase."
+             "postgresql://scott:tiger@localhost/mydatabase. "
              "Default is a SQLite database './indexer.sqlite'.")
-    parser.add_option(
-        "-n", type="int", dest="number_of_cpus",
+    parser.add_argument(
+        '-n', type=int, dest='number_of_cpus',
         help="Number of CPUs used for the indexer.",
         default=multiprocessing.cpu_count())
-    parser.add_option(
-        "-i", type="float", default=0.1, dest="poll_interval",
+    parser.add_argument(
+        '-i', '--poll-interval', type=float, default=0.1,
         help="Poll interval for file crawler in seconds (default is 0.1).")
-    parser.add_option(
-        "-r", type="int", dest="recent", default=0,
-        help="Index only recent files modified within the given" +
+    parser.add_argument(
+        '-r', '--recent', type=int, default=0,
+        help="Index only recent files modified within the given "
              "number of hours. This option is deactivated by default.")
-    parser.add_option(
-        "-v", action="store_true", dest="verbose", default=False,
-        help="Verbose output.")
-    parser.add_option(
-        "-l", type="string", dest="log", default="",
+    parser.add_argument(
+        '-l', '--log', default='',
         help="Log file name. If no log file is given, stdout will be used.")
-    parser.add_option(
-        "-m", "--mapping_file", type="string", dest="map_file",
+    parser.add_argument(
+        '-m', '--mapping-file', default=None,
         help="Correct network, station, location and channel codes using a" +
-             " custom mapping file.", default=None)
-    parser.add_option(
-        "--all_files", action="store_false", dest="skip_dots",
-        default=True,
+             " custom mapping file.")
+    parser.add_argument(
+        '-a', '--all-files', action='store_false', dest='skip_dots',
         help="The indexer will automatically skip paths or "
-             "files starting with a dot. This option forces to "
-             "parse all paths and files.")
-    parser.add_option(
-        "-1", "--run_once", action="store_true",
-        dest="run_once", default=False,
-        help="The indexer will parse cycle through all given directories only "
+             "files starting with a dot. This option forces "
+             "parsing of all paths and files.")
+    parser.add_argument(
+        '-1', '--run-once', action='store_true',
+        help="The indexer will parse through all given directories only "
              "once and quit afterwards.")
-    parser.add_option(
-        "--check_duplicates", action="store_true",
-        dest="check_duplicates", default=False,
-        help="Checks for duplicate entries within database." +
+    parser.add_argument(
+        '--check-duplicates', action='store_true',
+        help="Checks for duplicate entries within database. "
              "This feature will slow down the indexer progress.")
-    parser.add_option(
-        "--cleanup", action="store_true", dest="cleanup",
-        default=False,
+    parser.add_argument(
+        '--cleanup', action='store_true',
         help="Clean database from non-existing files or paths " +
              "if activated, but will skip all paths marked as " +
              "archived in the database.")
-    parser.add_option(
-        "--force-reindex", action="store_true",
-        dest="force_reindex", default=False,
+    parser.add_argument(
+        '-f', '--force-reindex', action='store_true',
         help="Reindex existing index entry for every crawled file.")
-    parser.add_option(
-        "--drop_database", action="store_true",
-        dest="drop_database", default=False,
+    parser.add_argument(
+        '--drop-database', action='store_true',
         help="Deletes and recreates the complete database at start up.")
-    parser.add_option(
-        "--host", type="string", dest="host",
-        help="Server host name. Default is 'localhost'.", default="localhost")
-    parser.add_option(
-        "--port", type="int", dest="port", default=0,
+    parser.add_argument(
+        '-H', '--host', default='localhost',
+        help="Server host name. Default is 'localhost'.")
+    parser.add_argument(
+        '-p', '--port', type=int, default=0,
         help="Port number. If not given a free port will be picked.")
 
-    (options, _) = parser.parse_args()
+    args = parser.parse_args()
     # set level of verbosity
-    if options.verbose:
+    if args.verbose:
         level = logging.DEBUG
     else:
         level = logging.INFO
-    if options.log == "":
+    if args.log == "":
         logging.basicConfig(stream=sys.stdout, level=level,
                             format="%(asctime)s [%(levelname)s] %(message)s")
     else:
         logging.basicConfig(filename=options.log, level=level,
                             format="%(asctime)s [%(levelname)s] %(message)s")
-    _runIndexer(options)
+    _runIndexer(args)
 
 
 if __name__ == "__main__":
