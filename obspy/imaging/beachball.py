@@ -3,7 +3,7 @@
 # Filename: beachball.py
 #  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
 #   Author: Robert Barsch
-#    Email: barsch@geophysik.uni-muenchen.de
+#    Email: barsch@egu.eu
 #
 # Copyright (C) 2008-2012 Robert Barsch
 # ---------------------------------------------------------------------
@@ -13,21 +13,21 @@ Draws a beachball diagram of an earthquake focal mechanism
 
 Most source code provided here are adopted from
 
-1. MatLab script `bb.m`_ written by Andy Michael and Oliver Boyd.
+1. MatLab script `bb.m`_ written by Andy Michael, Chen Ji and Oliver Boyd.
 2. ps_meca program from the `Generic Mapping Tools (GMT)`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
 import matplotlib.pyplot as plt
@@ -567,7 +567,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -678,7 +678,7 @@ def StrikeDip(n, e, u):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
     if u < 0:
@@ -703,7 +703,7 @@ def AuxPlane(s1, d1, r1):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
 
@@ -743,7 +743,7 @@ def MT2Plane(mt):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
     D = np.array([d[1], d[0], d[2]])
@@ -777,7 +777,7 @@ def TDL(AN, BN):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     XN = AN[0]
     YN = AN[1]
