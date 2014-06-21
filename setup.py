@@ -103,6 +103,7 @@ if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
 ENTRY_POINTS = {
     'console_scripts': [
+        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.core.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
         'obspy-print = obspy.core.scripts.print:main',
