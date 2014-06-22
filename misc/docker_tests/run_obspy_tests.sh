@@ -1,11 +1,15 @@
 #!/bin/bash
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
-# 1. Build all the base images if they do not yet exist.
 DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
 DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
+# file.
+python -c "import obspy"
+
 
 # Create temporary folder.
 rm -rf $TEMP_PATH
@@ -21,35 +25,24 @@ rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
 # Copy the install script.
 cp scripts/install_and_run_tests_on_image.sh $TEMP_PATH/install_and_run_tests_on_image.sh
 
-printf "STEP 1: CREATING BASE IMAGES\n"
 
-for image_path in $DOCKERFILE_FOLDER/*; do
-    image_name=$(basename $image_path)
-    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
-        continue
-    fi
+# Function creating an image if it does not exist.
+create_image () {
+    image_name=$1;
     has_image=$(docker images | grep obspy | grep $image_name)
     if [ "$has_image" ]; then
-        echo "Image '$image_name already exists."
+        printf "\tImage '$image_name already exists.\n"
     else
-        echo "Image '$image_name will be created."
+        printf "\tImage '$image_name will be created.\n"
         docker build -t obspy:$image_name $image_path
     fi
-done
+}
 
-# Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
-# file.
-python -c "import obspy"
 
-# 2. Execute the ObsPy
-printf "\nSTEP 2: EXECUTING THE TESTS\n"
-
-# Loop over all ObsPy Docker images.
-for image_name in $(docker images | grep obspy | awk '{print $2}'); do
-    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
-        continue
-    fi
-    printf 'Running Tests for image "'$image_name'"...\n'
+# Function running test on an image.
+run_tests_on_image () {
+    image_name=$1;
+    printf "\tRunning tests for image '"$image_name"'...\n"
     # Copy dockerfile and render template.
     sed 's/{{IMAGE_NAME}}/'$image_name'/g' scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
 
@@ -67,6 +60,30 @@ for image_name in $(docker images | grep obspy | awk '{print $2}'); do
 
     docker rm $ID
     docker rmi temp:temp
+}
 
+
+# 1. Build all the base images if they do not yet exist.
+printf "STEP 1: CREATING BASE IMAGES\n"
+
+for image_path in $DOCKERFILE_FOLDER/*; do
+    image_name=$(basename $image_path)
+    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
+        continue
+    fi
+    create_image $image_name;
 done
+
+
+# 2. Execute the ObsPy
+printf "\nSTEP 2: EXECUTING THE TESTS\n"
+
+# Loop over all ObsPy Docker images.
+for image_name in $(docker images | grep obspy | awk '{print $2}'); do
+    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
+        continue
+    fi
+    run_tests_on_image $image_name;
+done
+
 rm -rf $TEMP_PATH
