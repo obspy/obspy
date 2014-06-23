@@ -53,7 +53,7 @@ def dataless2resp(filename, options):
 
 
 def main():
-    parser = ArgumentParser(prog='obspy-xseed-dataless2resp',
+    parser = ArgumentParser(prog='obspy-dataless2resp',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)

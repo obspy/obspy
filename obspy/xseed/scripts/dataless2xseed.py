@@ -70,7 +70,7 @@ def dataless2xseed(filename, options):
 def main():
     parser = ArgumentParser(prog='obspy-dataless2xseed',
                             description=__doc__.strip())
-    parser.add_argument('-v', '--version', action='version',
+    parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
     parser.add_argument('-s', '--split-stations', action='store_true',
                         help='split multiple stations within one dataless '
