@@ -6,6 +6,15 @@ TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
 DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+# Determine the docker binary name. The official debian packages use docker.io
+# for the binary's name due to some legacy docker package.
+which docker.io
+if [ $? != 0 ]; then
+    DOCKER=docker
+else
+    DOCKER=docker.io
+fi
+
 # Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
 # file.
 python -c "import obspy"
@@ -38,12 +47,12 @@ list_not_contains() {
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    has_image=$(docker images | grep obspy | grep $image_name)
+    has_image=$($DOCKER images | grep obspy | grep $image_name)
     if [ "$has_image" ]; then
         printf "\tImage '$image_name already exists.\n"
     else
         printf "\tImage '$image_name will be created.\n"
-        docker build -t obspy:$image_name $image_path
+        $DOCKER build -t obspy:$image_name $image_path
     fi
 }
 
@@ -60,15 +69,15 @@ run_tests_on_image () {
     mkdir -p $LOG_DIR
     ID=$RANDOM-$RANDOM-$RANDOM
 
-    docker build -t temp:temp $TEMP_PATH
+    $DOCKER build -t temp:temp $TEMP_PATH
 
-    docker run --name=$ID temp:temp
+    $DOCKER run --name=$ID temp:temp
 
-    docker cp $ID:/INSTALL_LOG.txt $LOG_DIR
-    docker cp $ID:/TEST_LOG.txt $LOG_DIR
+    $DOCKER cp $ID:/INSTALL_LOG.txt $LOG_DIR
+    $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
 
-    docker rm $ID
-    docker rmi temp:temp
+    $DOCKER rm $ID
+    $DOCKER rmi temp:temp
 }
 
 
