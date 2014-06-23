@@ -8,12 +8,7 @@ DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
-which docker.io
-if [ $? != 0 ]; then
-    DOCKER=docker
-else
-    DOCKER=docker.io
-fi
+DOCKER=`which docker.io || which docker`
 
 # Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
 # file.
@@ -99,7 +94,7 @@ done
 printf "\nSTEP 2: EXECUTING THE TESTS\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $(docker images | grep obspy | awk '{print $2}'); do
+for image_name in $($DOCKER images | grep obspy | awk '{print $2}'); do
     if [ $# != 0 ]; then
         if list_not_contains "$*" $image_name; then
             continue
