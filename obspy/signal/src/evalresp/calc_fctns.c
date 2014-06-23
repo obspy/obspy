@@ -47,7 +47,7 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
   struct stage *stage_ptr;
   int i, j, units_code, eval_flag = 0, nc = 0, sym_fir = 0;
   double w;
-  int matching_stages = 0, has_stage0 = 0, deciStageEvaluated = 0;
+  int matching_stages = 0, has_stage0 = 0;
   struct complex of, val;
   double corr_applied, estim_delay, delay;
   
@@ -70,7 +70,6 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
     for(j = 0; j < chan->nstages; j++) {
       nc = 0;
       sym_fir = 0;
-      deciStageEvaluated = 0;
       if(!stage_ptr->sequence_no)
         has_stage0 = 1;
       if(start_stage >= 0 && stop_stage && (stage_ptr->sequence_no < start_stage ||
@@ -192,7 +191,7 @@ void calc_resp(struct channel *chan, double *freq, int nfreqs, struct complex *o
  * Convert response to velocity first, then to specified units
  *=================================================================*/
 void convert_to_units(int inp, char *out_units, struct complex *data, double w) {
-  int out, l;
+  int out = VEL, l;
   struct complex scale_val;
 
   /* if default units were specified by the user, no conversion is made,
@@ -420,7 +419,7 @@ void fir_sym_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
  *=================================================================*/
 void fir_asym_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
   double *a, h0, sint;
-  struct blkt *next_ptr, *third_ptr;
+  struct blkt *next_ptr;
   int na;
   int k;
   double R = 0.0, I = 0.0;
@@ -430,7 +429,6 @@ void fir_asym_trans(struct blkt *blkt_ptr, double w, struct complex *out) {
   a = blkt_ptr->blkt_info.fir.coeffs;
   na = blkt_ptr->blkt_info.fir.ncoeffs;
   next_ptr = blkt_ptr->next_blkt;
-  third_ptr = next_ptr->next_blkt;
   h0 = blkt_ptr->blkt_info.fir.h0;
   sint = next_ptr->blkt_info.decimation.sample_int;
   wsint = w * sint;

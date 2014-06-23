@@ -35,7 +35,7 @@ clibsignal.generalizedBeamformer.argtypes = [
                            flags=native_str('C_CONTIGUOUS')),
     np.ctypeslib.ndpointer(dtype='c16', ndim=3,
                            flags=native_str('C_CONTIGUOUS')),
-    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
     C.c_double,
     C.c_int,
 ]

@@ -982,8 +982,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
         errcode = clibsignal.generalizedBeamformer(
-            relpow_map, abspow_map, steer, R, nsamp, nstat, prewhiten,
-            grdpts_x, grdpts_y, nfft, nf, dpow, method)
+            relpow_map, abspow_map, steer, R, nstat, prewhiten,
+            grdpts_x, grdpts_y, nf, dpow, method)
         if errcode != 0:
             msg = 'generalizedBeamforming exited with error %d'
             raise Exception(msg % errcode)
