@@ -26,6 +26,15 @@ rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
 cp scripts/install_and_run_tests_on_image.sh $TEMP_PATH/install_and_run_tests_on_image.sh
 
 
+# Helper function checking if an element is in an array.
+list_not_contains() {
+    for word in $1; do
+        [[ $word == $2 ]] && return 1
+    done
+    return 0
+}
+
+
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
@@ -68,8 +77,10 @@ printf "STEP 1: CREATING BASE IMAGES\n"
 
 for image_path in $DOCKERFILE_FOLDER/*; do
     image_name=$(basename $image_path)
-    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
-        continue
+    if [ $# != 0 ]; then
+        if list_not_contains "$*" $image_name; then
+            continue
+        fi
     fi
     create_image $image_name;
 done
@@ -80,8 +91,10 @@ printf "\nSTEP 2: EXECUTING THE TESTS\n"
 
 # Loop over all ObsPy Docker images.
 for image_name in $(docker images | grep obspy | awk '{print $2}'); do
-    if [ $# != 0 ] && [[ "$*" != *$image_name* ]]; then
-        continue
+    if [ $# != 0 ]; then
+        if list_not_contains "$*" $image_name; then
+            continue
+        fi
     fi
     run_tests_on_image $image_name;
 done
