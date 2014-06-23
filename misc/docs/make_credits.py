@@ -25,11 +25,11 @@ libraries and applications, our build tools and our web sites.
 
 """)
 
-# add contributers
-filename = os.path.join('source', 'credits', 'CONTRIBUTERS.txt')
-contributers = sorted(codecs.open(filename, 'r', 'utf-8').readlines())
+# add contributors
+filename = os.path.join('source', 'credits', 'CONTRIBUTORS.txt')
+contributors = sorted(codecs.open(filename, 'r', 'utf-8').readlines())
 
-for item in contributers:
+for item in contributors:
     fh.write("    * %s" % (item))
 
 fh.write("""
