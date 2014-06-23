@@ -41,6 +41,14 @@
      * --drop_database is renamed to --drop-database.
    * obspy-plot: --format option is accepted as an alias of -f.
    * obspy-print: --format option is accepted as an alias of -f.
+   * obspy-scan: Options have been modified or amended slightly:
+     * --endtime is renamed to --end-time.
+     * --event-times is renamed to --event-time. --event-time may be specified
+       multiple times.
+     * --ids is renamed to --id. --id may be specified multiple times.
+     * --nox is renamed to --no-x.
+     * --nogaps is renamed to --no-gaps.
+     * --starttime is renamed to --start-time.
 
 0.9.3:
  - obspy.core:
