@@ -41,6 +41,7 @@
      * --drop_database is renamed to --drop-database.
    * obspy-plot: --format option is accepted as an alias of -f.
    * obspy-print: --format option is accepted as an alias of -f.
+   * obspy-runtests: -a option is accepted as an alias of --all.
    * obspy-scan: Options have been modified or amended slightly:
      * --endtime is renamed to --end-time.
      * --event-times is renamed to --event-time. --event-time may be specified
