@@ -86,6 +86,7 @@ KEYWORDS = [
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
+
 INSTALL_REQUIRES = [
     'future>=0.12.1',
     'numpy>1.0.0',
@@ -98,9 +99,13 @@ EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
               'pyimgur']}
-# PY2
+# Add mock for Python 2. stdlib package for Python >= 3.3.
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
+# Add argparse for Python 2.6. stdlib package for Python >= 2.7
+if sys.version_info[:2] == (2, 6):
+    INSTALL_REQUIRES.append('argparse')
+
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
