@@ -67,7 +67,7 @@ class TauP_Create(object):
             tauPCreate.start()
             print("Done!")
         except Exception as e:
-            print("Something went fundamentally wrong:", e.msg)
+            print("Something went fundamentally wrong:", e)
 
         # could catch different exceptions here dep on what went wrong
         #except IOError as?

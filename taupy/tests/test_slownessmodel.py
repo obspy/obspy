@@ -3,6 +3,8 @@ import unittest
 from taupy.SlownessModel import SlownessModel
 from taupy.SlownessModel import SlownessModelError
 from taupy.VelocityModel import VelocityModel
+from taupy.SlownessLayer import SlownessLayer
+from taupy.VelocityLayer import VelocityLayer
 
 class TestSlownessModel(unittest.TestCase):
     def test_createSample(self):
@@ -31,5 +33,14 @@ class TestSlownessModel(unittest.TestCase):
         testmod.radiusOfEarth = testmod.vMod.radiusOfEarth
         # Maybe merge these?
 
+    def test_slownesslayer(self):
+        vLayer=VelocityLayer(1, 10, 31, 3, 5, 2, 4)
+        a = SlownessLayer.create_from_vlayer(vLayer, True)
+        self.assertEqual(a.botP, 1268.0)
+        self.assertEqual(a.botDepth, 31.0)
+        b = SlownessLayer.create_from_vlayer(vLayer, False)
+        self.assertEqual(b.topP, 3180.5)
+
+
 if __name__ == '__main__':
-    unittest.main(buffer=False)
+    unittest.main(buffer=True)

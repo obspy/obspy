@@ -6,6 +6,8 @@ class testclass(object):
         
     def meep(self):
         print(self.no)
+        print(self.defaultno)
+        # but print(defaultno) is undefined!
         
     # The classmethod decorator is necessary, else the cls isn't 
     # recognised (gives an error that it's undefined)
@@ -16,7 +18,10 @@ class testclass(object):
         #print(self.no)
         print(cls.defaultno)
         
-        
+    def uninstantiated(self):
+        print(self.defaultno)
+                
+testclass.uninstantiated()        
 testclass.classmeep()
 test = testclass(3)
 test.meep()
