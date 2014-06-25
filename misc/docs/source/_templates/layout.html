@@ -4,3 +4,11 @@
                                 '//tests.obspy.org/static/font/style.css',
                                 '//tests.obspy.org/static/base.css'] %}
 
+{%- block footer %}
+{% if use_local_resources %}
+{% include 'footer.html' %}
+{% else %}
+<!--# include file="footer.html" -->
+{% endif %}
+{% endblock footer %}
+
