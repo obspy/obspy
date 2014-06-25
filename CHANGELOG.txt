@@ -39,6 +39,26 @@
      * --run_once is renamed to --run-once.
      * --check_duplicates is renamed to --check-duplicates.
      * --drop_database is renamed to --drop-database.
+   * obspy-mopad: Options have been modified or amended slightly:
+     * convert subcommand:
+       * No changes.
+     * decompose subcommand:
+       * --input_system is renamed to --input-system.
+       * --output_system is renamed to --output-system.
+     * gmt subcommand:
+       * --show_1fp is renamed to --show-1fp.
+       * --show_isotropic_part is renamed to --show-isotropic-part.
+     * plot subcommand:
+       * --basis_vectors is renamed to --basis-vectors.
+       * --full_sphere is renamed to --full-sphere.
+       * --input_system is renamed to --input-system.
+       * --lines_only is renamed to --lines-only.
+       * --output_file is renamed to --output-file.
+       * --pa_system is renamed to --pa-system.
+       * --pressure_colour is renamed to --pressure-colour.
+       * --show1fp is renamed to --show-1fp.
+       * --show_isotropic_part is renamed to --show-isotropic-part.
+       * --tension_colour is renamed to --tension-colour.
    * obspy-plot: --format option is accepted as an alias of -f.
    * obspy-print: --format option is accepted as an alias of -f.
    * obspy-runtests: -a option is accepted as an alias of --all.
