@@ -141,7 +141,7 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def main():
+def main(argv):
     parser = ArgumentParser(prog='obspy-scan', description=__doc__.strip(),
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('-V', '--version', action='version',
@@ -219,7 +219,7 @@ def main():
     parser.add_argument('--starttime', type=UTCDateTime,
                         action=action, help=SUPPRESS)
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Print help and exit if no arguments are given
     if len(args.paths) == 0 and args.load is None:
@@ -380,4 +380,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)
