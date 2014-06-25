@@ -10,7 +10,8 @@ from future.builtins import *  # NOQA
 from glob import glob
 from obspy import __version__
 from obspy.xseed.parser import Parser
-from argparse import ArgumentParser
+from argparse import ArgumentParser, SUPPRESS
+from obspy.core.util.base import _DeprecatedArgumentAction
 import os
 import sys
 
@@ -85,6 +86,12 @@ def main():
     parser.add_argument('-x', '--xml-version', dest='version', default=1.1,
                         help='XML-SEED version, 1.0 or 1.1', type=float)
     parser.add_argument('files', nargs='+', help='files to process')
+
+    # Deprecated arguments
+    action = _DeprecatedArgumentAction('-v', '--xml-version')
+    parser.add_argument('-v', dest='version', default=1.1, type=float,
+                        action=action, help=SUPPRESS)
+
     args = parser.parse_args()
 
     dataless2xseed(args.files, args)

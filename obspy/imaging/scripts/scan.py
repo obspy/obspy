@@ -36,7 +36,8 @@ import sys
 import os
 import warnings
 from obspy import __version__, read, UTCDateTime
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from obspy.core.util.base import _DeprecatedArgumentAction
+from argparse import ArgumentParser, RawDescriptionHelpFormatter, SUPPRESS
 import numpy as np
 
 
@@ -192,6 +193,32 @@ def main():
                         help='Optional, prints a list of gaps at the end.')
     parser.add_argument('paths', nargs='*',
                         help='Files or directories to scan.')
+
+    # Deprecated arguments
+    action = _DeprecatedArgumentAction('--endtime', '--end-time')
+    parser.add_argument('--endtime', type=UTCDateTime,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--event-times', '--event-time')
+    parser.add_argument('--event-times', action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--ids', '--id')
+    parser.add_argument('--ids', action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--nox', '--no-x',
+                                       real_action='store_true')
+    parser.add_argument('--nox', dest='no_x', nargs=0,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--nogaps', '--no-gaps',
+                                       real_action='store_true')
+    parser.add_argument('--nogaps', dest='no_gaps', nargs=0,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--starttime', '--start-time')
+    parser.add_argument('--starttime', type=UTCDateTime,
+                        action=action, help=SUPPRESS)
+
     args = parser.parse_args()
 
     # Print help and exit if no arguments are given
@@ -221,11 +248,24 @@ def main():
         times = map(date2num, args.event_time)
         for time in times:
             ax.axvline(time, color='k')
+    # Deprecated version (don't plot twice)
+    if args.event_times and not args.event_time:
+        times = args.event_times.split(',')
+        times = map(UTCDateTime, times)
+        times = map(date2num, times)
+        for time in times:
+            ax.axvline(time, color='k')
 
     if args.start_time:
         args.start_time = date2num(args.start_time)
+    elif args.starttime:
+        # Deprecated version
+        args.start_time = date2num(args.starttime)
     if args.end_time:
         args.end_time = date2num(args.end_time)
+    elif args.endtime:
+        # Deprecated version
+        args.end_time = date2num(args.endtime)
 
     # Generate dictionary containing nested lists of start and end times per
     # station
@@ -245,6 +285,9 @@ def main():
 
     # Loop through this dictionary
     ids = list(data.keys())
+    # Handle deprecated argument
+    if args.ids and not args.id:
+        args.id = args.ids.split(',')
     # restrict plotting of results to given ids
     if args.id:
         ids = [x for x in ids if x in args.id]

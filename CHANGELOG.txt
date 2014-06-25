@@ -26,7 +26,10 @@
  - scripts:
    * All scripts now require argparse instead of optparse.
    * All scripts now accept -V or --version to print version information.
+   * obspy-dataless2xseed: -v and --version options are renamed to -x and
+     --xml-version to not conflict with above option.
    * obspy-indexer: Options have been modified or amended slightly:
+     * --data is a new alias to -d.
      * --db-uri is a new alias to -u.
      * --log is a new alias to -l.
      * --poll-interval is a new alias to -i.
@@ -35,10 +38,10 @@
      * -f is a new alias to --force-reindex.
      * -H is a new alias to --host.
      * -p is a new alias to --port.
-     * --mapping_file is renamed to --mapping-file.
-     * --run_once is renamed to --run-once.
      * --check_duplicates is renamed to --check-duplicates.
      * --drop_database is renamed to --drop-database.
+     * --mapping_file is renamed to --mapping-file.
+     * --run_once is renamed to --run-once.
    * obspy-mopad: Options have been modified or amended slightly:
      * convert subcommand:
        * No changes.

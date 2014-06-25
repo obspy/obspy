@@ -22,7 +22,7 @@ A command-line program that indexes seismogram files into a database.
 
 (2) Run only once and remove duplicates::
 
-       ./obspy-indexer -v -i0.0 --run_once --check_duplicates -n1 -u$DB -d$DATA
+       ./obspy-indexer -v -i0.0 --run-once --check-duplicates -n1 -u$DB -d$DATA
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -35,7 +35,8 @@ from obspy import __version__
 from obspy.db.db import Base
 from obspy.db.indexer import worker, WaveformFileCrawler
 from obspy.db.util import parseMappingData
-from argparse import ArgumentParser
+from obspy.core.util.base import _DeprecatedArgumentAction
+from argparse import ArgumentParser, SUPPRESS
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import logging
@@ -240,6 +241,25 @@ Default path option is 'data=*.*'.""")
     parser.add_argument(
         '-p', '--port', type=int, default=0,
         help="Port number. If not given a free port will be picked.")
+
+    # Deprecated arguments
+    action = _DeprecatedArgumentAction('--check_duplicates',
+                                       '--check-duplicates',
+                                       real_action='store_true')
+    parser.add_argument('--check_duplicates', nargs=0,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--drop_database', '--drop-database',
+                                       real_action='store_true')
+    parser.add_argument('--drop_database', nargs=0,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--mapping_file', '--mapping-file')
+    parser.add_argument('--mapping_file', action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--run_once', '--run-once',
+                                       real_action='store_true')
+    parser.add_argument('--run_once', nargs=0, action=action, help=SUPPRESS)
 
     args = parser.parse_args()
     # set level of verbosity
