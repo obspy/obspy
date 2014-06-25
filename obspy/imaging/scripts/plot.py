@@ -13,7 +13,7 @@ from obspy.core.util.base import ENTRY_POINTS
 from argparse import ArgumentParser
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-plot', description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
@@ -26,7 +26,7 @@ def main():
                         help='Disable automatic merging of matching channels.')
     parser.add_argument('files', nargs='+',
                         help='Files to plot.')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.outfile is not None:
         import matplotlib

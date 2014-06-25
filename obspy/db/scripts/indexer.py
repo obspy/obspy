@@ -166,7 +166,7 @@ def _runIndexer(options):
     logging.info("Indexer stopped.")
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-indexer',
                             description='\n'.join(__doc__.split('\n')[:3]))
     parser.add_argument('-V', '--version', action='version',
@@ -261,7 +261,7 @@ Default path option is 'data=*.*'.""")
                                        real_action='store_true')
     parser.add_argument('--run_once', nargs=0, action=action, help=SUPPRESS)
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     # set level of verbosity
     if args.verbose:
         level = logging.DEBUG

@@ -3888,7 +3888,7 @@ class BeachBall:
 #
 # -------------------------------------------------------------------
 
-def main():
+def main(argv=None):
     """
     Usage
 
@@ -5144,7 +5144,7 @@ The 'source mechanism' as a comma-separated list of length:
         return parser
 
     parser = _build_parsers()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         M_raw = [float(xx) for xx in args.mechanism.split(',')]

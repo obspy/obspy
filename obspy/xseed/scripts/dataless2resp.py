@@ -52,7 +52,7 @@ def dataless2resp(filename, options):
             sys.stderr.write(msg)
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-dataless2resp',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
@@ -64,7 +64,7 @@ def main():
     parser.add_argument('-z', '--zipped', action='store_true',
                         help='Pack files of one station into a ZIP archive.')
     parser.add_argument('files', nargs='+', help='Files to convert.')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     dataless2resp(args.files, args)
 

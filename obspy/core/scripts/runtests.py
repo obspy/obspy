@@ -560,7 +560,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         return errors
 
 
-def run(interactive=True):
+def run(argv=None, interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
@@ -631,7 +631,7 @@ def run(interactive=True):
                              'diff images (but not images that passed the '
                              'corresponding test).')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     # set correct verbosity level
     if args.verbose:
         verbosity = 2
@@ -674,7 +674,7 @@ def run(interactive=True):
                     hostname=args.hostname)
 
 
-def main(interactive=True):
+def main(argv=None, interactive=True):
     """
     Entry point for setup.py.
 
@@ -703,7 +703,7 @@ def main(interactive=True):
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
         print(PSTATS_HELP)
     else:
-        errors = run(interactive)
+        errors = run(argv, interactive)
         if errors:
             sys.exit(1)
 

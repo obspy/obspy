@@ -13,7 +13,7 @@ from obspy.core.util.base import ENTRY_POINTS
 from argparse import ArgumentParser
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-print', description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
@@ -25,7 +25,7 @@ def main():
                         help='Switch on printing of gap information.')
     parser.add_argument('files', nargs='+',
                         help='Files to process.')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     st = Stream()
     for f in args.files:

@@ -12,7 +12,7 @@ from obspy import __version__
 from obspy.core.util import FlinnEngdahl
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-flinn-engdahl',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
@@ -23,7 +23,7 @@ def main():
     parser.add_argument('latitude', type=float,
                         help='Latitude (in degrees) of point. Positive for '
                              'North, negative for South.')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     flinn_engdahl = FlinnEngdahl()
     print(flinn_engdahl.get_region(args.longitude, args.latitude))

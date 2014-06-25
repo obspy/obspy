@@ -68,7 +68,7 @@ def dataless2xseed(filename, options):
             sys.stderr.write(msg)
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-dataless2xseed',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
@@ -92,7 +92,7 @@ def main():
     parser.add_argument('-v', dest='version', default=1.1, type=float,
                         action=action, help=SUPPRESS)
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     dataless2xseed(args.files, args)
 

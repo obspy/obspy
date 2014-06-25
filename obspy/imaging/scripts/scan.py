@@ -141,7 +141,7 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def main(argv):
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-scan', description=__doc__.strip(),
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('-V', '--version', action='version',
@@ -380,4 +380,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()

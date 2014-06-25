@@ -139,7 +139,7 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
         os.rename(filename_old, filename_new)
 
 
-def main():
+def main(argv=None):
     warnings.simplefilter('always')
     parser = ArgumentParser(prog='obspy-reftekrescue',
                             description=__doc__.strip(),
@@ -159,7 +159,7 @@ def main():
     parser.add_argument('-o', '--output-folder', default='/export/data/rescue',
                         help='Folder for output of reconstructed data. '
                              'An empty folder has to be specified.')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     # be friendly, do some checks.
     msg = "Invalid length for "
     if len(args.experiment_number) != 2:

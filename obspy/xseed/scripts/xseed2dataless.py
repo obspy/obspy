@@ -67,7 +67,7 @@ def xseed2dataless(filename, options):
             sys.stderr.write(msg)
 
 
-def main():
+def main(argv=None):
     parser = ArgumentParser(prog='obspy-xseed2dataless',
                             description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
@@ -79,7 +79,7 @@ def main():
     parser.add_argument('-o', '--output', default=None,
                         help='output filename or directory')
     parser.add_argument('files', nargs='+', help='files to convert')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     xseed2dataless(args.files, args)
 

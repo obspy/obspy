@@ -277,7 +277,7 @@ class RecordAnalyser(object):
         return ret_val
 
 
-def main():
+def main(argv=None):
     """
     Entry point for setup.py.
     """
@@ -288,7 +288,7 @@ def main():
     parser.add_argument('-n', default=0, type=int,
                         help='show info about N-th record (default: 0)')
     parser.add_argument('filename', help='file to analyze')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     rec = RecordAnalyser(args.filename)
     i = 0
