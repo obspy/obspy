@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 
 from obspy import read, Stream
 from obspy import __version__
+from obspy.core.util.base import ENTRY_POINTS
 from argparse import ArgumentParser
 
 
@@ -16,9 +17,9 @@ def main():
     parser = ArgumentParser(prog='obspy-plot', description=__doc__.strip())
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
-    parser.add_argument('-f', '--format', default=None,
+    parser.add_argument('-f', '--format', choices=ENTRY_POINTS['waveform'],
                         help='Waveform format.')
-    parser.add_argument('-o', '--outfile', default=None,
+    parser.add_argument('-o', '--outfile',
                         help='Output filename.')
     parser.add_argument('-n', '--no-automerge', dest='automerge',
                         action='store_false',

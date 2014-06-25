@@ -36,7 +36,7 @@ import sys
 import os
 import warnings
 from obspy import __version__, read, UTCDateTime
-from obspy.core.util.base import _DeprecatedArgumentAction
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, SUPPRESS
 import numpy as np
 
@@ -146,7 +146,7 @@ def main():
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('-V', '--version', action='version',
                         version='%(prog)s ' + __version__)
-    parser.add_argument('-f', '--format', default=None,
+    parser.add_argument('-f', '--format', choices=ENTRY_POINTS['waveform'],
                         help='Optional, the file format.\n' +
                              ' '.join(__doc__.split('\n')[-4:]))
     parser.add_argument('-v', '--verbose', action='store_true',
