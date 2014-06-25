@@ -205,7 +205,7 @@ html_last_updated_fmt = '%Y-%m-%dT%H:%M:%S'
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 html_sidebars = {
-   '**': ['localtoc.html', 'sourcelink.html', 'searchbox.html']
+   '**': ['localtoc.html', 'sourcelink.html']
 }
 
 # Additional templates that should be rendered to pages, maps page names to
