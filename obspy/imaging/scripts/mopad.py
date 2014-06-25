@@ -2042,7 +2042,7 @@ class BeachBall:
         file handler.
         """
         colour_Z = colour
-        wstring = '> -Z%i\n' % (colour_Z)
+        wstring = bytes('> -Z%i\n' % (colour_Z), encoding='utf-8')
         FH_string.write(wstring)
         np.savetxt(FH_string, self._GMT_scaling * curve.transpose())
 
@@ -2061,9 +2061,9 @@ class BeachBall:
         pressure_colour = self._GMT_pressure_colour
 
         # build strings for possible GMT-output, used by 'psxy'
-        GMT_string_FH = io.StringIO()
-        GMT_linestring_FH = io.StringIO()
-        GMT_EVs_FH = io.StringIO()
+        GMT_string_FH = io.BytesIO()
+        GMT_linestring_FH = io.BytesIO()
+        GMT_EVs_FH = io.BytesIO()
 
         self._add_2_GMT_string(GMT_EVs_FH, EV_2_plot, tension_colour)
         GMT_EVs_FH.flush()
@@ -4138,7 +4138,7 @@ def main():
         """
         """
         bb = BeachBall(MT, kwargs_dict)
-        return bb.get_psxy(kwargs_dict)
+        return str(bb.get_psxy(kwargs_dict), encoding='utf-8')
 
     def _call_decompose(MT, kwargs_dict):
         """
