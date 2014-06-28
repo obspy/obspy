@@ -3,11 +3,13 @@
 {% if use_local_assets %}
 {% set bootswatch_css_custom = ['_static/css/bootstrap.min.css',
                                 '_static/font.css',
-                                '_static/css/base.css'] %}
+                                '_static/css/base.css',
+                                '_static/css/custom.css'] %}
 {% else %}
 {% set bootswatch_css_custom = ['//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
                                 '//tests.obspy.org/static/font/style.css',
-                                '//tests.obspy.org/static/base.css'] %}
+                                '//tests.obspy.org/static/base.css',
+                                '_static/css/custom.css'] %}
 {% endif %}
 
 {%- block footer %}
