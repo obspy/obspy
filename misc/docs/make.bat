@@ -40,7 +40,7 @@ if "%1" == "help" (
 	echo.  coverager  to make create coverage HTML files and report test
 	echo.  pep8       to check PEP8 of tutorial
 	echo.  citations  to generate citations page
-    echo.  credits    to generate credits page
+	echo.  credits    to generate credits page
 	goto end
 )
 
@@ -76,8 +76,8 @@ if "%1" == "citations" (
 )
 
 if "%1" == "credits" (
-    python make_credits.py
-    goto end
+	python make_credits.py
+	goto end
 )
 
 if "%1" == "html" (
@@ -91,11 +91,11 @@ if "%1" == "html" (
 
 if "%1" == "html+log" (
 :html
-    %SPHINXBUILD% -b html %ALLSPHINXOPTS% %BUILDDIR%/html >error.log 2>&1
-    if errorlevel 1 exit /b 1
-    echo.
-    echo.Build finished. The HTML pages are in %BUILDDIR%/html.
-    goto end
+	%SPHINXBUILD% -b html %ALLSPHINXOPTS% %BUILDDIR%/html >error.log 2>&1
+	if errorlevel 1 exit /b 1
+	echo.
+	echo.Build finished. The HTML pages are in %BUILDDIR%/html.
+	goto end
 )
 if "%1" == "dirhtml" (
 	%SPHINXBUILD% -b dirhtml %ALLSPHINXOPTS% %BUILDDIR%/dirhtml
