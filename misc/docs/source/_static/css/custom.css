@@ -81,6 +81,14 @@ dd p {
   margin-top: 16px;
 }
 
+.epigraph div::first-letter {
+  float: left;
+  color: #C7254E;
+  font-size: 300%;
+  padding-top: 0.125ex;
+  padding-right: 0.25ex;
+  font-family: serif;
+}
 
 /* disable selection of doctest prefixes, e.g. >>> or ...*/
 .highlight .gp {

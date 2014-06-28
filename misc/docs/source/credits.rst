@@ -74,4 +74,6 @@ ObsPy was partially funded by the
 
 .. rubric:: Quotes
 
-* "I believe that ObsPy is what will finally make students and some of my colleagues consider using Python for doing science!  I tell people of it whenever I get a chance."
+
+.. epigraph::
+    "I believe that ObsPy is what will finally make students and some of my colleagues consider using Python for doing science!  I tell people of it whenever I get a chance."
