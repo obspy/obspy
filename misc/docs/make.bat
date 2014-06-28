@@ -22,6 +22,7 @@ if "%1" == "help" (
 	echo.  html+log   to make standalone HTML files and log everything into an error.log file
 	echo.  dirhtml    to make HTML files named index.html in directories
 	echo.  singlehtml to make a single large HTML file
+	echo.  serverhtml to make a single large HTML file
 	echo.  pickle     to make pickle files
 	echo.  json       to make JSON files
 	echo.  htmlhelp   to make HTML files and a HTML help project
@@ -41,6 +42,7 @@ if "%1" == "help" (
 	echo.  pep8       to check PEP8 of tutorial
 	echo.  citations  to generate citations page
 	echo.  credits    to generate credits page
+	echo.  assets     to generate static assets for local browsing
 	goto end
 )
 
@@ -80,9 +82,24 @@ if "%1" == "credits" (
 	goto end
 )
 
+if "%1" == "assets" (
+	python make_assets.py
+	goto end
+)
+
 if "%1" == "html" (
 :html
+	python make_assets.py
 	%SPHINXBUILD% -b html %ALLSPHINXOPTS% %BUILDDIR%/html
+	if errorlevel 1 exit /b 1
+	echo.
+	echo.Build finished. The HTML pages are in %BUILDDIR%/html.
+	goto end
+)
+
+if "%1" == "serverhtml" (
+:html
+	%SPHINXBUILD% -b html -A use_local_assets=0 %ALLSPHINXOPTS% %BUILDDIR%/html
 	if errorlevel 1 exit /b 1
 	echo.
 	echo.Build finished. The HTML pages are in %BUILDDIR%/html.

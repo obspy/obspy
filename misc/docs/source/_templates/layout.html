@@ -1,11 +1,17 @@
 {% extends "!layout.html" %}
 
+{% if use_local_assets %}
+{% set bootswatch_css_custom = ['_static/css/bootstrap.min.css',
+                                '_static/font.css',
+                                '_static/css/base.css'] %}
+{% else %}
 {% set bootswatch_css_custom = ['//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
                                 '//tests.obspy.org/static/font/style.css',
                                 '//tests.obspy.org/static/base.css'] %}
+{% endif %}
 
 {%- block footer %}
-{% if use_local_resources %}
+{% if use_local_assets %}
 {% include 'footer.html' %}
 {% else %}
 <!--# include file="footer.html" -->

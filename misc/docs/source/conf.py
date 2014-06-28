@@ -173,7 +173,7 @@ html_theme_options = {
 # Additional configuration for local themes
 html_context = {
     # Whether to use local files or files on ObsPy servers
-    'use_local_resources': True,
+    'use_local_assets': True,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
