@@ -212,6 +212,8 @@ html_last_updated_fmt = '%Y-%m-%dT%H:%M:%S'
 #html_sidebars = {}
 html_sidebars = {
     'index': [],
+    'genindex': [],
+    'py-modindex': [],
     '**': ['localtoc.html', 'sourcelink.html']
 }
 
