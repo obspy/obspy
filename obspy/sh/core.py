@@ -349,8 +349,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
 
     Q files consists of two files per data set:
 
-     * a ASCII header file with file extension `QHD` and the
-     * binary data file with file extension `QBN`.
+    * a ASCII header file with file extension `QHD` and the
+    * binary data file with file extension `QBN`.
 
     The read method only accepts header files for the ``filename`` parameter.
     ObsPy assumes that the corresponding data file is within the same directory

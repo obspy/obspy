@@ -31,17 +31,17 @@ using the :func:`~obspy.core.stream.read()` function.
 The data format is automatically detected. Important in this tutorial are the
 :class:`~obspy.core.trace.Trace` attributes:
     
-    ``tr.data``
-        contains the data as :class:`numpy.ndarray`
-        
-    ``tr.stats``
-        contains a dict-like class of header entries
+``tr.data``
+    contains the data as :class:`numpy.ndarray`
     
-    ``tr.stats.sampling_rate``
-        the sampling rate
-    
-    ``tr.stats.npts``
-        sample count of data
+``tr.stats``
+    contains a dict-like class of header entries
+
+``tr.stats.sampling_rate``
+    the sampling rate
+
+``tr.stats.npts``
+    sample count of data
 
 As an example, the header of the data file is printed and the data are plotted
 like this:
@@ -74,16 +74,16 @@ Available Methods
 After loading the data, we are able to pass the waveform data to the following
 trigger routines defined in :mod:`obspy.signal.trigger`:
 
-    .. autosummary::
-       :toctree: ../../packages/autogen
+.. autosummary::
+    :toctree: ../../packages/autogen
 
-       ~obspy.signal.trigger.recSTALTA
-       ~obspy.signal.trigger.carlSTATrig
-       ~obspy.signal.trigger.classicSTALTA
-       ~obspy.signal.trigger.delayedSTALTA
-       ~obspy.signal.trigger.zDetect
-       ~obspy.signal.trigger.pkBaer
-       ~obspy.signal.trigger.arPick
+    ~obspy.signal.trigger.recSTALTA
+    ~obspy.signal.trigger.carlSTATrig
+    ~obspy.signal.trigger.classicSTALTA
+    ~obspy.signal.trigger.delayedSTALTA
+    ~obspy.signal.trigger.zDetect
+    ~obspy.signal.trigger.pkBaer
+    ~obspy.signal.trigger.arPick
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
