@@ -25,7 +25,7 @@ instrument response and to simulate a 1Hz instrument with damping 0.707.
 .. include:: retrieving_data_from_datacenters_1.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/retrieving_data_from_datacenters_1.py
+.. plot:: tutorial/code_snippets/retrieving_data_from_datacenters_1.py
 
 -----------------
 IRIS Web Services

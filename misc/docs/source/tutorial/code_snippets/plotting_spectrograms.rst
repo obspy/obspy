@@ -17,4 +17,4 @@ matplotlib colormaps are given at:
 .. include:: plotting_spectrograms.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/plotting_spectrograms.py
+.. plot:: tutorial/code_snippets/plotting_spectrograms.py

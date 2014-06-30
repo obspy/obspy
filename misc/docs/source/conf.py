@@ -31,11 +31,10 @@ extensions = ['sphinx.ext.intersphinx',
               'sphinx.ext.doctest',
               'sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
-              'matplotlib.sphinxext.only_directives',
+              'matplotlib.sphinxext.plot_directive',
               'sphinx.ext.mathjax',
               # local extensions
               'autosummary',
-              'plot_directive',
               'obspydoc'
 ]
 
@@ -98,6 +97,8 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 modindex_common_prefix = ['obspy.']
 
+# File formats to generate.
+plot_formats = [('png', 110), ('hires.png', 200)]
 
 # -- Options for HTML output --------------------------------------------------
 

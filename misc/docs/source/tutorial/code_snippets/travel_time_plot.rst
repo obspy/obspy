@@ -10,4 +10,4 @@ distance range, selected phases and the ``iasp91`` velocity model using the
 .. include:: travel_time_plot.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/travel_time_plot.py
+.. plot:: tutorial/code_snippets/travel_time_plot.py

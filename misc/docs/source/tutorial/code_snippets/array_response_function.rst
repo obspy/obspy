@@ -9,4 +9,4 @@ beam forming as a function of wavenumber using the ObsPy function
 .. include:: array_response_function.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/array_response_function.py
+.. plot:: tutorial/code_snippets/array_response_function.py

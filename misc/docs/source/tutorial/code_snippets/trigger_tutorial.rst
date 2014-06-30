@@ -65,7 +65,7 @@ Using the :meth:`~obspy.core.trace.Trace.plot` method of the
 
     >>> tr.plot(type="relative")
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial.py
+.. plot:: tutorial/code_snippets/trigger_tutorial.py
 
 -----------------
 Available Methods
@@ -115,7 +115,7 @@ Classic Sta Lta
     >>> cft = classicSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plotTrigger(trace, cft, 1.5, 0.5)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
 
 Z-Detect
 ========
@@ -124,7 +124,7 @@ Z-Detect
     >>> cft = zDetect(trace.data, int(10 * df))
     >>> plotTrigger(trace, cft, -0.4, -0.3)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_z_detect.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_z_detect.py
 
 Recursive Sta Lta
 =================
@@ -133,7 +133,7 @@ Recursive Sta Lta
     >>> cft = recSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plotTrigger(trace, cft, 1.2, 0.5)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
 
 Carl-Sta-Trig
 =============
@@ -142,7 +142,7 @@ Carl-Sta-Trig
     >>> cft = carlSTATrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plotTrigger(trace, cft, 20.0, -20.0)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_carl_sta_trig.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_carl_sta_trig.py
 
 Delayed Sta Lta
 ===============
@@ -151,7 +151,7 @@ Delayed Sta Lta
     >>> cft = delayedSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plotTrigger(trace, cft, 5, 10)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
 
 .. _trigger-tutorial-coincidence:
 
@@ -406,4 +406,4 @@ results are plotted step by step, is shown here:
 .. include:: trigger_tutorial_advanced.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_advanced.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_advanced.py

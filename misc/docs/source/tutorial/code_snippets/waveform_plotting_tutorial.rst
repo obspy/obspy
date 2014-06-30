@@ -38,7 +38,7 @@ your needs.
 
    >>> singlechannel.plot()
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_1.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_1.py
 
 
 ----------------
@@ -55,7 +55,7 @@ the plot. Please see the documentation of method
    ...                    tick_rotation=5, tick_format='%I:%M %p',
    ...                    starttime=dt + 60*60, endtime=dt + 60*60 + 120)
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_2.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_2.py
 
 -------------------
 Saving Plot to File
@@ -81,7 +81,7 @@ in the following example to change the overall size of the plot.
 
    >>> threechannels.plot(size=(800, 600))
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_3.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_3.py
 
 -----------------------
 Creating a One-Day Plot
@@ -92,7 +92,7 @@ setting the ``type`` parameter to ``'dayplot'``:
 
    >>> singlechannel.plot(type='dayplot')
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_4.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_4.py
 
 Event information can be included in the plot as well (experimental feature, syntax might change):
 
@@ -104,7 +104,7 @@ Event information can be included in the plot as well (experimental feature, syn
     ...         color=['k', 'r', 'b', 'g'], show_y_UTC_label=False,
     ...         events={'min_magnitude': 6.5})
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_5.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_5.py
 
 -------------------------
 Plotting a Record Section
@@ -121,7 +121,7 @@ defined in meters. Or a geographical location ``trace.stats.coordinates.latitude
 great circle distances (``dist_degree=True``) along with parameter ``ev_coord``. 
 For further information please see :meth:`~obspy.core.stream.Stream.plot`
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_6.py
 
 --------------------
 Plot & Color Options

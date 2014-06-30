@@ -80,7 +80,7 @@ window..
     >>> ppsd.plot("/tmp/ppsd.png")  # doctest: +SKIP
     >>> ppsd.plot("/tmp/ppsd.pdf")  # doctest: +SKIP
 
-.. plot:: source/tutorial/code_snippets/probabilistic_power_spectral_density.py
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
 
 Below the actual PPSD (for a detailed discussion see
 [McNamara2004]_) is a visualization of the data basis for the PPSD

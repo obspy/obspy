@@ -9,4 +9,4 @@ the documentation of the :meth:`~obspy.core.stream.Stream.merge` method.
 .. include:: merging_seismograms.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/merging_seismograms.py
+.. plot:: tutorial/code_snippets/merging_seismograms.py

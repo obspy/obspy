@@ -90,7 +90,7 @@ preview of the waveform (requires the :mod:`obspy.imaging` module):
 
     >>> st.plot()
 
-.. plot:: source/tutorial/code_snippets/reading_seismograms.py
+.. plot:: tutorial/code_snippets/reading_seismograms.py
 
 .. _NumPy: http://numpy.scipy.org/
 .. _GSE2: http://obspy.org/export/2593/obspy/trunk/obspy.gse2/docs/provisional_GSE2.1.pdf

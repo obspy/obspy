@@ -14,7 +14,7 @@ Plot the Time Frequency Representation
 .. include:: time_frequency_misfit_ex1.py
    :literal:
    
-.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex1.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex1.py
 
 -------------------------------
 Plot the Time Frequency Misfits
@@ -48,7 +48,7 @@ Continuing the example from above:
     
     plt.show()
 
-.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex2.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex2.py
 
 
 ---------------------------------------
@@ -80,7 +80,7 @@ Continuing the example from above:
     plt.show()
 
 
-.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex3.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex3.py
 
 --------------------
 Multi Component Data
@@ -104,7 +104,7 @@ scaled accordingly.  Continuing the example from above:
     
     plotTfMisfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax)
 
-.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex4.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex4.py
 
 -------------------
 Local normalization
@@ -134,4 +134,4 @@ before the onset of the signal. Manual setting of the limits is thus necessary:
     
     plt.show()
 
-.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex5.py
+.. plot:: tutorial/code_snippets/time_frequency_misfit_ex5.py
