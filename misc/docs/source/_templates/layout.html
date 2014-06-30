@@ -12,11 +12,25 @@
                                 '_static/css/custom.css'] %}
 {% endif %}
 
+{%- block content %}
+<div id="wrapper">{# closed in footer #}
+{{ navBar() }}
+<div id="content" class="container">
+  <div class="row">
+    {%- block sidebar1 %}{{ bsidebar() }}{% endblock %}
+    <div class="{{ bs_span_prefix }}{{ bs_content_width }}">
+      {% block body %}{% endblock %}
+    </div>
+  </div>
+</div>
+{%- endblock %}
+
 {%- block footer %}
 {% if use_local_assets %}
 {% include 'footer.html' %}
 {% else %}
 <!--# include file="footer.html" -->
 {% endif %}
+</div>{# end of wrapper div #}
 {% endblock footer %}
 
