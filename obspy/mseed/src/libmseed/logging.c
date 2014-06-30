@@ -258,6 +258,7 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
       if ( logp->errprefix != NULL )
         {
           strncpy (message, logp->errprefix, MAX_LOG_MSG_LENGTH);
+          message[MAX_LOG_MSG_LENGTH-1] = '\0';
         }
       else
         {
@@ -285,6 +286,7 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
       if ( logp->logprefix != NULL )
         {
           strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
+          message[MAX_LOG_MSG_LENGTH-1] = '\0';
         }
       
       presize = strlen(message);
@@ -308,6 +310,7 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
       if ( logp->logprefix != NULL )
         {
           strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
+          message[MAX_LOG_MSG_LENGTH-1] = '\0';
         }
       
       presize = strlen(message);
