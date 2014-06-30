@@ -253,7 +253,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     memset(b_error,0,ndat*sizeof(float));
 
     // changed to rounding, Moritz
-    n32 = (int)((i2-i3)*2.0+m1_p+nl_p + 0.5);
+    n32 = (int)fmin((i2-i3)*2.0+m1_p+nl_p + 0.5, ndat);
     i3 = i2-n32;
     if(i3 < 0)
         i3 = 0;
