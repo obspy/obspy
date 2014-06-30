@@ -46,7 +46,7 @@ The data format is automatically detected. Important in this tutorial are the
 As an example, the header of the data file is printed and the data are plotted
 like this:
 
-    >>> print tr.stats
+    >>> print(tr.stats)
              network: 
              station: EV0_6
             location: 

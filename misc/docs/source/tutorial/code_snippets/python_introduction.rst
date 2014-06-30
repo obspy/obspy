@@ -18,7 +18,7 @@ key features are explained via the following Python script:
        tr = st[0]
        msg = "%s %s %f %f" % (tr.stats.station, str(tr.stats.starttime),
                               tr.data.mean(), tr.data.std())
-       print msg
+       print(msg)
 
 Description of each line of the example above:
 

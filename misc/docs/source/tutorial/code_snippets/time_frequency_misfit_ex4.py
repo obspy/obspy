@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from obspy.signal.tf_misfit import plotTfMisfits
@@ -30,7 +31,7 @@ st1 = A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
 st2_1 = st1.copy()
 st2_2 = st1.copy() * 5.
 st2 = np.c_[st2_1, st2_2].T
-print st2.shape
+print(st2.shape)
 
 # signal with amplitude error
 st1a = st2 * amp_fac

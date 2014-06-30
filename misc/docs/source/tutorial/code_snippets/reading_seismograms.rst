@@ -28,13 +28,13 @@ only one :class:`~obspy.core.trace.Trace` in the given seismogram:
 
    >>> from obspy.core import read
    >>> st = read('http://examples.obspy.org/RJOB_061005_072159.ehz.new')
-   >>> print st
+   >>> print(st)
    1 Trace(s) in Stream:
    .RJOB..Z | 2005-10-06T07:21:59.849998Z - 2005-10-06T07:24:59.844998Z | 200.0 Hz, 36000 samples
    >>> len(st)
    1
    >>> tr = st[0]  # assign first and only trace to new variable
-   >>> print tr
+   >>> print(tr)
    .RJOB..Z | 2005-10-06T07:21:59.849998Z - 2005-10-06T07:24:59.844998Z | 200.0 Hz, 36000 samples
 
 -------------------
@@ -46,7 +46,7 @@ via the ``stats`` keyword on each :class:`~obspy.core.trace.Trace`:
 
 .. doctest::
 
-    >>> print tr.stats  # doctest: +NORMALIZE_WHITESPACE
+    >>> print(tr.stats)  # doctest: +NORMALIZE_WHITESPACE
              network:
              station: RJOB
             location:

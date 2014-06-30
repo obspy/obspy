@@ -47,9 +47,9 @@ slices that the psds are computed from (here only the first two are printed).
 
 .. doctest::
 
-    >>> print ppsd.times[:2]
+    >>> print(ppsd.times[:2])
     [UTCDateTime(2011, 2, 6, 0, 0, 0, 935000), UTCDateTime(2011, 2, 6, 0, 30, 0, 935000)]
-    >>> print "number of psd segments:", len(ppsd.times)
+    >>> print("number of psd segments:", len(ppsd.times))
     number of psd segments: 47
 
 Adding the same stream again will do nothing (return value ``False``), the ppsd
@@ -59,7 +59,7 @@ object makes sure that no overlapping data segments go into the ppsd estimate.
 
     >>> ppsd.add(st)
     False
-    >>> print "number of psd segments:", len(ppsd.times)
+    >>> print("number of psd segments:", len(ppsd.times))
     number of psd segments: 47
 
 Additional information from other files/sources can be added step by step.

@@ -12,7 +12,7 @@ contains three channels of a seismograph.
 
    >>> from obspy.core import read
    >>> singlechannel = read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
-   >>> print singlechannel
+   >>> print(singlechannel)
    1 Trace(s) in Stream:
    DK.COP..BHZ | 2009-02-19T00:00:00.025100Z - 2009-02-19T23:59:59.975100Z | 20.0 Hz, 1728000 samples
 
@@ -21,7 +21,7 @@ contains three channels of a seismograph.
    >>> threechannels = read('http://examples.obspy.org/COP.BHE.DK.2009.050')
    >>> threechannels += read('http://examples.obspy.org/COP.BHN.DK.2009.050')
    >>> threechannels += read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
-   >>> print threechannels
+   >>> print(threechannels)
    3 Trace(s) in Stream:
    DK.COP..BHE | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
    DK.COP..BHN | 2009-02-19T00:00:00.025100Z - 2009-02-19T23:59:59.975100Z | 20.0 Hz, 1728000 samples
