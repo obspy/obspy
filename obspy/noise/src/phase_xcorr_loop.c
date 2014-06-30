@@ -23,12 +23,14 @@
 #include <stdio.h>
 
 void phase_xcorr_loop(double complex *data_1, double complex *data_2, int npts,
-                      double *pxc_out, double nu, int max_lag) {
+                      double *pxc_out, double nu, int max_lag, int min_lag) {
     int i, k;
     double sum1, sum2, sum3, sum4, factor;
 
     for (k=0; k <= max_lag; k++) {
-        printf("%i ", k);
+        if (min_lag > k) {
+            continue;
+        }
         sum1 = sum2 = sum3 = sum4 = 0.0;
         factor = 1.0 / (2.0 * npts - k);
 

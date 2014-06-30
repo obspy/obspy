@@ -20,5 +20,5 @@ clibnoise.phase_xcorr_loop.argtypes = [
     C.c_int,
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    C.c_double, C.c_int]
+    C.c_double, C.c_int, C.c_int]
 clibnoise.phase_xcorr_loop.restype = C.c_void_p

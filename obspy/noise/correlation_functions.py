@@ -4,7 +4,7 @@ from scipy.signal import hilbert
 from obspy.noise.header import clibnoise
 
 
-def phase_xcorr(data1, data2, max_lag, nu=1):
+def phase_xcorr(data1, data2, max_lag, nu=1, min_lag=0):
     """
     # Phase cross correlation (Schimmel 1999); this is obtained with a
     variable # window length
@@ -27,7 +27,11 @@ def phase_xcorr(data1, data2, max_lag, nu=1):
     data2 = data2 / (np.abs(data2))
 
     clibnoise.phase_xcorr_loop(data1, data2, len(data1), pxc, float(nu),
-                               int(max_lag))
+                               int(max_lag), int(min_lag))
+
+    if min_lag:
+        pxc = np.ma.array(pxc)
+        pxc[-min_lag: min_lag] = True
 
     # for k in range(0, max_lag + 1):
     #     i11 = 0
