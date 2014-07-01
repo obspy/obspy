@@ -99,6 +99,9 @@ class SlownessModel(object):
         slight low velocity zone within a spherical earth that is not
         a high slowness zone and thus does not exhibit any of the
         pathological behavior of a low velocity zone.  '''
+        highSlownessZoneP = DepthRange()
+        highSlownessZoneS = DepthRange()
+        fluidZone = DepthRange()
         inFluidZone = False
         belowOuterCore = False
         inHighSlownessZoneP = False
@@ -140,13 +143,17 @@ class SlownessModel(object):
             prevVLayer = currVLayer
             prevSLayer = currSLayer
             prevPLayer = currPLayer
-            # Could make this a deep copy, but not necessary (yet?)
+            # Could make the following a deep copy, but not necessary.
+            # Also don't just replace layer here and in the loop
+            # control with currVLayer, or the reference to the first
+            # zero thickness layer that has been initialised above
+            # will break.
             currVLayer = layer
             # Check again if in fluid zone
             if inFluidZone != True and currVLayer.topSVelocity == 0:
                 inFluidZone = True
                 fluidZone = DepthRange(topDepth = currVLayer.topDepth)
-            # If already in fluid zone, check if exited
+            # If already in fluid zone, check if exited (java line 909)
             if inFluidZone == True and currVLayer.topSVelocity != 0:
                 if prevVLayer.botDepth > self.vMod.iocbDepth:
                     belowOuterCore = True
@@ -169,19 +176,19 @@ class SlownessModel(object):
                                                          layerNum, -1, -1))
                 if self.DEBUG:
                     print('First order discontinuity, depth =' + str(currSLayer.topDepth))
-                    print('between' + str(prevPLayer), currPLayer)
+                    print('between' + str(prevPLayer), str(currPLayer))
                 if inHighSlownessZoneS and currSLayer.topP < minSSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
                                 + " of a high slowness zone.")
-                    highSlownessZoneS = DepthRange(botDepth = currSLayer.topDepth)
+                    highSlownessZoneS.botDepth =  currSLayer.topDepth
                     self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                     inHighSlownessZoneS = False;
                 if inHighSlownessZoneP and currPLayer.topP < minPSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
                                 + " of a high slowness zone.")
-                    highSlownessZoneP = DepthRange(botDepth = currSLayer.topDepth)
+                    highSlownessZoneP.botDepth =  currSLayer.topDepth
                     self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                     inHighSlownessZoneP = False;
                 # Update minPSoFar and minSSoFar as all total reflections off
@@ -191,33 +198,98 @@ class SlownessModel(object):
                     minPSoFar = currPLayer.topP
                 if minSSoFar > currSLayer.topP:
                     minSSoFar = currSLayer.topP
-                    
+
                 if inHighSlownessZoneS != True and (prevSLayer.botP < currSLayer.topP or
                                                     currSLayer.topP < currSLayer.botP):
-                    # start of a high slowness zone
+                    # start of a high slowness zone S
                     if self.DEBUG:
                         print("Found S high slowness at first order "
+                              + "discontinuity, layer = " + str(layerNum))
+                    inHighSlownessZoneS = True
+                    highSlownessZoneS = DepthRange(topDepth = currSLayer.topDepth)
+                    highSlownessZoneS.rayParam = minSSoFar
+                if inHighSlownessZoneP != True and (prevPLayer.botP < currPLayer.topP or
+                                                    currPLayer.topP < currPLayer.botP):
+                    # start of a high slowness zone P
+                    if self.DEBUG:
+                        print("Found P high slowness at first order "
                               + "discontinuity, layer = " + str(layerNum))
                     inHighSlownessZoneP = True
                     highSlownessZoneP = DepthRange(topDepth = currPLayer.topDepth)
                     highSlownessZoneP.rayParam = minPSoFar
-            else:
-                if ((prevSLayer.topP - prevSLayer.botP) *
-                    (prevSLayer.botP - currSLayer.botP) < 0 ) or (
-                    (prevPLayer.topP - prevPLayer.botP) *
-                    (prevPLayer.botP - currPLayer.botP)) < 0:
-                    # local slowness extrema
-                    self.criticalDepths.append(CriticalDepth(currSLayer.topDepth, layerNum,
-                                                             -1, -1))
-                    if self.DEBUG:
-                        print("local slowness extrema, depth=" + str(currSLayer.topDepth))
                     
-             # here is line 1014 of the java src!
+            elif ((prevSLayer.topP - prevSLayer.botP) *
+                (prevSLayer.botP - currSLayer.botP) < 0 ) or (
+                (prevPLayer.topP - prevPLayer.botP) *
+                (prevPLayer.botP - currPLayer.botP)) < 0:
+                # local slowness extrema, java l 1005
+                self.criticalDepths.append(CriticalDepth(currSLayer.topDepth, layerNum,
+                                                         -1, -1))
+                if self.DEBUG:
+                    print("local slowness extrema, depth=" + str(currSLayer.topDepth))
+                # here is line 1014 of the java src!
+                if inHighSlownessZoneP !=True and currPLayer.topP < currPLayer.botP:
+                    if self.DEBUG:
+                        print("start of a P high slowness zone, local slowness extrema,"
+                            +  "minPSoFar= " + str(minPSoFar))
+                    inHighSlownessZoneP = True
+                    highSlownessZoneP = DepthRange(topDepth = currPLayer.topDepth)
+                    highSlownessZoneP.rayParam = minPSoFar
+                if inHighSlownessZoneS !=True and currSLayer.topP < currSLayer.botP:
+                    if self.DEBUG:
+                        print("start of a S high slowness zone, local slowness extrema,"
+                            +  "minSSoFar= " + str(minSSoFar))
+                    inHighSlownessZoneS = True
+                    highSlownessZoneS = DepthRange(topDepth = currSLayer.topDepth)
+                    highSlownessZoneS.rayParam = minSSoFar
 
+            if inHighSlownessZoneP and currPLayer.BotP < minPSoFar 
+                # P: layer contains the bottom of a high slowness zone. java l 1043
+                if self.DEBUG:
+                    print("layer contains the bottom of a P "
+                        + "high slowness zone. minPSoFar=" + str(minPSoFar), currPLayer)
+                highSlownessZoneP.botDepth = findDepth(minPSoFar, layerNum,
+                                                       layerNum, self.PWAVE)
+                highSlownessLayerDepthsP.append(highSlownessZoneP)
+                inHighSlownessZoneP = False
     
 
+            if inHighSlownessZoneS and currSLayer.BotP < minSSoFar 
+                # S: layer contains the bottom of a high slowness zone. java l 1043
+                if self.DEBUG:
+                    print("layer contains the bottom of a S "
+                        + "high slowness zone. minSSoFar=" + str(minSSoFar), currSLayer)
+                # in fluid layers we want to check PWAVE structure
+                # when looking for S wave critical points
+                porS = self.PWAVE if currSLayer == currPLayer else porS = self.SWAVE
+                highSlownessZoneS.botDepth = findDepth(minSSoFar, layerNum,
+                                                       layerNum, porS)
+                highSlownessLayerDepthsS.append(highSlownessZoneS)
+                inHighSlownessZoneS = False
+            if minPSoFar > currPLayer.botP:
+                minPSoFar = currPLayer.botP
+            if minPSoFar > currPLayer.topP:
+                minPSoFar = currPLayer.topP
+            if minSSoFar > currSLayer.botP:
+                minSSoFar = currSLayer.botP
+            if minSSoFar > currSLayer.topP:
+                minSSoFar = currSLayer.topP
+            if self.DEBUG and inHighSlownessZoneS:
+                print("In S high slowness zone, layerNum = " + str(layerNum)
+                       + " minSSoFar=" + str(minSSoFar))
+            if self.DEBUG and inHighSlownessZoneP:
+                print("In P high slowness zone, layerNum = " + str(layerNum)
+                       + " minPSoFar=" + str(minPSoFar))
 
 
+        # We know that the bottommost depth is always a critical slowness,
+        # so we add vMod.getNumLayers()
+        # java line 1094
+        self.criticalDepths.append(CriticalDepth(radiusOfEarth, vMod.getNumLayers(),
+                                                 -1, -1))
+        
+    def findDepth(self):
+        pass
     def coarseSample(self):
         pass
     def rayParamIncCheck(self):
