@@ -18,3 +18,11 @@ in TauP_Create:
 cf the special notes file.
 Also removed get/setVelFileType, -ModelFilename, -Directory and DEBUG,
 as these appear to be never called ever, anywhere, either.
+
+in SlownessModel:
+findDepth(int, double, double, bool)   -->   findDepth_from_depths
+as the default is findDepth(int, int, int, bool)
+
+toSlownessLayer(a_v_layer, ...) --> SlownessLayer.create_from_vlayer(a_v_layer, ...)
+# the former returns: new SlownessLayer(vLayer, true, radiusOfEarth, isPWave)
+# which is a different constructor (overloaded)!

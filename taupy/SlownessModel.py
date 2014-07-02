@@ -20,6 +20,7 @@ class SlownessModel(object):
     """This class provides storage and methods for generating slowness-depth pairs."""
     DEBUG = False
     DEFAULT_SLOWNESS_TOLERANCE = 500
+    radiusOfEarth = 6371.0
     
     # NB if the following are actually cleared (lists are mutable) every
     # time createSample is called, maybe it would be better to just put these
@@ -115,6 +116,7 @@ class SlownessModel(object):
         self.highSlownessLayerDepthsP = []; # lists of DepthRange
         self.highSlownessLayerDepthsS = [];
         self.fluidLayerDepths = [];
+
         # Initialize the current velocity layer
         # to be zero thickness layer with values at the surface
         currVLayer = self.vMod.layers[0]
@@ -243,28 +245,28 @@ class SlownessModel(object):
                     highSlownessZoneS = DepthRange(topDepth = currSLayer.topDepth)
                     highSlownessZoneS.rayParam = minSSoFar
 
-            if inHighSlownessZoneP and currPLayer.BotP < minPSoFar 
+            if inHighSlownessZoneP and currPLayer.botP < minPSoFar:
                 # P: layer contains the bottom of a high slowness zone. java l 1043
                 if self.DEBUG:
                     print("layer contains the bottom of a P "
                         + "high slowness zone. minPSoFar=" + str(minPSoFar), currPLayer)
-                highSlownessZoneP.botDepth = findDepth(minPSoFar, layerNum,
+                highSlownessZoneP.botDepth = self.findDepth(minPSoFar, layerNum,
                                                        layerNum, self.PWAVE)
-                highSlownessLayerDepthsP.append(highSlownessZoneP)
+                self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                 inHighSlownessZoneP = False
     
 
-            if inHighSlownessZoneS and currSLayer.BotP < minSSoFar 
+            if inHighSlownessZoneS and currSLayer.botP < minSSoFar:
                 # S: layer contains the bottom of a high slowness zone. java l 1043
                 if self.DEBUG:
                     print("layer contains the bottom of a S "
                         + "high slowness zone. minSSoFar=" + str(minSSoFar), currSLayer)
                 # in fluid layers we want to check PWAVE structure
                 # when looking for S wave critical points
-                porS = self.PWAVE if currSLayer == currPLayer else porS = self.SWAVE
-                highSlownessZoneS.botDepth = findDepth(minSSoFar, layerNum,
+                porS = (self.PWAVE if currSLayer == currPLayer else self.SWAVE)
+                highSlownessZoneS.botDepth = self.findDepth(minSSoFar, layerNum,
                                                        layerNum, porS)
-                highSlownessLayerDepthsS.append(highSlownessZoneS)
+                self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                 inHighSlownessZoneS = False
             if minPSoFar > currPLayer.botP:
                 minPSoFar = currPLayer.botP
@@ -285,11 +287,128 @@ class SlownessModel(object):
         # We know that the bottommost depth is always a critical slowness,
         # so we add vMod.getNumLayers()
         # java line 1094
-        self.criticalDepths.append(CriticalDepth(radiusOfEarth, vMod.getNumLayers(),
-                                                 -1, -1))
+        self.criticalDepths.append(CriticalDepth(self.radiusOfEarth,
+                                                 self.vMod.getNumLayers(), -1, -1))
+
+        # Check if the bottommost depth is contained within a high slowness
+        # zone, might happen in a flat non-whole-earth model
+        if inHighSlownessZoneS:
+            highSlownessZoneS.botDepth = currVLayer.botDepth
+            self.highSlownessLayerDepthsS.append(highSlownessZoneS)
+        if inHighSlownessZoneP:
+            highSlownessZoneP.botDepth = currVLayer.botDepth
+            self.highSlownessLayerDepthsP.append(highSlownessZoneP)
+
+        # Check if the bottommost depth is contained within a fluid zone, this
+        # would be the case if we have a non whole earth model with the bottom
+        # in the outer core or if allowInnerCoreS == false and we want to use
+        # the P velocity structure in the inner core.
+        if inFluidZone:
+            fluidZone.botDepth = currVLayer.botDepth
+            self.fluidLayerDepths.append(fluidZone)
+
+        # optionally implement later: print all critical vel layers in debug mode
+
+        if self.validate() != True:
+            raise SlownessModelError("Validation failed after findDepth")
+
+
+    
+    def findDepth_from_depths(self, rayParam, topDepth, botDepth, isPWave):
+        '''Finds a depth corresponding to a slowness between two given depths in the
+        Velocity Model by calling findDepth with layer numbers.'''
+        topLayerNum = self.vMod.layerNumberBelow(topDepth)
+        if self.vMod.layers[topLayerNum].botDepth == topDepth:
+            topLayerNum += 1
+        botLayerNum = self.vMod.layerNumberAbove(botDepth)
+        return findDepth(rayParam, topLayerNum, botLayerNum, isPWave)
+    
+    def findDepth(self, p, topCriticalLayer, botCriticalLayer, isPWave):
+        '''Finds a depth corresponding to a slowness between two given velocity
+        layers, including the top and the bottom. We also check to see if the
+        slowness is less than the bottom slowness of these layers but greater
+        than the top slowness of the next deeper layer. This corresponds to a
+        total reflection. In this case a check needs to be made to see if this is
+        an S wave reflecting off of a fluid layer, use P velocity below in this
+        case. We assume that slowness is monotonic within these layers and
+        therefore there is only one depth with the given slowness. This means we
+        return the first depth that we find.
+    
+         SlownessModelError occurs if topCriticalLayer > botCriticalLayer because
+                   there are no layers to search, or if there is an increase
+                   in slowness, ie a negative velocity gradient, that just
+                   balances the decrease in slowness due to the spherical
+                   earth, or if the ray parameter p is not contained within
+                   the specified layer range.'''
+
+        topP = 1.1e300 # dummy numbers
+        botP = 1.1e300
+        waveType = 'P' if isPWave else 'S'
+        if topCriticalLayer > botCriticalLayer:
+            raise SlownessModelError("findDepth: no layers to search (wrong layer num?)")
+        for layerNum in range(topCriticalLayer, botCriticalLayer + 1):
+            velLayer = self.vMod.layers[layerNum]
+            topVelocity = velLayer.evaluateAtTop(waveType)
+            botVelocity = velLayer.evaluateAtBottom(waveType)
+            topP = self.toSlowness(topVelocity, velLayer.topDepth)
+            botP = self.toSlowness(botVelocity, velLayer.botDepth)
+            # check to see if we are within chatter level of the top or
+            # bottom and if so then return that depth.
+            if abs(topP - p) < self.slowness_tolerance:
+                return velLayer.topDepth
+            if abs(p - botP) < self.slowness_tolerance:
+                return velLayer.botDepth
+            
+            if (topP - p) * (p - botP) >= 0:
+                # Found layer containing p.
+                # We interpolate assuming that velocity is linear within
+                # this interval. So slope is the slope for velocity versus depth
+                slope = (botVelocity - topVelocity) / (velLayer.botDepth - velLayer.topDepth)
+                depth = self.interpolate(p, topVelocity, velLayer.topDepth, slope)
+                return depth
+            elif layerNum == topCriticalLayer and abs(p - topP) < self.slowness_tolerance:
+                # Check to see if p is just outside the topmost layer. If so
+                # then return the top depth.
+                return velLayer.topDepth
+
+            # Is p a total reflection? botP is the slowness at the bottom
+            # of the last velocity layer from the previous loop, set topP
+            # to be the slowness at the top of the next layer.
+            if layerNum < self.vMod.getNumLayers() - 1:
+                velLayer = self.vMod.layers[layerNum + 1]
+                topVelocity = velLayer.evaluateAtTop(waveType)
+                if isPWave != True and depthInFluid(velLayer.topDepth):
+                    # Special case for S waves above a fluid. If top next
+                    # layer is in a fluid then we should set topVelocity to
+                    # be the P velocity at the top of the layer.
+                    topVelocity = velLayer.evaluateAtTop('P')
+
+                topP = self.toSlowness(topVelocity, velLayer.topDepth)
+                if botP >= p and p >= topP:
+                    return velLayer.topDepth
+
+        if abs(p - botP) < self.slowness_tolerance:
+            # java line 1275
+            pass
         
-    def findDepth(self):
+            
+
+
+
+
+
+
+
+    def toSlowness(self, velocity, depth):
+        if velocity == 0:
+            raise SlownessModelError("toSlowness: velocity can't be zero, at depth" +
+                                     str(depth),
+                                     "Maybe related to using S velocities in outer core?")
+        return (self.radiusOfEarth - depth) / velocity
+
+    def depthInFluid(self, depth, fluidZoneDepth = DepthRange()):
         pass
+
     def coarseSample(self):
         pass
     def rayParamIncCheck(self):
