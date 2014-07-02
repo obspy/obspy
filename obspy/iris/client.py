@@ -175,7 +175,7 @@ class Client(object):
                    "file-like object.")
             raise TypeError(msg)
         try:
-            fh.write(data)
+            fh.write(data if binary else data.decode('utf-8'))
         finally:
             # Only close if also opened.
             if file_opened is True:
