@@ -58,7 +58,7 @@ def isWAV(filename):
             fh.close()
     except:
         return False
-    if width in [1, 2, 3]:
+    if width in [1, 2, 4]:
         return True
     return False
 
