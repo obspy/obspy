@@ -1,7 +1,5 @@
-from obspy.fdsn import Client as FDSN_Client
-from obspy.iris import Client as OldIris_Client
+from obspy.fdsn import Client
 from obspy.core import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -10,37 +8,28 @@ t1 = UTCDateTime("2010-09-3T16:30:00.000")
 t2 = UTCDateTime("2010-09-3T17:00:00.000")
 
 # Fetch waveform from IRIS FDSN web service into a ObsPy stream object
-fdsn_client = FDSN_Client("IRIS")
-st = fdsn_client.get_waveforms('NZ', 'BFZ', '10', 'HHZ', t1, t2)
+fdsn_client = Client('IRIS')
+st = fdsn_client.get_waveforms(network='NZ', station='BFZ', location='10',
+                               channel='HHZ', starttime=t1, endtime=t2)
 
-# Download and save instrument response file into a temporary file
-with NamedTemporaryFile() as tf:
-    respf = tf.name
-    old_iris_client = OldIris_Client()
-    # fetch RESP information from "old" IRIS web service, see obspy.fdsn
-    # for accessing the new IRIS FDSN web services
-    old_iris_client.resp('NZ', 'BFZ', '10', 'HHZ', t1, t2, filename=respf)
+# Fetch RESP information from IRIS FDSN web service
+inv = fdsn_client.get_stations(network='NZ', station='BFZ', location='10',
+                               channel='HHZ', starttime=t1, endtime=t2,
+                               # specify level to include response information
+                               level='response')
 
-    # make a copy to keep our original data
-    st_orig = st.copy()
+# make a copy to keep our original data
+st_orig = st.copy()
 
-    # define a filter band to prevent amplifying noise during the deconvolution
-    pre_filt = (0.005, 0.006, 30.0, 35.0)
+# attach response data to available traces at trace.stats.response
+st.attach_response(inv)
 
-    # this can be the date of your raw data or any date for which the
-    # SEED RESP-file is valid
-    date = t1
+# define a filter band to prevent amplifying noise during the deconvolution
+pre_filt = (0.005, 0.006, 30.0, 35.0)
 
-    seedresp = {'filename': respf,  # RESP filename
-                # when using Trace/Stream.simulate() the "date" parameter can
-                # also be omitted, and the starttime of the trace is then used.
-                'date': date,
-                # Units to return response in ('DIS', 'VEL' or ACC)
-                'units': 'DIS'
-                }
-
-    # Remove instrument response using the information from the given RESP file
-    st.simulate(paz_remove=None, pre_filt=pre_filt, seedresp=seedresp)
+# remove response from all traces that include stats.response
+st.remove_response(output='DISP',  # Units for output (also: VEL or ACC)
+                   pre_filt=pre_filt)
 
 # plot original and simulated data
 tr = st[0]
