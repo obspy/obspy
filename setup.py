@@ -85,7 +85,7 @@ EXTERNAL_LIBS = False
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'datamark', 'DYNA', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
@@ -144,6 +144,8 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.io.css.core',
         'DATAMARK = obspy.io.datamark.core',
+        'DYNA = obspy.io.dyna.core',
+        'ITACA = obspy.io.dyna.core',
         'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
@@ -189,6 +191,15 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.io.datamark.core:_is_datamark',
         'readFormat = obspy.io.datamark.core:_read_datamark',
+        ],
+    "obspy.plugin.waveform.DYNA": [
+        "isFormat = obspy.dyna.core:_is_dyna",
+        "readFormat = obspy.dyna.core:_read_dyna",
+        "writeFormat = obspy.dyna.core:_write_dyna",
+        ],
+    "obspy.plugin.waveform.ITACA": [
+        "isFormat = obspy.dyna.core:_is_itaca",
+        "readFormat = obspy.dyna.core:_read_itaca",
         ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',
