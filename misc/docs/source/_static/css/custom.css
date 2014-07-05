@@ -12,16 +12,6 @@
   }
 }
 
-/* gallery */
-#gallery div.figure {
-  display : inline;
-}
-
-#gallery div.figure img {
-  padding : 5px;
-  vertical-align : middle;
-}
-
 /* external links */
 a.external[href^="http:"] {
   background : transparent url(../extlink.gif) no-repeat scroll left center;

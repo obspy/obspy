@@ -35,6 +35,7 @@ extensions = ['sphinx.ext.intersphinx',
               'sphinx.ext.mathjax',
               # local extensions
               'autosummary',
+              'gallery',
               'obspydoc'
 ]
 
@@ -99,6 +100,11 @@ modindex_common_prefix = ['obspy.']
 
 # File formats to generate.
 plot_formats = [('png', 110), ('hires.png', 200)]
+
+# Classes to use for gallery. Bootstrap-specific.
+gallery_plot_classes = ['col-xs-12',  # One column on extra-small
+                        'col-sm-6',   # Two columns on small
+                        'col-md-4']   # Three columns on medium and up
 
 # -- Options for HTML output --------------------------------------------------
 
