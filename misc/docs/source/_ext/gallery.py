@@ -91,6 +91,17 @@ class Gallery(Directive):
         plot_template_orig = document.settings.env.config.plot_template
         document.settings.env.config.plot_template = template
 
+        # Don't bother with the high resolution version
+        plot_formats_orig = document.settings.env.config.plot_formats
+        plot_formats = []
+        for f in plot_formats_orig:
+            if isinstance(f, str) and 'hires' in f:
+                continue
+            elif isinstance(f, tuple) and 'hires' in f[0]:
+                continue
+            plot_formats.append(f)
+        document.settings.env.config.plot_formats = plot_formats
+
         options = {
             'alt': title,
         }
@@ -107,8 +118,9 @@ class Gallery(Directive):
             msg_node += nodes.literal_block(block_text, block_text)
             result = [msg_node]
 
-        # Restore template
+        # Restore original settings
         document.settings.env.config.plot_template = plot_template_orig
+        document.settings.env.config.plot_formats = plot_formats_orig
 
         return result
 
