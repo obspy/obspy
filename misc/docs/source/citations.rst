@@ -40,10 +40,12 @@ Citations
      - | Flinn, E. A. and Engdahl, E. R. (1965),
        | **A proposed basis for geographical and seismic regionalization**,
        | *Reviews of Geophysics*, 3 (1), 123-149.
+       | http://dx.doi.org/10.1029/RG003i001p00123
    * - .. [Flinn1974]
      - | Flinn, E. A., Engdahl, E. R., and Hill, A. R. (1974),
-       | **Seismic and geographical regionalization**,
+       | **Seismic and Geographical Regionalization**,
        | *Bulletin of the Seismological Society of America*, 64 (3-2), 771-992.
+       | http://www.bssaonline.org/content/64/3-2/771.short
    * - .. [Jurkevics1988]
      - | Jurkevics, A. (1988),
        | **Polarization analysis of three-component array data**,
@@ -97,6 +99,7 @@ Citations
      - | Pullan, S. (1990),
        | **Recommended standard for seismic (/radar) data files in the personal computer environment**,
        | *Geophysics*, 55 (9), 1260-1271.
+       | http://dx.doi.org/10.1190/1.1442942
    * - .. [Snoke2009]
      - | Snoke, J. A. (2009),
        | **Traveltime Tables for iasp91 and ak135**,
@@ -148,5 +151,6 @@ Citations
        | http://www.bssaonline.org/content/88/1/95.abstract
    * - .. [Young1996]
      - | Young, J. B., Presgrave, B. W., Aichele, H., Wiens, D. A., and Flinn, E. A. (1996),
-       | **The Flinn-Engdahl regionalisation scheme: the 1995 revision**,
+       | **The Flinn-Engdahl Regionalisation Scheme: The 1995 revision**,
        | *Physics of the Earth and Planetary Interiors*, 96 (4), 223-297.
+       | http://www.sciencedirect.com/science/article/pii/003192019603141X
