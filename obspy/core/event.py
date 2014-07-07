@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy Catalog and Event objects.
+obspy.core.event - Classes for handling event metadata
+======================================================
+This module provides a class hierarchy to consistently handle event metadata.
+This class hierarchy is closely modelled after the de-facto standard
+format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
+
+.. image:: /_static/Event.png
+    :width: 100%
 
 .. note::
 
