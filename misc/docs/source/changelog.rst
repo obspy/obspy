@@ -1,7 +1,7 @@
 .. _changelog:
 
-ObsPy ChangeLog
-===============
+ChangeLog
+=========
 
 .. include:: ../../../CHANGELOG.txt
    :literal:
