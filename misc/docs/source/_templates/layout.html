@@ -14,6 +14,7 @@
                     '_static/css/custom.css'] %}
 {% endif %}
 
+{% if use_local_assets %}
 {% set script_files = script_files + [
     '_static/js/jquery-1.11.0.min.js',
     '_static/js/jquery-fix.js',
@@ -21,6 +22,15 @@
     '_static/bootstrap-sphinx.js'
   ]
 %}
+{% else %}
+{% set server_script_files = [
+    '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',
+    '_static/js/jquery-fix.js',
+    '//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js',
+    '_static/bootstrap-sphinx.js'
+  ]
+%}
+{% endif %}
 
 {%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and sidebars %}
 
@@ -72,5 +82,8 @@
 <!--# include file="footer.html" -->
 {% endif %}
 </div>{# end of wrapper div #}
+{% for script in server_script_files -%}
+<script src="{{ script }}" defer></script>
+{% endfor %}
 {% endblock footer %}
 
