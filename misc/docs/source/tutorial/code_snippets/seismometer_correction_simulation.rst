@@ -11,10 +11,8 @@ seismometer with the given poles and zeros. Poles, zeros, gain
 (*A0 normalization factor*) and sensitivity (*overall sensitivity*) are
 specified as keys of a dictionary. 
 
-.. include:: seismometer_correction_simulation_1.py
-   :literal:
-
 .. plot:: tutorial/code_snippets/seismometer_correction_simulation_1.py
+   :include-source:
 
 For more customized plotting we could also work with matplotlib_ manually from
 here: 
@@ -47,10 +45,8 @@ Using a RESP file
 It is further possible to use evalresp_ to evaluate the instrument
 response information from a RESP file.
 
-.. include:: seismometer_correction_simulation_3.py
-   :literal:
-
 .. plot:: tutorial/code_snippets/seismometer_correction_simulation_3.py
+   :include-source:
 
 A :class:`~obspy.xseed.parser.Parser` object created using a Dataless SEED file
 can also be used. For each trace the respective RESP response data is extracted

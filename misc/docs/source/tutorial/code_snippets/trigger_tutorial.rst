@@ -403,7 +403,5 @@ Advanced Example
 A more complicated example, where the data are retrieved via ArcLink and
 results are plotted step by step, is shown here:
 
-.. include:: trigger_tutorial_advanced.py
-   :literal:
-
 .. plot:: tutorial/code_snippets/trigger_tutorial_advanced.py
+   :include-source:

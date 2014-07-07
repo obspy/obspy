@@ -11,10 +11,8 @@ Here are some examples how to use the included plotting tools:
 Plot the Time Frequency Representation
 --------------------------------------
 
-.. include:: time_frequency_misfit_ex1.py
-   :literal:
-   
 .. plot:: tutorial/code_snippets/time_frequency_misfit_ex1.py
+   :include-source:
 
 -------------------------------
 Plot the Time Frequency Misfits
