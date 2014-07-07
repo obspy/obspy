@@ -140,9 +140,9 @@ Citations
        | **An XML-SEED Format for the Exchange of Synthetic Seismograms**,
        | *AGU Fall Meeting Abstracts*, B3.
    * - .. [Wiggins1976]
-     - | {Wiggins}, R. A. (1976),
+     - | Wiggins, R. A. (1976),
        | **Interpolation of Digitized Curves**,
-       | *Bulletin of the Seismological Society of America*, 66 (6), 2077-2081
+       | *Bulletin of the Seismological Society of America*, 66 (6), 2077-2081.
        | http://www.bssaonline.org/content/66/6/2077.short
    * - .. [Withers1998]
      - | Withers, M., Aster, R., Young, C., Beiriger, J., Harris, M., Moore, S., and Trujillo, J. (1998),
