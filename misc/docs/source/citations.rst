@@ -91,7 +91,7 @@ Citations
        | *Annals of Geophysics*, 54 (1).
        | http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838
    * - .. [Peterson2003]
-     - | Peterson, J. (2003),
+     - | Peterson, J. (1993),
        | **Observations and Modeling of Seismic Background Noise**,
        | U.S. Geological Survey open-file report 93-322, Albuquerque, N.M.
        | http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
