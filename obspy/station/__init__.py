@@ -122,7 +122,7 @@ For example:
 
     >>> from obspy import read_inventory
     >>> inv = read_inventory()
-    >>> inv.plot()
+    >>> inv.plot()  # doctest: +SKIP
 
 .. plot::
 
@@ -147,7 +147,7 @@ For example:
     >>> from obspy import read_inventory
     >>> inv = read_inventory()
     >>> resp = inv[0][0][0].response
-    >>> resp.plot(0.001, output="VEL")
+    >>> resp.plot(0.001, output="VEL")  # doctest: +SKIP
 
 .. plot::
 
