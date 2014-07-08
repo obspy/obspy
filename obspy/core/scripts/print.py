@@ -10,7 +10,8 @@ from future.builtins import *  # NOQA
 from obspy import read, Stream
 from obspy import __version__
 from obspy.core.util.base import ENTRY_POINTS
-from argparse import ArgumentParser
+from obspy.core.util.base import _DeprecatedArgumentAction
+from argparse import ArgumentParser, SUPPRESS
 
 
 def main(argv=None):
@@ -19,12 +20,20 @@ def main(argv=None):
                         version='%(prog)s ' + __version__)
     parser.add_argument('-f', '--format', choices=ENTRY_POINTS['waveform'],
                         help='Waveform format (slightly faster if specified).')
-    parser.add_argument('-n', '--nomerge', action='store_false',
+    parser.add_argument('-n', '--no-merge', action='store_false',
                         dest='merge', help='Switch off cleanup merge.')
     parser.add_argument('-g', '--print-gaps', action='store_true',
                         help='Switch on printing of gap information.')
     parser.add_argument('files', nargs='+',
                         help='Files to process.')
+
+    # Deprecated arguments
+    action = _DeprecatedArgumentAction('--nomerge',
+                                       '--no-merge',
+                                       real_action='store_false')
+    parser.add_argument('--nomerge', nargs=0, action=action, dest='merge',
+                        help=SUPPRESS)
+
     args = parser.parse_args(argv)
 
     st = Stream()

@@ -460,6 +460,8 @@ def _DeprecatedArgumentAction(old_name, new_name, real_action='store'):
                 setattr(namespace, self.dest, values)
             elif real_action == 'store_true':
                 setattr(namespace, self.dest, True)
+            elif real_action == 'store_false':
+                setattr(namespace, self.dest, False)
 
     return _Action
 

@@ -63,7 +63,9 @@
        * --show_isotropic_part is renamed to --show-isotropic-part.
        * --tension_colour is renamed to --tension-colour.
    * obspy-plot: --format option is accepted as an alias of -f.
-   * obspy-print: --format option is accepted as an alias of -f.
+   * obspy-print: Options have been modified or amended slightly:
+     * --format is a new alias of -f.
+     * --nomerge is renamed to --no-merge.
    * obspy-runtests: -a option is accepted as an alias of --all.
    * obspy-scan: Options have been modified or amended slightly:
      * --endtime is renamed to --end-time.
