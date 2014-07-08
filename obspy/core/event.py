@@ -6,7 +6,7 @@ This module provides a class hierarchy to consistently handle event metadata.
 This class hierarchy is closely modelled after the de-facto standard
 format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 
-.. figure:: /_static/Event.png
+.. figure:: /_images/Event.png
 
 .. note::
 

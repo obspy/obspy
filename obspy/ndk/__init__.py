@@ -102,7 +102,7 @@ It can also deal with large amounts of data, though it might take a while.
 To see all events call 'print CatalogObject.__str__(print_all=True)'
 >>> cat.plot()  # doctest: +SKIP
 
-.. figure:: /_static/expensive_plots/GCMT_Catalog_1976-2010.png
+.. figure:: /_images/expensive_plots/GCMT_Catalog_1976-2010.png
 
 """
 from __future__ import (absolute_import, division, print_function,

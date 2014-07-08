@@ -57,7 +57,7 @@ structure, starting with a list of :class:`Networks
 <obspy.station.response.Response>` are attached to the channels as an
 attribute.
 
-.. figure:: /_static/Inventory.png
+.. figure:: /_images/Inventory.png
 
 >>> net = inv[0]
 >>> net  # doctest: +ELLIPSIS

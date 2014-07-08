@@ -48,7 +48,7 @@ A multitude of helper methods are attached to
 :class:`~obspy.core.stream.Stream` and :class:`~obspy.core.trace.Trace` objects
 for handling and modifying the waveform data.
 
-.. figure:: /_static/Stream_Trace.png
+.. figure:: /_images/Stream_Trace.png
 
 Example
 ^^^^^^^
@@ -94,7 +94,7 @@ de-facto standard format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 See the IPython notebooks mentioned in the :ref:`ObsPy Tutorial <tutorial>` for
 more detailed usage examples.
 
-.. figure:: /_static/Event.png
+.. figure:: /_images/Event.png
 
 .. _NumPy: http://docs.scipy.org
 """
