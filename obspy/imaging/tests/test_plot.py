@@ -7,13 +7,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.scripts.plot import main as obspy_plot
-from os.path import dirname, abspath, join, pardir
+from os.path import dirname, abspath, join, pardir, basename
 import shutil
-import sys
-import tempfile
 import os
 import unittest
 
@@ -29,7 +28,7 @@ class PlotTestCase(unittest.TestCase):
         # directory where the test files are located
         self.root = abspath(join(dirname(__file__), pardir, pardir))
         self.path = join(self.root, 'imaging', 'tests', 'images')
-        all_files = [os.path.join(self.root, 'core', 'tests', 'data', i)
+        all_files = [join(self.root, 'core', 'tests', 'data', i)
                      for i in ['slist.ascii', 'slist_2_traces.ascii']]
         self.all_files = all_files
 
@@ -43,24 +42,16 @@ class PlotTestCase(unittest.TestCase):
             reltol = 60
 
         # Copy files to a temp folder to avoid wildcard scans.
-        all_files = []
-        tempdir = tempfile.mkdtemp(prefix='obspy-')
-        for filename in self.all_files:
-            newname = os.path.join(tempdir, os.path.basename(filename))
-            shutil.copy(filename, newname)
-            all_files += [newname]
+        with TemporaryWorkingDirectory():
+            all_files = []
+            for filename in self.all_files:
+                newname = join(os.curdir, basename(filename))
+                shutil.copy(filename, newname)
+                all_files += [newname]
 
-        try:
             with ImageComparison(self.path, 'plot.png', reltol=reltol) as ic:
-                try:
-                    tmp_stdout = sys.stdout
-                    sys.stdout = open(os.devnull, 'wt')
+                with CatchOutput():
                     obspy_plot(['--outfile', ic.name] + all_files)
-                finally:
-                    sys.stdout.close()
-                    sys.stdout = tmp_stdout
-        finally:
-            shutil.rmtree(tempdir)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotNoMerge(self):
@@ -72,26 +63,18 @@ class PlotTestCase(unittest.TestCase):
             reltol = 60
 
         # Copy files to a temp folder to avoid wildcard scans.
-        all_files = []
-        tempdir = tempfile.mkdtemp(prefix='obspy-')
-        for filename in self.all_files:
-            newname = os.path.join(tempdir, os.path.basename(filename))
-            shutil.copy(filename, newname)
-            all_files += [newname]
+        with TemporaryWorkingDirectory():
+            all_files = []
+            for filename in self.all_files:
+                newname = join(os.curdir, basename(filename))
+                shutil.copy(filename, newname)
+                all_files += [newname]
 
-        try:
             with ImageComparison(self.path, 'plot_nomerge.png',
                                  reltol=reltol) as ic:
-                try:
-                    tmp_stdout = sys.stdout
-                    sys.stdout = open(os.devnull, 'wt')
+                with CatchOutput():
                     obspy_plot(['--no-automerge', '--outfile', ic.name] +
                                all_files)
-                finally:
-                    sys.stdout.close()
-                    sys.stdout = tmp_stdout
-        finally:
-            shutil.rmtree(tempdir)
 
 
 def suite():
