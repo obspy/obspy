@@ -27,10 +27,19 @@ class ScriptTestCase(unittest.TestCase):
                                        'data',
                                        self.xseed_name)
 
+    #
+    # obspy-dataless2resp
+    #
+
     def test_dataless2resp(self):
         with TemporaryWorkingDirectory():
-            with CatchOutput():
+            with CatchOutput() as out:
                 obspy_dataless2resp([self.dataless_file])
+
+            expected = '''Found 1 files.
+Parsing file %s
+''' % (self.dataless_file,)
+            self.assertEqual(expected, out.stdout)
 
             expected = ['RESP.BW.FURT..EHE',
                         'RESP.BW.FURT..EHN',
@@ -40,8 +49,13 @@ class ScriptTestCase(unittest.TestCase):
 
     def test_dataless2resp_zipped(self):
         with TemporaryWorkingDirectory():
-            with CatchOutput():
+            with CatchOutput() as out:
                 obspy_dataless2resp(['--zipped', self.dataless_file])
+
+            expected = '''Found 1 files.
+Parsing file %s
+''' % (self.dataless_file,)
+            self.assertEqual(expected, out.stdout)
 
             self.assertTrue(os.path.exists('dataless.seed.BW_FURT.zip'))
 
@@ -52,10 +66,19 @@ class ScriptTestCase(unittest.TestCase):
                 actual = sorted(zf.namelist())
             self.assertEqual(expected, actual)
 
+    #
+    # obspy-dataless2xseed
+    #
+
     def test_dataless2xseed(self):
         with TemporaryWorkingDirectory():
-            with CatchOutput():
+            with CatchOutput() as out:
                 obspy_dataless2xseed([self.dataless_file])
+
+            expected = '''Found 1 files.
+Parsing file %s
+''' % (self.dataless_file,)
+            self.assertEqual(expected, out.stdout)
 
             self.assertTrue(os.path.exists(self.xseed_name))
 
@@ -72,9 +95,14 @@ class ScriptTestCase(unittest.TestCase):
                                            'CL.AIO.dataless')
 
         with TemporaryWorkingDirectory():
-            with CatchOutput():
+            with CatchOutput() as out:
                 obspy_dataless2xseed(['--split-stations',
                                       dataless_multi_file])
+
+            expected = '''Found 1 files.
+Parsing file %s
+''' % (dataless_multi_file,)
+            self.assertEqual(expected, out.stdout)
 
             expected = ['CL.AIO.dataless.xml',
                         'CL.AIO.dataless.xml.1028697240.0.xml',
@@ -84,10 +112,19 @@ class ScriptTestCase(unittest.TestCase):
             actual = sorted(os.listdir(os.curdir))
             self.assertEqual(expected, actual)
 
+    #
+    # obspy-xseed2dataless
+    #
+
     def test_xseed2dataless(self):
         with NamedTemporaryFile() as tf:
-            with CatchOutput():
+            with CatchOutput() as out:
                 obspy_xseed2dataless(['--output', tf.name, self.xseed_file])
+
+            expected = '''Found 1 files.
+Parsing file %s
+''' % (self.xseed_file,)
+            self.assertEqual(expected, out.stdout)
 
             with open(self.dataless_file, 'rb') as fh:
                 expected = fh.read()
