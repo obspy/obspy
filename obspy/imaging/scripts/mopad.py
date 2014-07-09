@@ -4793,7 +4793,7 @@ The 'source mechanism' as a comma-separated list of length:
             help='boolean key, if 2 faultplanes shall be shown')
         group_show.add_argument(
             '-d', '--show-1fp', dest='GMT_show_1FP', metavar='<FP index>',
-            choices=[1, 2], default=False,
+            type=int, choices=[1, 2], default=False,
             help='integer key (1,2), what faultplane shall be shown '
                  '[%(default)s]')
         group_geo.add_argument(
