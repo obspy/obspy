@@ -1794,7 +1794,7 @@ def fancy_matrix(m_in):
     """
     m = m_in.copy()
 
-    norm_factor = round(max(abs(m.flatten())), 5)
+    norm_factor = round(np.max(np.abs(m.flatten())), 5)
 
     try:
         if (norm_factor < 0.1) or (norm_factor >= 10):
