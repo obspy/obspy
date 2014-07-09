@@ -16,7 +16,7 @@ from obspy.imaging.scripts.mopad import main as obspy_mopad
 import numpy as np
 
 import io
-import itertools
+from itertools import product, zip_longest
 import os
 import unittest
 
@@ -104,10 +104,8 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         ]
 
         for exp, (insys, outsys) in zip(expected,
-                                        itertools.product(['NED',
-                                                           'USE',
-                                                           'XYZ',
-                                                           'NWU'], repeat=2)):
+                                        product(['NED', 'USE', 'XYZ', 'NWU'],
+                                                repeat=2)):
 
             with CatchOutput() as out:
                 obspy_mopad(['convert', '-b', insys, outsys,
@@ -161,13 +159,14 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         expected = os.path.join(self.path, exp_file)
 
         # Test headers
-        with open(expected) as expf, io.StringIO(out.stdout) as sio:
-            for exp_line, out_line in itertools.zip_longest(expf.readlines(),
-                                                            sio.readlines(),
-                                                            fillvalue=''):
-                if exp_line.startswith('>') or out_line.startswith('>'):
-                    self.assertEqual(exp_line, out_line,
-                                     msg='Headers do not match!')
+        with open(expected) as expf:
+            with io.StringIO(out.stdout) as sio:
+                for exp_line, out_line in zip_longest(expf.readlines(),
+                                                      sio.readlines(),
+                                                      fillvalue=''):
+                    if exp_line.startswith('>') or out_line.startswith('>'):
+                        self.assertEqual(exp_line, out_line,
+                                         msg='Headers do not match!')
 
         # Test actual data
         exp_data = np.genfromtxt(expected, comments='>')

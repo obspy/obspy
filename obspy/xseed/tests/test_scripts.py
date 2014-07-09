@@ -62,8 +62,9 @@ Parsing file %s
             expected = ['RESP.BW.FURT..EHE',
                         'RESP.BW.FURT..EHN',
                         'RESP.BW.FURT..EHZ']
-            with zipfile.ZipFile('dataless.seed.BW_FURT.zip') as zf:
-                actual = sorted(zf.namelist())
+            zf = zipfile.ZipFile('dataless.seed.BW_FURT.zip')
+            actual = sorted(zf.namelist())
+            zf.close()
             self.assertEqual(expected, actual)
 
     #
