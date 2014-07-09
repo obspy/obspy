@@ -59,7 +59,8 @@ ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
              4: ("FLOAT32", "f", np.dtype("float32")),
              5: ("FLOAT64", "d", np.dtype("float64")),
              10: ("STEIM1", "i", np.dtype("int32")),
-             11: ("STEIM2", "i", np.dtype("int32"))}
+             11: ("STEIM2", "i", np.dtype("int32")),
+             30: ("SRO", "i", np.dtype("int32"))}
 
 # Map the dtype to the samplecode. Redundant information but it is hard coded
 # for performance reasons.
