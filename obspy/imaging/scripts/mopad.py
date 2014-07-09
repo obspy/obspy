@@ -4729,11 +4729,16 @@ To generate a beachball for a normal faulting mechanism (a snake's eye type):
                                help="""
 The 'source mechanism' as a comma-separated list of length:
 
-- 3 (strike,dip,rake),
-- 4 (strike,dip,rake,moment),
-- 6 (M11,M22,M33,M12,M13,M23),
-- 7 (M11,M22,M33,M12,M13,M23,moment),
-- 9 (full moment tensor)
+3:
+    strike, dip, rake;
+4:
+    strike, dip, rake, moment;
+6:
+    M11, M22, M33, M12, M13, M23;
+7:
+    M11, M22, M33, M12, M13, M23, moment;
+9:
+    full moment tensor
 
 (With all angles to be given in degrees)
                             """)
@@ -4931,7 +4936,7 @@ The 'source mechanism' as a comma-separated list of length:
             '-d', '--show-1fp', dest='plot_show_1faultplane', nargs=4,
             metavar=('<index>', '<linewidth>', '<colour>', '<alpha>'),
             help='plot 1 faultplane - arguments are: index [1,2] of the '
-                 'resp. FP, linewidth(float), line colour(string or '
+                 'resp. FP, linewidth (float), line colour (string or '
                  'rgb-tuple), and alpha value (float between 0 and 1)')
         group_misc.add_argument(
             '-e', '--eigenvectors', dest='plot_show_princ_axes',
@@ -4946,13 +4951,13 @@ The 'source mechanism' as a comma-separated list of length:
             '-l', '--lines', dest='plot_outerline',
             metavar=('<linewidth>', '<colour>', '<alpha>'), nargs=3,
             help='gives the style of the outer line - 3 arguments needed: '
-                 'linewidth(float), line colour(string or RGB-tuple), and '
+                 'linewidth (float), line colour (string or RGB-tuple), and '
                  'alpha value (float between 0 and 1)')
         group_app.add_argument(
             '-n', '--nodals', dest='plot_nodalline',
             metavar=('<linewidth>', '<colour>', '<alpha>'), nargs=3,
             help='gives the style of the nodal lines - 3 arguments needed: '
-                 'linewidth(float), line colour(string or RGB-tuple), and '
+                 'linewidth (float), line colour (string or RGB-tuple), and '
                  'alpha value (float between 0 and 1)')
         group_quality.add_argument(
             '-q', '--quality', dest='plot_dpi', metavar='<dpi>', type=int,
@@ -5061,36 +5066,60 @@ The 'source mechanism' as a comma-separated list of length:
         Returns a list of the decomposition results.
 
         Order:
-        - 1 - basis of the provided input     (string)
-        - 2 - basis of  the representation    (string)
-        - 3 - chosen decomposition type      (integer)
+        1:
+            basis of the provided input     (string);
+        2:
+            basis of  the representation    (string);
+        3:
+            chosen decomposition type      (integer);
 
-        - 4 - full moment tensor              (matrix)
+        4:
+            full moment tensor              (matrix);
 
-        - 5 - isotropic part                  (matrix)
-        - 6 - isotropic percentage             (float)
-        - 7 - deviatoric part                 (matrix)
-        - 8 - deviatoric percentage            (float)
+        5:
+            isotropic part                  (matrix);
+        6:
+            isotropic percentage             (float);
+        7:
+            deviatoric part                 (matrix);
+        8:
+            deviatoric percentage            (float);
 
-        - 9 - DC part                         (matrix)
-        -10 - DC percentage                    (float)
-        -11 - DC2 part                        (matrix)
-        -12 - DC2 percentage                   (float)
-        -13 - DC3 part                        (matrix)
-        -14 - DC3 percentage                   (float)
+        9:
+            DC part                         (matrix);
+        10:
+            DC percentage                    (float);
+        11:
+            DC2 part                        (matrix);
+        12:
+            DC2 percentage                   (float);
+        13:
+            DC3 part                        (matrix);
+        14:
+            DC3 percentage                   (float);
 
-        -15 - CLVD part                       (matrix)
-        -16 - CLVD percentage                 (matrix)
+        15:
+            CLVD part                       (matrix);
+        16:
+            CLVD percentage                 (matrix);
 
-        -17 - seismic moment                   (float)
-        -18 - moment magnitude                 (float)
+        17:
+            seismic moment                   (float);
+        18:
+            moment magnitude                 (float);
 
-        -19 - eigenvectors                   (3-array)
-        -20 - eigenvalues                       (list)
-        -21 - p-axis                         (3-array)
-        -22 - neutral axis                   (3-array)
-        -23 - t-axis                         (3-array)
-        -24 - faultplanes       (list of two 3-arrays)
+        19:
+            eigenvectors                   (3-array);
+        20:
+            eigenvalues                       (list);
+        21:
+            p-axis                         (3-array);
+        22:
+            neutral axis                   (3-array);
+        23:
+            t-axis                         (3-array);
+        24:
+            faultplanes       (list of two 3-arrays).
 
 
         If option 'fancy' is set, only a small overview about geometry and
