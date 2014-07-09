@@ -1033,7 +1033,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print('\n   Full moment tensor in %s-coordinates: ' % (system))
+            print('\n   Full moment tensor in %s-coordinates:' % (system))
             return self._matrix_w_style_and_system(self._M, system, style)
         else:
             return self._matrix_w_style_and_system(self._M, system, style)
@@ -1811,7 +1811,7 @@ def fancy_matrix(m_in):
         pass
 
     return "\n  / %5.2F %5.2F %5.2F \\\n" % (m[0, 0], m[0, 1], m[0, 2]) + \
-           "  | %5.2F %5.2F %5.2F  | \n" % (m[1, 0], m[1, 1], m[1, 2]) + \
+           "  | %5.2F %5.2F %5.2F  |\n" % (m[1, 0], m[1, 1], m[1, 2]) + \
            "  \\ %5.2F %5.2F %5.2F /\n" % (m[2, 0], m[2, 1], m[2, 2])
 
 
