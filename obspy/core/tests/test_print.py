@@ -20,10 +20,10 @@ class PrintTestCase(unittest.TestCase):
             obspy_print(self.all_files)
 
         self.assertEqual(
-            out.stdout,
             '''1 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
-'''  # noqa
+''',  # noqa
+            out.stdout
         )
 
     def test_print_nomerge(self):
@@ -31,11 +31,11 @@ XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 
             obspy_print(['--no-merge'] + self.all_files)
 
         self.assertEqual(
-            out.stdout,
             '''2 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
-'''  # noqa
+''',  # noqa
+            out.stdout
         )
 
 

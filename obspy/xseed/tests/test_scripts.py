@@ -36,7 +36,7 @@ class ScriptTestCase(unittest.TestCase):
                         'RESP.BW.FURT..EHN',
                         'RESP.BW.FURT..EHZ']
             actual = sorted(os.listdir(os.curdir))
-            self.assertEqual(actual, expected)
+            self.assertEqual(expected, actual)
 
     def test_dataless2resp_zipped(self):
         with TemporaryWorkingDirectory():
@@ -50,7 +50,7 @@ class ScriptTestCase(unittest.TestCase):
                         'RESP.BW.FURT..EHZ']
             with zipfile.ZipFile('dataless.seed.BW_FURT.zip') as zf:
                 actual = sorted(zf.namelist())
-            self.assertEqual(actual, expected)
+            self.assertEqual(expected, actual)
 
     def test_dataless2xseed(self):
         with TemporaryWorkingDirectory():
@@ -62,9 +62,9 @@ class ScriptTestCase(unittest.TestCase):
             with open(self.xseed_file, 'rt') as fh:
                 expected = fh.read()
             with open(self.xseed_name, 'rt') as fh:
-                output = fh.read()
+                actual = fh.read()
 
-            self.assertEqual(expected, output)
+            self.assertEqual(expected, actual)
 
     def test_dataless2xseed_split(self):
         dataless_multi_file = os.path.join(os.path.dirname(__file__),
@@ -82,7 +82,7 @@ class ScriptTestCase(unittest.TestCase):
                         'CL.AIO.dataless.xml.1278350400.0.xml',
                         'CL.AIO.dataless.xml.1308244920.0.xml']
             actual = sorted(os.listdir(os.curdir))
-            self.assertEqual(actual, expected)
+            self.assertEqual(expected, actual)
 
     def test_xseed2dataless(self):
         with NamedTemporaryFile() as tf:
@@ -92,14 +92,14 @@ class ScriptTestCase(unittest.TestCase):
             with open(self.dataless_file, 'rb') as fh:
                 expected = fh.read()
             with open(tf.name, 'rb') as fh:
-                output = fh.read()
+                actual = fh.read()
 
             try:
-                compareSEED(expected, output)
+                compareSEED(expected, actual)
             except Exception:
                 self.fail('compareSEED raised Exception unexpectedly!')
             parser1 = Parser(expected)
-            parser2 = Parser(output)
+            parser2 = Parser(actual)
             self.assertEqual(parser1.getSEED(), parser2.getSEED())
 
 
