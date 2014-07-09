@@ -20,6 +20,7 @@ from subprocess import Popen, PIPE
 import warnings
 import itertools
 import tempfile
+import shutil
 import numpy as np
 import math
 
@@ -447,6 +448,26 @@ def CatchOutput():
             os.remove(stderr_filename)
         except OSError:
             pass
+
+
+@contextmanager
+def TemporaryWorkingDirectory():
+    """
+    A context manager that changes to a temporary working directory.
+
+    Always use with "with" statement. Does nothing useful otherwise.
+
+    >>> with TemporaryWorkingDirectory():  # doctest: +SKIP
+    ...    os.system('echo "$PWD"')
+    """
+    tempdir = tempfile.mkdtemp(prefix='obspy-')
+    old_dir = os.getcwd()
+    os.chdir(tempdir)
+    try:
+        yield
+    finally:
+        os.chdir(old_dir)
+        shutil.rmtree(tempdir)
 
 
 def factorize_int(x):
