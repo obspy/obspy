@@ -889,7 +889,7 @@ class SacIO(object):
             rows = npts // 5
             np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
                        fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-            np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
+            np.savetxt(f, self.seis[5 * rows:], delimiter=b'\t')
         except:
             f.close()
             raise SacIOError("Cannot write trace values: " + ofname)
