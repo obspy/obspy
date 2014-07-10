@@ -714,19 +714,19 @@ class ParserTestCase(unittest.TestCase):
                                (tr_2.data ** 2))
         energy_after = np.sum((tr_r_z.data ** 2) + (tr_r_n.data ** 2) +
                               (tr_r_e.data ** 2))
-        np.testing.assert_allclose(energy_before, energy_after)
+        self.assertTrue(np.allclose(energy_before, energy_after))
 
         # The vertical channel should not have changed at all.
         np.testing.assert_array_equal(tr_z.data, tr_r_z.data)
         # The other two are only rotated by 2 degree so should also not have
         # changed much but at least a little bit. And the components should be
         # renamed.
-        np.testing.assert_allclose(tr_1, tr_r_n, rtol=10E-3)
+        self.assertTrue(np.allclose(tr_1, tr_r_n, rtol=10E-3))
         # The east channel carries very little energy for this particular
         # example. Thus it changes quite a lot even for this very subtle
         # rotation. The energy comparison should still ensure a sensible
         # result.
-        np.testing.assert_allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0)
+        self.assertTrue(np.allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0))
 
 
 def suite():
