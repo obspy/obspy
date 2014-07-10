@@ -869,7 +869,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # default dtype of numpy.string_ from "|S1" to "|S32". Enforce
             # "|S1|" here to be consistent across NumPy versions.
             if encoding == 0:
-                seed_dtype = "|S1"
+                seed_dtype = native_str("|S1")
             with NamedTemporaryFile() as tf:
                 tempfile = tf.name
                 # Write it once with the encoding key and once with the value.

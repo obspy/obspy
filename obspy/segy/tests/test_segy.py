@@ -188,7 +188,7 @@ class SEGYTestCase(unittest.TestCase):
             data = 200000.0 * np.random.ranf(50000) - 100000.0
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
@@ -218,7 +218,7 @@ class SEGYTestCase(unittest.TestCase):
             data = 1E-5 * np.random.ranf(50000)
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
@@ -247,7 +247,7 @@ class SEGYTestCase(unittest.TestCase):
         data = np.array(data)
         # Convert to float64 in case native floats are different to be
         # able to utilize double precision.
-        data = np.require(data, 'float64')
+        data = np.require(data, np.float64)
         # Loop over little and big endian.
         for endian in endians:
             # Pack.

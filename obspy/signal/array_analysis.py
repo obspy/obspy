@@ -948,7 +948,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 ft[i, :] = np.fft.rfft(dat, nfft)[nlow:nlow + nf]
         except IndexError:
             break
-        ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
+        ft = np.require(ft, np.complex128, ['C_CONTIGUOUS'])
         relpow_map.fill(0.)
         abspow_map.fill(0.)
         # computing the covariances of the signal at different receivers

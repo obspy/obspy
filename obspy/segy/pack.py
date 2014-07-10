@@ -62,7 +62,7 @@ def pack_4byte_IBM(file, data, endian='>'):
 
     # Now calculate the fraction using single precision.
     fraction = np.require(
-        data, 'float32') / (16.0 ** (np.require(exponent, 'float32') - 64))
+        data, np.float32) / (16.0 ** (np.require(exponent, np.float32) - 64))
 
     # Normalization.
     while True:
@@ -82,19 +82,19 @@ def pack_4byte_IBM(file, data, endian='>'):
     # Times 2^24 to be able to get a long.
     fraction *= 16777216.0
     # Convert to unsigned long.
-    fraction = np.require(fraction, 'uint64')
+    fraction = np.require(fraction, np.uint64)
 
     # Use 8 bit integers to be able to store every byte separately.
-    new_data = np.zeros(4 * len(data), 'uint8')
+    new_data = np.zeros(4 * len(data), np.uint8)
 
     # The first bit is the sign and the following 7 are the exponent.
-    byte_0 = np.require(signs + exponent, 'uint8')
+    byte_0 = np.require(signs + exponent, np.uint8)
     # All following 24 bit are the fraction.
     byte_1 = np.require(np.right_shift(np.bitwise_and(fraction, 0x00ff0000),
-                                       16), 'uint8')
+                                       16), np.uint8)
     byte_2 = np.require(np.right_shift(np.bitwise_and(fraction, 0x0000ff00),
-                                       8), 'uint8')
-    byte_3 = np.require(np.bitwise_and(fraction, 0x000000ff), 'uint8')
+                                       8), np.uint8)
+    byte_3 = np.require(np.bitwise_and(fraction, 0x000000ff), np.uint8)
 
     # Depending on the endianness store the data different.
     # big endian.

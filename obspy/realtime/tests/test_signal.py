@@ -30,7 +30,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
                                             'II.TLY.BHZ.SAC'),
                                dtype=np.float64)[0]
         # make really sure test data is float64
-        self.orig_trace.data = np.require(self.orig_trace.data, 'f8')
+        self.orig_trace.data = np.require(self.orig_trace.data, np.float64)
         self.orig_trace_chunks = self.orig_trace / NUM_PACKETS
 
     def setUp(self):

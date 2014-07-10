@@ -97,8 +97,8 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
               "use shift_len/2 which we want to avoid."
         raise ValueError(msg)
     # be nice and adapt type if necessary
-    tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
-    tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
+    tr1 = np.require(tr1, np.float32, ['C_CONTIGUOUS'])
+    tr2 = np.require(tr2, np.float32, ['C_CONTIGUOUS'])
     corp = np.empty(2 * shift_len + 1, dtype=np.float64, order='C')
 
     shift = C.c_int()

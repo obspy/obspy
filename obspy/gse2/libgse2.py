@@ -268,11 +268,11 @@ def compress_CM6(data):
     :param data: the data to write
     :returns: numpy chararray containing compressed samples
     """
-    data = np.require(data, 'int32', ['C_CONTIGUOUS'])
+    data = np.require(data, np.int32, ['C_CONTIGUOUS'])
     N = len(data)
     count = [0]  # closure, must be container
     # 4 character bytes per int32_t
-    carr = np.zeros(N * 4, dtype='c')
+    carr = np.zeros(N * 4, dtype=native_str('c'))
 
     def writer(char):
         carr[count[0]] = char
@@ -285,9 +285,9 @@ def compress_CM6(data):
         raise GSEUtiError(msg % ierr)
     cnt = count[0]
     if cnt < 80:
-        return carr[:cnt].view('|S%d' % cnt)
+        return carr[:cnt].view(native_str('|S%d' % cnt))
     else:
-        return carr[:(cnt // 80 + 1) * 80].view('|S80')
+        return carr[:(cnt // 80 + 1) * 80].view(native_str('|S80'))
 
 
 def verifyChecksum(fh, data, version=2):
