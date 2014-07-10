@@ -28,7 +28,10 @@ else:
 # relies on the built-in memoryview object.
 if PY2:
     def frombuffer(data, dtype):
-        return np.frombuffer(data, dtype=dtype).copy()
+        if data:
+            return np.frombuffer(data, dtype=dtype).copy()
+        else:
+            return np.array([], dtype=dtype)
 else:
     def frombuffer(data, dtype):
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
