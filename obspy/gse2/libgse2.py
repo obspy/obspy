@@ -268,7 +268,7 @@ def compress_CM6(data):
     :param data: the data to write
     :returns: numpy chararray containing compressed samples
     """
-    data = np.require(data, np.int32, ['C_CONTIGUOUS'])
+    data = np.ascontiguousarray(data, np.int32)
     N = len(data)
     count = [0]  # closure, must be container
     # 4 character bytes per int32_t

@@ -538,7 +538,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             msg = "Detected non contiguous data array in Stream[%i]" % _i + \
                   ".data. Trying to fix array."
             warnings.warn(msg)
-            trace.data = np.require(trace.data, requirements=('C_CONTIGUOUS',))
+            trace.data = np.ascontiguousarray(trace.data)
 
         # Handle the record length.
         if reclen is not None:

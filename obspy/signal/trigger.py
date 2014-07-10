@@ -57,7 +57,7 @@ def recSTALTA(a, nsta, nlta):
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
     # be nice and adapt type if necessary
-    a = np.require(a, np.float64, ['C_CONTIGUOUS'])
+    a = np.ascontiguousarray(a, np.float64)
     ndat = len(a)
     charfct = np.empty(ndat, dtype=np.float64)
     # do not use pointer here:
@@ -186,7 +186,7 @@ def classicSTALTA(a, nsta, nlta):
     head = np.empty(1, dtype=head_stalta_t)
     head[:] = (len(data), nsta, nlta)
     # ensure correct type and contiguous of data
-    data = np.require(data, dtype=np.float64, requirements=['C_CONTIGUOUS'])
+    data = np.ascontiguousarray(data, dtype=np.float64)
     # all memory should be allocated by python
     charfct = np.empty(len(data), dtype=np.float64)
     # run and check the error-code
@@ -401,7 +401,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     # c_chcar_p strings are immutable, use string_buffer for pointers
     pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
-    reltrc = np.require(reltrc, np.float32, ['C_CONTIGUOUS'])
+    reltrc = np.ascontiguousarray(reltrc, np.float32)
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
@@ -437,9 +437,9 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     :return: (ptime, stime) parrival and sarrival
     """
     # be nice and adapt type if necessary
-    a = np.require(a, np.float32, ['C_CONTIGUOUS'])
-    b = np.require(b, np.float32, ['C_CONTIGUOUS'])
-    c = np.require(c, np.float32, ['C_CONTIGUOUS'])
+    a = np.ascontiguousarray(a, np.float32)
+    b = np.ascontiguousarray(b, np.float32)
+    c = np.ascontiguousarray(c, np.float32)
     s_pick = C.c_int(s_pick)  # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
