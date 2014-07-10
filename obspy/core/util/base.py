@@ -118,6 +118,8 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    if isinstance(dtype, str):
+        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
