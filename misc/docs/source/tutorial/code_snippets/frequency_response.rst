@@ -24,7 +24,5 @@ imaginary part of the response):
 * we want the phase to go from 0 to 2*pi, instead of the output from atan2
   that goes from -pi to pi 
 
-.. include:: frequency_response.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/frequency_response.py
+.. plot:: tutorial/code_snippets/frequency_response.py
+   :include-source:

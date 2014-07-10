@@ -1034,13 +1034,13 @@ class Trace(object):
             selected, if set to ``False``, the next sample containing the time
             is selected. Defaults to ``True``.
 
-                Given the following trace containing 4 samples, "|" are the
-                sample points, "A" is the requested starttime::
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
 
-                    |        A|         |         |
+                |        A|         |         |
 
-                ``nearest_sample=True`` will select the second sample point,
-                ``nearest_sample=False`` will select the first sample point.
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
 
         :type fill_value: int, float or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces

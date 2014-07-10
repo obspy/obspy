@@ -8,8 +8,8 @@ from shutil import copyfile
 
 ROOT = os.path.dirname(__file__)
 PEP8_IMAGE = os.path.join(ROOT, 'source', 'pep8', 'pep8.svg')
-PEP8_FAIL_IMAGE = os.path.join(ROOT, 'source', '_static', 'pep8-failing.svg')
-PEP8_PASS_IMAGE = os.path.join(ROOT, 'source', '_static', 'pep8-passing.svg')
+PEP8_FAIL_IMAGE = os.path.join(ROOT, 'source', '_images', 'pep8-failing.svg')
+PEP8_PASS_IMAGE = os.path.join(ROOT, 'source', '_images', 'pep8-passing.svg')
 
 
 path = obspy.__path__[0]

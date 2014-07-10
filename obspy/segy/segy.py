@@ -443,18 +443,18 @@ class SEGYTrace(object):
         :param data_encoding: The data sample format code as defined in the
             binary file header:
 
-                1:
-                    4 byte IBM floating point
-                2:
-                    4 byte Integer, two's complement
-                3:
-                    2 byte Integer, two's complement
-                4:
-                    4 byte Fixed point with gain
-                5:
-                    4 byte IEEE floating point
-                8:
-                    1 byte Integer, two's complement
+            1:
+                4 byte IBM floating point
+            2:
+                4 byte Integer, two's complement
+            3:
+                2 byte Integer, two's complement
+            4:
+                4 byte Fixed point with gain
+            5:
+                4 byte IEEE floating point
+            8:
+                1 byte Integer, two's complement
 
             Defaults to 4.
         :type big_endian: bool
