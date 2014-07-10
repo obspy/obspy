@@ -325,7 +325,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
             else:
                 data = trace.data
             data = data.reshape((-1, 6))
-            np.savetxt(fh, data, delimiter='\t',
+            np.savetxt(fh, data, delimiter=b'\t',
                        fmt=fmt.encode('ascii', 'strict'))
             if rest:
                 fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
