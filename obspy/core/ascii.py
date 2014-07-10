@@ -432,11 +432,10 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
             # write data
             times = np.linspace(stats.starttime.timestamp,
                                 stats.endtime.timestamp, stats.npts)
-            times = [UTCDateTime(t) for t in times]
-            data = np.vstack((times, trace.data)).T
-            # .26s cuts the Z from the time string
-            np.savetxt(fh, data,
-                       fmt=("%.26s  " + fmt).encode('ascii', 'strict'))
+            for t, d in zip(times, trace.data):
+                # .26s cuts the Z from the time string
+                line = ('%.26s  ' + fmt + '\n') % (UTCDateTime(t), d)
+                fh.write(line.encode('ascii', 'strict'))
 
 
 def _parse_data(data, data_type):
