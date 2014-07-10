@@ -630,7 +630,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['encoding'] = 5
             elif trace.data.dtype.type == np.int16:
                 trace_attr['encoding'] = 1
-            elif trace.data.dtype.type == np.dtype('|S1').type:
+            elif trace.data.dtype.type == np.dtype(native_str('|S1')).type:
                 trace_attr['encoding'] = 0
             else:
                 msg = "Unsupported data type %s in Stream[%i].data" % \

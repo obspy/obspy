@@ -19,6 +19,7 @@ WAV bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Trace, Stream
 import numpy as np
@@ -29,9 +30,9 @@ import wave
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
 WIDTH2DTYPE = {
-    1: '<u1',  # unsigned char
-    2: '<i2',  # signed short int
-    4: '<i4',  # signed int (int32)
+    1: native_str('<u1'),  # unsigned char
+    2: native_str('<i2'),  # signed short int
+    4: native_str('<i4'),  # signed int (int32)
 }
 
 

@@ -124,7 +124,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     this_stream = copy.deepcopy(stream)
                     this_stream[0].data = \
                         np.require(this_stream[0].data,
-                                   dtype=encoding_values[encoding])
+                                   dtype=native_str(encoding_values[encoding]))
                     with NamedTemporaryFile() as tf:
                         temp_file = tf.name
                         writeMSEED(this_stream, temp_file, encoding=encoding,
@@ -500,7 +500,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Special handling for ASCII encoded files.
         for value in list(ENCODINGS.values()):
             if value[0] == 'ASCII':
-                np_encodings[value[0]] = np.dtype("|S1")
+                np_encodings[value[0]] = np.dtype(native_str("|S1"))
             else:
                 np_encodings[value[0]] = value[2]
         st = Stream([Trace(data=data)])
@@ -582,7 +582,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for byteorder, btype in byteorders.items():
             for encoding, dtype in encodings.items():
                 # Convert data to floats and write them again
-                st[0].data = data_copy.astype(dtype)
+                st[0].data = data_copy.astype(native_str(dtype))
                 with NamedTemporaryFile() as tf:
                     tempfile = tf.name
                     st.write(tempfile, format="MSEED", encoding=encoding,
@@ -591,7 +591,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     # ObsPy
                     with open(tempfile, "rb") as fp:
                         s = fp.read()
-                    data = np.fromstring(s[56:256], dtype=btype + dtype)
+                    data = np.fromstring(s[56:256],
+                                         dtype=native_str(btype + dtype))
                     np.testing.assert_array_equal(data, st[0].data[:len(data)])
                     # Read the binary chunk of data with ObsPy
                     st2 = read(tempfile)
@@ -602,7 +603,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests writing small ASCII strings.
         """
         st = Stream()
-        st.append(Trace(data=np.fromstring("A" * 8, "|S1")))
+        st.append(Trace(data=np.fromstring("A" * 8, native_str("|S1"))))
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             st.write(tempfile, format="MSEED")
@@ -617,7 +618,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             data = np.random.randint(-1000, 1000, 500)
             for dtype in ["i2", "i4", "f4", "f8", "S1"]:
                 for enc in ["<", ">", "="]:
-                    st1.append(Trace(data=data.astype(np.dtype(enc + dtype))))
+                    typed_data = data.astype(np.dtype(native_str(enc + dtype)))
+                    st1.append(Trace(data=typed_data))
             # this will raise a UserWarning - ignoring for test
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
@@ -631,8 +633,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                          str(tr.dtype.itemsize),
                                          dtype)
                         # byte order is always native (=)
-                        np.testing.assert_array_equal(tr,
-                                                      data.astype("=" + dtype))
+                        typed_data = data.astype(native_str("=" + dtype))
+                        np.testing.assert_array_equal(tr, typed_data)
 
     def test_enforceSteim2WithSteim1asEncoding(self):
         """
@@ -661,13 +663,15 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         def_content = np.arange(1, 51, dtype=np.int32)
         files = {
             os.path.join(path, "smallASCII.mseed"):
-            ('|S1', 'a', 0, np.fromstring('ABCDEFGH', dtype='|S1')),
+            (native_str('|S1'), 'a', 0,
+             np.fromstring('ABCDEFGH', dtype=native_str('|S1'))),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
-            ('|S1', 'a', 0, np.fromstring(
+            (native_str('|S1'), 'a', 0, np.fromstring(
                 """ !"#$%&'()*+,-./""" +
                 """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
-                """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
+                """abcdefghijklmnopqrstuvwxyz{|}~""",
+                dtype=native_str('|S1'))),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
             (np.int32, 'i', 1, def_content.astype(np.int16)),

@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.compatibility import frombuffer
@@ -154,7 +155,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # read temp file directly without libmseed
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
-                dtype = np.dtype('>f4')
+                dtype = np.dtype(native_str('>f4'))
                 bin_data = frombuffer(fp.read(7 * dtype.itemsize),
                                       dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
@@ -382,7 +383,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 5 - transform to ASCII values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('|S1')
+                tr.data = tr.data.astype(native_str('|S1'))
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding

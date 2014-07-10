@@ -5,6 +5,7 @@ DATAMARK bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Trace, UTCDateTime, Stream
 import numpy as np
@@ -43,7 +44,7 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
             int('%x' % (ord(buff[2:3]) >> 4))
             ord(buff[3:4])
             idata00 = fpin.read(4)
-            np.fromstring(idata00, '>i')[0]
+            np.fromstring(idata00, native_str('>i'))[0]
     except:
         return False
     return True
@@ -80,7 +81,8 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             if len(pklen) == 0:
                 break  # EOF
             leng = 4
-            truelen = np.fromstring(pklen, '>i')[0]  # equiv to Str4Int
+            # equiv to Str4Int
+            truelen = np.fromstring(pklen, native_str('>i'))[0]
             buff = fpin.read(6)
             leng += 6
 
@@ -112,7 +114,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
 
                 idata00 = fpin.read(4)
                 leng += 4
-                idata22 = np.fromstring(idata00, '>i')[0]
+                idata22 = np.fromstring(idata00, native_str('>i'))[0]
 
                 if chanum in output:
                     output[chanum].append(idata22)
@@ -145,19 +147,20 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                 elif datawide == 2:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[2 * i:2 * (i + 1)], '>h')[0]
+                            np.fromstring(sdata[2 * i:2 * (i + 1)],
+                                          native_str('>h'))[0]
                         output[chanum].append(idata2)
                 elif datawide == 3:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
-                                          '>i')[0] >> 8
+                                          native_str('>i'))[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[4 * i:4 * (i + 1)],
-                                          '>i')[0]
+                                          native_str('>i'))[0]
                         output[chanum].append(idata2)
                 else:
                     msg = "DATAWIDE is %s " % datawide + \
