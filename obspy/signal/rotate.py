@@ -181,8 +181,8 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
         np.sin(azimuth) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
 
     # Now simply rotate a north pointing unit vector with both matrixes.
-    temp = np.array([azimuth_rotation_matrix.dot([0.0, -1.0, 0.0])]).ravel()
-    return np.array(dip_rotation_matrix.dot(temp)).ravel()
+    temp = np.dot(azimuth_rotation_matrix, [[0.0], [-1.0], [0.0]])
+    return np.array(np.dot(dip_rotation_matrix, temp)).ravel()
 
 
 def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
@@ -237,8 +237,8 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     T = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
 
     # Apply it.
-    z, s, e = T.dot([data_1, data_2, data_3])
-    # Replace all negative zeros. These might confuse some futher processing
+    z, s, e = np.dot(T, [data_1, data_2, data_3])
+    # Replace all negative zeros. These might confuse some further processing
     # programs.
     z = np.array(z).ravel()
     z[z == -0.0] = 0
