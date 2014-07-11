@@ -28,6 +28,8 @@ else:
 # relies on the built-in memoryview object.
 if PY2:
     def frombuffer(data, dtype):
+        if isinstance(dtype, unicode):
+            dtype = str(dtype)
         if data:
             return np.frombuffer(data, dtype=dtype).copy()
         else:
