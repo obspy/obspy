@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
-    SAMPLETYPE, DATATYPES, \
+    SAMPLETYPE, DATATYPES, UNSUPPORTED_ENCODINGS, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
     VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS, blkt_100_s
 from obspy.mseed import util
@@ -209,7 +209,21 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             bo = None
 
         info = util.getRecordInformation(mseed_object, endian=bo)
-        info['encoding'] = ENCODINGS[info['encoding']][0]
+
+        # Map the encoding to a readable string value.
+        if info["encoding"] in ENCODINGS:
+            info['encoding'] = ENCODINGS[info['encoding']][0]
+        elif info["encoding"] in UNSUPPORTED_ENCODINGS:
+            msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
+                   "the file to the ObsPy developers so that we can add "
+                   "support for it.") % \
+                (UNSUPPORTED_ENCODINGS[info['encoding']], info['encoding'])
+            raise ValueError(msg)
+        else:
+            msg = "Encoding '%i' is not a valid MiniSEED encoding." % \
+                info['encoding']
+            raise ValueError(msg)
+
         # Only keep information relevant for the whole file.
         info = {'encoding': info['encoding'],
                 'filesize': info['filesize'],
@@ -467,7 +481,6 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             raise ValueError(msg)
 
     # Check if encoding kwarg is set and catch invalid encodings.
-    # XXX: Currently INT24 is not working due to lacking NumPy support.
     encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.items()])
 
     if encoding is not None:
