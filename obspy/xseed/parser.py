@@ -922,7 +922,7 @@ class Parser(object):
         """
         Compares two blockettes.
         """
-        for key in list(blkt1.__dict__.keys()):
+        for key in blkt1.__dict__.keys():
             # Continue if just some meta data.
             if key in IGNORE_ATTR:
                 continue

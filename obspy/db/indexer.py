@@ -342,7 +342,7 @@ class WaveformFileCrawler(object):
             # file list is empty
             # clean up not existing files in current path
             if self.options.cleanup:
-                for file in list(self._db_files.keys()):
+                for file in self._db_files.keys():
                     self._delete(self._current_path, file)
             # jump into next directory
             self._stepWalker()

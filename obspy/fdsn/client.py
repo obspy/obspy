@@ -1494,7 +1494,7 @@ def setup_query_dict(service, locs, kwargs):
                 raise FDSNException(msg)
     # short aliases are not mentioned in the downloaded WADLs, so we have
     # to map it here according to the official FDSN WS documentation
-    for key in list(kwargs.keys()):
+    for key in kwargs.keys():
         if key in PARAMETER_ALIASES:
             value = kwargs.pop(key)
             if value is not None:

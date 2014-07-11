@@ -449,7 +449,7 @@ class _TextTestRunner:
         wasSuccessful = True
         if self.verbosity:
             self.stream.writeln()
-        for result in list(results.values()):
+        for result in results.values():
             failed, errored = list(map(len, (result.failures, result.errors)))
             faileds += failed
             erroreds += errored
@@ -531,7 +531,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     # sort tests by time taken
     mydict = {}
     # loop over modules
-    for mod in list(ttr.values()):
+    for mod in ttr.values():
         mydict.update(dict(mod.timer))
     sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
     sorted_tests = sorted_tests[::-1]

@@ -884,7 +884,7 @@ master/seishub/plugins/seismology/event.py
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
         descrip_str += "\n".join(["=".join((str(k), str(v)))
-                                  for k, v in list(kwargs.items())])
+                                  for k, v in kwargs.items()])
         SubElement(folder, "description").text = descrip_str
 
         style = SubElement(folder, "Style")

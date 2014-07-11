@@ -1359,7 +1359,7 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in list(data.items())
+        stations = [value for key, value in data.items()
                     if key.startswith(network + '.')
                     and "code" in value]
         return stations

@@ -2540,7 +2540,7 @@ class BeachBall:
         the object, the value is updated. Otherwise, the keyword is
         ignored.
         """
-        for key in list(kwargs.keys()):
+        for key in kwargs.keys():
             if key[0] == '_':
                 kw = key[1:]
             else:
@@ -4885,7 +4885,7 @@ def main():
         # todo
         # check, if arguments do not start with "-" - if so, there is a lack of
         # arguments for the previous option
-        for val2check in list(options.__dict__.values()):
+        for val2check in options.__dict__.values():
             if str(val2check).startswith('-'):
                 try:
                     val2check_split = val2check.split(',')

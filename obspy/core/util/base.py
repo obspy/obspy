@@ -265,7 +265,7 @@ def _getFunctionFromEntryPoint(group, type):
             entry_point = ep_dict[type]
         else:
             # search using lower cases only
-            entry_point = [v for k, v in list(ep_dict.items())
+            entry_point = [v for k, v in ep_dict.items()
                            if k.lower() == type.lower()][0]
     except (KeyError, IndexError):
         # check if any entry points are available at all
@@ -338,7 +338,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in list(EPS.values()):
+        for format_ep in EPS.values():
             # search isFormat for given entry point
             isFormat = load_entry_point(
                 format_ep.dist.key,

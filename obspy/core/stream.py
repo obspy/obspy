@@ -1790,7 +1790,7 @@ class Stream(object):
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for _id in list(traces_dict.keys()):
+        for _id in traces_dict.keys():
             cur_trace = traces_dict[_id].pop(0)
             # loop through traces of same id
             for _i in range(len(traces_dict[_id])):
@@ -2697,7 +2697,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for id_ in list(traces_dict.keys()):
+        for id_ in traces_dict.keys():
             trace_list = traces_dict[id_]
             cur_trace = trace_list.pop(0)
             # work through all traces of same id

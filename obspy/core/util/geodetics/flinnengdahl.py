@@ -52,7 +52,7 @@ class FlinnEngdahl(object):
 
         self.lat_begins = {}
 
-        for quad, index in list(self.lons_per_lat.items()):
+        for quad, index in self.lons_per_lat.items():
             begin = 0
             end = -1
             begins = []
