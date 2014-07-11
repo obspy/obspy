@@ -1037,6 +1037,20 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 self.assertTrue("cannot be written with obspy" in
                                 str(e.exception).lower())
 
+    def test_reading_geoscope_16bit_4bit_exponent_format(self):
+        """
+        Tests reading miniseed data with the GEOSCOPE Multiplexed 16 bit
+        ranged, 4 bit exponent encoding.
+        """
+        tr = read(os.path.join(self.path, "data", "G.NOUC..LHZ.mseed"))[0]
+
+        self.assertEqual(tr.stats.mseed.encoding, "GEOSCOPE16_4")
+        self.assertEqual(tr.data.dtype, np.float32)
+        # Data is from the IRIS ASCII timeseries service.
+        np.testing.assert_allclose(
+            tr.data[:5], np.array([-1.1015625, -1.11328125, -1.109375,
+                                   -1.12890625, -1.1171875]))
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
