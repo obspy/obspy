@@ -136,6 +136,29 @@ class ResponseTest(unittest.TestCase):
                 resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                           outfile=ic.name)
 
+    def test_segfault_after_error_handling(self):
+        """
+        Many functions in evalresp call `error_return()` which uses lngjump()
+        to jump to some previously set state.
+
+        ObsPy calls some evalresp functions directly so evalresp cannot call
+        setjmp(). In that case lngjump() jumps to a an undefined location most
+        likely resulting in a segfault.
+
+        This test tests a workaround for this issue.
+
+        As long as it does not segfault the test is doing alright.
+        """
+        filename = os.path.join(self.data_dir,
+                                "TM.SKLT..BHZ_faulty_response.xml")
+        inv = read_inventory(filename)
+
+        t_samp = 0.05
+        nfft = 256
+
+        inv[0][0][0].response.get_evalresp_response(
+            t_samp, nfft, output="DISP")
+
 
 def suite():
     return unittest.makeSuite(ResponseTest, 'test')
