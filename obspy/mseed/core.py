@@ -403,7 +403,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
 
 def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
-               flush=1, verbose=0, **_kwargs):
+               flush=True, verbose=0, **_kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
@@ -415,12 +415,14 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: A Stream object.
     :type filename: str
-    :param filename: Name of the output file
+    :param filename: Name of the output file or a file-like object.
     :type encoding: int or str, optional
     :param encoding: Should be set to one of the following supported Mini-SEED
-        data encoding formats: ASCII (``0``)*, INT16 (``1``), INT32 (``3``),
-        FLOAT32 (``4``)*, FLOAT64 (``5``)*, STEIM1 (``10``) and STEIM2
-        (``11``)*. Default data types a marked with an asterisk.
+        data encoding formats: ``ASCII`` (``0``)*, ``INT16`` (``1``),
+        ``INT32`` (``3``), ``FLOAT32`` (``4``)*, ``FLOAT64`` (``5``)*,
+        ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. If no encoding is given
+        it will be derived from the dtype of the data and the appropriate
+        default encoding (depicted with an asterix) will be chosen.
     :type reclen: int, optional
     :param reclen: Should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
@@ -431,12 +433,13 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. If ``-1`` it will be passed directly to libmseed
         which will also default it to big endian. Defaults to big endian.
-    :type flush: int, optional
-    :param flush: If it is not zero all of the data will be packed into
-        records, otherwise records will only be packed while there are
-        enough data samples to completely fill a record.
+    :type flush: bool, optional
+    :param flush: If ``True``, all data will be packed into records. If
+        ``False`` new records will only be created when there is enough data to
+        completely fill a record. Be careful with this. If in doubt, choose
+        ``True`` which is also the default value.
     :type verbose: int, optional
-    :param verbose: Controls verbosity, a value of zero will result in no
+    :param verbose: Controls verbosity, a value of ``0`` will result in no
         diagnostic output.
 
     .. note::
@@ -451,6 +454,17 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     >>> st = read()
     >>> st.write('filename.mseed', format='MSEED')  # doctest: +SKIP
     """
+    # Map flush and verbose flags.
+    if flush:
+        flush = 1
+    else:
+        flush = 0
+
+    if not verbose:
+        verbose = 0
+    if verbose is True:
+        verbose = 1
+
     # Some sanity checks for the keyword arguments.
     if reclen is not None and reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. The record length must be a value\n' + \
