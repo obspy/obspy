@@ -1042,7 +1042,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests reading miniseed data with the GEOSCOPE Multiplexed 16 bit
         ranged, 4 bit exponent encoding.
         """
-        tr = read(os.path.join(self.path, "data", "G.NOUC..LHZ.mseed"))[0]
+        tr = read(os.path.join(self.path, "data",
+                               "GEOSCOPE16_4_encoding.mseed"))[0]
 
         self.assertEqual(tr.stats.mseed.encoding, "GEOSCOPE16_4")
         self.assertEqual(tr.data.dtype, np.float32)
