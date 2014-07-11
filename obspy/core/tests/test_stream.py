@@ -2099,9 +2099,10 @@ class StreamTestCase(unittest.TestCase):
         st2 = read()
 
         for tr in st1:
-            tr.integrate(type = 'cumtrapz',initial=0)
-        st2.integrate(type = 'cumtrapz',initial=0)
+            tr.integrate(type='cumtrapz', initial=0)
+        st2.integrate(type='cumtrapz', initial=0)
         self.assertEqual(st1, st2)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
