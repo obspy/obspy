@@ -13,6 +13,7 @@ from obspy.mseed.headers import clibmseed, ENCODINGS
 from obspy.mseed.msstruct import _MSStruct
 
 import copy
+import io
 import numpy as np
 import os
 import unittest
@@ -979,6 +980,40 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
                         out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
+
+    def test_writing_with_some_encoding_fails(self):
+        """
+        Writing with some encoding fails as libmseed does not support those.
+        Make sure an appropriate error is raised.
+        """
+        tr = read()[0]
+        tr.data = tr.data[:10]
+
+        # Test writing by forcing the encoding.
+        for encoding, value in ENCODINGS.items():
+            # Convert the data to the appropriate type to make it does not
+            # fail because of that.
+            tr2 = tr.copy()
+            tr2.data = np.require(tr2.data, dtype=value[2])
+
+            buf = io.BytesIO()
+
+            # Should not fail with write support.
+            if value[3]:
+                # Test with integer code and string name.
+                tr2.write(buf, format="mseed", encoding=encoding)
+                tr2.write(buf, format="mseed", encoding=value[0])
+            # Should fail without write support.
+            else:
+                # Test with integer code and string name.
+                with self.assertRaises(ValueError) as e:
+                    tr2.write(buf, format="mseed", encoding=encoding)
+                self.assertTrue("cannot be written with obspy" in
+                                str(e.exception).lower())
+                with self.assertRaises(ValueError) as e:
+                    tr2.write(buf, format="mseed", encoding=value[0])
+                self.assertTrue("cannot be written with obspy" in
+                                str(e.exception).lower())
 
 
 def suite():
