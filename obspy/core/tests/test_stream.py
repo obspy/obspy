@@ -2138,6 +2138,18 @@ class StreamTestCase(unittest.TestCase):
                           "method": "weighted_average_slopes"},
                          patch.call_args[1])
 
+    def test_integratestream(self):
+        """
+        Test integration on the stream and trace
+        """
+        st1 = read()
+        st2 = read()
+
+        for tr in st1:
+            tr.integrate(type='cumtrapz', initial=0)
+        st2.integrate(type='cumtrapz', initial=0)
+        self.assertEqual(st1, st2)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

@@ -37,6 +37,7 @@ libraries and applications, our build tools and our web sites.
     * Heiner Igel
     * Joachim Saul
     * Joachim Wassermann
+    * John Leeman
     * Lars Krieger
     * Leonardo Uieda
     * Lion Krischer
