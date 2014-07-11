@@ -2148,7 +2148,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.differentiate(type=type)
         return self
 
-    def integrate(self, type='cumtrapz'):
+    def integrate(self, type='cumtrapz',**options):
         """
         Method to integrate all traces with respect to time.
 
@@ -2171,7 +2171,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(type=type)
+            tr.integrate(type=type,**options)
         return self
 
     @raiseIfMasked
