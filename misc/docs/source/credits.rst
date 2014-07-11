@@ -37,6 +37,7 @@ libraries and applications, our build tools and our web sites.
     * Lars Krieger
     * Lion Krischer
     * Thomas Lecocq
+    * John Leeman
     * Philippe Lesage
     * Anthony Lomax
     * Alessia Maggi

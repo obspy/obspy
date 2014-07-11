@@ -2091,6 +2091,18 @@ class StreamTestCase(unittest.TestCase):
         st2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         self.assertEqual(st1, st2)
 
+    def test_integratestream(self):
+        """
+        Test integration on the stream and trace
+        """
+        st1 = read()
+        st2 = read()
+
+        for tr in st1:
+            tr.integrate(type='cumtrapz', initial=0)
+        st2.integrate(type='cumtrapz', initial=0)
+        self.assertEqual(st1, st2)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
