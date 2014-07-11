@@ -1047,10 +1047,22 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
         self.assertEqual(tr.stats.mseed.encoding, "GEOSCOPE16_4")
         self.assertEqual(tr.data.dtype, np.float32)
-        # Data is from the IRIS ASCII timeseries service.
+        # Test data is from the IRIS ASCII timeseries service.
         np.testing.assert_allclose(
             tr.data[:5], np.array([-1.1015625, -1.11328125, -1.109375,
                                    -1.12890625, -1.1171875]))
+
+    def test_reading_SRO_format(self):
+        """
+        Tests reading miniseed data with the SRO encoding.
+        """
+        tr = read(os.path.join(self.path, "data",
+                               "SRO_encoding.mseed")).select(component="Z")[0]
+        self.assertEqual(tr.stats.mseed.encoding, "SRO")
+        self.assertEqual(tr.data.dtype, np.int32)
+        # Test data is from the IRIS ASCII timeseries service.
+        np.testing.assert_allclose(
+            tr.data[:5], np.array([126, 67, -11, -95, -167]))
 
 
 def suite():
