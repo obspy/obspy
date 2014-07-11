@@ -30,7 +30,7 @@ from obspy.core.util.base import getMatplotlibVersion
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
-if MATPLOTLIB_VERSION < (0, 99, 1):
+if MATPLOTLIB_VERSION < [0, 99, 1]:
     path_effect_kwargs = {}
 else:
     import matplotlib.patheffects as PathEffects
