@@ -60,7 +60,12 @@ ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
              5: ("FLOAT64", "d", np.dtype("float64")),
              10: ("STEIM1", "i", np.dtype("int32")),
              11: ("STEIM2", "i", np.dtype("int32")),
-             30: ("SRO", "i", np.dtype("int32"))}
+             12: ("GEOSCOPE24", "f", np.float32),
+             13: ("GEOSCOPE16_3", "f", np.float32),
+             14: ("GEOSCOPE16_4", "f", np.float32),
+             16: ("CDSN", "i", np.int32),
+             30: ("SRO", "i", np.int32),
+             32: ("DWWSSN", "i", np.int32)}
 
 # Map the dtype to the samplecode. Redundant information but it is hard coded
 # for performance reasons.
