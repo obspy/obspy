@@ -1690,6 +1690,10 @@ class StreamTestCase(unittest.TestCase):
         # dtype
         tr = read(dtype=np.int64)[0]
         self.assertEqual(tr.data.dtype, np.int64)
+        # dtype is string
+        tr2 = read(dtype='i8')[0]
+        self.assertEqual(tr2.data.dtype, np.int64)
+        self.assertEqual(tr, tr2)
         # start-/endtime
         tr2 = read(starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
