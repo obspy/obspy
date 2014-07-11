@@ -1006,14 +1006,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Should fail without write support.
             else:
                 # Test with integer code and string name.
-                with self.assertRaises(ValueError) as e:
-                    tr2.write(buf, format="mseed", encoding=encoding)
-                self.assertTrue("cannot be written with obspy" in
-                                str(e.exception).lower())
-                with self.assertRaises(ValueError) as e:
-                    tr2.write(buf, format="mseed", encoding=value[0])
-                self.assertTrue("cannot be written with obspy" in
-                                str(e.exception).lower())
+                self.assertRaises(ValueError, tr2.write, buf,
+                                  format="mseed", encoding=encoding)
+                self.assertRaises(ValueError, tr2.write, buf,
+                                  format="mseed", encoding=value[0])
 
             # Test again by setting the encoding on the trace stats.
             tr2.stats.mseed = AttribDict()
@@ -1021,21 +1017,13 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             if value[3]:
                 tr2.write(buf, format="mseed")
             else:
-                # Test with integer code and string name.
-                with self.assertRaises(ValueError) as e:
-                    tr2.write(buf, format="mseed")
-                self.assertTrue("cannot be written with obspy" in
-                                str(e.exception).lower())
+                self.assertRaises(ValueError, tr2.write, buf, format="mseed")
             # Again with setting the string code.
             tr2.stats.mseed.encoding = value[0]
             if value[3]:
                 tr2.write(buf, format="mseed")
             else:
-                # Test with integer code and string name.
-                with self.assertRaises(ValueError) as e:
-                    tr2.write(buf, format="mseed")
-                self.assertTrue("cannot be written with obspy" in
-                                str(e.exception).lower())
+                self.assertRaises(ValueError, tr2.write, buf, format="mseed")
 
     def test_reading_geoscope_16bit_4bit_exponent_format(self):
         """
