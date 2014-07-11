@@ -420,8 +420,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     :param encoding: Should be set to one of the following supported Mini-SEED
         data encoding formats: ASCII (``0``)*, INT16 (``1``), INT32 (``3``),
         FLOAT32 (``4``)*, FLOAT64 (``5``)*, STEIM1 (``10``) and STEIM2
-        (``11``)*. Default data types a marked with an asterisk. Currently
-        INT24 (``2``) is not supported due to lacking NumPy support.
+        (``11``)*. Default data types a marked with an asterisk.
     :type reclen: int, optional
     :param reclen: Should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
@@ -470,18 +469,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                   "0, 1 or -1"
             raise ValueError(msg)
 
-    # Check if encoding kwarg is set and catch invalid encodings.
-    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.items()])
-
     if encoding is not None:
-        if isinstance(encoding, int) and encoding in ENCODINGS:
-            pass
-        elif encoding and isinstance(encoding, (str, native_str)) \
-                and encoding in encoding_strings:
-            encoding = encoding_strings[encoding]
-        else:
-            msg = 'Invalid encoding %s. Valid encodings: %s'
-            raise ValueError(msg % (encoding, encoding_strings))
+        encoding = util._convert_and_check_encoding_for_writing(encoding)
 
     trace_attributes = []
     use_blkt_1001 = 0
@@ -494,7 +483,6 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Create temporary dict for storing information while writing.
         trace_attr = {}
         trace_attributes.append(trace_attr)
-        stats = trace.stats
 
         # Figure out whether or not to use Blockette 1001. This check is done
         # once to ensure that Blockette 1001 is either written for every record
@@ -546,10 +534,10 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Handle the record length.
         if reclen is not None:
             trace_attr['reclen'] = reclen
-        elif hasattr(stats, 'mseed') and \
-                hasattr(stats.mseed, 'record_length'):
-            if stats.mseed.record_length in VALID_RECORD_LENGTHS:
-                trace_attr['reclen'] = stats.mseed.record_length
+        elif hasattr(trace.stats, 'mseed') and \
+                hasattr(trace.stats.mseed, 'record_length'):
+            if trace.stats.mseed.record_length in VALID_RECORD_LENGTHS:
+                trace_attr['reclen'] = trace.stats.mseed.record_length
             else:
                 msg = 'Invalid record length in Stream[%i].stats.' % _i + \
                       'mseed.reclen.\nThe record length must be a value ' + \
@@ -561,18 +549,18 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Handle the byte order.
         if byteorder is not None:
             trace_attr['byteorder'] = byteorder
-        elif hasattr(stats, 'mseed') and \
-                hasattr(stats.mseed, 'byteorder'):
-            if stats.mseed.byteorder in [0, 1, -1]:
-                trace_attr['byteorder'] = stats.mseed.byteorder
-            elif stats.mseed.byteorder == '=':
+        elif hasattr(trace.stats, 'mseed') and \
+                hasattr(trace.stats.mseed, 'byteorder'):
+            if trace.stats.mseed.byteorder in [0, 1, -1]:
+                trace_attr['byteorder'] = trace.stats.mseed.byteorder
+            elif trace.stats.mseed.byteorder == '=':
                 if NATIVE_BYTEORDER == '<':
                     trace_attr['byteorder'] = 0
                 else:
                     trace_attr['byteorder'] = 1
-            elif stats.mseed.byteorder == '<':
+            elif trace.stats.mseed.byteorder == '<':
                 trace_attr['byteorder'] = 0
-            elif stats.mseed.byteorder == '>':
+            elif trace.stats.mseed.byteorder == '>':
                 trace_attr['byteorder'] = 1
             else:
                 msg = "Invalid byteorder in Stream[%i].stats." % _i + \
@@ -589,10 +577,12 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
         # Handle the encoding.
         trace_attr['encoding'] = None
+        # If encoding arrives here it is already guaranteed to be a valid
+        # integer encoding.
         if encoding is not None:
             # Check if the dtype for all traces is compatible with the enforced
             # encoding.
-            id, _, dtype = ENCODINGS[encoding]
+            id, _, dtype, _ = ENCODINGS[encoding]
             if trace.data.dtype.type != dtype:
                 msg = """
                     Wrong dtype for Stream[%i].data for encoding %s.
@@ -604,17 +594,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             trace_attr['encoding'] = encoding
         elif hasattr(trace.stats, 'mseed') and hasattr(trace.stats.mseed,
                                                        'encoding'):
-            mseed_encoding = stats.mseed.encoding
-            # Check if the encoding is valid.
-            if isinstance(mseed_encoding, int) and mseed_encoding in ENCODINGS:
-                trace_attr['encoding'] = mseed_encoding
-            elif isinstance(mseed_encoding, (str, native_str)) and \
-                    mseed_encoding in encoding_strings:
-                trace_attr['encoding'] = encoding_strings[mseed_encoding]
-            else:
-                msg = 'Invalid encoding %s in ' + \
-                      'Stream[%i].stats.mseed.encoding. Valid encodings: %s'
-                raise ValueError(msg % (mseed_encoding, _i, encoding_strings))
+            trace_attr["encoding"] = \
+                util._convert_and_check_encoding_for_writing(
+                    trace.stats.mseed.encoding)
             # Check if the encoding matches the data's dtype.
             if trace.data.dtype.type != ENCODINGS[trace_attr['encoding']][2]:
                 msg = 'The encoding specified in ' + \

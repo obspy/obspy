@@ -495,7 +495,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # byte order.
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         byteorders = ['>', '<']
-        encodings = [value[0] for value in list(ENCODINGS.values())]
+        # Only select encoding that have write support.
+        encodings = [value[0] for value in list(ENCODINGS.values()) if
+                     value[3]]
         np_encodings = {}
         # Special handling for ASCII encoded files.
         for value in list(ENCODINGS.values()):
@@ -860,6 +862,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
         for encoding, value in ENCODINGS.items():
+            # Skip encodings that cannot be written.
+            if not value[3]:
+                continue
+
             seed_dtype = value[2]
             # Special handling for the ASCII dtype. NumPy 1.7 changes the
             # default dtype of numpy.string_ from "|S1" to "|S32". Enforce

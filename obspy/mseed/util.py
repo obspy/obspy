@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
-    ENDIAN
+    ENDIAN, ENCODINGS, UNSUPPORTED_ENCODINGS
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
@@ -725,6 +725,41 @@ def shiftTimeOfFile(input_file, output_file, timeshift):
 
     # Write to the output file.
     data.tofile(output_file)
+
+
+def _convert_and_check_encoding_for_writing(encoding):
+    """
+    Helper function to handle and test encodings.
+
+    If encoding is a string, it will be converted to the appropriate
+    integer. It will furthermore be checked if the specified encoding can be
+    written using libmseed. Appropriate errors will be raised if necessary.
+    """
+    # Check if encoding kwarg is set and catch invalid encodings.
+    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.items()])
+
+    try:
+        encoding = int(encoding)
+    except:
+        pass
+
+    if isinstance(encoding, int):
+        if (encoding in ENCODINGS and ENCODINGS[encoding][3] is False) or \
+                encoding in UNSUPPORTED_ENCODINGS:
+            msg = ("Encoding %i cannot be written with ObsPy. Please "
+                   "use another encoding.") % encoding
+            raise ValueError(msg)
+        elif encoding not in ENCODINGS:
+            raise ValueError("Unknown encoding: %i." % encoding)
+    else:
+        if encoding not in encoding_strings:
+            raise ValueError("Unknown encoding: '%s'." % str(encoding))
+        elif ENCODINGS[encoding_strings[encoding]][3] is False:
+            msg = ("Encoding '%s' cannot be written with ObsPy. Please "
+                   "use another encoding.") % encoding
+            raise ValueError(msg)
+        encoding = encoding_strings[encoding]
+    return encoding
 
 
 if __name__ == '__main__':

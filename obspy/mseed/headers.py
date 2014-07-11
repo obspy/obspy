@@ -52,20 +52,20 @@ VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 
 # allowed encodings:
-# SEED id: SEED name, SEED sampletype a, i, f or d, default NumPy type)}
-ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
-             1: ("INT16", "i", np.dtype("int16")),
-             3: ("INT32", "i", np.dtype("int32")),
-             4: ("FLOAT32", "f", np.dtype("float32")),
-             5: ("FLOAT64", "d", np.dtype("float64")),
-             10: ("STEIM1", "i", np.dtype("int32")),
-             11: ("STEIM2", "i", np.dtype("int32")),
-             12: ("GEOSCOPE24", "f", np.float32),
-             13: ("GEOSCOPE16_3", "f", np.float32),
-             14: ("GEOSCOPE16_4", "f", np.float32),
-             16: ("CDSN", "i", np.int32),
-             30: ("SRO", "i", np.int32),
-             32: ("DWWSSN", "i", np.int32)}
+# id: (name, sampletype a/i/f/d, default NumPy type, write support)
+ENCODINGS = {0: ("ASCII", "a", np.dtype(native_str("|S1")).type, True),
+             1: ("INT16", "i", np.int16, True),
+             3: ("INT32", "i", np.int32, True),
+             4: ("FLOAT32", "f", np.float32, True),
+             5: ("FLOAT64", "d", np.float64, True),
+             10: ("STEIM1", "i", np.int32, True),
+             11: ("STEIM2", "i", np.int32, True),
+             12: ("GEOSCOPE24", "f", np.float32, False),
+             13: ("GEOSCOPE16_3", "f", np.float32, False),
+             14: ("GEOSCOPE16_4", "f", np.float32, False),
+             16: ("CDSN", "i", np.int32, False),
+             30: ("SRO", "i", np.int32, False),
+             32: ("DWWSSN", "i", np.int32, False)}
 
 # Encodings not supported by libmseed and consequently ObsPy.
 UNSUPPORTED_ENCODINGS = {
