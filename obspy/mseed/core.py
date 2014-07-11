@@ -101,7 +101,7 @@ def isMSEED(filename):
 
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
-              sourcename=None, reclen=None, recinfo=True, details=False,
+              sourcename=None, reclen=None, details=False,
               header_byteorder=None, verbose=None, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
@@ -126,13 +126,6 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
-    :type recinfo: bool, optional
-    :param recinfo: If ``True`` the byte order, record length and the
-        encoding of the file will be read and stored in every Trace's
-        stats.mseed AttribDict. These stored attributes will also be used while
-        writing a Mini-SEED file. Only the very first record of the file will
-        be read and all following records are assumed to be the same. Defaults
-        to ``True``.
     :type details: bool, optional
     :param details: If ``True`` read additional information: timing quality
         and availability of calibration information.
@@ -199,37 +192,35 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         warnings.warn(msg, category=DeprecationWarning)
 
     # Parse some information about the file.
-    if recinfo:
-        # Pass the byte order if enforced.
-        if header_byteorder == 0:
-            bo = "<"
-        elif header_byteorder > 0:
-            bo = ">"
-        else:
-            bo = None
+    if header_byteorder == 0:
+        bo = "<"
+    elif header_byteorder > 0:
+        bo = ">"
+    else:
+        bo = None
 
-        info = util.getRecordInformation(mseed_object, endian=bo)
+    info = util.getRecordInformation(mseed_object, endian=bo)
 
-        # Map the encoding to a readable string value.
-        if info["encoding"] in ENCODINGS:
-            info['encoding'] = ENCODINGS[info['encoding']][0]
-        elif info["encoding"] in UNSUPPORTED_ENCODINGS:
-            msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
-                   "the file to the ObsPy developers so that we can add "
-                   "support for it.") % \
-                (UNSUPPORTED_ENCODINGS[info['encoding']], info['encoding'])
-            raise ValueError(msg)
-        else:
-            msg = "Encoding '%i' is not a valid MiniSEED encoding." % \
-                info['encoding']
-            raise ValueError(msg)
+    # Map the encoding to a readable string value.
+    if info["encoding"] in ENCODINGS:
+        info['encoding'] = ENCODINGS[info['encoding']][0]
+    elif info["encoding"] in UNSUPPORTED_ENCODINGS:
+        msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
+               "the file to the ObsPy developers so that we can add "
+               "support for it.") % \
+            (UNSUPPORTED_ENCODINGS[info['encoding']], info['encoding'])
+        raise ValueError(msg)
+    else:
+        msg = "Encoding '%i' is not a valid MiniSEED encoding." % \
+            info['encoding']
+        raise ValueError(msg)
 
-        # Only keep information relevant for the whole file.
-        info = {'encoding': info['encoding'],
-                'filesize': info['filesize'],
-                'record_length': info['record_length'],
-                'byteorder': info['byteorder'],
-                'number_of_records': info['number_of_records']}
+    # Only keep information relevant for the whole file.
+    info = {'encoding': info['encoding'],
+            'filesize': info['filesize'],
+            'record_length': info['record_length'],
+            'byteorder': info['byteorder'],
+            'number_of_records': info['number_of_records']}
 
     # If its a filename just read it.
     if isinstance(mseed_object, (str, native_str)):
@@ -392,10 +383,9 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             header = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                           for k, v in header.items())
             trace = Trace(header=header, data=data)
-            # Append information if necessary.
-            if recinfo:
-                for key, value in info.items():
-                    setattr(trace.stats.mseed, key, value)
+            # Append information.
+            for key, value in info.items():
+                setattr(trace.stats.mseed, key, value)
             traces.append(trace)
             # A Null pointer access results in a ValueError
             try:
