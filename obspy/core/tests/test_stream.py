@@ -2093,16 +2093,15 @@ class StreamTestCase(unittest.TestCase):
 
     def test_integratestream(self):
         """
-        Test integration on the stream
+        Test integration on the stream and trace
         """
         st1 = read()
         st2 = read()
 
-        st1.filter('lowpass', freq=1.0)
-        st2.filter('lowpass', freq=1.0)
-
-        st1.integrate(type = 'cumtrapz',initial=0)
+        for tr in st1:
+            tr.integrate(type = 'cumtrapz',initial=0)
         st2.integrate(type = 'cumtrapz',initial=0)
+        self.assertEqual(st1, st2)
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
