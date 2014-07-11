@@ -67,6 +67,17 @@ ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
              30: ("SRO", "i", np.int32),
              32: ("DWWSSN", "i", np.int32)}
 
+# Encodings not supported by libmseed and consequently ObsPy.
+UNSUPPORTED_ENCODINGS = {
+    2: "INT24",
+    15: "US National Network compression",
+    17: "Graefenberg 16 bit gain ranged",
+    18: "IPG - Strasbourg 16 bit gain ranged",
+    19: "STEIM (3) Comprssion",
+    31: "HGLP Format",
+    33: "RSTN 16 bit gain ranged"
+}
+
 # Map the dtype to the samplecode. Redundant information but it is hard coded
 # for performance reasons.
 SAMPLETYPE = {"|S1": "a",
