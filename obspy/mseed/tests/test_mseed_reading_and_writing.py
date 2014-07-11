@@ -989,7 +989,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         tr = read()[0]
         tr.data = tr.data[:10]
 
-        # Test writing by forcing the encoding.
         for encoding, value in ENCODINGS.items():
             # Convert the data to the appropriate type to make it does not
             # fail because of that.
@@ -998,6 +997,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
             buf = io.BytesIO()
 
+            # Test writing by forcing the encoding.
             # Should not fail with write support.
             if value[3]:
                 # Test with integer code and string name.
@@ -1012,6 +1012,28 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 str(e.exception).lower())
                 with self.assertRaises(ValueError) as e:
                     tr2.write(buf, format="mseed", encoding=value[0])
+                self.assertTrue("cannot be written with obspy" in
+                                str(e.exception).lower())
+
+            # Test again by setting the encoding on the trace stats.
+            tr2.stats.mseed = AttribDict()
+            tr2.stats.mseed.encoding = encoding
+            if value[3]:
+                tr2.write(buf, format="mseed")
+            else:
+                # Test with integer code and string name.
+                with self.assertRaises(ValueError) as e:
+                    tr2.write(buf, format="mseed")
+                self.assertTrue("cannot be written with obspy" in
+                                str(e.exception).lower())
+            # Again with setting the string code.
+            tr2.stats.mseed.encoding = value[0]
+            if value[3]:
+                tr2.write(buf, format="mseed")
+            else:
+                # Test with integer code and string name.
+                with self.assertRaises(ValueError) as e:
+                    tr2.write(buf, format="mseed")
                 self.assertTrue("cannot be written with obspy" in
                                 str(e.exception).lower())
 
