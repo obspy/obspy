@@ -21,11 +21,21 @@ from matplotlib.ticker import FormatStrFormatter, FuncFormatter, Formatter, \
     MaxNLocator
 from matplotlib.dates import date2num, AutoDateLocator, \
     AutoDateFormatter
-import matplotlib.patheffects as PathEffects
 import datetime
 import numpy as np
 import warnings
 from obspy import UTCDateTime
+from obspy.core.util.base import getMatplotlibVersion
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
+
+if MATPLOTLIB_VERSION < (0, 99, 1):
+    path_effect_kwargs = {}
+else:
+    import matplotlib.patheffects as PathEffects
+    path_effect_kwargs = dict(
+        path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
 
 try:
     from mpl_toolkits.basemap import Basemap
@@ -240,13 +250,10 @@ def plot_basemap(lons, lats, size, color, labels=None,
                 if xpt > 1e25:
                     continue
                 plt.text(xpt, ypt, name, weight="heavy",
-                         color="k", zorder=100,
-                         path_effects=[PathEffects.withStroke(
-                             linewidth=3, foreground="white")])
+                         color="k", zorder=100, **path_effect_kwargs)
         elif len(lons) == 1:
             plt.text(x[0], y[0], labels[0], weight="heavy", color="k",
-                     path_effects=[PathEffects.withStroke(linewidth=3,
-                                                          foreground="white")])
+                     **path_effect_kwargs)
 
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
                            zorder=10, cmap=colormap)
