@@ -829,7 +829,7 @@ class Response(ComparingObject):
                     continue
             all_stages[stage.stage_sequence_number].append(stage)
 
-        stage_lengths = set(map(len, list(all_stages.values())))
+        stage_lengths = set(map(len, all_stages.values()))
         if len(stage_lengths) != 1 or stage_lengths.pop() != 1:
             msg = "Each stage can only appear once."
             raise ValueError(msg)
