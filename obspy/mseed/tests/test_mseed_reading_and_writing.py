@@ -1052,6 +1052,17 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         np.testing.assert_allclose(
             tr.data[:5], np.array([126, 67, -11, -95, -167]))
 
+    def test_reading_DWWSSN_format(self):
+        """
+        Tests reading miniseed data with the DWWSSN encoding.
+        """
+        tr = read(os.path.join(self.path, "data", "DWWSSN_encoding.mseed"))[0]
+        self.assertEqual(tr.stats.mseed.encoding, "DWWSSN")
+        self.assertEqual(tr.data.dtype, np.int32)
+        # Test data is from the IRIS ASCII timeseries service.
+        np.testing.assert_allclose(
+            tr.data[:5], np.array([-38, -38, -36, -37, -36]))
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
