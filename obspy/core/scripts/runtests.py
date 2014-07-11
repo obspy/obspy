@@ -450,7 +450,7 @@ class _TextTestRunner:
         if self.verbosity:
             self.stream.writeln()
         for result in results.values():
-            failed, errored = list(map(len, (result.failures, result.errors)))
+            failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():

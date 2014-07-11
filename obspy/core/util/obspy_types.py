@@ -213,8 +213,7 @@ class Enum(object):
     __isabstractmethod__ = False
 
     def __init__(self, enums, replace={}):
-        self.__enums = OrderedDict(list(zip([str(e).lower()
-                                             for e in enums], enums)))
+        self.__enums = OrderedDict((str(e).lower(), e) for e in enums)
         self.__replace = replace
 
     def __call__(self, enum):

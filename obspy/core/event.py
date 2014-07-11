@@ -337,8 +337,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 error_key = key + "_errors"
                 if hasattr(self, error_key) and\
                    _bool(getattr(self, error_key)):
-                    err_items = list(getattr(self, error_key).items())
-                    err_items.sort()
+                    err_items = sorted(getattr(self, error_key).items())
                     repr_str += " [%s]" % ', '.join(
                         [str(k) + "=" + str(v) for k, v in err_items])
                 return repr_str

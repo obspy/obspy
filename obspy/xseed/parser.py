@@ -817,7 +817,7 @@ class Parser(object):
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(list(XML_blockette.values())[0])
+        blockette_id = int(XML_blockette.values()[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
