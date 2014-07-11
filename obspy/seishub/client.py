@@ -197,7 +197,7 @@ class Client(object):
         params = {}
         # map keywords
         for key, value in KEYWORDS.items():
-            if key in list(kwargs.keys()):
+            if key in kwargs.keys():
                 kwargs[value] = kwargs[key]
                 del kwargs[key]
         # check for ranges and empty values

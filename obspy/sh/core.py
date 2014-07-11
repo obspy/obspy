@@ -549,7 +549,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
         temp += "S021:%s~ " % fromUTCDateTime(dt)
         for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
-            if not key or key not in list(SH_IDX.keys()):
+            if not key or key not in SH_IDX.keys():
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):

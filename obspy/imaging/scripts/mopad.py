@@ -4302,7 +4302,7 @@ def main():
                 gmtp = temp_dict['GMT_projection'].lower()
                 if gmtp in lo_allowed_projections:
                     consistent_kwargs_dict['plot_projection'] = gmtp
-                elif gmtp in list(do_allowed_projections.keys()):
+                elif gmtp in do_allowed_projections.keys():
                     consistent_kwargs_dict['plot_projection'] = \
                         do_allowed_projections[gmtp]
                 else:
@@ -4592,7 +4592,7 @@ def main():
                 ppl = temp_dict['plot_projection'].lower()
                 if ppl in lo_allowed_projections:
                     consistent_kwargs_dict['plot_projection'] = ppl
-                elif ppl in list(do_allowed_projections.keys()):
+                elif ppl in do_allowed_projections.keys():
                     consistent_kwargs_dict['plot_projection'] = \
                         do_allowed_projections[ppl]
                 else:
@@ -4630,7 +4630,7 @@ def main():
             try:
                 sec_colour_raw = temp_dict['plot_pressure_colour'].split(',')
                 if len(sec_colour_raw) == 1:
-                    if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                    if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                         consistent_kwargs_dict['plot_pressure_colour'] = \
                             sec_colour_raw[0].lower()[0]
                     else:
@@ -4652,7 +4652,7 @@ def main():
             try:
                 sec_colour_raw = temp_dict['plot_tension_colour'].split(',')
                 if len(sec_colour_raw) == 1:
-                    if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                    if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                         consistent_kwargs_dict['plot_tension_colour'] = \
                             sec_colour_raw[0].lower()[0]
                     else:
@@ -4701,7 +4701,7 @@ def main():
                     sec_colour_raw = fp_args[2].split(',')
                     if len(sec_colour_raw) == 1:
                         sc = sec_colour_raw[0].lower()[0]
-                        if sc not in list('bgrcmykw'):
+                        if sc not in 'bgrcmykw':
                             raise
                         consistent_kwargs_dict['plot_faultplane_colour'] = \
                             sec_colour_raw[0].lower()[0]
@@ -4756,7 +4756,7 @@ def main():
                 try:
                     sec_colour_raw = fp_args[1].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                        if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                             consistent_kwargs_dict['plot_outerline_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:
@@ -4796,7 +4796,7 @@ def main():
                 try:
                     sec_colour_raw = fp_args[1].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                        if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                             consistent_kwargs_dict['plot_nodalline_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:

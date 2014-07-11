@@ -661,11 +661,11 @@ def run(interactive=True):
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
-    if options.report or 'OBSPY_REPORT' in list(os.environ.keys()):
+    if options.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
     else:
         report = False
-    if 'OBSPY_REPORT_SERVER' in list(os.environ.keys()):
+    if 'OBSPY_REPORT_SERVER' in os.environ.keys():
         options.server = os.environ['OBSPY_REPORT_SERVER']
     # check interactivity settings
     if interactive and options.dontask:

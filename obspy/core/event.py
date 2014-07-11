@@ -415,7 +415,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             inheriting from AttribDict.
             """
             # Pass to the parent method if not a custom property.
-            if name not in list(self._property_dict.keys()):
+            if name not in self._property_dict.keys():
                 AttribDict.__setattr__(self, name, value)
                 return
             attrib_type = self._property_dict[name]

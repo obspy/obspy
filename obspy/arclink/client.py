@@ -620,9 +620,9 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _ROUTING_NS_1_0 in list(xml_doc.nsmap.values()):
+        if _ROUTING_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _ROUTING_NS_1_0
-        elif _ROUTING_NS_0_1 in list(xml_doc.nsmap.values()):
+        elif _ROUTING_NS_0_1 in xml_doc.nsmap.values():
             xml_ns = _ROUTING_NS_0_1
         else:
             msg = "Unknown routing namespace %s"
@@ -1126,14 +1126,14 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _INVENTORY_NS_1_0 in list(xml_doc.nsmap.values()):
+        if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'
             component_ns = 'stream'
             seismometer_ns = 'sensor'
             name_ns = 'publicID'
             resp_paz_ns = 'responsePAZ'
-        elif _INVENTORY_NS_0_2 in list(xml_doc.nsmap.values()):
+        elif _INVENTORY_NS_0_2 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_0_2
             stream_ns = 'seis_stream'
             component_ns = 'component'

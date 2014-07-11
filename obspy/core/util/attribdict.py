@@ -116,7 +116,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in list(adict.items()):
+        for (key, value) in adict.items():
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)

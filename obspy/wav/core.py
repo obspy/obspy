@@ -97,7 +97,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
         header = {'sampling_rate': rate, 'npts': length}
         if headonly:
             return Stream([Trace(header=header)])
-        if width not in list(WIDTH2DTYPE.keys()):
+        if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
         data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
@@ -135,7 +135,7 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=None,
     """
     i = 0
     base, ext = os.path.splitext(filename)
-    if width not in list(WIDTH2DTYPE.keys()) + [None]:
+    if width not in WIDTH2DTYPE.keys() and width is not None:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
         # try to autodetect width from data, see #791

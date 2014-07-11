@@ -375,7 +375,7 @@ class WaveformFileCrawler(object):
             self.input_queue[filepath] = (path, file, self.features)
             return
         # compare with database entries
-        if file not in list(self._db_files.keys()):
+        if file not in self._db_files.keys():
             # file does not exists in database -> add file
             self.input_queue[filepath] = (path, file, self.features)
             return
