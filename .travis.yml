@@ -39,6 +39,8 @@ script:
   - cd empty
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
   - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r
+  - mv .coverage ..
+  - cd ..
 after_success:
   - coveralls
 notifications:
