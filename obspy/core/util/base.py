@@ -118,6 +118,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    # For compatibility with NumPy 1.4
     if isinstance(dtype, str):
         dtype = native_str(dtype)
     if fill_value is None:
