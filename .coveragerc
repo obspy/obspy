@@ -1,5 +1,5 @@
 [run]
-omit = */scripts/*,*/data/*,*/docs/*
+omit = */data/*,*/docs/*
 
 [report]
 # Regexes for lines to exclude from consideration
