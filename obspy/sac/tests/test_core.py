@@ -2,10 +2,9 @@
 """
 The sac.core test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -48,7 +47,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readwriteViaObspy(self):
+    def test_readwriteViaObsPy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -66,7 +65,7 @@ class CoreTestCase(unittest.TestCase):
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
         self.assertTrue(tr == tr1)
 
-    def test_readXYwriteXYViaObspy(self):
+    def test_readXYwriteXYViaObsPy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -77,7 +76,7 @@ class CoreTestCase(unittest.TestCase):
             tr1 = read(tempfile)[0]
         self.assertTrue(tr == tr1)
 
-    def test_readwriteXYViaObspy(self):
+    def test_readwriteXYViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -96,7 +95,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr1.data[0:10])
 
-    def test_readBigEndianViaObspy(self):
+    def test_readBigEndianViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -284,7 +283,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test case for issue #156.
         """
-        #1
+        # 1
         tr = Trace()
         tr.stats.delta = 0.01
         tr.data = np.arange(0, 3000)
@@ -294,7 +293,7 @@ class CoreTestCase(unittest.TestCase):
             st = read(sac_file)
         self.assertEqual(st[0].stats.delta, 0.01)
         self.assertEqual(st[0].stats.sampling_rate, 100.0)
-        #2
+        # 2
         tr = Trace()
         tr.stats.delta = 0.005
         tr.data = np.arange(0, 2000)

@@ -9,15 +9,17 @@ File dealing with the StationXML format.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
+import io
 from lxml import etree
 import os
 import warnings
 
 import obspy
-from obspy.core import compatibility
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
@@ -41,7 +43,7 @@ def is_StationXML(path_or_file_object):
 
     This is simply done by validating against the StationXML schema.
 
-    :param path_of_file_object: Filename or file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     return validate_StationXML(path_or_file_object)[0]
 
@@ -52,9 +54,9 @@ def validate_StationXML(path_or_object):
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
-    errors, if existant.
+    errors, if existent.
 
-    :path_or_object: Filename of file like object. Can also be an etree
+    :param path_or_object: Filename or file like object. Can also be an etree
         element.
     """
     # Get the schema location.
@@ -84,7 +86,7 @@ def read_StationXML(path_or_file_object):
     """
     Function reading a StationXML file.
 
-    :path_or_file_object: Filename of file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
@@ -645,8 +647,8 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     :type inventory: :class:`~obspy.station.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
-    :type validate: Boolean
-    :type validate: If True, the created document will be validated with the
+    :type validate: bool
+    :param validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
     """
@@ -678,7 +680,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
     if validate is True:
-        buf = compatibility.BytesIO()
+        buf = io.BytesIO()
         tree.write(buf)
         buf.seek(0)
         validates, errors = validate_StationXML(buf)
@@ -771,13 +773,12 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
 
 def _float_to_str(x):
     """
-    Converts a float to str making sure no precision is lost in the string
-    representation.
+    Converts a float to str making. For most numbers this results in a
+    decimal representation (for xs:decimal) while for very large or very
+    small numbers this results in an exponential representation suitable for
+    xs:float and xs:double.
     """
-    text = ("%20f" % x).rstrip("0").lstrip()
-    if text.endswith("."):
-        text += "0"
-    return text
+    return "%s" % x
 
 
 def _write_polezero_list(parent, obj):
@@ -1003,7 +1004,9 @@ def _write_response_stage(parent, stage):
                        ResponseListResponseStage: "ResponseList",
                        FIRResponseStage: "FIR",
                        PolynomialResponseStage: "Polynomial"}
-        subel_attrs = {"name": str(stage.name)}
+        subel_attrs = {}
+        if stage.name is not None:
+            subel_attrs["name"] = str(stage.name)
         if stage.resource_id2 is not None:
             subel_attrs["resourceId"] = stage.resource_id2
         sub_ = etree.SubElement(sub, tagname_map[type(stage)], subel_attrs)
@@ -1158,7 +1161,7 @@ def _tags2obj(element, tag, convert):
     values = []
     # make sure, only unicode
     if convert is str:
-        ### XXX: this warning if raised with python3
+        # XXX: this warning if raised with python3
         warnings.warn("overriding 'str' with 'unicode'.")
         convert = str
     for elem in element.findall(tag):

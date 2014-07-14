@@ -1,0 +1,107 @@
+/* responsive logo */
+#logo img {
+  width: 100%;
+  padding: 0 2em;
+  margin-bottom: -3em;
+}
+
+@media (max-width: 768px) {
+  #logo img {
+    margin-top: 1em;
+    margin-bottom: 0;
+  }
+}
+
+/* external links */
+a.external[href^="http:"] {
+  background : transparent url(../extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+a.external[href^="https:"] {
+  background : transparent url(../extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+a.external[href^="ftp:"] {
+  background : transparent url(../extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+
+div.highlight-python {
+  margin : 1em 2em;
+}
+
+/* code sections */
+pre {
+  overflow-x : auto;
+  overflow-y : hidden;
+}
+
+tt {
+  background-color : #ECF0F3;
+  font-family : Consolas, Menlo, Monaco, LucidaConsole, LiberationMono, DejaVuSansMono, BitstreamVeraSansMono, CourierNew, monospace, serif;
+  font-size : 0.9em;
+  padding : 2px;
+}
+
+tt.descname {
+  font-size : 1.1em;
+}
+
+div.highlight {
+  background-color : transparent;
+}
+
+div.highlight pre {
+  background : none repeat scroll 0 0 #EEFFCC;
+}
+
+
+/* table stuff */
+table.highlighttable td {
+  padding : 0 0.2em;
+}
+
+table.highlighttable {
+  margin-left : 0;
+}
+
+table.citation, table.citation td {
+  border: none !important;
+  background-color: transparent !important;
+  margin-bottom: 5px;
+}
+
+table.hlist td {
+  min-width: 250px;
+  vertical-align: top;
+}
+
+
+p.rubric {
+  font-size : 1.1em;
+}
+
+dd p {
+  margin-top: 16px;
+}
+
+.epigraph div::first-letter {
+  float: left;
+  color: #C7254E;
+  font-size: 300%;
+  padding-top: 0.125ex;
+  padding-right: 0.25ex;
+  font-family: serif;
+}
+
+/* disable selection of doctest prefixes, e.g. >>> or ...*/
+.highlight .gp {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  cursor: default;
+}

@@ -9,26 +9,29 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-import copy
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
-from future.builtins import map
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
-from lxml import etree
+from future import standard_library
+with standard_library.hooks():
+    import queue
+    import urllib.parse
+    import urllib.request
+
+import copy
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
-from obspy.core import compatibility
 
-import queue
+import collections
+import io
+from lxml import etree
 import threading
 import warnings
 import os
@@ -115,12 +118,12 @@ class Client(object):
         # Authentication
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = compatibility.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = compatibility.HTTPDigestAuthHandler(password_mgr)
-            opener = compatibility.build_opener(auth_handler)
+            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
+            opener = urllib.request.build_opener(auth_handler)
             # install globally
-            compatibility.install_opener(opener)
+            urllib.request.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -230,7 +233,7 @@ class Client(object):
             suggested to be the preferred magnitude only.
         :type includearrivals: bool, optional
         :param includearrivals: Specify if phase arrivals should be included.
-        :type eventid: str or int (dependent on data center), optional
+        :type eventid: str or int, optional
         :param eventid: Select a specific event by ID; event identifiers are
             data center specific.
         :type limit: int, optional
@@ -241,10 +244,12 @@ class Client(object):
         :type orderby: str, optional
         :param orderby: Order the result by time or magnitude with the
             following possibilities:
-                * time: order by origin descending time
-                * time-asc: order by origin ascending time
-                * magnitude: order by descending magnitude
-                * magnitude-asc: order by ascending magnitude
+
+            * time: order by origin descending time
+            * time-asc: order by origin ascending time
+            * magnitude: order by descending magnitude
+            * magnitude-asc: order by ascending magnitude
+
         :type catalog: str, optional
         :param catalog: Limit to events from a specified catalog
         :type contributor: str, optional
@@ -253,7 +258,7 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param updatedafter: Limit to events updated after the specified time.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -397,7 +402,7 @@ class Client(object):
             are comma-separated.
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. As a special case “--“ (two
+            identifiers are comma-separated. As a special case ``“--“`` (two
             dashes) will be translated to a string of two space characters to
             match blank location IDs.
         :type channel: str
@@ -423,7 +428,7 @@ class Client(object):
         :type minradius: float
         :param minradius: Limit results to stations within the specified
             minimum number of degrees from the geographic point defined by the
-                    latitude and longitude parameters.
+            latitude and longitude parameters.
         :type maxradius: float
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
@@ -441,7 +446,7 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param updatedafter: Limit to metadata updated after specified date;
             updates are data center specific.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -548,7 +553,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -639,9 +644,9 @@ class Client(object):
             `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
-              - a string containing the request information
-              - a string with the path to a local file with the request
-              - an open file handle (or file-like object) with the request
+            - a string containing the request information
+            - a string with the path to a local file with the request
+            - an open file handle (or file-like object) with the request
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
@@ -712,7 +717,7 @@ class Client(object):
             information to each trace. This can be used to remove response
             using :meth:`~obspy.core.stream.Stream.remove_response`.
 
-        :type bulk: str, file-like object or list of lists
+        :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
@@ -726,7 +731,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel. Ignored when `bulk` is provided as a request string/file.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -747,26 +752,200 @@ class Client(object):
             msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
+        arguments = OrderedDict(
+            quality=quality,
+            minimumlength=minimumlength,
+            longestonly=longestonly
+        )
+        bulk = self._get_bulk_string(bulk, arguments)
+
+        url = self._build_url("dataselect", "query")
+
+        data_stream = self._download(url,
+                                     data=bulk.encode('ascii', 'strict'))
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            st = obspy.read(data_stream, format="MSEED")
+            data_stream.close()
+            if attach_response:
+                self._attach_responses(st)
+            return st
+
+    def get_stations_bulk(self, bulk, level=None, includerestricted=None,
+                          includeavailability=None, filename=None, **kwargs):
+        r"""
+        Query the station service of the client. Bulk request.
+
+        Send a bulk request for stations to the server. `bulk` can either be
+        specified as a filename, a file-like object or a string (with
+        information formatted according to the FDSN standard) or a list of
+        lists (each specifying network, station, location, channel, starttime
+        and endtime). See examples and parameter description for more
+        details.
+
+        `bulk` can be provided in the following forms:
+
+        (1) As a list of lists. Each list item has to be list of network,
+            station, location, channel, starttime and endtime.
+
+        (2) As a valid request string/file as defined in the
+            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            The request information can be provided as a..
+
+            - a string containing the request information
+            - a string with the path to a local file with the request
+            - an open file handle (or file-like object) with the request
+
+        >>> client = Client("IRIS")
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = t1 + 1
+        >>> t3 = t1 + 3
+        >>> bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
+        ...         ("IU", "AFI", "1?", "BHE", t1, t3),
+        ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
+        >>> inv = client.get_stations_bulk(bulk)
+        >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                None
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (2):
+                    GR
+                    IU
+                Stations (2):
+                    GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (0):
+        >>> inv.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import UTCDateTime
+            from obspy.fdsn import Client
+
+            client = Client("IRIS")
+            t1 = UTCDateTime("2010-02-27T06:30:00.000")
+            t2 = t1 + 1
+            t3 = t1 + 3
+            bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
+                    ("IU", "AFI", "1?", "BHE", t1, t3),
+                    ("GR", "GRA1", "*", "BH*", t2, t3)]
+            inv = client.get_stations_bulk(bulk)
+            inv.plot()
+
+        >>> inv = client.get_stations_bulk(bulk, level="channel")
+        >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                    None
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (2):
+                    GR
+                    IU
+                Stations (2):
+                    GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (5):
+                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    IU.ANMO.10.BHZ
+        >>> inv = client.get_stations_bulk("/tmp/request.txt") \
+        ...     # doctest: +SKIP
+        >>> print(inv)  # doctest: +SKIP
+        Inventory created at 2014-04-28T14:42:26.000000Z
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: 1.0.14
+                    None
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (2):
+                    GR
+                    IU
+                Stations (2):
+                    GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (5):
+                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    IU.ANMO.10.BHZ
+
+        :type bulk: str, file or list of lists
+        :param bulk: Information about the requested data. See above for
+            details.
+        :type quality: str, optional
+        :param quality: Select a specific SEED quality indicator, handling is
+            data center dependent. Ignored when `bulk` is provided as a
+            request string/file.
+        :type minimumlength: float, optional
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds. Ignored when `bulk` is
+            provided as a request string/file.
+        :type longestonly: bool, optional
+        :param longestonly: Limit results to the longest continuous segment per
+            channel. Ignored when `bulk` is provided as a request string/file.
+        :type filename: str or file
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+        :type attach_response: bool
+        :param attach_response: Specify whether the station web service should
+            be used to automatically attach response information to each trace
+            in the result set. A warning will be shown if a response can not be
+            found for a channel. Does nothing if output to a file was
+            specified.
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "dataselect" not in self.services:
+            msg = "The current client does not have a dataselect service."
+            raise ValueError(msg)
+
+        arguments = OrderedDict(
+            level=level,
+            includerestriced=includerestricted,
+            includeavailability=includeavailability
+        )
+        bulk = self._get_bulk_string(bulk, arguments)
+
+        url = self._build_url("station", "query")
+
+        data_stream = self._download(url,
+                                     data=bulk.encode('ascii', 'strict'))
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+            return
+        else:
+            inv = obspy.read_inventory(data_stream, format="stationxml")
+            data_stream.close()
+            return inv
+
+    def _get_bulk_string(self, bulk, arguments):
         locs = locals()
-        # if it's an iterable, we build up the query string from it
-        # StringIO objects also have __iter__ so check for read as well
-        if hasattr(bulk, "__iter__") \
+        # If its an iterable, we build up the query string from it
+        # StringIO objects also have __iter__ so check for 'read' as well
+        if isinstance(bulk, collections.Iterable) \
                 and not hasattr(bulk, "read") \
                 and not isinstance(bulk, (str, native_str)):
-            tmp = ["%s=%s" % (key, convert_to_string(locs[key]))
-                   for key in ("quality", "minimumlength", "longestonly")
-                   if locs[key] is not None]
+            tmp = ["%s=%s" % (key, convert_to_string(value))
+                   for key, value in arguments.items() if value is not None]
             # empty location codes have to be represented by two dashes
             tmp += [" ".join((net, sta, loc or "--", cha,
                               convert_to_string(t1), convert_to_string(t2)))
                     for net, sta, loc, cha, t1, t2 in bulk]
             bulk = "\n".join(tmp)
         else:
-            override_keys = ("quality", "minimumlength", "longestonly")
-            if any([locs[key] is not None for key in override_keys]):
+            if any([value is not None for value in arguments.values()]):
                 msg = ("Parameters %s are ignored when request data is "
                        "provided as a string or file!")
-                warnings.warn(msg % override_keys)
+                warnings.warn(msg % arguments.keys())
             # if it has a read method, read data from there
             if hasattr(bulk, "read"):
                 bulk = bulk.read()
@@ -783,21 +962,7 @@ class Client(object):
                 msg = ("Unrecognized input for 'bulk' argument. Please "
                        "contact developers if you think this is a bug.")
                 raise NotImplementedError(msg)
-
-        url = self._build_url("dataselect", "query")
-
-        data_stream = self._download(url,
-                                     data=bulk.encode('ascii', 'strict'))
-        data_stream.seek(0, 0)
-        if filename:
-            self._write_to_file_object(filename, data_stream)
-            data_stream.close()
-        else:
-            st = obspy.read(data_stream, format="MSEED")
-            data_stream.close()
-            if attach_response:
-                self._attach_responses(st)
-            return st
+        return bulk
 
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
@@ -931,7 +1096,8 @@ class Client(object):
 
             def _param_info_string(name):
                 param = self.services[service][name]
-                name = "%s (%s)" % (name, param["type"].__name__)
+                name = "%s (%s)" % (name, param["type"].__name__.replace(
+                    'new', ''))
                 req_def = ""
                 if param["required"]:
                     req_def = "Required Parameter"
@@ -1075,7 +1241,7 @@ class Client(object):
                             wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
-                    except compatibility.HTTPError as e:
+                    except urllib.request.HTTPError as e:
                         if e.code == 404:
                             wadl_queue.put((url, None))
                         else:
@@ -1264,7 +1430,7 @@ def build_url(base_url, service, major_version, resource_type,
                 parameters[key] = value.strip()
             except:
                 pass
-        url = "?".join((url, compatibility.urlencode(parameters)))
+        url = "?".join((url, urllib.parse.urlencode(parameters)))
     return url
 
 
@@ -1276,7 +1442,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
     The first one is the returned HTTP code and the second the data as
     string.
 
-    Will return a touple of Nones if the service could not be found.
+    Will return a tuple of Nones if the service could not be found.
     All encountered exceptions will get raised unless `debug=True` is
     specified.
 
@@ -1286,12 +1452,12 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print("Downloading %s" % url)
 
     try:
-        url_obj = compatibility.urlopen(
-            compatibility.Request(url=url, headers=headers),
+        url_obj = urllib.request.urlopen(
+            urllib.request.Request(url=url, headers=headers),
             timeout=timeout,
             data=data)
     # Catch HTTP errors.
-    except compatibility.HTTPError as e:
+    except urllib.request.HTTPError as e:
         if debug is True:
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())
@@ -1306,7 +1472,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
 
     code = url_obj.getcode()
     if return_string is False:
-        data = compatibility.BytesIO(url_obj.read())
+        data = io.BytesIO(url_obj.read())
     else:
         data = url_obj.read()
 
@@ -1346,19 +1512,19 @@ def parse_simple_xml(xml_string):
     Simple helper function for parsing the Catalog and Contributor availability
     files.
 
-    Parses XMLs of the form
+    Parses XMLs of the form::
 
-    <Bs>
-        <total>4</total>
-        <B>1</B>
-        <B>2</B>
-        <B>3</B>
-        <B>4</B>
-    <Bs>
+        <Bs>
+            <total>4</total>
+            <B>1</B>
+            <B>2</B>
+            <B>3</B>
+            <B>4</B>
+        </Bs>
 
-    and return a dictionary with a single item:
+    and return a dictionary with a single item::
 
-    {"Bs": set(("1", "2", "3", "4"))}
+        {"Bs": set(("1", "2", "3", "4"))}
     """
     root = etree.fromstring(xml_string.strip())
 

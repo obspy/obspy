@@ -11,7 +11,5 @@ option, thus 4 corners overall). Then we calculate the envelope and plot it
 together with the Trace. Data can be found
 `here <http://examples.obspy.org/RJOB_061005_072159.ehz.new>`_.
 
-.. include:: seismogram_envelopes.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/seismogram_envelopes.py
+.. plot:: tutorial/code_snippets/seismogram_envelopes.py
+   :include-source:

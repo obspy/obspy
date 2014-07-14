@@ -12,7 +12,7 @@ contains three channels of a seismograph.
 
    >>> from obspy.core import read
    >>> singlechannel = read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
-   >>> print singlechannel
+   >>> print(singlechannel)
    1 Trace(s) in Stream:
    DK.COP..BHZ | 2009-02-19T00:00:00.025100Z - 2009-02-19T23:59:59.975100Z | 20.0 Hz, 1728000 samples
 
@@ -21,7 +21,7 @@ contains three channels of a seismograph.
    >>> threechannels = read('http://examples.obspy.org/COP.BHE.DK.2009.050')
    >>> threechannels += read('http://examples.obspy.org/COP.BHN.DK.2009.050')
    >>> threechannels += read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
-   >>> print threechannels
+   >>> print(threechannels)
    3 Trace(s) in Stream:
    DK.COP..BHE | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
    DK.COP..BHN | 2009-02-19T00:00:00.025100Z - 2009-02-19T23:59:59.975100Z | 20.0 Hz, 1728000 samples
@@ -38,7 +38,7 @@ your needs.
 
    >>> singlechannel.plot()
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_1.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_1.py
 
 
 ----------------
@@ -46,7 +46,7 @@ Customized Plots
 ----------------
 
 This example shows the options to adjust the color of the graph, the number of
-ticks shown, their format and rotation and how to set the start- and endtime of
+ticks shown, their format and rotation and how to set the start and end time of
 the plot. Please see the documentation of method
 :meth:`~obspy.core.stream.Stream.plot` for more details on all parameters.
 
@@ -55,7 +55,7 @@ the plot. Please see the documentation of method
    ...                    tick_rotation=5, tick_format='%I:%M %p',
    ...                    starttime=dt + 60*60, endtime=dt + 60*60 + 120)
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_2.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_2.py
 
 -------------------
 Saving Plot to File
@@ -81,7 +81,7 @@ in the following example to change the overall size of the plot.
 
    >>> threechannels.plot(size=(800, 600))
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_3.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_3.py
 
 -----------------------
 Creating a One-Day Plot
@@ -92,7 +92,7 @@ setting the ``type`` parameter to ``'dayplot'``:
 
    >>> singlechannel.plot(type='dayplot')
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_4.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_4.py
 
 Event information can be included in the plot as well (experimental feature, syntax might change):
 
@@ -104,7 +104,7 @@ Event information can be included in the plot as well (experimental feature, syn
     ...         color=['k', 'r', 'b', 'g'], show_y_UTC_label=False,
     ...         events={'min_magnitude': 6.5})
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_5.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_5.py
 
 -------------------------
 Plotting a Record Section
@@ -121,7 +121,7 @@ defined in meters. Or a geographical location ``trace.stats.coordinates.latitude
 great circle distances (``dist_degree=True``) along with parameter ``ev_coord``. 
 For further information please see :meth:`~obspy.core.stream.Stream.plot`
 
-.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_6.py
 
 --------------------
 Plot & Color Options

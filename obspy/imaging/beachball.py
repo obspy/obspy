@@ -1,37 +1,35 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: beachball.py
 #  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
 #   Author: Robert Barsch
-#    Email: barsch@geophysik.uni-muenchen.de
+#    Email: barsch@egu.eu
 #
 # Copyright (C) 2008-2012 Robert Barsch
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 """
 Draws a beachball diagram of an earthquake focal mechanism
 
 Most source code provided here are adopted from
 
-1. MatLab script `bb.m`_ written by Andy Michael and Oliver Boyd.
+1. MatLab script `bb.m`_ written by Andy Michael, Chen Ji and Oliver Boyd.
 2. ps_meca program from the `Generic Mapping Tools (GMT)`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import zip
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
-from obspy.core import compatibility
+import io
 import matplotlib.pyplot as plt
 from matplotlib import patches, collections, transforms, path as mplpath
 import numpy as np
@@ -228,7 +226,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
     elif format and not outfile:
-        imgdata = compatibility.BytesIO()
+        imgdata = io.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
         return imgdata.read()
@@ -569,7 +567,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -598,7 +596,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     if D2 >= 90:
         D2 = 89.9999
 
-    # arange checked for numerical stablility, np.pi is not multiple of 0.1
+    # arange checked for numerical stability, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
     l1 = np.sqrt(
         np.power(90 - D1, 2) / (
@@ -680,7 +678,7 @@ def StrikeDip(n, e, u):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
     if u < 0:
@@ -705,7 +703,7 @@ def AuxPlane(s1, d1, r1):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
 
@@ -727,6 +725,11 @@ def AuxPlane(s1, d1, r1):
 
     z = h1 * n1 + h2 * n2
     z = z / np.sqrt(h1 * h1 + h2 * h2)
+    # we might get above 1.0 only due to floating point
+    # precision. Clip for those cases.
+    float64epsilon = 2.2204460492503131e-16
+    if 1.0 < abs(z) < 1.0 + 100 * float64epsilon:
+        z = np.copysign(1.0, z)
     z = np.arccos(z)
     rake = 0
     if sl3 > 0:
@@ -745,7 +748,7 @@ def MT2Plane(mt):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
     D = np.array([d[1], d[0], d[2]])
@@ -779,7 +782,7 @@ def TDL(AN, BN):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     XN = AN[0]
     YN = AN[1]
@@ -816,7 +819,7 @@ def TDL(AN, BN):
         if SL < 0. and CL > 0:
             FL = -FL
     else:
-        if - ZN > 1.0:
+        if -ZN > 1.0:
             ZN = -1.0
         FDH = np.arccos(-ZN)
         FD = FDH * CON

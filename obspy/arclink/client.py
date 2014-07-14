@@ -8,19 +8,18 @@ ArcLink/WebDC client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from fnmatch import fnmatch
-from lxml import objectify, etree
 from obspy import read, UTCDateTime
 from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.core import compatibility
+
+from fnmatch import fnmatch
+import io
+from lxml import objectify, etree
 from telnetlib import Telnet
 import os
 import time
@@ -85,6 +84,8 @@ class Client(object):
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
         (default is ``0``).
+    :var status_delay: Delay in seconds between each status request (default is
+        ``0.5`` seconds).
 
     .. rubric:: Notes
 
@@ -166,9 +167,15 @@ class Client(object):
 
     def _reconnect(self):
         self._client.close()
-        self._client.open(native_str(self._client.host),
-                          self._client.port,
-                          self._client.timeout)
+        try:
+            self._client.open(native_str(self._client.host),
+                              self._client.port,
+                              self._client.timeout)
+        except:
+            # Python 2.6: port needs to be native int or string -> not long
+            self._client.open(native_str(self._client.host),
+                              native_str(self._client.port),
+                              self._client.timeout)
 
     def _writeln(self, buffer):
         # Py3k: might be confusing, _writeln accepts str
@@ -392,7 +399,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :type compressed: bool, optional
@@ -431,7 +438,7 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        file_stream = compatibility.BytesIO()
+        file_stream = io.BytesIO()
         self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)
@@ -505,7 +512,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
 
@@ -971,7 +978,7 @@ class Client(object):
         """
         Writes response information into a file.
 
-        :type filename: str or file like object
+        :type filename: str or file
         :param filename: Name of the output file or open file like object.
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -985,9 +992,9 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'SEED'``, optional
-        :param format: Output format. Currently only Dataless SEED is
-            supported.
+        :type format: str, optional
+        :param format: Output format. Currently only Dataless SEED (``'SEED'``)
+            is supported.
         :return: None
 
         .. rubric:: Example

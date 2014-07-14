@@ -2,14 +2,11 @@
 """
 Mini-SEED specific utilities.
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
     ENDIAN
 from obspy import UTCDateTime
@@ -24,9 +21,9 @@ import warnings
 
 def getStartAndEndTime(file_or_file_object):
     """
-    Returns the start- and endtime of a Mini-SEED file or file-like object.
+    Returns the start and end time of a Mini-SEED file or file-like object.
 
-    :type file_or_file_object: basestring or open file-like object.
+    :type file_or_file_object: str or file
     :param file_or_file_object: Mini-SEED file name or open file-like object
         containing a Mini-SEED record.
     :return: tuple (start time of first record, end time of last record)
@@ -35,7 +32,7 @@ def getStartAndEndTime(file_or_file_object):
     of the last record. Keep in mind that it will not return the correct result
     if the records in the Mini-SEED file do not have a chronological ordering.
 
-    The returned endtime is the time of the last data sample and not the
+    The returned end time is the time of the last data sample and not the
     time that the last sample covers.
 
     .. rubric:: Example
@@ -56,8 +53,8 @@ def getStartAndEndTime(file_or_file_object):
 
     And also with a Mini-SEED file stored in a BytesIO
 
-    >>> from obspy.core import compatibility
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> import io
+    >>> file_object = io.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -73,7 +70,7 @@ def getStartAndEndTime(file_or_file_object):
 
     The same is valid for a file-like object.
 
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> file_object = io.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -95,7 +92,7 @@ def getTimingAndDataQuality(file_or_file_object):
     Counts all data quality flags of the given Mini-SEED file and returns
     statistics about the timing quality if applicable.
 
-    :type file_or_file_object: basestring or open file-like object.
+    :type file_or_file_object: str or file
     :param file_or_file_object: Mini-SEED file name or open file-like object
         containing a Mini-SEED record.
 
@@ -154,8 +151,8 @@ def getTimingAndDataQuality(file_or_file_object):
     ...     print(k, v)
     data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    >>> from obspy.core import compatibility
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> import io
+    >>> file_object = io.BytesIO(f.read())
     >>> f.close()
     >>> tq = getTimingAndDataQuality(file_object)
     >>> for k, v in tq.items():
@@ -202,7 +199,7 @@ def getTimingAndDataQuality(file_or_file_object):
     timing_quality_min 0.0
     timing_quality_upper_quantile 75.0
 
-    >>> file_object = compatibility.BytesIO(f.read())
+    >>> file_object = io.BytesIO(f.read())
     >>> f.close()
     >>> tq = getTimingAndDataQuality(file_object)
     >>> for k, v in sorted(tq.items()):
@@ -262,7 +259,7 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
     """
     Returns record information about given files and file-like object.
 
-    :param endian: If given, the byteorder will be enforced. Can be either "<"
+    :param endian: If given, the byte order will be enforced. Can be either "<"
         or ">". If None, it will be determined automatically.
         Defaults to None.
 
@@ -304,7 +301,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     If offset is given, the Mini-SEED record is assumed to start at current
     position + offset in file_object.
 
-    :param endian: If given, the byteorder will be enforced. Can be either "<"
+    :param endian: If given, the byte order will be enforced. Can be either "<"
         or ">". If None, it will be determined automatically.
         Defaults to None.
     """
@@ -358,7 +355,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
             record_start += rec_len
             file_object.seek(record_start, 0)
 
-    # Use the date to figure out the byteorder.
+    # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
@@ -386,7 +383,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
         except:
-            msg = ("Invalid starttime found. The passed byteorder is likely "
+            msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
             raise ValueError(msg)
     npts = values[6]

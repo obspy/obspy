@@ -9,8 +9,9 @@ storing in into a standard SQL database.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import read
 from obspy.core.preview import createPreview

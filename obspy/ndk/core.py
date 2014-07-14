@@ -11,17 +11,17 @@ The format is an ASCII format but will internally handled by unicode routines.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-import traceback
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
-import itertools
+from future import standard_library
+with standard_library.hooks():
+    import itertools
+
 import math
-import os
 import re
+import traceback
 import warnings
 import uuid
 
@@ -92,10 +92,10 @@ def is_ndk(filename):
     # Not a file-like object.
     if not hasattr(filename, "readline"):
         # Check if it exists, otherwise assume its a string.
-        if os.path.exists(filename):
+        try:
             with open(filename, "rt") as fh:
                 first_line = fh.readline()
-        else:
+        except:
             try:
                 filename = filename.decode()
             except:
@@ -139,7 +139,7 @@ def is_ndk(filename):
     return False
 
 
-def read_ndk(filename, *args, **kwargs):
+def read_ndk(filename, *args, **kwargs):  # @UnusedVariable
     """
     Reads an NDK file to a :class:`~obspy.core.event.Catalog` object.
 
@@ -150,10 +150,10 @@ def read_ndk(filename, *args, **kwargs):
     # much.
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
-        if os.path.exists(filename):
+        try:
             with open(filename, "rt") as fh:
                 data = fh.read()
-        else:
+        except:
             try:
                 data = filename.decode()
             except:
@@ -208,7 +208,7 @@ def read_ndk(filename, *args, **kwargs):
             version=record["version_code"]
         )
 
-        # Use the obspy flinn engdahl region determinator as the region in
+        # Use the ObsPy flinn engdahl region determinator as the region in
         # the NDK files is oftentimes trimmed.
         region = fe.get_region(record["centroid_longitude"],
                                record["centroid_latitude"])

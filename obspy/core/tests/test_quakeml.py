@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
-    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
+    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
+    Pick
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
-from obspy.core import compatibility
+
+import io
 from xml.etree.ElementTree import tostring, fromstring
 import difflib
 import math
@@ -652,11 +652,11 @@ class QuakeMLTestCase(unittest.TestCase):
                 continue
             # Assign clearer names.
             enum_name = module_item_name
-            enum_values = [_i.lower() for _i in list(module_item.keys())]
+            enum_values = [_i.lower() for _i in module_item.keys()]
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.items():
-            self.assertTrue(enum_name in list(all_enums.keys()))
+            self.assertTrue(enum_name in all_enums.keys())
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
@@ -750,7 +750,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # write QuakeML file
         cat = Catalog(events=[ev])
-        memfile = compatibility.BytesIO()
+        memfile = io.BytesIO()
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)
@@ -832,6 +832,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(amp.time_window.reference,
                          UTCDateTime("2007-10-10T14:40:39.055"))
 
+    @skipIf(not LXML_ETREE, "lxml too old to run this test.")
     def test_write_amplitude_time_window(self):
         """
         Tests writing an QuakeML Amplitude with TimeWindow.
@@ -871,6 +872,100 @@ class QuakeMLTestCase(unittest.TestCase):
                 b'</timeWindow>',
                 b'</amplitude>']
             self.assertEqual(got, expected)
+
+    def test_write_with_extra_tags_and_read(self):
+        """
+        Tests that a QuakeML file with additional custom "extra" tags gets
+        written correctly and that when reading it again the extra tags are
+        parsed correctly.
+        """
+        filename = os.path.join(self.path, "quakeml_1.2_origin.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        # add some custom tags to first event:
+        #  - tag with explicit namespace but no explicit ns abbreviation
+        #  - tag without explicit namespace (gets obspy default ns)
+        #  - tag with explicit namespace and namespace abbreviation
+        my_extra = AttribDict(
+            {'public': {'value': False,
+                        'namespace': r"http://some-page.de/xmlns/1.0",
+                        'attrib': {u"some_attrib": u"some_value",
+                                   u"another_attrib": u"another_value"}},
+             'custom': {'value': u"True",
+                        'namespace': r'http://test.org/xmlns/0.1'},
+             'new_tag': {'value': 1234,
+                         'namespace': r"http://test.org/xmlns/0.1"},
+             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z'),
+                    'namespace': r'http://test.org/xmlns/0.1'},
+             'dataid': {'namespace': r'http://anss.org/xmlns/catalog/0.1',
+                        'type': 'attribute', 'value': '00999999'}})
+        nsmap = {"ns0": r"http://test.org/xmlns/0.1",
+                 "catalog": r'http://anss.org/xmlns/catalog/0.1'}
+        cat[0].extra = my_extra.copy()
+        # insert a pick with an extra field
+        p = Pick()
+        p.extra = {'weight': {'value': 2,
+                              'namespace': r"http://test.org/xmlns/0.1"}}
+        cat[0].picks.append(p)
+
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write file
+            cat.write(tmpfile, "QUAKEML", nsmap=nsmap)
+            # check contents
+            with open(tmpfile, "rb") as fh:
+                lines = fh.readlines()
+            # check namespace definitions in root element
+            got = sorted(lines[1].strip()[:-1].split())
+            expected = [b'<q:quakeml',
+                        b'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
+                        b'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        b'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            self.assertEqual(got, expected)
+            # check additional tags
+            got = sorted([lines[i_].strip() for i_ in range(85, 89)])
+            expected = [
+                b'<ns0:custom>True</ns0:custom>',
+                b'<ns0:new_tag>1234</ns0:new_tag>',
+                b'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
+                b'<ns1:public ' +
+                b'another_attrib="another_value" ' +
+                b'some_attrib="some_value">false</ns1:public>',
+                ]
+            self.assertEqual(got, expected)
+            # now, read again to test if its parsed correctly..
+            cat = readQuakeML(tmpfile)
+        # when reading..
+        #  - namespace abbreviations should be disregarded
+        #  - we always end up with a namespace definition, even if it was
+        #    omitted when originally setting the custom tag
+        #  - custom namespace abbreviations should attached to Catalog
+        self.assertTrue(hasattr(cat[0], "extra"))
+
+        def _tostr(x):
+            if isinstance(x, bool):
+                if x:
+                    return str("true")
+                else:
+                    return str("false")
+            return str(x)
+
+        for key, value in my_extra.items():
+            my_extra[key]['value'] = _tostr(value['value'])
+        self.assertEqual(cat[0].extra, my_extra)
+        self.assertTrue(hasattr(cat[0].picks[0], "extra"))
+        self.assertEqual(
+            cat[0].picks[0].extra,
+            {'weight': {'value': '2',
+                        'namespace': r'http://test.org/xmlns/0.1'}})
+        self.assertTrue(hasattr(cat, "nsmap"))
+        self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])
 
 
 def suite():

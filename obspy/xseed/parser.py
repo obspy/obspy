@@ -8,27 +8,26 @@ Main module containing XML-SEED parser.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import open
-from future.builtins import str
-from future.builtins import bytes
-from future.utils import native_str, PY2
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
-from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 import obspy
 from obspy import __version__
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core import compatibility
 from obspy.core.util import deprecated_keywords
 from obspy.core.util.decorator import map_example_filename
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
+
 import copy
 import datetime
+import io
+from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 import math
 import os
 import warnings
@@ -77,13 +76,15 @@ class Parser(object):
         """
         Initializes the SEED parser.
 
-        :param data: Filename, URL, XSEED/SEED string, file pointer or StringIO
-        :type debug: Boolean.
+        :type data: str, bytes, io.BytesIO or file
+        :param data: Filename, URL, XSEED/SEED string, file pointer or
+            BytesIO.
+        :type debug: bool
         :param debug: Enables a verbose debug log during parsing of SEED file.
-        :type strict: Boolean.
+        :type strict: bool
         :param strict: Parser will raise an exception if SEED files does not
             stay within the SEED specifications.
-        :type compact: Boolean.
+        :type compact: bool
         :param compact: SEED volume will contain compact data strings. Missing
             time strings will be filled with 00:00:00.0000 if this option is
             disabled.
@@ -144,35 +145,39 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Filename, URL, Basestring or StringIO object.
+        :type data: str, bytes, io.BytesIO or file
         :param data: Filename, URL or XSEED/SEED string as file pointer or
-            StringIO.
+            BytesIO.
         """
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
-        # try to transform everything into StringIO object
+        # try to transform everything into BytesIO object
         if isinstance(data, (str, native_str)):
             if "://" in data:
                 # some URL
-                data = compatibility.urlopen(data).read()
-                data = compatibility.BytesIO(data)
+                data = urllib.request.urlopen(data).read()
+                data = io.BytesIO(data)
             elif os.path.isfile(data):
                 # looks like a file - read it
                 with open(data, 'rb') as f:
                     data = f.read()
-                data = compatibility.BytesIO(data)
+                data = io.BytesIO(data)
             else:
-                if PY2:
-                    data = compatibility.BytesIO(data)
-                else:
+                try:
+                    data = data.encode()
+                except:
+                    pass
+                try:
+                    data = io.BytesIO(data)
+                except:
                     raise IOError("data is neither filename nor valid URL")
         # but could also be a big string with data
         elif isinstance(data, bytes):
-            data = compatibility.BytesIO(data)
+            data = io.BytesIO(data)
         elif not hasattr(data, "read"):
             raise TypeError
-        # check first byte of data StringIO object
+        # check first byte of data BytesIO object
         first_byte = data.read(1)
         data.seek(0)
         if first_byte.isdigit():
@@ -192,7 +197,7 @@ class Parser(object):
 
         :type version: float, optional
         :param version: XSEED version string (default is ``1.1``).
-        :type split_stations: boolean, optional
+        :type split_stations: bool, optional
         :param split_stations: Splits stations containing multiple channels
             into multiple documents.
         :rtype: str or dict
@@ -347,7 +352,7 @@ class Parser(object):
         resp_list = []
         # Loop over all stations.
         for station in self.stations:
-            resp = compatibility.BytesIO(b'')
+            resp = io.BytesIO(b'')
             blockettes = []
             # Read the current station information and store it.
             cur_station = station[0].station_call_letters.strip()
@@ -370,8 +375,8 @@ class Parser(object):
                     # Create the filename.
                     filename = 'RESP.%s.%s.%s.%s' \
                         % (cur_network, cur_station, cur_location, cur_channel)
-                    # Create new StringIO and list.
-                    resp = compatibility.BytesIO(b'')
+                    # Create new BytesIO and list.
+                    resp = io.BytesIO(b'')
                     blockettes = []
                     blockettes.append(station[_i])
                     # Write header and the first two lines to the string.
@@ -381,7 +386,7 @@ class Parser(object):
                         '#\t\t======== CHANNEL RESPONSE DATA ========\n' + \
                         'B050F03     Station:     %s\n' % cur_station + \
                         'B050F16     Network:     %s\n' % cur_network
-                    # Write to StringIO.
+                    # Write to BytesIO.
                     resp.write(header.encode('ascii', 'strict'))
                     continue
                 blockettes.append(station[_i])
@@ -598,7 +603,7 @@ class Parser(object):
 
         It will always parse the whole file and skip any time span data.
 
-        :type data: File pointer or StringIO object.
+        :type data: file or io.BytesIO
         """
         # Jump to the beginning of the file.
         data.seek(0)
@@ -613,7 +618,7 @@ class Parser(object):
         if temp not in [b'010', b'008', b'005']:
             raise SEEDParserException("Expecting blockette 010, 008 or 005")
         # Skip the next four bytes containing the length of the blockette.
-        #data.seek(4, 1)
+        # data.seek(4, 1)
         data.read(4)
         # Set the version.
         self.version = float(data.read(4))
@@ -734,7 +739,7 @@ class Parser(object):
         """
         Parse a XML-SEED string.
 
-        :type data: File pointer or StringIO object.
+        :type data: file or io.BytesIO
         """
         data.seek(0)
         root = xmlparse(data).getroot()
@@ -765,7 +770,7 @@ class Parser(object):
     def _getRESPString(self, resp, blockettes, station):
         """
         Takes a file like object and a list of blockettes containing all
-        blockettes for one channel and writes them RESP like to the StringIO.
+        blockettes for one channel and writes them RESP like to the BytesIO.
         """
         blkt52 = blockettes[0]
         # The first blockette in the list always has to be Blockette 52.
@@ -985,7 +990,7 @@ class Parser(object):
                     self.abbreviations.append(blkt)
             # Update the stations.
             self.stations.extend(self.temp['stations'])
-            #XXX Update volume control header!
+            # XXX Update volume control header!
 
         # Also make the version of the format 2.4.
         self.volume[0].version_of_format = 2.4
@@ -1023,8 +1028,8 @@ class Parser(object):
         """
         if not data:
             return
-        # Create StringIO for easier access.
-        data = compatibility.BytesIO(data)
+        # Create BytesIO for easier access.
+        data = io.BytesIO(data)
         # Do not do anything if no data is passed or if a time series header
         # is passed.
         if record_type not in HEADERS:
@@ -1110,8 +1115,8 @@ class Parser(object):
             stations.append(station)
         # Make abbreviations.
         abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
-        abbr_lenght = len(abbreviations)
-        cur_count = 1 + abbr_lenght
+        abbr_length = len(abbreviations)
+        cur_count = 1 + abbr_length
         while True:
             blkt11 = blockette.Blockette011()
             blkt11.number_of_stations = len(self.stations)
@@ -1128,7 +1133,7 @@ class Parser(object):
                 blkt12.number_of_spans_in_table = 0
                 self.volume.append(blkt12)
             volume = self._createCutAndFlushRecord(self.volume, 'V')
-            if cur_count - abbr_lenght < len(volume):
+            if cur_count - abbr_length < len(volume):
                 cur_count += len(volume) - 1
                 self._deleteBlockettes11and12()
                 continue

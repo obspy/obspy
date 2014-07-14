@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
-from obspy.core import compatibility
+
+import io
 import warnings
 import os
 try:
@@ -28,7 +29,7 @@ def tostring(element, xml_declaration=True, encoding="utf-8",
     Generates a string representation of an XML element, including all
     subelements.
 
-    :param element: Element instance.
+    :param element: :class:`~etree.Element`
     :type xml_declaration: bool, optional
     :param xml_declaration: Adds a XML declaration.. Defaults to ``True``.
     :type encoding: str, optional
@@ -60,9 +61,9 @@ class XMLParser:
     """
     def __init__(self, xml_doc, namespace=None):
         """
-        Initializes a XMLPaser object.
+        Initializes a XMLParser object.
 
-        :type xml_doc: str, filename, file-like object, parsed XML document
+        :type xml_doc: bytes, str, file or :class:`~etree.ElementTree`
         :param xml_doc: XML document
         :type namespace: str, optional
         :param namespace: Document-wide default namespace. Defaults to ``''``.
@@ -70,7 +71,7 @@ class XMLParser:
         if isinstance(xml_doc, bytes):
             # some string - check if it starts with <?xml
             if xml_doc.strip()[0:5].upper().startswith(b'<?XML'):
-                xml_doc = compatibility.BytesIO(xml_doc)
+                xml_doc = io.BytesIO(xml_doc)
             # parse XML file
             self.xml_doc = etree.parse(xml_doc)
         elif isinstance(xml_doc, (str, native_str)):
@@ -96,7 +97,8 @@ class XMLParser:
 
         :type xpath: str
         :param xpath: XPath string, e.g. ``*/event``.
-        :type xml_doc: Element or ElementTree, optional
+        :type xml_doc: :class:`~etree.Element` or :class:`~etree.ElementTree`,
+            optional
         :param xml_doc: XML document to query. Defaults to parsed XML document.
         :type convert_to: any type
         :param convert_to: Type to convert to. Defaults to ``str``.
@@ -136,7 +138,8 @@ class XMLParser:
 
         :type xpath: str
         :param xpath: XPath string, e.g. ``*/event``.
-        :type xml_doc: Element or ElementTree, optional
+        :type xml_doc: :class:`~etree.Element` or :class:`~etree.ElementTree`,
+            optional
         :param xml_doc: XML document to query. Defaults to parsed XML document.
         :type namespace: str, optional
         :param namespace: Namespace used by query. Defaults to document-wide

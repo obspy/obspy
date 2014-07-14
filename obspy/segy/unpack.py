@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: unpack.py
 #  Purpose: Routines for unpacking SEG Y data formats.
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions that will all take a file pointer and the sample count and return a
-numpy array with the unpacked values.
+NumPy array with the unpacked values.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.segy.util import clibsegy
 
 import ctypes as C
@@ -23,7 +24,7 @@ import sys
 import os
 import warnings
 
-# Get the system byteorder.
+# Get the system byte order.
 BYTEORDER = sys.byteorder
 if BYTEORDER == 'little':
     BYTEORDER = '<'
@@ -44,7 +45,7 @@ def unpack_4byte_IBM(file, count, endian='>'):
     """
     # Read as 4 byte integer so bit shifting works.
     data = np.fromstring(file.read(count * 4), dtype='float32')
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     length = len(data)
@@ -55,13 +56,13 @@ def unpack_4byte_IBM(file, count, endian='>'):
 
 # Old pure Python/NumPy code
 #
-#def unpack_4byte_IBM(file, count, endian='>'):
+# def unpack_4byte_IBM(file, count, endian='>'):
 #    """
 #    Unpacks 4 byte IBM floating points.
 #    """
 #    # Read as 4 byte integer so bit shifting works.
 #    data = np.fromstring(file.read(count * 4), dtype='int32')
-#    # Swap the byteorder if necessary.
+#    # Swap the byte order if necessary.
 #    if BYTEORDER != endian:
 #        data = data.byteswap()
 #    # See http://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
@@ -90,7 +91,7 @@ def unpack_4byte_Integer(file, count, endian='>'):
     """
     # Read as 4 byte integer so bit shifting works.
     data = np.fromstring(file.read(count * 4), dtype='int32')
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     return data
@@ -102,7 +103,7 @@ def unpack_2byte_Integer(file, count, endian='>'):
     """
     # Read as 4 byte integer so bit shifting works.
     data = np.fromstring(file.read(count * 2), dtype='int16')
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     return data
@@ -118,7 +119,7 @@ def unpack_4byte_IEEE(file, count, endian='>'):
     """
     # Read as 4 byte integer so bit shifting works.
     data = np.fromstring(file.read(count * 4), dtype='float32')
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     return data

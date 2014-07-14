@@ -5,12 +5,14 @@ Earthworm Wave Server client for ObsPy.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from fnmatch import fnmatch
 from obspy import Stream, UTCDateTime
@@ -182,7 +184,7 @@ class Client(object):
         :rtype: list
         :return: List of tuples with information on the available data. One
             tuple consists of network, station, location, channel
-            (all strings), starttime and endtime
+            (all strings), start time and end time
             (both as :class:`~obspy.core.utcdatetime.UTCDateTime`).
 
         .. rubric:: Example
@@ -219,7 +221,7 @@ class Client(object):
         # reorder items and convert time info to UTCDateTime
         response = [(x[3], x[1], x[4], x[2], UTCDateTime(x[5]),
                      UTCDateTime(x[6])) for x in response]
-        # restrict results acording to user input
+        # restrict results according to user input
         response = [x for x in response if fnmatch(".".join(x[:4]), pattern)]
         return response
 

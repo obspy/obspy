@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.event import ResourceIdentifier, readEvents
 from obspy.pde.mchedr import readMchedr
@@ -142,7 +143,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         # confidence ellipsoid
         c = u.confidence_ellipsoid
         self.assertEqual(c.semi_intermediate_axis_length, 2750.0)
-        #c.major_axis_rotation is computed during file reading:
+        # c.major_axis_rotation is computed during file reading:
         self.assertAlmostEqual(c.major_axis_rotation, 170.5, places=3)
         self.assertEqual(c.major_axis_plunge, 76.06)
         self.assertEqual(c.semi_minor_axis_length, 2210.0)

@@ -9,10 +9,10 @@ Provides the Network class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.station.util import BaseNode
 from obspy.station.station import Station
 import textwrap
@@ -35,8 +35,8 @@ class Network(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type code: String
-        :type code: The SEED network code.
+        :type code: str
+        :param code: The SEED network code.
         :type total_number_of_stations: int
         :param total_number_of_stations: The total number of stations
             contained in this networkork, including inactive or terminated
@@ -46,21 +46,21 @@ class Network(BaseNode):
             document, even if the stations do not appear in the document. (This
             might happen if the user only wants a document that goes contains
             only information at the Network level.)
-        :type description: String, optional
+        :type description: str, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """
@@ -109,7 +109,8 @@ class Network(BaseNode):
         """
         Returns a dictionary containing the contents of the object.
 
-        Example
+        .. rubric:: Example
+
         >>> from obspy import read_inventory
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
@@ -248,9 +249,9 @@ class Network(BaseNode):
                starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
         """
-        Returns the :class:`Network` object only with these
-        :class:`~obspy.station.station.Station`s /
-        :class:`~obspy.station.channel.Channel`s that match the given
+        Returns the :class:`Network` object with only the
+        :class:`~obspy.station.station.Station`\ s /
+        :class:`~obspy.station.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -261,7 +262,7 @@ class Network(BaseNode):
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
-        .. rubric:: Examples
+        .. rubric:: Example
 
         >>> from obspy import read_inventory, UTCDateTime
         >>> net = read_inventory()[0]
@@ -334,19 +335,23 @@ class Network(BaseNode):
         Creates a preview map of all stations in current network object.
 
         :type projection: str, optional
-        :param projection: The map projection. Currently supported are
+        :param projection: The map projection. Currently supported are:
+
             * ``"cyl"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
+
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are
+            based directly to the basemap module. Possible values are:
+
             * ``"c"`` (crude)
             * ``"l"`` (low)
             * ``"i"`` (intermediate)
             * ``"h"`` (high)
             * ``"f"`` (full)
+
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
@@ -454,21 +459,27 @@ class Network(BaseNode):
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
-            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"L44*"``, ``"L4?A"``,
+            ``"[LM]44A``"; see :func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard stations active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -482,7 +493,7 @@ class Network(BaseNode):
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
         :type unwrap_phase: bool
-        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.

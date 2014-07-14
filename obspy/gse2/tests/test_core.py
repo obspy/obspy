@@ -3,10 +3,10 @@
 """
 The gse2.core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
-from future.builtins import str
-from future.builtins import open
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2.libgse2 import ChksumError
@@ -147,7 +147,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 1000
         # data cloud of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location': '',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}

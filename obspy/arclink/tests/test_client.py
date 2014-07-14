@@ -2,18 +2,17 @@
 """
 The obspy.arclink.client test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import read
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
-from obspy.core import compatibility
+
+import io
 import numpy as np
 import operator
 import unittest
@@ -289,6 +288,7 @@ class ClientTestCase(unittest.TestCase):
             'npts': 1370,
             'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
             'channel': 'EHZ'}
+        results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
         # example 2
         client = Client(user='test@obspy.org')
@@ -331,6 +331,7 @@ class ClientTestCase(unittest.TestCase):
             'calib': 1.0,
             'sampling_rate': 40.0,
             'channel': 'BHZ'}
+        results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
 
     def test_getNotExistingWaveform(self):
@@ -465,7 +466,7 @@ class ClientTestCase(unittest.TestCase):
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
             with open(mseedfile, 'rb') as fp:
-                self.assertNotEquals(fp.read(8)[6:7], b"V")
+                self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertEqual(st[0].stats.network, 'GE')
             self.assertEqual(st[0].stats.station, 'APE')
@@ -572,7 +573,7 @@ class ClientTestCase(unittest.TestCase):
                 self.assertEqual(fp.read(8), b"000001V ")
 
         # Try again but write to a BytesIO instance.
-        file_object = compatibility.BytesIO()
+        file_object = io.BytesIO()
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -601,8 +602,10 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
-        poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
-                                         t, t + 30).values())[0]
+        # original but deprecated call
+        # poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
+        #                                 t, t+30).values())[0]
+        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ", t)
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])

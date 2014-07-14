@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Purpose: Convenience imports for obspy
 #   Author: Robert Barsch
 #           Moritz Beyreuther
@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2008-2014 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 ObsPy: A Python Toolbox for seismology/seismological observatories
 ==================================================================
@@ -27,11 +27,15 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _getVersionString
-__version__ = _getVersionString()
+__version__ = _getVersionString(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents, Catalog
@@ -62,6 +66,7 @@ else:
 
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "readEvents", "Catalog", "read_inventory"]
+__all__ = [native_str(i) for i in __all__]
 
 
 if __name__ == '__main__':

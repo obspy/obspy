@@ -11,7 +11,7 @@ Features and content supported by SEED and not in FDSN-StationXML:
  in FDSN-StationXML.
 
 * Data record blockettes, 100 and higher.  FDSN-StationXML does not include
- anything that would be included in miniSEED.
+ anything that would be included in MiniSEED.
 
 * Event and time span indexing blockettes.  No event parameters and no
  indexing relating to data records in files are contained in

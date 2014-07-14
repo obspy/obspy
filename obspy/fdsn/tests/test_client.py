@@ -9,25 +9,25 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-import warnings
-from future import standard_library  # NOQA
-from future.builtins import zip
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core import compatibility
 from obspy.core.compatibility import mock
 from obspy.station import Response
+
+from difflib import Differ
+import io
 import os
+import re
 import sys
 import unittest
-from difflib import Differ
-import re
+import warnings
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -366,7 +366,7 @@ class ClientTestCase(unittest.TestCase):
             got.module = None
             expected.module = None
 
-            # XXX Py3k: the objects differ in direct comparision, however,
+            # XXX Py3k: the objects differ in direct comparison, however,
             # the strings of them are equal
             self.assertEqual(str(got), str(expected), failmsg(got, expected))
 
@@ -450,7 +450,7 @@ class ClientTestCase(unittest.TestCase):
             client = self.client
 
             # Capture output
-            tmp = compatibility.StringIO()
+            tmp = io.StringIO()
             sys.stdout = tmp
 
             client.help("event")
@@ -476,7 +476,7 @@ class ClientTestCase(unittest.TestCase):
                                      normalize_version_number(expected)))
 
             # Reset. Creating a new one is faster then clearing the old one.
-            tmp = compatibility.StringIO()
+            tmp = io.StringIO()
             sys.stdout = tmp
 
             client.help("station")
@@ -497,7 +497,7 @@ class ClientTestCase(unittest.TestCase):
                                      normalize_version_number(expected)))
 
             # Reset.
-            tmp = compatibility.StringIO()
+            tmp = io.StringIO()
             sys.stdout = tmp
 
             client.help("dataselect")
@@ -532,10 +532,10 @@ class ClientTestCase(unittest.TestCase):
                          failmsg(normalize_version_number(got),
                                  normalize_version_number(expected)))
 
-    def test_bulk(self):
+    def test_dataselect_bulk(self):
         """
-        Test bulk requests, POSTing data to server. Also tests authenticated
-        bulk request.
+        Test bulk dataselect requests, POSTing data to server. Also tests
+        authenticated bulk request.
         """
         clients = [self.client, self.client_auth]
         file = os.path.join(self.datapath, "bulk.mseed")
@@ -585,8 +585,71 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected, failmsg(got, expected))
         # test cases for providing a file-like object
         for client in clients:
-            got = client.get_waveforms_bulk(compatibility.StringIO(bulk))
+            got = client.get_waveforms_bulk(io.StringIO(bulk))
             self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_station_bulk(self):
+        """
+        Test bulk station requests, POSTing data to server. Also tests
+        authenticated bulk request.
+
+        Does currently only test reading from a list of list. The other
+        input types are tested with the waveform bulk downloader and thus
+        should work just fine.
+        """
+        clients = [self.client, self.client_auth]
+        # test cases for providing lists of lists
+        starttime = UTCDateTime(1990, 1, 1)
+        endtime = UTCDateTime(1990, 1, 1) + 10
+        bulk = [
+            ["IU", "ANMO", "", "BHE", starttime, endtime],
+            ["IU", "CCM", "", "BHZ", starttime, endtime],
+            ["IU", "COR", "", "UHZ", starttime, endtime],
+            ["IU", "HRV", "", "LHN", starttime, endtime],
+        ]
+        for client in clients:
+            # Test with station level.
+            inv = client.get_stations_bulk(bulk, level="station")
+            # Test with output to file.
+            with NamedTemporaryFile() as tf:
+                client.get_stations_bulk(
+                    bulk, filename=tf.name, level="station")
+                inv2 = read_inventory(tf.name, format="stationxml")
+
+            self.assertEqual(inv.networks, inv2.networks)
+            self.assertEqual(len(inv.networks), 1)
+            self.assertEqual(inv[0].code, "IU")
+            self.assertEqual(len(inv.networks[0].stations), 4)
+            self.assertEqual(
+                sorted([_i.code for _i in inv.networks[0].stations]),
+                sorted(["ANMO", "CCM", "COR", "HRV"]))
+
+            # Test with channel level.
+            inv = client.get_stations_bulk(bulk, level="channel")
+            # Test with output to file.
+            with NamedTemporaryFile() as tf:
+                client.get_stations_bulk(
+                    bulk, filename=tf.name, level="channel")
+                inv2 = read_inventory(tf.name, format="stationxml")
+
+            self.assertEqual(inv.networks, inv2.networks)
+            self.assertEqual(len(inv.networks), 1)
+            self.assertEqual(inv[0].code, "IU")
+            self.assertEqual(len(inv.networks[0].stations), 4)
+            self.assertEqual(
+                sorted([_i.code for _i in inv.networks[0].stations]),
+                sorted(["ANMO", "CCM", "COR", "HRV"]))
+            channels = []
+            for station in inv[0]:
+                for channel in station:
+                    channels.append("IU.%s.%s.%s" % (
+                        station.code, channel.location_code,
+                        channel.code))
+            self.assertEqual(
+                sorted(channels),
+                sorted(["IU.ANMO..BHE", "IU.CCM..BHZ", "IU.COR..UHZ",
+                        "IU.HRV..LHN"]))
+        return
 
     def test_get_waveform_attach_response(self):
         """

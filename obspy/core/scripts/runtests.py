@@ -43,7 +43,7 @@ the names of all available test cases.
     or
 
     >>> import obspy.core
-    >>> obspy.core.runTests(verbosity=2)"  # DOCTEST: +SKIP
+    >>> obspy.core.runTests(verbosity=2)  # DOCTEST: +SKIP
 
 (4) Run tests of module :mod:`obspy.mseed`::
 
@@ -81,19 +81,16 @@ and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import super
-from future.builtins import input
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
+from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from optparse import OptionParser, OptionGroup
+import types
 import copy
 import doctest
 import glob
@@ -108,7 +105,8 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose']
+                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future',
+                "flake8", "pyflakes", "pyimgur"]
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -123,7 +121,7 @@ Type "help" to see all available options.
 HOSTNAME = platform.node().split('.', 1)[0]
 
 
-#XXX: start of ugly monkey patch for Python 2.7
+# XXX: start of ugly monkey patch for Python 2.7
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
 class _WritelnDecorator(object):
     """
@@ -143,7 +141,7 @@ class _WritelnDecorator(object):
         self.write('\n')  # text-mode streams translate to \r\n if needed
 
 unittest._WritelnDecorator = _WritelnDecorator
-#XXX: end of ugly monkey patch
+# XXX: end of ugly monkey patch
 
 
 def _getSuites(verbosity=1, names=[]):
@@ -175,14 +173,19 @@ def _getSuites(verbosity=1, names=[]):
     return suites, status
 
 
-def _createReport(ttrs, timetaken, log, server, hostname):
+def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
     # import additional libraries here to speed up normal tests
-    from obspy.core import compatibility
+    from future import standard_library
+    with standard_library.hooks():
+        import urllib.parse
+        import http.client
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
+    result['slowest_tests'] = [("%0.3fs" % dt, "%s" % desc)
+                               for (desc, dt) in sorted_tests[:20]]
     result['timetaken'] = timetaken
     if log:
         try:
@@ -296,7 +299,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     xml_doc = etree.tostring(root)
     print()
     # send result to report server
-    params = compatibility.urlencode({
+    params = urllib.parse.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
@@ -309,14 +312,14 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
-    conn = compatibility.HTTPConnection(server)
+    conn = http.client.HTTPConnection(server)
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
-        o = compatibility.urlparse(response.msg['location'])
-        conn = compatibility.HTTPConnection(o.netloc)
+        o = urllib.parse.urlparse(response.msg['location'])
+        conn = http.client.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response
         response = conn.getresponse()
@@ -344,6 +347,45 @@ class _TextTestResult(unittest._TextTestResult):
         self.timer.append((test, time.time() - self.start))
 
 
+def _skip_test(test_case, msg):
+    """
+    Helper method intended to be bound to a `unittest.TestCase`
+    instance overwriting the `setUp()` method to immediately and
+    unconditionally skip the test when executed.
+
+    :type test_case: unittest.TestCase
+    :type msg: str
+    :param msg: Reason for unconditionally skipping the test.
+    """
+    # python 2.6 does not provide `skipTest`
+    try:
+        test_case.skipTest(msg)
+    except AttributeError:
+        raise Exception(msg)
+
+
+def _recursive_skip(test_suite, msg):
+    """
+    Helper method to recursively skip all tests aggregated in `test_suite`
+    with the the specified message.
+
+    :type test_suite: unittest.TestSuite
+    :type msg: str
+    :param msg: Reason for unconditionally skipping the tests.
+    """
+    def _custom_skip_test(testcase):
+        _skip_test(testcase, msg)
+
+    if isinstance(test_suite, unittest.TestSuite):
+        for obj in test_suite:
+            _recursive_skip(obj, msg)
+    elif isinstance(test_suite, unittest.TestCase):
+        # overwrite setUp method
+        test_suite.setUp = types.MethodType(_custom_skip_test, test_suite)
+    else:
+        raise NotImplementedError()
+
+
 class _TextTestRunner:
     def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
                  timeit=False):
@@ -364,6 +406,24 @@ class _TextTestRunner:
         keys = sorted(suites.keys())
         for id in keys:
             test = suites[id]
+            # run checker routine if any,
+            # to see if module's tests can be executed
+            msg = None
+            if id in MODULE_TEST_SKIP_CHECKS:
+                # acquire function specified by string
+                mod, func = MODULE_TEST_SKIP_CHECKS[id].rsplit(".", 1)
+                try:
+                    import importlib
+                    mod = importlib.import_module(mod)
+                # Py 2.6 workaround
+                except:
+                    mod = __import__(mod, fromlist=["obspy"])
+                func = getattr(mod, func)
+                msg = func()
+            # we encountered an error message, so skip all tests with given
+            # message
+            if msg:
+                _recursive_skip(test, msg)
             result = self._makeResult()
             start = time.time()
             test(result)
@@ -426,15 +486,15 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of strings, optional
+    :type tests: list of str, optional
     :param tests: Test suites to run. If no suite is given all installed tests
         suites will be started (default is a empty list).
         Example ``['obspy.core.tests.suite']``.
-    :type report: boolean, optional
+    :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
-    :type log: string, optional
+    :type log: str, optional
     :param log: Filename of install log file to append to report.
-    :type server: string, optional
+    :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     if all:
@@ -468,19 +528,21 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     # run test suites
     ttr, total_time, errors = _TextTestRunner(verbosity=verbosity,
                                               timeit=timeit).run(suites)
+    # sort tests by time taken
+    mydict = {}
+    # loop over modules
+    for mod in list(ttr.values()):
+        mydict.update(dict(mod.timer))
+    sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
+    sorted_tests = sorted_tests[::-1]
+
     if slowest:
-        mydict = {}
-        # loop over modules
-        for mod in list(ttr.values()):
-            mydict.update(dict(mod.timer))
-        sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
-        sorted_tests = sorted_tests[::-1][:slowest]
-        sorted_tests = ["%0.3fs: %s" % (dt, desc)
-                        for (desc, dt) in sorted_tests]
+        slowest_tests = ["%0.3fs: %s" % (dt, desc)
+                         for (desc, dt) in sorted_tests[:slowest]]
         print()
         print("Slowest Tests")
         print("-------------")
-        print(os.linesep.join(sorted_tests))
+        print(os.linesep.join(slowest_tests))
         print()
         print()
     if interactive and not report:
@@ -489,7 +551,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server, hostname)
+        _createReport(ttr, total_time, log, server, hostname, sorted_tests)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
@@ -526,9 +588,6 @@ def run(interactive=True):
     filter.add_option("-x", "--exclude",
                       action="append", type="str", dest="module",
                       help="exclude given module from test")
-    filter.add_option("--tutorial", default=False,
-                      action="store_true", dest="tutorial",
-                      help="add doctests in tutorial")
     parser.add_option_group(filter)
     # timing / profile options
     timing = OptionGroup(parser, "Timing/Profile Options")
@@ -560,25 +619,31 @@ def run(interactive=True):
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
-    report.add_option("--keep-images", default=False,
+    parser.add_option_group(report)
+    # other options
+    others = OptionGroup(parser, "Additional Options")
+    others.add_option("--tutorial", default=False,
+                      action="store_true", dest="tutorial",
+                      help="add doctests in tutorial")
+    others.add_option("--no-flake8", default=False,
+                      dest="no_flake8", action="store_true",
+                      help="skip code formatting test")
+    others.add_option("--keep-images", default=False,
                       dest="keep_images", action="store_true",
                       help="store images created during image comparison "
                            "tests in subfolders of baseline images")
-    report.add_option("--keep-only-failed-images", default=False,
+    others.add_option("--keep-only-failed-images", default=False,
                       dest="keep_only_failed_images", action="store_true",
                       help="when storing images created during testing, only "
                            "store failed images and the corresponding diff "
                            "images (but not images that passed the "
                            "corresponding test).")
-    report.add_option("--no-flake8", default=False,
-                      dest="no_flake8", action="store_true",
-                      help="skip code formatting test")
-    parser.add_option_group(report)
+    parser.add_option_group(others)
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:
         verbosity = 2
-        # raise all numpy warnings
+        # raise all NumPy warnings
         np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
@@ -626,7 +691,7 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
-    # catch and ignore a numpy deprecation warning
+    # catch and ignore a NumPy deprecation warning
     with warnings.catch_warnings(record=True):
         warnings.filterwarnings(
             "ignore", 'The compiler package is deprecated and removed in '

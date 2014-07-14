@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
 import io
 import inspect
 import os
@@ -7,7 +11,6 @@ import unittest
 import warnings
 
 from obspy import readEvents, UTCDateTime
-from obspy.core.compatibility import StringIO, BytesIO
 from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException, \
     _parse_date_time
 
@@ -108,7 +111,7 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         with open(filename, "rt") as fh:
-            file_object = StringIO(fh.read())
+            file_object = io.StringIO(fh.read())
 
         cat = readEvents(file_object)
         file_object.close()
@@ -124,7 +127,7 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         with open(filename, "rb") as fh:
-            file_object = BytesIO(fh.read())
+            file_object = io.BytesIO(fh.read())
 
         cat = readEvents(file_object)
         file_object.close()
@@ -270,7 +273,7 @@ class NDKTestCase(unittest.TestCase):
             lines = [_i.rstrip() for _i in fh.readlines()]
 
         # Assemble anew and skip last line.
-        data = StringIO("\n".join(lines[:-1]))
+        data = io.StringIO("\n".join(lines[:-1]))
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -283,10 +286,10 @@ class NDKTestCase(unittest.TestCase):
         # Only five events will have been read.
         self.assertEqual(len(cat), 5)
 
-    def test_reading_event_with_faulty_but_often_occuring_timestamp(self):
+    def test_reading_event_with_faulty_but_often_occurring_timestamp(self):
         """
         The timestamp "O-00000000000000" is not valid according to the NDK
-        definition but is occuring a lot in the GCMT catalog thus we include it
+        definition but occurs a lot in the GCMT catalog thus we include it
         here.
         """
         filename = os.path.join(self.datapath, "faulty_cmt_timestamp.ndk")
@@ -308,7 +311,7 @@ class NDKTestCase(unittest.TestCase):
             lines = [_i.rstrip() for _i in fh.readlines()]
 
         # Assemble anew and skip last line.
-        data = StringIO("\n".join(lines[:-1]))
+        data = io.StringIO("\n".join(lines[:-1]))
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -335,7 +338,7 @@ class NDKTestCase(unittest.TestCase):
         self.assertEqual(_parse_date_time(date, time),
                          UTCDateTime(2013, 3, 2, 7, 53, 43, int(8E5)))
 
-        # Some more tests for 60s. The tested values are all values occuring
+        # Some more tests for 60s. The tested values are all values occurring
         # in a big NDK test file.
         date, time = "1998/09/27", "00:57:60.0"
         self.assertEqual(_parse_date_time(date, time),

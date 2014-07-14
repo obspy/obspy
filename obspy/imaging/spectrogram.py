@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: spectrogram.py
 #  Purpose: Plotting spectrogram of Seismograms.
 #   Author: Christian Sippl, Moritz Beyreuther
 #    Email: sippl@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Christian Sippl
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Plotting spectrogram of seismograms.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from matplotlib import mlab
 from matplotlib.colors import Normalize
@@ -40,7 +40,7 @@ def _nearestPow2(x):
     >>> _nearestPow2(15)
     16.0
 
-    :type x: Float
+    :type x: float
     :param x: Number
     :rtype: Int
     :return: Nearest power of 2 to x
@@ -72,10 +72,10 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
-    :type outfile: String
+    :type outfile: str
     :param outfile: String for the filename of output file, if None
         interactive plotting is activated.
-    :type fmt: String
+    :type fmt: str
     :param fmt: Format of image to save
     :type axes: :class:`matplotlib.axes.Axes`
     :param axes: Plot into given axes, this deactivates the fmt and
@@ -84,14 +84,14 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :param dbscale: If True 10 * log10 of color values is taken, if False the
         sqrt is taken.
     :type mult: float
-    :param mult: Pad zeros to lengh mult * wlen. This will make the spectrogram
-        smoother. Available for matplotlib > 0.99.0.
+    :param mult: Pad zeros to length mult * wlen. This will make the
+        spectrogram smoother. Available for matplotlib > 0.99.0.
     :type cmap: :class:`matplotlib.colors.Colormap`
     :param cmap: Specify a custom colormap instance
     :type zorder: float
     :param zorder: Specify the zorder of the plot. Only of importance if other
         plots in the same axes are executed.
-    :type title: String
+    :type title: str
     :param title: Set the plot title
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way, further
@@ -112,7 +112,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
-    #XXX add condition for too many windows => calculation takes for ever
+    # XXX add condition for too many windows => calculation takes for ever
     nfft = int(_nearestPow2(wlen * samp_rate))
     if nfft > npts:
         nfft = int(_nearestPow2(npts / 8.0))
@@ -174,7 +174,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         time -= halfbin_time
         freq -= halfbin_freq
         # pcolormesh issue was fixed in matplotlib r5716 (2008-07-07)
-        # inbetween tags 0.98.2 and 0.98.3
+        # between tags 0.98.2 and 0.98.3
         # see:
         #  - http://matplotlib.svn.sourceforge.net/viewvc/...
         #    matplotlib?revision=5716&view=revision

@@ -8,13 +8,11 @@ Module for basemap related plotting in ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import zip
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.colorbar import Colorbar
@@ -49,10 +47,10 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :param lons: Longitudes of the data points.
     :type lats: list/tuple of floats
     :param lats: Latitudes of the data points.
-    :type size: list/tuple of floats (or a single float)
+    :type size: float or list/tuple of floats
     :param size: Size of the individual points in the scatter plot.
-    :type color: list/tuple of
-        floats/:class:`~obspy.core.utcdatetime.UTCDateTime` (or a single float)
+    :type color: float or list/tuple of
+        floats/:class:`~obspy.core.utcdatetime.UTCDateTime`
     :param color: Color information of the individual data points. Can be
     :type labels: list/tuple of str
     :param labels: Annotations for the individual data points.
@@ -77,7 +75,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :type water_fill_color: Valid matplotlib color, optional
     :param water_fill_color: Color of all water bodies.
         Defaults to ``"white"``.
-    :type colormap: str, optional, any matplotlib colormap
+    :type colormap: str, any matplotlib colormap, optional
     :param colormap: The colormap for color-coding the events.
         The event with the smallest property will have the
         color of one end of the colormap and the event with the biggest
@@ -92,7 +90,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
         on/off.
     :type title: str
     :param title: Title above plot.
-    :type colorbar_ticklabel_format: str or func or
+    :type colorbar_ticklabel_format: str or function or
         subclass of :class:`matplotlib.ticker.Formatter`
     :param colorbar_ticklabel_format: Format string or Formatter used to format
         colorbar tick labels.
@@ -155,8 +153,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
         else:
             max_lons = max(lons)
             min_lons = min(lons)
-        lat_0 = (max(lats) + min(lats)) / 2.
-        lon_0 = (max_lons + min_lons) / 2.
+        lat_0 = max(lats) / 2. + min(lats) / 2.
+        lon_0 = max_lons / 2. + min_lons / 2.
         if lon_0 > 180:
             lon_0 -= 360
         deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
@@ -192,7 +190,12 @@ def plot_basemap(lons, lats, size, color, labels=None,
             """
             dval = val2 - val1
             round_pos = int(round(-np.log10(1. * dval / N)))
-            delta = round(2. * dval / N, round_pos) / 2
+            # Fake negative rounding as not supported by future as of now.
+            if round_pos < 0:
+                factor = 10 ** (abs(round_pos))
+                delta = round(2. * dval / N / factor) * factor / 2
+            else:
+                delta = round(2. * dval / N, round_pos) / 2
             new_val1 = np.ceil(val1 / delta) * delta
             new_val2 = np.floor(val2 / delta) * delta
             N = (new_val2 - new_val1) / delta + 1
@@ -230,7 +233,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
     # plot labels
     if labels:
         if 100 > len(lons) > 1:
-            for name, xpt, ypt, colorpt in zip(labels, x, y, color):
+            for name, xpt, ypt, _colorpt in zip(labels, x, y, color):
                 # Check if the point can actually be seen with the current bmap
                 # projection. The bmap object will set the coordinates to very
                 # large values if it cannot project a point.
@@ -265,7 +268,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
             if datetimeplot:
                 locator = AutoDateLocator()
                 formatter = AutoDateFormatter(locator)
-                formatter.scaled[1/(24.*60.)] = '%H:%M:%S'
+                formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
             else:
                 locator = None
                 formatter = None

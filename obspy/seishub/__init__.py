@@ -42,36 +42,6 @@ Advanced Examples
 >>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'LOG', 'SHE', 'SHN', 'SHZ']
 
->>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
-...                                  format='metadata')
->>> print(res)  # doctest: +NORMALIZE_WHITESPACE
-<?xml version="1.0" encoding="utf-8"?>
-<metadata>
-  <item title="Station Name">
-    <text text="Manzenberg,Bavaria, BW-Net"/>
-  </item>
-  <item title="Station ID">
-    <text text="MANZ"/>
-  </item>
-  <item title="Network ID">
-    <text text="BW"/>
-  </item>
-  <item title="Channel IDs">
-    <text text="EHZ"/>
-    <text text="EHN"/>
-    <text text="EHE"/>
-  </item>
-  <item title="Latitude (°)">
-    <text text="+49.986198"/>
-  </item>
-  <item title="Longitude (°)">
-    <text text="+12.108300"/>
-  </item>
-  <item title="Elevation (m)">
-    <text text="+635.0"/>
-  </item>
-</metadata>
-
 >>> paz = client.station.getPAZ('BW.MANZ..EHZ', UTCDateTime('20090808'))
 >>> paz = paz.items()
 >>> sorted(paz)  # doctest: +SKIP
@@ -81,7 +51,9 @@ Advanced Examples
  ('sensitivity', 2516800000.0),
  ('zeros', [0j, 0j])]
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.seishub.client import Client
 

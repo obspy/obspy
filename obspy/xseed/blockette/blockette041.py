@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import os
-from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
     Loop
 from obspy.xseed.utils import formatRESP, LookupCode
+
+import io
+import os
 
 
 class Blockette041(Blockette):
@@ -34,7 +34,7 @@ class Blockette041(Blockette):
         Integer(6, "Signal In Units", 3, xpath=34),
         Integer(7, "Signal Out Units", 3, xpath=34),
         Integer(8, "Number of Factors", 4),
-        #REPEAT field 9 for the Number of Factors
+        # REPEAT field 9 for the Number of Factors
         Loop("FIR Coefficient", "Number of Factors", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
@@ -48,7 +48,7 @@ class Blockette041(Blockette):
         # convert to stream for test issues
         if isinstance(data, bytes):
             expected_length = len(data)
-            data = compatibility.BytesIO(data)
+            data = io.BytesIO(data)
         elif isinstance(data, (str, native_str)):
             raise TypeError("Data must be bytes, not string")
         # get current lookup key
@@ -57,7 +57,7 @@ class Blockette041(Blockette):
         global_lookup_key = int(data.read(4))
         data.seek(pos)
         # read first blockette
-        temp = compatibility.BytesIO()
+        temp = io.BytesIO()
         temp.write(data.read(expected_length))
         # check next blockettes
         while True:

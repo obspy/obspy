@@ -9,10 +9,10 @@ Test suite for the StationXML reader and writer.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import zip
-from future.builtins import open
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import fnmatch
 import inspect
 
@@ -20,9 +20,9 @@ import os
 import unittest
 import re
 
+import io
 import obspy
 import obspy.station
-from obspy.core import compatibility
 
 
 class StationXMLTestCase(unittest.TestCase):
@@ -63,7 +63,7 @@ class StationXMLTestCase(unittest.TestCase):
             self.assertEqual(org_line, new_line)
 
         # Assert the line length at the end to find trailing non-equal lines.
-        # If it is done before the line comparision it is oftentimes not very
+        # If it is done before the line comparison it is oftentimes not very
         # helpful as you do not know which line is missing.
         self.assertEqual(len(new_lines), len(org_lines))
 
@@ -101,13 +101,13 @@ class StationXMLTestCase(unittest.TestCase):
 
         # Write it again. Also validate it to get more confidence. Suppress the
         # writing of the ObsPy related tags to ease testing.
-        file_buffer = compatibility.BytesIO()
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = compatibility.BytesIO(open_file.read())
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
         self._assert_station_xml_equality(file_buffer,
@@ -123,7 +123,7 @@ class StationXMLTestCase(unittest.TestCase):
 
         # Write it again. Also validate it to get more confidence. Suppress the
         # writing of the ObsPy related tags to ease testing.
-        file_buffer = compatibility.BytesIO()
+        file_buffer = io.BytesIO()
 
         # XXX helper variable to debug writing the full random file, set True
         # XXX for debug output
@@ -140,7 +140,7 @@ class StationXMLTestCase(unittest.TestCase):
             file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = compatibility.BytesIO(open_file.read())
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
         self._assert_station_xml_equality(file_buffer,
@@ -153,7 +153,7 @@ class StationXMLTestCase(unittest.TestCase):
         net = obspy.station.Network(code="UL")
         inv = obspy.station.Inventory(networks=[net], source="BLU")
 
-        file_buffer = compatibility.BytesIO()
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", validate=True)
         file_buffer.seek(0, 0)
         lines = file_buffer.read().decode().splitlines()
@@ -195,13 +195,13 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(inv.sender, "The ObsPy Team")
 
         # Write it again. Do not write the module tags.
-        file_buffer = compatibility.BytesIO()
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = compatibility.BytesIO(open_file.read())
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
         self._assert_station_xml_equality(
@@ -279,13 +279,13 @@ class StationXMLTestCase(unittest.TestCase):
             self.assertEqual(author.phones[0].phone_number, "456-7890")
 
         # Now write it again and compare to the original file.
-        file_buffer = compatibility.BytesIO()
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = compatibility.BytesIO(open_file.read())
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
         self._assert_station_xml_equality(
@@ -515,13 +515,13 @@ class StationXMLTestCase(unittest.TestCase):
                          "Some other description")
 
         # Now write it again and compare to the original file.
-        file_buffer = compatibility.BytesIO()
+        file_buffer = io.BytesIO()
         inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
-            expected_xml_file_buffer = compatibility.BytesIO(open_file.read())
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
         self._assert_station_xml_equality(file_buffer,

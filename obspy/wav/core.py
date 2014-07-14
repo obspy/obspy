@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Filename: core.py
 #  Purpose: Python Class for transforming seismograms to audio WAV files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009-2012 Moritz Beyreuther
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 """
 WAV bindings to ObsPy core module.
 
@@ -16,9 +16,10 @@ WAV bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import division
-from __future__ import unicode_literals
 from obspy import Trace, Stream
 import numpy as np
 import os
@@ -57,7 +58,7 @@ def isWAV(filename):
             fh.close()
     except:
         return False
-    if width == 1 or width == 2 or width == 4:
+    if width in [1, 2, 4]:
         return True
     return False
 
@@ -104,7 +105,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     return Stream([Trace(header=header, data=data)])
 
 
-def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
+def writeWAV(stream, filename, framerate=7000, rescale=False, width=None,
              **kwargs):  # @UnusedVariable
     """
     Writes a audio WAV file from given ObsPy Stream object. The seismogram is
@@ -127,14 +128,23 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         the seismogram (default is 7000).
     :type rescale: bool, optional
     :param rescale: Maximum to maximal representable number
-    :type width: int, optimal
+    :type width: int, optional
     :param width: dtype to write, 1 for '<u1', 2 for '<i2' or 4 for '<i4'.
+        tries to autodetect width from data, uses 4 otherwise
     """
     i = 0
     base, ext = os.path.splitext(filename)
-    if width not in list(WIDTH2DTYPE.keys()):
+    if width not in list(WIDTH2DTYPE.keys()) + [None]:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
+        # try to autodetect width from data, see #791
+        if width is None:
+            if trace.data.dtype.str[-2:] in ['u1', 'i2', 'i4']:
+                tr_width = int(trace.data.dtype.str[-1])
+            else:
+                tr_width = 4
+        else:
+            tr_width = width
         # write WAV file
         if len(stream) >= 2:
             filename = "%s%03d%s" % (base, i, ext)
@@ -142,13 +152,13 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         try:
             trace.stats.npts = len(trace.data)
             # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-            w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
+            w.setparams((1, tr_width, framerate, trace.stats.npts, 'NONE',
                          'not compressed'))
             data = trace.data
-            dtype = WIDTH2DTYPE[width]
+            dtype = WIDTH2DTYPE[tr_width]
             if rescale:
                 # optimal scale, account for +/- and the zero
-                maxint = 2 ** (width * 8 - 1) - 1
+                maxint = 2 ** (tr_width * 8 - 1) - 1
                 data = data.astype('f8')  # upcast for following rescaling
                 data = data / abs(data).max() * maxint
             data = np.require(data, dtype=dtype)

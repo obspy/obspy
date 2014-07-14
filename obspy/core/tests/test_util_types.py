@@ -1,6 +1,7 @@
-from __future__ import unicode_literals
-from future.builtins import zip
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.util import Enum, ComplexWithUncertainties, \
     FloatWithUncertainties
@@ -34,9 +35,9 @@ class UtilTypesTestCase(unittest.TestCase):
         self.assertTrue("other" in units)
         self.assertTrue("ot21her" not in units)
         # test typical dict methods
-        self.assertEqual(list(units.values()), items)
-        self.assertEqual(list(units.items()), list(zip(items, items)))
-        self.assertEqual(list(units.keys()), items)
+        self.assertEqual(units.values(), items)
+        self.assertEqual(units.items(), list(zip(items, items)))
+        self.assertEqual(units.keys(), items)
         # call will either return correct enum label or return None
         self.assertEqual(units('m'), 'm')
         self.assertEqual(units('m/(s*s)'), 'm/(s*s)')

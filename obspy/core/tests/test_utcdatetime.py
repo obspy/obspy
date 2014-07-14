@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
@@ -934,6 +934,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
              "2013-09-01T12:34:56-0000"]
         for time_string in time_strings:
             self.assertEqual(t, UTCDateTime(time_string))
+
+    def test_year_2038_problem(self):
+        """
+        See issue #805
+        """
+        dt = UTCDateTime(2004, 1, 10, 13, 37, 4)
+        self.assertEqual(dt.__str__(), '2004-01-10T13:37:04.000000Z')
+        dt = UTCDateTime(2038, 1, 19, 3, 14, 8)
+        self.assertEqual(dt.__str__(), '2038-01-19T03:14:08.000000Z')
+        dt = UTCDateTime(2106, 2, 7, 6, 28, 16)
+        self.assertEqual(dt.__str__(), '2106-02-07T06:28:16.000000Z')
 
 
 def suite():

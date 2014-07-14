@@ -3,13 +3,14 @@
 """
 The Filter test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from obspy.core.util.libnames import _load_CDLL
 
-from obspy.signal.headers import lib_name, lib_extension
 from obspy.signal import xcorr
 import ctypes as C
 import numpy as np
-import os
 import unittest
 
 
@@ -21,7 +22,7 @@ class UtilTestCase(unittest.TestCase):
         """
         """
         # example 1 - all samples are equal
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         tr1 = np.random.randn(10000).astype('float32')
         tr2 = tr1.copy()
         shift, corr = xcorr(tr1, tr2, 100)
@@ -67,10 +68,7 @@ class UtilTestCase(unittest.TestCase):
         window_len = 100
         corp = np.empty(2 * window_len + 1, dtype='float64')
 
-        path = os.path.dirname(__file__)
-        name = os.path.join(path, os.pardir, os.pardir, 'lib',
-                            lib_name + lib_extension)
-        lib = C.CDLL(name)
+        lib = _load_CDLL("signal")
         #
         shift = C.c_int()
         coe_p = C.c_double()

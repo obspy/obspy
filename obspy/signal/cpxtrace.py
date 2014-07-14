@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#--------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: cpxtrace.py
 #   Author: Conny Hammer
 #    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Complex Trace Analysis
 
@@ -16,10 +16,9 @@ Complex Trace Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from numpy import size, pi
 from scipy import signal
@@ -111,7 +110,7 @@ def normEnvelope(data, fs, smoothie, fk):
         dAnorm = signal.lfilter(fk, 1, Anorm_add)
         # correct start and end values of time derivative
         dAnorm = dAnorm[size(fk) - 1:size(dAnorm)]
-        #dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
+        # dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
         return Anorm, dAnorm
     else:
         Anorm = np.zeros(1, dtype='float64')
@@ -287,7 +286,7 @@ def instBwith(data, fs, fk):
                 ([row[0]] * (np.size(fk) // 2), row,
                  [row[np.size(row) - 1]] * (np.size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
-            #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
+            # t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             # correct start and end values
             t = t[size(fk) - 1:size(t)]
             sigma_win = abs((t * fs) / (row * 2 * pi))
@@ -298,7 +297,7 @@ def instBwith(data, fs, fk):
             ([sigma[0]] * (np.size(fk) // 2), sigma,
              [sigma[np.size(sigma) - 1]] * (np.size(fk) // 2)))
         dsigma = signal.lfilter(fk, 1, sigma_add)
-        #dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
+        # dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
         # correct start and end values
         dsigma = dsigma[size(fk) - 1:size(dsigma)]
         return sigma, dsigma

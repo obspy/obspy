@@ -1,11 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import open
-from future.builtins import zip
-from future.builtins import range
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import os

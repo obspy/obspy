@@ -177,7 +177,7 @@ lil_free(LinkedIDList * lil)
 }
 
 // Print function that does nothing.
-void empty_print(char *string) {}
+void empty_print(const char *string) {}
 
 
 // Function that reads from a MiniSEED binary file from a char buffer and
@@ -186,7 +186,7 @@ LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
                  int header_byteorder, long (*allocData) (int, char),
-                 void (*diag_print) (char*), void (*log_print) (char*))
+                 void (*diag_print) (const char*), void (*log_print) (const char*))
 {
     int retcode = 0;
     int retval = 0;
@@ -249,7 +249,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         msr = msr_init(NULL);
         if ( msr == NULL ) {
             ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
-            return -1;
+            return NULL;
         }
         if (verbose > 1) {
             ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
@@ -322,8 +322,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
         recordCurrent->record = msr;
 
-        // Determine the byteorder swapflag only for the very first record. The byteorder
-        // should not change within the file.
+        // Determine the byte order swapflag only for the very first record.
+        // The byte order should not change within the file.
         // XXX: Maybe check for every record?
         if (swapflag <= 0) {
             // Returns 0 if the host is little endian, otherwise 1.

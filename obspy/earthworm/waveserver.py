@@ -5,12 +5,12 @@ Low-level Earthworm Wave Server tools.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import Trace, UTCDateTime, Stream
 from obspy.core import Stats
@@ -53,7 +53,7 @@ class tracebuf2:
     """
     byteswap = False
     ndata = 0           # number of samples in instance
-    inputType = None    # numpy data type
+    inputType = None    # NumPy data type
 
     def readTB2(self, tb2):
         """

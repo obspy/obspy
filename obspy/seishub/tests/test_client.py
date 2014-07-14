@@ -3,21 +3,45 @@
 """
 The obspy.seishub.client test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
 from obspy.seishub import Client
 import unittest
 from obspy.core import UTCDateTime, AttribDict
+from obspy.core.util.decorator import skipIf
 from obspy.xseed.utils import SEEDParserException
 
 
+TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
+TESTSERVER_UNREACHABLE_MSG = "Seishub test server not reachable."
+
+
+def _check_server_availability():
+    """
+    Returns an empty string if server is reachable or failure message
+    otherwise.
+    """
+    try:
+        code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
+        assert(code == 200)
+    except:
+        return TESTSERVER_UNREACHABLE_MSG
+    return ""
+
+
+@skipIf(_check_server_availability(), TESTSERVER_UNREACHABLE_MSG)
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for the SeisHub client.
     """
 
     def setUp(self):
-        self.client = Client("http://teide.geophysik.uni-muenchen.de:8080")
+        self.client = Client(TESTSERVER)
 
 #    def test_getWaveformApplyFilter(self):
 #        t = UTCDateTime("2009-09-03 00:00:00")
@@ -65,29 +89,29 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(time, float))
 
     def test_getStationIds(self):
-        #1 - some selected stations
+        # 1 - some selected stations
         stations = ['FUR', 'FURT', 'ROTZ', 'RTAK', 'MANZ', 'WET']
         data = self.client.waveform.getStationIds()
         for station in stations:
             self.assertTrue(station in data)
-        #2 - all stations of network BW
+        # 2 - all stations of network BW
         stations = ['FURT', 'ROTZ', 'RTAK', 'MANZ']
         data = self.client.waveform.getStationIds(network='BW')
         for station in stations:
             self.assertTrue(station in data)
 
     def test_getLocationIds(self):
-        #1 - all locations
+        # 1 - all locations
         items = ['', '10']
         data = self.client.waveform.getLocationIds()
         for item in items:
             self.assertTrue(item in data)
-        #2 - all locations for network BW
+        # 2 - all locations for network BW
         items = ['']
         data = self.client.waveform.getLocationIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
-        #3 - all locations for network BW and station MANZ
+        # 3 - all locations for network BW and station MANZ
         items = ['']
         data = self.client.waveform.getLocationIds(network='BW',
                                                    station='MANZ')
@@ -95,25 +119,25 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(item in data)
 
     def test_getChannelIds(self):
-        #1 - all channels
+        # 1 - all channels
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
                  'EHZ', 'HHE', 'HHN', 'HHZ', 'LHE', 'LHN', 'LHZ', 'SHE', 'SHN',
                  'SHZ']
         data = self.client.waveform.getChannelIds()
         for item in items:
             self.assertTrue(item in data)
-        #2 - all channels for network BW
+        # 2 - all channels for network BW
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
                  'EHZ', 'HHE', 'HHN', 'HHZ', 'SHE', 'SHN', 'SHZ']
         data = self.client.waveform.getChannelIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
-        #3 - all channels for network BW and station MANZ
+        # 3 - all channels for network BW and station MANZ
         items = ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
         data = self.client.waveform.getChannelIds(network='BW', station='MANZ')
         for item in items:
             self.assertTrue(item in data)
-        #4 - all channels for network BW, station MANZ and given location
+        # 4 - all channels for network BW, station MANZ and given location
         items = ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
         data = self.client.waveform.getChannelIds(network='BW', station='MANZ',
                                                   location='')

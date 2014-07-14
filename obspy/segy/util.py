@@ -1,34 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from distutils import sysconfig
 from struct import unpack
-import ctypes as C
-import os
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.libnames import _load_CDLL
 
-# Import shared libsegy depending on the platform.
-# create library names
-lib_names = [
-    # python3.3 platform specific library name
-    _get_lib_name('segy', add_extension_suffix=True),
-    # fallback for pre-packaged libraries
-    'libsegy']
-# get default file extension for shared objects
-lib_extension, = sysconfig.get_config_vars('SO')
-# initialize library
-for lib_name in lib_names:
-    try:
-        clibsegy = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                                       'lib', lib_name + lib_extension))
-        break
-    except Exception as e:
-        err_msg = str(e)
-        pass
-else:
-    msg = 'Could not load shared library for obspy.segy.\n\n %s' % err_msg
-    raise ImportError(msg)
+# Import shared libsegy
+clibsegy = _load_CDLL("segy")
 
 
 def unpack_header_value(endian, packed_value, length, special_format):

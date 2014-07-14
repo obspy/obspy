@@ -8,10 +8,10 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from copy import copy
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
@@ -27,9 +27,9 @@ def createPreview(trace, delta=60):
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
 
-    :type delta: integer, optional
+    :type delta: int, optional
     :param delta: Difference between two preview points. Defaults to ``60``.
-    :rtype: :class:`~obspy.core.Trace`
+    :rtype: :class:`~obspy.core.trace.Trace`
     :return: New Trace object.
 
     This method will modify the original Trace object. Create a copy of the
@@ -87,9 +87,9 @@ def mergePreviews(stream):
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
 
-    :type stream: :class:`~obspy.core.Stream`
+    :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: Stream object to be merged
-    :rtype: :class:`~obspy.core.Stream`
+    :rtype: :class:`~obspy.core.stream.Stream`
     :return: Merged Stream object.
     """
     copied_traces = copy(stream.traces)
@@ -158,7 +158,7 @@ def resamplePreview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
-    :type trace: :class:`~obspy.core.Trace`
+    :type trace: :class:`~obspy.core.trace.Trace`
     :param trace: Trace object to be resampled.
     :type samples: int
     :param samples: Desired number of samples.

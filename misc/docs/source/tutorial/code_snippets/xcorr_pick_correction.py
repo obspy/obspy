@@ -1,3 +1,4 @@
+from __future__ import print_function
 from obspy.core import read, UTCDateTime
 from obspy.signal.cross_correlation import xcorrPickCorrection
 
@@ -16,12 +17,13 @@ t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 # estimate the time correction for pick 2 without any preprocessing and open
 # a plot window to visually validate the results
 dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True)
-print "No preprocessing:"
-print "  Time correction for pick 2: %.6f" % dt
-print "  Correlation coefficient: %.2f" % coeff
+print("No preprocessing:")
+print("  Time correction for pick 2: %.6f" % dt)
+print("  Correlation coefficient: %.2f" % coeff)
 # estimate the time correction with bandpass prefiltering
 dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True,
-        filter="bandpass", filter_options={'freqmin': 1, 'freqmax': 10})
-print "Bandpass prefiltering:"
-print "  Time correction for pick 2: %.6f" % dt
-print "  Correlation coefficient: %.2f" % coeff
+                                filter="bandpass",
+                                filter_options={'freqmin': 1, 'freqmax': 10})
+print("Bandpass prefiltering:")
+print("  Time correction for pick 2: %.6f" % dt)
+print("  Correlation coefficient: %.2f" % coeff)

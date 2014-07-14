@@ -1,7 +1,7 @@
-from __future__ import unicode_literals
-from future.builtins import zip
-from future.builtins import str
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import copy
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
@@ -17,9 +17,7 @@ import warnings
 # checking for matplotlib/basemap
 try:
     from matplotlib import rcParams
-    import mpl_toolkits.basemap
-    # avoid flake8 complaining about unused import
-    mpl_toolkits.basemap
+    import mpl_toolkits.basemap  # NOQA
     HAS_BASEMAP = True
 except ImportError:
     HAS_BASEMAP = False
@@ -463,7 +461,7 @@ class CatalogTestCase(unittest.TestCase):
         reltol = 1
         # some ticklabels are slightly offset on py 3.3.3 in travis..
         # e.g. see http://tests.obspy.org/13309/#1
-        if (sys.version_info[0], sys.version_info[1]) == (3, 3):
+        if (sys.version_info[0]) == 3:
             reltol = 5
         with ImageComparison(self.image_dir, "catalog3.png",
                              reltol=reltol) as ic:
@@ -582,7 +580,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         NEVER modify the __resource_id_weak_dict!
 
         Only those ResourceIdentifiers that have a reference to an object that
-        is refered to somewhere else should stay in the dictionary.
+        is referred to somewhere else should stay in the dictionary.
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         _r1 = ResourceIdentifier()  # NOQA

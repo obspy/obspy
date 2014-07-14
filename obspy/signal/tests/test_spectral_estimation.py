@@ -3,8 +3,9 @@
 """
 The psd test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import zip
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
@@ -30,7 +31,7 @@ class PsdTestCase(unittest.TestCase):
         Test to compare results of PITSA's psd routine to the
         :func:`matplotlib.mlab.psd` routine wrapped in
         :func:`obspy.signal.spectral_estimation.psd`.
-        The test works on 8192 samples long gaussian noise with a standard
+        The test works on 8192 samples long Gaussian noise with a standard
         deviation of 0.1 generated with PITSA, sampling rate for processing in
         PITSA was 100.0 Hz, length of nfft 512 samples. The overlap in PITSA
         cannot be controlled directly, instead only the number of overlapping

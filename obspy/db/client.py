@@ -8,8 +8,9 @@ Client for a database created by obspy.db.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.preview import mergePreviews
@@ -29,14 +30,14 @@ class Client(object):
         """
         Initializes the client.
 
-        :type url: string, optional
+        :type url: str, optional
         :param url: A string that indicates database dialect and connection
             arguments. See
             http://docs.sqlalchemy.org/en/latest/core/engines.html for more
             information about database dialects and urls.
-        :type session: class:`sqlalchemy.orm.session.Session`, optional
+        :type session: :class:`sqlalchemy.orm.session.Session`, optional
         :param session: An existing database session object.
-        :type debug: boolean, optional
+        :type debug: bool, optional
         :param debug: Enables verbose output.
         """
         if url:
@@ -65,7 +66,7 @@ class Client(object):
         """
         Fetches all possible station id's.
 
-        :type network: string, optional
+        :type network: str, optional
         :param network: Filter result by given network id if given. Defaults
             to ``None``.
         """
@@ -82,10 +83,10 @@ class Client(object):
         """
         Fetches all possible location id's.
 
-        :type network: string, optional
+        :type network: str, optional
         :param network: Filter result by given network id if given. Defaults
             to ``None``.
-        :type station: string, optional
+        :type station: str, optional
         :param station: Filter result by given station id if given. Defaults
             to ``None``.
         """
@@ -104,13 +105,13 @@ class Client(object):
         """
         Fetches all possible channel id's.
 
-        :type network: string, optional
+        :type network: str, optional
         :param network: Filter result by given network id if given. Defaults
             to ``None``.
-        :type station: string, optional
+        :type station: str, optional
         :param station: Filter result by given station id if given. Defaults
             to ``None``.
-        :type location: string, optional
+        :type location: str, optional
         :param location: Filter result by given location id if given. Defaults
             to ``None``.
         """
@@ -130,7 +131,7 @@ class Client(object):
     def getEndtimes(self, network=None, station=None, location=None,
                     channel=None):
         """
-        Generates a list of last endtimes for each channel.
+        Generates a list of last end times for each channel.
         """
         # build up query
         session = self.session()

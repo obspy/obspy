@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime, Stream, Trace, read
+from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
-from obspy.core import compatibility
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
+
 import ctypes as C
+import io
 import numpy as np
 import os
 import random
@@ -45,7 +48,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         An invalid record length should raise an exception.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             data = np.random.randint(-1000, 1000, npts).astype('int32')
@@ -66,7 +69,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         An invalid encoding should raise an exception.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             data = np.random.randint(-1000, 1000, npts).astype('int32')
@@ -151,7 +154,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # read temp file directly without libmseed
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
-                bin_data = np.fromfile(fp, dtype='>f4', count=7)
+                dtype = np.dtype('>f4')
+                bin_data = frombuffer(fp.read(7 * dtype.itemsize),
+                                      dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
             st2 = readMSEED(tempfile)
@@ -183,7 +188,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         Writing data of type int64 and int16 are not supported.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # int64
@@ -535,16 +540,16 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
     def test_enforcing_reading_byteorder(self):
         """
-        Tests if setting the byteorder of the header for reading is passed to
+        Tests if setting the byte order of the header for reading is passed to
         the C functions.
 
-        Quite simple. It just checks if reading with the correct byteorder
-        works and reading with the wrong byteorder fails.
+        Quite simple. It just checks if reading with the correct byte order
+        works and reading with the wrong byte order fails.
         """
         tr = Trace(data=np.arange(10, dtype="int32"))
 
         # Test with little endian.
-        memfile = compatibility.BytesIO()
+        memfile = io.BytesIO()
         tr.write(memfile, format="mseed", byteorder="<")
         memfile.seek(0, 0)
         # Reading little endian should work just fine.
@@ -556,11 +561,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Wrong byteorder raises.
+        # Wrong byte order raises.
         self.assertRaises(ValueError, read, memfile, header_byteorder=">")
 
         # Same test with big endian
-        memfile = compatibility.BytesIO()
+        memfile = io.BytesIO()
         tr.write(memfile, format="mseed", byteorder=">")
         memfile.seek(0, 0)
         # Reading big endian should work just fine.
@@ -572,7 +577,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Wrong byteorder raises.
+        # Wrong byte order raises.
         self.assertRaises(ValueError, read, memfile, header_byteorder="<")
 
     def test_long_year_range(self):
@@ -589,8 +594,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         years = list(range(1901, 2101, 5))
         for year in years:
             for byteorder in ["<", ">"]:
-                memfile = compatibility.BytesIO()
-                # Get some random time with the year and byteorder as the seed.
+                memfile = io.BytesIO()
+                # Get some random time with the year and the byte order as the
+                # seed.
                 random.seed(year + ord(byteorder))
                 tr.stats.starttime = UTCDateTime(
                     year,

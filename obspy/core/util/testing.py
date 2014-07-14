@@ -8,17 +8,16 @@ Testing utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import super
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str, PY2
-from obspy.core.util.misc import get_untracked_files_from_git
+
+from obspy.core.util.misc import get_untracked_files_from_git, CatchOutput
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core import compatibility
+
 import fnmatch
 import inspect
-import sys
 import os
 import glob
 import unittest
@@ -142,7 +141,7 @@ class ImageComparison(NamedTemporaryFile):
     :type image_name: str
     :param image_name: Filename (with suffix, without directory path) of the
         baseline image
-    :type reltol: float (optional)
+    :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
 
@@ -232,18 +231,37 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
+        msg = ""
         try:
-            # only compare images if no exception occured in the with
-            # statement. this avoids masking previously occured exceptions (as
+            # only compare images if no exception occurred in the with
+            # statement. this avoids masking previously occurred exceptions (as
             # an exception may occur in compare()). otherwise we only clean up
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:
-                self.compare()
+                msg = self.compare()
+        # we can still upload images if comparison fails on two different sized
+        # images
+        except ValueError as e:
+            failed = True
+            msg = str(e)
+            if "operands could not be broadcast together" in msg:
+                msg = self._upload_and_append_message(msg)
+                raise ImageComparisonException(msg)
+            raise
+        # simply reraise on any other unhandled exceptions
         except:
             failed = True
             raise
+        # if image comparison not raises by itself, the test failed if we get a
+        # message back or the test passed if we get an empty message
         else:
+            if msg:
+                msg = self._upload_and_append_message(msg)
+                failed = True
+                raise ImageComparisonException(msg)
             failed = False
+        # finally clean up after the image test, whether failed or not.
+        # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
             self.close()
@@ -251,6 +269,7 @@ class ImageComparison(NamedTemporaryFile):
             if self.keep_output:
                 if not (self.keep_only_failed and not failed):
                     self._copy_tempfiles()
+            # delete temporary files
             os.remove(self.name)
             if os.path.exists(self.diff_filename):
                 os.remove(self.diff_filename)
@@ -267,8 +286,7 @@ class ImageComparison(NamedTemporaryFile):
             raise ImageComparisonException(msg)
         msg = compare_images(native_str(self.baseline_image),
                              native_str(self.name), tol=self.tol)
-        if msg:
-            raise ImageComparisonException(msg)
+        return msg
 
     def _copy_tempfiles(self):
         """
@@ -289,6 +307,59 @@ class ImageComparison(NamedTemporaryFile):
                                                          diff_filename_new))
         shutil.copy(self.name, os.path.join(directory, self.image_name))
 
+    def _upload_and_append_message(self, msg):
+        """
+        Takes an error message from image comparison, uploads any output images
+        and appends the corresponding imgur links to the original error
+        message.
+        """
+        msg_ = self._upload_images()
+        if msg_:
+            msg = "\n".join([msg, msg_])
+        return msg
+
+    def _upload_images(self):
+        """
+        Uploads images to imgur.
+        """
+        # try to import pyimgur
+        try:
+            import pyimgur
+        except ImportError:
+            msg = ("Upload to imgur not possible (python package "
+                   "'pyimgur' not installed).")
+            warnings.warn(msg)
+            return ""
+        # requests package should be installed since it is a dependency of
+        # pyimgur
+        import requests
+        # try to get imgur client id from environment
+        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
+        if imgur_clientid is None:
+            msg = ("Upload to imgur not possible (environment "
+                   "variable OBSPY_IMGUR_CLIENTID not set).")
+            warnings.warn(msg)
+            return ""
+        # upload images and return urls
+        imgur = pyimgur.Imgur(imgur_clientid)
+        msg = []
+        try:
+            if os.path.exists(self.baseline_image):
+                up = imgur.upload_image(self.baseline_image, title=self.name)
+                msg.append("Baseline image: " + up.link)
+            if os.path.exists(self.name):
+                up = imgur.upload_image(self.name, title=self.name)
+                msg.append("Failed image:   " + up.link)
+            if os.path.exists(self.diff_filename):
+                up = imgur.upload_image(self.diff_filename,
+                                        title=self.diff_filename)
+                msg.append("Diff image:     " + up.link)
+        except requests.exceptions.SSLError as e:
+            msg = ("Upload to imgur not possible (caught SSLError: %s).")
+            warnings.warn(msg % str(e))
+            return ""
+        return "\n".join(msg)
+
 
 def get_matplotlib_defaul_tolerance():
     """
@@ -299,14 +370,12 @@ def get_matplotlib_defaul_tolerance():
     if getMatplotlibVersion() < [1, 3, 0]:
         return 2e-3
     else:
-        return 1
+        return 2
 
 
 FLAKE8_EXCLUDE_FILES = [
     "*/__init__.py",
     ]
-# E265: block comment should start with '# '  (> 500 appearances)
-FLAKE8_IGNORE_CODES = ["E265"]
 
 try:
     import flake8
@@ -324,7 +393,7 @@ def check_flake8():
     # pyflakes autodetection of PY2 does not work with the future library.
     # Therefore, overwrite the pyflakes autodetection manually
     if PY2:
-        import pyflakes.checker
+        import pyflakes.checker  # @UnusedImport
         pyflakes.checker.PY2 = True
     import flake8.main
     from flake8.engine import get_style_guide
@@ -360,16 +429,24 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    flake8_style.options.ignore = \
-        tuple(set(flake8_style.options.ignore + tuple(FLAKE8_IGNORE_CODES)))
-    sys.stdout = compatibility.StringIO()
-    if PY2:
+    flake8_style.options.ignore = tuple(set(flake8_style.options.ignore))
+
+    with CatchOutput() as out:
         files = [native_str(f) for f in files]
-    report = flake8_style.check_files(files)
-    sys.stdout.seek(0)
-    message = sys.stdout.read()
-    sys.stdout = sys.__stdout__
-    return report, message
+        report = flake8_style.check_files(files)
+
+    return report, out.stdout
+
+
+# this dictionary contains the locations of checker routines that determine
+# whether the module's tests can be executed or not (e.g. because test server
+# is unreachable, necessary ports are blocked, etc.).
+# A checker routine should return either an empty string (tests can and will
+# be executed) or a message explaining why tests can not be executed (all
+# tests of corresponding module will be skipped).
+MODULE_TEST_SKIP_CHECKS = {
+    'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
+    }
 
 
 if __name__ == '__main__':

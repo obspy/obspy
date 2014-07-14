@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: paz.py
 #  Purpose: Python routines for reading GSE poles and zero files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Python routines for reading GSE pole and zero (PAZ) files.
 
@@ -19,10 +19,9 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import doctest
@@ -35,12 +34,12 @@ def readPaz(paz_file):
     Read GSE PAZ / Calibration file format and returns poles, zeros and the
     seismometer_gain.
 
-    Do not use this function in connection with the obspy instrument
+    Do not use this function in connection with the ObsPy instrument
     simulation, the A0_normalization_factor might be set wrongly. Use
     :func:`~obspy.gse2.libgse2.attach_paz` instead.
 
-    >>> from obspy.core import compatibility
-    >>> f = compatibility.StringIO(
+    >>> import io
+    >>> f = io.StringIO(
     ... """CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
@@ -58,9 +57,10 @@ def readPaz(paz_file):
     zeros = []
 
     if isinstance(paz_file, (str, native_str)):
-        paz_file = open(paz_file, 'r')
-
-    PAZ = paz_file.readlines()
+        with open(paz_file, 'rt') as fh:
+            PAZ = fh.readlines()
+    else:
+        PAZ = paz_file.readlines()
     if PAZ[0][0:4] != 'CAL1':
         raise NameError("Unknown GSE PAZ format %s" % PAZ[0][0:4])
     if PAZ[0][31:34] != 'PAZ':
@@ -109,9 +109,10 @@ def attach_paz(tr, paz_file):
             attributes
     :param paz_file: path to pazfile or file pointer
 
-    >>> from obspy.core import Trace, compatibility
+    >>> from obspy.core import Trace
+    >>> import io
     >>> tr = Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
-    >>> f = compatibility.StringIO(
+    >>> f = io.StringIO(
     ... """CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
@@ -122,7 +123,7 @@ def attach_paz(tr, paz_file):
     ... 0.0 0.0
     ... 0.4""")
     >>> attach_paz(tr, f)
-    >>> print(round(tr.stats.paz.sensitivity, -4))
+    >>> print(round(tr.stats.paz.sensitivity / 10E3) * 10E3)
     671140000.0
     '''
     poles, zeros, seismometer_gain = readPaz(paz_file)

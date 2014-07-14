@@ -2,59 +2,20 @@
 """
 Defines the libsignal and evalresp structures and blockettes.
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from distutils import sysconfig
 import ctypes as C
 import numpy as np
-import os
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.libnames import _load_CDLL
 
 
-# Import shared libsignal depending on the platform.
-# create library names
-lib_names = [
-    # python3.3 platform specific library name
-    _get_lib_name('signal', add_extension_suffix=True),
-    # fallback for pre-packaged libraries
-    'libsignal']
-# get default file extension for shared objects
-lib_extension, = sysconfig.get_config_vars('SO')
-# initialize library
-for lib_name in lib_names:
-    try:
-        clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                                         'lib', lib_name + lib_extension))
-        break
-    except Exception as e:
-        err_msg = str(e)
-        pass
-else:
-    msg = 'Could not load shared library for obspy.signal.\n\n %s' % err_msg
-    raise ImportError(msg)
-
-# Import shared libevresp depending on the platform.
-# create library names
-erlib_names = [
-    # python3.3 platform specific library name
-    _get_lib_name('evresp', add_extension_suffix=True),
-    # fallback for pre-packaged libraries
-    'libevresp']
-# initialize library
-for erlib_name in erlib_names:
-    try:
-        clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                                         'lib', erlib_name + lib_extension))
-        break
-    except Exception as e:
-        err_msg = str(e)
-        pass
-else:
-    msg = 'Could not load shared library for ' + \
-          'obspy.signal.invsim.evalresp\n\n %s' % err_msg
-    raise ImportError(msg)
+# Import shared libsignal
+clibsignal = _load_CDLL("signal")
+# Import shared libevresp
+clibevresp = _load_CDLL("evresp")
 
 clibsignal.calcSteer.argtypes = [
     C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_float,
@@ -74,7 +35,7 @@ clibsignal.generalizedBeamformer.argtypes = [
                            flags=native_str('C_CONTIGUOUS')),
     np.ctypeslib.ndpointer(dtype='c16', ndim=3,
                            flags=native_str('C_CONTIGUOUS')),
-    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
     C.c_double,
     C.c_int,
 ]
@@ -138,6 +99,18 @@ clibsignal.stalta.argtypes = [
                            flags=native_str('C_CONTIGUOUS')),
 ]
 clibsignal.stalta.restype = C.c_int
+
+clibsignal.hermite_interpolation.argtypes = [
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.c_int, C.c_int, C.c_double, C.c_double]
+clibsignal.hermite_interpolation.restype = C.c_void_p
 
 
 STALEN = 64

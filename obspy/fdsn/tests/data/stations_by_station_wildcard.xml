@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.14</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.1</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2000-01-01T00%3A00%3A00.000000&amp;station=A%2A&amp;network=IU&amp;endtime=2002-01-01T00%3A00%3A00.000000&amp;location=00</ModuleURI>
- <Created>2014-04-10T15:33:34</Created>
+ <Created>2014-05-16T11:46:12</Created>
  <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>260</TotalNumberStations>
   <SelectedNumberStations>4</SelectedNumberStations>
-  <Station code="ADK" startDate="1995-08-20T00:00:00" endDate="2009-02-14T00:00:00" restrictedStatus="open" alternateNetworkCodes=".EARTHSCOPE,_FDSN,_STS-1,.UNRESTRICTED,_ANSS,_US-REF,_GSN-BROADBAND,_ANSS-BB,_FDSN-ALL,_US-ALL,_GSN,_REALTIME">
+  <Station code="ADK" startDate="1995-08-20T00:00:00" endDate="2009-02-14T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes=".EARTHSCOPE,_FDSN,_STS-1,.UNRESTRICTED,_ANSS,_US-REF,_GSN-BROADBAND,_ANSS-BB,_FDSN-ALL,_US-ALL,_GSN,_REALTIME">
    <Comment>
     <Value>TEST DATA:  Calibration, and testing in progress.</Value>
     <BeginEffectiveTime>1995-08-24T00:00:00</BeginEffectiveTime>
@@ -46,7 +46,7 @@
    <TotalNumberChannels>74</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="AFI" startDate="1993-08-24T00:00:00" endDate="2009-05-11T00:00:00" restrictedStatus="open" alternateNetworkCodes="_GSN,_GSN-BROADBAND,_FDSN,_STS-1,.UNRESTRICTED,_FDSN-ALL,_SPACIFIC,_REALTIME,.SPACIFIC">
+  <Station code="AFI" startDate="1993-08-24T00:00:00" endDate="2009-05-11T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN,_GSN-BROADBAND,_FDSN,_STS-1,.UNRESTRICTED,_FDSN-ALL,_SPACIFIC,_REALTIME,.SPACIFIC">
    <Comment>
     <Value>TEST DATA:  Calibration, and testing in progress.</Value>
     <BeginEffectiveTime>1993-08-24T00:00:00</BeginEffectiveTime>
@@ -67,7 +67,7 @@
    <TotalNumberChannels>95</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.UNRESTRICTED,.TEST,_GSN,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME">
+  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.UNRESTRICTED,.TEST,_GSN,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME">
    <Comment>
     <Value>Time Uncertain.</Value>
     <BeginEffectiveTime>1996-05-20T19:20:00</BeginEffectiveTime>
@@ -83,7 +83,7 @@
    <TotalNumberChannels>172</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.UNRESTRICTED,.TEST,_GSN,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME">
+  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.UNRESTRICTED,.TEST,_GSN,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME">
    <Comment>
     <Value>Station Maintenance.  Tests may be in progress.</Value>
     <BeginEffectiveTime>2001-04-25T14:00:00</BeginEffectiveTime>

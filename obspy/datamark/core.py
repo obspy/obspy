@@ -2,10 +2,9 @@
 """
 DATAMARK bindings to ObsPy core module.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import str
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, UTCDateTime, Stream
 import numpy as np
@@ -16,7 +15,7 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
     """
     Checks whether a file is DATAMARK or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: DATAMARK file to be checked.
     :rtype: bool
     :return: ``True`` if a DATAMARK file.
@@ -58,7 +57,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: DATAMARK file to be read.
     :param century: DATAMARK stores year as 2 numbers, need century to
         construct proper datetime.

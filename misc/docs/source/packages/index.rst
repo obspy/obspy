@@ -43,6 +43,7 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.core.quakeml
    obspy.ndk
    obspy.pde
 
