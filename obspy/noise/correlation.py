@@ -1,4 +1,3 @@
-import h5py
 import numpy as np
 
 from obspy.noise.correlation_functions import phase_xcorr
@@ -42,7 +41,7 @@ class CorrelationStack(object):
         self.__locked = True
 
     def write(self, filename):
-        f = h5py.File('myfile.hdf5', 'r')
+        pass
 
 
 def correlate_trace(trace_a, trace_b, max_lag, correlation_type, **kwargs):

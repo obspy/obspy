@@ -15,14 +15,14 @@ def phase_xcorr(data1, data2, max_lag, nu=1, min_lag=0):
     information)
     max_lag: maximum lag in number of samples, integer
     """
-    #Initialize pcc array:
+    # Initialize pcc array:
     pxc = np.zeros((2 * max_lag + 1,), dtype=np.float64)
 
-    #Obtain analytic signal
+    # Obtain analytic signal
     data1 = hilbert(data1)
     data2 = hilbert(data2)
 
-    #Normalization
+    # Normalization
     data1 = data1 / (np.abs(data1))
     data2 = data2 / (np.abs(data2))
 
@@ -32,22 +32,5 @@ def phase_xcorr(data1, data2, max_lag, nu=1, min_lag=0):
     if min_lag:
         pxc = np.ma.array(pxc)
         pxc[-min_lag: min_lag] = True
-
-    # for k in range(0, max_lag + 1):
-    #     i11 = 0
-    #     i12 = len(data1) - k
-    #     i21 = k
-    #     i22 = len(data1)
-    #
-    #     pxc[max_lag + k] = 1.0 / float(2.0 * len(data1) - k) * \
-    #         (np.sum(np.abs(data1[i11:i12] +
-    #                        data2[i21:i22]) ** nu) -
-    #          np.sum(np.abs(data1[i11:i12] -
-    #                        data2[i21:i22]) ** nu))
-    #     pxc[max_lag - k] = 1.0 / float(2.0 * len(data1) - k) * \
-    #         (np.sum(np.abs(data1[i21:i22] +
-    #                        data2[i11:i12]) ** nu) -
-    #          np.sum(np.abs(data1[i21:i22] -
-    #                        data2[i11:i12]) ** nu))
 
     return pxc
