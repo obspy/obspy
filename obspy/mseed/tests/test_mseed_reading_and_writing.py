@@ -1063,6 +1063,17 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         np.testing.assert_allclose(
             tr.data[:5], np.array([-38, -38, -36, -37, -36]))
 
+    def test_reading_CDSN_format(self):
+        """
+        Tests reading miniseed data with the CDSN encoding.
+        """
+        tr = read(os.path.join(self.path, "data", "CDSN_encoding.mseed"))[0]
+        self.assertEqual(tr.stats.mseed.encoding, "CDSN")
+        self.assertEqual(tr.data.dtype, np.int32)
+        # Test data is from the IRIS ASCII timeseries service.
+        np.testing.assert_allclose(
+            tr.data[:5], np.array([294, 32, 26, 285, 389]))
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
