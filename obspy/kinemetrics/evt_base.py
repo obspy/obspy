@@ -74,9 +74,9 @@ class EVT_Virtual(object):
         :return: the value in the dictionnary
         """
         key = item.lower()
-        if key in eval(self.diconame):
+        if key in self.HEADER:
             try:
-                return eval(self.diconame)[key][2]
+                return self.HEADER[key][2]
             except IndexError:
                 return("No value for " + key)
 
@@ -91,8 +91,8 @@ class EVT_Virtual(object):
         key = item.lower()
         try:
             if getattr(self, diconame) != "":
-                if key in eval(self.diconame):
-                    eval(self.diconame)[key][2] = value
+                if key in self.HEADER:
+                    self.HEADER[key][2] = value
                 else:
                     object.__setattr__(self, item, value)
             else:
@@ -104,9 +104,9 @@ class EVT_Virtual(object):
         """
         remove value from dictionary
         """
-        for key in eval(self.diconame):
+        for key in self.HEADER:
             try:
-                eval(self.diconame)[key].pop(2)
+                self.HEADER[key].pop(2)
             except IndexError:
                 pass
 
@@ -120,19 +120,19 @@ class EVT_Virtual(object):
         """
         if type(val) is not list:
             raise TypeError("setdico waiting a list")
-        for key in eval(self.diconame):
-            index = eval(self.diconame)[key][0]-offset
+        for key in self.HEADER:
+            index = self.HEADER[key][0]-offset
             if index < len(val) and index >= 0:
-                if eval(self.diconame)[key][1] != "":
-                    fct = 'self.' + eval(self.diconame)[key][1][0]
-                    param = eval(self.diconame)[key][1][1]
+                if self.HEADER[key][1] != "":
+                    fct = 'self.' + self.HEADER[key][1][0]
+                    param = self.HEADER[key][1][1]
                     value = eval(fct)(val[index], param, val, offset)
                 else:
                     value = val[index]
                 try:
-                    eval(self.diconame)[key][2] = value
+                    self.HEADER[key][2] = value
                 except IndexError:
-                    eval(self.diconame)[key].append(value)
+                    self.HEADER[key].append(value)
 
     def __str__(self):
         """
@@ -142,7 +142,7 @@ class EVT_Virtual(object):
 
         """
         chaine = ""
-        for vname in sorted(eval(self.diconame)):
+        for vname in sorted(self.HEADER):
             chaine += vname + "\t is \t" + str(getattr(self, vname)) + "\n"
         return chaine
 

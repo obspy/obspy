@@ -156,43 +156,42 @@ class EVT_DATA(object):
 
 
 class EVT_HEADER(EVT_Virtual):
-    HEADER_DICT = {'instrument': [1, ['_instrument', '']],
-                   'a2dbits': [4, ""],
-                   'samplebytes': [5, ""],
-                   'installedchan': [7, ""],
-                   'maxchannels': [8, ""],
-                   'batteryvoltage': [13, ""],
-                   'temperature': [16, ""],
-                   'gpsstatus': [18, ['_gpsstatus', '']],
-                   'gpslastlock': [33, ['_time', -1]],
-                   'startime': [107, ['_time', 112]],
-                   'triggertime': [108, ['_time', 113]],
-                   'duration': [109, ""],
-                   'nscans': [115, ""],
-                   'serialnumber': [116, ""],
-                   'nchannels': [117, ""],
-                   'stnid': [118, ['_strnull', '']],
-                   'comment': [119, ['_strnull', '']],
-                   'elevation': [120, ""],
-                   'latitude': [121, ""],
-                   'longitude': [122, ""],
-                   'chan_id': [140, ['_arraynull', [12, 27, 140]]],
-                   'chan_north': [143, ['_arraynull', [12, 27, 143]]],
-                   'chan_east': [144, ['_arraynull', [12, 27, 144]]],
-                   'chan_up': [145, ['_arraynull', [12, 27, 145]]],
-                   'chan_azimuth': [147, ['_arraynull', [12, 27, 147]]],
-                   'chan_gain': [150, ['_array', [12, 27, 150]]],
-                   'chan_fullscale': [157, ['_array', [12, 27, 157]]],
-                   'chan_sensitivity': [158, ['_array', [12, 27, 158]]],
-                   'chan_damping': [159, ['_array', [12, 27, 159]]],
-                   'chan_natfreq': [160, ['_array', [12, 27, 160]]],
-                   'chan_calcoil': [164, ['_array', [12, 27, 164]]],
-                   'chan_range': [165, ['_array', [12, 27, 165]]],
-                   'chan_sensogain': [166, ['_array', [12, 27, 166]]]}
+    HEADER = {'instrument': [1, ['_instrument', '']],
+              'a2dbits': [4, ""],
+              'samplebytes': [5, ""],
+              'installedchan': [7, ""],
+              'maxchannels': [8, ""],
+              'batteryvoltage': [13, ""],
+              'temperature': [16, ""],
+              'gpsstatus': [18, ['_gpsstatus', '']],
+              'gpslastlock': [33, ['_time', -1]],
+              'startime': [107, ['_time', 112]],
+              'triggertime': [108, ['_time', 113]],
+              'duration': [109, ""],
+              'nscans': [115, ""],
+              'serialnumber': [116, ""],
+              'nchannels': [117, ""],
+              'stnid': [118, ['_strnull', '']],
+              'comment': [119, ['_strnull', '']],
+              'elevation': [120, ""],
+              'latitude': [121, ""],
+              'longitude': [122, ""],
+              'chan_id': [140, ['_arraynull', [12, 27, 140]]],
+              'chan_north': [143, ['_arraynull', [12, 27, 143]]],
+              'chan_east': [144, ['_arraynull', [12, 27, 144]]],
+              'chan_up': [145, ['_arraynull', [12, 27, 145]]],
+              'chan_azimuth': [147, ['_arraynull', [12, 27, 147]]],
+              'chan_gain': [150, ['_array', [12, 27, 150]]],
+              'chan_fullscale': [157, ['_array', [12, 27, 157]]],
+              'chan_sensitivity': [158, ['_array', [12, 27, 158]]],
+              'chan_damping': [159, ['_array', [12, 27, 159]]],
+              'chan_natfreq': [160, ['_array', [12, 27, 160]]],
+              'chan_calcoil': [164, ['_array', [12, 27, 164]]],
+              'chan_range': [165, ['_array', [12, 27, 165]]],
+              'chan_sensogain': [166, ['_array', [12, 27, 166]]]}
 
     def __init__(self):
         EVT_Virtual.__init__(self)
-        self.diconame = "self.HEADER_DICT"
 
     def read(self, fp, length, endian):
         """
@@ -232,9 +231,9 @@ class EVT_HEADER(EVT_Virtual):
         :rtype: dictionary
         """
         dico = {}
-        for key in self.HEADER_DICT:
+        for key in self.HEADER:
             try:
-                value = self.HEADER_DICT[key][2]
+                value = self.HEADER[key][2]
                 if type(value) is list:
                     dico[key] = value[numchan]
                 else:
@@ -260,24 +259,23 @@ class EVT_HEADER(EVT_Virtual):
 
 
 class EVT_FRAME(EVT_Virtual):
-    FRAME_DICT = {'frametype': [0, ''],
-                  'instrumentcode': [1, ['_instrument', '']],
-                  'recorderid': [2, ''],
-                  'framesize': [3, ''],
-                  'blocktime': [4, ['_time', 9]],
-                  'channelbitmap': [5, ''],
-                  'streampar': [6, ''],
-                  'framestatus': [7, ''],
-                  'framestatus2': [8, ''],
-                  'msec': [9, ''],
-                  'channelbitmap1': [10, ''],
-                  'timecode': [11, '']}
+    HEADER = {'frametype': [0, ''],
+              'instrumentcode': [1, ['_instrument', '']],
+              'recorderid': [2, ''],
+              'framesize': [3, ''],
+              'blocktime': [4, ['_time', 9]],
+              'channelbitmap': [5, ''],
+              'streampar': [6, ''],
+              'framestatus': [7, ''],
+              'framestatus2': [8, ''],
+              'msec': [9, ''],
+              'channelbitmap1': [10, ''],
+              'timecode': [11, '']}
 
     endian = 0
 
     def __init__(self):
         EVT_Virtual.__init__(self)
-        self.diconame = "self.FRAME_DICT"
         self.numframe = 0
 
     def count(self):
@@ -336,20 +334,19 @@ class EVT_TAG(EVT_Virtual):
     """
     Class to read the TAGs of EVT Files
     """
-    TAG_DICT = {'order': [1, ""],
-                'version': [2, ""],
-                'instrument': [3, ['_instrument', '']],
-                'type': [4, ""],
-                'length': [5, ""],
-                'datalength': [6, ""],
-                'id': [7, ""],
-                'checksum': [8, ""],
-                'endian': [9, ""]}
+    HEADER = {'order': [1, ""],
+              'version': [2, ""],
+              'instrument': [3, ['_instrument', '']],
+              'type': [4, ""],
+              'length': [5, ""],
+              'datalength': [6, ""],
+              'id': [7, ""],
+              'checksum': [8, ""],
+              'endian': [9, ""]}
     INST_COUNT = 0
 
     def __init__(self):
         EVT_Virtual.__init__(self)
-        self.diconame = "self.TAG_DICT"
 
     def read(self, fp):
         """
