@@ -175,7 +175,7 @@ class Client(object):
                    "file-like object.")
             raise TypeError(msg)
         try:
-            fh.write(data)
+            fh.write(data if binary else data.decode('utf-8'))
         finally:
             # Only close if also opened.
             if file_opened is True:
@@ -814,10 +814,10 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :param model: Name of 1-D earth velocity model to be used. Available
             models include:
 
-                * ``'iasp91'`` (default) - by Int'l Assoc of Seismology and
-                  Physics of the Earth's Interior
-                * ``'prem'`` - Preliminary Reference Earth Model
-                * ``'ak135'``
+            * ``'iasp91'`` (default) - by Int'l Assoc of Seismology and
+              Physics of the Earth's Interior
+            * ``'prem'`` - Preliminary Reference Earth Model
+            * ``'ak135'``
 
         :type phases: list of str, optional
         :param phases: Comma separated list of phases. The default is as

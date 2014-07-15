@@ -110,7 +110,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> createEmptyDataChunk(6, np.dtype('complex128'), 0)
+    >>> createEmptyDataChunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -118,6 +118,9 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    # For compatibility with NumPy 1.4
+    if isinstance(dtype, str):
+        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \

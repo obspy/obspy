@@ -21,7 +21,7 @@ from obspy.seedlink.slpacket import SLPacket
 
 class SLState(object):
     """
-     Class to manage SeedLinkConnection state.
+    Class to manage SeedLinkConnection state.
 
     :var SL_DOWN: Connection state down.
     :type SL_DOWN: int

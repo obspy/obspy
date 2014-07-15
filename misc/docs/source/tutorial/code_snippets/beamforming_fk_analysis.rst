@@ -25,17 +25,13 @@ The second half shows how to plot the output. We use the output
 absolute power, backazimuth, slowness. The colorbar corresponds to relative
 power.
 
-.. include:: beamforming_fk_analysis_1.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/beamforming_fk_analysis_1.py
+.. plot:: tutorial/code_snippets/beamforming_fk_analysis_1.py
+   :include-source:
 
 Another representation would be a polar plot, which sums the relative power in
 gridded bins, each defined by backazimuth and slowness of the analyzed signal
 part. The backazimuth is counted clockwise from north, the slowness limits can
 be set by hand.
 
-.. include:: beamforming_fk_analysis_2.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/beamforming_fk_analysis_2.py
+.. plot:: tutorial/code_snippets/beamforming_fk_analysis_2.py
+   :include-source:

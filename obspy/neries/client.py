@@ -118,9 +118,9 @@ class Client(object):
             service. This entry in form of a email address is required for
             using the following methods:
 
-                * :meth:`~obspy.neries.client.Client.saveWaveform`
-                * :meth:`~obspy.neries.client.Client.getWaveform`
-                * :meth:`~obspy.neries.client.Client.getInventory`
+            * :meth:`~obspy.neries.client.Client.saveWaveform`
+            * :meth:`~obspy.neries.client.Client.getWaveform`
+            * :meth:`~obspy.neries.client.Client.getInventory`
 
             Defaults to ``''``.
         :type password: str, optional

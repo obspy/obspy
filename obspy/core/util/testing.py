@@ -330,6 +330,9 @@ class ImageComparison(NamedTemporaryFile):
                    "'pyimgur' not installed).")
             warnings.warn(msg)
             return ""
+        # requests package should be installed since it is a dependency of
+        # pyimgur
+        import requests
         # try to get imgur client id from environment
         imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
         if imgur_clientid is None:
@@ -340,16 +343,21 @@ class ImageComparison(NamedTemporaryFile):
         # upload images and return urls
         imgur = pyimgur.Imgur(imgur_clientid)
         msg = []
-        if os.path.exists(self.baseline_image):
-            up = imgur.upload_image(self.baseline_image, title=self.name)
-            msg.append("Baseline image: " + up.link)
-        if os.path.exists(self.name):
-            up = imgur.upload_image(self.name, title=self.name)
-            msg.append("Failed image:   " + up.link)
-        if os.path.exists(self.diff_filename):
-            up = imgur.upload_image(self.diff_filename,
-                                    title=self.diff_filename)
-            msg.append("Diff image:     " + up.link)
+        try:
+            if os.path.exists(self.baseline_image):
+                up = imgur.upload_image(self.baseline_image, title=self.name)
+                msg.append("Baseline image: " + up.link)
+            if os.path.exists(self.name):
+                up = imgur.upload_image(self.name, title=self.name)
+                msg.append("Failed image:   " + up.link)
+            if os.path.exists(self.diff_filename):
+                up = imgur.upload_image(self.diff_filename,
+                                        title=self.diff_filename)
+                msg.append("Diff image:     " + up.link)
+        except requests.exceptions.SSLError as e:
+            msg = ("Upload to imgur not possible (caught SSLError: %s).")
+            warnings.warn(msg % str(e))
+            return ""
         return "\n".join(msg)
 
 

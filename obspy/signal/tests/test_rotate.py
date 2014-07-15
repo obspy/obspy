@@ -122,8 +122,8 @@ class RotateTestCase(unittest.TestCase):
         data_e = np.loadtxt(f)
         f.close()
         # Use double precision to get more accuracy for testing.
-        data_n = np.require(data_n, "float64")
-        data_e = np.require(data_e, "float64")
+        data_n = np.require(data_n, np.float64)
+        data_e = np.require(data_e, np.float64)
         ba = 33.3
         new_n, new_e = rotate_NE_RT(data_n, data_e, ba)
         new_n, new_e = rotate_RT_NE(new_n, new_e, ba)

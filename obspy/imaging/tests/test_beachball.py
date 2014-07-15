@@ -149,6 +149,15 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(d2, 45.001906942415623)
         self.assertAlmostEqual(r2, -159.99404307049076)
 
+    def test_AuxPlane735(self):
+        """
+        Test AuxPlane precision issue #735
+        """
+        s, d, r = AuxPlane(164, 90, -32)
+        self.assertAlmostEqual(s, 254.)
+        self.assertAlmostEqual(d, 58.)
+        self.assertAlmostEqual(r, -180.)
+
     def test_TDL(self):
         """
         Test TDL function - all values are taken from MatLab.

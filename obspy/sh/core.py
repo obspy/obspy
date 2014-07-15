@@ -11,6 +11,7 @@ SH bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -209,7 +210,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = loadtxt(data, dtype='float32', ndmin=1)
+            data = loadtxt(data, dtype=np.float32, ndmin=1)
 
             # cut data if requested
             if skip and length:
@@ -349,8 +350,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
 
     Q files consists of two files per data set:
 
-     * a ASCII header file with file extension `QHD` and the
-     * binary data file with file extension `QBN`.
+    * a ASCII header file with file extension `QHD` and the
+    * binary data file with file extension `QBN`.
 
     The read method only accepts header files for the ``filename`` parameter.
     ObsPy assumes that the corresponding data file is within the same directory
@@ -464,10 +465,10 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
                 continue
             # read data
             data = fh_data.read(npts * 4)
-            dtype = byteorder + 'f4'
+            dtype = native_str(byteorder + 'f4')
             data = np.fromstring(data, dtype=dtype)
             # convert to system byte order
-            data = np.require(data, '=f4')
+            data = np.require(data, native_str('=f4'))
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
@@ -576,7 +577,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
-        dtype = byteorder + 'f4'
+        dtype = native_str(byteorder + 'f4')
         data = np.require(trace.data, dtype=dtype)
         fh_data.write(data.data)
     fh.close()

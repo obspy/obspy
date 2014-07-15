@@ -725,6 +725,11 @@ def AuxPlane(s1, d1, r1):
 
     z = h1 * n1 + h2 * n2
     z = z / np.sqrt(h1 * h1 + h2 * h2)
+    # we might get above 1.0 only due to floating point
+    # precision. Clip for those cases.
+    float64epsilon = 2.2204460492503131e-16
+    if 1.0 < abs(z) < 1.0 + 100 * float64epsilon:
+        z = np.copysign(1.0, z)
     z = np.arccos(z)
     rake = 0
     if sl3 > 0:

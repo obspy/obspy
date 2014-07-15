@@ -175,9 +175,9 @@ class PolesZerosResponseStage(ResponseStage):
     :param pz_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
 
-            * ``LAPLACE (RADIANS/SECOND)``
-            * ``LAPLACE (HERTZ)``
-            * ``DIGITAL (Z-TRANSFORM)``
+        * ``LAPLACE (RADIANS/SECOND)``
+        * ``LAPLACE (HERTZ)``
+        * ``DIGITAL (Z-TRANSFORM)``
 
         The function tries to match inputs to one of three types if it can.
     :type normalization_frequency: float
@@ -308,9 +308,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
     :param cf_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
 
-            * ``ANALOG (RADIANS/SECOND)``
-            * ``ANALOG (HERTZ)``
-            * ``DIGITAL``
+        * ``ANALOG (RADIANS/SECOND)``
+        * ``ANALOG (HERTZ)``
+        * ``DIGITAL``
 
         The function tries to match inputs to one of three types if it can.
     :type numerator: list of
@@ -1052,9 +1052,9 @@ class Response(ComparingObject):
 
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
 
-        output = np.empty(len(freqs), dtype="complex128")
+        output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
         clibevresp.check_channel(C.pointer(chan))

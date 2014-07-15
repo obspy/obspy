@@ -107,7 +107,7 @@ class SUTestCase(unittest.TestCase):
         su = readSU(file)
         data = su.traces[0].data
         # The data is written as integer so it is also converted to float32.
-        correct_data = np.require(np.load(data_file).ravel(), 'float32')
+        correct_data = np.require(np.load(data_file).ravel(), np.float32)
         # Compare both.
         np.testing.assert_array_equal(correct_data, data)
 
