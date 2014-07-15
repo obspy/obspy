@@ -47,6 +47,10 @@ dt {
   font-weight: normal;
 }
 
+dd {
+  margin-left: 30px;
+}
+
 tt.descname {
   font-size : 1.1em;
 }
@@ -67,11 +71,14 @@ div.genindex-jumpbox, div.modindex-jumpbox {
   border: none;
 }
 
+.viewcode-link, #sourcelink {
+  font-size: 80%;
+}
 
 /* breadcrumb */
 
-.breadcrumb, .viewcode-link, #sourcelink {
-  font-size: 80%;
+.breadcrumb {
+  margin-bottom: 0;
 }
 
 .breadcrumb > li.pull-right {
@@ -82,7 +89,6 @@ div.genindex-jumpbox, div.modindex-jumpbox {
   content: "" !important;
   padding: 0 !important;
 }
-
 
 /* table stuff */
 table.table td {

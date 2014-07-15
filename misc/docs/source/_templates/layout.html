@@ -62,7 +62,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <script type="text/javascript">
-  var shiftWindow = function() { scrollBy(0, -90) };
+  var shiftWindow = function() { scrollBy(0, -70) };
   if (location.hash) shiftWindow();
   window.addEventListener("hashchange", shiftWindow);
 </script>
@@ -77,7 +77,7 @@
 {%- block content %}
 <div id="wrapper">{# closed in footer #}
 {%- include "navbar.html" %}
-<div id="content" class="container">
+<div id="content" class="container-fluid">
   {{ breadcrumb() }}
 
   <div class="row">
