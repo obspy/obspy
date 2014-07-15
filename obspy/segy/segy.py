@@ -573,7 +573,7 @@ class SEGYTrace(object):
         """
         Creates an empty trace with an empty header.
         """
-        self.data = np.zeros(0, dtype='float32')
+        self.data = np.zeros(0, dtype=np.float32)
         self.header = SEGYTraceHeader(header=None, endian=self.endian)
 
     def __str__(self):

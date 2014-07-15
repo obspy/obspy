@@ -55,10 +55,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
                     # new trace object in native byte order
-                    dt = np.dtype("int").newbyteorder(native_byteorder)
+                    dt = np.dtype(np.int_).newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
                         # MiniSEED and GSE2 cannot write int64, enforce type
-                        dt = "int32"
+                        dt = np.int32
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
                     tr.stats.station = "MANZ1"
@@ -190,9 +190,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
 
-            dt = np.dtype("int")
+            dt = np.int_
             if format in ('MSEED', 'GSE2'):
-                dt = "int32"
+                dt = np.int32
             tr = Trace(data=data.astype(dt))
             tr.stats.network = "BW"
             tr.stats.station = "MANZ1"
@@ -249,7 +249,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
-        data = np.arange(10, dtype='int32')
+        data = np.arange(10, dtype=np.int32)
         # make array non-contiguous
         data = data[::2]
         tr = Trace(data=data)
@@ -351,9 +351,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             stream = deepcopy(stream_orig)
             # set some data
-            dt = 'f4'
+            dt = np.float32
             if format in ('GSE2', 'MSEED'):
-                dt = 'i4'
+                dt = np.int32
             for tr in stream:
                 tr.data = np.arange(tr.stats.npts).astype(dt)
             with NamedTemporaryFile() as tf:

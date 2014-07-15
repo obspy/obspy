@@ -297,7 +297,7 @@ def logbankm(p, n, fs, w):
     b3 = int(np.floor(bl[2]))
     b1 = int(np.floor(bl[0])) + 1
     b4 = int(min(fn2, np.ceil(bl[3]))) - 1
-    pf = np.log(((np.arange(b1 - 1, b4 + 1, dtype='f8') / n) * fs) / (fl)) / lr
+    pf = np.log(np.arange(b1 - 1, b4 + 1, dtype=np.float64) / n * fs / fl) / lr
     fp = np.floor(pf)
     pm = pf - fp
     k2 = b2 - b1 + 1
@@ -308,7 +308,7 @@ def logbankm(p, n, fs, w):
     v = 2 * np.append([1 - pm[k2:k4 + 1]], [pm[1:k3 + 1]])
     mn = b1 + 1
     mx = b4 + 1
-    # x = np.array([[c],[r]], dtype=[('x', 'float'), ('y', 'float')])
+    # x = np.array([[c],[r]], dtype=[('x', np.float), ('y', np.float)])
     # ind=np.argsort(x, order=('x','y'))
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]

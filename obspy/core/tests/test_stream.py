@@ -33,19 +33,19 @@ class StreamTestCase(unittest.TestCase):
                   'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
                   'npts': 412, 'sampling_rate': 200.0,
                   'channel': 'EHE'}
-        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype('float64'),
+        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
-        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
+        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
+        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
         trace4 = Trace(
-            data=np.random.randint(0, 1000, 50668).astype('float64'),
+            data=np.random.randint(0, 1000, 50668).astype(np.float64),
             header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
@@ -53,7 +53,7 @@ class StreamTestCase(unittest.TestCase):
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
         trace = Trace(
-            data=np.random.randint(0, 1000, 12000).astype('float64'),
+            data=np.random.randint(0, 1000, 12000).astype(np.float64),
             header=header)
         self.gse2_stream = Stream(traces=[trace])
 
@@ -96,7 +96,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(st[0].data[0], 999)
         st[0] = stream[0]
         np.testing.assert_array_equal(stream[0].data[:10],
-                                      np.ones(10, dtype='int') * 999)
+                                      np.ones(10, dtype=np.int_) * 999)
 
     def test_getitem(self):
         """
@@ -781,18 +781,18 @@ class StreamTestCase(unittest.TestCase):
         Test the merge method of the Stream object.
         """
         # 1 - different dtype for the same channel should fail
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         st = Stream([tr1, tr2])
         self.assertRaises(Exception, st.merge)
         # 2 - different sampling rates for the different channels is ok
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         tr2.stats.channel = 'EHZ'
-        tr3 = Trace(data=np.zeros(5, dtype="int32"))
+        tr3 = Trace(data=np.zeros(5, dtype=np.int32))
         tr3.stats.channel = 'EHE'
-        tr4 = Trace(data=np.zeros(5, dtype="float32"))
+        tr4 = Trace(data=np.zeros(5, dtype=np.float32))
         tr4.stats.channel = 'EHZ'
         st = Stream([tr1, tr2, tr3, tr4])
         st.merge()
@@ -1103,8 +1103,8 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 1: 00000000
         #     Trace 2:     66666666
         #     1 + 2  : 000024666666 (interpolation_samples=2)
-        trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=6 * np.ones(8, dtype='int32'))
+        trace1 = Trace(data=np.zeros(8, dtype=np.int32))
+        trace2 = Trace(data=6 * np.ones(8, dtype=np.int32))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=2)
@@ -1115,8 +1115,8 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 1: 00000000
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
-        trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
+        trace1 = Trace(data=np.zeros(8, dtype=np.int32))
+        trace2 = Trace(data=5 * np.ones(8, dtype=np.int32))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=(-1))
@@ -1129,8 +1129,8 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 1: 00000000
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
-        trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
+        trace1 = Trace(data=np.zeros(8, dtype=np.int32))
+        trace2 = Trace(data=5 * np.ones(8, dtype=np.int32))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=5)
@@ -1689,8 +1689,12 @@ class StreamTestCase(unittest.TestCase):
         """
         # 1 - default example
         # dtype
-        tr = read(dtype='int64')[0]
+        tr = read(dtype=np.int64)[0]
         self.assertEqual(tr.data.dtype, np.int64)
+        # dtype is string
+        tr2 = read(dtype='i8')[0]
+        self.assertEqual(tr2.data.dtype, np.int64)
+        self.assertEqual(tr, tr2)
         # start-/endtime
         tr2 = read(starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
@@ -1702,7 +1706,7 @@ class StreamTestCase(unittest.TestCase):
 
         # 2 - via http
         # dtype
-        tr = read('http://examples.obspy.org/test.sac', dtype='int32')[0]
+        tr = read('http://examples.obspy.org/test.sac', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
         # start-/endtime
         tr2 = read('http://examples.obspy.org/test.sac',
@@ -1716,7 +1720,7 @@ class StreamTestCase(unittest.TestCase):
 
         # 3 - some example within obspy
         # dtype
-        tr = read('/path/to/slist_float.ascii', dtype='int32')[0]
+        tr = read('/path/to/slist_float.ascii', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
         # start-/endtime
         tr2 = read('/path/to/slist_float.ascii',

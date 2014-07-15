@@ -30,7 +30,7 @@ class CoreTestCase(unittest.TestCase):
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
              -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
-             -5.87784529e-01, -3.09016049e-01], dtype='float32')
+             -5.87784529e-01, -3.09016049e-01], dtype=np.float32)
 
     def test_readViaObsPy(self):
         """
@@ -188,7 +188,7 @@ class CoreTestCase(unittest.TestCase):
         head = {'network': 'NL', 'station': 'HGN', 'location': '00',
                 'channel': 'BHZ', 'calib': 1.0, 'sampling_rate': 40.0,
                 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400)}
-        data = np.random.randint(0, 5000, 11947).astype("int32")
+        data = np.random.randint(0, 5000, 11947).astype(np.int32)
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
         with NamedTemporaryFile() as tf:
@@ -344,7 +344,7 @@ class CoreTestCase(unittest.TestCase):
         head = {'network': 'NL', 'station': 'HGN', 'channel': 'BHZ',
                 'sampling_rate': 200.0,
                 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 999999)}
-        data = np.random.randint(0, 5000, 100).astype("int32")
+        data = np.random.randint(0, 5000, 100).astype(np.int32)
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
         with NamedTemporaryFile() as tf:

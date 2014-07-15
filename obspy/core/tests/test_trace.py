@@ -349,11 +349,11 @@ class TraceTestCase(unittest.TestCase):
         should not be changed anyways.
         """
         # Choose non native dtype.
-        tr = Trace(np.arange(100, dtype='int16'))
+        tr = Trace(np.arange(100, dtype=np.int16))
         tr.trim(UTCDateTime(10000), UTCDateTime(20000))
         # Assert the result.
         self.assertEqual(len(tr.data), 0)
-        self.assertEqual(tr.data.dtype, 'int16')
+        self.assertEqual(tr.data.dtype, np.int16)
 
     def test_addTraceWithGap(self):
         """
@@ -448,7 +448,7 @@ class TraceTestCase(unittest.TestCase):
         trace = tr1 + tr2
         # should return exact the same values like trace 1
         self.assertEqual(trace.stats, tr1.stats)
-        mask = np.zeros(len(tr1)).astype("bool")
+        mask = np.zeros(len(tr1)).astype(np.bool_)
         mask[200:401] = True
         np.testing.assert_array_equal(trace.data.mask, mask)
         np.testing.assert_array_equal(trace.data.data[:200], tr1.data[:200])
@@ -481,7 +481,7 @@ class TraceTestCase(unittest.TestCase):
         # overlap
         overlap = tr1 + tr2
         self.assertEqual(len(overlap), 1800)
-        mask = np.zeros(1800).astype("bool")
+        mask = np.zeros(1800).astype(np.bool_)
         mask[800:1000] = True
         np.testing.assert_array_equal(overlap.data.mask, mask)
         np.testing.assert_array_equal(overlap.data.data[:800], tr1.data[:800])
@@ -489,7 +489,7 @@ class TraceTestCase(unittest.TestCase):
         # overlap + gap
         overlap_gap = overlap + tr3
         self.assertEqual(len(overlap_gap), 3400)
-        mask = np.zeros(3400).astype("bool")
+        mask = np.zeros(3400).astype(np.bool_)
         mask[800:1000] = True
         mask[1800:2400] = True
         np.testing.assert_array_equal(overlap_gap.data.mask, mask)
@@ -501,7 +501,7 @@ class TraceTestCase(unittest.TestCase):
         # gap
         gap = tr2 + tr3
         self.assertEqual(len(gap), 2600)
-        mask = np.zeros(2600).astype("bool")
+        mask = np.zeros(2600).astype(np.bool_)
         mask[1000:1600] = True
         np.testing.assert_array_equal(gap.data.mask, mask)
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
@@ -575,7 +575,7 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the slicing of trace objects.
         """
-        tr = Trace(data=np.arange(10, dtype='int32'))
+        tr = Trace(data=np.arange(10, dtype=np.int32))
         mempos = tr.data.ctypes.data
         t = tr.stats.starttime
         tr1 = tr.slice(t + 2, t + 8)
@@ -588,7 +588,7 @@ class TraceTestCase(unittest.TestCase):
         # Test the processing information for the slicing. The sliced trace
         # should have a processing information showing that it has been
         # trimmed. The original trace should have nothing.
-        tr = Trace(data=np.arange(10, dtype='int32'))
+        tr = Trace(data=np.arange(10, dtype=np.int32))
         tr2 = tr.slice(tr.stats.starttime)
         self.assertTrue("processing" not in tr.stats)
         self.assertTrue("processing" in tr2.stats)
@@ -599,7 +599,7 @@ class TraceTestCase(unittest.TestCase):
         Tests the slicing of trace objects with no starttime or endtime
         provided. Compares results against the equivalent trim() operation
         """
-        tr_orig = Trace(data=np.arange(10, dtype='int32'))
+        tr_orig = Trace(data=np.arange(10, dtype=np.int32))
         tr = tr_orig.copy()
         # two time points outside the trace and two inside
         t1 = tr.stats.starttime - 2
@@ -793,7 +793,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(temp.stats.starttime.timestamp, -2.0)
         self.assertEqual(temp.stats.endtime.timestamp, 200)
         self.assertEqual(temp.stats.npts, 203)
-        mask = np.zeros(203).astype("bool")
+        mask = np.zeros(203).astype(np.bool_)
         mask[:2] = True
         mask[13:] = True
         np.testing.assert_array_equal(temp.data.mask, mask)
@@ -995,18 +995,18 @@ class TraceTestCase(unittest.TestCase):
         Test __add__ method of the Trace object.
         """
         # 1 - different data types for the same channel should fail
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         self.assertRaises(TypeError, tr1.__add__, tr2)
         self.assertRaises(TypeError, tr2.__add__, tr1)
         # 2 - different sampling rates for the different channels works
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         tr2.stats.channel = 'EHZ'
-        tr3 = Trace(data=np.zeros(5, dtype="int32"))
+        tr3 = Trace(data=np.zeros(5, dtype=np.int32))
         tr3.stats.channel = 'EHE'
-        tr4 = Trace(data=np.zeros(5, dtype="float32"))
+        tr4 = Trace(data=np.zeros(5, dtype=np.float32))
         tr4.stats.channel = 'EHZ'
         # same data types and ids should not fail
         tr1 + tr3

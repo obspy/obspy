@@ -244,8 +244,8 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         except ValueError:
             msg = "evalresp failed to calculate a response."
             raise ValueError(msg)
-        h = np.empty(nfreqs, dtype='complex128')
-        f = np.empty(nfreqs, dtype='float64')
+        h = np.empty(nfreqs, dtype=np.complex128)
+        f = np.empty(nfreqs, dtype=np.float64)
         for i in range(nfreqs):
             h[i] = rvec[i].real + rvec[i].imag * 1j
             f[i] = rfreqs[i]
@@ -461,7 +461,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     delta = 1.0 / samp_rate
     #
     ndat = len(data)
-    data = data.astype("float64")
+    data = data.astype(np.float64)
     if zero_mean:
         data -= data.mean()
     if taper:
