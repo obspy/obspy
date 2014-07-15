@@ -43,6 +43,31 @@ class CoreTestCase(unittest.TestCase):
         for filename in invalid_files:
             self.assertFalse(is_evt(filename))
 
+    def test_is_evt_from_bytesio(self):
+        """
+        Test for the the is_evt() function from BytesIO objects.
+        """
+        valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
+                       os.path.join(self.path, "BX456_MOLA-02351.evt")]
+        invalid_files = [os.path.join(self.path, "NOUTF8.evt")]
+        py_dir = os.path.join(self.path, os.pardir, os.pardir)
+        for filename in os.listdir(py_dir):
+            if filename.endswith(".py"):
+                invalid_files.append(
+                    os.path.abspath(os.path.join(py_dir, filename)))
+        self.assertTrue(len(invalid_files) > 0)
+
+        for filename in valid_files:
+            with open(filename, "rb") as fh:
+                buf = io.BytesIO(fh.read())
+            buf.seek(0, 0)
+            self.assertTrue(is_evt(buf))
+        for filename in invalid_files:
+            with open(filename, "rb") as fh:
+                buf = io.BytesIO(fh.read())
+            buf.seek(0, 0)
+            self.assertFalse(is_evt(buf))
+
     def test_read_via_ObsPy(self):
         """
         Read files via obspy.core.stream.read function.

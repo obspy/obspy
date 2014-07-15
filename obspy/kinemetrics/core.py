@@ -17,23 +17,42 @@ import obspy.kinemetrics.evt as evt
 from .evt_base import EVTBaseError
 
 
-def is_evt(filename):
+def is_evt(filename_or_object):
     """
     Checks whether a file is EVT or not.
 
-    :type filename: string
-    :param filename: EVT file to be checked.
+    :type filename_or_object: filename or file-like object.
+    :param filename_or_object: EVT file to be checked.
     :rtype: bool
     :return: ``True`` if a EVT file, ``False`` otherwise.
     """
-    try:
-        Tag = evt.EVT_TAG()
-        with open(filename, "rb") as fh:
-            Tag.read(fh)
+    if hasattr(filename_or_object, "seek") and \
+            hasattr(filename_or_object, "tell") and \
+            hasattr(filename_or_object, "read"):
+        is_fileobject = True
+        pos = filename_or_object.tell()
+    else:
+        is_fileobject = False
+
+    Tag = evt.EVT_TAG()
+
+    if is_fileobject:
+        try:
+            Tag.read(filename_or_object)
             Tag.verify()
-    except (EVTBaseError, IOError):
-        return False
-    return True
+            return True
+        except EVTBaseError:
+            return False
+        finally:
+            filename_or_object.seek(pos, 0)
+    else:
+        with open(filename_or_object, "rb") as fh:
+            try:
+                Tag.read(fh)
+                Tag.verify()
+                return True
+            except (EVTBaseError, IOError):
+                return False
 
 
 def read_evt(filename, **kwargs):
