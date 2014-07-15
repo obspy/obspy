@@ -125,7 +125,7 @@ class EVT(object):
             t.stats.station = self.EHeader.stnid.replace(b"\x00", b"").decode()
             t.stats.sampling_rate = float(self.samplingrate)
             t.stats.starttime = self.EHeader.startime
-            t.stats.evt = self.EHeader.makeobspydico(i)
+            t.stats.kinemetrics_evt = self.EHeader.makeobspydico(i)
             traces.append(t)
 
         return Stream(traces=traces)

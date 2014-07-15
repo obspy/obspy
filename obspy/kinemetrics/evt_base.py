@@ -70,26 +70,6 @@ class EVT_Virtual(object):
         if key in self.HEADER:
             return self.HEADER[key][2]
 
-    def __setattr__(self, item, value):
-        """
-        __setattr__ is called for every attribute assignment
-        :type item: string
-        :param item: name of the attribute (key)
-        :type value: any
-        :param value: value is the value to be assigned to item
-        """
-        key = item.lower()
-        try:
-            if getattr(self, diconame) != "":
-                if key in self.HEADER:
-                    self.HEADER[key][2] = value
-                else:
-                    object.__setattr__(self, item, value)
-            else:
-                object.__setattr__(self, item, value)
-        except NameError:
-            object.__setattr__(self, item, value)
-
     def unsetdico(self):
         """
         remove value from dictionary

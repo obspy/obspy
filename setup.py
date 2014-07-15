@@ -121,7 +121,7 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
-        'EVT = obspy.kinemetrics.core',
+        'KINEMETRICS_EVT = obspy.kinemetrics.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
@@ -159,7 +159,7 @@ ENTRY_POINTS = {
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
     ],
-    'obspy.plugin.waveform.EVT': [
+    'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.kinemetrics.core:is_evt',
         'readFormat = obspy.kinemetrics.core:read_evt',
     ],
