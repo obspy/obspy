@@ -68,10 +68,7 @@ class EVT_Virtual(object):
         """
         key = item.lower()
         if key in self.HEADER:
-            try:
-                return self.HEADER[key][2]
-            except IndexError:
-                return("No value for " + key)
+            return self.HEADER[key][2]
 
     def __setattr__(self, item, value):
         """
@@ -111,8 +108,8 @@ class EVT_Virtual(object):
         :type offset: integer
         :param offset : offset in the dictonary (header place)
         """
-        if type(val) is not list:
-            raise TypeError("setdico waiting a list")
+        if not isinstance(val, list):
+            raise TypeError("setdico() expects a list")
         for key in self.HEADER:
             index = self.HEADER[key][0]-offset
             if index < len(val) and index >= 0:
@@ -158,7 +155,8 @@ class EVT_Virtual(object):
 
     def _strnull(self, strn, param, val, offset):
         """
-        change a C string (null teminated in Pythonstring
+        Change a C string (null teminated to Python string)
+
         :type str: string
         :param str: string to convert
         :param param: not used
@@ -166,8 +164,8 @@ class EVT_Virtual(object):
         :param offset: not used
         :rtype: string
         """
-        if type(strn) == str:
-            newstr = strn.split('\0')[0]
+        if isinstance(strn, str):
+            newstr = strn.split("\0")[0]
         else:
             newstr = strn
         return newstr

@@ -246,7 +246,7 @@ class EVT_HEADER(EVT_Virtual):
         for key in self.HEADER:
             try:
                 value = self.HEADER[key][2]
-                if type(value) is list:
+                if isinstance(value, list):
                     dico[key] = value[numchan]
                 else:
                     dico[key] = value
