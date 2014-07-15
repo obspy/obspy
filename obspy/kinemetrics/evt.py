@@ -63,7 +63,7 @@ class EVT(object):
         for i in range(self.EHeader.nchannels):
             # grange = 8.0/(2 ** self.EHeader.chan_range[i])
             calibV = 8388608.0 / self.EHeader.chan_fullscale[i]
-            calibMKS = (calibV*self.EHeader.chan_sensitivity[i])/(9.81)
+            calibMKS = (calibV * self.EHeader.chan_sensitivity[i]) / (9.81)
             self.data[i] /= calibMKS
 
     def readFile(self, filename_or_object, Raw=False):
@@ -148,7 +148,7 @@ class EVT_DATA(object):
         samplrate = param[0]
         numbyte = param[1]
         numchan = param[3].count(1)
-        num = (samplrate/10)*numbyte*numchan
+        num = (samplrate / 10) * numbyte * numchan
         data = [[] for _ in range(numchan)]
         if (length != num):
             raise EVTBadDataError("Bad data length")
@@ -156,11 +156,13 @@ class EVT_DATA(object):
             for k in range(numchan):
                 i = (j * numchan) + k
                 if numbyte == 2:
-                    val = unpack(b">i", buff[i*2:(i*2)+2] + b'\0\0')[0] >> 8
+                    val = unpack(b">i", buff[i * 2:(i * 2) + 2] + b'\0\0')[0] \
+                        >> 8
                 elif numbyte == 3:
-                    val = unpack(b">i", buff[i*3:(i*3)+3] + b'\0')[0] >> 8
+                    val = unpack(b">i", buff[i * 3:(i * 3) + 3] + b'\0')[0] \
+                        >> 8
                 elif numbyte == 4:
-                    val = unpack(b">i", buff[i*4:(i*4)+4])[0]
+                    val = unpack(b">i", buff[i * 4:(i * 4) + 4])[0]
                 else:
                     raise EVTBadDataError("Bad data format")
                 data[k].append(val)
@@ -304,7 +306,7 @@ class EVT_FRAME(EVT_Virtual):
         else:
             raise EVTBadHeaderError("Bad Header length " + length)
         samplingrate = self.streampar & 4095
-        samplesize = (self.framestatus >> 6)+1
+        samplesize = (self.framestatus >> 6) + 1
         return (samplingrate, samplesize, self.blocktime, self.channels())
 
     def analyse_frame32(self, head_buff):
@@ -327,7 +329,7 @@ class EVT_FRAME(EVT_Virtual):
             raise NotImplementedError("16 Channels not implemented")
         chan = []
         for i in range(numchan):
-            p2 = 2**i
+            p2 = 2 ** i
             if (self.channelbitmap & p2):
                 chan.append(1)
             else:
