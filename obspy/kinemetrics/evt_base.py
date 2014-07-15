@@ -16,9 +16,6 @@ from future.builtins import *  # NOQA
 from obspy import UTCDateTime
 
 
-# # -------------   Definition of Evt Errors               -----------------# #
-# ----------------------------------------------------------------------------#
-
 class EVTBaseError(Exception):
     """
     Base Class for all EVT specific errors.
@@ -53,9 +50,6 @@ class EVTNotImplementedError(EVTBaseError):
     """
     pass
 
-# --------- Class EVT_Virtual ----------------------------------------------- #
-# --------------------------------------------------------------------------- #
-
 
 class EVT_Virtual(object):
     """
@@ -68,7 +62,6 @@ class EVT_Virtual(object):
             param : parameters to send to function
             value : value of name (can be omited)
     """
-
     def __init__(self):
         self.diconame = ""  # set the dictionnary name to be used
 

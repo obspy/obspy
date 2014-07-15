@@ -27,6 +27,23 @@ WARNING_HEADER = "Only tested with files from ROB networks :" + \
     " - .........." + \
     "Other situation may not work (not implemented)."
 
+FRAME_STRUCT = b"BBHHLHHBBHB13s"
+
+# 0 - 0x7c (0-34)
+HEADER_STRUCT1 = b"3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"
+# 0x7c - 0x22c (35-106)
+HEADER_STRUCT2 = b"lLlL2l12x"*12
+# 0x22c-0x2c8(->139)
+HEADER_STRUCT3 = b"3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"
+# 0x2c8 - 0x658 (140 - 464) (27*12)
+HEADER_STRUCT4 = b"5sbH5h3H4BHBx8f2B10x"*12
+# 0x658 - 0x688
+HEADER_STRUCT5 = b"3B5x6H2hb2Bxh3Hl8x"
+# 0x688 - 0x6c4 (3*15)
+HEADER_STRUCT6 = b"cBh"*15
+# 0x6c4 - 0x7f8
+HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
+
 
 class EVT(object):
     """
@@ -38,22 +55,6 @@ class EVT(object):
         self.EFrame = EVT_FRAME()
         self.EData = EVT_DATA()
         self.samplingrate = 0
-
-    def saveascii(self):
-        """
-        for test purposes
-        """
-        fp = open("output.txt", "wb")
-        fp.write("####################\n")
-        fp.write(fp, self.EHeader)
-        fp.write("####################\n\n")
-        for i in range(self.data.shape[1]):
-            tmp = ""
-            for j in range(self.data.shape[0]):
-                tmp += str(self.data[j][i]) + "    "
-            tmp += "\n"
-            fp.write(tmp)
-        fp.close()
 
     def calibration(self):
         """
@@ -118,8 +119,6 @@ class EVT(object):
         return Stream(traces=traces)
 
 
-###############################################################################
-
 class EVT_DATA(object):
     def read(self, fp, length, endian, param):
         """
@@ -154,23 +153,6 @@ class EVT_DATA(object):
                     raise EVTBadDataError("Bad data format")
                 data[k].append(val)
         return data
-
-
-# ==========================================================================
-# 0 - 0x7c (0-34)
-HEADER_STRUCT1 = b"3sB2H3B3x6Hh2Hh22x3B5x2H4hH2x2h6L16x"
-# 0x7c - 0x22c (35-106)
-HEADER_STRUCT2 = b"lLlL2l12x"*12
-# 0x22c-0x2c8(->139)
-HEADER_STRUCT3 = b"3L4H2L4x2H5s33sh2f4h4B2LB17s2B2B6xh22x"
-# 0x2c8 - 0x658 (140 - 464) (27*12)
-HEADER_STRUCT4 = b"5sbH5h3H4BHBx8f2B10x"*12
-# 0x658 - 0x688
-HEADER_STRUCT5 = b"3B5x6H2hb2Bxh3Hl8x"
-# 0x688 - 0x6c4 (3*15)
-HEADER_STRUCT6 = b"cBh"*15
-# 0x6c4 - 0x7f8
-HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
 
 
 class EVT_HEADER(EVT_Virtual):
@@ -244,10 +226,10 @@ class EVT_HEADER(EVT_Virtual):
 
     def makeobspydico(self, numchan):
         """
-        Make an obpsy dictionnary from header dictionnary for 1 channel
+        Make an ObsPy dictionary from header dictionary for 1 channel
 
         :param numchan: channel to be converted
-        :rtype: dictionnary
+        :rtype: dictionary
         """
         dico = {}
         for key in self.HEADER_DICT:
@@ -275,9 +257,6 @@ class EVT_HEADER(EVT_Virtual):
             if value & key:
                 retval += dico[key] + " "
         return retval
-
-# ==========================================================================
-FRAME_STRUCT = b"BBHHLHHBBHB13s"
 
 
 class EVT_FRAME(EVT_Virtual):
@@ -353,7 +332,6 @@ class EVT_FRAME(EVT_Virtual):
         return chan
 
 
-# ======================================================================
 class EVT_TAG(EVT_Virtual):
     """
     Class to read the TAGs of EVT Files
