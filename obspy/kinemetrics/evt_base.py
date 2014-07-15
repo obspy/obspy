@@ -114,9 +114,9 @@ class EVT_Virtual(object):
             index = self.HEADER[key][0]-offset
             if index < len(val) and index >= 0:
                 if self.HEADER[key][1] != "":
-                    fct = 'self.' + self.HEADER[key][1][0]
+                    fct = self.HEADER[key][1][0]
                     param = self.HEADER[key][1][1]
-                    value = eval(fct)(val[index], param, val, offset)
+                    value = getattr(self, fct)(val[index], param, val, offset)
                 else:
                     value = val[index]
                 try:
@@ -164,11 +164,10 @@ class EVT_Virtual(object):
         :param offset: not used
         :rtype: string
         """
-        if isinstance(strn, str):
-            newstr = strn.split("\0")[0]
-        else:
-            newstr = strn
-        return newstr
+        try:
+            return strn.rstrip("\0")
+        except AttributeError:
+            return strn
 
     def _array(self, firstval, param, val, offset):
         """
