@@ -66,36 +66,45 @@ class EVT(object):
             calibMKS = (calibV*self.EHeader.chan_sensitivity[i])/(9.81)
             self.data[i] /= calibMKS
 
-    def readFile(self, filename, Raw=False):
+    def readFile(self, filename_or_object, Raw=False):
         """
         Reads an EVT file to the internal data structure.
 
-        :type filename: string
-        :param filename: EVT file to be read.
+        :type filename_or_object: string or file-like object.
+        :param filename_or_object: EVT file to be read.
         :type raw : boolean
         :param raw : True if Raw data (no corrections, int32)
                      False if data in m/s2 (default)
         :rtype: obspy.core.stream.Stream
         :return: Obspy Stream with data
         """
-        self.file_pointer = open(filename, "rb")
-        self.ETag.read(self.file_pointer)
+        # Support reading from filenames of file-like objects.
+        if hasattr(filename_or_object, "seek") and \
+                hasattr(filename_or_object, "tell") and \
+                hasattr(filename_or_object, "read"):
+            is_fileobject = True
+            file_pointer = filename_or_object
+        else:
+            is_fileobject = False
+            file_pointer = open(filename_or_object, "rb")
+
+        self.ETag.read(file_pointer)
         endian = self.ETag.endian
         self.EHeader.unsetdico()
-        self.EHeader.read(self.file_pointer, self.ETag.length, endian)
+        self.EHeader.read(file_pointer, self.ETag.length, endian)
 
         self.data = np.ndarray([self.EHeader.nchannels, 0])
 
         while True:
             try:
-                self.ETag.read(self.file_pointer)
-                retparam = self.EFrame.read(self.file_pointer,
+                self.ETag.read(file_pointer)
+                retparam = self.EFrame.read(file_pointer,
                                             self.ETag.length, endian)
                 if (self.samplingrate == 0):
                     self.samplingrate = retparam[0]
                 elif (self.samplingrate != retparam[0]):
                     raise EVTBadHeaderError("Sampling rate not constant")
-                datal = self.EData.read(self.file_pointer,
+                datal = self.EData.read(file_pointer,
                                         self.ETag.datalength, endian, retparam)
                 npdata = np.array(datal)
                 self.data = np.hstack((self.data, npdata))  # append data
@@ -106,7 +115,8 @@ class EVT(object):
 
         if not Raw:
             self.calibration()
-        self.file_pointer.close()
+        if is_fileobject is False:
+            file_pointer.close()
 
         traces = []
         for i in range(self.EHeader.nchannels):

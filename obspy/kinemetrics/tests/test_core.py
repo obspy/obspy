@@ -62,11 +62,15 @@ class CoreTestCase(unittest.TestCase):
                 buf = io.BytesIO(fh.read())
             buf.seek(0, 0)
             self.assertTrue(is_evt(buf))
+            # The is_evt() method should not change the file pointer.
+            self.assertEqual(buf.tell(), 0)
         for filename in invalid_files:
             with open(filename, "rb") as fh:
                 buf = io.BytesIO(fh.read())
             buf.seek(0, 0)
             self.assertFalse(is_evt(buf))
+            # The is_evt() method should not change the file pointer.
+            self.assertEqual(buf.tell(), 0)
 
     def test_read_via_ObsPy(self):
         """

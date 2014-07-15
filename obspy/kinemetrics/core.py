@@ -55,7 +55,7 @@ def is_evt(filename_or_object):
                 return False
 
 
-def read_evt(filename, **kwargs):
+def read_evt(filename_or_object, **kwargs):
     """
     Reads a EVT file and returns a Stream object.
 
@@ -63,11 +63,11 @@ def read_evt(filename, **kwargs):
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
-    :param filename: EVT file to be read.
+    :type filename_or_object: string or file-like object.
+    :param filename_or_object: EVT file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: Stream object containing header and data.
     """
     Evt_Obj = evt.EVT()
-    stream = Evt_Obj.readFile(filename)
+    stream = Evt_Obj.readFile(filename_or_object)
     return stream
