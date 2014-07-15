@@ -245,10 +245,10 @@ class Client(object):
         :param orderby: Order the result by time or magnitude with the
             following possibilities:
 
-                * time: order by origin descending time
-                * time-asc: order by origin ascending time
-                * magnitude: order by descending magnitude
-                * magnitude-asc: order by ascending magnitude
+            * time: order by origin descending time
+            * time-asc: order by origin ascending time
+            * magnitude: order by descending magnitude
+            * magnitude-asc: order by ascending magnitude
 
         :type catalog: str, optional
         :param catalog: Limit to events from a specified catalog
@@ -644,9 +644,9 @@ class Client(object):
             `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
-              - a string containing the request information
-              - a string with the path to a local file with the request
-              - an open file handle (or file-like object) with the request
+            - a string containing the request information
+            - a string with the path to a local file with the request
+            - an open file handle (or file-like object) with the request
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
@@ -795,9 +795,9 @@ class Client(object):
             `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
-              - a string containing the request information
-              - a string with the path to a local file with the request
-              - an open file handle (or file-like object) with the request
+            - a string containing the request information
+            - a string with the path to a local file with the request
+            - an open file handle (or file-like object) with the request
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")

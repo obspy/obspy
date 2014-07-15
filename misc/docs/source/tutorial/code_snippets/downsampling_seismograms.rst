@@ -11,7 +11,5 @@ the shift that is introduced because by default the applied filters are not of
 zero-phase type. This can be avoided by manually applying a zero-phase filter
 and deactivating automatic filtering during downsampling (``no_filter=True``).
 
-.. include:: downsampling_seismograms.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/downsampling_seismograms.py
+.. plot:: tutorial/code_snippets/downsampling_seismograms.py
+   :include-source:

@@ -37,6 +37,7 @@ libraries and applications, our build tools and our web sites.
     * Heiner Igel
     * Joachim Saul
     * Joachim Wassermann
+    * John Leeman
     * Lars Krieger
     * Leonardo Uieda
     * Lion Krischer
@@ -74,4 +75,6 @@ ObsPy was partially funded by the
 
 .. rubric:: Quotes
 
-* "I believe that ObsPy is what will finally make students and some of my colleagues consider using Python for doing science!  I tell people of it whenever I get a chance."
+
+.. epigraph::
+    "I believe that ObsPy is what will finally make students and some of my colleagues consider using Python for doing science!  I tell people of it whenever I get a chance."

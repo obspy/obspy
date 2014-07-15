@@ -5,14 +5,14 @@ Earthworm Wave Server client for ObsPy.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from fnmatch import fnmatch
 from obspy import Stream, UTCDateTime

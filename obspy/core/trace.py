@@ -1034,13 +1034,13 @@ class Trace(object):
             selected, if set to ``False``, the next sample containing the time
             is selected. Defaults to ``True``.
 
-                Given the following trace containing 4 samples, "|" are the
-                sample points, "A" is the requested starttime::
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
 
-                    |        A|         |         |
+                |        A|         |         |
 
-                ``nearest_sample=True`` will select the second sample point,
-                ``nearest_sample=False`` will select the first sample point.
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
 
         :type fill_value: int, float or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
@@ -1466,6 +1466,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
@@ -1539,6 +1548,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         zero then the end time of the trace is changing on sub-sample scale. To
         abort downsampling in case of changing end times set
         ``strict_length=True``.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -2032,6 +2050,117 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.data = self.data.data[slice.start:slice.stop]
             trace_list.append(tr)
         return Stream(trace_list)
+
+    @skipIfNoData
+    @raiseIfMasked
+    @_add_processing_info
+    def interpolate(self, sampling_rate, method="weighted_average_slopes",
+                    starttime=None, npts=None):
+        """
+        Interpolate the data using various interpolation techniques.
+
+        No filter, antialiasing, ... is applied so make sure the data is
+        suitable for the operation to be performed.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~.copy` to create a copy of your Trace
+            object.
+
+
+        :param sampling_rate: The new sampling rate in ``Hz``.
+        :param method: The kind of interpolation to perform as a string (
+            ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``,
+            ``"quadratic"``, ``"cubic"``, or ``"weighted_average_slopes"``
+            where ``"slinear"``, ``"quadratic"`` and ``"cubic"`` refer  to a
+            spline interpolation of first,  second or third order) or as an
+            integer specifying the order of the spline interpolator to use.
+            Defaults to ``"weighted_average_slopes"`` which is the
+            interpolation technique used by SAC. Refer to
+            :func:`~obspy.signal.interpolation.weighted_average_slopes` for
+            more details.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
+        :param starttime: The start time (or timestamp) for the new
+            interpolated stream. Will be set to current start time of the
+            trace if not given.
+        :type npts: int
+        :param npts: The new number of samples. Will be set to the best
+            fitting  number to retain the current end time of the trace if
+            not given.
+
+        .. rubric:: _`Usage Examples`
+
+
+        >>> from obspy import read
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> tr.interpolate(sampling_rate=111.1)  # doctest: +ELLIPSIS
+        <obspy.core.trace.Trace object at 0x...>
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+
+        Setting ``starttime`` and/or ``npts`` will interpolate to sampling
+        points with the given start time and/or number of samples.
+        Extrapolation will not be performed.
+
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> tr.interpolate(sampling_rate=111.1,
+        ...                starttime=tr.stats.starttime + 10) \
+        # doctest:  +ELLIPSIS
+        <obspy.core.trace.Trace object at 0x...>
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:13... - ... | 111.1 Hz, 2221 samples
+        """
+        try:
+            method = method.lower()
+        except:
+            pass
+
+        dt = float(sampling_rate)
+        if dt <= 0.0:
+            raise ValueError("The time step must be positive.")
+        dt = 1.0 / sampling_rate
+
+        if isinstance(method, int) or method in ["linear", "nearest", "zero",
+                                                 "slinear", "quadratic",
+                                                 "cubic"]:
+            func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
+        else:
+            func = _getFunctionFromEntryPoint('interpolate', method)
+        old_start = self.stats.starttime.timestamp
+        old_dt = self.stats.delta
+
+        if starttime is not None:
+            try:
+                starttime = starttime.timestamp
+            except AttributeError:
+                pass
+        else:
+            starttime = self.stats.starttime.timestamp
+
+        if npts is None:
+            npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
+                                  dt)) + 1
+        self.data = func(np.require(self.data, dtype="float64"), old_start,
+                         old_dt, starttime, dt, npts, type=method)
+        self.stats.starttime = UTCDateTime(starttime)
+        self.stats.delta = dt
+
+        return self
 
     def times(self):
         """

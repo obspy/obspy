@@ -175,9 +175,9 @@ class PolesZerosResponseStage(ResponseStage):
     :param pz_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
 
-            * ``LAPLACE (RADIANS/SECOND)``
-            * ``LAPLACE (HERTZ)``
-            * ``DIGITAL (Z-TRANSFORM)``
+        * ``LAPLACE (RADIANS/SECOND)``
+        * ``LAPLACE (HERTZ)``
+        * ``DIGITAL (Z-TRANSFORM)``
 
         The function tries to match inputs to one of three types if it can.
     :type normalization_frequency: float
@@ -308,9 +308,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
     :param cf_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
 
-            * ``ANALOG (RADIANS/SECOND)``
-            * ``ANALOG (HERTZ)``
-            * ``DIGITAL``
+        * ``ANALOG (RADIANS/SECOND)``
+        * ``ANALOG (HERTZ)``
+        * ``DIGITAL``
 
         The function tries to match inputs to one of three types if it can.
     :type numerator: list of

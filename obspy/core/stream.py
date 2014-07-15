@@ -1412,13 +1412,13 @@ class Stream(object):
             selected, if set to ``False``, the next sample containing the time
             is selected. Defaults to ``True``.
 
-                Given the following trace containing 4 samples, "|" are the
-                sample points, "A" is the requested starttime::
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
 
-                    |        A|         |         |
+                |        A|         |         |
 
-                ``nearest_sample=True`` will select the second sample point,
-                ``nearest_sample=False`` will select the first sample point.
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
 
         :type fill_value: int, float or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
@@ -1428,7 +1428,7 @@ class Stream(object):
         .. note::
 
             This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
+            raw data will no longer be accessible afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
 
@@ -2059,6 +2059,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
@@ -2114,6 +2123,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         zero then the end time of the trace is changing on sub-sample scale. To
         abort downsampling in case of changing end times set
         ``strict_length=True``.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -2198,7 +2216,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.differentiate(type=type)
         return self
 
-    def integrate(self, type='cumtrapz'):
+    def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate all traces with respect to time.
 
@@ -2221,7 +2239,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(type=type)
+            tr.integrate(type=type, **options)
         return self
 
     @raiseIfMasked
@@ -2275,6 +2293,49 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         for tr in self:
             tr.taper(*args, **kwargs)
+        return self
+
+    def interpolate(self, *args, **kwargs):
+        """
+        Method to interpolate all Traces in a Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.interpolate` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> st.interpolate(sampling_rate=111.1)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        """
+        for tr in self:
+            tr.interpolate(*args, **kwargs)
         return self
 
     def std(self):

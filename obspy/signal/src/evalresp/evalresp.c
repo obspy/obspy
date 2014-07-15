@@ -23,9 +23,7 @@
 
 
 
-int main(argc, argv)
-int  argc;
-char *argv[];
+int main(int argc, char *argv[])
 {
   char *sta_list, *cha_list, units[MAXFLDLEN], *file, *verbose;
   char *net_code, *locid, *type, rtype[MAXFLDLEN];
@@ -199,8 +197,7 @@ char *argv[];
       if((++i) < argc && *argv[i] != '-') {
         fldlen = strlen(argv[i]);
         if(fldlen >= TODAYSIZE) {
-	    void *a;
-            a = realloc(t_o_day,(fldlen+1));
+            t_o_day = realloc(t_o_day,(fldlen+1));
         }
         strcpy(t_o_day, argv[i]);
       }

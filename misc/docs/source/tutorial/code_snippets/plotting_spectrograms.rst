@@ -14,7 +14,5 @@ matplotlib colormaps are given at:
 * http://www.astro.lsa.umich.edu/~msshin/science/code/matplotlib_cm/
 * http://www.scipy.org/Cookbook/Matplotlib/Show_colormaps
 
-.. include:: plotting_spectrograms.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/plotting_spectrograms.py
+.. plot:: tutorial/code_snippets/plotting_spectrograms.py
+   :include-source:

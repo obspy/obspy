@@ -25,11 +25,11 @@ libraries and applications, our build tools and our web sites.
 
 """)
 
-# add contributers
-filename = os.path.join('source', 'credits', 'CONTRIBUTERS.txt')
-contributers = sorted(codecs.open(filename, 'r', 'utf-8').readlines())
+# add contributors
+filename = os.path.join('source', 'credits', 'CONTRIBUTORS.txt')
+contributors = sorted(codecs.open(filename, 'r', 'utf-8').readlines())
 
-for item in contributers:
+for item in contributors:
     fh.write("    * %s" % (item))
 
 fh.write("""
@@ -56,6 +56,15 @@ filename = os.path.join('source', 'credits', 'QUOTES.txt')
 funds = codecs.open(filename, 'r', 'utf-8').readlines()
 
 for item in funds:
-    fh.write("* %s" % (item))
+    item = item.split('---')
+    fh.write("""
+.. epigraph::
+    %s""" % (item[0]))
+    try:
+        fh.write("""
+
+    -- %s""" % (item[1]))
+    except IndexError:
+        pass
 
 fh.close()
