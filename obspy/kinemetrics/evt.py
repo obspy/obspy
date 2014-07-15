@@ -201,7 +201,7 @@ class EVT_HEADER(EVT_Virtual):
         buff = fp.read(length)
         try:
             self.endian = endian.encode()
-        except:
+        except UnicodeError:
             self.endian = endian
         if (length == 2040):  # File Header 12 channel
             self.analyse_header12(buff)
