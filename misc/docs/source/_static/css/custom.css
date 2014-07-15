@@ -63,42 +63,62 @@ div.highlight pre {
   background : none repeat scroll 0 0 #EEFFCC;
 }
 
+div.genindex-jumpbox, div.modindex-jumpbox {
+  border: none;
+}
+
+
+/* breadcrumb */
+
+.breadcrumb, .viewcode-link, #sourcelink {
+  font-size: 80%;
+}
+
+.breadcrumb > li.pull-right {
+  color: #ccc;
+}
+
+.breadcrumb > li.pull-right:last-child:before {
+  content: "" !important;
+  padding: 0 !important;
+}
+
 
 /* table stuff */
 table.table td {
-    min-width: 10em;
+  min-width: 11em;
 }
 
 table.table tr.row-even {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
 
 table.field-list th {
-    background-color: #eeddee;
-    border: 1px solid #aaaaaa;
-    border-collapse: collapse;
+  background-color: #eeddee;
+  border: 1px solid #aaaaaa;
+  border-collapse: collapse;
 }
 
 
 table.field-list td {
-    background-color: #eeeeff;
-    border: 1px solid #aaaaaa;
-    min-width: 10em;
+  background-color: #eeeeff;
+  border: 1px solid #aaaaaa;
+  min-width: 10em;
 }
 
 table.field-list ul li {
-    list-style-position: inside;
-    list-style-type: none;
-    padding-bottom: 0.5em;
+  list-style-position: inside;
+  list-style-type: none;
+  padding-bottom: 0.5em;
 }
 
 table.field-list ul {
-    padding-left: 0;
+  padding-left: 0;
 }
 
 table.field-list td.field-body span.dash {
-    display: block;
-    padding: 0.5em 1em 0.5em 2em;
+  display: block;
+  padding: 0.5em 1em 0.5em 2em;
 }
 
 table.highlighttable td {
@@ -152,12 +172,12 @@ dd p {
 
 /* warnings */
 .warning {
-    background-color: #f2dede;
-    border-color: #ebccd1;
-    color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+  color: #a94442;
 }
 
 .warning a {
-    color: #843534;
-    font-weight: 700;
+  color: #843534;
+  font-weight: 700;
 }
