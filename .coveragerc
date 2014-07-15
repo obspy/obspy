@@ -1,5 +1,5 @@
 [run]
-omit = */scripts/*,*/data/*,*/docs/*
+omit = */data/*,*/docs/*
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -21,3 +21,8 @@ exclude_lines =
 
     # skip missing imports which
     except ImportError
+
+[paths]
+sources =
+    obspy/
+    /home/travis/virtualenv/python*/lib/python*/site-packages/obspy/
