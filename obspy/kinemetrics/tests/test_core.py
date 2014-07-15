@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import os
 import unittest
 
@@ -84,6 +85,54 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
 
+    def test_reading_via_obspy_and_bytesio(self):
+        """
+        Test the reading of EVT files from BytesIO objects.
+        """
+        # 1
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        with open(filename, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+        buf.seek(0, 0)
+        st = read(buf)
+        st.verify()
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230*25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
+
+        # 2
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        with open(filename, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+        buf.seek(0, 0)
+        st = read(buf)
+        st.verify()
+        self.assertEqual(len(st), 6)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(len(st[0]), 390*25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MOLA')
+
     def test_read_via_module(self):
         """
         Read files via obspy.kinemetrics.core.read_evt function.
@@ -107,6 +156,55 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         # 2
         st = read_evt(filename)
+        st.verify()
+        self.assertEqual(len(st), 6)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[3].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[4].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(st[5].stats.starttime,
+                         UTCDateTime('2012-01-17T09:54:36.000000Z'))
+        self.assertEqual(len(st[0]), 390*25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MOLA')
+
+    def test_read_via_module_and_bytesio(self):
+        """
+        Read files via obspy.kinemetrics.core.read_evt function from BytesIO
+        objects.
+        """
+        # 1
+        filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
+        with open(filename, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+        buf.seek(0, 0)
+        st = read_evt(buf)
+        st.verify()
+        self.assertEqual(len(st), 3)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(st[2].stats.starttime,
+                         UTCDateTime('2013-08-15T09:20:28.000000Z'))
+        self.assertEqual(len(st[0]), 230*25)
+        self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
+        self.assertEqual(st[0].stats.channel, '0')
+        self.assertEqual(st[0].stats.station, 'MEMA')
+
+        # 2
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        with open(filename, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+        buf.seek(0, 0)
+        st = read_evt(buf)
         st.verify()
         self.assertEqual(len(st), 6)
         self.assertEqual(st[0].stats.starttime,
