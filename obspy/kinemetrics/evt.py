@@ -17,7 +17,7 @@ import numpy as np
 
 from obspy import Trace, Stream
 from obspy.kinemetrics.evt_base import EVTBadHeaderError, EVTEOFError, \
-    EVTBadDataError, EVT_Virtual, EVTNotImplementedError
+    EVTBadDataError, EVT_Virtual
 
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
@@ -207,7 +207,7 @@ class EVT_HEADER(EVT_Virtual):
         if (length == 2040):  # File Header 12 channel
             self.analyse_header12(buff)
         elif (length == 2736):  # File Header 18 channel
-            raise EVTNotImplementedError("16 Channel not implemented")
+            raise NotImplementedError("16 Channel not implemented")
         else:
             raise EVTBadHeaderError("Bad Header length " + length)
 
@@ -321,7 +321,7 @@ class EVT_FRAME(EVT_Virtual):
     def channels(self):
         numchan = 12
         if (self.frametype == 4):
-            raise EVTNotImplementedError("16 Channels not implemented")
+            raise NotImplementedError("16 Channels not implemented")
         chan = []
         for i in range(numchan):
             p2 = 2**i

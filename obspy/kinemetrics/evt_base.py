@@ -44,13 +44,6 @@ class EVTEOFError(EVTBaseError):
     pass
 
 
-class EVTNotImplementedError(EVTBaseError):
-    """
-    Raised if a function is called with not implemented options
-    """
-    pass
-
-
 class EVT_Virtual(object):
     """
     class for parameters reading.
