@@ -31,7 +31,7 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
-DEPR_WARN = ("This service was shut down on the server side in december "
+DEPR_WARN = ("This service was shut down on the server side in December "
              "2013, please use %s instead. Further information: "
              "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
@@ -148,12 +148,12 @@ class Client(object):
         Either writes data into a file if filename is given or directly returns
         it.
 
-        :type filename: String or open file-like object.
+        :type filename: str or file
         :param filename: File or object being written to. If None, a string
             will be returned.
-        :type data: String or Bytes
+        :type data: str or bytes
         :param data: The data being written or returned.
-        :type binary: Boolean, optional
+        :type binary: bool, optional
         :param binary: Whether to write the data as binary or text. Defaults to
             binary.
         """
@@ -175,7 +175,7 @@ class Client(object):
                    "file-like object.")
             raise TypeError(msg)
         try:
-            fh.write(data)
+            fh.write(data if binary else data.decode('utf-8'))
         finally:
             # Only close if also opened.
             if file_opened is True:
@@ -186,7 +186,7 @@ class Client(object):
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -200,7 +200,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -214,7 +214,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -227,7 +227,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -357,7 +357,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             ``'audio'``
                 audio WAV file
             ``'miniseed'``
-                IRIS miniSEED format
+                IRIS MiniSEED format
             ``'plot'``
                 A simple plot of the timeseries
             ``'saca'``
@@ -444,17 +444,19 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         **Temporal constraints**
 
-        The following three parameters impose time constrants on the query.
+        The following three parameters impose time constraints on the query.
         Time may be requested through the use of either time OR the start and
         end times. If no time is specified, then the current time is assumed.
 
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param time: Find the response for the given time. Time cannot be used
-            with starttime or endtime parameters
+            with ``starttime`` or ``endtime`` parameters
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Start time, may be used in conjunction with endtime.
+        :param starttime: Start time, may be used in conjunction with
+            ``endtime``.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End time, may be used in conjunction with starttime.
+        :param endtime: End time, may be used in conjunction with
+            ``starttime``.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -517,7 +519,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -531,7 +533,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -545,7 +547,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -564,7 +566,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
@@ -594,10 +596,10 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` optional
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End date and time. Requires starttime parameter.
+        :param endtime: End date and time. Requires ``starttime`` parameter.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -750,8 +752,9 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :param lat: Latitude of interest.
         :type lon: float
         :param lon: Longitude of interest.
-        :type rtype: ``'code'``, ``'region'`` or ``'both'``
-        :param rtype: Return type. Defaults to ``'both'``.
+        :type rtype: str, optional
+        :param rtype: Return type. Can be one of ``'code'``, ``'region'`` or
+            ``'both'``. Defaults to ``'both'``.
         :rtype: int, str, or tuple
         :returns: Returns Flinn-Engdahl region code or name or both, depending
             on the request type parameter ``rtype``.
@@ -811,15 +814,18 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :param model: Name of 1-D earth velocity model to be used. Available
             models include:
 
-                * ``'iasp91'`` (default) - by Int'l Assoc of Seismology and
-                  Physics of the Earth's Interior
-                * ``'prem'`` - Preliminary Reference Earth Model
-                * ``'ak135'``
+            * ``'iasp91'`` (default) - by Int'l Assoc of Seismology and
+              Physics of the Earth's Interior
+            * ``'prem'`` - Preliminary Reference Earth Model
+            * ``'ak135'``
+
         :type phases: list of str, optional
         :param phases: Comma separated list of phases. The default is as
             follows::
+
                 ['p','s','P','S','Pn','Sn','PcP','ScS','Pdiff','Sdiff',
                  'PKP','SKS','PKiKP','SKiKS','PKIKP','SKIKS']
+
             Invalid phases will be ignored. Valid arbitrary phases can be made
             up e.g. sSKJKP. See
             `TauP documentation <http://www.seis.sc.edu/TauP/>`_ for more
@@ -863,6 +869,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
             .. note:: Travel times are produced in ascending order regardless
                 of the order in which the phases are specified
+
         :type rayparamonly: bool, optional
         :param rayparamonly: Returns a space-separated list of ray parameters,
             in sec/deg.. Defaults to ``False``.
@@ -976,7 +983,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             Must be a positive integer no greater than ``10000``. The
             instrument response is evaluated on a equally spaced logarithmic
             scale. Defaults to ``200``.
-        :type units:  ``'def'``, ``'dis'``, ``'vel'``, ``'acc'``, optional
+        :type units:  str, optional
         :param units: Output Unit. Defaults to ``'def'``.
 
             ``'def'``
@@ -1033,7 +1040,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
-        :rtype: numpy.ndarray, str or `None`
+        :rtype: :class:`numpy.ndarray`, str or `None`
         :returns: Returns either a NumPy :class:`~numpy.ndarray`, image string
             or nothing, depending on the ``output`` parameter.
 
@@ -1129,7 +1136,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         SHUT DOWN ON SERVER SIDE!
 
-        This service was shut down on the server side in december
+        This service was shut down on the server side in December
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:

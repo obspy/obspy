@@ -80,6 +80,7 @@
 
 struct matched_files *find_files(char *file, struct scn_list *scn_lst, int *mode) {
   char *basedir, testdir[MAXLINELEN];
+  char *tmpdir;
   char comp_name[MAXLINELEN], new_name[MAXLINELEN];
   int i, nscn, nfiles;
   struct matched_files *flst_head, *flst_ptr, *tmp_ptr;
@@ -149,8 +150,8 @@ struct matched_files *find_files(char *file, struct scn_list *scn_lst, int *mode
            directory (and the SEEDRESP directory exists) add it to the
            search path */
         stat(basedir, &buf);
-        (void)getcwd(testdir,MAXLINELEN);
-        if(S_ISDIR(buf.st_mode) && strcmp(testdir, basedir)) {
+        tmpdir = getcwd(testdir, MAXLINELEN);
+        if(tmpdir && S_ISDIR(buf.st_mode) && strcmp(testdir, basedir)) {
 	  memset(new_name,0,MAXLINELEN);
           sprintf(new_name, " %s/RESP.%s.%s.%s.%s",basedir,
                   scn_ptr->network,scn_ptr->station,scn_ptr->locid,scn_ptr->channel);
@@ -168,8 +169,8 @@ struct matched_files *find_files(char *file, struct scn_list *scn_lst, int *mode
                 scn_ptr->channel);
         if(basedir != NULL) {
           stat(basedir, &buf);
-          (void) getcwd(testdir,MAXLINELEN);
-          if(S_ISDIR(buf.st_mode) && strcmp(testdir, basedir)) {
+          tmpdir = getcwd(testdir, MAXLINELEN);
+          if(tmpdir && S_ISDIR(buf.st_mode) && strcmp(testdir, basedir)) {
 	    memset(new_name,0,MAXLINELEN);
             sprintf(new_name, " %s/RESP.%s.%s.%s",basedir,
                     scn_ptr->network,scn_ptr->station,scn_ptr->channel);

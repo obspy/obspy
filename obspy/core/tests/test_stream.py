@@ -5,6 +5,7 @@ from future.builtins import *  # NOQA
 
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
+from obspy.core.compatibility import mock
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
@@ -2125,6 +2126,32 @@ class StreamTestCase(unittest.TestCase):
         for tr in st1:
             tr.remove_response(pre_filt=(0.1, 0.5, 30, 50))
         st2.remove_response(pre_filt=(0.1, 0.5, 30, 50))
+        self.assertEqual(st1, st2)
+
+    def test_interpolate(self):
+        """
+        Tests that the interpolate command is called for all traces of a
+        Stream object.
+        """
+        st = read()
+        with mock.patch("obspy.core.trace.Trace.interpolate") as patch:
+            st.interpolate(sampling_rate=1.0, method="weighted_average_slopes")
+
+        self.assertEqual(len(st), patch.call_count)
+        self.assertEqual({"sampling_rate": 1.0,
+                          "method": "weighted_average_slopes"},
+                         patch.call_args[1])
+
+    def test_integratestream(self):
+        """
+        Test integration on the stream and trace
+        """
+        st1 = read()
+        st2 = read()
+
+        for tr in st1:
+            tr.integrate(type='cumtrapz', initial=0)
+        st2.integrate(type='cumtrapz', initial=0)
         self.assertEqual(st1, st2)
 
 

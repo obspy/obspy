@@ -141,7 +141,7 @@ class ImageComparison(NamedTemporaryFile):
     :type image_name: str
     :param image_name: Filename (with suffix, without directory path) of the
         baseline image
-    :type reltol: float (optional)
+    :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
 
@@ -233,8 +233,8 @@ class ImageComparison(NamedTemporaryFile):
         """
         msg = ""
         try:
-            # only compare images if no exception occured in the with
-            # statement. this avoids masking previously occured exceptions (as
+            # only compare images if no exception occurred in the with
+            # statement. this avoids masking previously occurred exceptions (as
             # an exception may occur in compare()). otherwise we only clean up
             # and the exception gets re-raised at the end of __exit__.
             if exc_type is None:
@@ -243,8 +243,8 @@ class ImageComparison(NamedTemporaryFile):
         # images
         except ValueError as e:
             failed = True
-            if "operands could not be broadcast together" in e.message:
-                msg = e.message
+            msg = str(e)
+            if "operands could not be broadcast together" in msg:
                 msg = self._upload_and_append_message(msg)
                 raise ImageComparisonException(msg)
             raise
@@ -260,7 +260,7 @@ class ImageComparison(NamedTemporaryFile):
                 failed = True
                 raise ImageComparisonException(msg)
             failed = False
-        # finalle clean up after the image test, whether failed or not.
+        # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
@@ -330,6 +330,9 @@ class ImageComparison(NamedTemporaryFile):
                    "'pyimgur' not installed).")
             warnings.warn(msg)
             return ""
+        # requests package should be installed since it is a dependency of
+        # pyimgur
+        import requests
         # try to get imgur client id from environment
         imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
         if imgur_clientid is None:
@@ -340,16 +343,21 @@ class ImageComparison(NamedTemporaryFile):
         # upload images and return urls
         imgur = pyimgur.Imgur(imgur_clientid)
         msg = []
-        if os.path.exists(self.baseline_image):
-            up = imgur.upload_image(self.baseline_image, title=self.name)
-            msg.append("Baseline image: " + up.link)
-        if os.path.exists(self.name):
-            up = imgur.upload_image(self.name, title=self.name)
-            msg.append("Failed image:   " + up.link)
-        if os.path.exists(self.diff_filename):
-            up = imgur.upload_image(self.diff_filename,
-                                    title=self.diff_filename)
-            msg.append("Diff image:     " + up.link)
+        try:
+            if os.path.exists(self.baseline_image):
+                up = imgur.upload_image(self.baseline_image, title=self.name)
+                msg.append("Baseline image: " + up.link)
+            if os.path.exists(self.name):
+                up = imgur.upload_image(self.name, title=self.name)
+                msg.append("Failed image:   " + up.link)
+            if os.path.exists(self.diff_filename):
+                up = imgur.upload_image(self.diff_filename,
+                                        title=self.diff_filename)
+                msg.append("Diff image:     " + up.link)
+        except requests.exceptions.SSLError as e:
+            msg = ("Upload to imgur not possible (caught SSLError: %s).")
+            warnings.warn(msg % str(e))
+            return ""
         return "\n".join(msg)
 
 

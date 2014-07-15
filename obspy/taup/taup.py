@@ -77,7 +77,7 @@ def getTravelTimes(delta, depth, model='iasp91'):
     :param delta: Distance in degrees.
     :type depth: float
     :param depth: Depth in kilometer.
-    :type model: string, optional
+    :type model: str, optional
     :param model: Either ``'iasp91'`` or ``'ak135'`` velocity model. Defaults
         to ``'iasp91'``.
     :rtype: list of dicts
@@ -147,12 +147,12 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         Defaults to ``360``.
     :type npoints: int, optional
     :param npoints: Number of points to plot. Defaults to ``1000``.
-    :type phases: list of strings, optional
+    :type phases: list of str, optional
     :param phases: List of phase names which should be used within the plot.
         Defaults to all phases if not explicit set.
     :type depth: float, optional
     :param depth: Depth in kilometer. Defaults to ``100``.
-    :type model: string, optional
+    :type model: str, optional
     :param model: Either ``'iasp91'`` or ``'ak135'`` velocity model.
         Defaults to ``'iasp91'``.
     :return: None

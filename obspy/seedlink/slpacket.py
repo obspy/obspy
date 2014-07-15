@@ -36,7 +36,7 @@ class SLPacket(object):
         the termination sequence completed.
     :type SLTERMINATE: str
     :var SLNOPACKET: No packet flag - indicates no data available.
-    :type SLNOPACKET: chr
+    :type SLNOPACKET: bytes
     :var SLERROR: Error flag - indicates server reported an error.
     :type SLERROR: str
     :var SLHEADSIZE: SeedLink packet header size.

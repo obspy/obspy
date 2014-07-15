@@ -35,7 +35,7 @@ from future.utils import native_str
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _getVersionString
-__version__ = _getVersionString()
+__version__ = _getVersionString(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents, Catalog

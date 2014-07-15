@@ -57,7 +57,7 @@ class CalibrationTestCase(unittest.TestCase):
                                              decimal=4)
         np.testing.assert_array_almost_equal(amp, un_resp[:, 1],
                                              decimal=4)
-        # TODO: unkown why the first frequency mismatches so much
+        # TODO: unknown why the first frequency mismatches so much
         np.testing.assert_array_almost_equal(phase[1:], un_resp[1:, 2],
                                              decimal=4)
 

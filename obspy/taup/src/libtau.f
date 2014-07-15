@@ -1,7 +1,7 @@
 C+
-C	libtau.f is from Buland's 1996 Feb. libtau.src.
-C	Added references to my lenc routine for calculating lengths
-C	  of character strings up to first blank or null (jas/vt)
+C     libtau.f is from Buland's 1996 Feb. libtau.src.
+C     Added references to my lenc routine for calculating lengths
+C       of character strings up to first blank or null (jas/vt)
 C
 C
 C
@@ -59,7 +59,7 @@ c++
       read(nin) coef
       call retrns(nin)
 c
-	nb = lenc(modnam)
+      nb = lenc(modnam)
       filename = modnam(1:nb)//'.tbl'
       call dasign(nin,-1,filename,nasgr)
 c
@@ -227,8 +227,8 @@ c     write(10,*)'msrc isrc odep zs us',msrc,isrc,odep,sngl(zs),
 c    1 sngl(us(1)),sngl(us(2))
 c     write(10,200)ki,(i,iidx(i),kk(i),pk(i),i=1,nseg)
 c200  format(/10x,i5/(1x,3i5,f12.6))
-      usrc(1)=us(1)/pn
-      usrc(2)=us(2)/pn
+      usrc(1)=sngl(us(1)/pn)
+      usrc(2)=sngl(us(2)/pn)
       return
       end
       subroutine depcor(nph)
@@ -275,8 +275,8 @@ c   Find where the source slowness falls in the ray parameter array.
       k2=n1
       if(pu(n1,nph).eq.umin) go to 50
 c     call abort('Source slowness too large.')
-	write(*,*) 'Source slowness too large.'
-	call exit(0) 
+      write(*,*) 'Source slowness too large.'
+      call exit(0)
  4    k2=i
 c50   write(10,*)'k2 umin',k2,sngl(umin)
 c
@@ -619,13 +619,13 @@ c
       do 1 i=2,m1
       if(zm(i,nph).le.zs) go to 2
  1    continue
-      dep=(1d0-dexp(zs))/xn
+      dep=sngl((1d0-dexp(zs))/xn)
       write(msg,100)dep
       write(6,100)dep
  100  format('Source depth (',f6.1,') too deep.')
 c     call abort(msg)
-	write(*,*)msg
-	call exit(0)
+      write(*,*)msg
+      call exit(0)
  2    if(dabs(zs-zm(i,nph)).le.dtol.and.dabs(zm(i,nph)-zm(i+1,nph)).le.
      1 dtol) go to 3
       j=i-1
@@ -874,7 +874,7 @@ c300  format(/(1x,i5,4f12.6))
       shm=-.375d0*tau(4,j)/tau(3,j)
       hm=shm*shm
       if(shm.le.0d0.or.(hm.le.pe1.or.hm.ge.pe0)) go to 4
- 7    thm=tau(2,j)+shm*(2d0*shm*tau(3,j)+1.5d0*tau(4,j))
+      thm=tau(2,j)+shm*(2d0*shm*tau(3,j)+1.5d0*tau(4,j))
       xlim(1,j)=dmin1(xlim(1,j),thm)
       xlim(2,j)=dmax1(xlim(2,j),thm)
       if(thm.ge.dmn) go to 6
@@ -999,7 +999,7 @@ c
  3    m=k+2
       k=i-1
       axm=1d10
- 7    xm=xm+dx*idint((x-xm-dx2)/dx+rnd)
+      xm=xm+dx*idint((x-xm-dx2)/dx+rnd)
  2    if(dabs(x-xm).ge.axm) go to 1
       axm=dabs(x-xm)
       k=i-1
@@ -1345,15 +1345,15 @@ c
       if(dabs(tau(3,j)).gt.1d-30) go to 2
       dps=(x-tau(2,j))/(1.5d0*tau(4,j))
       dp=dsign(dps*dps,dps)
-      dp0=dp
+      dp0=sngl(dp)
       if(dp.lt.p1-delp.or.dp.gt.p0+delp) go to 9
       if(n.ge.max) go to 13
       n=n+1
       ps=pt(ie)-dp
-      tt(n)=tn*(tau(1,j)+dp*(tau(2,j)+dps*tau(4,j))+ps*x)
-      dtdd(n)=dsgn*ps
+      tt(n)=sngl(tn*(tau(1,j)+dp*(tau(2,j)+dps*tau(4,j))+ps*x))
+      dtdd(n)=dsgn*sngl(ps)
       dtdh(n)=hsgn*sqrt(abs(sngl(us(nph)*us(nph)-ps*ps)))
-      dddp(n)=dpn*.75d0*tau(4,j)/dmax1(dabs(dps),deps)
+      dddp(n)=sngl(dpn*.75d0*tau(4,j)/dmax1(dabs(dps),deps))
       phnm(n)=phcd(jb)
       in=index(phnm(n),'ab')
       if(in.le.0) go to 8
@@ -1369,7 +1369,7 @@ c
  3    dps=-(3d0*tau(4,j)+dsign(dsqrt(dabs(arg)),tau(4,j)))/(8d0*
      1 tau(3,j))
       dp=dsign(dps*dps,dps)
-      dp0=dp
+      dp0=sngl(dp)
       go to 7
  6    dps=(tau(2,j)-x)/(2d0*tau(3,j)*dps)
       dp=dsign(dps*dps,dps)
@@ -1377,10 +1377,12 @@ c
       if(n.ge.max) go to 13
       n=n+1
       ps=pt(ie)-dp
-      tt(n)=tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+dps*tau(4,j))+ps*x)
-      dtdd(n)=dsgn*ps
+      tt(n)=sngl(tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+dps*tau(4,j))+
+     1 ps*x))
+      dtdd(n)=dsgn*sngl(ps)
       dtdh(n)=hsgn*sqrt(abs(sngl(us(nph)*us(nph)-ps*ps)))
-      dddp(n)=dpn*(2d0*tau(3,j)+.75d0*tau(4,j)/dmax1(dabs(dps),deps))
+      dddp(n)=sngl(dpn*(2d0*tau(3,j)+
+     1 .75d0*tau(4,j)/dmax1(dabs(dps),deps)))
       phnm(n)=phcd(jb)
       in=index(phnm(n),'ab')
       if(in.le.0) go to 4
@@ -1400,11 +1402,11 @@ c
       dp=pt(i)-pt(j)
       dps=dsqrt(dabs(dp))
       n=n+1
-      tt(n)=tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+dps*tau(4,j))+
-     1 pt(j)*x)
+      tt(n)=sngl(tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+dps*tau(4,j))+
+     1 pt(j)*x))
       dtdd(n)=dsgn*sngl(pt(j))
       dtdh(n)=hsgn*sqrt(abs(sngl(us(nph)*us(nph)-pt(j)*pt(j))))
-      dddp(n)=dpn*(2d0*tau(3,j)+.75d0*tau(4,j)/dmax1(dps,deps))
+      dddp(n)=sngl(dpn*(2d0*tau(3,j)+.75d0*tau(4,j)/dmax1(dps,deps)))
       ln=index(phcd(jb),'ab')-1
       if(ln.le.0) ln=index(phcd(jb),' ')-1
       if(ln.le.0) ln=len(phcd(jb))
@@ -1424,7 +1426,7 @@ c   IargcX emulates the UNIX command iargc using the MSDOS
 c   nargs equivalent.
 c
 c     i=nargs()-1
-	i=iargc()-1
+      i=iargc()-1
       iargcX=i
       return
       end
@@ -1455,7 +1457,7 @@ c
  100  format(a)
 c
  2    nb=lenc(ib)
- 	filename = ib(1:nb)//'.hed'
+      filename = ib(1:nb)//'.hed'
       call assign(lu,mode,filename)
       return
       end
@@ -1640,7 +1642,7 @@ c   algorithm for the ACM).
       r=r+.0390625
       go to 12
  11   r=r-.21875
- 12   ij=i+(j-i)*r
+ 12   ij=int(i+(j-i)*r)
       if(rkey(iptr(i)).le.rkey(iptr(ij))) go to 20
       it=iptr(ij)
       iptr(ij)=iptr(i)
@@ -1781,8 +1783,9 @@ c
       dps=dsqrt(dabs(dp))
       x=tau(2,j)+2d0*dp*tau(3,j)+1.5d0*dps*tau(4,j)
 c     print *,'j pt dp dps x',j,pt(ie),dp,dps,x
-      tcor=tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+dps*tau(4,j))+ps*x)
-      xcor=cn*x
+      tcor=sngl(tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+dps*tau(4,j))+
+     1 ps*x))
+      xcor=sngl(cn*x)
 c     print *,'iupcor xcor tcor',iupcor,xcor,tcor
       return
 c
@@ -1867,7 +1870,7 @@ C 22   print *,'Enter desired branch control list at the prompts:'
       no=no+1
 C      read 100,phlst(no)
       phlst(no) = 'all'
- 100  format(a)
+C 100  format(a)
 c   Terminate the list of tokens with a blank entry.
       if(phlst(no).ne.' ') go to 21
       no=no-1
@@ -1989,7 +1992,7 @@ C     if(.not.fnd) print *,'Brnset:  the following phases have '//
 C    1 'been selected -'
 C     fnd=.true.
 C     print 102,i,(segcd(j),j=j1,j2)
- 102  format(10x,i5,5(2x,a))
+C 102  format(10x,i5,5(2x,a))
  16   continue
       return
       end
@@ -2051,9 +2054,9 @@ c   Got the ray parameter interval.  Interpolate.
                 dps=dsqrt(dabs(dp))
                 x=tau(2,j)+2d0*dp*tau(3,j)+1.5d0*dps*tau(4,j)
 c               print *,'j pt dp dps x',j,pt(ie),dp,dps,x
-                tcor=tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+
-     1           dps*tau(4,j))+ps*x)
-                xcor=cn*x
+                tcor=sngl(tn*(tau(1,j)+dp*(tau(2,j)+dp*tau(3,j)+
+     1           dps*tau(4,j))+ps*x))
+                xcor=sngl(cn*x)
 c               print *,'oneray xcor tcor',oneray,xcor,tcor
                 return
               endif
@@ -2090,8 +2093,11 @@ c   on the same line).  Programmed on 17 September 1980 by
 c   R. Buland.
 c
       character*(*) ia
+C     No warnings:
+      n=n
+      ia=ia
 C      write(*,100)ia(1:n)
- 100  format(a,$)
+C 100  format(a,$)
       return
       end
       subroutine dasign(lu,mode,ia,len)
@@ -2139,22 +2145,22 @@ c
       call exit(ierr)
       end
 C+
-	function lenc(string)
+      function lenc(string)
 C
-C	Returns length of character variable STRING excluding right-hand
-C	  most blanks or nulls
+C     Returns length of character variable STRING excluding right-hand
+C       most blanks or nulls
 C-
-	character*(*) string
-	length = len(string)	! total length
-	if (length .eq. 0) then
-	  lenc = 0
-	  return
-	end if
-	if(ichar(string(length:length)).eq.0)string(length:length) = ' '
-	do j=length,1,-1
-	  lenc = j
-	  if (string(j:j).ne.' ' .and. ichar(string(j:j)).ne.0) return
-	end do
-	lenc = 0
-	return
-	end
+      character*(*) string
+      length = len(string)    ! total length
+      if (length .eq. 0) then
+        lenc = 0
+        return
+      end if
+      if(ichar(string(length:length)).eq.0)string(length:length) = ' '
+      do j=length,1,-1
+        lenc = j
+        if (string(j:j).ne.' ' .and. ichar(string(j:j)).ne.0) return
+      end do
+      lenc = 0
+      return
+      end

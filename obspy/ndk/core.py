@@ -208,7 +208,7 @@ def read_ndk(filename, *args, **kwargs):  # @UnusedVariable
             version=record["version_code"]
         )
 
-        # Use the obspy flinn engdahl region determinator as the region in
+        # Use the ObsPy flinn engdahl region determinator as the region in
         # the NDK files is oftentimes trimmed.
         region = fe.get_region(record["centroid_longitude"],
                                record["centroid_latitude"])

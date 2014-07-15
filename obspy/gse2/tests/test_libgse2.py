@@ -146,7 +146,7 @@ class LibGSE2TestCase(unittest.TestCase):
                 self.assertRaises(OverflowError, libgse2.write, header, data,
                                   f)
 
-    def test_arrayNotNumpy(self):
+    def test_arrayNotNumPy(self):
         """
         Test if exception is raised when data are not of type int32 NumPy array
         """

@@ -15,7 +15,7 @@ plt.xlabel('Frequency [Hz]')
 plt.ylabel('Amplitude')
 
 plt.subplot(122)
-#take negative of imaginary part
+# take negative of imaginary part
 phase = np.unwrap(np.arctan2(-h.imag, h.real))
 plt.semilogx(f, phase)
 plt.xlabel('Frequency [Hz]')

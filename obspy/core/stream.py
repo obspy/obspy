@@ -58,7 +58,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
         object will be returned.
-    :type format: string, optional
+    :type format: str, optional
     :param format: Format of the file to read (e.g. ``"MSEED"``). See
         the `Supported Formats`_ section below for a list of supported formats.
         If format is set to ``None`` it will be automatically detected which
@@ -694,7 +694,7 @@ class Stream(object):
         """
         Extends the current Stream object with a list of Trace objects.
 
-        :param trace_list: list of :class:`~obspy.core.stream.Trace` objects or
+        :param trace_list: list of :class:`~obspy.core.trace.Trace` objects or
             :class:`~obspy.core.stream.Stream`.
 
         .. rubric:: Example
@@ -740,10 +740,10 @@ class Stream(object):
 
         The returned list contains one item in the following form for each gap/
         overlap: [network, station, location, channel, starttime of the gap,
-        endtime of the gap, duration of the gap, number of missing samples]
+        end time of the gap, duration of the gap, number of missing samples]
 
         Please be aware that no sorting and checking of stations, channels, ...
-        is done. This method only compares the start- and endtimes of the
+        is done. This method only compares the start and end times of the
         Traces.
 
         .. rubric:: Example
@@ -861,11 +861,11 @@ class Stream(object):
             If no outfile is specified but a format is, than a binary
             imagestring will be returned.
             Defaults to ``None``.
-        :param starttime: Starttime of the graph as a
+        :param starttime: Start time of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted from the beginning.
             Defaults to ``None``.
-        :param endtime: Endtime of the graph as a
+        :param endtime: End time of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted until the end.
             Defaults to ``None``.
@@ -890,10 +890,10 @@ class Stream(object):
             '#0E01FF')`` for ``type='dayplot'``.
         :param bgcolor: Background color of the graph.
             Defaults to ``'white'``.
-        :param face_color: Facecolor of the matplotlib canvas.
+        :param face_color: Face color of the matplotlib canvas.
             Defaults to ``'white'``.
         :param transparent: Make all backgrounds transparent (True/False). This
-            will overwrite the bgcolor and face_color arguments.
+            will overwrite the ``bgcolor`` and ``face_color`` arguments.
             Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
             Defaults to ``4``.
@@ -962,15 +962,17 @@ class Stream(object):
             Defaults to ``'local time'``.
         :param localization_dict: Enables limited localization of the dayplot
             through the usage of a dictionary. To change the labels to, e.g.
-            German, use the following:
+            German, use the following::
+
                 localization_dict={'time in': 'Zeit in', 'seconds': 'Sekunden',
                                    'minutes': 'Minuten', 'hours': 'Stunden'}
+
         :param data_unit: If given, the scale of the data will be drawn on the
             right hand side in the form "%f {data_unit}". The unit is supposed
             to be a string containing the actual unit of the data. Can be a
             LaTeX expression if matplotlib has been built with LaTeX support,
             e.g. "$\\\\frac{m}{s}$". Be careful to escape the backslashes, or
-            use r-prepended strings, e.g. r"$\\\\frac{m}{s}$".
+            use r-prefixed strings, e.g. r"$\\\\frac{m}{s}$".
             Defaults to ``None``, meaning no scale is drawn.
         :param events: An optional list of events can be drawn on the plot if
             given.  They will be displayed as yellow stars with optional
@@ -979,15 +981,19 @@ class Stream(object):
             UTCDateTime object with the origin time of the event. Furthermore
             every event can have an optional "text" key which will then be
             displayed as an annotation.
-            Example:
+            Example::
+
                 events=[{"time": UTCDateTime(...), "text": "Event A"}, {...}]
+
             It can also be a :class:`~obspy.core.event.Catalog` object. In this
             case each event will be annotated with its corresponding
             Flinn-Engdahl region and the magnitude.
             Events can also be automatically downloaded with the help of
             obspy.neries. Just pass a dictionary with a "min_magnitude" key,
-            e.g.
+            e.g. ::
+
                 events={"min_magnitude": 5.5}
+
             Defaults to ``[]``.
         :param x_labels_size: Size of x labels in points or fontsize.
             Defaults to ``8``.
@@ -1032,7 +1038,7 @@ class Stream(object):
             Defaults to ``1.0``.
         :type vred: float, optional
         :param vred: Perform velocity reduction, in m/s.
-        :type norm: string, optional
+        :type norm: str, optional
         :param norm: Defines how the traces are normalized,
             either against each ``trace`` or against the global
             maximum ``stream``.
@@ -1049,18 +1055,18 @@ class Stream(object):
         :type ev_coord: tuple or None, optional
         :param ev_coord: Event's coordinates as tuple
             ``(latitude, longitude)``.
-        :type plot_dx: integer, optional
+        :type plot_dx: int, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
             Either km or degree, depending on ``azim_dist``
-        :type recordstart: integer, optional
+        :type recordstart: int, optional
         :param recordstart: Seconds to crop from the beginning.
-        :type recordlength: integer, optional
+        :type recordlength: int, optional
         :param recordlength: Length of the record section in seconds.
         :type alpha: float, optional
-        :param alpha: Transparancy of the traces between 0.0 - 1.0.
+        :param alpha: Transparency of the traces between 0.0 - 1.0.
             Defaults to ``0.5``.
         :type time_down: bool, optional
-        :param time_down: Flip the plot horizontaly, time goes down.
+        :param time_down: Flip the plot horizontally, time goes down.
             Defaults to ``False``, i.e., time goes up.
 
         **Relative Parameters**
@@ -1338,9 +1344,9 @@ class Stream(object):
         """
         Saves stream into a file.
 
-        :type filename: string
+        :type filename: str
         :param filename: The name of the file to write.
-        :type format: string
+        :type format: str
         :param format: The file format to use (e.g. ``"MSEED"``). See
             the `Supported Formats`_ section below for a list of supported
             formats.
@@ -1409,13 +1415,13 @@ class Stream(object):
             selected, if set to ``False``, the next sample containing the time
             is selected. Defaults to ``True``.
 
-                Given the following trace containing 4 samples, "|" are the
-                sample points, "A" is the requested starttime::
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
 
-                    |        A|         |         |
+                |        A|         |         |
 
-                ``nearest_sample=True`` will select the second sample point,
-                ``nearest_sample=False`` will select the first sample point.
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
 
         :type fill_value: int, float or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
@@ -1425,7 +1431,7 @@ class Stream(object):
         .. note::
 
             This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
+            raw data will no longer be accessible afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
 
@@ -1717,15 +1723,14 @@ class Stream(object):
         """
         Merges ObsPy Trace objects with same IDs.
 
-        :type method: ``-1``, ``0`` or ``1``, optional
+        :type method: int, optional
         :param method: Methodology to handle overlaps of traces. Defaults
             to ``0``.
             See :meth:`obspy.core.trace.Trace.__add__` for details on
             methods ``0`` and ``1``,
             see :meth:`obspy.core.stream.Stream._cleanup` for details on
             method ``-1``.
-        :type fill_value: int or float, ``'latest'`` or ``'interpolate'``,
-            optional
+        :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
             gaps are present. The value ``'latest'`` will use the latest value
@@ -2044,7 +2049,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
-        :type window: array_like, callable, string, float, or tuple, optional
+        :type window: array_like, callable, str, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
@@ -2052,8 +2057,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``True``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -2099,8 +2113,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         Currently a simple integer decimation is implemented.
         Only every decimation_factor-th sample remains in the trace, all other
@@ -2109,9 +2123,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         filtering can be deactivated with ``no_filter=True``.
 
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. To
-        abort downsampling in case of changing endtimes set
+        zero then the end time of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing end times set
         ``strict_length=True``.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -2170,7 +2193,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to differentiate all traces with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: str, optional
         :param type: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
@@ -2196,7 +2219,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.differentiate(type=type)
         return self
 
-    def integrate(self, type='cumtrapz'):
+    def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate all traces with respect to time.
 
@@ -2204,7 +2227,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.integrate` method of
         :class:`~obspy.core.trace.Trace`.
 
-        :type type: str
+        :type type: str, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
             further details.
@@ -2219,7 +2242,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(type=type)
+            tr.integrate(type=type, **options)
         return self
 
     @raiseIfMasked
@@ -2227,8 +2250,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to remove a linear trend from all traces.
 
-        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
-            optional
+        :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
 
@@ -2274,6 +2296,49 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         for tr in self:
             tr.taper(*args, **kwargs)
+        return self
+
+    def interpolate(self, *args, **kwargs):
+        """
+        Method to interpolate all Traces in a Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.interpolate` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            The :class:`~Stream` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> st.interpolate(sampling_rate=111.1)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+        """
+        for tr in self:
+            tr.interpolate(*args, **kwargs)
         return self
 
     def std(self):
@@ -2377,8 +2442,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Convenience method for rotating stream objects.
 
-        :type method: string
+        :type method: str
         :param method: Determines the rotation method.
+
             ``'NE->RT'``: Rotates the North- and East-components of a
                 seismogram to radial and transverse components.
             ``'RT->NE'``: Rotates the radial and transverse components of a
@@ -2387,6 +2453,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 to LQT, e.g. right-handed ray coordinate system.
             ``'LQR->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
                 system to left handed Z, North, and East system.
+
         :type back_azimuth: float, optional
         :param angle: Depends on the chosen method.
             A single float, the back azimuth from station to source in degrees.

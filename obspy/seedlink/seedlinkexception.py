@@ -2,7 +2,7 @@
 """
 SeedLinkException.
 
-Part of Python implementaion of libslink of Chad Trabant and
+Part of Python implementation of libslink of Chad Trabant and
 JSeedLink of Anthony Lomax
 
 :copyright:

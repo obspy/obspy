@@ -19,7 +19,7 @@ import numpy as np
 import sys
 
 LOG2 = 0.3010299956639812
-# Get the system byteorder.
+# Get the system byte order.
 BYTEORDER = sys.byteorder
 if BYTEORDER == 'little':
     BYTEORDER = '<'
@@ -34,7 +34,7 @@ class WrongDtypeException(Exception):
 def pack_4byte_IBM(file, data, endian='>'):
     """
     Packs 4 byte IBM floating points. This will only work if the host system
-    internally uses little endian byteorders.
+    internally uses little endian byte orders.
     """
     # Check the dtype and raise exception otherwise!
     if data.dtype != np.float64 and data.dtype != np.float32:
@@ -126,7 +126,7 @@ def pack_4byte_Integer(file, data, endian='>'):
     # Check the dtype and raise exception otherwise!
     if data.dtype != np.int32:
         raise WrongDtypeException
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
@@ -140,7 +140,7 @@ def pack_2byte_Integer(file, data, endian='>'):
     # Check the dtype and raise exception otherwise!
     if data.dtype != np.int16:
         raise WrongDtypeException
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
@@ -158,7 +158,7 @@ def pack_4byte_IEEE(file, data, endian='>'):
     # Check the dtype and raise exception otherwise!
     if data.dtype != np.float32:
         raise WrongDtypeException
-    # Swap the byteorder if necessary.
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.

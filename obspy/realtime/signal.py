@@ -48,7 +48,7 @@ def offset(trace, offset=0.0, rtmemory_list=None):  # @UnusedVariable
         optional
     :param rtmemory_list: Persistent memory used by this process for specified
         trace
-    :rtype: Numpy :class:`numpy.ndarray`
+    :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object
     """
 
@@ -540,7 +540,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     Apply recursive kurtosis calculation on data.
 
     Recursive kurtosis is computed using the [ChassandeMottin2002]_
-    formulation adjusted to give the kurtosis of a gaussian distribution = 0.0.
+    formulation adjusted to give the kurtosis of a Gaussian distribution = 0.0.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace: :class:`~obspy.core.trace.Trace` object to append to this
@@ -551,7 +551,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
         optional
     :param rtmemory_list: Persistent memory used by this process for specified
         trace
-    :rtype: Numpy :class:`numpy.ndarray`
+    :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object
     """
     if not isinstance(trace, Trace):

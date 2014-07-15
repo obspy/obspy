@@ -9,7 +9,7 @@
 # --------------------------------------------------------------------
 """
 Functions that will all take a file pointer and the sample count and return a
-numpy array with the unpacked values.
+NumPy array with the unpacked values.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -24,7 +24,7 @@ import sys
 import os
 import warnings
 
-# Get the system byteorder.
+# Get the system byte order.
 BYTEORDER = sys.byteorder
 if BYTEORDER == 'little':
     BYTEORDER = '<'

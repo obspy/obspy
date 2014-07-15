@@ -559,7 +559,8 @@ class Unpickler(object):
         Converts an etree.Element into an Axis object.
 
         :type parent: etree.Element
-        :type name: tag name of axis
+        :type name: str
+        :param name: tag name of axis
         :rtype: :class:`~obspy.core.event.Axis`
         """
         obj = Axis()
@@ -599,7 +600,8 @@ class Unpickler(object):
         Converts an etree.Element into an NodalPlane object.
 
         :type parent: etree.Element
-        :type name: tag name of sub nodal plane
+        :type name: str
+        :param name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
         obj = NodalPlane()
@@ -960,7 +962,7 @@ class Pickler(object):
         :type catalog: :class:`~obspy.core.event.Catalog`
         :param catalog: ObsPy Catalog object.
         :rtype: str
-        :returns: QuakeML formated string.
+        :returns: QuakeML formatted string.
         """
         return self._serialize(catalog)
 
@@ -1688,9 +1690,9 @@ def writeQuakeML(catalog, filename, validate=False, nsmap=None,
 
     :type catalog: :class:`~obspy.core.stream.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: string or open file-like object
+    :type filename: str or file
     :param filename: Filename to write or open file-like object.
-    :type validate: Boolean, optional
+    :type validate: bool, optional
     :param validate: If True, the final QuakeML file will be validated against
         the QuakeML schema file. Raises an AssertionError if the validation
         fails.

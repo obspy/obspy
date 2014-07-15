@@ -666,7 +666,7 @@ extern hptime_t ms_timestr2hptime (char *timestr);
 extern double   ms_nomsamprate (int factor, int multiplier);
 extern int      ms_genfactmult (double samprate, int16_t *factor, int16_t *multiplier);
 extern int      ms_ratapprox (double real, int *num, int *den, int maxval, double precision);
-extern int      ms_bigendianhost ();
+extern int      ms_bigendianhost (void);
 extern double   ms_dabs (double val);
 
 
@@ -683,19 +683,19 @@ extern char *   ms_errorstr (int errorcode);
 /* Logging parameters */
 typedef struct MSLogParam_s
 {
-  void (*log_print)();
+  void (*log_print)(const char*);
   const char *logprefix;
-  void (*diag_print)();
+  void (*diag_print)(const char*);
   const char *errprefix;
 } MSLogParam;
 
 extern int    ms_log (int level, ...);
 extern int    ms_log_l (MSLogParam *logp, int level, ...);
-extern void   ms_loginit (void (*log_print)(char*), const char *logprefix,
-			  void (*diag_print)(char*), const char *errprefix);
+extern void   ms_loginit (void (*log_print)(const char*), const char *logprefix,
+			  void (*diag_print)(const char*), const char *errprefix);
 extern MSLogParam *ms_loginit_l (MSLogParam *logp,
-			         void (*log_print)(char*), const char *logprefix,
-			         void (*diag_print)(char*), const char *errprefix);
+			         void (*log_print)(const char*), const char *logprefix,
+			         void (*diag_print)(const char*), const char *errprefix);
 
 /* Selection functions */
 extern Selections *ms_matchselect (Selections *selections, char *srcname,

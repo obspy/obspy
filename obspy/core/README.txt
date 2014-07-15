@@ -34,4 +34,4 @@ For more information visit http://www.obspy.org.
 Dependencies
 ------------
 * distribute
-* numpy
+* NumPy

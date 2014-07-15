@@ -49,8 +49,8 @@ class SUTestCase(unittest.TestCase):
 
     def test_enforcingByteordersWhileReading(self):
         """
-        Tests whether or not enforcing the byteorder while reading and writing
-        does something and works at all. Using the wrong byteorder will most
+        Tests whether or not enforcing the byte order while reading and writing
+        does something and works at all. Using the wrong byte order will most
         likely raise an Exception.
         """
         # This file is little endian.
@@ -67,7 +67,7 @@ class SUTestCase(unittest.TestCase):
 
     def test_readingAndWritingDifferentByteorders(self):
         """
-        Writing different byteorders should not change
+        Writing different byte orders should not change
         """
         # This file is little endian.
         file = os.path.join(self.path, '1.su_first_trace')

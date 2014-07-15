@@ -59,7 +59,7 @@ def isWAV(filename):
             fh.close()
     except:
         return False
-    if width == 1 or width == 2 or width == 4:
+    if width in [1, 2, 4]:
         return True
     return False
 
@@ -106,7 +106,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     return Stream([Trace(header=header, data=data)])
 
 
-def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
+def writeWAV(stream, filename, framerate=7000, rescale=False, width=None,
              **kwargs):  # @UnusedVariable
     """
     Writes a audio WAV file from given ObsPy Stream object. The seismogram is
@@ -129,14 +129,23 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         the seismogram (default is 7000).
     :type rescale: bool, optional
     :param rescale: Maximum to maximal representable number
-    :type width: int, optimal
+    :type width: int, optional
     :param width: dtype to write, 1 for '<u1', 2 for '<i2' or 4 for '<i4'.
+        tries to autodetect width from data, uses 4 otherwise
     """
     i = 0
     base, ext = os.path.splitext(filename)
-    if width not in list(WIDTH2DTYPE.keys()):
+    if width not in list(WIDTH2DTYPE.keys()) + [None]:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
+        # try to autodetect width from data, see #791
+        if width is None:
+            if trace.data.dtype.str[-2:] in ['u1', 'i2', 'i4']:
+                tr_width = int(trace.data.dtype.str[-1])
+            else:
+                tr_width = 4
+        else:
+            tr_width = width
         # write WAV file
         if len(stream) >= 2:
             filename = "%s%03d%s" % (base, i, ext)
@@ -144,10 +153,10 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         try:
             trace.stats.npts = len(trace.data)
             # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-            w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
+            w.setparams((1, tr_width, framerate, trace.stats.npts, 'NONE',
                          'not compressed'))
             data = trace.data
-            dtype = WIDTH2DTYPE[width]
+            dtype = WIDTH2DTYPE[tr_width]
             if rescale:
                 # optimal scale, account for +/- and the zero
                 maxint = 2 ** (width * 8 - 1) - 1

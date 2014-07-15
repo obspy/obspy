@@ -3,7 +3,6 @@ from obspy.iris import Client as OldIris_Client
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 import matplotlib.pyplot as plt
-import numpy as np
 
 # MW 7.1 Darfield earthquake, New Zealand
 t1 = UTCDateTime("2010-09-3T16:30:00.000")
@@ -45,7 +44,7 @@ with NamedTemporaryFile() as tf:
 # plot original and simulated data
 tr = st[0]
 tr_orig = st_orig[0]
-time = np.arange(tr.stats.npts) / tr.stats.sampling_rate
+time = tr.times()
 
 plt.subplot(211)
 plt.plot(time, tr_orig.data, 'k')

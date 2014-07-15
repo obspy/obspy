@@ -151,7 +151,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         encoding_strings = {}
         for key, value in ENCODINGS.items():
             encoding_strings[value[0]] = key
-        # Test the encodings and byteorders.
+        # Test the encodings and byte orders.
         path = os.path.join(self.path, "data", "encoding")
         files = ['float32_Float32_bigEndian.mseed',
                  'float32_Float32_littleEndian.mseed',
@@ -492,7 +492,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         np.random.seed(815)  # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         # Test all possible combinations of record length, encoding and
-        # byteorder.
+        # byte order.
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         byteorders = ['>', '<']
         encodings = [value[0] for value in list(ENCODINGS.values())]
@@ -696,8 +696,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 np.testing.assert_array_equal(st[0].data, files[file][3])
                 # Check the dtype.
                 self.assertEqual(st[0].data.dtype, files[file][0])
-                # Check byteorder. Should always be native byteorder. Byteorder
-                # does not apply to ASCII arrays.
+                # Check byte order. Should always be native byte order. Byte
+                # order does not apply to ASCII arrays.
                 if 'ASCII' in cur_file:
                     self.assertEqual(st[0].data.dtype.byteorder, '|')
                 else:
@@ -935,7 +935,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info
-        # timing_quality splits the stream additionaly when timing quality
+        # timing_quality splits the stream additionally when timing quality
         # changes, sum of all points in stream must stay the same
         self.assertEqual(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]

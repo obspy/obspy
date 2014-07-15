@@ -4,7 +4,7 @@ obspy.realtime - Real time support for ObsPy
 ============================================
 
 The obspy.realtime package extends the ObsPy core classes with real time
-functionalities.
+functionality.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi

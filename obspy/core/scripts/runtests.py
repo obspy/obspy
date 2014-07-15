@@ -486,15 +486,15 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of strings, optional
+    :type tests: list of str, optional
     :param tests: Test suites to run. If no suite is given all installed tests
         suites will be started (default is a empty list).
         Example ``['obspy.core.tests.suite']``.
-    :type report: boolean, optional
+    :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
-    :type log: string, optional
+    :type log: str, optional
     :param log: Filename of install log file to append to report.
-    :type server: string, optional
+    :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     if all:
@@ -643,7 +643,7 @@ def run(interactive=True):
     # set correct verbosity level
     if options.verbose:
         verbosity = 2
-        # raise all numpy warnings
+        # raise all NumPy warnings
         np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
@@ -691,7 +691,7 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
-    # catch and ignore a numpy deprecation warning
+    # catch and ignore a NumPy deprecation warning
     with warnings.catch_warnings(record=True):
         warnings.filterwarnings(
             "ignore", 'The compiler package is deprecated and removed in '

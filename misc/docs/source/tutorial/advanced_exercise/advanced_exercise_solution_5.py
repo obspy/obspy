@@ -1,3 +1,4 @@
+from __future__ import print_function
 from obspy.core import Stream, UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.arclink import Client
@@ -18,14 +19,14 @@ for station in stations:
         tmp = client.getWaveform("CH", station, "", "[EH]HZ", t, t2,
                                  metadata=True)
     except:
-        print station, "---"
+        print(station, "---")
         continue
     st += tmp
 
 st.taper()
 st.filter("bandpass", freqmin=1, freqmax=20)
 triglist = coincidenceTrigger("recstalta", 10, 2, st, 4, sta=0.5, lta=10)
-print len(triglist), "events triggered."
+print(len(triglist), "events triggered.")
 
 for trig in triglist:
     closest_sta = trig['stations'][0]
@@ -38,8 +39,8 @@ paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
 
 for trig in triglist:
     t = trig['time']
-    print "#" * 80
-    print "Trigger time:", t
+    print("#" * 80)
+    print("Trigger time:", t)
     mags = []
 
     stations = client.getStations(t, t + 300, "CH")
@@ -51,7 +52,7 @@ for trig in triglist:
                                     t + 300, metadata=True)
             assert(len(st) == 3)
         except:
-            print station, "---"
+            print(station, "---")
             continue
 
         st.simulate(paz_remove="self", paz_simulate=paz_wa, water_level=10)
@@ -79,8 +80,8 @@ for trig in triglist:
             a = 0.0038
             b = 3.02
         ml = log10(ampl * 1000) + a * epi_dist + b
-        print station, ml
+        print(station, ml)
         mags.append(ml)
 
     net_mag = median(mags)
-    print "Network magnitude:", net_mag
+    print("Network magnitude:", net_mag)

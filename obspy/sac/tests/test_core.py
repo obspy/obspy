@@ -47,7 +47,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readwriteViaObspy(self):
+    def test_readwriteViaObsPy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -65,7 +65,7 @@ class CoreTestCase(unittest.TestCase):
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
         self.assertTrue(tr == tr1)
 
-    def test_readXYwriteXYViaObspy(self):
+    def test_readXYwriteXYViaObsPy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -76,7 +76,7 @@ class CoreTestCase(unittest.TestCase):
             tr1 = read(tempfile)[0]
         self.assertTrue(tr == tr1)
 
-    def test_readwriteXYViaObspy(self):
+    def test_readwriteXYViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -95,7 +95,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr1.data[0:10])
 
-    def test_readBigEndianViaObspy(self):
+    def test_readBigEndianViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """

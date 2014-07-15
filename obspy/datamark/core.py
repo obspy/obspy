@@ -16,7 +16,7 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
     """
     Checks whether a file is DATAMARK or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: DATAMARK file to be checked.
     :rtype: bool
     :return: ``True`` if a DATAMARK file.
@@ -58,7 +58,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: DATAMARK file to be read.
     :param century: DATAMARK stores year as 2 numbers, need century to
         construct proper datetime.

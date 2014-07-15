@@ -1,3 +1,4 @@
+from __future__ import print_function
 from obspy.core import UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.arclink import Client
@@ -31,4 +32,4 @@ epi_dist = epi_dist / 1000
 a = 0.018
 b = 2.17
 ml = log10(ampl * 1000) + a * epi_dist + b
-print ml
+print(ml)
