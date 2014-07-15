@@ -39,7 +39,8 @@ def is_evt(filename_or_object):
     if is_fileobject:
         try:
             Tag.read(filename_or_object)
-            Tag.verify()
+            if Tag.verify(verbose=False) is False:
+                return False
             return True
         except EVTBaseError:
             return False
@@ -49,7 +50,8 @@ def is_evt(filename_or_object):
         with open(filename_or_object, "rb") as fh:
             try:
                 Tag.read(fh)
-                Tag.verify()
+                if Tag.verify(verbose=False) is False:
+                    return False
                 return True
             except (EVTBaseError, IOError):
                 return False

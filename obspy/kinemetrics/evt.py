@@ -210,10 +210,7 @@ class EVT_HEADER(EVT_Virtual):
         read the Header of Evt file
         """
         buff = fp.read(length)
-        try:
-            self.endian = endian.encode()
-        except UnicodeError:
-            self.endian = endian
+        self.endian = endian.encode()
         if (length == 2040):  # File Header 12 channel
             self.analyse_header12(buff)
         elif (length == 2736):  # File Header 18 channel
@@ -244,14 +241,11 @@ class EVT_HEADER(EVT_Virtual):
         """
         dico = {}
         for key in self.HEADER:
-            try:
-                value = self.HEADER[key][2]
-                if isinstance(value, list):
-                    dico[key] = value[numchan]
-                else:
-                    dico[key] = value
-            except:
-                pass
+            value = self.HEADER[key][2]
+            if isinstance(value, list):
+                dico[key] = value[numchan]
+            else:
+                dico[key] = value
         return dico
 
     def _gpsstatus(self, value, a, b, c):
@@ -317,16 +311,15 @@ class EVT_FRAME(EVT_Virtual):
         self.numframe += 1
         val = unpack(self.endian+FRAME_STRUCT, head_buff)
         self.setdico(list(val), 0)
-        if self.verify(0) == 1:
+        if not self.verify(verbose=False):
             raise EVTBadHeaderError("Bad Frame values")
 
-    def verify(self, verbose=1):
-        retval = 0
+    def verify(self, verbose=False):
         if self.frametype not in [3, 4, 5]:
             if verbose:
                 print("FrameType ", self.frametype, " not Known")
-            retval = 1
-        return retval
+            return False
+        return True
 
     def channels(self):
         numchan = 12
@@ -382,18 +375,17 @@ class EVT_TAG(EVT_Virtual):
         val = list(unpack(endian + b"cBBBLHHHH", mystr))
         self.setdico(val)
         self.endian = endian
-        if self.verify(0) == 1:
+        if not self.verify(verbose=False):
             raise EVTBadHeaderError("Bad Tag values")
         return 1
 
-    def verify(self, verbose=1):
-        retval = 0
+    def verify(self, verbose=False):
         if self.type not in [1, 2]:
             if verbose:
                 print("Type of Header ", self.type, " not known")
-            retval = 1
+            return False
         if (self.type == 1) and (self.length not in [2040, 2736]):
             if verbose:
                 print("Bad Header file length : ", self.length)
-            retval = 1
-        return retval
+            return False
+        return True
