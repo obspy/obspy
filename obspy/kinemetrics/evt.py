@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-EVT (Kinemetrics) format support for ObsPy
+EVT (Kinemetrics) format support for ObsPy.
 
 :copyright:
-Royal Observatory of Belgium, 2013
+    Royal Observatory of Belgium, 2013
 :license:
-GNU Lesser General Public License, Version 3
-(http://www.gnu.org/copyleft/lesser.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -25,7 +25,7 @@ WARNING_HEADER = "Only tested with files from ROB networks :" + \
     " - ByteOrder : MSB first (Motorola) " + \
     " - File Header of 2040 bytes (12 Channels)" + \
     " - .........." + \
-    "Other situation may not work (not implemented)."
+    "Other situation may not work (not yet implemented)."
 
 FRAME_STRUCT = b"BBHHLHHBBHB13s"
 
@@ -68,6 +68,8 @@ class EVT(object):
 
     def readFile(self, filename, Raw=False):
         """
+        Reads an EVT file to the internal data structure.
+
         :type filename: string
         :param filename: EVT file to be read.
         :type raw : boolean
@@ -195,7 +197,7 @@ class EVT_HEADER(EVT_Virtual):
 
     def read(self, fp, length, endian):
         """
-        read Header of Evt file
+        read the Header of Evt file
         """
         buff = fp.read(length)
         try:

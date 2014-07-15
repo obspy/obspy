@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 EVT (Kinemetrics) support for ObsPy.
-Base classes (Can not be directly called)
+Base classes (cannot be directly called)
 
 :copyright:
-Royal Observatory of Belgium, 2013
+    Royal Observatory of Belgium, 2013
 :license:
-GNU Lesser General Public License, Version 3
-(http://www.gnu.org/copyleft/lesser.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -25,21 +25,21 @@ class EVTBaseError(Exception):
 
 class EVTBadDataError(EVTBaseError):
     """
-    Raised if a Bad Data is readed in EVT File
+    Raised if bad data is encountered while reading an EVT file.
     """
     pass
 
 
 class EVTBadHeaderError(EVTBaseError):
     """
-    Raised if an error occured in EVT headers
+    Raised if an error occured while parsing an EVT header.
     """
     pass
 
 
 class EVTEOFError(EVTBaseError):
     """
-    Raised if an EOF occured (formely not an error)
+    Raised if an unexpected EOF is encountered.
     """
     pass
 
@@ -54,7 +54,7 @@ class EVTNotImplementedError(EVTBaseError):
 class EVT_Virtual(object):
     """
     class for parameters reading.
-    The dictionnary have this structure :
+    The dictionary have this structure :
        {"name":[header_place,["function","param"],value], ...}
             name is the attribute (key) (in lower cases)
             header_place : offset to find value in file
@@ -63,7 +63,7 @@ class EVT_Virtual(object):
             value : value of name (can be omited)
     """
     def __init__(self):
-        self.diconame = ""  # set the dictionnary name to be used
+        self.diconame = ""  # set the dictionary name to be used
 
     def __getattr__(self, item):
         """
@@ -71,7 +71,7 @@ class EVT_Virtual(object):
         :type item: string
         :param item: name of the attribute (key)
         :rtype: any
-        :return: the value in the dictionnary
+        :return: the value in the dictionary
         """
         key = item.lower()
         if key in self.HEADER:
@@ -136,10 +136,9 @@ class EVT_Virtual(object):
 
     def __str__(self):
         """
-        create a string with all dictionnary values
+        create a string with all dictionary values
         :rtype:  string
         :return: string to be printed
-
         """
         chaine = ""
         for vname in sorted(self.HEADER):

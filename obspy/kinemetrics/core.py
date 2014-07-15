@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-EVT (Kinemetrics files) bindings to ObsPy core module.
+EVT (Kinemetrics files) bindings to ObsPy's core classes.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import obspy.kinemetrics.evt as evt
-from . evt_base import EVTBaseError
+from .evt_base import EVTBaseError
 
 
 def is_evt(filename):
@@ -24,7 +24,7 @@ def is_evt(filename):
     :type filename: string
     :param filename: EVT file to be checked.
     :rtype: bool
-    :return: ``True`` if a EVT file.
+    :return: ``True`` if a EVT file, ``False`` otherwise.
     """
     try:
         Tag = evt.EVT_TAG()
