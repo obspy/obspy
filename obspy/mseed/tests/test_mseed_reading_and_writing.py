@@ -1040,9 +1040,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.mseed.encoding, "GEOSCOPE16_4")
         self.assertEqual(tr.data.dtype, np.float32)
         # Test data is from the IRIS ASCII timeseries service.
-        np.testing.assert_allclose(
-            tr.data[:5], np.array([-1.1015625, -1.11328125, -1.109375,
-                                   -1.12890625, -1.1171875]))
+        self.assertTrue(np.allclose(
+            tr.data[:5],
+            np.array([-1.1015625, -1.11328125, -1.109375, -1.12890625,
+                      -1.1171875]),
+            rtol=1E-5))
 
     def test_reading_SRO_format(self):
         """
@@ -1053,8 +1055,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.mseed.encoding, "SRO")
         self.assertEqual(tr.data.dtype, np.int32)
         # Test data is from the IRIS ASCII timeseries service.
-        np.testing.assert_allclose(
-            tr.data[:5], np.array([126, 67, -11, -95, -167]))
+        self.assertTrue(np.allclose(
+            tr.data[:5], np.array([126, 67, -11, -95, -167]), rtol=1E-5))
 
     def test_reading_DWWSSN_format(self):
         """
@@ -1064,8 +1066,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.mseed.encoding, "DWWSSN")
         self.assertEqual(tr.data.dtype, np.int32)
         # Test data is from the IRIS ASCII timeseries service.
-        np.testing.assert_allclose(
-            tr.data[:5], np.array([-38, -38, -36, -37, -36]))
+        self.assertTrue(np.allclose(
+            tr.data[:5], np.array([-38, -38, -36, -37, -36]), rtol=1E-5))
 
     def test_reading_CDSN_format(self):
         """
@@ -1075,8 +1077,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.mseed.encoding, "CDSN")
         self.assertEqual(tr.data.dtype, np.int32)
         # Test data is from the IRIS ASCII timeseries service.
-        np.testing.assert_allclose(
-            tr.data[:5], np.array([294, 32, 26, 285, 389]))
+        self.assertTrue(np.allclose(
+            tr.data[:5], np.array([294, 32, 26, 285, 389]), rtol=1E-5))
 
 
 def suite():
