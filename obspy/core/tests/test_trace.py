@@ -1770,9 +1770,10 @@ class TraceTestCase(unittest.TestCase):
         # SAC extrapolates a bit which we don't want here. The deviations
         # to SAC are likely due to the fact that we use double precision
         # math while SAC uses single precision math.
-        np.testing.assert_allclose(int_tr.data,
-                                   interp_delta_0_003.data[:int_tr.stats.npts],
-                                   rtol=1E-3)
+        self.assertTrue(np.allclose(
+            int_tr.data,
+            interp_delta_0_003.data[:int_tr.stats.npts],
+            rtol=1E-3))
 
         int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.077,
                                            method="weighted_average_slopes")
@@ -1781,9 +1782,10 @@ class TraceTestCase(unittest.TestCase):
         # Assert that the new endtime is smaller than the old one. SAC
         # calculates one sample less in this case.
         self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
-        np.testing.assert_allclose(
+        self.assertTrue(np.allclose(
             int_tr.data[:interp_delta_0_077.stats.npts],
-            interp_delta_0_077.data, rtol=1E-5)
+            interp_delta_0_077.data,
+            rtol=1E-5))
 
         # Also test the other interpolation methods mainly by assuring the
         # correct SciPy function is called and everything stays internally
