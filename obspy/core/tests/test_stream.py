@@ -8,11 +8,11 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.compatibility import mock
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.base import (NamedTemporaryFile, getMatplotlibVersion,
+                                  getSciPyVersion)
 from obspy.xseed import Parser
 from obspy.core.util.decorator import skipIf
 import numpy as np
-from scipy import __version__ as scipy_version
 import os
 import pickle
 import unittest
@@ -20,6 +20,7 @@ import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
+SCIPY_VERSION = getSciPyVersion()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -2156,7 +2157,7 @@ class StreamTestCase(unittest.TestCase):
         st2.integrate()
         self.assertEqual(st1, st2)
 
-    @skipIf(scipy_version < [0, 11, 0], 'SciPy is too old')
+    @skipIf(SCIPY_VERSION < [0, 11, 0], 'SciPy is too old')
     def test_integrate_args(self):
         """
         Tests that the integrate command is called for all traces of a Stream
