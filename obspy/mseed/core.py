@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
-    SAMPLETYPE, DATATYPES, \
+    SAMPLETYPE, DATATYPES, UNSUPPORTED_ENCODINGS, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
     VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS, blkt_100_s
 from obspy.mseed import util
@@ -101,7 +101,7 @@ def isMSEED(filename):
 
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
-              sourcename=None, reclen=None, recinfo=True, details=False,
+              sourcename=None, reclen=None, details=False,
               header_byteorder=None, verbose=None, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
@@ -126,13 +126,6 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
-    :type recinfo: bool, optional
-    :param recinfo: If ``True`` the byte order, record length and the
-        encoding of the file will be read and stored in every Trace's
-        stats.mseed AttribDict. These stored attributes will also be used while
-        writing a Mini-SEED file. Only the very first record of the file will
-        be read and all following records are assumed to be the same. Defaults
-        to ``True``.
     :type details: bool, optional
     :param details: If ``True`` read additional information: timing quality
         and availability of calibration information.
@@ -199,23 +192,35 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         warnings.warn(msg, category=DeprecationWarning)
 
     # Parse some information about the file.
-    if recinfo:
-        # Pass the byte order if enforced.
-        if header_byteorder == 0:
-            bo = "<"
-        elif header_byteorder > 0:
-            bo = ">"
-        else:
-            bo = None
+    if header_byteorder == 0:
+        bo = "<"
+    elif header_byteorder > 0:
+        bo = ">"
+    else:
+        bo = None
 
-        info = util.getRecordInformation(mseed_object, endian=bo)
+    info = util.getRecordInformation(mseed_object, endian=bo)
+
+    # Map the encoding to a readable string value.
+    if info["encoding"] in ENCODINGS:
         info['encoding'] = ENCODINGS[info['encoding']][0]
-        # Only keep information relevant for the whole file.
-        info = {'encoding': info['encoding'],
-                'filesize': info['filesize'],
-                'record_length': info['record_length'],
-                'byteorder': info['byteorder'],
-                'number_of_records': info['number_of_records']}
+    elif info["encoding"] in UNSUPPORTED_ENCODINGS:
+        msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
+               "the file to the ObsPy developers so that we can add "
+               "support for it.") % \
+            (UNSUPPORTED_ENCODINGS[info['encoding']], info['encoding'])
+        raise ValueError(msg)
+    else:
+        msg = "Encoding '%i' is not a valid MiniSEED encoding." % \
+            info['encoding']
+        raise ValueError(msg)
+
+    # Only keep information relevant for the whole file.
+    info = {'encoding': info['encoding'],
+            'filesize': info['filesize'],
+            'record_length': info['record_length'],
+            'byteorder': info['byteorder'],
+            'number_of_records': info['number_of_records']}
 
     # If its a filename just read it.
     if isinstance(mseed_object, (str, native_str)):
@@ -378,10 +383,9 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             header = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                           for k, v in header.items())
             trace = Trace(header=header, data=data)
-            # Append information if necessary.
-            if recinfo:
-                for key, value in info.items():
-                    setattr(trace.stats.mseed, key, value)
+            # Append information.
+            for key, value in info.items():
+                setattr(trace.stats.mseed, key, value)
             traces.append(trace)
             # A Null pointer access results in a ValueError
             try:
@@ -399,7 +403,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
 
 def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
-               flush=1, verbose=0, **_kwargs):
+               flush=True, verbose=0, **_kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
@@ -411,13 +415,14 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: A Stream object.
     :type filename: str
-    :param filename: Name of the output file
+    :param filename: Name of the output file or a file-like object.
     :type encoding: int or str, optional
     :param encoding: Should be set to one of the following supported Mini-SEED
-        data encoding formats: ASCII (``0``)*, INT16 (``1``), INT32 (``3``),
-        FLOAT32 (``4``)*, FLOAT64 (``5``)*, STEIM1 (``10``) and STEIM2
-        (``11``)*. Default data types a marked with an asterisk. Currently
-        INT24 (``2``) is not supported due to lacking NumPy support.
+        data encoding formats: ``ASCII`` (``0``)*, ``INT16`` (``1``),
+        ``INT32`` (``3``), ``FLOAT32`` (``4``)*, ``FLOAT64`` (``5``)*,
+        ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. If no encoding is given
+        it will be derived from the dtype of the data and the appropriate
+        default encoding (depicted with an asterix) will be chosen.
     :type reclen: int, optional
     :param reclen: Should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
@@ -428,12 +433,13 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. If ``-1`` it will be passed directly to libmseed
         which will also default it to big endian. Defaults to big endian.
-    :type flush: int, optional
-    :param flush: If it is not zero all of the data will be packed into
-        records, otherwise records will only be packed while there are
-        enough data samples to completely fill a record.
+    :type flush: bool, optional
+    :param flush: If ``True``, all data will be packed into records. If
+        ``False`` new records will only be created when there is enough data to
+        completely fill a record. Be careful with this. If in doubt, choose
+        ``True`` which is also the default value.
     :type verbose: int, optional
-    :param verbose: Controls verbosity, a value of zero will result in no
+    :param verbose: Controls verbosity, a value of ``0`` will result in no
         diagnostic output.
 
     .. note::
@@ -448,6 +454,17 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     >>> st = read()
     >>> st.write('filename.mseed', format='MSEED')  # doctest: +SKIP
     """
+    # Map flush and verbose flags.
+    if flush:
+        flush = 1
+    else:
+        flush = 0
+
+    if not verbose:
+        verbose = 0
+    if verbose is True:
+        verbose = 1
+
     # Some sanity checks for the keyword arguments.
     if reclen is not None and reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. The record length must be a value\n' + \
@@ -466,19 +483,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                   "0, 1 or -1"
             raise ValueError(msg)
 
-    # Check if encoding kwarg is set and catch invalid encodings.
-    # XXX: Currently INT24 is not working due to lacking NumPy support.
-    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.items()])
-
     if encoding is not None:
-        if isinstance(encoding, int) and encoding in ENCODINGS:
-            pass
-        elif encoding and isinstance(encoding, (str, native_str)) \
-                and encoding in encoding_strings:
-            encoding = encoding_strings[encoding]
-        else:
-            msg = 'Invalid encoding %s. Valid encodings: %s'
-            raise ValueError(msg % (encoding, encoding_strings))
+        encoding = util._convert_and_check_encoding_for_writing(encoding)
 
     trace_attributes = []
     use_blkt_1001 = 0
@@ -491,7 +497,6 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Create temporary dict for storing information while writing.
         trace_attr = {}
         trace_attributes.append(trace_attr)
-        stats = trace.stats
 
         # Figure out whether or not to use Blockette 1001. This check is done
         # once to ensure that Blockette 1001 is either written for every record
@@ -543,10 +548,10 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Handle the record length.
         if reclen is not None:
             trace_attr['reclen'] = reclen
-        elif hasattr(stats, 'mseed') and \
-                hasattr(stats.mseed, 'record_length'):
-            if stats.mseed.record_length in VALID_RECORD_LENGTHS:
-                trace_attr['reclen'] = stats.mseed.record_length
+        elif hasattr(trace.stats, 'mseed') and \
+                hasattr(trace.stats.mseed, 'record_length'):
+            if trace.stats.mseed.record_length in VALID_RECORD_LENGTHS:
+                trace_attr['reclen'] = trace.stats.mseed.record_length
             else:
                 msg = 'Invalid record length in Stream[%i].stats.' % _i + \
                       'mseed.reclen.\nThe record length must be a value ' + \
@@ -558,18 +563,18 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Handle the byte order.
         if byteorder is not None:
             trace_attr['byteorder'] = byteorder
-        elif hasattr(stats, 'mseed') and \
-                hasattr(stats.mseed, 'byteorder'):
-            if stats.mseed.byteorder in [0, 1, -1]:
-                trace_attr['byteorder'] = stats.mseed.byteorder
-            elif stats.mseed.byteorder == '=':
+        elif hasattr(trace.stats, 'mseed') and \
+                hasattr(trace.stats.mseed, 'byteorder'):
+            if trace.stats.mseed.byteorder in [0, 1, -1]:
+                trace_attr['byteorder'] = trace.stats.mseed.byteorder
+            elif trace.stats.mseed.byteorder == '=':
                 if NATIVE_BYTEORDER == '<':
                     trace_attr['byteorder'] = 0
                 else:
                     trace_attr['byteorder'] = 1
-            elif stats.mseed.byteorder == '<':
+            elif trace.stats.mseed.byteorder == '<':
                 trace_attr['byteorder'] = 0
-            elif stats.mseed.byteorder == '>':
+            elif trace.stats.mseed.byteorder == '>':
                 trace_attr['byteorder'] = 1
             else:
                 msg = "Invalid byteorder in Stream[%i].stats." % _i + \
@@ -586,10 +591,12 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
         # Handle the encoding.
         trace_attr['encoding'] = None
+        # If encoding arrives here it is already guaranteed to be a valid
+        # integer encoding.
         if encoding is not None:
             # Check if the dtype for all traces is compatible with the enforced
             # encoding.
-            id, _, dtype = ENCODINGS[encoding]
+            id, _, dtype, _ = ENCODINGS[encoding]
             if trace.data.dtype.type != dtype:
                 msg = """
                     Wrong dtype for Stream[%i].data for encoding %s.
@@ -601,17 +608,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             trace_attr['encoding'] = encoding
         elif hasattr(trace.stats, 'mseed') and hasattr(trace.stats.mseed,
                                                        'encoding'):
-            mseed_encoding = stats.mseed.encoding
-            # Check if the encoding is valid.
-            if isinstance(mseed_encoding, int) and mseed_encoding in ENCODINGS:
-                trace_attr['encoding'] = mseed_encoding
-            elif isinstance(mseed_encoding, (str, native_str)) and \
-                    mseed_encoding in encoding_strings:
-                trace_attr['encoding'] = encoding_strings[mseed_encoding]
-            else:
-                msg = 'Invalid encoding %s in ' + \
-                      'Stream[%i].stats.mseed.encoding. Valid encodings: %s'
-                raise ValueError(msg % (mseed_encoding, _i, encoding_strings))
+            trace_attr["encoding"] = \
+                util._convert_and_check_encoding_for_writing(
+                    trace.stats.mseed.encoding)
             # Check if the encoding matches the data's dtype.
             if trace.data.dtype.type != ENCODINGS[trace_attr['encoding']][2]:
                 msg = 'The encoding specified in ' + \
