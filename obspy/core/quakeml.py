@@ -57,9 +57,10 @@ def _get_first_child_namespace(element):
 
 def _xml_doc_from_anything(source):
     """
-    Helper function attempting to create and xml etree document from anything.
+    Helper function attempting to create an xml etree element from either a
+    filename, a file-like object, or a (byte)string.
 
-    Will raise if it fails.
+    Will raise a ValueError if it fails.
     """
     try:
         xml_doc = etree.parse(source)
@@ -70,7 +71,7 @@ def _xml_doc_from_anything(source):
             try:
                 xml_doc = etree.fromstring(source.encode())
             except:
-                raise ValueError("Could not parse '%s' to an XML element." %
+                raise ValueError("Could not parse '%s' to an etree element." %
                                  source)
     return xml_doc
 
