@@ -43,12 +43,22 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Simple helper function to compare two XML strings.
         """
-        with io.BytesIO(doc1.encode()) as fh:
-            obj1 = etree.parse(fh)
-        with io.BytesIO(doc2.encode()) as fh:
-            obj2 = etree.parse(fh)
-        str1 = [_i.strip() for _i in etree.tostring(obj1).split(b"\n")]
-        str2 = [_i.strip() for _i in etree.tostring(obj2).split(b"\n")]
+        # Compat py2k and py3k
+        try:
+            doc1 = doc1.encode()
+            doc2 = doc2.encode()
+        except:
+            pass
+        obj1 = etree.fromstring(doc1)
+        obj2 = etree.fromstring(doc2)
+
+        obj1 = etree.tostring(obj1, pretty_print=True).decode()
+        obj2 = etree.tostring(obj2, pretty_print=True).decode()
+
+        str1 = ["".join(sorted(_i.strip().split(" "))) for _i in
+                obj1.splitlines()]
+        str2 = ["".join(sorted(_i.strip().split(" "))) for _i in
+                obj2.splitlines()]
 
         # XXX: Temporary workaround, needs better solution! lxml has no way
         # to force the order or attributes or namespace declarations. Thus
@@ -680,6 +690,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         with open(self.neries_filename, 'rb') as fp:
             data = fp.read()
+
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 

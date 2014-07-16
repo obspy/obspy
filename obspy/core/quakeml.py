@@ -55,6 +55,26 @@ def _get_first_child_namespace(element):
     return etree.QName(element.tag).namespace
 
 
+def _xml_doc_from_anything(source):
+    """
+    Helper function attempting to create and xml etree document from anything.
+
+    Will raise if it fails.
+    """
+    try:
+        xml_doc = etree.parse(source)
+    except:
+        try:
+            xml_doc = etree.fromstring(source)
+        except:
+            try:
+                xml_doc = etree.fromstring(source.encode())
+            except:
+                raise ValueError("Could not parse '%s' to an XML element." %
+                                 source)
+    return xml_doc
+
+
 def isQuakeML(filename):
     """
     Checks whether a file is QuakeML format.
@@ -69,13 +89,27 @@ def isQuakeML(filename):
     >>> isQuakeML('/path/to/quakeml.xml')  # doctest: +SKIP
     True
     """
+    if hasattr(filename, "tell") and hasattr(filename, "seek") and \
+            hasattr(filename, "read"):
+        file_like_object = True
+        position = filename.tell()
+    else:
+        file_like_object = False
+
     try:
-        xml_doc = etree.parse(filename)
+        xml_doc = _xml_doc_from_anything(filename)
     except:
         return False
+    finally:
+        if file_like_object:
+            filename.seek(position, 0)
+
     # check if node "*/eventParameters/event" for the global namespace exists
     try:
-        namespace = _get_first_child_namespace(xml_doc.getroot())
+        if hasattr(xml_doc, "getroot"):
+            namespace = _get_first_child_namespace(xml_doc.getroot())
+        else:
+            namespace = _get_first_child_namespace(xml_doc)
         xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
     except:
         return False
@@ -89,6 +123,13 @@ class Unpickler(object):
     def __init__(self, xml_doc=None):
         self.xml_doc = xml_doc
 
+    @property
+    def xml_root(self):
+        try:
+            return self.xml_doc.getroot()
+        except AttributeError:
+            return self.xml_doc
+
     def load(self, file):
         """
         Reads QuakeML file into ObsPy catalog object.
@@ -98,7 +139,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.xml_doc = etree.parse(file)
+        self.xml_doc = _xml_doc_from_anything(file)
         return self._deserialize()
 
     def loads(self, string):
@@ -135,7 +176,7 @@ class Unpickler(object):
 
     def _xpath(self, xpath, element=None, namespace=None):
         if element is None:
-            element = self.xml_doc.getroot()
+            element = self.xml_root
 
         namespaces = None
         if namespace:
@@ -835,17 +876,17 @@ class Unpickler(object):
     def _deserialize(self):
         # check node "quakeml/eventParameters" for global namespace
         try:
-            namespace = _get_first_child_namespace(self.xml_doc.getroot())
+            namespace = _get_first_child_namespace(self.xml_root)
             catalog_el = self._xpath('eventParameters', namespace=namespace)[0]
         except IndexError:
             raise Exception("Not a QuakeML compatible file or string")
         self._quakeml_namespaces = [
-            ns for ns in self.xml_doc.getroot().nsmap.values()
+            ns for ns in self.xml_root.nsmap.values()
             if ns.startswith(r"http://quakeml.org/xmlns/")]
         # create catalog
         catalog = Catalog(force_resource_id=False)
         # add any custom namespace abbreviations of root element to Catalog
-        catalog.nsmap = self.xml_doc.getroot().nsmap.copy()
+        catalog.nsmap = self.xml_root.nsmap.copy()
         # optional catalog attributes
         catalog.description = self._xpath2obj('description', catalog_el)
         catalog.comments = self._comments(catalog_el)
