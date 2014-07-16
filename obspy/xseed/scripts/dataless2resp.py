@@ -26,7 +26,7 @@ def dataless2resp(filename, options):
         if not os.path.isfile(file):
             continue
         f = open(file, 'rb')
-        if f.read(7)[6] != 'V':
+        if f.read(7)[6:] != b'V':
             if options.verbose:
                 msg = 'Skipping file %s' % file
                 msg += '\t-- not a Dataless SEED file' + os.linesep

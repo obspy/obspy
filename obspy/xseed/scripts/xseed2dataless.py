@@ -37,7 +37,7 @@ def xseed2dataless(filename, options):
         if not os.path.isfile(file):
             continue
         f = open(file, 'rb')
-        if f.read(1) != '<':
+        if f.read(1) != b'<':
             if options.verbose:
                 msg = 'Skipping file %s' % file
                 msg += '\t-- not a XML-SEED file' + os.linesep
