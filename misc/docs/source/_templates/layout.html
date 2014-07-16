@@ -73,29 +73,15 @@
 {% block relbar1 %}{% endblock %}
 {% block relbar2 %}{% endblock %}
 {% block sidebarsourcelink %}{% endblock %}
+{% block sidebar1 %}{% endblock %}
 
 {%- block content %}
 <div id="wrapper">{# closed in footer #}
 {%- include "navbar.html" %}
-<div id="content" class="container-fluid">
-  {{ breadcrumb() }}
 
-  <div class="row">
-    {%- block sidebar1 %}
-    {%- if render_sidebar %}
-    <div class="col-md-3 hidden-xs">
-      <div id="sidebar" class="bs-sidenav" role="complementary">
-        {%- for sidebartemplate in sidebars %}
-          {%- include sidebartemplate %}
-        {%- endfor %}
-      </div>
-    </div>
-    {%- endif %}
-    {%- endblock %}
-    <div class="col-md-{{ bs_content_width }}">
-      {% block body %}{% endblock %}
-    </div>
-  </div>
+<div id="content" class="container">
+  {{ breadcrumb() }}
+  {% block body %}{% endblock %}
 </div>
 {%- endblock %}
 
