@@ -1692,7 +1692,8 @@ class Pickler(object):
         root_el = etree.Element('{%s}quakeml' % NSMAP_QUAKEML['q'],
                                 nsmap=nsmap)
         root_el.append(catalog_el)
-        return etree.tostring(root_el, pretty_print=pretty_print)
+        return etree.tostring(root_el, pretty_print=pretty_print,
+                              encoding="utf-8", xml_declaration=True)
 
 
 def readQuakeML(filename):
