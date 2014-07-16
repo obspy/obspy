@@ -76,7 +76,7 @@ def isQuakeML(filename):
     # check if node "*/eventParameters/event" for the global namespace exists
     try:
         namespace = _get_first_child_namespace(xml_doc.getroot())
-        xml_doc.xpath('eventParameters', namespace=namespace)[0]
+        xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
     except:
         return False
     return True

@@ -50,6 +50,16 @@ class QuakeMLTestCase(unittest.TestCase):
         str1 = [_i.strip() for _i in etree.tostring(obj1).split(b"\n")]
         str2 = [_i.strip() for _i in etree.tostring(obj2).split(b"\n")]
 
+        # XXX: Temporary workaround, needs better solution! lxml has no way
+        # to force the order or attributes or namespace declarations. Thus
+        # the test needs to be independent from it!
+        str1 = [" ".join(sorted(_i.split(" "))) for _i in str1]
+        str2 = [" ".join(sorted(_i.split(" "))) for _i in str2]
+        str1 = [_i.replace("<", "").replace("/>", "").replace(">", "")
+                for _i in str1]
+        str2 = [_i.replace("<", "").replace("/>", "").replace(">", "")
+                for _i in str2]
+
         unified_diff = difflib.unified_diff(str1, str2)
         err_msg = "\n".join(unified_diff)
         if err_msg:
