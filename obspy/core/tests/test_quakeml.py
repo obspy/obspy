@@ -49,31 +49,23 @@ class QuakeMLTestCase(unittest.TestCase):
             doc2 = doc2.encode()
         except:
             pass
-        obj1 = etree.fromstring(doc1)
-        obj2 = etree.fromstring(doc2)
+        obj1 = etree.fromstring(doc1).getroottree()
+        obj2 = etree.fromstring(doc2).getroottree()
 
-        obj1 = etree.tostring(obj1, pretty_print=True).decode()
-        obj2 = etree.tostring(obj2, pretty_print=True).decode()
+        buf = io.BytesIO()
+        obj1.write_c14n(buf)
+        buf.seek(0, 0)
+        str1 = buf.read()
+        str1 = [_i.strip() for _i in str1.splitlines()]
 
-        # XXX: Temporary workaround, needs better solution! lxml has no way
-        # to force the order or attributes or namespace declarations. Thus
-        # the test needs to be independent from it!
-        str1 = [" ".join(sorted(_i
-                                .replace("<", " ")
-                                .replace("/>", " ")
-                                .replace(">", " ")
-                                .strip()
-                                .split()))
-                for _i in obj1.splitlines()]
-        str2 = [" ".join(sorted(_i
-                                .replace("<", " ")
-                                .replace("/>", " ")
-                                .replace(">", " ")
-                                .strip()
-                                .split()))
-                for _i in obj2.splitlines()]
+        buf = io.BytesIO()
+        obj2.write_c14n(buf)
+        buf.seek(0, 0)
+        str2 = buf.read()
+        str2 = [_i.strip() for _i in str2.splitlines()]
 
         unified_diff = difflib.unified_diff(str1, str2)
+
         err_msg = "\n".join(unified_diff)
         if err_msg:
             msg = "Strings are not equal.\n"
