@@ -56,18 +56,18 @@ class TriggerTestCase(unittest.TestCase):
         Type checking recSTALTA
         """
         ndat = 1
-        charfct = np.empty(ndat, dtype='float64')
+        charfct = np.empty(ndat, dtype=np.float64)
         self.assertRaises(ArgumentError, clibsignal.recstalta, [1], charfct,
                           ndat, 5, 10)
         self.assertRaises(ArgumentError, clibsignal.recstalta,
-                          np.array([1], dtype='int32'), charfct, ndat, 5, 10)
+                          np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
 
     def test_pkBaer(self):
         """
         Test pkBaer against implementation for UNESCO short course
         """
         file = os.path.join(self.path, 'manz_waldk.a01.gz')
-        data = np.loadtxt(gzip.open(file), dtype='float32')
+        data = np.loadtxt(gzip.open(file), dtype=np.float32)
         df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
@@ -83,7 +83,7 @@ class TriggerTestCase(unittest.TestCase):
         for channel in ['z', 'n', 'e']:
             file = os.path.join(self.path,
                                 'loc_RJOB20050801145719850.' + channel)
-            data.append(np.loadtxt(file, dtype='float32'))
+            data.append(np.loadtxt(file, dtype=np.float32))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
             200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2

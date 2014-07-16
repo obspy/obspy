@@ -56,7 +56,7 @@ def sonogram(data, fs, fc1, nofb, no_win):
         fmin[i] = fc[i] / np.sqrt(float(5. / 3.))
         fmax[i] = fc[i] * np.sqrt(float(5. / 3.))
     nfft = util.nextpow2(data.shape[np.size(data.shape) - 1])
-    # c = np.zeros((data.shape), dtype='complex64')
+    # c = np.zeros((data.shape), dtype=np.complex64)
     c = fftpack.fft(data, nfft)
     z = np.zeros([len(c[:, 1]), nofb])
     z_tot = np.zeros(len(c[:, 1]))

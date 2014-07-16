@@ -1,41 +1,99 @@
-{#
-    default/layout.html
-    ~~~~~~~~~~~~~~~~~~~
-
-    Sphinx layout template for the default theme.
-
-    :copyright: Copyright 2007-2011 by the Sphinx team, see AUTHORS.
-    :license: BSD, see LICENSE for details.
-#}
 {% extends "basic/layout.html" %}
 
-{% if theme_collapsiblesidebar|tobool %}
-{% set script_files = script_files + ['_static/sidebar.js'] %}
+{% if use_local_assets %}
+{% set css_files = ['_static/css/bootstrap.min.css',
+                    '_static/bootstrap-sphinx.css',
+                    '_static/font.css',
+                    '_static/css/base.css',
+                    '_static/css/custom.css'] %}
+{% else %}
+{% set css_files = ['//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
+                    '_static/bootstrap-sphinx.css',
+                    '//tests.obspy.org/static/font/style.css',
+                    '//tests.obspy.org/static/base.css',
+                    '_static/css/custom.css'] %}
 {% endif %}
 
-{% block rootrellink %}
-        <li><a href="{{ pathto('index') }}">ObsPy Documentation ({{ release|e }})</a>
-          &raquo;</li>
+{% if use_local_assets %}
+{% set script_files = script_files + [
+    '_static/js/jquery-1.11.0.min.js',
+    '_static/js/jquery-fix.js',
+    '_static/bootstrap-3.1.0/js/bootstrap.min.js',
+    '_static/bootstrap-sphinx.js'
+  ]
+%}
+{% else %}
+{% set server_script_files = [
+    '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',
+    '_static/js/jquery-fix.js',
+    '//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js',
+    '_static/bootstrap-sphinx.js'
+  ]
+%}
+{% endif %}
+
+{%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and sidebars %}
+
+{%- set bs_content_width = render_sidebar and "9" or "12"%}
+
+{%- macro breadcrumb() %}
+    <div class="breadcrumb pull-right">
+      {%- for rellink in rellinks %}<a href="{{ pathto(rellink[0]) }}" title="{{ rellink[1]|striptags|e }}"
+         {{ accesskey(rellink[2]) }}>{{ rellink[3] }}</a>{% if not loop.last %}<span style="color: #ccc; padding: 0 5px;">| </span>{% endif %}{%- endfor %}
+    </div>
+    <ol class="breadcrumb">
+      {%- block rootrellink %}
+        <li><a href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a></li>
+      {%- endblock %}
+      {%- for parent in parents %}
+        <li><a href="{{ parent.link|e }}" {% if loop.last %}{{ accesskey("U") }}{% endif %}>{{ parent.title }}</a></li>
+      {%- endfor %}
+      {%- block relbaritems %} {% endblock %}
+    </ol>
+{%- endmacro %}
+
+
+{%- block doctype -%}
+<!DOCTYPE html>
+{%- endblock %}
+
+{%- block extrahead %}
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript">
+  var shiftWindow = function() { scrollBy(0, -70) };
+  if (location.hash) shiftWindow();
+  window.addEventListener("hashchange", shiftWindow);
+</script>
 {% endblock %}
 
-{% block extrahead %}
-<link rel="stylesheet" type="text/css" href="{{ pathto('_static/custom.css', 1) }}" />
-{% endblock %}
+{# Silence the sidebar's, relbar's #}
+{% block header %}{% endblock %}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+{% block sidebarsourcelink %}{% endblock %}
+{% block sidebar1 %}{% endblock %}
+
+{%- block content %}
+<div id="wrapper">{# closed in footer #}
+{%- include "navbar.html" %}
+
+<div id="content" class="container">
+  {{ breadcrumb() }}
+  {% block body %}{% endblock %}
+</div>
+{%- endblock %}
 
 {%- block footer %}
-    <div class="footer">
-    {%- if show_copyright %}
-      {%- if hasdoc('copyright') %}
-        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}
-      {%- else %}
-        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
-      {%- endif %}
-    {%- endif %}
-    {%- if last_updated %}
-      {% trans last_updated=last_updated|e %}Built at {{ last_updated }}{% endtrans %} (<a href="{{ pathto('log.txt', 1) }}">build log</a>, <a href="{{ pathto('linkcheck.txt', 1) }}">link check</a>).
-    {%- endif %}
-    {%- if show_sphinx %}
-      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
-    {%- endif %}
-    </div>
-{%- endblock %}
+{% if use_local_assets %}
+{% include 'footer.html' %}
+{% else %}
+<!--# include file="footer.html" -->
+{% endif %}
+</div>{# end of wrapper div #}
+{% for script in server_script_files -%}
+<script src="{{ script }}" defer></script>
+{% endfor %}
+{% endblock footer %}
+

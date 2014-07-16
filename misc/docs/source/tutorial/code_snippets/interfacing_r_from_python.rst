@@ -14,7 +14,7 @@ the R command ``summary`` on it.
     >>> r = RO.r
     >>> st = read("test/BW.BGLD..EHE.D.2008.001")
     >>> M = RO.RMatrix(st[0].data)
-    >>> print r.summary(M)  # doctest: +NORMALIZE_WHITESPACE
+    >>> print(r.summary(M))  # doctest: +NORMALIZE_WHITESPACE
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
     -1056.0  -409.0  -393.0  -393.7  -378.0   233.0
 

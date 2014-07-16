@@ -48,27 +48,27 @@ def format_names(role):
 
 formats = {
     'article': words(sep='')[
-        '\n   | ',
+        '\n     - | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
-        '\n   | ',
+        '\n       | ',
         bold(field('title')), ',',
-        '\n   | ',
+        '\n       | ',
         sentence(sep=', ')[
             italic(field('journal')),
             optional[words(sep=' ')[
                 field('volume'), optional[brackets(field('number'))]]],
             optional[field('pages')],
         ],
-        optional['\n   | ', field('url')]
+        optional['\n       | ', field('url')]
     ],
     'book': words(sep='')[
-        '\n   | ',
+        '\n     - | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
-        '\n   | ',
+        '\n       | ',
         bold(field('title')), ',',
-        '\n   | ',
+        '\n       | ',
         sentence(sep=', ')[
             optional[field('edition')],
             optional[field('series')],
@@ -80,15 +80,15 @@ formats = {
             optional[field('address')],
             optional['ISBN: ', field('isbn')],
         ],
-        optional['\n   | ', field('url')]
+        optional['\n       | ', field('url')]
     ],
     'incollection': words(sep='')[
-        '\n   | ',
+        '\n     - | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
-        '\n   | ',
+        '\n       | ',
         bold(field('title')), ',',
-        '\n   | in ',
+        '\n       | in ',
         sentence(sep=', ')[
             italic(field('booktitle')),
             optional[field('chapter')],
@@ -96,21 +96,21 @@ formats = {
                 field('volume'), optional[brackets(field('number'))]]],
             optional[field('pages')],
         ],
-        optional['\n   | ', field('url')]
+        optional['\n       | ', field('url')]
     ],
     'techreport': words(sep='')[
-        '\n   | ',
+        '\n     - | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
-        '\n   | ',
+        '\n       | ',
         bold(field('title')), ',',
-        '\n   | in ',
+        '\n       | in ',
         sentence(sep=', ')[
             italic(words(sep=' ')[field('type'), field('number')]),
             field('institution'),
             optional[field('address')],
         ],
-        optional['\n   | ', field('url')]
+        optional['\n       | ', field('url')]
     ],
 }
 
@@ -137,6 +137,9 @@ fh.write("""
 Citations
 ==========
 
+.. list-table::
+   :widths: 1 4
+
 """)
 
 for key in sorted(entries.keys()):
@@ -144,7 +147,7 @@ for key in sorted(entries.keys()):
     if entry.type not in formats:
         msg = "BibTeX entry type %s not implemented"
         raise NotImplementedError(msg % (entry.type))
-    out = '.. [%s]  %s'
+    out = '   * - .. [%s]%s'
     line = formats[entry.type].format_data(entry).plaintext()
     # replace special content, e.g. <nbsp>
     for old, new in REPLACE_TOKEN:

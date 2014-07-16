@@ -202,11 +202,11 @@ channel._fields_ = [
 #                int useTotalSensitivityFlag)
 clibevresp.calc_resp.argtypes = [
     C.POINTER(channel),
-    np.ctypeslib.ndpointer(dtype='float64',  # freqs
+    np.ctypeslib.ndpointer(dtype=np.float64,  # freqs
                            ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int,
-    np.ctypeslib.ndpointer(dtype='complex128',  # output
+    np.ctypeslib.ndpointer(dtype=np.complex128,  # output
                            ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_char_p,

@@ -199,16 +199,16 @@ class SEG2(object):
 
         # Parse the data format code.
         if data_format_code == 4:
-            dtype = 'float32'
+            dtype = np.float32
             sample_size = 4
         elif data_format_code == 5:
-            dtype = 'float64'
+            dtype = np.float64
             sample_size = 8
         elif data_format_code == 1:
-            dtype = 'int16'
+            dtype = np.int16
             sample_size = 2
         elif data_format_code == 2:
-            dtype = 'int32'
+            dtype = np.int32
             sample_size = 4
         elif data_format_code == 3:
             msg = ('\nData format code 3 (20-bit SEG-D floating point) not '

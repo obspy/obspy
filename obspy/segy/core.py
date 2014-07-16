@@ -263,14 +263,14 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     :param data_encoding: The data encoding is an integer with the following
         currently supported meaning:
 
-            ``1``
-                4 byte IBM floating points (float32)
-            ``2``
-                4 byte Integers (int32)
-            ``3``
-                2 byte Integer (int16)
-            ``5``
-                4 byte IEEE floating points (float32)
+        ``1``
+            4 byte IBM floating points (float32)
+        ``2``
+            4 byte Integers (int32)
+        ``3``
+            2 byte Integer (int16)
+        ``5``
+            4 byte IEEE floating points (float32)
 
         The value in the brackets is the necessary dtype of the data. ObsPy
         will now automatically convert the data because data might change/loose
@@ -585,7 +585,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     # Check that the dtype for every Trace is correct.
     for trace in stream:
         # Check the dtype.
-        if trace.data.dtype != 'float32':
+        if trace.data.dtype != np.float32:
             msg = """
             The dtype of the data is not float32.  You need to manually convert
             the dtype. Please refer to the obspy.segy manual for more details.

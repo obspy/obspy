@@ -51,10 +51,10 @@ Handling time differences
 .. doctest::
 
    >>> time = UTCDateTime("2012-09-07T12:15:00")
-   >>> print time + 3600
+   >>> print(time + 3600)
    2012-09-07T13:15:00.000000Z
    >>> time2 = UTCDateTime(2012, 1, 1)
-   >>> print time - time2
+   >>> print(time - time2)
    21644100.0
 
 

@@ -11,6 +11,7 @@ Tools for creating and merging previews.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from copy import copy
 from obspy.core.stream import Stream
@@ -73,7 +74,7 @@ def createPreview(trace, delta=60):
     if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)
     data = np.concatenate([first_diff, diff, last_diff])
-    data = np.require(data, dtype="float32")
+    data = np.require(data, dtype=np.float32)
     tr = Trace(data=data, header=trace.stats)
     tr.stats.delta = delta
     tr.stats.npts = len(data)
@@ -126,7 +127,7 @@ def mergePreviews(stream):
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = set([str(tr.data.dtype) for tr in value])
+        dtypes = set([native_str(tr.data.dtype) for tr in value])
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)

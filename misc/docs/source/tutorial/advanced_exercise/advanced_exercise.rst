@@ -71,16 +71,16 @@ a) Modify the existing code and use the file `LKBD.MSEED
    calculate :math:`M_\text{lh}` like before.  Use the following values for the
    PAZ dictionaries:
 
-        ===========  ===============  =================
-        --           LE3D-5s          Wood-Anderson            
-        ===========  ===============  =================
-        poles        -0.885+0.887j    -6.2832-4.7124j  
-                     -0.885-0.887j    -6.2832+4.7124j
-                     -0.427+0j
-        zeros        0j, 0j, 0j       0j                                   
-        gain         1.009            1                             
-        sensitivity  167364000.0      2800                                      
-        ===========  ===============  =================
+   ===========  ===============  =================
+   --           LE3D-5s          Wood-Anderson
+   ===========  ===============  =================
+   poles        -0.885+0.887j    -6.2832-4.7124j
+                -0.885-0.887j    -6.2832+4.7124j
+                -0.427+0j
+   zeros        0j, 0j, 0j       0j
+   gain         1.009            1
+   sensitivity  167364000.0      2800
+   ===========  ===============  =================
 
 b) Instead of the hard-coded values, read the response information from a locally
    stored *dataless SEED* `LKBD.dataless
@@ -129,14 +129,14 @@ In this additional advanced exercise we can enhance the
 routine to be independent of a-priori known origin times by using a coincidence
 network trigger for event detection.
 
- * fetch a few hours of Z component data for 6 stations in Valais /
-   SW-Switzerland
- * run a coincidence trigger like shown in the :ref:`Trigger
-   Tutorial<trigger-tutorial-coincidence>`
- * loop over detected network triggers, store the coordinates of the closest
-   station as the epicenter
- * loop over triggers, use the trigger time to select the time window and use
-   the network magnitude estimation code like before
+* fetch a few hours of Z component data for 6 stations in Valais /
+  SW-Switzerland
+* run a coincidence trigger like shown in the :ref:`Trigger
+  Tutorial<trigger-tutorial-coincidence>`
+* loop over detected network triggers, store the coordinates of the closest
+  station as the epicenter
+* loop over triggers, use the trigger time to select the time window and use
+  the network magnitude estimation code like before
 
 Solutions
 ~~~~~~~~~

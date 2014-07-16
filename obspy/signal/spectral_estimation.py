@@ -603,7 +603,7 @@ class PPSD():
             print(len(tr), self.len)
             return False
         # being paranoid, only necessary if in-place operations would follow
-        tr.data = tr.data.astype("float64")
+        tr.data = tr.data.astype(np.float64)
         # if trace has a masked array we fill in zeros
         try:
             tr.data[tr.data.mask] = 0.0
