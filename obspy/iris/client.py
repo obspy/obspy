@@ -23,7 +23,6 @@ from obspy.core.util import NamedTemporaryFile, loadtxt
 import io
 import json
 import platform
-import warnings
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
