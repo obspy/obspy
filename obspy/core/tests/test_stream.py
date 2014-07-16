@@ -8,7 +8,8 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.compatibility import mock
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.base import (NamedTemporaryFile, getMatplotlibVersion,
+                                  getSciPyVersion)
 from obspy.xseed import Parser
 from obspy.core.util.decorator import skipIf
 import numpy as np
@@ -19,6 +20,7 @@ import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
+SCIPY_VERSION = getSciPyVersion()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -2142,9 +2144,24 @@ class StreamTestCase(unittest.TestCase):
                           "method": "weighted_average_slopes"},
                          patch.call_args[1])
 
-    def test_integratestream(self):
+    def test_integrate(self):
         """
-        Test integration on the stream and trace
+        Tests that the integrate command is called for all traces of a Stream
+        object.
+        """
+        st1 = read()
+        st2 = read()
+
+        for tr in st1:
+            tr.integrate()
+        st2.integrate()
+        self.assertEqual(st1, st2)
+
+    @skipIf(SCIPY_VERSION < [0, 11, 0], 'SciPy is too old')
+    def test_integrate_args(self):
+        """
+        Tests that the integrate command is called for all traces of a Stream
+        object and options are passed along correctly.
         """
         st1 = read()
         st2 = read()

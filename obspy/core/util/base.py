@@ -307,6 +307,28 @@ def getMatplotlibVersion():
     return version
 
 
+def getSciPyVersion():
+    """
+    Get SciPy version information.
+
+    :returns: SciPy version as a list of three integers or ``None`` if scipy
+        import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        import scipy
+        version = scipy.__version__
+        version = version.split("~rc")[0]
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
 def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
