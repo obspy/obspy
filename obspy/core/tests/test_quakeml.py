@@ -55,20 +55,23 @@ class QuakeMLTestCase(unittest.TestCase):
         obj1 = etree.tostring(obj1, pretty_print=True).decode()
         obj2 = etree.tostring(obj2, pretty_print=True).decode()
 
-        str1 = ["".join(sorted(_i.strip().split(" "))) for _i in
-                obj1.splitlines()]
-        str2 = ["".join(sorted(_i.strip().split(" "))) for _i in
-                obj2.splitlines()]
-
         # XXX: Temporary workaround, needs better solution! lxml has no way
         # to force the order or attributes or namespace declarations. Thus
         # the test needs to be independent from it!
-        str1 = [" ".join(sorted(_i.split(" "))) for _i in str1]
-        str2 = [" ".join(sorted(_i.split(" "))) for _i in str2]
-        str1 = [_i.replace("<", "").replace("/>", "").replace(">", "")
-                for _i in str1]
-        str2 = [_i.replace("<", "").replace("/>", "").replace(">", "")
-                for _i in str2]
+        str1 = [" ".join(sorted(_i
+                                .replace("<", " ")
+                                .replace("/>", " ")
+                                .replace(">", " ")
+                                .strip()
+                                .split()))
+                for _i in obj1.splitlines()]
+        str2 = [" ".join(sorted(_i
+                                .replace("<", " ")
+                                .replace("/>", " ")
+                                .replace(">", " ")
+                                .strip()
+                                .split()))
+                for _i in obj2.splitlines()]
 
         unified_diff = difflib.unified_diff(str1, str2)
         err_msg = "\n".join(unified_diff)
