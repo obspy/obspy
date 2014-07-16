@@ -484,14 +484,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
+        >>> from lxml import etree
         >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <origin>
         ...   <latitude><value>34.23</value></latitude>
         ... </origin>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> origin = unpickler._origin(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> origin = unpickler._origin(xml_doc)
         >>> print(origin.latitude)
         34.23
         """
@@ -531,14 +531,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
+        >>> from lxml import etree
         >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <magnitude>
         ...   <mag><value>3.2</value></mag>
         ... </magnitude>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> magnitude = unpickler._magnitude(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> magnitude = unpickler._magnitude(xml_doc)
         >>> print(magnitude.mag)
         3.2
         """
@@ -570,14 +570,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
+        >>> from lxml import etree
         >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <stationMagnitude>
         ...   <mag><value>3.2</value></mag>
         ... </stationMagnitude>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> station_mag = unpickler._station_magnitude(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> station_mag = unpickler._station_magnitude(xml_doc)
         >>> print(station_mag.mag)
         3.2
         """
@@ -797,14 +797,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
+        >>> from lxml import etree
         >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <focalMechanism>
         ...   <methodID>smi:ISC/methodID=Best_double_couple</methodID>
         ... </focalMechanism>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> fm = unpickler._focal_mechanism(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> fm = unpickler._focal_mechanism(xml_doc)
         >>> print(fm.method_id)
         smi:ISC/methodID=Best_double_couple
         """
@@ -1198,7 +1198,8 @@ class Pickler(object):
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(tostring(el).decode())  \
+        >>> print(tostring(el, encoding="utf-8",
+        ...                xml_declaration=True).decode()) \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
@@ -1236,7 +1237,8 @@ class Pickler(object):
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(tostring(el).decode())  \
+        >>> print(tostring(el, encoding="utf-8",
+        ...       xml_declaration=True).decode()) \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
@@ -1271,7 +1273,8 @@ class Pickler(object):
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(tostring(el).decode())  \
+        >>> print(tostring(el, encoding="utf-8",
+        ...                xml_declaration=True).decode()) \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
