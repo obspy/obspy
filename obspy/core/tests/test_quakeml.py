@@ -913,30 +913,30 @@ class QuakeMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write file
-            cat.write(tmpfile, "QUAKEML", nsmap=nsmap)
+            cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
             # check contents
-            with open(tmpfile, "rb") as fh:
-                lines = fh.readlines()
+            with open(tmpfile, "r") as fh:
+                content = fh.read()
             # check namespace definitions in root element
-            got = sorted(lines[1].strip()[:-1].split())
-            expected = [b'<q:quakeml',
-                        b'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
-                        b'xmlns:ns0="http://test.org/xmlns/0.1"',
-                        b'xmlns:ns1="http://some-page.de/xmlns/1.0"',
-                        b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
-                        b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
-            self.assertEqual(got, expected)
+            expected = ['<q:quakeml',
+                        'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
+                        'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            for line in expected:
+                self.assertTrue(line in content)
             # check additional tags
-            got = sorted([lines[i_].strip() for i_ in range(85, 89)])
             expected = [
-                b'<ns0:custom>True</ns0:custom>',
-                b'<ns0:new_tag>1234</ns0:new_tag>',
-                b'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
-                b'<ns1:public ' +
-                b'another_attrib="another_value" ' +
-                b'some_attrib="some_value">false</ns1:public>',
-                ]
-            self.assertEqual(got, expected)
+                '<ns0:custom>True</ns0:custom>',
+                '<ns0:new_tag>1234</ns0:new_tag>',
+                '<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
+                '<ns1:public '
+                'another_attrib="another_value" '
+                'some_attrib="some_value">false</ns1:public>'
+            ]
+            for lines in expected:
+                self.assertTrue(line in content)
             # now, read again to test if its parsed correctly..
             cat = readQuakeML(tmpfile)
         # when reading..

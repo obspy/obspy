@@ -1150,7 +1150,6 @@ class Pickler(object):
 
     def _add_namespace(self, ns):
         self.ns_set.add(ns)
-        return
 
     def _arrival(self, arrival):
         """
