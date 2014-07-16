@@ -4061,7 +4061,7 @@ def main(argv=None):
         """
         """
         bb = BeachBall(MT, kwargs_dict)
-        return str(bb.get_psxy(kwargs_dict), encoding='utf-8')
+        return bb.get_psxy(kwargs_dict).decode('utf-8')
 
     def _call_decompose(MT, kwargs_dict):
         """
