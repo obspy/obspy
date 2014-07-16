@@ -31,7 +31,6 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
     ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 from obspy.core.util import AttribDict
 import warnings
 
