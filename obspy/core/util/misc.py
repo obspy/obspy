@@ -370,7 +370,7 @@ def wrap_long_string(string, line_length=79, prefix="",
 @contextmanager
 def CatchOutput():
     """
-    A context manager that catches stdout/stderr for its scope.
+    A context manager that catches stdout/stderr/exit() for its scope.
 
     Always use with "with" statement. Does nothing otherwise.
 
@@ -412,7 +412,10 @@ def CatchOutput():
                 os.close(stderr_file)
 
                 try:
+                    raised = False
                     yield out
+                except SystemExit:
+                    raised = True
                 finally:
                     sys.stdout.flush()
                     sys.stderr.flush()
@@ -429,6 +432,9 @@ def CatchOutput():
                         out.stdout = fh.read()
                     with open(stderr_filename, "r") as fh:
                         out.stderr = fh.read()
+
+                    if raised:
+                        raise SystemExit(out.stderr)
 
     finally:
         # Make sure to always close and remove the temporary files.
