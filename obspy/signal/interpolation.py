@@ -146,7 +146,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     w = np.abs(m)
     w = 1.0 / np.clip(w, np.spacing(1), w.max())
 
-    slope = np.empty(len(data), dtype="float64")
+    slope = np.empty(len(data), dtype=np.float64)
     slope[0] = m[0]
     slope[1:-1] = (w[:-1] * m[:-1] + w[1:] * m[1:]) / (w[:-1] + w[1:])
     slope[-1] = m[-1]
@@ -157,7 +157,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     sign_change = np.diff(np.sign(m)).astype(np.bool)
     slope[1:-1][sign_change] = 0.0
 
-    derivatives = np.empty((len(data), 2), dtype="float64")
+    derivatives = np.empty((len(data), 2), dtype=np.float64)
     derivatives[:, 0] = data
     derivatives[:, 1] = slope
 
@@ -165,7 +165,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
     # it is directly applicable as the first derivatives are known.
     # Using scipy.interpolate.piecewise_polynomial_interpolate() is to
     # memory intensive
-    return_data = np.empty(len(new_time_array), dtype="float64")
+    return_data = np.empty(len(new_time_array), dtype=np.float64)
     clibsignal.hermite_interpolation(data, slope, new_time_array, return_data,
                                      len(data), len(return_data), old_dt,
                                      old_start)

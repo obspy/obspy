@@ -85,9 +85,9 @@ clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
 clibsignal.utl_geo_km.restype = C.c_void_p
 
 head_stalta_t = np.dtype([
-    (native_str('N'), b'u4', 1),
-    (native_str('nsta'), b'u4', 1),
-    (native_str('nlta'), b'u4', 1),
+    (native_str('N'), np.uint32, 1),
+    (native_str('nsta'), np.uint32, 1),
+    (native_str('nlta'), np.uint32, 1),
 ], align=True)
 
 clibsignal.stalta.argtypes = [
@@ -101,13 +101,13 @@ clibsignal.stalta.argtypes = [
 clibsignal.stalta.restype = C.c_int
 
 clibsignal.hermite_interpolation.argtypes = [
-    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='f8', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int, C.c_double, C.c_double]
 clibsignal.hermite_interpolation.restype = C.c_void_p
