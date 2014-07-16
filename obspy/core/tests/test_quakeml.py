@@ -14,6 +14,7 @@ from obspy.core.util.decorator import skipIf
 
 import io
 import difflib
+from lxml import etree
 import math
 import os
 import unittest
@@ -42,10 +43,12 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Simple helper function to compare two XML strings.
         """
-        obj1 = fromstring(doc1)
-        obj2 = fromstring(doc2)
-        str1 = [_i.strip() for _i in tostring(obj1).split(b"\n")]
-        str2 = [_i.strip() for _i in tostring(obj2).split(b"\n")]
+        with io.BytesIO(doc1.encode()) as fh:
+            obj1 = etree.parse(fh)
+        with io.BytesIO(doc2.encode()) as fh:
+            obj2 = etree.parse(fh)
+        str1 = [_i.strip() for _i in etree.tostring(obj1).split(b"\n")]
+        str2 = [_i.strip() for _i in etree.tostring(obj2).split(b"\n")]
 
         unified_diff = difflib.unified_diff(str1, str2)
         err_msg = "\n".join(unified_diff)

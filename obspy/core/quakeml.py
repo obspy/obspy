@@ -36,11 +36,23 @@ import warnings
 
 import inspect
 import io
+from lxml import etree
 import os
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
                  'q': "http://quakeml.org/xmlns/quakeml/1.2"}
+
+
+def _get_first_child_namespace(element):
+    """
+    Helper function extracting the namespace of an element.
+    """
+    try:
+        element = element[0]
+    except IndexError:
+        return None
+    return etree.QName(element.tag).namespace
 
 
 def isQuakeML(filename):
@@ -58,12 +70,12 @@ def isQuakeML(filename):
     True
     """
     try:
-        xml_doc = XMLParser(filename)
+        xml_doc = etree.parse(filename)
     except:
         return False
     # check if node "*/eventParameters/event" for the global namespace exists
     try:
-        namespace = xml_doc._getFirstChildNamespace()
+        namespace = _get_first_child_namespace(xml_doc.getroot())
         xml_doc.xpath('eventParameters', namespace=namespace)[0]
     except:
         return False
@@ -74,8 +86,8 @@ class Unpickler(object):
     """
     De-serializes a QuakeML string into an ObsPy Catalog object.
     """
-    def __init__(self, parser=None):
-        self.parser = parser
+    def __init__(self, xml_doc=None):
+        self.xml_doc = xml_doc
 
     def load(self, file):
         """
@@ -86,7 +98,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(file)
+        self.xml_doc = etree.parse(file)
         return self._deserialize()
 
     def loads(self, string):
@@ -98,14 +110,45 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(io.BytesIO(string))
+        self.xml_doc = etree.parse(io.BytesIO(string))
         return self._deserialize()
 
-    def _xpath2obj(self, *args, **kwargs):
-        return self.parser.xpath2obj(*args, **kwargs)
+    def _xpath2obj(self, xpath, element=None, convert_to=str, namespace=None):
+        q = self._xpath(xpath, element=element, namespace=namespace)
+        if not q:
+            return None
+        text = q[0].text
+        if text is None or text == '':
+            return None
+        if convert_to == bool:
+            if text.lower() in ["true", "1"]:
+                return True
+            elif text.lower() in ["false", "0"]:
+                return False
+            return None
+        try:
+            return convert_to(text)
+        except:
+            msg = "Could not convert %s to type %s. Returning None."
+            warnings.warn(msg % (text, convert_to))
+        return None
 
-    def _xpath(self, *args, **kwargs):
-        return self.parser.xpath(*args, **kwargs)
+    def _xpath(self, xpath, element=None, namespace=None):
+        if element is None:
+            element = self.xml_doc.getroot()
+
+        namespaces = None
+        if namespace:
+            xpath = "b:%s" % xpath
+            namespaces = {"b": namespace}
+        elif hasattr(element, "nsmap") and None in element.nsmap:
+            xpath = "b:%s" % xpath
+            namespaces = {"b": element.nsmap[None]}
+        elif hasattr(self, "nsmap") and None in self.nsmap:
+            xpath = "b:%s" % xpath
+            namespaces = {"b": self.nsmap[None]}
+
+        return element.xpath(xpath, namespaces=namespaces)
 
     def _comments(self, parent):
         obj = []
@@ -792,19 +835,17 @@ class Unpickler(object):
     def _deserialize(self):
         # check node "quakeml/eventParameters" for global namespace
         try:
-            namespace = self.parser._getFirstChildNamespace()
+            namespace = _get_first_child_namespace(self.xml_doc.getroot())
             catalog_el = self._xpath('eventParameters', namespace=namespace)[0]
         except IndexError:
             raise Exception("Not a QuakeML compatible file or string")
-        # set default namespace for parser
-        self.parser.namespace = self.parser._getElementNamespace(catalog_el)
         self._quakeml_namespaces = [
-            ns for ns in self.parser.xml_root.nsmap.values()
+            ns for ns in self.xml_doc.getroot().nsmap.values()
             if ns.startswith(r"http://quakeml.org/xmlns/")]
         # create catalog
         catalog = Catalog(force_resource_id=False)
         # add any custom namespace abbreviations of root element to Catalog
-        catalog.nsmap = self.parser.xml_root.nsmap.copy()
+        catalog.nsmap = self.xml_doc.getroot().nsmap.copy()
         # optional catalog attributes
         catalog.description = self._xpath2obj('description', catalog_el)
         catalog.comments = self._comments(catalog_el)
@@ -1154,11 +1195,11 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Magnitude
-        >>> from obspy.core.util import tostring as _tostring
+        >>> from lxml.etree import tostring
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(_tostring(el).decode())  \
+        >>> print(tostring(el).decode())  \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
@@ -1192,11 +1233,11 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import StationMagnitude
-        >>> from obspy.core.util import tostring as _tostring
+        >>> from lxml.etree import tostring
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(_tostring(el).decode())  \
+        >>> print(tostring(el).decode())  \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
@@ -1227,11 +1268,11 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Origin
-        >>> from obspy.core.util import tostring as _tostring
+        >>> from lxml.etree import tostring
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(_tostring(el).decode())  \
+        >>> print(tostring(el).decode())  \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
@@ -1649,7 +1690,7 @@ class Pickler(object):
         root_el = etree.Element('{%s}quakeml' % NSMAP_QUAKEML['q'],
                                 nsmap=nsmap)
         root_el.append(catalog_el)
-        return tostring(root_el, pretty_print=pretty_print)
+        return etree.tostring(root_el, pretty_print=pretty_print)
 
 
 def readQuakeML(filename):
