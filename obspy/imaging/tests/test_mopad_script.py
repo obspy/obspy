@@ -112,7 +112,11 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                              ','.join(str(x) for x in self.mt)])
 
             actual = eval(out.stdout)
-            self.assertAlmostEqual(exp, actual)
+            self.assertEqual(len(exp), len(actual))
+            for i, (e, a) in enumerate(zip(exp, actual)):
+                msg = '%d: %f != %f in %s -> %s conversion' % (i, e, a,
+                                                               insys, outsys)
+                self.assertAlmostEqual(e, a, msg=msg)
 
     def test_script_convert_vector(self):
         with CatchOutput() as out:
