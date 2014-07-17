@@ -257,6 +257,7 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
   int  err_type;
   char  out_name[MAXLINELEN], locid[LOCIDLEN+1];
   char *locid_ptr, *end_locid_ptr;
+  size_t locid_len;
   struct matched_files *flst_head = (struct matched_files *)NULL;
   struct matched_files *flst_ptr = NULL, *output_files = NULL;
   struct file_list *lst_ptr = NULL, *tmp_ptr = NULL, *out_file = NULL, *tmp_file = NULL;
@@ -329,7 +330,11 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
   while(*locid_ptr && *locid_ptr == ' ') locid_ptr++;
   end_locid_ptr = locid_ptr + strlen(locid_ptr) - 1;
   while(end_locid_ptr > locid_ptr && *end_locid_ptr == ' ') end_locid_ptr--;
-  strncpy(locid, locid_ptr, (end_locid_ptr - locid_ptr + 1));
+  locid_len = end_locid_ptr - locid_ptr + 1;
+  if (locid_len > LOCIDLEN)
+    locid_len = LOCIDLEN;
+  strncpy(locid, locid_ptr, locid_len);
+  locid[LOCIDLEN] = '\0';
 
   /* parse the "locidlst" string to form a list of channels  */
 
