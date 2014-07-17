@@ -580,7 +580,7 @@ class WaveformPlotting(object):
         ax.plot(x_pos, y_pos, "*", color="yellow",
                 markersize=12, linewidth=self.linewidth)
 
-        for pick in event.picks:
+        for pick in getattr(event, 'picks', []):
             # check that network/station/location matches
             if pick.waveform_id.getSEEDString().split(".")[:-1] != \
                seed_id.split(".")[:-1]:
