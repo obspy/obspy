@@ -3,6 +3,8 @@
    * fixed a problem with UTCDateTime with timestamps of far future
      dates (larger than 2038, often seen in StationXML end dates,
      see #805)
+ - obspy.mseed:
+   * proper error reporting while reading
  - obspy.seedlink:
    * bugfix: INFO responses from the IRIS ringserver are now parsed
      correctly (see #807)
