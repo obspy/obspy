@@ -315,6 +315,13 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             raise InternalMSEEDReadingError(msg[7:].strip())
         if msg.startswith(b"INFO: "):
             msg = msg[6:].strip()
+            # Append the offset of the full SEED header if necessary. That way
+            # the C code does not have to deal with it.
+            if offset and "offset" in msg:
+                msg = ("%s The file contains a %i byte dataless part at the "
+                       "beginning. Make sure to add that to the reported "
+                       "offset to get the actual location in the file." % (
+                       msg, offset))
             warnings.warn(msg, InternalMSEEDReadingWarning)
     diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
 
