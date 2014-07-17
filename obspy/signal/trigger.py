@@ -508,12 +508,17 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     The routine works in the following steps:
       * take every single trace in the stream
-      * apply specified triggering routine
-      * evaluate triggering results
+      * apply specified triggering routine (can be skipped to work on
+        precomputed custom characteristic functions)
+      * evaluate all single station triggering results
       * compile chronological overall list of all single station triggers
       * find overlapping single station triggers
-      * calculate coincidence sum every individual overlapping trigger
+      * calculate coincidence sum of every individual overlapping trigger
       * add to coincidence trigger list if it exceeds the given threshold
+      * optional: if master event templates are provided, also check single
+        station triggers individually and include any single station trigger if
+        it exceeds the specified similarity threshold even if no other stations
+        coincide with the trigger
       * return list of network coincidence triggers
 
     .. note::
@@ -529,9 +534,9 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
-        further details. If set to None no triggering routine is applied, i.e.
-        data in traces is supposed to be a precomputed characteristic function
-        on which the trigger thresholds are evaluated.
+        further details. If set to `None` no triggering routine is applied,
+        i.e.  data in traces is supposed to be a precomputed characteristic
+        function on which the trigger thresholds are evaluated.
     :type trigger_type: str or None
     :type thr_on: float
     :param thr_on: threshold for switching single station trigger on
@@ -585,7 +590,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         three traces for Z, N, E component. A dictionary is expected where for
         each station used in the trigger, a list of streams can be provided as
         the value to the network/station key (e.g. {"GR.FUR": [stream1,
-        stream2]}).
+        stream2]}). Templates are compared against the provided `stream`
+        without the specified triggering routine (`trigger_type`) applied.
     :type event_templates: dict
     :param similarity_threshold: similarity threshold (0.0-1.0) at which a
         single station trigger gets included in the output network event
