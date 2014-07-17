@@ -314,7 +314,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         if msg.startswith(b"ERROR: "):
             raise InternalMSEEDReadingError(msg[7:].strip())
         if msg.startswith(b"INFO: "):
-            warnings.warn(msg[6:].strip(), InternalMSEEDReadingWarning)
+            msg = msg[6:].strip()
+            warnings.warn(msg, InternalMSEEDReadingWarning)
     diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
 
     def log_message(msg):

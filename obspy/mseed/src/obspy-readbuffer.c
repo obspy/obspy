@@ -281,6 +281,49 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // way libmseed can take care to not overstep bounds.
         retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
         if (retcode != MS_NOERROR) {
+            switch ( retcode ) {
+                case MS_ENDOFFILE:
+                    ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
+                              "parsing record starting at offset %d. The rest "
+                              "of the file will not be read.\n", offset);
+                    break;
+                case MS_GENERROR:
+                    ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
+                              "record starting at offset %d. The rest of the "
+                               "file will not be read.\n", offset);
+                    break;
+                case MS_NOTSEED:
+                    ms_log(1, "readMSEEDBuffer(): Record starting at offset "
+                              "%d is not valid SEED. The rest of the file "
+                              "will not be read.\n", offset);
+                    break;
+                case MS_WRONGLENGTH:
+                    ms_log(1, "readMSEEDBuffer(): Length of data read was not "
+                              "correct when parsing record starting at "
+                              "offset %d. The rest of the file will not be "
+                              "read.\n", offset);
+                    break;
+                case MS_OUTOFRANGE:
+                    ms_log(1, "readMSEEDBuffer(): SEED record length out of "
+                              "range for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                case MS_UNKNOWNFORMAT:
+                    ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
+                              "format for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                case MS_STBADCOMPFLAG:
+                    ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
+                              "flag(s) in record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                default:
+                    ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
+                              "record starting at offset %d. The rest of the "
+                              "file will not be read.\n", retcode, offset);
+                    break;
+            }
             msr_free(&msr);
             break;
         }
