@@ -138,11 +138,11 @@ class ResponseTest(unittest.TestCase):
 
     def test_segfault_after_error_handling(self):
         """
-        Many functions in evalresp call `error_return()` which uses lngjump()
+        Many functions in evalresp call `error_return()` which uses longjmp()
         to jump to some previously set state.
 
         ObsPy calls some evalresp functions directly so evalresp cannot call
-        setjmp(). In that case lngjump() jumps to a an undefined location most
+        setjmp(). In that case longjmp() jumps to an undefined location, most
         likely resulting in a segfault.
 
         This test tests a workaround for this issue.
