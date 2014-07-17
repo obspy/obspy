@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.event import readEvents
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
@@ -381,6 +382,21 @@ class WaveformTestCase(unittest.TestCase):
                             {'time': event3, 'text': 'Event 3'},
                             {'time': event4, 'text': 'Event 4'},
                             {'time': event5, 'text': 'Event 5'}])
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDayPlotCatalog(self):
+        '''
+        Plots day plot, with a catalog of events.
+        '''
+        start = UTCDateTime(2012, 4, 4, 14, 0, 0)
+        cat = readEvents()
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot_catalog.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5,
+                    events=cat)
 
 
 def suite():
