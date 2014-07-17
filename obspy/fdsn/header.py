@@ -117,7 +117,7 @@ DEFAULT_TYPES = {
     "includeallorigins": bool,
     "includeallmagnitudes": bool,
     "includearrivals": bool,
-    "eventid": int,
+    "eventid": str,
     "limit": int,
     "offset": int,
     "orderby": str,
