@@ -290,7 +290,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                 case MS_GENERROR:
                     ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
                               "record starting at offset %d. The rest of the "
-                               "file will not be read.\n", offset);
+                              "file will not be read.\n", offset);
                     break;
                 case MS_NOTSEED:
                     ms_log(1, "readMSEEDBuffer(): Record starting at offset "
