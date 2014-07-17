@@ -346,6 +346,34 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name, type='relative', reftime=ref)
 
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDayPlot(self):
+        '''
+        Plots day plot, starting Jan 1970.
+        '''
+        start = UTCDateTime(0)
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5)
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDayPlotExplicitEvent(self):
+        '''
+        Plots day plot, starting Jan 1970, with an event at 30s.
+        '''
+        start = UTCDateTime(0)
+        event = UTCDateTime(30)
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot_event.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5,
+                    events=[{'time': event, 'text': 'M 5.1'}])
+
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
