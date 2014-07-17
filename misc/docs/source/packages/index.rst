@@ -29,6 +29,7 @@ The functionality is provided through the following packages:
    obspy.datamark
    obspy.gse2
    obspy.mseed
+   obspy.pdas
    obspy.sac
    obspy.seisan
    obspy.seg2
