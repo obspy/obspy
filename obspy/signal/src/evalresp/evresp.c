@@ -410,8 +410,8 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
     if(!mode) {
       which_matched = 0;
       while(test && which_matched >= 0) {
+        new_file = 0;
         if(!(err_type = setjmp(jump_buffer))) {
-          new_file = 0;
           which_matched = find_resp(fptr, scns, date_time, &this_channel);
 #ifdef LIB_MODE /* IGD 25-Sep-2007 Looks like we do not need this: function returns anyway */
 //        if(which_matched < 0) {
@@ -607,8 +607,8 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
         if(fptr != (FILE *)NULL) {
           curr_file = lst_ptr->name;
     look_again:
+          new_file = 0;
           if(!(err_type = setjmp(jump_buffer))) {
-            new_file = 0;
             which_matched = get_resp(fptr, scn, date_time, &this_channel);
 #ifdef LIB_MODE /* IGD 25-Sep-2007 Looks like we do not need this: function returns anyway */
 //           if(which_matched < 1) {
