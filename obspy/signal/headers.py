@@ -158,6 +158,3 @@ clibevresp.evresp.restype = C.POINTER(RESPONSE)
 
 clibevresp.free_response.argtypes = [C.POINTER(RESPONSE)]
 clibevresp.free_response.restype = C.c_void_p
-
-clibevresp._obspy_set_jump.argtypes = []
-clibevresp._obspy_set_jump.restype = C.c_void_p

@@ -196,11 +196,11 @@ channel._fields_ = [
 ]
 
 
-# void calc_resp(struct channel *chan, double *freq, int nfreqs,
-#                struct complex *output,
-#                char *out_units, int start_stage, int stop_stage,
-#                int useTotalSensitivityFlag)
-clibevresp.calc_resp.argtypes = [
+# int _obspy_calc_resp(struct channel *chan, double *freq, int nfreqs,
+#                      struct complex *output,
+#                      char *out_units, int start_stage, int stop_stage,
+#                      int useTotalSensitivityFlag)
+clibevresp._obspy_calc_resp.argtypes = [
     C.POINTER(channel),
     np.ctypeslib.ndpointer(dtype=np.float64,  # freqs
                            ndim=1,
@@ -213,17 +213,17 @@ clibevresp.calc_resp.argtypes = [
     C.c_int,
     C.c_int,
     C.c_int]
-clibevresp.calc_resp.restype = C.c_void_p
+clibevresp._obspy_calc_resp.restype = C.c_int
 
 
-# void check_channel(struct channel *chan)
-clibevresp.check_channel.argtypes = [C.POINTER(channel)]
-clibevresp.check_channel.restype = C.c_void_p
+# int _obspy_check_channel(struct channel *chan)
+clibevresp._obspy_check_channel.argtypes = [C.POINTER(channel)]
+clibevresp._obspy_check_channel.restype = C.c_int
 
 
-# void norm_resp(struct channel *chan, int start_stage, int stop_stage)
-clibevresp.norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
-clibevresp.norm_resp.restype = C.c_void_p
+# int _obspy_norm_resp(struct channel *chan, int start_stage, int stop_stage)
+clibevresp._obspy_norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
+clibevresp._obspy_norm_resp.restype = C.c_int
 
 
 # Only useful for debugging thus not officially included as every import of

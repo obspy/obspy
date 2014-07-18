@@ -156,8 +156,9 @@ class ResponseTest(unittest.TestCase):
         t_samp = 0.05
         nfft = 256
 
-        inv[0][0][0].response.get_evalresp_response(
-            t_samp, nfft, output="DISP")
+        self.assertRaises(Exception,
+                          inv[0][0][0].response.get_evalresp_response,
+                          t_samp, nfft, output="DISP")
 
 
 def suite():
