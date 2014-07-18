@@ -68,10 +68,11 @@ def readPDAS(filename, **kwargs):
     month, day, year = items[4][1].decode().split("-")
     if UTCDateTime().year > 2050:
         raise NotImplementedError()
-    if int(year) < 50:
-        year = "20" + year
-    else:
-        year = "19" + year
+    if len(year) == 2:
+        if int(year) < 50:
+            year = "20" + year
+        else:
+            year = "19" + year
     time = items[5][1].decode()
     t = UTCDateTime("%s-%s-%sT%s" % (year, month, day, time))
     sampling_rate = 1.0 / float(items[6][1].decode())
