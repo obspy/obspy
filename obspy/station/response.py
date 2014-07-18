@@ -1057,6 +1057,7 @@ class Response(ComparingObject):
         output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
+        clibevresp._obspy_set_jump()
         clibevresp.check_channel(C.pointer(chan))
         clibevresp.norm_resp(C.pointer(chan), -1, 0)
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
