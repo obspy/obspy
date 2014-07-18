@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Utility functions required for the download helpers.
+
+:copyright:
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import collections
 import copy
 import fnmatch
@@ -310,9 +325,6 @@ def does_file_contain_all_channels(filename, station, logger=None):
             logger.warning(msg)
         else:
             warnings.warn(msg)
-
-
-
 
 
 def get_stationxml_contents(filename):

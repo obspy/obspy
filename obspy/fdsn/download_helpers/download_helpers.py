@@ -9,6 +9,10 @@ Download helpers.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import logging
 from multiprocessing.pool import ThreadPool
 import itertools
@@ -148,15 +152,13 @@ class DownloadHelper(object):
 
         # Filter out already existing files.
         for station in stations:
-            asdf
-
+            pass
 
         # Group available stations per client.
         availability = {
             (client_name, self._initialized_clients[client_name]): stations
             for client_name, stations in
             itertools.groupby(master_availability, lambda x: x.client)}
-
 
     def __initialize_clients(self):
         """

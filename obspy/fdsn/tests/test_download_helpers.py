@@ -9,8 +9,10 @@ The obspy.fdsn.download_helpers test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import unittest
 
 from obspy.fdsn.download_helpers import domain
