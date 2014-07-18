@@ -353,7 +353,7 @@ class WaveformTestCase(unittest.TestCase):
         Plots day plot, starting Jan 1970.
         '''
         start = UTCDateTime(0)
-        st = self._createStream(start, start + 3600, 100)
+        st = self._createStream(start, start + 3 * 3600, 100)
         # create and compare image
         image_name = 'waveform_dayplot.png'
         with ImageComparison(self.path, image_name) as ic:
