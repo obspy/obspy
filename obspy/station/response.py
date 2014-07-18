@@ -1059,17 +1059,17 @@ class Response(ComparingObject):
 
         rc = clibevresp._obspy_check_channel(C.pointer(chan))
         if rc:
-            msg = 'check_channel: Error %d occurred in evalresp!' % (rc)
-            raise Exception(msg)
+            e, m = ew.ENUM_ERROR_CODES[rc]
+            raise e('check_channel: ' + m)
         rc = clibevresp._obspy_norm_resp(C.pointer(chan), -1, 0)
         if rc:
-            msg = 'norm_resp: Error %d occurred in evalresp!' % (rc)
-            raise Exception(msg)
+            e, m = ew.ENUM_ERROR_CODES[rc]
+            raise e('norm_resp: ' + m)
         rc = clibevresp._obspy_calc_resp(C.pointer(chan), freqs, len(freqs),
                                          output, out_units, -1, 0, 0)
         if rc:
-            msg = 'calc_resp: Error %d occurred in evalresp!' % (rc)
-            raise Exception(msg)
+            e, m = ew.ENUM_ERROR_CODES[rc]
+            raise e('calc_resp: ' + m)
         # XXX: Check if this is really not needed.
         # output *= scale_factor[0]
 

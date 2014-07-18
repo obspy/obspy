@@ -11,6 +11,29 @@ from obspy.signal.headers import clibevresp
 
 clibevresp.twoPi = 3.141
 
+ENUM_ERROR_CODES = {
+    2: (IOError, 'Open file error'),
+    3: (Exception, 'RE compilation failed'),
+    4: (Exception, 'Merge error'),  # Unused
+    5: (Exception, 'Swap failed'),
+    6: (Exception, 'Usage error'),  # Should not happen
+    7: (ValueError, 'Bad out units'),
+    -1: (MemoryError, 'Out of memory'),
+    -2: (Exception, 'Non existent field'),  # Unused
+    -3: (ValueError, 'Undefined prefix'),
+    -4: (ValueError, 'Parse error'),
+    -5: (ValueError, 'Illegal RESP format'),
+    -6: (ValueError, 'Undef sepstr'),
+    -7: (IOError, 'Unrecognized file type'),
+    -8: (EOFError, 'Unexpected EOF'),
+    -9:  (IndexError, 'Array bounds exceeded'),
+    -10: (ValueError, 'Improper data type'),
+    -11: (NotImplementedError, 'Unsupported file type'),
+    -12: (ValueError, 'Illegal filter specification'),
+    -13: (IndexError, 'No stage matched'),
+    -14: (NotImplementedError, 'Unrecognized units')
+}
+
 ENUM_UNITS = {
     "UNDEF_UNITS": 0,
     "DIS": 1,
@@ -39,7 +62,6 @@ ENUM_FILT_TYPES = {
     "FIR_COEFFS": 12,
     "IIR_COEFFS": 13
 }
-
 
 ENUM_STAGE_TYPES = {
     "UNDEF_STAGE": 0,

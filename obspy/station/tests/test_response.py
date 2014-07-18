@@ -156,7 +156,7 @@ class ResponseTest(unittest.TestCase):
         t_samp = 0.05
         nfft = 256
 
-        self.assertRaises(Exception,
+        self.assertRaises(ValueError,
                           inv[0][0][0].response.get_evalresp_response,
                           t_samp, nfft, output="DISP")
 
