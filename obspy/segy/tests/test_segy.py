@@ -101,9 +101,9 @@ class SEGYTestCase(unittest.TestCase):
                 # Read the data as uint8 to be able to directly access the
                 # different bytes.
                 # Original data.
-                packed_data = np.fromstring(packed_data, 'uint8')
+                packed_data = np.fromstring(packed_data, np.uint8)
                 # Newly written.
-                new_packed_data = np.fromstring(new_packed_data, 'uint8')
+                new_packed_data = np.fromstring(new_packed_data, np.uint8)
 
                 # Figure out the non normalized fractions in the original data
                 # because these cannot be compared directly.
@@ -136,8 +136,8 @@ class SEGYTestCase(unittest.TestCase):
                 # to get 4 byte numbers.
                 packed_data_copy = packed_data.copy()
                 new_packed_data_copy = new_packed_data.copy()
-                packed_data_copy.dtype = 'int32'
-                new_packed_data_copy.dtype = 'int32'
+                packed_data_copy.dtype = np.int32
+                new_packed_data_copy.dtype = np.int32
                 # Equalize the non normalized parts.
                 packed_data_copy[non_normalized] = \
                     new_packed_data_copy[non_normalized]
@@ -148,7 +148,7 @@ class SEGYTestCase(unittest.TestCase):
                 # same.
                 data = data[non_normalized]
                 # Unpack the data again.
-                new_packed_data.dtype = 'int32'
+                new_packed_data.dtype = np.int32
                 new_packed_data = new_packed_data[non_normalized]
                 length = len(new_packed_data)
                 f = io.BytesIO()
@@ -157,7 +157,7 @@ class SEGYTestCase(unittest.TestCase):
                 new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
                     f, length, endian)
                 f.close()
-                packed_data.dtype = 'int32'
+                packed_data.dtype = np.int32
                 packed_data = packed_data[non_normalized]
                 length = len(packed_data)
                 f = io.BytesIO()
@@ -188,7 +188,7 @@ class SEGYTestCase(unittest.TestCase):
             data = 200000.0 * np.random.ranf(50000) - 100000.0
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
@@ -218,7 +218,7 @@ class SEGYTestCase(unittest.TestCase):
             data = 1E-5 * np.random.ranf(50000)
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
@@ -247,7 +247,7 @@ class SEGYTestCase(unittest.TestCase):
         data = np.array(data)
         # Convert to float64 in case native floats are different to be
         # able to utilize double precision.
-        data = np.require(data, 'float64')
+        data = np.require(data, np.float64)
         # Loop over little and big endian.
         for endian in endians:
             # Pack.
@@ -360,8 +360,8 @@ class SEGYTestCase(unittest.TestCase):
             # tested again here.
             if len(non_normalized_samples) != 0:
                 # Convert to 4 byte integers. Any 4 byte numbers work.
-                org_data = np.fromstring(org_data, 'int32')
-                new_data = np.fromstring(new_data, 'int32')
+                org_data = np.fromstring(org_data, np.int32)
+                new_data = np.fromstring(new_data, np.int32)
                 # Skip the header (4*960 bytes) and replace the non normalized
                 # data samples.
                 org_data[960:][non_normalized_samples] = \

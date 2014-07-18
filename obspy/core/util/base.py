@@ -110,7 +110,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> createEmptyDataChunk(6, np.dtype('complex128'), 0)
+    >>> createEmptyDataChunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -118,6 +118,9 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    # For compatibility with NumPy 1.4
+    if isinstance(dtype, str):
+        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
@@ -297,6 +300,28 @@ def getMatplotlibVersion():
     try:
         import matplotlib
         version = matplotlib.__version__
+        version = version.split("~rc")[0]
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
+def getSciPyVersion():
+    """
+    Get SciPy version information.
+
+    :returns: SciPy version as a list of three integers or ``None`` if scipy
+        import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        import scipy
+        version = scipy.__version__
         version = version.split("~rc")[0]
         version = list(map(toIntOrZero, version.split(".")))
     except ImportError:

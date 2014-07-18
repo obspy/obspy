@@ -136,10 +136,10 @@ html_theme_options = {
     # ],
 
     # Render the next and previous page links in navbar. (Default: true)
-    # 'navbar_sidebarrel': True,
+    'navbar_sidebarrel': True,
 
     # Render the current pages TOC in the navbar. (Default: true)
-    # 'navbar_pagenav': True,
+    'navbar_pagenav': True,
 
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
@@ -229,13 +229,13 @@ html_sidebars = {
 html_additional_pages = {'index': 'index.html'}
 
 # If false, no module index is generated.
-#html_domain_indices = True
+html_domain_indices = True
 
 # If false, no index is generated.
-#html_use_index = True
+html_use_index = True
 
 # If true, the index is split into individual pages for each letter.
-#html_split_index = False
+html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
 html_show_sourcelink = True

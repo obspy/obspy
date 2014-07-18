@@ -4,11 +4,14 @@ USAGE: make_assets.py [-f] [-c]
 """
 
 from __future__ import print_function, unicode_literals
-from future.builtins import *
+from future.builtins import *  # @UnusedWildImport
 from future.moves.urllib import request
 import sys
 import os
 import shutil
+
+
+CDN_URL = 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/'
 
 ASSETS = {
     'source/_static/css/base.css': 'https://tests.obspy.org/static/base.css',
@@ -30,15 +33,15 @@ ASSETS = {
         'https://tests.obspy.org/snippets/footer.html',
 
     'source/_static/css/bootstrap.min.css':
-        'https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
+        CDN_URL + 'css/bootstrap.min.css',
     'source/_static/fonts/glyphicons-halflings-regular.eot':
-        'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/fonts/glyphicons-halflings-regular.eot',
+        CDN_URL + 'fonts/glyphicons-halflings-regular.eot',
     'source/_static/fonts/glyphicons-halflings-regular.svg':
-        'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/fonts/glyphicons-halflings-regular.svg',
+        CDN_URL + 'fonts/glyphicons-halflings-regular.svg',
     'source/_static/fonts/glyphicons-halflings-regular.ttf':
-        'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/fonts/glyphicons-halflings-regular.ttf',
+        CDN_URL + 'fonts/glyphicons-halflings-regular.ttf',
     'source/_static/fonts/glyphicons-halflings-regular.woff':
-        'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/fonts/glyphicons-halflings-regular.woff',
+        CDN_URL + 'fonts/glyphicons-halflings-regular.woff',
 }
 
 force = '-f' in sys.argv

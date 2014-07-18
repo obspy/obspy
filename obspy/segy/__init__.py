@@ -182,7 +182,7 @@ script::
     for _i in xrange(3):
         # Create some random data.
         data = np.random.ranf(1000)
-        data = np.require(data, dtype='float32')
+        data = np.require(data, dtype=np.float32)
         trace = Trace(data=data)
 
         # Attributes in trace.stats will overwrite everything in

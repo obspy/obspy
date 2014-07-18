@@ -333,22 +333,22 @@ class SacIO(object):
         :return: Nothing
         """
         # The SAC header has 70 floats, then 40 integers, then 192 bytes
-        # in strings. Store them in array (an convert the char to a
+        # in strings. Store them in array (and convert the char to a
         # list). That's a total of 632 bytes.
         #
         # allocate the array for header floats
-        self.hf = np.ndarray(70, dtype='<f4')
+        self.hf = np.ndarray(70, dtype=native_str('<f4'))
         self.hf[:] = -12345.0
         #
         # allocate the array for header integers
-        self.hi = np.ndarray(40, dtype='<i4')
+        self.hi = np.ndarray(40, dtype=native_str('<i4'))
         self.hi[:] = -12345
         #
         # allocate the array for header characters
-        self.hs = np.ndarray(24, dtype='|S8')
+        self.hs = np.ndarray(24, dtype=native_str('|S8'))
         self.hs[:] = b'-12345  '  # setting default value
         # allocate the array for the points
-        self.seis = np.ndarray([], dtype='<f4')
+        self.seis = np.ndarray([], dtype=native_str('<f4'))
 
     def fromarray(self, trace, begin=0.0, delta=1.0, distkm=0,
                   starttime=UTCDateTime("1970-01-01T00:00:00.000000")):
@@ -365,7 +365,7 @@ class SacIO(object):
             raise SacError("input needs to be of instance numpy.ndarray")
         else:
             # Only copy the data if they are not of the required type
-            self.seis = np.require(trace, '<f4')
+            self.seis = np.require(trace, native_str('<f4'))
         # convert stattime to sac reference time, if it is not default
         if begin == -12345:
             reftime = starttime
@@ -541,13 +541,13 @@ class SacIO(object):
         # parse the header
         #
         # The sac header has 70 floats, 40 integers, then 192 bytes
-        #    in strings. Store them in array (an convert the char to a
+        #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = frombuffer(f.read(4 * 70), dtype='<f4')
-        self.hi = frombuffer(f.read(4 * 40), dtype='<i4')
+        self.hf = frombuffer(f.read(4 * 70), dtype=native_str('<f4'))
+        self.hi = frombuffer(f.read(4 * 40), dtype=native_str('<i4'))
         # read in the char values
-        self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
+        self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
@@ -559,10 +559,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 f.seek(0, 0)
-                self.hf = frombuffer(f.read(4 * 70), dtype='>f4')
-                self.hi = frombuffer(f.read(4 * 40), dtype='>i4')
+                self.hf = frombuffer(f.read(4 * 70), dtype=native_str('>f4'))
+                self.hi = frombuffer(f.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
-                self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
+                self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
             except SacError as e:
@@ -642,13 +642,13 @@ class SacIO(object):
         # parse the header
         #
         # The sac header has 70 floats, 40 integers, then 192 bytes
-        #    in strings. Store them in array (an convert the char to a
+        #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = frombuffer(f.read(4 * 70), dtype='<f4')
-        self.hi = frombuffer(f.read(4 * 40), dtype='<i4')
+        self.hf = frombuffer(f.read(4 * 70), dtype=native_str('<f4'))
+        self.hi = frombuffer(f.read(4 * 40), dtype=native_str('<i4'))
         # read in the char values
-        self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
+        self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
@@ -661,10 +661,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 f.seek(0, 0)
-                self.hf = frombuffer(f.read(4 * 70), dtype='>f4')
-                self.hi = frombuffer(f.read(4 * 40), dtype='>i4')
+                self.hf = frombuffer(f.read(4 * 70), dtype=native_str('>f4'))
+                self.hi = frombuffer(f.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
-                self.hs = frombuffer(f.read(24 * 8), dtype='|S8')
+                self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
                 self.IsSACfile(fname, fsize)
                 self.byteorder = 'big'
             except SacError as e:
@@ -677,9 +677,9 @@ class SacIO(object):
         # actually, it's in the SAC manual
         npts = self.hi[9]
         if self.byteorder == 'big':
-            self.seis = frombuffer(f.read(npts * 4), dtype='>f4')
+            self.seis = frombuffer(f.read(npts * 4), dtype=native_str('>f4'))
         else:
-            self.seis = frombuffer(f.read(npts * 4), dtype='<f4')
+            self.seis = frombuffer(f.read(npts * 4), dtype=native_str('<f4'))
         if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
             f.close()
@@ -728,26 +728,28 @@ class SacIO(object):
         # parse the header
         #
         # The sac header has 70 floats, 40 integers, then 192 bytes
-        #    in strings. Store them in array (an convert the char to a
+        #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
         # read in the float values
-        self.hf = np.array([i.split() for i in data[:14]], dtype='<f4').ravel()
+        self.hf = np.array([i.split() for i in data[:14]],
+                           dtype=native_str('<f4')).ravel()
         # read in the int values
         self.hi = np.array([i.split() for i in data[14: 14 + 8]],
-                           dtype='<i4').ravel()
+                           dtype=native_str('<i4')).ravel()
         # reading in the string part is a bit more complicated
         # because every string field has to be 8 characters long
         # apart from the second field which is 16 characters long
         # resulting in a total length of 192 characters
         for i, j in enumerate(range(0, 24, 3)):
             line = data[14 + 8 + i]
-            self.hs[j:j + 3] = np.fromstring(line, dtype='|S8', count=3)
+            self.hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'),
+                                             count=3)
         # --------------------------------------------------------------
         # read in the seismogram points
         # --------------------------------------------------------------
-        self.seis = np.array([i.split() for i in data[30:]], dtype='<f4')\
-            .ravel()
+        self.seis = np.array([i.split() for i in data[30:]],
+                             dtype=native_str('<f4')).ravel()
         try:
             self._get_date()
         except SacError:
@@ -791,21 +793,23 @@ class SacIO(object):
         # parse the header
         #
         # The sac header has 70 floats, 40 integers, then 192 bytes
-        #    in strings. Store them in array (an convert the char to a
+        #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
         # read in the float values
-        self.hf = np.array([i.split() for i in data[:14]], dtype='<f4').ravel()
+        self.hf = np.array([i.split() for i in data[:14]],
+                           dtype=native_str('<f4')).ravel()
         # read in the int values
         self.hi = np.array([i.split() for i in data[14: 14 + 8]],
-                           dtype='<i4').ravel()
+                           dtype=native_str('<i4')).ravel()
         # reading in the string part is a bit more complicated
         # because every string field has to be 8 characters long
         # apart from the second field which is 16 characters long
         # resulting in a total length of 192 characters
         for i, j in enumerate(range(0, 24, 3)):
             line = data[14 + 8 + i]
-            self.hs[j:j + 3] = np.fromstring(line, dtype='|S8', count=3)
+            self.hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'),
+                                             count=3)
         try:
             self.IsSACfile(fname, fsize=False)
         except SacError as e:
@@ -885,7 +889,7 @@ class SacIO(object):
             rows = npts // 5
             np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
                        fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-            np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
+            np.savetxt(f, self.seis[5 * rows:], delimiter=b'\t')
         except:
             f.close()
             raise SacIOError("Cannot write trace values: " + ofname)
@@ -1172,7 +1176,7 @@ class SacIO(object):
         """
         If trace changed since read, adapt header values
         """
-        self.seis = np.require(self.seis, '<f4')
+        self.seis = np.require(self.seis, native_str('<f4'))
         self.SetHvalue('npts', self.seis.size)
         if self.seis.size == 0:
             return

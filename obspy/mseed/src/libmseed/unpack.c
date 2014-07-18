@@ -172,6 +172,7 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
   
   /* Populate some of the common header fields */
   strncpy (sequence_number, msr->fsdh->sequence_number, 6);
+  sequence_number[6] = '\0';
   msr->sequence_number = (int32_t) strtol (sequence_number, NULL, 10);
   msr->dataquality = msr->fsdh->dataquality;
   ms_strncpcleantail (msr->network, msr->fsdh->network, 2);

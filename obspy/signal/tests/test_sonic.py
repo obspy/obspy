@@ -46,7 +46,7 @@ class SonicTestCase(unittest.TestCase):
         dt = df * slowness * (np.cos(baz) * geometry[:, 1] + np.sin(baz) *
                               geometry[:, 0])
         dt = np.round(dt)
-        dt = dt.astype('int32')
+        dt = dt.astype(np.int32)
         max_dt = np.max(dt) + 1
         min_dt = np.min(dt) - 1
         trl = list()
@@ -103,7 +103,7 @@ class SonicTestCase(unittest.TestCase):
 9.56880885e-01 1.16028992e-05 1.84349488e+01 1.26491106e+00
 9.49584782e-01 9.67131311e-06 1.84349488e+01 1.26491106e+00
         """
-        ref = np.loadtxt(io.StringIO(raw), dtype='f4')
+        ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
 
     def test_sonicBfPrew(self):
@@ -116,7 +116,7 @@ class SonicTestCase(unittest.TestCase):
 1.33609938e-01 1.16028992e-05 1.84349488e+01 1.26491106e+00
 1.32638966e-01 9.67131311e-06 1.84349488e+01 1.26491106e+00
         """
-        ref = np.loadtxt(io.StringIO(raw), dtype='f4')
+        ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         self.assertTrue(np.allclose(ref, out[:, 1:]))
 
     def test_sonicCapon(self):
@@ -129,7 +129,7 @@ class SonicTestCase(unittest.TestCase):
 7.94530414e+02 7.94530414e+02 -1.65963757e+02  2.06155281e+00
 6.08349575e+03 6.08349575e+03  1.77709390e+02  2.50199920e+00
         """
-        ref = np.loadtxt(io.StringIO(raw), dtype='f4')
+        ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         # XXX relative tolerance should be lower!
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=5e-3))
 
@@ -143,7 +143,7 @@ class SonicTestCase(unittest.TestCase):
 1.51510617e-02 6.54541771e-01  6.81985905e+01  2.15406592e+00
 3.10761699e-02 7.38667657e+00  1.13099325e+01  1.52970585e+00
         """
-        ref = np.loadtxt(io.StringIO(raw), dtype='f4')
+        ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         # XXX relative tolerance should be lower!
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
 

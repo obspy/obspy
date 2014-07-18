@@ -114,7 +114,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
             pathname_or_url.strip().startswith(b'<'):
         # XML string
         return _read(io.BytesIO(pathname_or_url), format, **kwargs)
-    elif "://" in pathname_or_url:
+    elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
@@ -128,7 +128,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathnames = glob.glob(pathname)
         if not pathnames:
             # try to give more specific information why the stream is empty
-            if glob.has_magic(pathname) and not glob(pathname):
+            if glob.has_magic(pathname) and not glob.glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)

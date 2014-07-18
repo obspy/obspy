@@ -1052,9 +1052,9 @@ class Response(ComparingObject):
 
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
 
-        output = np.empty(len(freqs), dtype="complex128")
+        output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
         clibevresp.check_channel(C.pointer(chan))

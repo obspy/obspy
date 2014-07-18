@@ -11,6 +11,7 @@ SEISAN bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -165,8 +166,8 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     # now parse each event file channel header + data
     stream = Stream()
     dlen = arch // 8
-    dtype = np.dtype(byteorder + 'i' + str(dlen))
-    stype = '=i' + str(dlen)
+    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
+    stype = native_str('=i' + str(dlen))
     for _i in range(number_of_channels):
         # get channel header
         temp = _readline(fh, 1040).decode()

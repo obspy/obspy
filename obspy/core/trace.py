@@ -1972,7 +1972,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             norm = self.max()
 
-        self.data = self.data.astype("float64")
+        self.data = self.data.astype(np.float64)
         self.data /= abs(norm)
 
         return self
@@ -2155,7 +2155,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if npts is None:
             npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
                                   dt)) + 1
-        self.data = func(np.require(self.data, dtype="float64"), old_start,
+        self.data = func(np.require(self.data, dtype=np.float64), old_start,
                          old_dt, starttime, dt, npts, type=method)
         self.stats.starttime = UTCDateTime(starttime)
         self.stats.delta = dt
@@ -2362,7 +2362,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             return self
 
         # use evalresp
-        data = self.data.astype("float64")
+        data = self.data.astype(np.float64)
         npts = len(data)
         # time domain pre-processing
         if zero_mean:
