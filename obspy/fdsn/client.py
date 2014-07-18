@@ -233,7 +233,7 @@ class Client(object):
             suggested to be the preferred magnitude only.
         :type includearrivals: bool, optional
         :param includearrivals: Specify if phase arrivals should be included.
-        :type eventid: str or int, optional
+        :type eventid: str (or int, dependent on data center), optional
         :param eventid: Select a specific event by ID; event identifiers are
             data center specific.
         :type limit: int, optional
