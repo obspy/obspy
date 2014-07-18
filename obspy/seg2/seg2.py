@@ -11,11 +11,11 @@ A file format description is given by [Pullan1990]_.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import PY2
+
 from copy import deepcopy
 import numpy as np
 from struct import unpack
@@ -199,16 +199,16 @@ class SEG2(object):
 
         # Parse the data format code.
         if data_format_code == 4:
-            dtype = 'float32'
+            dtype = np.float32
             sample_size = 4
         elif data_format_code == 5:
-            dtype = 'float64'
+            dtype = np.float64
             sample_size = 8
         elif data_format_code == 1:
-            dtype = 'int16'
+            dtype = np.int16
             sample_size = 2
         elif data_format_code == 2:
-            dtype = 'int32'
+            dtype = np.int32
             sample_size = 4
         elif data_format_code == 3:
             msg = ('\nData format code 3 (20-bit SEG-D floating point) not '
@@ -271,7 +271,7 @@ class SEG2(object):
         # all kinds of subtle changes throughout this file. Separating the
         # handling for Python 2 and 3 seems the cleaner and simpler approach.
         if PY2:
-            strings = [filter(is_good_char, _i)
+            strings = ["".join(filter(is_good_char, _i))
                        for _i in strings
                        if len(_i) >= 3]
         else:

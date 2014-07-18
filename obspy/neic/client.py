@@ -8,10 +8,9 @@ NEIC CWB Query service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from time import sleep
 from obspy import UTCDateTime, read, Stream
@@ -71,15 +70,15 @@ class Client(object):
                     endtime):
         """
         Gets a waveform for a specified net, station, location and channel
-        from starttime to endtime. The individual elements can contain wildcard
-        "?" representing one character, matches of character ranges (e.g.
-        channel="BH[Z12]"). All fields are left justified and padded with
-        spaces to the required field width if they are too short.  Use
-        getWaveformNSCL for seednames specified with regular expressions.
+        from start time to end time. The individual elements can contain
+        wildcard ``"?"`` representing one character, matches of character
+        ranges (e.g. ``channel="BH[Z12]"``). All fields are left justified and
+        padded with spaces to the required field width if they are too short.
+        Use getWaveformNSCL for seednames specified with regular expressions.
 
         .. rubric:: Notes
 
-        Using ".*" regular expression might or might not work. If the 12
+        Using ``".*"`` regular expression might or might not work. If the 12
         character seed name regular expression is less than 12 characters it
         might get padded with spaces on the server side.
 

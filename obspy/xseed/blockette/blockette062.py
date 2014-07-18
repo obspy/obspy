@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, Loop
@@ -42,7 +43,7 @@ class Blockette062(Blockette):
         Float(12, "Upper Bound of Approximation", 12, mask='%+1.5e'),
         Float(13, "Maximum Absolute Error", 12, mask='%+1.5e'),
         Integer(14, "Number of Polynomial Coefficients", 3),
-        #REPEAT fields 15 and 16 for each polynomial coefficient
+        # REPEAT fields 15 and 16 for each polynomial coefficient
         Loop("Polynomial Coefficients", "Number of Polynomial Coefficients", [
             Float(12, "Polynomial Coefficient", 12, mask='%+1.5e'),
             Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),

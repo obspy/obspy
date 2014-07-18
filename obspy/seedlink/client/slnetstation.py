@@ -11,8 +11,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.utcdatetime import UTCDateTime
 
@@ -32,7 +33,7 @@ class SLNetStation(object):
     :var seqnum: SeedLink sequence number of last packet received.
     :type seqnum: int
     :var btime: Time stamp of last packet received.
-    :type btime: TTT
+    :type btime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     """
     MAX_SELECTOR_SIZE = 8
 
@@ -50,7 +51,7 @@ class SLNetStation(object):
         """
         self.net = str(net)
         self.station = str(station)
-        #print "DEBUG: selectors:", selectors
+        # print "DEBUG: selectors:", selectors
         if selectors is not None:
             self.selectors = selectors
         else:

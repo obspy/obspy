@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: mopad.py
 #  Purpose: Moment tensor Plotting and Decomposition tool
 #   Author: Lars Krieger, Sebastian Heimann
 #    Email: lars.krieger@zmaw.de, sebastian.heimann@zmaw.de
 #
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
@@ -64,14 +64,11 @@ USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 """
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
-from future.builtins import zip
-from io import StringIO
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import io
 import math
 import numpy as np
 import os
@@ -246,7 +243,7 @@ class MomentTensor:
         # all 9 elements are given
         if np.prod(np.shape(mech)) == 9:
             if np.shape(mech)[0] == 3:
-                #assure symmetry:
+                # assure symmetry:
                 mech[1, 0] = mech[0, 1]
                 mech[2, 0] = mech[0, 2]
                 mech[2, 1] = mech[1, 2]
@@ -1030,7 +1027,7 @@ class MomentTensor:
         lo_vectors = []
 
         # if list of vectors
-        if type(vectors) == list:
+        if isinstance(vectors, list):
             for vec in vectors:
                 if np.prod(np.shape(vec)) != 3:
                     print('\n please provide vector(s) from R³ \n ')
@@ -1478,11 +1475,11 @@ class MomentTensor:
         return self._plot_clr_order
 
 
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 #
 #   external functions:
 #
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 def _puzzle_basis_transformation(mat_tup_arr_vec, in_basis, out_basis):
     lo_bases = ['NED', 'USE', 'XYZ', 'NWU']
@@ -1880,11 +1877,11 @@ def fancy_vector(v):
         "  \\ %5.2F /\n" % (v[2])
 
 
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 #
 #   Class for plotting:
 #
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 class BeachBall:
     """
@@ -2045,7 +2042,7 @@ class BeachBall:
         file handler.
         """
         colour_Z = colour
-        wstring = '> -Z%i\n' % (colour_Z)
+        wstring = bytes('> -Z%i\n' % (colour_Z), encoding='utf-8')
         FH_string.write(wstring)
         np.savetxt(FH_string, self._GMT_scaling * curve.transpose())
 
@@ -2064,9 +2061,9 @@ class BeachBall:
         pressure_colour = self._GMT_pressure_colour
 
         # build strings for possible GMT-output, used by 'psxy'
-        GMT_string_FH = StringIO()
-        GMT_linestring_FH = StringIO()
-        GMT_EVs_FH = StringIO()
+        GMT_string_FH = io.BytesIO()
+        GMT_linestring_FH = io.BytesIO()
+        GMT_EVs_FH = io.BytesIO()
 
         self._add_2_GMT_string(GMT_EVs_FH, EV_2_plot, tension_colour)
         GMT_EVs_FH.flush()
@@ -2934,7 +2931,7 @@ class BeachBall:
         # down_prime = - ( np.array( ( s_lat, c_lat*c_lon, -c_lat*s_lon ) ) )
         down_prime = -(np.array((s_lat, c_lat * s_lon, -c_lat * c_lon)))
 
-        #normalise:
+        # normalise:
         down_prime /= np.sqrt(np.dot(down_prime, down_prime))
 
         # get second local basis vector " north' " by orthogonalising
@@ -3022,7 +3019,7 @@ class BeachBall:
             rotated_object = rotated_thing.copy()
             setattr(self, '_' + obj + '_rotated', rotated_object.transpose())
 
-    #---------------------------------------------------------------
+    # ---------------------------------------------------------------
 
     def _vertical_2D_projection(self):
         """
@@ -3836,7 +3833,7 @@ class BeachBall:
                 c=self._plot_nodalline_colour, ls='-',
                 lw=self._plot_nodalline_width,
                 alpha=self._plot_nodalline_alpha * self._plot_total_alpha)
-        #ax.plot( neg_nodalline[0,:] ,neg_nodalline[1,:],'go')
+        # ax.plot( neg_nodalline[0,:] ,neg_nodalline[1,:],'go')
 
         ax.plot(pos_nodalline[0, :], pos_nodalline[1, :],
                 c=self._plot_nodalline_colour, ls='-',
@@ -3931,17 +3928,17 @@ class BeachBall:
 
         # plot 4 fake points, guaranteeing full visibilty of the sphere
         ax.plot([0, 1.05, 0, -1.05], [1.05, 0, -1.05, 0], ',', alpha=0.)
-        # scaling behaviour
+        # scaling behavior
         ax.autoscale_view(tight=True, scalex=True, scaley=True)
 
         return plotfig
 
 
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 #
 #  input and call management
 #
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 
 def main():
     """
@@ -4141,7 +4138,7 @@ def main():
         """
         """
         bb = BeachBall(MT, kwargs_dict)
-        return bb.get_psxy(kwargs_dict)
+        return str(bb.get_psxy(kwargs_dict), encoding='utf-8')
 
     def _call_decompose(MT, kwargs_dict):
         """
@@ -4703,11 +4700,11 @@ def main():
                 try:
                     sec_colour_raw = fp_args[2].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
-                            consistent_kwargs_dict['plot_faultplane_colour'] =\
-                                sec_colour_raw[0].lower()[0]
-                        else:
+                        sc = sec_colour_raw[0].lower()[0]
+                        if sc not in list('bgrcmykw'):
                             raise
+                        consistent_kwargs_dict['plot_faultplane_colour'] = \
+                            sec_colour_raw[0].lower()[0]
                     elif len(sec_colour_raw) == 3:
                         for sc in sec_colour_raw:
                             if not 0 <= (int(sc)) <= 255:

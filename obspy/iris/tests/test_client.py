@@ -2,8 +2,9 @@
 """
 The obspy.iris.client test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -150,7 +151,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.202802E+04  1.792007E+02\n')
+                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -159,7 +160,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05 -1.202685E+04 1.677835E+02\n')
+                                 '1.000000E-05 -1.055896E+04 1.473054E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -168,7 +169,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.202802E+04  1.792007E+02\n')
+                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -177,7 +178,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  7.557425E-01  2.692007E+02\n')
+                                 '1.000000E-05  6.635035E-01  2.692007E+02\n')
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -186,7 +187,7 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.202802E+04  1.792007E+02\n')
+                                 '1.000000E-05  1.055999E+04  1.792007E+02\n')
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -195,17 +196,17 @@ class ClientTestCase(unittest.TestCase):
                             filename=tempfile)
             with open(tempfile, 'rt') as fp:
                 self.assertEqual(fp.readline(),
-                                 '1.000000E-05  1.914318E+08  8.920073E+01\n')
+                                 '1.000000E-05  1.680674E+08  8.920073E+01\n')
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
         np.testing.assert_array_equal(
-            data[0], [1.00000000e-05, 1.20280200e+04, 1.79200700e+02])
+            data[0], [1.00000000e-05, 1.05599900e+04, 1.79200700e+02])
         # cs as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='cs')
         np.testing.assert_array_equal(
-            data[0], [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
+            data[0], [1.00000000e-05, -1.05589600e+04, 1.47305400e+02])
 
     def test_resp(self):
         """
@@ -251,7 +252,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st1[0].stats.starttime, st2[0].stats.starttime)
         self.assertEqual(st1[0].stats.endtime, st2[0].stats.endtime)
         self.assertEqual(st1[0].data[0], 24)
-        self.assertAlmostEqual(st2[0].data[0], -2.4910707e-06)
+        self.assertAlmostEqual(st2[0].data[0], -2.8373747e-06)
 
 
 def suite():

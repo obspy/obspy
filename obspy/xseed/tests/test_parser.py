@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from lxml import etree
-import numpy as np
 import obspy
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core import compatibility
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
+
 import gzip
+import io
+from lxml import etree
+import numpy as np
 import os
 import unittest
 import warnings
@@ -325,7 +324,7 @@ class ParserTestCase(unittest.TestCase):
                 xseed_string = parser2.getXSEED(version=version)
                 del parser2
                 # Validate XSEED.
-                doc = etree.parse(compatibility.BytesIO(xseed_string))
+                doc = etree.parse(io.BytesIO(xseed_string))
                 self.assertTrue(xmlschema.validate(doc))
                 del doc
                 parser3 = Parser(xseed_string)
@@ -393,7 +392,7 @@ class ParserTestCase(unittest.TestCase):
         # And the same for yet another dataless file
         #
         filename = os.path.join(self.path, 'nied.dataless.gz')
-        f = compatibility.BytesIO(gzip.open(filename).read())
+        f = io.BytesIO(gzip.open(filename).read())
         sp = Parser(f)
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
@@ -510,7 +509,7 @@ class ParserTestCase(unittest.TestCase):
         """
         Tests RESP file creation from XML-SEED.
         """
-        ### example 1
+        # 1
         # parse Dataless SEED
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
@@ -522,7 +521,7 @@ class ParserTestCase(unittest.TestCase):
             sp2 = Parser(tempfile)
             # create RESP files
             sp2.getRESP()
-        ### example 2
+        # 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp1 = Parser(filename)
@@ -706,28 +705,28 @@ class ParserTestCase(unittest.TestCase):
         tr_r_e = st_r.select(channel="BHE")[0]
 
         # Convert all components to float for easier assertions.
-        tr_z.data = np.require(tr_z.data, dtype="float64")
-        tr_1.data = np.require(tr_1.data, dtype="float64")
-        tr_2.data = np.require(tr_2.data, dtype="float64")
+        tr_z.data = np.require(tr_z.data, dtype=np.float64)
+        tr_1.data = np.require(tr_1.data, dtype=np.float64)
+        tr_2.data = np.require(tr_2.data, dtype=np.float64)
 
         # The total energy should not be different.
         energy_before = np.sum((tr_z.data ** 2) + (tr_1.data ** 2) +
                                (tr_2.data ** 2))
         energy_after = np.sum((tr_r_z.data ** 2) + (tr_r_n.data ** 2) +
                               (tr_r_e.data ** 2))
-        np.testing.assert_allclose(energy_before, energy_after)
+        self.assertTrue(np.allclose(energy_before, energy_after))
 
         # The vertical channel should not have changed at all.
         np.testing.assert_array_equal(tr_z.data, tr_r_z.data)
         # The other two are only rotated by 2 degree so should also not have
         # changed much but at least a little bit. And the components should be
         # renamed.
-        np.testing.assert_allclose(tr_1, tr_r_n, rtol=10E-3)
+        self.assertTrue(np.allclose(tr_1, tr_r_n, rtol=10E-3))
         # The east channel carries very little energy for this particular
         # example. Thus it changes quite a lot even for this very subtle
         # rotation. The energy comparison should still ensure a sensible
         # result.
-        np.testing.assert_allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0)
+        self.assertTrue(np.allclose(tr_2, tr_r_e, atol=tr_r_e.max() / 4.0))
 
 
 def suite():

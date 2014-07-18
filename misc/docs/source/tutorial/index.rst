@@ -7,6 +7,14 @@ This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
 will give you a good idea of the library’s flavor and style.
 
+A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`.
+
+There are also IPython notebooks available online with an
+`introduction to Python <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction.ipynb>`__
+(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction_with_solutions.ipynb>`__)
+and an
+`introduction to ObsPy <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction.ipynb>`__
+(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction_with_solutions.ipynb>`__).
 
 Introduction to ObsPy
 ---------------------
@@ -45,6 +53,7 @@ Introduction to ObsPy
    code_snippets/visualize_data_availability_of_local_waveform_archive
    code_snippets/travel_time_plot
    code_snippets/xcorr_pick_correction
+   code_snippets/quakeml_custom_tags
 
 
 Advanced Exercise

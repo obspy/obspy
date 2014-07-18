@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy Catalog and Event objects.
+obspy.core.event - Classes for handling event metadata
+======================================================
+This module provides a class hierarchy to consistently handle event metadata.
+This class hierarchy is closely modelled after the de-facto standard
+format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
+
+.. figure:: /_images/Event.png
+
+.. note::
+
+    For handling additional information not covered by the QuakeML standard and
+    how to output it to QuakeML see the :ref:`ObsPy Tutorial <quakeml-extra>`.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -8,14 +19,13 @@ Module for handling ObsPy Catalog and Event objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import super
-from future.builtins import str
-from future.builtins import bytes
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    import urllib.request
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
@@ -28,7 +38,9 @@ from obspy.core.util import uncompressFile, _readFromPlugin, \
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
-from obspy.core import compatibility
+
+
+import io
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
@@ -101,13 +113,13 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     elif isinstance(pathname_or_url, bytes) and \
             pathname_or_url.strip().startswith(b'<'):
         # XML string
-        return _read(compatibility.BytesIO(pathname_or_url), format, **kwargs)
-    elif "://" in pathname_or_url:
+        return _read(io.BytesIO(pathname_or_url), format, **kwargs)
+    elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(compatibility.urlopen(pathname_or_url).read())
+            fh.write(urllib.request.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
@@ -116,7 +128,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathnames = glob.glob(pathname)
         if not pathnames:
             # try to give more specific information why the stream is empty
-            if glob.has_magic(pathname) and not glob(pathname):
+            if glob.has_magic(pathname) and not glob.glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)
@@ -543,7 +555,8 @@ class ResourceIdentifier(object):
     >>> assert(id(ref_c.getReferredObject()) == obj_id)
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
-    the convertIDToQuakeMLURI() method. The resulting id will be of the form
+    the convertIDToQuakeMLURI() method. The resulting id will be of the form::
+
         smi:authority_id/prefix/id
 
     >>> res_id = ResourceIdentifier(prefix='origin')
@@ -881,7 +894,7 @@ class CreationInfo(__CreationInfo):
     :param author: Name describing the author of a resource.
     :type author_uri: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param author_uri: Resource Identifier of the author of a resource.
-    :type creation_time: UTCDateTime, optional
+    :type creation_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param creation_time: Time of creation of a resource.
     :type version: str, optional
     :param version: Version string of a resource
@@ -889,6 +902,12 @@ class CreationInfo(__CreationInfo):
     >>> info = CreationInfo(author="obspy.org", version="0.0.1")
     >>> print(info)
     CreationInfo(author='obspy.org', version='0.0.1')
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -913,6 +932,12 @@ class TimeWindow(__TimeWindow):
         point in time window. The value may be zero, but not negative.  Unit: s
     :type reference: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param reference: Reference point in time (“central” point).
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -939,28 +964,28 @@ class CompositeTime(__CompositeTime):
 
     :type year: int
     :param year: Year or range of years of the event’s focal time.
-    :type year_errors: :class:`~obspy.core.util.AttribDict`
+    :type year_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param year_errors: AttribDict containing error quantities.
     :type month: int
     :param month: Month or range of months of the event’s focal time.
-    :type month_errors: :class:`~obspy.core.util.AttribDict`
+    :type month_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param month_errors: AttribDict containing error quantities.
     :type day: int
     :param day: Day or range of days of the event’s focal time.
-    :type day_errors: :class:`~obspy.core.util.AttribDict`
+    :type day_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param day_errors: AttribDict containing error quantities.
     :type hour: int
     :param hour: Hour or range of hours of the event’s focal time.
-    :type hour_errors: :class:`~obspy.core.util.AttribDict`
+    :type hour_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param hour_errors: AttribDict containing error quantities.
     :type minute: int
     :param minute: Minute or range of minutes of the event’s focal time.
-    :type minute_errors: :class:`~obspy.core.util.AttribDict`
+    :type minute_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param minute_errors: AttribDict containing error quantities.
     :type second: float
     :param second: Second and fraction of seconds or range of seconds with
         fraction of the event’s focal time.
-    :type second_errors: :class:`~obspy.core.util.AttribDict`
+    :type second_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param second_errors: AttribDict containing error quantities.
 
     >>> print(CompositeTime(2011, 1, 1))
@@ -968,6 +993,12 @@ class CompositeTime(__CompositeTime):
     >>> # Can also be instantiated with the uncertainties.
     >>> print(CompositeTime(year=2011, year_errors={"uncertainty":1}))
     CompositeTime(year=2011 [uncertainty=1])
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1005,6 +1036,12 @@ class Comment(__Comment):
     >>> comment.creation_info = {"author": "obspy.org"}
     >>> print(comment.creation_info)
     CreationInfo(author='obspy.org')
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1150,16 +1187,19 @@ class Amplitude(__Amplitude):
         attribute unit provides the most likely units that could be needed
         here. For clarity, using the optional unit attribute is highly
         encouraged.
-    :type generic_amplitude_errors: :class:`~obspy.core.util.AttribDict`
+    :type generic_amplitude_errors:
+        :class:`~obspy.core.util.attribdict.AttribDict`
     :param generic_amplitude_errors: AttribDict containing error quantities.
     :type type: str, optional
     :param type: Describes the type of amplitude using the nomenclature from
         Storchak et al. (2003). Possible values are:
-            * unspecified amplitude reading (``'A'``),
-            * amplitude reading for local magnitude (``'AML'``),
-            * amplitude reading for body wave magnitude (``'AMB'``),
-            * amplitude reading for surface wave magnitude (``'AMS'``), and
-            * time of visible end of record for duration magnitude (``'END'``).
+
+        * unspecified amplitude reading (``'A'``),
+        * amplitude reading for local magnitude (``'AML'``),
+        * amplitude reading for body wave magnitude (``'AMB'``),
+        * amplitude reading for surface wave magnitude (``'AMS'``), and
+        * time of visible end of record for duration magnitude (``'END'``).
+
     :type category: str, optional
     :param category:  Amplitude category.  This attribute describes the way the
         waveform trace is evaluated to derive an amplitude value. This can be
@@ -1168,25 +1208,29 @@ class Amplitude(__Amplitude):
         time interval (integral), specifying just a time interval (duration),
         or evaluating a period (period).
         Possible values are:
-            * ``"point"``,
-            * ``"mean"``,
-            * ``"duration"``,
-            * ``"period"``,
-            * ``"integral"``,
-            * ``"other"``
+
+        * ``"point"``,
+        * ``"mean"``,
+        * ``"duration"``,
+        * ``"period"``,
+        * ``"integral"``,
+        * ``"other"``
+
     :type unit: str, optional
     :param unit: Amplitude unit. This attribute provides the most likely
         measurement units for the physical quantity described in the
         genericAmplitude attribute. Possible values are specified as
         combinations of SI base units.
         Possible values are:
-            * ``"m"``,
-            * ``"s"``,
-            * ``"m/s"``,
-            * ``"m/(s*s)"``,
-            * ``"m*s"``,
-            * ``"dimensionless"``,
-            * ``"other"``
+
+        * ``"m"``,
+        * ``"s"``,
+        * ``"m/s"``,
+        * ``"m/(s*s)"``,
+        * ``"m*s"``,
+        * ``"dimensionless"``,
+        * ``"other"``
+
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Describes the method of amplitude determination.
     :type period: float, optional
@@ -1207,41 +1251,53 @@ class Amplitude(__Amplitude):
     :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by ``waveform_id``.
-    :type scaling_time: :class:`~obspy.core.UTCDateTime`, optional
+    :type scaling_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param scaling_time: Scaling time for amplitude measurement.
-    :type scaling_time_errors: :class:`~obspy.core.util.AttribDict`
+    :type scaling_time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param scaling_time_errors: AttribDict containing error quantities.
     :type magnitude_hint: str, optional
     :param magnitude_hint: Type of magnitude the amplitude measurement is used
         for.  This is a free-text field because it is impossible to cover all
         existing magnitude type designations with an enumeration. Possible
         values are:
-            * unspecified magnitude (``'M'``),
-            * local magnitude (``'ML'``),
-            * body wave magnitude (``'Mb'``),
-            * surface wave magnitude (``'MS'``),
-            * moment magnitude (``'Mw'``),
-            * duration magnitude (``'Md'``)
-            * coda magnitude (``'Mc'``)
-            * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+
+        * unspecified magnitude (``'M'``),
+        * local magnitude (``'ML'``),
+        * body wave magnitude (``'Mb'``),
+        * surface wave magnitude (``'MS'``),
+        * moment magnitude (``'Mw'``),
+        * duration magnitude (``'Md'``)
+        * coda magnitude (``'Mc'``)
+        * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Amplitude. Allowed values are
         the following:
-            * ``"manual"``
-            * ``"automatic"``
+
+        * ``"manual"``
+        * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Amplitude. Allowed values
         are the following:
-            * ``"preliminary"``
-            * ``"confirmed"``
-            * ``"reviewed"``
-            * ``"final"``
-            * ``"rejected"``
-            * ``"reported"``
+
+        * ``"preliminary"``
+        * ``"confirmed"``
+        * ``"reviewed"``
+        * ``"final"``
+        * ``"rejected"``
+        * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: CreationInfo for the Amplitude object.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1274,14 +1330,14 @@ class Pick(__Pick):
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type time: :class:`~obspy.core.UTCDateTime`
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param time: Observed onset time of signal (“pick time”).
-    :type time_errors: :class:`~obspy.core.util.AttribDict`
+    :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
-    :param waveform_id: Identifes the waveform stream.
+    :param waveform_id: Identifies the waveform stream.
     :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
-    :param filter_id: dentifies the filter or filter setup used for filtering
+    :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by waveform_id.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Identifies the picker that produced the pick. This can be
@@ -1289,12 +1345,13 @@ class Pick(__Pick):
     :type horizontal_slowness: float, optional
     :param horizontal_slowness: Observed horizontal slowness of the signal.
         Most relevant in array measurements. Unit: s·deg^(−1)
-    :type horizontal_slowness_errors: :class:`~obspy.core.util.AttribDict`
+    :type horizontal_slowness_errors:
+        :class:`~obspy.core.util.attribdict.AttribDict`
     :param horizontal_slowness_errors: AttribDict containing error quantities.
     :type backazimuth: float, optional
     :param backazimuth: Observed backazimuth of the signal. Most relevant in
         array measurements. Unit: deg
-    :type backazimuth_errors: :class:`~obspy.core.util.AttribDict`
+    :type backazimuth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param backazimuth_errors: AttribDict containing error quantities.
     :type slowness_method_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
@@ -1303,36 +1360,50 @@ class Pick(__Pick):
     :type onset: str, optional
     :param onset: Flag that roughly categorizes the sharpness of the onset.
         Allowed values are:
-            * ``"emergent"``
-            * ``"impulsive"``
-            * ``"questionable"``
+
+        * ``"emergent"``
+        * ``"impulsive"``
+        * ``"questionable"``
+
     :type phase_hint: str, optional
     :param phase_hint: Tentative phase identification as specified by the
         picker.
     :type polarity: str, optional
     :param polarity: Indicates the polarity of first motion, usually from
         impulsive onsets. Allowed values are:
-            * ``"positive"``
-            * ``"negative"``
-            * ``"undecidable"``
+
+        * ``"positive"``
+        * ``"negative"``
+        * ``"undecidable"``
+
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Pick. Allowed values are the
         following:
-            * ``"manual"``
-            * ``"automatic"``
+
+        * ``"manual"``
+        * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Pick. Allowed values are
         the following:
-            * ``"preliminary"``
-            * ``"confirmed"``
-            * ``"reviewed"``
-            * ``"final"``
-            * ``"rejected"``
-            * ``"reported"``
+
+        * ``"preliminary"``
+        * ``"confirmed"``
+        * ``"reviewed"``
+        * ``"final"``
+        * ``"rejected"``
+        * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: CreationInfo for the Pick object.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1390,7 +1461,7 @@ class Arrival(__Arrival):
     :type takeoff_angle: float, optional
     :param takeoff_angle: Angle of emerging ray at the source, measured against
         the downward normal direction. Unit: deg
-    :type takeoff_angle_errors: :class:`~obspy.core.util.AttribDict`
+    :type takeoff_angle_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param takeoff_angle_errors: AttribDict containing error quantities.
     :type time_residual: float, optional
     :param time_residual: Residual between observed and expected arrival time
@@ -1424,6 +1495,12 @@ class Arrival(__Arrival):
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: CreationInfo for the Arrival object.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1489,6 +1566,12 @@ class OriginQuality(__OriginQuality):
     :type median_distance: float, optional
     :param median_distance: Median epicentral distance of used stations.
         Unit: deg
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1523,6 +1606,12 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
         direction of the ellipsoid’s minor axis. Corresponds to Tait-Bryan
         angle θ.
         Unit: deg
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1565,12 +1654,20 @@ class OriginUncertainty(__OriginUncertainty):
     :type preferred_description: str, optional
     :param preferred_description: Preferred uncertainty description. Allowed
         values are the following:
-            * horizontal uncertainty
-            * uncertainty ellipse
-            * confidence ellipsoid
+
+        * horizontal uncertainty
+        * uncertainty ellipse
+        * confidence ellipsoid
+
     :type confidence_level: float, optional
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1608,19 +1705,19 @@ class Origin(__Origin):
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type time: :class:`~obspy.core.UTCDateTime`
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param time: Focal time.
-    :type time_errors: :class:`~obspy.core.util.AttribDict`
+    :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param time_errors: AttribDict containing error quantities.
     :type longitude: float
     :param longitude: Hypocenter longitude, with respect to the World Geodetic
         System 1984 (WGS84) reference system. Unit: deg
-    :type longitude_errors: :class:`~obspy.core.util.AttribDict`
+    :type longitude_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param longitude_errors: AttribDict containing error quantities.
     :type latitude: float
     :param latitude: Hypocenter latitude, with respect to the WGS84 reference
         system. Unit: deg
-    :type latitude_errors: :class:`~obspy.core.util.AttribDict`
+    :type latitude_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param latitude_errors: AttribDict containing error quantities.
     :type depth: float, optional
     :param depth: Depth of hypocenter with respect to the nominal sea level
@@ -1630,25 +1727,27 @@ class Origin(__Origin):
         As an example, GSE2.0, defines depth with respect to the local surface.
         If event data is converted from other formats to QuakeML, depth values
         may have to be modified accordingly. Unit: m
-    :type depth_errors: :class:`~obspy.core.util.AttribDict`
+    :type depth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param depth_errors: AttribDict containing error quantities.
     :type depth_type: str, optional
     :param depth_type: Type of depth determination. Allowed values are the
         following:
-            * ``"from location"``
-            * ``"from moment tensor inversion"``
-            * ``"from modeling of broad-band P waveforms"``
-            * ``"constrained by depth phases"``
-            * ``"constrained by direct phases"``
-            * ``"constrained by depth and direct phases"``
-            * ``"operator assigned"``
-            * ``"other"``
+
+        * ``"from location"``
+        * ``"from moment tensor inversion"``
+        * ``"from modeling of broad-band P waveforms"``
+        * ``"constrained by depth phases"``
+        * ``"constrained by direct phases"``
+        * ``"constrained by depth and direct phases"``
+        * ``"operator assigned"``
+        * ``"other"``
+
     :type time_fixed: bool, optional
-    :param time_fixed: Boolean flag. True if focal time was kept fixed for
-        computation of the Origin.
+    :param time_fixed: True if focal time was kept fixed for computation of the
+        Origin.
     :type epicenter_fixed: bool, optional
-    :param epicenter_fixed: Boolean flag. True if epicenter was kept fixed for
-        computation of Origin.
+    :param epicenter_fixed: True if epicenter was kept fixed for computation of
+        Origin.
     :type reference_system_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param reference_system_id: Identifies the reference system used for
@@ -1676,18 +1775,20 @@ class Origin(__Origin):
     :type origin_type: str, optional
     :param origin_type: Describes the origin type. Allowed values are the
         following:
-            * ``"hypocenter"``
-            * ``"centroid"``
-            * ``"amplitude"``
-            * ``"macroseismic"``
-            * ``"rupture start"``
-            * ``"rupture end"``
+
+        * ``"hypocenter"``
+        * ``"centroid"``
+        * ``"amplitude"``
+        * ``"macroseismic"``
+        * ``"rupture start"``
+        * ``"rupture end"``
+
     :type origin_uncertainty: :class:`~obspy.core.event.OriginUncertainty`,
         optional
     :param origin_uncertainty: Describes the location uncertainties of an
         origin.
     :type region: str, optional
-    :param region: Can be used to decribe the geographical region of the
+    :param region: Can be used to describe the geographical region of the
         epicenter location. Useful if an event has multiple origins from
         different agencies, and these have different region designations. Note
         that an event-wide region can be defined in the description attribute
@@ -1696,17 +1797,21 @@ class Origin(__Origin):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Origin. Allowed values are the
         following:
-            * ``"manual"``
-            * ``"automatic"``
+
+        * ``"manual"``
+        * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Origin. Allowed values are
         the following:
-            * ``"preliminary"``
-            * ``"confirmed"``
-            * ``"reviewed"``
-            * ``"final"``
-            * ``"rejected"``
-            * ``"reported"``
+
+        * ``"preliminary"``
+        * ``"confirmed"``
+        * ``"reviewed"``
+        * ``"final"``
+        * ``"rejected"``
+        * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
@@ -1730,6 +1835,12 @@ class Origin(__Origin):
           longitude: 42.0
            latitude: 12.0 [confidence_level=95.0]
          depth_type: ...'from location'
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1757,6 +1868,12 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
         is no rule for the sum of the weights of all station magnitude
         contributions to a specific network magnitude. In particular, the
         weights are not required to sum up to unity.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1793,20 +1910,22 @@ class Magnitude(__Magnitude):
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
         available, this value can represent the reported magnitude.
-    :type mag_errors: :class:`~obspy.core.util.AttribDict`
+    :type mag_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param mag_errors: AttribDict containing error quantities.
     :type magnitude_type: str, optional
     :param magnitude_type: Describes the type of magnitude. This is a free-text
         field because it is impossible to cover all existing magnitude type
         designations with an enumeration. Possible values are:
-            * unspecified magnitude (``'M'``),
-            * local magnitude (``'ML'``),
-            * body wave magnitude (``'Mb'``),
-            * surface wave magnitude (``'MS'``),
-            * moment magnitude (``'Mw'``),
-            * duration magnitude (``'Md'``)
-            * coda magnitude (``'Mc'``)
-            * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+
+        * unspecified magnitude (``'M'``),
+        * local magnitude (``'ML'``),
+        * body wave magnitude (``'Mb'``),
+        * surface wave magnitude (``'MS'``),
+        * moment magnitude (``'Mw'``),
+        * duration magnitude (``'Md'``)
+        * coda magnitude (``'Mc'``)
+        * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+
     :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param origin_id: Reference to an origin’s resource_id if the magnitude has
         an associated Origin.
@@ -1823,18 +1942,22 @@ class Magnitude(__Magnitude):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Magnitude. Allowed values are
         the following:
-            * ``"manual"``
-            * ``"automatic"``
-    :type evaluation_status: :class:`~obspy.core.event.EvaluationStatus`,
-        optional
+
+        * ``"manual"``
+        * ``"automatic"``
+
+    :type evaluation_status:
+        :class:`~obspy.core.event_header.EvaluationStatus`, optional
     :param evaluation_status: Evaluation status of Magnitude. Allowed values
         are the following:
-            * ``"preliminary"``
-            * ``"confirmed"``
-            * ``"reviewed"``
-            * ``"final"``
-            * ``"rejected"``
-            * ``"reported"``
+
+        * ``"preliminary"``
+        * ``"confirmed"``
+        * ``"reviewed"``
+        * ``"final"``
+        * ``"rejected"``
+        * ``"reported"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type station_magnitude_contributions: list of
@@ -1844,6 +1967,12 @@ class Magnitude(__Magnitude):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1874,14 +2003,14 @@ class StationMagnitude(__StationMagnitude):
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: float
     :param mag: Estimated magnitude.
-    :type mag_errors: :class:`~obspy.core.util.AttribDict`
+    :type mag_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param mag_errors: AttribDict containing error quantities.
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: See :class:`~obspy.core.event.Magnitude`
     :type amplitude_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
-    :param amplitude_id: dentifies the data source of the StationMagnitude. For
-        magnitudes derived from amplitudes in waveforms (e.g., local magnitude
-        ML), amplitudeID points to publicID in class Amplitude.
+    :param amplitude_id: Identifies the data source of the StationMagnitude.
+        For magnitudes derived from amplitudes in waveforms (e.g., local
+        magnitude ML), amplitudeID points to publicID in class Amplitude.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: See :class:`~obspy.core.event.Magnitude`
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
@@ -1894,6 +2023,12 @@ class StationMagnitude(__StationMagnitude):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1914,13 +2049,20 @@ class EventDescription(__EventDescription):
     :type type: str, optional
     :param type: Category of earthquake description. Values
         can be taken from the following:
-            * ``"felt report"``
-            * ``"Flinn-Engdahl region"``
-            * ``"local time"``
-            * ``"tectonic summary"``
-            * ``"nearest cities"``
-            * ``"earthquake name"``
-            * ``"region name"``
+
+        * ``"felt report"``
+        * ``"Flinn-Engdahl region"``
+        * ``"local time"``
+        * ``"tectonic summary"``
+        * ``"nearest cities"``
+        * ``"earthquake name"``
+        * ``"region name"``
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1942,28 +2084,34 @@ class Tensor(__Tensor):
 
     :type m_rr: float
     :param m_rr: Moment-tensor element Mrr. Unit: Nm
-    :type m_rr_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_rr_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_rr_errors: AttribDict containing error quantities.
     :type m_tt: float
     :param m_tt: Moment-tensor element Mtt. Unit: Nm
-    :type m_tt_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_tt_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_tt_errors: AttribDict containing error quantities.
     :type m_pp: float
     :param m_pp: Moment-tensor element Mpp. Unit: Nm
-    :type m_pp_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_pp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_pp_errors: AttribDict containing error quantities.
     :type m_rt: float
     :param m_rt: Moment-tensor element Mrt. Unit: Nm
-    :type m_rt_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_rt_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_rt_errors: AttribDict containing error quantities.
     :type m_rp: float
     :param m_rp: Moment-tensor element Mrp. Unit: Nm
-    :type m_rp_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_rp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_rp_errors: AttribDict containing error quantities.
     :type m_tp: float
     :param m_tp: Moment-tensor element Mtp. Unit: Nm
-    :type m_tp_errors: :class:`~obspy.core.util.AttribDict`
+    :type m_tp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param m_tp_errors: AttribDict containing error quantities.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -1984,12 +2132,14 @@ class DataUsed(__DataUsed):
     :type wave_type: str
     :param wave_type: Type of waveform data. This can be one of the following
         values:
-            * ``"P waves"``,
-            * ``"body waves"``,
-            * ``"surface waves"``,
-            * ``"mantle waves"``,
-            * ``"combined"``,
-            * ``"unknown"``
+
+        * ``"P waves"``,
+        * ``"body waves"``,
+        * ``"surface waves"``,
+        * ``"mantle waves"``,
+        * ``"combined"``,
+        * ``"unknown"``
+
     :type station_count: int, optional
     :param station_count: Number of stations that have contributed data of the
         type given in wave_type.
@@ -2000,6 +2150,12 @@ class DataUsed(__DataUsed):
     :param shortest_period: Shortest period present in data. Unit: s
     :type longest_period: float, optional
     :param longest_period: Longest period present in data. Unit: s
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2018,16 +2174,24 @@ class SourceTimeFunction(__SourceTimeFunction):
     :type type: str
     :param type: Type of source time function. Values can be taken from the
         following:
-            * ``"box car"``,
-            * ``"triangle"``,
-            * ``"trapezoid"``,
-            * ``"unknown"``
+
+        * ``"box car"``,
+        * ``"triangle"``,
+        * ``"trapezoid"``,
+        * ``"unknown"``
+
     :type duration: float
     :param duration: Source time function duration. Unit: s
     :type rise_time: float, optional
     :param rise_time: Source time function rise time. Unit: s
     :type decay_time: float, optional
     :param decay_time: Source time function decay time. Unit: s
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2045,16 +2209,22 @@ class NodalPlane(__NodalPlane):
 
     :type strike: float
     :param strike: Strike angle of nodal plane. Unit: deg
-    :type strike_errors: :class:`~obspy.core.util.AttribDict`
+    :type strike_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param strike_errors: AttribDict containing error quantities.
     :type dip: float
     :param dip: Dip angle of nodal plane. Unit: deg
-    :type dip_errors: :class:`~obspy.core.util.AttribDict`
+    :type dip_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param dip_errors: AttribDict containing error quantities.
     :type rake: float
     :param rake: Rake angle of nodal plane. Unit: deg
-    :type rake_errors: :class:`~obspy.core.util.AttribDict`
+    :type rake_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param rake_errors: AttribDict containing error quantities.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2075,19 +2245,25 @@ class Axis(__Axis):
     :param azimuth: Azimuth of eigenvector of moment tensor expressed in
         principal-axes system. Measured clockwise from South-North direction at
         epicenter. Unit: deg
-    :type azimuth_errors: :class:`~obspy.core.util.AttribDict`
+    :type azimuth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param azimuth_errors: AttribDict containing error quantities.
     :type plunge: float
     :param plunge: Plunge of eigenvector of moment tensor expressed in
         principal-axes system. Measured against downward vertical direction at
         epicenter. Unit: deg
-    :type plunge_errors: :class:`~obspy.core.util.AttribDict`
+    :type plunge_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param plunge_errors: AttribDict containing error quantities.
     :type length: float
     :param length: Eigenvalue of moment tensor expressed in principal-axes
         system. Unit: Nm
-    :type length_errors: :class:`~obspy.core.util.AttribDict`
+    :type length_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param length_errors: AttribDict containing error quantities.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2110,9 +2286,15 @@ class NodalPlanes(__NodalPlanes):
     :type nodal_plane_2: :class:`~obspy.core.event.NodalPlane`, optional
     :param nodal_plane_2: Second nodal plane of double-couple moment tensor
         solution.
-    :type preferred_plane: ``1`` or ``2``, optional
+    :type preferred_plane: int, optional
     :param preferred_plane: Indicator for preferred nodal plane of moment
         tensor solution. It can take integer values ``1`` or ``2``.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2134,6 +2316,12 @@ class PrincipalAxes(__PrincipalAxes):
     :param p_axis: P (pressure) axis of a double-couple moment tensor solution.
     :type n_axis: :class:`~obspy.core.event.Axis`, optional
     :param n_axis: N (neutral) axis of a double-couple moment tensor solution.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2179,7 +2367,7 @@ class MomentTensor(__MomentTensor):
     :type scalar_moment: float, optional
     :param scalar_moment: Scalar moment as derived in moment tensor inversion.
         Unit: Nm
-    :type scalar_moment_errors: :class:`~obspy.core.util.AttribDict`
+    :type scalar_moment_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param scalar_moment_errors: AttribDict containing error quantities.
     :type tensor: :class:`~obspy.core.event.Tensor`, optional
     :param tensor: Tensor object holding the moment tensor elements.
@@ -2216,20 +2404,30 @@ class MomentTensor(__MomentTensor):
     :type category: str, optional
     :param category: Moment tensor category. Values can be taken from the
         following:
-            * ``"teleseismic"``,
-            * ``"regional"``
+
+        * ``"teleseismic"``,
+        * ``"regional"``
+
     :type inversion_type: str, optional
     :param inversion_type: Moment tensor inversion type. Users should avoid to
         give contradictory information in inversion_type and method_id. Values
         can be taken from the following:
-            * ``"general"``,
-            * ``"zero trace"``,
-            * ``"double couple"``
+
+        * ``"general"``,
+        * ``"zero trace"``,
+        * ``"double couple"``
+
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2294,17 +2492,21 @@ class FocalMechanism(__FocalMechanism):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of FocalMechanism. Allowed values
         are the following:
-            * ``"manual"``
-            * ``"automatic"``
+
+        * ``"manual"``
+        * ``"automatic"``
+
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of FocalMechanism. Allowed
         values are the following:
-            * ``"preliminary"``
-            * ``"confirmed"``
-            * ``"reviewed"``
-            * ``"final"``
-            * ``"rejected"``
-            * ``"reported"``
+
+        * ``"preliminary"``
+        * ``"confirmed"``
+        * ``"reviewed"``
+        * ``"final"``
+        * ``"rejected"``
+        * ``"reported"``
+
     :type moment_tensor: :class:`~obspy.core.event.MomentTensor`, optional
     :param moment_tensor: Moment tensor description for this focal mechanism.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
@@ -2312,6 +2514,12 @@ class FocalMechanism(__FocalMechanism):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
 
 
@@ -2345,55 +2553,59 @@ class Event(__Event):
     :type event_type: str, optional
     :param event_type: Describes the type of an event. Allowed values are the
         following:
-            * ``"not existing"``
-            * ``"not reported"``
-            * ``"earthquake"``
-            * ``"anthropogenic event"``
-            * ``"collapse"``
-            * ``"cavity collapse"``
-            * ``"mine collapse"``
-            * ``"building collapse"``
-            * ``"explosion"``
-            * ``"accidental explosion"``
-            * ``"chemical explosion"``
-            * ``"controlled explosion"``
-            * ``"experimental explosion"``
-            * ``"industrial explosion"``
-            * ``"mining explosion"``
-            * ``"quarry blast"``
-            * ``"road cut"``
-            * ``"blasting levee"``
-            * ``"nuclear explosion"``
-            * ``"induced or triggered event"``
-            * ``"rock burst"``
-            * ``"reservoir loading"``
-            * ``"fluid injection"``
-            * ``"fluid extraction"``
-            * ``"crash"``
-            * ``"plane crash"``
-            * ``"train crash"``
-            * ``"boat crash"``
-            * ``"other event"``
-            * ``"atmospheric event"``
-            * ``"sonic boom"``
-            * ``"sonic blast"``
-            * ``"acoustic noise"``
-            * ``"thunder"``
-            * ``"avalanche"``
-            * ``"snow avalanche"``
-            * ``"debris avalanche"``
-            * ``"hydroacoustic event"``
-            * ``"ice quake"``
-            * ``"slide"``
-            * ``"landslide"``
-            * ``"rockslide"``
-            * ``"meteorite"``
-            * ``"volcanic eruption"``
+
+        * ``"not existing"``
+        * ``"not reported"``
+        * ``"earthquake"``
+        * ``"anthropogenic event"``
+        * ``"collapse"``
+        * ``"cavity collapse"``
+        * ``"mine collapse"``
+        * ``"building collapse"``
+        * ``"explosion"``
+        * ``"accidental explosion"``
+        * ``"chemical explosion"``
+        * ``"controlled explosion"``
+        * ``"experimental explosion"``
+        * ``"industrial explosion"``
+        * ``"mining explosion"``
+        * ``"quarry blast"``
+        * ``"road cut"``
+        * ``"blasting levee"``
+        * ``"nuclear explosion"``
+        * ``"induced or triggered event"``
+        * ``"rock burst"``
+        * ``"reservoir loading"``
+        * ``"fluid injection"``
+        * ``"fluid extraction"``
+        * ``"crash"``
+        * ``"plane crash"``
+        * ``"train crash"``
+        * ``"boat crash"``
+        * ``"other event"``
+        * ``"atmospheric event"``
+        * ``"sonic boom"``
+        * ``"sonic blast"``
+        * ``"acoustic noise"``
+        * ``"thunder"``
+        * ``"avalanche"``
+        * ``"snow avalanche"``
+        * ``"debris avalanche"``
+        * ``"hydroacoustic event"``
+        * ``"ice quake"``
+        * ``"slide"``
+        * ``"landslide"``
+        * ``"rockslide"``
+        * ``"meteorite"``
+        * ``"volcanic eruption"``
+
     :type event_type_certainty: str, optional
     :param event_type_certainty: Denotes how certain the information on event
         type is. Allowed values are the following:
-            * ``"suspected"``
-            * ``"known"``
+
+        * ``"suspected"``
+        * ``"known"``
+
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
@@ -2416,6 +2628,12 @@ class Event(__Event):
     :type station_magnitudes: list of
         :class:`~obspy.core.event.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
     def short_str(self):
         """
@@ -2498,6 +2716,12 @@ class Catalog(object):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
     def __init__(self, events=None, **kwargs):
         if not events:
@@ -2575,12 +2799,17 @@ class Catalog(object):
             return False
         return True
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __getitem__(self, index):
         """
         __getitem__ method of the Catalog object.
 
         :return: Event objects
         """
+        if index == "extra":
+            return self.__dict__[index]
         if isinstance(index, slice):
             return self.__class__(events=self.events.__getitem__(index))
         else:
@@ -2709,9 +2938,9 @@ class Catalog(object):
         * used_phase_count.
 
         Use ``inverse=True`` to return the Events that *do not* match the
-        specified filter rultes.
+        specified filter rules.
 
-        :rtype: :class:`~obspy.core.stream.Catalog`
+        :rtype: :class:`Catalog`
         :return: Filtered catalog. A new Catalog object with filtered
             Events as references to the original Events.
 
@@ -2877,9 +3106,9 @@ class Catalog(object):
         """
         Saves catalog into a file.
 
-        :type filename: string
+        :type filename: str
         :param filename: The name of the file to write.
-        :type format: string
+        :type format: str
         :param format: The file format to use (e.g. ``"QUAKEML"``). See the
             `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
@@ -2933,19 +3162,23 @@ class Catalog(object):
         Creates preview map of all events in current Catalog object.
 
         :type projection: str, optional
-        :param projection: The map projection. Currently supported are
-                * ``"cyl"`` (Will plot the whole world.)
-                * ``"ortho"`` (Will center around the mean lat/long.)
-                * ``"local"`` (Will plot around local events)
+        :param projection: The map projection. Currently supported are:
+
+            * ``"cyl"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are
-                * ``"c"`` (crude)
-                * ``"l"`` (low)
-                * ``"i"`` (intermediate)
-                * ``"h"`` (high)
-                * ``"f"`` (full)
+            based directly to the basemap module. Possible values are:
+
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
@@ -2954,18 +3187,22 @@ class Catalog(object):
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
         :type label: str, optional
-        :param label:Events will be labeld based on the chosen property.
-            Possible values are
-                * ``"magnitude"``
-                * ``None``
+        :param label: Events will be labelled based on the chosen property.
+            Possible values are:
+
+            * ``"magnitude"``
+            * ``None``
+
             Defaults to ``"magnitude"``
         :type color: str, optional
-        :param color:The events will be color-coded based on the chosen
-            proberty. Possible values are
-                * ``"date"``
-                * ``"depth"``
+        :param color: The events will be color-coded based on the chosen
+            property. Possible values are:
+
+            * ``"date"``
+            * ``"depth"``
+
             Defaults to ``"depth"``
-        :type colormap: str, optional, any matplotlib colormap
+        :type colormap: str, any matplotlib colormap, optional
         :param colormap: The colormap for color-coding the events.
             The event with the smallest property will have the
             color of one end of the colormap and the event with the biggest

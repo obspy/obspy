@@ -8,11 +8,11 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import map
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
@@ -35,8 +35,8 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
-                            'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
+                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS']
 EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
@@ -47,7 +47,7 @@ class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacement for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str
@@ -110,7 +110,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> createEmptyDataChunk(6, np.dtype('complex128'), 0)
+    >>> createEmptyDataChunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -118,6 +118,9 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    # For compatibility with NumPy 1.4
+    if isinstance(dtype, str):
+        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
@@ -224,6 +227,7 @@ ENTRY_POINTS = {
     'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
     'integrate': _getEntryPoints('obspy.plugin.integrate'),
+    'interpolate': _getEntryPoints('obspy.plugin.interpolate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
@@ -296,6 +300,28 @@ def getMatplotlibVersion():
     try:
         import matplotlib
         version = matplotlib.__version__
+        version = version.split("~rc")[0]
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
+def getSciPyVersion():
+    """
+    Get SciPy version information.
+
+    :returns: SciPy version as a list of three integers or ``None`` if scipy
+        import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        import scipy
+        version = scipy.__version__
         version = version.split("~rc")[0]
         version = list(map(toIntOrZero, version.split(".")))
     except ImportError:

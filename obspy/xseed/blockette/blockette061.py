@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, VariableString, \
@@ -47,7 +48,7 @@ class Blockette061(Blockette):
         Integer(6, "Signal In Units", 3, xpath=34),
         Integer(7, "Signal Out Units", 3, xpath=34),
         Integer(8, "Number of Coefficients", 4),
-        #REPEAT field 9 for the Number of Coefficients
+        # REPEAT field 9 for the Number of Coefficients
         Loop("FIR Coefficient", "Number of Coefficients", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]

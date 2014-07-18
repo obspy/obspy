@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile
-from obspy.core import compatibility
+
+import io
 import numpy as np
 import os
 import random
@@ -55,7 +57,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(now, util._convertMSTimeToDatetime(
             util._convertDatetimeToMSTime(now)))
         # Some random date.
-        random.seed(815)  # make test reproducable
+        random.seed(815)  # make test reproducible
         timestring = random.randint(0, 2000000) * 1e6
         self.assertEqual(timestring, util._convertDatetimeToMSTime(
             util._convertMSTimeToDatetime(timestring)))
@@ -85,7 +87,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(open_file.tell(), 1234)
         # Now test with a BytesIO with the first ten percent.
         with open(filename, 'rb') as open_file:
-            open_file_string = compatibility.BytesIO(open_file.read())
+            open_file_string = io.BytesIO(open_file.read())
         open_file_string.seek(111)
         info = util.getRecordInformation(open_file_string)
         self.assertEqual(info['filesize'], 5120 - 111)

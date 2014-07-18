@@ -172,17 +172,22 @@ int test_field(FILE *fptr, char *return_field, int *blkt_no, int *fld_no, char *
 
 int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) {
   char *lcl_ptr, line[MAXLINELEN];
+  char *res;
   int  lcl_blkt, lcl_fld, test;
   int tmpint;
   char tmpstr[200];
-  int i;
+  size_t slen, i;
 
   test = fgetc(fptr);
   
   
   while(test != EOF && test == '#') {
     strncpy(line,"",MAXLINELEN-1);
-    (void) fgets(line, MAXLINELEN, fptr);
+    res = fgets(line, MAXLINELEN, fptr);
+    if (res == NULL) {
+      test = EOF;
+      break;
+    }
     test = fgetc(fptr);
   }
 
@@ -192,9 +197,13 @@ int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) 
   }
   else {
     ungetc(test,fptr);
-    (void ) fgets(line, MAXLINELEN, fptr);
+    res = fgets(line, MAXLINELEN, fptr);
+    if (res == NULL) {
+      return 0;
+    }
 
-  for (i = 0; i < strlen(line); i++)
+  slen = strlen(line);
+  for (i = 0; i < slen; i++)
   {
     if ('\t' == line[i])
       line[i] = ' ';
@@ -277,6 +286,7 @@ int get_line(FILE *fptr, char *return_line, int blkt_no, int fld_no, char *sep) 
 
 int next_line(FILE *fptr, char *return_line, int *blkt_no, int *fld_no, char *sep) {
   char *lcl_ptr, line[MAXLINELEN];
+  char *res;
   int test;
   int tmpint;
   char tmpstr[200];
@@ -284,7 +294,11 @@ int next_line(FILE *fptr, char *return_line, int *blkt_no, int *fld_no, char *se
   test = fgetc(fptr);
 
   while(test != EOF && test == '#') {
-    (void) fgets(line, MAXLINELEN, fptr);
+    res = fgets(line, MAXLINELEN, fptr);
+    if (res == NULL) {
+      test = EOF;
+      break;
+    }
     test = fgetc(fptr);
   }
 
@@ -293,7 +307,10 @@ int next_line(FILE *fptr, char *return_line, int *blkt_no, int *fld_no, char *se
   }
   else {
     ungetc(test,fptr);
-    (void) fgets(line, MAXLINELEN, fptr);
+    res = fgets(line, MAXLINELEN, fptr);
+    if (res == NULL) {
+      return 0;
+    }
     tmpint = strlen(line);        /* strip any trailing CR or LF chars */
     while(tmpint > 0 && line[tmpint-1] < ' ')
       line[--tmpint] = '\0';
@@ -362,7 +379,7 @@ int count_delim_fields(char *line, char *delim) {
   }
   if(strlen((lcl_ptr+line_len))) {
     nfields++;
-  } else if (!strcmp((lcl_ptr+line_len-1),",")) {
+  } else if (line_len && !strcmp((lcl_ptr+line_len-1),",")) {
     nfields++;
   }
 
@@ -409,7 +426,7 @@ int parse_field(char *line, int fld_no, char *return_field) {
                  field exists with that number */
 
 int parse_delim_field(char *line, int fld_no, char *delim, char *return_field) {
-  char *lcl_ptr, *tmp_ptr;
+  char *lcl_ptr, *tmp_ptr = NULL;
   int nfields,  i;
 
   nfields = count_delim_fields(line, delim);
@@ -432,7 +449,6 @@ int parse_delim_field(char *line, int fld_no, char *delim, char *return_field) {
       lcl_ptr = tmp_ptr + 1;
   }
 
-  memset(return_field, 0, sizeof(return_field));
   if(tmp_ptr)
     strncpy(return_field, lcl_ptr, (tmp_ptr-lcl_ptr));
   else
@@ -447,13 +463,18 @@ int parse_delim_field(char *line, int fld_no, char *delim, char *return_field) {
 /* SBH - 2004.079 added code to skip blank lines */
 int check_line(FILE *fptr, int *blkt_no, int *fld_no, char *in_line) {
   char  line[MAXLINELEN];
+  char *res;
   int  test;
   char tmpstr[200];
   int tmpint;
 
   test = fgetc(fptr);
   while(test != EOF && test == '#') {
-    (void) fgets(line, MAXLINELEN, fptr);
+    res = fgets(line, MAXLINELEN, fptr);
+    if (res == NULL) {
+      test = EOF;
+      break;
+    }
     test = fgetc(fptr);
   }
 
@@ -469,7 +490,10 @@ int check_line(FILE *fptr, int *blkt_no, int *fld_no, char *in_line) {
   }
   else {
     ungetc(test,fptr);
-    (void) fgets(line, MAXLINELEN, fptr);
+    res = fgets(line, MAXLINELEN, fptr);
+    if (res == NULL) {
+      return 0;
+    }
 
     /* check for blank line */
 	tmpint = sscanf(line, "%s", tmpstr);
@@ -757,13 +781,17 @@ int add_null(char *s, int len, char where) {
 char line[500];
   int i, denoms, result;
   for (i=0; i<80; i++)	{/* enough to make sure we are getting field 10; not to much to get to the next blockette */
-  	(void) fscanf(fp, "%s", line);
+	result = fscanf(fp, "%s", line);
+	if (result != 1)
+		return 0;
   	if (strncmp (line, "B054F10", 7) == 0)
 		break;
    }
   if (strncmp (line, "B054F10", 7) == 0)	{
 	for (i=0; i<4; i++)
-		(void) fscanf(fp, "%s", line );
+		result = fscanf(fp, "%s", line);
+		if (result != 1)
+			return 0;
 		denoms = atoi (line);
 		if (denoms == 0)
 			result = 0;

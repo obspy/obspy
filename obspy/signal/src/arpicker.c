@@ -253,7 +253,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     memset(b_error,0,ndat*sizeof(float));
 
     // changed to rounding, Moritz
-    n32 = (int)((i2-i3)*2.0+m1_p+nl_p + 0.5);
+    n32 = (int)fmin((i2-i3)*2.0+m1_p+nl_p + 0.5, ndat);
     i3 = i2-n32;
     if(i3 < 0)
         i3 = 0;
@@ -340,6 +340,8 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         }
         i5 += m1_s + nl_s;
         i6 = 0;
+        if (i5 > ndat)
+            i5 = ndat;
         // we try this for now
         //   i6 = i4 - m1_s - nl_s;
 #if 0
@@ -357,7 +359,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         }
         lta_max = 0.;
         for(i=(i5+nlta);i>=i4;i--){
-            if((buf_sta[i-nlta] - buf_lta[i-nlta])<lta_max && i < i5){
+            if(i < i5 && (buf_sta[i-nlta] - buf_lta[i-nlta])<lta_max){
                 lta_max = buf_sta[i-nlta] - buf_lta[i-nlta];
                 i6 = i-nlta;
             }

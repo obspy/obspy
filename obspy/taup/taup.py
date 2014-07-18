@@ -2,13 +2,15 @@
 """
 obspy.taup - Travel time calculation tool
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
 import numpy as np
 import os
 import platform
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.libnames import _get_lib_name, _load_CDLL
 
 
 lib_name = _get_lib_name('tau', add_extension_suffix=False)
@@ -23,10 +25,7 @@ except ImportError:
     # windows using ctypes
     if platform.system() == "Windows":
         import ctypes as C
-        from distutils import sysconfig
-        lib_extension, = sysconfig.get_config_vars('SO')
-        libtau = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                        'lib', lib_name + lib_extension))
+        libtau = _load_CDLL("tau")
 
         def ttimes(delta, depth, modnam):
             delta = C.c_float(delta)
@@ -49,6 +48,8 @@ except ImportError:
                            dddp.ctypes.data_as(C.POINTER(C.c_float)))
             phase_names = np.array([p.value for p in phase_names])
             return phase_names, tt, toang, dtdd, dtdh, dddp
+    else:
+        raise
 
 
 # Directory of obspy.taup.
@@ -76,7 +77,7 @@ def getTravelTimes(delta, depth, model='iasp91'):
     :param delta: Distance in degrees.
     :type depth: float
     :param depth: Depth in kilometer.
-    :type model: string, optional
+    :type model: str, optional
     :param model: Either ``'iasp91'`` or ``'ak135'`` velocity model. Defaults
         to ``'iasp91'``.
     :rtype: list of dicts
@@ -97,6 +98,10 @@ def getTravelTimes(delta, depth, model='iasp91'):
     {'phase_name': 'P', 'dT/dD': 7.1050525, 'take-off angle': 45.169445,
      'time': 497.53741, 'd2T/dD2': -0.0044748308, 'dT/dh': -0.070258446}
     """
+    # Raise an error, otherwise libtau sends an EXIT signal. Depends on the
+    # model but 800 km works for the included models.
+    if depth > 800.00:
+        raise ValueError("Source depth of %.2f km is too deep." % depth)
     model_path = os.path.join(_taup_dir, 'tables', model)
     if not os.path.exists(model_path + os.path.extsep + 'hed') or \
        not os.path.exists(model_path + os.path.extsep + 'tbl'):
@@ -142,12 +147,12 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         Defaults to ``360``.
     :type npoints: int, optional
     :param npoints: Number of points to plot. Defaults to ``1000``.
-    :type phases: list of strings, optional
+    :type phases: list of str, optional
     :param phases: List of phase names which should be used within the plot.
         Defaults to all phases if not explicit set.
     :type depth: float, optional
     :param depth: Depth in kilometer. Defaults to ``100``.
-    :type model: string, optional
+    :type model: str, optional
     :param model: Either ``'iasp91'`` or ``'ak135'`` velocity model.
         Defaults to ``'iasp91'``.
     :return: None

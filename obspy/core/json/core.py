@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.builtins import open
-from future.builtins import str  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import json
 from obspy.core.json import Default
 
@@ -35,7 +36,7 @@ def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
 
     :type obj: :mod:`~obspy.core.event` class object
     :param obj: The ObsPy Event-type object to write.
-    :type filename: string or open file-like object
+    :type filename: str or file
     :param filename: Filename to write or open file-like object.
     :type omit_nulls: bool
     :param omit_nulls: Don't include empty-valued attributes
@@ -55,7 +56,7 @@ def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
         default = Default(omit_nulls=omit_nulls)
         if pretty_print:
             kwargs.setdefault('indent', 2)
-        json_string = json.dumps(obj, default=default, **kwargs)
+        json_string = str(json.dumps(obj, default=default, **kwargs))
         fh.write(json_string)
     finally:
         # Close if a file has been opened by this function.

@@ -3,9 +3,11 @@
 """
 The SacIO test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError, attach_paz, attach_resp
@@ -42,7 +44,7 @@ class SacIOTestCase(unittest.TestCase):
                          -0.95105659961700439, -1.0, -0.95105630159378052,
                          -0.80901658535003662, -0.5877845287322998,
                          -0.30901604890823364, 1.1285198979749111e-06],
-                        dtype='<f4')
+                        dtype=native_str('<f4'))
         sacfile = os.path.join(self.path, 'test.sac')
         t = SacIO()
         t.ReadSacFile(sacfile)
@@ -166,7 +168,7 @@ class SacIOTestCase(unittest.TestCase):
             t.WriteSacBinary(tempfile)
             t2 = SacIO(tempfile)
         b = np.array([18486532.5788 / 1000., 65.654154562, 305.975459869],
-                     dtype='>f4')
+                     dtype=native_str('>f4'))
         self.assertEqual(t2.GetHvalue('dist'), b[0])
         self.assertEqual(t2.GetHvalue('az'), b[1])
         self.assertEqual(t2.GetHvalue('baz'), b[2])
@@ -184,27 +186,27 @@ class SacIOTestCase(unittest.TestCase):
         self.assertEqual(tr.npts, tr.GetHvalue('npts'))
         self.assertEqual(tr.kstnm, tr.GetHvalue('kstnm'))
 
-    ### def test_raiseOnGetDist(self):
-    ###     """
-    ###     Test case to check that SACError is raised if obspy.signal is not
-    ###     installed. SACError must be raised as it is catched by various
-    ###     methods. The import of setuptools introduces a function
-    ###     findall, which recursively searches directories for pth files.
-    ###     Could not get obspy.signal out of the path so far...
-    ###     """
-    ###     t = SacIO()
-    ###     t.SetHvalue('evla',48.15)
-    ###     t.SetHvalue('evlo',11.58333)
-    ###     t.SetHvalue('stla',-41.2869)
-    ###     t.SetHvalue('stlo',174.7746)
-    ###     delete obspy.signal from system path list
-    ###     signal_path = [sys.path.pop(sys.path.index(j)) for j in \
-    ###             [i for i in sys.path if 'obspy.signal' in i]]
-    ###     # delete obspy.signal from all imported modules dict
-    ###     #[sys.modules.pop(i) for i in \
-    ###     #        sys.modules.keys() if 'obspy.signal' in i]
-    ###     self.assertRaises(SacError, t._get_dist_)
-    ###     sys.path.extend(signal_path)
+    # def test_raiseOnGetDist(self):
+    #     """
+    #     Test case to check that SACError is raised if obspy.signal is not
+    #     installed. SACError must be raised as it is catched by various
+    #     methods. The import of setuptools introduces a function
+    #     findall, which recursively searches directories for pth files.
+    #     Could not get obspy.signal out of the path so far...
+    #     """
+    #     t = SacIO()
+    #     t.SetHvalue('evla',48.15)
+    #     t.SetHvalue('evlo',11.58333)
+    #     t.SetHvalue('stla',-41.2869)
+    #     t.SetHvalue('stlo',174.7746)
+    #     delete obspy.signal from system path list
+    #     signal_path = [sys.path.pop(sys.path.index(j)) for j in \
+    #             [i for i in sys.path if 'obspy.signal' in i]]
+    #     # delete obspy.signal from all imported modules dict
+    #     #[sys.modules.pop(i) for i in \
+    #     #        sys.modules.keys() if 'obspy.signal' in i]
+    #     self.assertRaises(SacError, t._get_dist_)
+    #     sys.path.extend(signal_path)
 
     def test_attach_paz(self):
         fvelhz = io.StringIO("""ZEROS 3
@@ -307,14 +309,14 @@ class SacIOTestCase(unittest.TestCase):
         self.assertTrue(tr1.stats.paz.t_shift, 0.4022344)
         # The following plots the comparison between the
         # two frequency response functions.
-        #import pylab as plt
-        #plt.subplot(1,2,1)
-        #plt.loglog(f,amp1)
-        #plt.loglog(f,amp2,'k--')
-        #plt.subplot(1,2,2)
-        #plt.semilogx(f,phase1)
-        #plt.semilogx(f,phase2,'k--')
-        #plt.show()
+        # import pylab as plt
+        # plt.subplot(1,2,1)
+        # plt.loglog(f,amp1)
+        # plt.loglog(f,amp2,'k--')
+        # plt.subplot(1,2,2)
+        # plt.semilogx(f,phase1)
+        # plt.semilogx(f,phase2,'k--')
+        # plt.show()
 
     def test_issue171(self):
         """

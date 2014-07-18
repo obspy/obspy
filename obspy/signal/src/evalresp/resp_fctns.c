@@ -183,7 +183,7 @@ void check_channel(struct channel *chan) {
   struct blkt *filt_blkt, *deci_blkt, *gain_blkt, *ref_blkt;
   int stage_type;
   int  gain_flag, deci_flag, ref_flag;
-  int i, j, nc, nblkts;
+  int i, j, nc;
 
   /* first run a 'sanity-check' of the filter sequence, making sure
      that the units match and that the proper blockettes are found
@@ -385,7 +385,6 @@ void check_channel(struct channel *chan) {
       }
       blkt_ptr = next_blkt;
     }
-    nblkts = j;
 
     /* If not a 'gain-only' stage, run a 'sanity check' for this stage's filter
        sequence.  Do this by reorganizing the filters (regardless of input

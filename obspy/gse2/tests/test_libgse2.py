@@ -3,17 +3,18 @@
 """
 The libgse2 test suite.
 """
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import zip
-from future.builtins import open
-from ctypes import ArgumentError
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.gse2 import libgse2
 from obspy.gse2.libgse2 import ChksumError, GSEUtiError, parse_STA2, \
     compile_STA2
-from obspy.core import compatibility
+
+from ctypes import ArgumentError
+import io
 import numpy as np
 import os
 import unittest
@@ -81,18 +82,18 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
 
-    def test_stringIO(self):
+    def test_bytesIO(self):
         """
-        Checks that reading and writing works via StringIO
+        Checks that reading and writing works via BytesIO.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         with open(gse2file, 'rb') as f:
-            fin = compatibility.BytesIO(f.read())
+            fin = io.BytesIO(f.read())
         header, data = libgse2.read(fin)
         # be sure something es actually read
         self.assertEqual(12000, header['npts'])
         self.assertEqual(1, data[-1])
-        fout = compatibility.BytesIO()
+        fout = io.BytesIO()
         libgse2.write(header, data, fout)
         fout.seek(0)
         newheader, newdata = libgse2.read(fout)
@@ -134,7 +135,7 @@ class LibGSE2TestCase(unittest.TestCase):
         Test that exception is raised when data values exceed the maximum
         of 2^26
         """
-        data = np.array([2 ** 26 + 1], dtype='int32')
+        data = np.array([2 ** 26 + 1], dtype=np.int32)
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
@@ -145,7 +146,7 @@ class LibGSE2TestCase(unittest.TestCase):
                 self.assertRaises(OverflowError, libgse2.write, header, data,
                                   f)
 
-    def test_arrayNotNumpy(self):
+    def test_arrayNotNumPy(self):
         """
         Test if exception is raised when data are not of type int32 NumPy array
         """
@@ -159,7 +160,7 @@ class LibGSE2TestCase(unittest.TestCase):
             with open(testfile, 'wb') as f:
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
                                   f)
-            data = np.array([2, 26, 1], dtype='f')
+            data = np.array([2, 26, 1], dtype=np.float32)
             with open(testfile, 'wb') as f:
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
                                   f)
@@ -191,16 +192,16 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path,
                                 'loc_RJOB20050831023349_first100_dos.z')
-        fout = compatibility.BytesIO()
+        fout = io.BytesIO()
         with open(filename, 'rb') as fin:
             lines = (l for l in fin if not l.startswith(b'DAT2'))
             fout.write(b"".join(lines))
         fout.seek(0)
-        #with CatchOutput() as out:
+        # with CatchOutput() as out:
         with CatchOutput():
             self.assertRaises(GSEUtiError, libgse2.read, fout)
         # XXX: CatchOutput does not work on Py3k, skipping for now
-        #self.assertEqual(out.stdout,
+        # self.assertEqual(out.stdout,
         #                 "decomp_6b: Neither DAT2 or DAT1 found!\n")
 
     def test_parse_STA2(self):

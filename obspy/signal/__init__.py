@@ -188,8 +188,9 @@ and the same page in the `Tutorial`_. For automated use see the following
 .. _`Tutorial`: http://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal.filter import bandpass, bandstop, lowpass, highpass, \
     remezFIR, lowpassFIR, envelope, integerDecimation

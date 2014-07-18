@@ -57,7 +57,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from misc import _get_lib_name  # @UnresolvedImport
+from libnames import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -87,7 +87,7 @@ KEYWORDS = [
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
-    'future>=0.11.4',
+    'future>=0.12.4',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
@@ -96,7 +96,8 @@ INSTALL_REQUIRES = [
     'suds-jurko']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose']}
+              'nose',
+              'pyimgur']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
@@ -272,6 +273,11 @@ ENTRY_POINTS = {
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
     ],
+    'obspy.plugin.interpolate': [
+        'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
+        'weighted_average_slopes = '
+        'obspy.signal.interpolation:weighted_average_slopes',
+    ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
         'rotate_RT_NE = obspy.signal:rotate_RT_NE',
@@ -328,12 +334,15 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    # support library paths containing spaces
-    def _library_dir_option(self, dir):
-        return '"/LIBPATH:%s"' % (dir)
-
+    import distutils
     from distutils.msvc9compiler import MSVCCompiler
-    MSVCCompiler.library_dir_option = _library_dir_option
+
+    # for Python 2.x only -> support library paths containing spaces
+    if distutils.__version__.startswith('2.'):
+        def _library_dir_option(self, dir):
+            return '/LIBPATH:"%s"' % (dir)
+
+        MSVCCompiler.library_dir_option = _library_dir_option
 
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):

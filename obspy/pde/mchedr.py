@@ -12,14 +12,9 @@ Only supports file format revision of February 24, 2004.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import open
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
@@ -31,8 +26,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.decorator import map_example_filename
-from obspy.core import compatibility
+
 from datetime import timedelta
+import io
 import string as s
 import math
 import numpy as np
@@ -103,7 +99,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.fh = compatibility.BytesIO(string)
+        self.fh = io.BytesIO(string)
         self.filename = None
         return self._deserialize()
 
@@ -202,8 +198,8 @@ class Unpickler(object):
     def _angleBetween(self, u1, u2):
         """
         Returns the angle in degrees between unit vectors 'u1' and 'u2':
-        Source: http://stackoverflow.com/questions/2827393/
-                       angles-between-two-n-dimensional-vectors-in-python
+        Source: http://stackoverflow.com/questions/2827393/\
+angles-between-two-n-dimensional-vectors-in-python
         """
         angle = np.arccos(np.dot(u1, u2))
         if np.isnan(angle):
@@ -216,7 +212,7 @@ class Unpickler(object):
     def _latErrToDeg(self, latitude_stderr):
         """
         Convert latitude error from km to degrees
-        using a simple fomula
+        using a simple formula
         """
         if latitude_stderr is not None:
             return round(latitude_stderr / 111.1949, 4)
@@ -226,7 +222,7 @@ class Unpickler(object):
     def _lonErrToDeg(self, longitude_stderr, latitude):
         """
         Convert longitude error from km to degrees
-        using a simple fomula
+        using a simple formula
         """
         if longitude_stderr is not None and latitude is not None:
             return round(longitude_stderr /
@@ -240,22 +236,22 @@ class Unpickler(object):
         """
         date = line[2:10]
         time = line[11:20]
-        #unused: location_quality = line[20]
+        # unused: location_quality = line[20]
         latitude = self._float(line[21:27])
         lat_type = line[27]
         longitude = self._float(line[29:36])
         lon_type = line[36]
         depth = self._float(line[38:43])
-        #unused: depth_quality = line[43]
+        # unused: depth_quality = line[43]
         standard_dev = self._float(line[44:48])
         station_number = self._int(line[48:51])
-        #unused: version_flag = line[51]
+        # unused: version_flag = line[51]
         FE_region_number = line[52:55]
         FE_region_name = self._decodeFERegionNumber(FE_region_number)
         source_code = line[55:60].strip()
 
         event = Event()
-        #FIXME: a smarter way to define evid?
+        # FIXME: a smarter way to define evid?
         evid = date + time
         res_id = '/'.join((res_id_prefix, 'event', evid))
         event.resource_id = ResourceIdentifier(id=res_id)
@@ -285,9 +281,9 @@ class Unpickler(object):
         origin.quality = OriginQuality()
         origin.quality.associated_station_count = station_number
         origin.quality.standard_error = standard_dev
-        #associated_phase_count can be incremented in records 'P ' and 'S '
+        # associated_phase_count can be incremented in records 'P ' and 'S '
         origin.quality.associated_phase_count = 0
-        #depth_phase_count can be incremented in record 'S '
+        # depth_phase_count can be incremented in record 'S '
         origin.quality.depth_phase_count = 0
         origin.type = 'hypocenter'
         origin.region = FE_region_name
@@ -380,7 +376,7 @@ class Unpickler(object):
         # This is called "intermediate_axis_length",
         # but it is definitively a "semi_intermediate_axis_length",
         # since in most cases:
-        #   (intermediate_axis_length / 2) < semi_minor_axis_lenght
+        #   (intermediate_axis_length / 2) < semi_minor_axis_length
         intermediate_axis_length = self._float(line[32:40])
         semi_minor_axis_azimuth = self._float(line[40:46])
         semi_minor_axis_plunge = self._float(line[46:51])
@@ -394,35 +390,35 @@ class Unpickler(object):
             semi_minor_axis_length = intermediate_axis_length
             origin.depth_type = 'operator assigned'
 
-        #FIXME: The following code needs to be double-checked!
-        semi_major_axis_unit_vect =\
+        # FIXME: The following code needs to be double-checked!
+        semi_major_axis_unit_vect = \
             self._sphericalToCartesian((1,
                                         semi_major_axis_azimuth,
                                         semi_major_axis_plunge))
-        semi_minor_axis_unit_vect =\
+        semi_minor_axis_unit_vect = \
             self._sphericalToCartesian((1,
                                         semi_minor_axis_azimuth,
                                         semi_minor_axis_plunge))
-        major_axis_rotation =\
+        major_axis_rotation = \
             self._angleBetween(semi_major_axis_unit_vect,
                                semi_minor_axis_unit_vect)
 
         origin.origin_uncertainty = OriginUncertainty()
-        origin.origin_uncertainty.preferred_description =\
+        origin.origin_uncertainty.preferred_description = \
             'confidence ellipsoid'
         origin.origin_uncertainty.confidence_level = 90
         confidence_ellipsoid = ConfidenceEllipsoid()
-        confidence_ellipsoid.semi_major_axis_length =\
+        confidence_ellipsoid.semi_major_axis_length = \
             semi_major_axis_length * 1000
-        confidence_ellipsoid.semi_minor_axis_length =\
+        confidence_ellipsoid.semi_minor_axis_length = \
             semi_minor_axis_length * 1000
-        confidence_ellipsoid.semi_intermediate_axis_length =\
+        confidence_ellipsoid.semi_intermediate_axis_length = \
             intermediate_axis_length * 1000
         confidence_ellipsoid.major_axis_plunge = semi_major_axis_plunge
         confidence_ellipsoid.major_axis_azimuth = semi_major_axis_azimuth
         # We need to add 90 to match NEIC QuakeML format,
         # but I don't understand why...
-        confidence_ellipsoid.major_axis_rotation =\
+        confidence_ellipsoid.major_axis_rotation = \
             major_axis_rotation + 90
         origin.origin_uncertainty.confidence_ellipsoid = confidence_ellipsoid
 
@@ -434,16 +430,16 @@ class Unpickler(object):
         phase_number = self._int(line[2:6])
         station_number = self._int(line[7:10])
         gap = self._float(line[10:15])
-        #unused: official_mag = line[16:19]
-        #unused: official_mag_type = line[19:21]
-        #unused: official_mag_source_code = line[21:26]
-        #unused: deaths_field_descriptor = line[27]
-        #unused: dead_people = line[28:35]
-        #unused: injuries_field_descriptor = line[35]
-        #unused: injured_people = line[36:43]
-        #unused: damaged_buildings_descriptor = line[43]
-        #unused: damaged_buildings = line[44:51]
-        #unused: event_quality_flag = line[51]
+        # unused: official_mag = line[16:19]
+        # unused: official_mag_type = line[19:21]
+        # unused: official_mag_source_code = line[21:26]
+        # unused: deaths_field_descriptor = line[27]
+        # unused: dead_people = line[28:35]
+        # unused: injuries_field_descriptor = line[35]
+        # unused: injured_people = line[36:43]
+        # unused: damaged_buildings_descriptor = line[43]
+        # unused: damaged_buildings = line[44:51]
+        # unused: event_quality_flag = line[51]
 
         origin.quality.used_phase_count = phase_number
         origin.quality.used_station_count = station_number
@@ -462,7 +458,7 @@ class Unpickler(object):
             event.comments.append(comment)
             comment.text = line[2:60]
         # strip non printable-characters
-        comment.text =\
+        comment.text = \
             "".join(x for x in comment.text if x in s.printable)
 
     def _parseRecordAH(self, line, event):
@@ -471,14 +467,14 @@ class Unpickler(object):
         """
         date = line[2:10]
         time = line[11:20]
-        #unused: hypocenter_quality = line[20]
+        # unused: hypocenter_quality = line[20]
         latitude = self._float(line[21:27])
         lat_type = line[27]
         longitude = self._float(line[29:36])
         lon_type = line[36]
-        #unused: preliminary_flag = line[37]
+        # unused: preliminary_flag = line[37]
         depth = self._float(line[38:43])
-        #unused: depth_quality = line[43]
+        # unused: depth_quality = line[43]
         standard_dev = self._floatUnused(line[44:48])
         station_number = self._intUnused(line[48:51])
         phase_number = self._intUnused(line[51:55])
@@ -516,7 +512,7 @@ class Unpickler(object):
         mag2_type = line[46:48]
 
         evid = event.resource_id.id.split('/')[-1]
-        #this record is to be associated to the latest origin
+        # this record is to be associated to the latest origin
         origin = event.origins[-1]
         self._storeUncertainty(origin.time_errors, orig_time_stderr)
         self._storeUncertainty(origin.latitude_errors,
@@ -564,7 +560,7 @@ class Unpickler(object):
         if orig_time_stderr == 'FX':
             orig_time_stderr = 'Fixed'
         else:
-            orig_time_stderr =\
+            orig_time_stderr = \
                 self._floatWithFormat(orig_time_stderr, '2.1', scale)
         centroid_latitude = self._floatWithFormat(line[17:21], '4.2')
         lat_type = line[21]
@@ -594,7 +590,7 @@ class Unpickler(object):
         component_number = self._intZero(line[43:46])
         station_number2 = self._intZero(line[46:48])
         component_number2 = self._intZero(line[48:51])
-        #unused: half_duration = self._floatWithFormat(line[51:54], '3.1')
+        # unused: half_duration = self._floatWithFormat(line[51:54], '3.1')
         moment = self._floatWithFormat(line[54:56], '2.1')
         moment_stderr = self._floatWithFormat(line[56:58], '2.1')
         moment_exponent = self._int(line[58:60])
@@ -604,7 +600,7 @@ class Unpickler(object):
             moment_stderr *= math.pow(10, moment_exponent)
 
         evid = event.resource_id.id.split('/')[-1]
-        #Create a new origin only if centroid time is defined:
+        # Create a new origin only if centroid time is defined:
         origin = None
         if centroid_origin_time.strip() != '.':
             origin = Origin()
@@ -612,11 +608,11 @@ class Unpickler(object):
                                evid, source_contributor.lower(),
                                'mw' + computation_type.lower()))
             origin.resource_id = ResourceIdentifier(id=res_id)
-            origin.creation_info =\
+            origin.creation_info = \
                 CreationInfo(agency_id=source_contributor)
             date = event.origins[0].time.strftime('%Y%m%d')
             origin.time = UTCDateTime(date + centroid_origin_time)
-            #Check if centroid time is on the next day:
+            # Check if centroid time is on the next day:
             if origin.time < event.origins[0].time:
                 origin.time += timedelta(days=1)
             self._storeUncertainty(origin.time_errors, orig_time_stderr)
@@ -638,9 +634,9 @@ class Unpickler(object):
                 self._storeUncertainty(origin.depth_errors,
                                        depth_stderr, scale=1000)
             quality = OriginQuality()
-            quality.used_station_count =\
+            quality.used_station_count = \
                 station_number + station_number2
-            quality.used_phase_count =\
+            quality.used_phase_count = \
                 component_number + component_number2
             origin.quality = quality
             origin.type = 'centroid'
@@ -650,15 +646,15 @@ class Unpickler(object):
                            evid, source_contributor.lower(),
                            'mw' + computation_type.lower()))
         focal_mechanism.resource_id = ResourceIdentifier(id=res_id)
-        focal_mechanism.creation_info =\
+        focal_mechanism.creation_info = \
             CreationInfo(agency_id=source_contributor)
         moment_tensor = MomentTensor()
         if origin is not None:
             moment_tensor.derived_origin_id = origin.resource_id
         else:
-            #this is required for QuakeML validation:
+            # this is required for QuakeML validation:
             res_id = '/'.join((res_id_prefix, 'no-origin'))
-            moment_tensor.derived_origin_id =\
+            moment_tensor.derived_origin_id = \
                 ResourceIdentifier(id=res_id)
         for mag in event.magnitudes:
             if mag.creation_info.agency_id == source_contributor:
@@ -676,22 +672,22 @@ class Unpickler(object):
         if computation_type == 'C':
             res_id = '/'.join((res_id_prefix, 'methodID=CMT'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
-            #CMT algorithm uses long-period body waves,
-            #very-long-period surface waves and
-            #intermediate period surface waves (since 2004
-            #for shallow and intermediate-depth earthquakes
+            # CMT algorithm uses long-period body waves,
+            # very-long-period surface waves and
+            # intermediate period surface waves (since 2004
+            # for shallow and intermediate-depth earthquakes
             # --Ekstrom et al., 2012)
             data_used.wave_type = 'combined'
         if computation_type == 'M':
             res_id = '/'.join((res_id_prefix, 'methodID=moment_tensor'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
-            #FIXME: not sure which kind of data is used by
-            #"moment tensor" algorithm.
+            # FIXME: not sure which kind of data is used by
+            # "moment tensor" algorithm.
             data_used.wave_type = 'unknown'
         elif computation_type == 'B':
             res_id = '/'.join((res_id_prefix, 'methodID=broadband_data'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
-            #FIXME: is 'combined' correct here?
+            # FIXME: is 'combined' correct here?
             data_used.wave_type = 'combined'
         elif computation_type == 'F':
             res_id = '/'.join((res_id_prefix, 'methodID=P-wave_first_motion'))
@@ -700,8 +696,8 @@ class Unpickler(object):
         elif computation_type == 'S':
             res_id = '/'.join((res_id_prefix, 'methodID=scalar_moment'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
-            #FIXME: not sure which kind of data is used
-            #for scalar moment determination.
+            # FIXME: not sure which kind of data is used
+            # for scalar moment determination.
             data_used.wave_type = 'unknown'
         moment_tensor.data_used = [data_used]
         focal_mechanism.moment_tensor = moment_tensor
@@ -805,22 +801,22 @@ class Unpickler(object):
         phase = line[7:15]
         arrival_time = line[15:24]
         residual = self._float(line[25:30])
-        #unused: residual_flag = line[30]
+        # unused: residual_flag = line[30]
         distance = self._float(line[32:38])  # degrees
         azimuth = self._float(line[39:44])
         backazimuth = round(azimuth % -360 + 180, 1)
         mb_period = self._float(line[44:48])
         mb_amplitude = self._float(line[48:55])  # nanometers
         mb_magnitude = self._float(line[56:59])
-        #unused: mb_usage_flag = line[59]
+        # unused: mb_usage_flag = line[59]
 
         origin = event.origins[0]
         evid = event.resource_id.id.split('/')[-1]
         waveform_id = WaveformStreamID()
         waveform_id.station_code = station
-        #network_code is required for QuakeML validation
+        # network_code is required for QuakeML validation
         waveform_id.network_code = '  '
-        station_string =\
+        station_string = \
             waveform_id.getSEEDString()\
             .replace(' ', '-').replace('.', '_').lower()
         prefix = '/'.join((res_id_prefix, 'waveformstream',
@@ -831,7 +827,7 @@ class Unpickler(object):
         pick.resource_id = ResourceIdentifier(prefix=prefix)
         date = origin.time.strftime('%Y%m%d')
         pick.time = UTCDateTime(date + arrival_time)
-        #Check if pick is on the next day:
+        # Check if pick is on the next day:
         if pick.time < origin.time:
             pick.time += timedelta(days=1)
         pick.waveform_id = waveform_id
@@ -866,13 +862,13 @@ class Unpickler(object):
             station_magnitude.resource_id = ResourceIdentifier(prefix=prefix)
             station_magnitude.origin_id = origin.resource_id
             station_magnitude.mag = mb_magnitude
-            #station_magnitude.mag_errors['uncertainty'] = 0.0
+            # station_magnitude.mag_errors['uncertainty'] = 0.0
             station_magnitude.station_magnitude_type = 'Mb'
             station_magnitude.amplitude_id = amplitude.resource_id
             station_magnitude.waveform_id = pick.waveform_id
             res_id = '/'.join(
                 (res_id_prefix, 'magnitude/generic/body_wave_magnitude'))
-            station_magnitude.method_id =\
+            station_magnitude.method_id = \
                 ResourceIdentifier(id=res_id)
             event.station_magnitudes.append(station_magnitude)
         arrival = Arrival()
@@ -889,7 +885,7 @@ class Unpickler(object):
         origin.quality.minimum_distance = min(
             d for d in (arrival.distance, origin.quality.minimum_distance)
             if d is not None)
-        origin.quality.maximum_distance =\
+        origin.quality.maximum_distance = \
             max(arrival.distance, origin.quality.minimum_distance)
         origin.quality.associated_phase_count += 1
         return pick, arrival
@@ -898,19 +894,19 @@ class Unpickler(object):
         """
         Parses the 'surface wave record' M
         """
-        #unused: Z_comp = line[7]
+        # unused: Z_comp = line[7]
         Z_period = self._float(line[9:13])
         # note: according to the format documentation,
         # column 20 should be blank. However, it seems that
         # Z_amplitude includes that column
         Z_amplitude = self._float(line[13:21])  # micrometers
-        #TODO: N_comp and E_comp seems to be never there
+        # TODO: N_comp and E_comp seems to be never there
         MSZ_mag = line[49:52]
         Ms_mag = self._float(line[53:56])
-        #unused: Ms_usage_flag = line[56]
+        # unused: Ms_usage_flag = line[56]
 
         evid = event.resource_id.id.split('/')[-1]
-        station_string =\
+        station_string = \
             pick.waveform_id.getSEEDString()\
             .replace(' ', '-').replace('.', '_').lower()
         amplitude = None
@@ -959,23 +955,23 @@ class Unpickler(object):
             arrivals.append((phase, arrival_time))
 
         evid = event.resource_id.id.split('/')[-1]
-        station_string =\
+        station_string = \
             p_pick.waveform_id.getSEEDString()\
             .replace(' ', '-').replace('.', '_').lower()
         origin = event.origins[0]
         for phase, arrival_time in arrivals:
             if phase[0:2] == 'D=':
-                #unused: depth = self._float(phase[2:7])
+                # unused: depth = self._float(phase[2:7])
                 try:
                     depth_usage_flag = phase[7]
                 except IndexError:
-                    #usage flag is not defined
+                    # usage flag is not defined
                     depth_usage_flag = None
-                #FIXME: I'm not sure that 'X' actually
-                #means 'used'
+                # FIXME: I'm not sure that 'X' actually
+                # means 'used'
                 if depth_usage_flag == 'X':
-                    #FIXME: is this enough to say that
-                    #the event is constained by depth pahses?
+                    # FIXME: is this enough to say that
+                    # the event is constained by depth pahses?
                     origin.depth_type = 'constrained by depth phases'
                     origin.quality.depth_phase_count += 1
             else:
@@ -985,7 +981,7 @@ class Unpickler(object):
                 pick.resource_id = ResourceIdentifier(prefix=prefix)
                 date = origin.time.strftime('%Y%m%d')
                 pick.time = UTCDateTime(date + arrival_time)
-                #Check if pick is on the next day:
+                # Check if pick is on the next day:
                 if pick.time < origin.time:
                     pick.time += timedelta(days=1)
                 pick.waveform_id = p_pick.waveform_id

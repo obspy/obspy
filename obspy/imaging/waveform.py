@@ -1,41 +1,42 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: waveform.py
 #  Purpose: Waveform plotting for obspy.Stream objects
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Lion Krischer
-#---------------------------------------------------------------------
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import str
-from future.builtins import range
-from future.utils import native_str
-from copy import copy
-from datetime import datetime
-from obspy import UTCDateTime, Stream, Trace
-from obspy.core import compatibility
-from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
-    getMatplotlibVersion, locations2degrees
-from obspy.core.util.decorator import deprecated_keywords
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
-import matplotlib.patches as patches
-import numpy as np
-import scipy.signal as signal
-import warnings
+# --------------------------------------------------------------------
 """
 Waveform plotting for obspy.Stream objects.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
+
+from obspy import UTCDateTime, Stream, Trace
+from obspy.core.preview import mergePreviews
+from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
+    getMatplotlibVersion, locations2degrees
+from obspy.core.util.decorator import deprecated_keywords
+
+from copy import copy
+from datetime import datetime
+import io
+import matplotlib.pyplot as plt
+from matplotlib.path import Path
+import matplotlib.patches as patches
+import numpy as np
+import scipy.signal as signal
+import warnings
+
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
@@ -291,7 +292,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = compatibility.BytesIO()
+                imgdata = io.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)
@@ -420,10 +421,7 @@ class WaveformPlotting(object):
                                  top=self.subplots_adjust_top,
                                  bottom=self.subplots_adjust_bottom)
         # Create x_value_array.
-        aranged_array = np.arange(self.width)
-        x_values = np.empty(2 * self.width)
-        x_values[0::2] = aranged_array
-        x_values[1::2] = aranged_array
+        x_values = np.repeat(np.arange(self.width), 2)
         intervals = self.extreme_values.shape[0]
         # Loop over each step.
         for _i in range(intervals):
@@ -468,6 +466,7 @@ class WaveformPlotting(object):
                                      format="catalog",
                                      min_magnitude=events["min_magnitude"])
             except Exception as e:
+                events = None
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
                 warnings.warn(msg)
@@ -704,7 +703,7 @@ class WaveformPlotting(object):
             trace.data = np.ma.concatenate(concat)
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
-        trace.data = np.require(trace.data, 'float64') * calib
+        trace.data = np.require(trace.data, np.float64) * calib
         ax.plot(
             trace.data, color=self.color, linewidth=self.linewidth,
             linestyle=self.linestyle)
@@ -796,10 +795,7 @@ class WaveformPlotting(object):
                            minmax[:, 0].min(),
                            minmax[:, 1].max()])
         # Finally plot the data.
-        x_values = np.empty(2 * self.width)
-        aranged = np.arange(self.width)
-        x_values[0::2] = aranged
-        x_values[1::2] = aranged
+        x_values = np.repeat(np.arange(self.width), 2)
         # Initialize completely masked array. This version is a little bit
         # slower than first creating an empty array and then setting the mask
         # to True. But on NumPy 1.1 this results in a 0-D array which can not
@@ -1101,10 +1097,10 @@ class WaveformPlotting(object):
                       for _i in tick_steps]
         self.axis[0].set_yticks(ticks)
         self.axis[0].set_yticklabels(ticklabels, size=self.y_labels_size)
-        #Show time zone label if request
+        # Show time zone label if request
         if self.show_y_UTC_label:
             self.axis[0].set_ylabel(label)
-        #In case of right verticals labels
+        # In case of right verticals labels
         if self.right_vertical_labels:
             yrange = self.axis[0].get_ylim()
             self.twin_x = self.axis[0].twinx()
@@ -1116,7 +1112,7 @@ class WaveformPlotting(object):
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
 
-    def plotSection(self, *args, **kwargs):
+    def plotSection(self, *args, **kwargs):  # @UnusedVariable
         """
         Plots multiple waveforms as a record section on a single plot.
         """
@@ -1179,7 +1175,7 @@ class WaveformPlotting(object):
         Arrange the trace data used for plotting.
 
         If necessary the data is resampled before
-        beeing collected in a continuous list.
+        being collected in a continuous list.
         """
         # Extract distances from st[].stats.distance
         # or from st.[].stats.coordinates.latitude...
@@ -1201,8 +1197,8 @@ class WaveformPlotting(object):
                         self.stream[_tr].stats.coordinates.longitude,
                         self.ev_coord[0], self.ev_coord[1])
             except:
-                msg = 'Define latitude/longitude in trace.stats.coordinates' +\
-                    ' and ev_lat/ev_lon. See documentation.'
+                msg = 'Define latitude/longitude in trace.stats.' + \
+                    'coordinates and ev_lat/ev_lon. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
         if self.sect_offset_min is None:
@@ -1303,7 +1299,7 @@ class WaveformPlotting(object):
         self.__sectNormalizeTraces()
         # Calculate scaling factor
         self.__sectScaleTraces()
-        # ax.plot() prefered over containers
+        # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
             # Scale, normalize and shift traces by offset
             # for plotting
@@ -1326,7 +1322,7 @@ class WaveformPlotting(object):
             # Normalize the whole stream
             self._tr_normfac.fill(self._tr_max_count_glob)
         else:
-            msg = 'Define a normalisation method. Valid normalisations' +\
+            msg = 'Define a normalisation method. Valid normalisations' + \
                 'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
 

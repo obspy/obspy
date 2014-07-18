@@ -17,8 +17,8 @@
 #include "libmseed.h"
 
 void ms_loginit_main (MSLogParam *logp,
-		      void (*log_print)(char*), const char *logprefix,
-		      void (*diag_print)(char*), const char *errprefix);
+		      void (*log_print)(const char*), const char *logprefix,
+		      void (*diag_print)(const char*), const char *errprefix);
 
 int ms_log_main (MSLogParam *logp, int level, va_list *varlist);
 
@@ -34,8 +34,8 @@ MSLogParam gMSLogParam = {NULL, NULL, NULL, NULL};
  * See ms_loginit_main() description for usage.
  ***************************************************************************/
 void
-ms_loginit (void (*log_print)(char*), const char *logprefix,
-	    void (*diag_print)(char*), const char *errprefix)
+ms_loginit (void (*log_print)(const char*), const char *logprefix,
+	    void (*diag_print)(const char*), const char *errprefix)
 {
   ms_loginit_main(&gMSLogParam, log_print, logprefix, diag_print, errprefix);
 }  /* End of ms_loginit() */
@@ -55,8 +55,8 @@ ms_loginit (void (*log_print)(char*), const char *logprefix,
  ***************************************************************************/
 MSLogParam *
 ms_loginit_l (MSLogParam *logp,
-	      void (*log_print)(char*), const char *logprefix,
-	      void (*diag_print)(char*), const char *errprefix)
+	      void (*log_print)(const char*), const char *logprefix,
+	      void (*diag_print)(const char*), const char *errprefix)
 {
   MSLogParam *llog;
   
@@ -110,8 +110,8 @@ ms_loginit_l (MSLogParam *logp,
  ***************************************************************************/
 void
 ms_loginit_main (MSLogParam *logp,
-		 void (*log_print)(char*), const char *logprefix,
-		 void (*diag_print)(char*), const char *errprefix)
+		 void (*log_print)(const char*), const char *logprefix,
+		 void (*diag_print)(const char*), const char *errprefix)
 {
   if ( ! logp )
     return;
@@ -258,6 +258,7 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
       if ( logp->errprefix != NULL )
         {
           strncpy (message, logp->errprefix, MAX_LOG_MSG_LENGTH);
+          message[MAX_LOG_MSG_LENGTH-1] = '\0';
         }
       else
         {
@@ -285,6 +286,7 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
       if ( logp->logprefix != NULL )
         {
           strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
+          message[MAX_LOG_MSG_LENGTH-1] = '\0';
         }
       
       presize = strlen(message);
@@ -308,6 +310,7 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
       if ( logp->logprefix != NULL )
         {
           strncpy (message, logp->logprefix, MAX_LOG_MSG_LENGTH);
+          message[MAX_LOG_MSG_LENGTH-1] = '\0';
         }
       
       presize = strlen(message);

@@ -31,13 +31,15 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
-from obspy.core.compatibility import StringIO
+
+import io
 import numpy as np
 
 
@@ -128,7 +130,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
             elif line.startswith('TIMESERIES'):
                 # new header line
                 key = True
-                buf.append((line, StringIO()))
+                buf.append((line, io.StringIO()))
             elif headonly:
                 # skip data for option headonly
                 continue
@@ -193,7 +195,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
             elif line.startswith('TIMESERIES'):
                 # new header line
                 key = True
-                buf.append((line, StringIO()))
+                buf.append((line, io.StringIO()))
             elif headonly:
                 # skip data for option headonly
                 continue
@@ -323,7 +325,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
             else:
                 data = trace.data
             data = data.reshape((-1, 6))
-            np.savetxt(fh, data, delimiter='\t',
+            np.savetxt(fh, data, delimiter=b'\t',
                        fmt=fmt.encode('ascii', 'strict'))
             if rest:
                 fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
@@ -430,28 +432,27 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
             # write data
             times = np.linspace(stats.starttime.timestamp,
                                 stats.endtime.timestamp, stats.npts)
-            times = [UTCDateTime(t) for t in times]
-            data = np.vstack((times, trace.data)).T
-            # .26s cuts the Z from the time string
-            np.savetxt(fh, data,
-                       fmt=("%.26s  " + fmt).encode('ascii', 'strict'))
+            for t, d in zip(times, trace.data):
+                # .26s cuts the Z from the time string
+                line = ('%.26s  ' + fmt + '\n') % (UTCDateTime(t), d)
+                fh.write(line.encode('ascii', 'strict'))
 
 
 def _parse_data(data, data_type):
     """
-    Simple function to read data contained in a StringIO object to a numpy
+    Simple function to read data contained in a StringIO object to a NumPy
     array.
 
-    :type data: StringIO.StringIO object.
+    :type data: io.StringIO
     :param data: The actual data.
-    :type data_type: String
+    :type data_type: str
     :param data_type: The data type of the expected data. Currently supported
         are 'INTEGER' and 'FLOAT'.
     """
     if data_type == "INTEGER":
-        dtype = "int"
+        dtype = np.int_
     elif data_type == "FLOAT":
-        dtype = "float32"
+        dtype = np.float32
     else:
         raise NotImplementedError
     # Seek to the beginning of the StringIO.
@@ -461,7 +462,7 @@ def _parse_data(data, data_type):
     if len(data.read(1)) == 0:
         return np.array([], dtype=dtype)
     data.seek(0)
-    return loadtxt(data, dtype=dtype, ndlim=1)
+    return loadtxt(data, dtype=dtype, ndmin=1)
 
 
 if __name__ == '__main__':

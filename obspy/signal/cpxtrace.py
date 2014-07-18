@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#--------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: cpxtrace.py
 #   Author: Conny Hammer
 #    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Complex Trace Analysis
 
@@ -16,10 +16,9 @@ Complex Trace Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from numpy import size, pi
 from scipy import signal
@@ -45,8 +44,8 @@ def envelope(data):
         input data.
     """
     nfft = util.nextpow2(data.shape[size(data.shape) - 1])
-    A_cpx = np.zeros((data.shape), dtype='complex64')
-    A_abs = np.zeros((data.shape), dtype='float64')
+    A_cpx = np.zeros((data.shape), dtype=np.complex64)
+    A_abs = np.zeros((data.shape), dtype=np.float64)
     if (np.size(data.shape) > 1):
         i = 0
         for row in data:
@@ -84,7 +83,7 @@ def normEnvelope(data, fs, smoothie, fk):
     fs = float(fs)
     if (size(x[1].shape) > 1):
         i = 0
-        Anorm = np.zeros(x[1].shape[0], dtype='float64')
+        Anorm = np.zeros(x[1].shape[0], dtype=np.float64)
         for row in x[1]:
             A_win_smooth = util.smooth(row, int(np.floor(len(row) / 3)))
             # Differentiation of original signal, dA/dt
@@ -111,10 +110,10 @@ def normEnvelope(data, fs, smoothie, fk):
         dAnorm = signal.lfilter(fk, 1, Anorm_add)
         # correct start and end values of time derivative
         dAnorm = dAnorm[size(fk) - 1:size(dAnorm)]
-        #dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
+        # dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
         return Anorm, dAnorm
     else:
-        Anorm = np.zeros(1, dtype='float64')
+        Anorm = np.zeros(1, dtype=np.float64)
         A_win_smooth = util.smooth(x[1], smoothie)
         # Differentiation of original signal, dA/dt
         # Better, because faster, calculation of A_win_add
@@ -154,7 +153,7 @@ def centroid(data, fk):
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):
-        centroid = np.zeros(x[1].shape[0], dtype='float64')
+        centroid = np.zeros(x[1].shape[0], dtype=np.float64)
         i = 0
         for row in x[1]:
             # Integral within window
@@ -177,7 +176,7 @@ def centroid(data, fk):
         dcentroid = dcentroid[size(fk) - 1:size(dcentroid)]
         return centroid, dcentroid
     else:
-        centroid = np.zeros(1, dtype='float64')
+        centroid = np.zeros(1, dtype=np.float64)
         # Integral within window
         half = 0.5 * sum(x[1])
         # Estimate energy centroid
@@ -209,7 +208,7 @@ def instFreq(data, fs, fk):
     """
     x = envelope(data)
     if (size(x[0].shape) > 1):
-        omega = np.zeros(x[0].shape[0], dtype='float64')
+        omega = np.zeros(x[0].shape[0], dtype=np.float64)
         i = 0
         for row in x[0]:
             f = np.real(row)
@@ -241,7 +240,7 @@ def instFreq(data, fs, fk):
         domega = domega[size(fk) - 1:size(domega)]
         return omega, domega
     else:
-        omega = np.zeros(size(x[0]), dtype='float64')
+        omega = np.zeros(size(x[0]), dtype=np.float64)
         f = np.real(x[0])
         h = np.imag(x[0])
         # faster alternative to calculate f_add
@@ -279,7 +278,7 @@ def instBwith(data, fs, fk):
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):
-        sigma = np.zeros(x[1].shape[0], dtype='float64')
+        sigma = np.zeros(x[1].shape[0], dtype=np.float64)
         i = 0
         for row in x[1]:
             # faster alternative to calculate A_win_add
@@ -287,7 +286,7 @@ def instBwith(data, fs, fk):
                 ([row[0]] * (np.size(fk) // 2), row,
                  [row[np.size(row) - 1]] * (np.size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
-            #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
+            # t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             # correct start and end values
             t = t[size(fk) - 1:size(t)]
             sigma_win = abs((t * fs) / (row * 2 * pi))
@@ -298,12 +297,12 @@ def instBwith(data, fs, fk):
             ([sigma[0]] * (np.size(fk) // 2), sigma,
              [sigma[np.size(sigma) - 1]] * (np.size(fk) // 2)))
         dsigma = signal.lfilter(fk, 1, sigma_add)
-        #dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
+        # dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
         # correct start and end values
         dsigma = dsigma[size(fk) - 1:size(dsigma)]
         return sigma, dsigma
     else:
-        sigma = np.zeros(size(x[0]), dtype='float64')
+        sigma = np.zeros(size(x[0]), dtype=np.float64)
         # faster alternative to calculate A_win_add
         A_win_add = np.hstack(
             ([row[0]] * (np.size(fk) // 2), row,

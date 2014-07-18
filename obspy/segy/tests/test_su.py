@@ -2,13 +2,14 @@
 """
 The obspy.segy Seismic Unix test suite.
 """
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.segy import readSU, SEGYTraceReadingError
-from obspy.core import compatibility
+
+import io
 import numpy as np
 import os
 import unittest
@@ -48,8 +49,8 @@ class SUTestCase(unittest.TestCase):
 
     def test_enforcingByteordersWhileReading(self):
         """
-        Tests whether or not enforcing the byteorder while reading and writing
-        does something and works at all. Using the wrong byteorder will most
+        Tests whether or not enforcing the byte order while reading and writing
+        does something and works at all. Using the wrong byte order will most
         likely raise an Exception.
         """
         # This file is little endian.
@@ -66,7 +67,7 @@ class SUTestCase(unittest.TestCase):
 
     def test_readingAndWritingDifferentByteorders(self):
         """
-        Writing different byteorders should not change
+        Writing different byte orders should not change
         """
         # This file is little endian.
         file = os.path.join(self.path, '1.su_first_trace')
@@ -106,7 +107,7 @@ class SUTestCase(unittest.TestCase):
         su = readSU(file)
         data = su.traces[0].data
         # The data is written as integer so it is also converted to float32.
-        correct_data = np.require(np.load(data_file).ravel(), 'float32')
+        correct_data = np.require(np.load(data_file).ravel(), np.float32)
         # Compare both.
         np.testing.assert_array_equal(correct_data, data)
 
@@ -118,7 +119,7 @@ class SUTestCase(unittest.TestCase):
         filename = os.path.join(self.path, '1.su_first_trace')
         with open(filename, 'rb') as fp:
             data = fp.read()
-        st = readSU(compatibility.BytesIO(data))
+        st = readSU(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
 
 

@@ -8,10 +8,11 @@ SAC bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from obspy import Trace, Stream
 from obspy.sac.sacio import SacIO, _isText
 import os
@@ -22,7 +23,7 @@ def isSAC(filename):
     """
     Checks whether a file is a SAC file or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a SAC file.
@@ -73,7 +74,7 @@ def isSAC(filename):
                 return False
             if delta <= 0:
                 return False
-            if leven != 0 and leven != 1:
+            if leven != 0 and leven != 1 and leven != -12345:
                 return False
             if lpspol != 0 and lpspol != 1 and lpspol != -12345:
                 return False
@@ -90,7 +91,7 @@ def isSACXY(filename):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: Alphanumeric SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.
@@ -99,10 +100,10 @@ def isSACXY(filename):
 
     >>> isSACXY('/path/to/testxy.sac')  #doctest: +SKIP
     """
-    ### First find out if it is a text or a binary file. This should
-    ### always be true if a file is a text-file and only true for a
-    ### binary file in rare occasions (Recipe 173220 found on
-    ### http://code.activestate.com/
+    # First find out if it is a text or a binary file. This should
+    # always be true if a file is a text-file and only true for a
+    # binary file in rare occasions (Recipe 173220 found on
+    # http://code.activestate.com/
     if not _isText(filename, blocksize=512):
         return False
     try:

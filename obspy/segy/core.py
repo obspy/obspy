@@ -8,10 +8,10 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import open
-from future.builtins import super
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
@@ -130,17 +130,18 @@ def readSEGY(filename, headonly=False, byteorder=None,
 
     :type filename: str
     :param filename: SEG Y rev1 file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If set to True, read only the header and omit the waveform
         data.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If it is ``None``, it will try
         to autodetect the endianness. The endianness is always valid for the
         whole file. Defaults to ``None``.
-    :type textual_header_encoding: ``'EBCDIC'``, ``'ASCII'`` or ``None``
-    :param textual_header_encoding: The encoding of the textual header. If it
-        is ``None``, autodetection will be attempted. Defaults to ``None``.
+    :type textual_header_encoding: str or ``None``
+    :param textual_header_encoding: The encoding of the textual header. Can be
+        ``'EBCDIC'``, ``'ASCII'`` or ``None``. If it is ``None``, autodetection
+        will be attempted. Defaults to ``None``.
     :type unpack_trace_headers: bool, optional
     :param unpack_trace_headers: Determines whether or not all trace header
         values will be unpacked during reading. If ``False`` it will greatly
@@ -262,14 +263,14 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     :param data_encoding: The data encoding is an integer with the following
         currently supported meaning:
 
-            ``1``
-                4 byte IBM floating points (float32)
-            ``2``
-                4 byte Integers (int32)
-            ``3``
-                2 byte Integer (int16)
-            ``5``
-                4 byte IEEE floating points (float32)
+        ``1``
+            4 byte IBM floating points (float32)
+        ``2``
+            4 byte Integers (int32)
+        ``3``
+            2 byte Integer (int16)
+        ``5``
+            4 byte IEEE floating points (float32)
 
         The value in the brackets is the necessary dtype of the data. ObsPy
         will now automatically convert the data because data might change/loose
@@ -281,17 +282,17 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         point numbers) will be used. Different data encodings for different
         traces are currently not supported because these will most likely not
         be readable by other software.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If is ``None``, it will either
         be the endianness of the first Trace or if that is also not set, it
         will be big endian. A mix between little and big endian for the headers
         and traces is currently not supported.
-    :type textual_header_encoding: ``'EBCDIC'``, ``'ASCII'`` or ``None``
-    :param textual_header_encoding: The encoding of the textual header. If it
-        is ``None``, the textual_file_header_encoding attribute in the
-        stats.segy dictionary of the first Trace is used and if that is not
-        set, ASCII will be used.
+    :type textual_header_encoding: str or ``None``
+    :param textual_header_encoding: The encoding of the textual header. Can be
+        ``'EBCDIC'``, ``'ASCII'`` or ``None``. If it is ``None``, the
+        textual_file_header_encoding attribute in the stats.segy dictionary of
+        the first Trace is used and if that is not set, ASCII will be used.
 
     This function will automatically set the data encoding field of the binary
     file header so the user does not need to worry about it.
@@ -462,10 +463,10 @@ def readSU(filename, headonly=False, byteorder=None,
 
     :type filename: str
     :param filename: SU file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If set to True, read only the header and omit the waveform
         data.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If it is ``None``, it will try
         to autodetect the endianness. The endianness is always valid for the
@@ -571,7 +572,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     :param stream: The ObsPy Stream object to write.
     :type filename: str
     :param filename: Name of file to write.
-    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :type byteorder: str or ``None``
     :param byteorder: Determines the endianness of the file. Either ``'>'`` for
         big endian or ``'<'`` for little endian. If is ``None``, it will either
         be the endianness of the first Trace or if that is also not set, it
@@ -584,7 +585,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     # Check that the dtype for every Trace is correct.
     for trace in stream:
         # Check the dtype.
-        if trace.data.dtype != 'float32':
+        if trace.data.dtype != np.float32:
             msg = """
             The dtype of the data is not float32.  You need to manually convert
             the dtype. Please refer to the obspy.segy manual for more details.
@@ -694,8 +695,8 @@ class LazyTraceHeaderAttribDict(AttribDict):
     """
     This version of AttribDict will unpack header values only if needed.
 
-    This saves a huge amount of memory. The disadvantage is that it is no more
-    possible to use tab completion in e.g. ipython.
+    This saves a huge amount of memory. The disadvantage is that it is no
+    longer possible to use tab completion in e.g. ipython.
 
     This version is used for the SEGY/SU trace headers.
     """

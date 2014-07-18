@@ -177,7 +177,7 @@ lil_free(LinkedIDList * lil)
 }
 
 // Print function that does nothing.
-void empty_print(char *string) {}
+void empty_print(const char *string) {}
 
 
 // Function that reads from a MiniSEED binary file from a char buffer and
@@ -186,7 +186,7 @@ LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
                  int header_byteorder, long (*allocData) (int, char),
-                 void (*diag_print) (char*), void (*log_print) (char*))
+                 void (*diag_print) (const char*), void (*log_print) (const char*))
 {
     int retcode = 0;
     int retval = 0;
@@ -249,7 +249,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         msr = msr_init(NULL);
         if ( msr == NULL ) {
             ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
-            return -1;
+            return NULL;
         }
         if (verbose > 1) {
             ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
@@ -281,6 +281,49 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // way libmseed can take care to not overstep bounds.
         retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
         if (retcode != MS_NOERROR) {
+            switch ( retcode ) {
+                case MS_ENDOFFILE:
+                    ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
+                              "parsing record starting at offset %d. The rest "
+                              "of the file will not be read.\n", offset);
+                    break;
+                case MS_GENERROR:
+                    ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
+                              "record starting at offset %d. The rest of the "
+                              "file will not be read.\n", offset);
+                    break;
+                case MS_NOTSEED:
+                    ms_log(1, "readMSEEDBuffer(): Record starting at offset "
+                              "%d is not valid SEED. The rest of the file "
+                              "will not be read.\n", offset);
+                    break;
+                case MS_WRONGLENGTH:
+                    ms_log(1, "readMSEEDBuffer(): Length of data read was not "
+                              "correct when parsing record starting at "
+                              "offset %d. The rest of the file will not be "
+                              "read.\n", offset);
+                    break;
+                case MS_OUTOFRANGE:
+                    ms_log(1, "readMSEEDBuffer(): SEED record length out of "
+                              "range for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                case MS_UNKNOWNFORMAT:
+                    ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
+                              "format for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                case MS_STBADCOMPFLAG:
+                    ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
+                              "flag(s) in record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                default:
+                    ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
+                              "record starting at offset %d. The rest of the "
+                              "file will not be read.\n", retcode, offset);
+                    break;
+            }
             msr_free(&msr);
             break;
         }
@@ -322,8 +365,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
         recordCurrent->record = msr;
 
-        // Determine the byteorder swapflag only for the very first record. The byteorder
-        // should not change within the file.
+        // Determine the byte order swapflag only for the very first record.
+        // The byte order should not change within the file.
         // XXX: Maybe check for every record?
         if (swapflag <= 0) {
             // Returns 0 if the host is little endian, otherwise 1.

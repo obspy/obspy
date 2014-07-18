@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: rotate.py
 #  Purpose: Various Seismogram Rotation Functions
 #   Author: Tobias Megies, Tom Richter, Lion Krischer
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009-2013 Tobias Megies, Tom Richter, Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Seismogram Rotation Functions
 
@@ -17,8 +17,9 @@ Various Seismogram Rotation Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from math import pi, sin, cos
 import numpy as np
@@ -31,7 +32,7 @@ def rotate_NE_RT(n, e, ba):
     The North- and East-Component of a seismogram will be rotated in Radial
     and Transversal Component. The angle is given as the back-azimuth, that is
     defined as the angle measured between the vector pointing from the station
-    to the source and the vector pointing from the station to the north.
+    to the source and the vector pointing from the station to the North.
 
     :type n: :class:`~numpy.ndarray`
     :param n: Data of the North component of the seismogram.
@@ -54,7 +55,7 @@ def rotate_RT_NE(n, e, ba):
     """
     Rotates horizontal components of a seismogram.
 
-    Rotates from radial and tranversal components to north and east
+    Rotates from radial and transversal components to North and East
     components.
 
     This is the inverse transformation of the transformation described
@@ -131,7 +132,7 @@ def rotate_LQT_ZNE(l, q, t, ba, inc):
 def _dip_azimuth2ZSE_base_vector(dip, azimuth):
     """
     Helper function converting a vector described with azimuth and dip of unit
-    length to a vector in the ZSE (vertical, south, east) base.
+    length to a vector in the ZSE (Vertical, South, East) base.
 
     The definition of azimuth and dip is according to the SEED reference
     manual, as are the following examples (they use rounding for small
@@ -180,8 +181,8 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
         np.sin(azimuth) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
 
     # Now simply rotate a north pointing unit vector with both matrixes.
-    temp = np.array([azimuth_rotation_matrix.dot([0.0, -1.0, 0.0])]).ravel()
-    return np.array(dip_rotation_matrix.dot(temp)).ravel()
+    temp = np.dot(azimuth_rotation_matrix, [[0.0], [-1.0], [0.0]])
+    return np.array(np.dot(dip_rotation_matrix, temp)).ravel()
 
 
 def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
@@ -190,13 +191,13 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     Rotates an arbitrarily oriented three-component vector to ZNE.
 
     Each components orientation is described with a azimuth and a dip. The
-    azimuth is defined as the degrees from north, clockwise and the dip is the
+    azimuth is defined as the degrees from North, clockwise and the dip is the
     defined as the number of degrees, down from horizontal. Both definitions
     are according to the SEED standard.
 
     The three components need not be orthogonal to each other but the
     components have to be linearly independent. The function performs a full
-    base change to orthogonal vertical, north, and east orientations.
+    base change to orthogonal Vertical, North, and East orientations.
 
     :param data_1: Data component 1.
     :param azimuth_1: The azimuth of component 1.
@@ -208,7 +209,7 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     :param azimuth_3: The azimuth of component 3.
     :param dip_3: The dip of component 3.
 
-    :rtype: Tuple of three numpy arrays.
+    :rtype: Tuple of three NumPy arrays.
     :returns: The three rotated components, oriented in Z, N, and E.
 
     >>> # An input of ZNE yields an output of ZNE
@@ -224,7 +225,7 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
             np.arange(3) * 3, 0, -90) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 3., 6.]), array([ 0., 1., 2.]), array([ 0., 2., 4.]))
     """
-    # Internally works in vertical, south, and east components; a right handed
+    # Internally works in Vertical, South, and East components; a right handed
     # coordinate system.
 
     # Define the base vectors of the old base in terms of the new base vectors.
@@ -236,12 +237,12 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     T = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
 
     # Apply it.
-    z, s, e = T.dot([data_1, data_2, data_3])
-    # Replace all negative zeros. These might confuse some futher processing
+    z, s, e = np.dot(T, [data_1, data_2, data_3])
+    # Replace all negative zeros. These might confuse some further processing
     # programs.
     z = np.array(z).ravel()
     z[z == -0.0] = 0
-    # Return a north pointing array.
+    # Return a North pointing array.
     n = -1.0 * np.array(s).ravel()
     n[n == -0.0] = 0
     e = np.array(e).ravel()

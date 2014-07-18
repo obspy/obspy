@@ -2,19 +2,18 @@
 """
 The obspy.segy test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.core import compatibility
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
 from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile, \
     readSEGY
 from obspy.segy.tests.header import FILES, DTYPES
+
+import io
 import numpy as np
 import os
 import unittest
@@ -81,7 +80,7 @@ class SEGYTestCase(unittest.TestCase):
                 f.seek(3200 + 400 + 240)
                 packed_data = f.read(count * size)
             # The pack functions all write to file objects.
-            f = compatibility.BytesIO()
+            f = io.BytesIO()
             # Pack the data.
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_format](f, data, endian)
             # Read again.0.
@@ -102,9 +101,9 @@ class SEGYTestCase(unittest.TestCase):
                 # Read the data as uint8 to be able to directly access the
                 # different bytes.
                 # Original data.
-                packed_data = np.fromstring(packed_data, 'uint8')
+                packed_data = np.fromstring(packed_data, np.uint8)
                 # Newly written.
-                new_packed_data = np.fromstring(new_packed_data, 'uint8')
+                new_packed_data = np.fromstring(new_packed_data, np.uint8)
 
                 # Figure out the non normalized fractions in the original data
                 # because these cannot be compared directly.
@@ -137,8 +136,8 @@ class SEGYTestCase(unittest.TestCase):
                 # to get 4 byte numbers.
                 packed_data_copy = packed_data.copy()
                 new_packed_data_copy = new_packed_data.copy()
-                packed_data_copy.dtype = 'int32'
-                new_packed_data_copy.dtype = 'int32'
+                packed_data_copy.dtype = np.int32
+                new_packed_data_copy.dtype = np.int32
                 # Equalize the non normalized parts.
                 packed_data_copy[non_normalized] = \
                     new_packed_data_copy[non_normalized]
@@ -149,19 +148,19 @@ class SEGYTestCase(unittest.TestCase):
                 # same.
                 data = data[non_normalized]
                 # Unpack the data again.
-                new_packed_data.dtype = 'int32'
+                new_packed_data.dtype = np.int32
                 new_packed_data = new_packed_data[non_normalized]
                 length = len(new_packed_data)
-                f = compatibility.BytesIO()
+                f = io.BytesIO()
                 f.write(new_packed_data.tostring())
                 f.seek(0, 0)
                 new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
                     f, length, endian)
                 f.close()
-                packed_data.dtype = 'int32'
+                packed_data.dtype = np.int32
                 packed_data = packed_data[non_normalized]
                 length = len(packed_data)
-                f = compatibility.BytesIO()
+                f = io.BytesIO()
                 f.write(packed_data.tostring())
                 f.seek(0, 0)
                 old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
@@ -189,11 +188,11 @@ class SEGYTestCase(unittest.TestCase):
             data = 200000.0 * np.random.ranf(50000) - 100000.0
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
-                f = compatibility.BytesIO()
+                f = io.BytesIO()
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
@@ -219,11 +218,11 @@ class SEGYTestCase(unittest.TestCase):
             data = 1E-5 * np.random.ranf(50000)
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
-                f = compatibility.BytesIO()
+                f = io.BytesIO()
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
@@ -248,11 +247,11 @@ class SEGYTestCase(unittest.TestCase):
         data = np.array(data)
         # Convert to float64 in case native floats are different to be
         # able to utilize double precision.
-        data = np.require(data, 'float64')
+        data = np.require(data, np.float64)
         # Loop over little and big endian.
         for endian in endians:
             # Pack.
-            f = compatibility.BytesIO()
+            f = io.BytesIO()
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
             # Jump to beginning and read again.
             f.seek(0, 0)
@@ -275,7 +274,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_header = f.read(400)
             header = SEGYBinaryFileHeader(header=org_header, endian=endian)
             # The header writes to a file like object.
-            new_header = compatibility.BytesIO()
+            new_header = io.BytesIO()
             header.write(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -306,7 +305,7 @@ class SEGYTestCase(unittest.TestCase):
                 # Assert the encoding and compare with known values.
                 self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
-            new_header = compatibility.BytesIO()
+            new_header = io.BytesIO()
             segy._writeTextualHeader(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -328,7 +327,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_header = f.read(240)
             header = SEGYTraceHeader(header=org_header, endian=endian)
             # The header writes to a file like object.
-            new_header = compatibility.BytesIO()
+            new_header = io.BytesIO()
             header.write(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -361,8 +360,8 @@ class SEGYTestCase(unittest.TestCase):
             # tested again here.
             if len(non_normalized_samples) != 0:
                 # Convert to 4 byte integers. Any 4 byte numbers work.
-                org_data = np.fromstring(org_data, 'int32')
-                new_data = np.fromstring(new_data, 'int32')
+                org_data = np.fromstring(org_data, np.int32)
+                new_data = np.fromstring(new_data, np.int32)
                 # Skip the header (4*960 bytes) and replace the non normalized
                 # data samples.
                 org_data[960:][non_normalized_samples] = \
@@ -371,7 +370,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
             # Always write the SEGY File revision number!
-            #org_data[3500:3502] = new_data[3500:3502]
+            # org_data[3500:3502] = new_data[3500:3502]
             # Test the identity without the SEGY revision number
             self.assertEqual(org_data[:3500], new_data[:3500])
             self.assertEqual(org_data[3502:], new_data[3502:])
@@ -549,31 +548,31 @@ class SEGYTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'example.y_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(compatibility.BytesIO(data))
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 500)
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(compatibility.BytesIO(data))
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2050)
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(compatibility.BytesIO(data))
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(compatibility.BytesIO(data))
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2001)
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(compatibility.BytesIO(data))
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
 
 

@@ -9,9 +9,10 @@ Various additional utilities for obspy.signal.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native
 
 from scipy import signal, fix, fftpack
 import ctypes as C
@@ -81,14 +82,14 @@ def nextpow2(i):
     """
     Find the next power of two
 
-    >>> nextpow2(5)
+    >>> int(nextpow2(5))
     8
-    >>> nextpow2(250)
+    >>> int(nextpow2(250))
     256
     """
-    # do not use numpy here, math is much faster for single values
+    # do not use NumPy here, math is much faster for single values
     buf = M.ceil(M.log(i) / M.log(2))
-    return int(M.pow(2, buf))
+    return native(int(M.pow(2, buf)))
 
 
 def prevpow2(i):
@@ -100,7 +101,7 @@ def prevpow2(i):
     >>> prevpow2(250)
     128
     """
-    # do not use numpy here, math is much faster for single values
+    # do not use NumPy here, math is much faster for single values
     return int(M.pow(2, M.floor(M.log(i, 2))))
 
 
@@ -136,10 +137,10 @@ def enframe(x, win, inc):
     if (nwin == 1):
         length = win
     else:
-        #length = nextpow2(nwin)
+        # length = nextpow2(nwin)
         length = nwin
     nf = int(fix((nx - length + inc) // inc))
-    #f = np.zeros((nf, length))
+    # f = np.zeros((nf, length))
     indf = inc * np.arange(nf)
     inds = np.arange(length) + 1
     f = x[(np.transpose(np.vstack([indf] * length)) +
@@ -154,7 +155,7 @@ def enframe(x, win, inc):
 
 def smooth(x, smoothie):
     """
-    Smoothes a given signal by computing a central moving average.
+    Smooths a given signal by computing a central moving average.
 
     :param x: signal to smooth
     :param smoothie: number of past/future values to calculate moving average
@@ -163,23 +164,23 @@ def smooth(x, smoothie):
     size_x = np.size(x)
     if smoothie > 0:
         if (len(x) > 1 and len(x) < size_x):
-            #out_add = append(append([x[0,:]]*smoothie,x,axis=0),
+            # out_add = append(append([x[0,:]]*smoothie,x,axis=0),
             #                     [x[(len(x)-1),:]]*smoothie,axis=0)
-            #out_add = (np.append([x[0, :]]*int(smoothie), x, axis=0))
+            # out_add = (np.append([x[0, :]]*int(smoothie), x, axis=0))
             out_add = np.vstack(([x[0, :]] * int(smoothie), x,
                                  [x[(len(x) - 1), :]] * int(smoothie)))
             help = np.transpose(out_add)
-            #out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
+            # out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
             out = signal.lfilter(
                 np.hstack((np.ones(smoothie) / (2 * smoothie), 0,
                           np.ones(smoothie) / (2 * smoothie))), 1, help)
             out = np.transpose(out)
-            #out = out[smoothie:len(out), :]
+            # out = out[smoothie:len(out), :]
             out = out[2 * smoothie:len(out), :]
-            #out = filter(ones(1,smoothie)/smoothie,1,out_add)
-            #out[1:smoothie,:] = []
+            # out = filter(ones(1,smoothie)/smoothie,1,out_add)
+            # out[1:smoothie,:] = []
         else:
-            #out_add = np.append(np.append([x[0]] * smoothie, x),
+            # out_add = np.append(np.append([x[0]] * smoothie, x),
             #                   [x[size_x - 1]] * smoothie)
             out_add = np.hstack(([x[0]] * int(smoothie), x,
                                  [x[(len(x) - 1)]] * int(smoothie)))
@@ -189,7 +190,7 @@ def smooth(x, smoothie):
             out = out[2 * smoothie:len(out)]
             out[0:smoothie] = out[smoothie]
             out[len(out) - smoothie:len(out)] = out[len(out) - smoothie - 1]
-            #for i in xrange(smoothie, len(x) + smoothie):
+            # for i in xrange(smoothie, len(x) + smoothie):
             #    sum = 0
             #    for k in xrange(-smoothie, smoothie):
             #        sum = sum + out_add[i + k]
@@ -255,7 +256,7 @@ def _npts2nfft(npts, smart=True):
 
     >>> _npts2nfft(1800028)  # good nfft with minimum points
     3600056
-    >>> _npts2nfft(1800029)  # falls back to next power of 2
+    >>> int(_npts2nfft(1800029))  # falls back to next power of 2
     4194304
     >>> _npts2nfft(1800031)  # finds suitable nfft close to minimum npts
     3600082

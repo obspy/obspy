@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
 import matplotlib
 # this code is needed to run the tests without any X11 or any other
 # display, e.g. via a SSH connection. Import it only once, else a nasty

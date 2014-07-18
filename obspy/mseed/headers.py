@@ -2,41 +2,22 @@
 """
 Defines the libmseed structures and blockettes.
 """
-from __future__ import unicode_literals
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
-from distutils import sysconfig
+
 import ctypes as C
 import numpy as np
-import os
-from obspy.core.util.misc import _get_lib_name
+from obspy.core.util.libnames import _load_CDLL
 
 
 HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
-# Import shared libmseed depending on the platform.
-# create library names
-lib_names = [
-    # python3.3 platform specific library name
-    _get_lib_name('mseed', add_extension_suffix=True),
-    # fallback for pre-packaged libraries
-    'libmseed']
-# get default file extension for shared objects
-lib_extension, = sysconfig.get_config_vars('SO')
-# initialize library
-for lib_name in lib_names:
-    try:
-        clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                                        'lib', lib_name + lib_extension))
-        break
-    except Exception as e:
-        err_msg = str(e)
-        pass
-else:
-    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % err_msg
-    raise ImportError(msg)
+# Import shared libmseed
+clibmseed = _load_CDLL("mseed")
 
 
 # XXX: Do we still support Python 2.4 ????
@@ -52,9 +33,9 @@ if hasattr(C.pythonapi, 'Py_InitModule4'):
 elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
     Py_ssize_t = C.c_int64
 else:
-    #XXX: just hard code it for now
+    # XXX: just hard code it for now
     Py_ssize_t = C.c_int64
-    #raise TypeError("Cannot determine type of Py_ssize_t")
+    # raise TypeError("Cannot determine type of Py_ssize_t")
 
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
@@ -71,14 +52,31 @@ VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 
 # allowed encodings:
-# SEED id: SEED name, SEED sampletype a, i, f or d, default numpy type)}
-ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
-             1: ("INT16", "i", np.dtype("int16")),
-             3: ("INT32", "i", np.dtype("int32")),
-             4: ("FLOAT32", "f", np.dtype("float32")),
-             5: ("FLOAT64", "d", np.dtype("float64")),
-             10: ("STEIM1", "i", np.dtype("int32")),
-             11: ("STEIM2", "i", np.dtype("int32"))}
+# id: (name, sampletype a/i/f/d, default NumPy type, write support)
+ENCODINGS = {0: ("ASCII", "a", np.dtype(native_str("|S1")).type, True),
+             1: ("INT16", "i", np.dtype(np.int16), True),
+             3: ("INT32", "i", np.dtype(np.int32), True),
+             4: ("FLOAT32", "f", np.dtype(np.float32), True),
+             5: ("FLOAT64", "d", np.dtype(np.float64), True),
+             10: ("STEIM1", "i", np.dtype(np.int32), True),
+             11: ("STEIM2", "i", np.dtype(np.int32), True),
+             12: ("GEOSCOPE24", "f", np.dtype(np.float32), False),
+             13: ("GEOSCOPE16_3", "f", np.dtype(np.float32), False),
+             14: ("GEOSCOPE16_4", "f", np.dtype(np.float32), False),
+             16: ("CDSN", "i", np.dtype(np.int32), False),
+             30: ("SRO", "i", np.dtype(np.int32), False),
+             32: ("DWWSSN", "i", np.dtype(np.int32), False)}
+
+# Encodings not supported by libmseed and consequently ObsPy.
+UNSUPPORTED_ENCODINGS = {
+    2: "INT24",
+    15: "US National Network compression",
+    17: "Graefenberg 16 bit gain ranged",
+    18: "IPG - Strasbourg 16 bit gain ranged",
+    19: "STEIM (3) Comprssion",
+    31: "HGLP Format",
+    33: "RSTN 16 bit gain ranged"
+}
 
 # Map the dtype to the samplecode. Redundant information but it is hard coded
 # for performance reasons.
@@ -87,11 +85,11 @@ SAMPLETYPE = {"|S1": "a",
               "int32": "i",
               "float32": "f",
               "float64": "d",
-              np.dtype("|S1").type: "a",
-              np.dtype("int16").type: "i",
-              np.dtype("int32").type: "i",
-              np.dtype("float32").type: "f",
-              np.dtype("float64").type: "d"}
+              np.dtype(native_str("|S1")).type: "a",
+              np.dtype(np.int16).type: "i",
+              np.dtype(np.int32).type: "i",
+              np.dtype(np.float32).type: "f",
+              np.dtype(np.float64).type: "d"}
 # as defined in libmseed.h
 MS_ENDOFFILE = 1
 MS_NOERROR = 0
@@ -157,7 +155,7 @@ class blkt_200_s(C.Structure):
     ]
 
 
-#Blockette 201, Murdock Event Detection (without header)
+# Blockette 201, Murdock Event Detection (without header)
 class blkt_201_s(C.Structure):
     _fields_ = [
         ('amplitude', C.c_float),
@@ -173,7 +171,7 @@ class blkt_201_s(C.Structure):
     ]
 
 
-#Blockette 300, Step Calibration (without header)
+# Blockette 300, Step Calibration (without header)
 class blkt_300_s(C.Structure):
     _fields_ = [
         ('time', BTime),
@@ -207,7 +205,7 @@ class blkt_310_s(C.Structure):
     ]
 
 
-#Blockette 320, Pseudo-random Calibration (without header)
+# Blockette 320, Pseudo-random Calibration (without header)
 class blkt_320_s(C.Structure):
     _fields_ = [
         ('time', BTime),
@@ -224,7 +222,7 @@ class blkt_320_s(C.Structure):
     ]
 
 
-#Blockette 390, Generic Calibration (without header)
+# Blockette 390, Generic Calibration (without header)
 class blkt_390_s(C.Structure):
     _fields_ = [
         ('time', BTime),
@@ -237,7 +235,7 @@ class blkt_390_s(C.Structure):
     ]
 
 
-#Blockette 395, Calibration Abort (without header)
+# Blockette 395, Calibration Abort (without header)
 class blkt_395_s(C.Structure):
     _fields_ = [
         ('time', BTime),
@@ -245,7 +243,7 @@ class blkt_395_s(C.Structure):
     ]
 
 
-#Blockette 400, Beam (without header)
+# Blockette 400, Beam (without header)
 class blkt_400_s(C.Structure):
     _fields_ = [
         ('azimuth', C.c_float),
@@ -255,14 +253,14 @@ class blkt_400_s(C.Structure):
     ]
 
 
-#Blockette 405, Beam Delay (without header)
+# Blockette 405, Beam Delay (without header)
 class blkt_405_s(C.Structure):
     _fields_ = [
         ('delay_values', C.c_ushort * 1),
     ]
 
 
-#Blockette 500, Timing (without header)
+# Blockette 500, Timing (without header)
 class blkt_500_s(C.Structure):
     _fields_ = [
         ('vco_correction', C.c_float),
@@ -297,7 +295,7 @@ class blkt_1001_s(C.Structure):
 blkt_1001 = blkt_1001_s
 
 
-#Blockette 2000, Opaque Data (without header)
+# Blockette 2000, Opaque Data (without header)
 class blkt_2000_s(C.Structure):
     _fields_ = [
         ('length', C.c_ushort),
@@ -315,11 +313,11 @@ class blkt_link_s(C.Structure):
     pass
 
 blkt_link_s._fields_ = [
-    ('blktoffset', C.c_ushort),       # Blockette offset
-    ('blkt_type', C.c_ushort),        # Blockette type
-    ('next_blkt', C.c_ushort),        # Offset to next blockette
-    ('blktdata', C.POINTER(None)),    # Blockette data
-    ('blktdatalen', C.c_ushort),      # Length of blockette data in bytes
+    ('blktoffset', C.c_ushort),  # Blockette offset
+    ('blkt_type', C.c_ushort),  # Blockette type
+    ('next_blkt', C.c_ushort),  # Offset to next blockette
+    ('blktdata', C.POINTER(None)),  # Blockette data
+    ('blktdatalen', C.c_ushort),  # Length of blockette data in bytes
     ('next', C.POINTER(blkt_link_s))]
 BlktLink = blkt_link_s
 
@@ -341,7 +339,7 @@ class MSRecord_s(C.Structure):
 MSRecord_s._fields_ = [
     ('record', C.POINTER(C.c_char)),  # Mini-SEED record
     ('reclen', C.c_int),              # Length of Mini-SEED record in bytes
-    # Pointers to SEED data record structures
+                                      # Pointers to SEED data record structures
     ('fsdh', C.POINTER(fsdh_s)),      # Fixed Section of Data Header
     ('blkts', C.POINTER(BlktLink)),   # Root of blockette chain
     ('Blkt100',
@@ -350,7 +348,7 @@ MSRecord_s._fields_ = [
      C.POINTER(blkt_1000_s)),         # Blockette 1000, if present
     ('Blkt1001',
      C.POINTER(blkt_1001_s)),         # Blockette 1001, if present
-    # Common header fields in accessible form
+                                      # Common header fields in accessible form
     ('sequence_number', C.c_int),     # SEED record sequence number
     ('network', C.c_char * 11),       # Network designation, NULL terminated
     ('station', C.c_char * 11),       # Station designation, NULL terminated
@@ -363,12 +361,12 @@ MSRecord_s._fields_ = [
     ('samplecnt', C.c_int64),         # Number of samples in record
     ('encoding', C.c_byte),           # Data encoding format
     ('byteorder', C.c_byte),          # Byte order of record
-    # Data sample fields
+                                      # Data sample fields
     ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
                                       # 'sampletype'
     ('numsamples', C.c_int64),        # Number of data samples in datasamples
     ('sampletype', C.c_char),         # Sample type code: a, i, f, d
-    # Stream oriented state information
+                                      # Stream oriented state information
     ('ststate',
      C.POINTER(StreamState)),         # Stream processing state information
 ]
@@ -440,9 +438,9 @@ class U_DIFF(C.Union):
     Union for Steim objects.
     """
     _fields_ = [
-        ("byte", C.c_int8 * 4),       # 4 1-byte differences.
-        ("hw", C.c_int16 * 2),        # 2 halfword differences.
-        ("fw", C.c_int32),            # 1 fullword difference.
+        ("byte", C.c_int8 * 4),  # 4 1-byte differences.
+        ("hw", C.c_int16 * 2),  # 2 halfword differences.
+        ("fw", C.c_int32),  # 1 fullword difference.
     ]
 
 
@@ -451,8 +449,8 @@ class FRAME(C.Structure):
     Frame in a seed data record.
     """
     _fields_ = [
-        ("ctrl", C.c_uint32),         # control word for frame.
-        ("w", U_DIFF * 14),           # compressed data.
+        ("ctrl", C.c_uint32),  # control word for frame.
+        ("w", U_DIFF * 14),  # compressed data.
     ]
 
 
@@ -500,18 +498,18 @@ clibmseed.ms_detect.restype = C.c_int
 
 clibmseed.msr_unpack_steim2.argtypes = [
     C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
 clibmseed.msr_unpack_steim1.argtypes = [
     C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
@@ -602,8 +600,8 @@ class SelectTime(C.Structure):
     pass
 
 SelectTime._fields_ = [
-    ('starttime', C.c_longlong),      # Earliest data for matching channels
-    ('endtime', C.c_longlong),        # Latest data for matching channels
+    ('starttime', C.c_longlong),  # Earliest data for matching channels
+    ('endtime', C.c_longlong),    # Latest data for matching channels
     ('next', C.POINTER(SelectTime))
 ]
 
@@ -613,8 +611,8 @@ class Selections(C.Structure):
     pass
 
 Selections._fields_ = [
-    ('srcname', C.c_char * 100),      # Matching (globbing) source name:
-                                      # Net_Sta_Loc_Chan_Qual
+    ('srcname', C.c_char * 100),  # Matching (globbing) source name:
+                                  # Net_Sta_Loc_Chan_Qual
     ('timewindows', C.POINTER(SelectTime)),
     ('next', C.POINTER(Selections))
 ]
@@ -633,8 +631,8 @@ ContinuousSegment._fields_ = [
     ('samplecnt', C.c_int64),
     ('timing_quality', C.c_uint8),
     ('calibration_type', C.c_int8),
-    ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
-                                      # 'sampletype'
+    ('datasamples', C.c_void_p),  # Data samples, 'numsamples' of type
+                                  # 'sampletype'
     ('firstRecord', C.c_void_p),
     ('lastRecord', C.c_void_p),
     ('next', C.POINTER(ContinuousSegment)),
@@ -647,19 +645,19 @@ class LinkedIDList(C.Structure):
     pass
 
 LinkedIDList._fields_ = [
-    ('network', C.c_char * 11),       # Network designation, NULL terminated
-    ('station', C.c_char * 11),       # Station designation, NULL terminated
-    ('location', C.c_char * 11),      # Location designation, NULL terminated
-    ('channel', C.c_char * 11),       # Channel designation, NULL terminated
-    ('dataquality', C.c_char),        # Data quality indicator
+    ('network', C.c_char * 11),      # Network designation, NULL terminated
+    ('station', C.c_char * 11),      # Station designation, NULL terminated
+    ('location', C.c_char * 11),     # Location designation, NULL terminated
+    ('channel', C.c_char * 11),      # Channel designation, NULL terminated
+    ('dataquality', C.c_char),       # Data quality indicator
     ('firstSegment',
-     C.POINTER(ContinuousSegment)),   # Pointer to first of list of segments
+     C.POINTER(ContinuousSegment)),  # Pointer to first of list of segments
     ('lastSegment',
-     C.POINTER(ContinuousSegment)),   # Pointer to last of list of segments
+     C.POINTER(ContinuousSegment)),  # Pointer to last of list of segments
     ('next',
-     C.POINTER(LinkedIDList)),        # Pointer to next id
+     C.POINTER(LinkedIDList)),       # Pointer to next id
     ('previous',
-     C.POINTER(LinkedIDList)),        # Pointer to previous id
+     C.POINTER(LinkedIDList)),       # Pointer to previous id
 ]
 
 
@@ -669,7 +667,7 @@ LinkedIDList._fields_ = [
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='b', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.POINTER(Selections),
@@ -696,7 +694,7 @@ clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
 clibmseed.lil_free.restype = C.c_void_p
 
 
-clibmseed.allocate_bytes.argtypes = (C.c_int, )
+clibmseed.allocate_bytes.argtypes = (C.c_int,)
 clibmseed.allocate_bytes.restype = C.c_void_p
 
 

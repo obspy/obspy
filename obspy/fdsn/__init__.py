@@ -33,6 +33,7 @@ GFZ     http://geofon.gfz-potsdam.de
 IRIS    http://service.iris.edu
 NCEDC   http://service.ncedc.org
 NERIES  http://www.seismicportal.eu
+ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
 USGS    http://comcat.cr.usgs.gov
 USP     http://sismo.iag.usp.br
@@ -123,10 +124,10 @@ USP     http://sismo.iag.usp.br
 Please see the documentation for each method for further information and
 examples.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import str  # NOQA
-from future.utils import PY2
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import PY2, native_str
 
 from .client import Client  # NOQA
 from .header import URL_MAPPINGS  # NOQA
@@ -143,7 +144,7 @@ if r"%s" in Client.__init__.__doc__:
             Client.__init__.__doc__ % \
             str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
-__all__ = ["Client"]
+__all__ = [native_str("Client")]
 
 
 if __name__ == '__main__':

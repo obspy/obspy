@@ -2,8 +2,10 @@
 """
 GSE2/GSE1 bindings to ObsPy core module.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
 from obspy import Trace, Stream
 from obspy.gse2 import libgse2, libgse1
 import numpy as np
@@ -13,7 +15,7 @@ def isGSE2(filename):
     """
     Checks whether a file is GSE2 or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE2 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE2 file.
@@ -38,11 +40,11 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE2 file to be read.
-    :type headonly: boolean, optional
+    :type headonly: bool, optional
     :param headonly: If True read only head of GSE2 file.
-    :type verify_chksum: boolean, optional
+    :type verify_chksum: bool, optional
     :param verify_chksum: If True verify Checksum and raise Exception if
         it is not correct.
     :rtype: :class:`~obspy.core.stream.Stream`
@@ -80,9 +82,9 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
 
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
-    :type filename: string
+    :type filename: str
     :param filename: Name of file to write.
-    :type inplace: boolean, optional
+    :type inplace: bool, optional
     :param inplace: If True, do compression not on a copy of the data but
         on the data itself - note this will change the data values and make
         them therefore unusable!
@@ -98,9 +100,9 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     with open(filename, 'wb') as f:
         # write multiple gse2 parts
         for trace in stream:
-            dt = np.dtype('int32')
+            dt = np.dtype(np.int32)
             if trace.data.dtype.name == dt.name:
-                trace.data = np.require(trace.data, dt, ['C_CONTIGUOUS'])
+                trace.data = np.ascontiguousarray(trace.data, dt)
             else:
                 msg = "GSE2 data must be of type %s, but are of type %s" % \
                     (dt.name, trace.data.dtype)
@@ -112,7 +114,7 @@ def isGSE1(filename):
     """
     Checks whether a file is GSE1 or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: GSE1 file to be checked.
     :rtype: bool
     :return: ``True`` if a GSE1 file.
@@ -139,11 +141,11 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
-    :type param: GSE2 file to be read.
-    :type headonly: boolean, optional
+    :type filename: str
+    :param filename: GSE2 file to be read.
+    :type headonly: bool, optional
     :param headonly: If True read only header of GSE1 file.
-    :type verify_chksum: boolean, optional
+    :type verify_chksum: bool, optional
     :param verify_chksum: If True verify Checksum and raise Exception if
         it is not correct.
     :rtype: :class:`~obspy.core.stream.Stream`

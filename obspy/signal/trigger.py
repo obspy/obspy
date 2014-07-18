@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: trigger.py
 #  Purpose: Python trigger/picker routines for seismology.
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 """
 Various routines related to triggering/picking
 
@@ -25,9 +25,9 @@ characteristic functions and a coincidence triggering routine.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import warnings
 import ctypes as C
@@ -45,21 +45,21 @@ def recSTALTA(a, nsta, nlta):
     Fast version written in C.
 
     :note: This version directly uses a C version via CTypes
-    :type a: numpy.ndarray dtype float64
+    :type a: :class:`numpy.ndarray`, dtype=float64
     :param a: Seismic Trace, numpy.ndarray dtype float64
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: numpy.ndarray dtype float64
+    :rtype: :class:`numpy.ndarray`, dtype=float64
     :return: Characteristic function of recursive STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
     # be nice and adapt type if necessary
-    a = np.require(a, 'float64', ['C_CONTIGUOUS'])
+    a = np.ascontiguousarray(a, np.float64)
     ndat = len(a)
-    charfct = np.empty(ndat, dtype='float64')
+    charfct = np.empty(ndat, dtype=np.float64)
     # do not use pointer here:
     clibsignal.recstalta(a, charfct, ndat, nsta, nlta)
     return charfct
@@ -74,13 +74,13 @@ def recSTALTAPy(a, nsta, nlta):
         There exists a faster version of this trigger wrapped in C
         called :func:`~obspy.signal.trigger.recSTALTA` in this module!
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of recursive STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -115,25 +115,25 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :type ration: Float
+    :type ration: float
     :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
-    :type quiet: Float
+    :type quiet: float
     :param quiet: as quiet gets smaller, carlSTATrig gets more sensitive
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
     m = len(a)
     #
-    sta = np.zeros(len(a), dtype='float64')
-    lta = np.zeros(len(a), dtype='float64')
-    star = np.zeros(len(a), dtype='float64')
-    ltar = np.zeros(len(a), dtype='float64')
+    sta = np.zeros(len(a), dtype=np.float64)
+    lta = np.zeros(len(a), dtype=np.float64)
+    star = np.zeros(len(a), dtype=np.float64)
+    ltar = np.zeros(len(a), dtype=np.float64)
     pad_sta = np.zeros(nsta)
     pad_lta = np.zeros(nlta)  # avoid for 0 division 0/1=0
     #
@@ -172,23 +172,23 @@ def classicSTALTA(a, nsta, nlta):
 
     Fast version written in C.
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
     data = a
-    # initialize C struct / numpy structed array
+    # initialize C struct / NumPy structured array
     head = np.empty(1, dtype=head_stalta_t)
     head[:] = (len(data), nsta, nlta)
     # ensure correct type and contiguous of data
-    data = np.require(data, dtype='f8', requirements=['C_CONTIGUOUS'])
+    data = np.ascontiguousarray(data, dtype=np.float64)
     # all memory should be allocated by python
-    charfct = np.empty(len(data), dtype='f8')
+    charfct = np.empty(len(data), dtype=np.float64)
     # run and check the error-code
     errcode = clibsignal.stalta(head, data, charfct)
     if errcode != 0:
@@ -207,16 +207,16 @@ def classicSTALTAPy(a, nsta, nlta):
         There exists a faster version of this trigger wrapped in C
         called :func:`~obspy.signal.trigger.classicSTALTA` in this module!
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
-    #XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
+    # XXX From NumPy 1.3 use numpy.lib.stride_tricks.as_strided
     #    This should be faster then the for loops in this fct
     #    Currently debian lenny ships 1.1.1
     m = len(a)
@@ -224,7 +224,7 @@ def classicSTALTAPy(a, nsta, nlta):
     nsta_1 = nsta - 1
     nlta_1 = nlta - 1
     # compute the short time average (STA)
-    sta = np.zeros(len(a), dtype='float64')
+    sta = np.zeros(len(a), dtype=np.float64)
     pad_sta = np.zeros(nsta_1)
     # Tricky: Construct a big window of length len(a)-nsta. Now move this
     # window nsta points, i.e. the window "sees" every point in a at least
@@ -234,7 +234,7 @@ def classicSTALTAPy(a, nsta, nlta):
     sta = sta / nsta
     #
     # compute the long time average (LTA)
-    lta = np.zeros(len(a), dtype='float64')
+    lta = np.zeros(len(a), dtype=np.float64)
     pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
     for i in range(nlta):  # window size to smooth over
         lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
@@ -251,13 +251,13 @@ def delayedSTALTA(a, nsta, nlta):
     """
     Delayed STA/LTA.
 
-    :type a: NumPy ndarray
+    :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
-    :type nsta: Int
+    :type nsta: int
     :param nsta: Length of short time average window in samples
-    :type nlta: Int
+    :type nlta: int
     :param nlta: Length of long time average window in samples
-    :rtype: NumPy ndarray
+    :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of delayed STA/LTA
 
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
@@ -266,8 +266,8 @@ def delayedSTALTA(a, nsta, nlta):
     #
     # compute the short time average (STA) and long time average (LTA)
     # don't start for STA at nsta because it's muted later anyway
-    sta = np.zeros(m, dtype='float64')
-    lta = np.zeros(m, dtype='float64')
+    sta = np.zeros(m, dtype=np.float64)
+    lta = np.zeros(m, dtype=np.float64)
     for i in range(m):
         sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
@@ -288,7 +288,7 @@ def zDetect(a, nsta):
     m = len(a)
     #
     # Z-detector given by Swindell and Snell (1977)
-    sta = np.zeros(len(a), dtype='float64')
+    sta = np.zeros(len(a), dtype=np.float64)
     # Standard Sta
     pad_sta = np.zeros(nsta)
     for i in range(nsta):  # window size to smooth over
@@ -310,19 +310,19 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     are more then 1e6 triggerings ("on" AND "off") in charfct --- normally
     this does not happen.
 
-    :type charfct: NumPy ndarray
+    :type charfct: NumPy :class:`~numpy.ndarray`
     :param charfct: Characteristic function of e.g. STA/LTA trigger
-    :type thres1: Float
+    :type thres1: float
     :param thres1: Value above which trigger (of characteristic function)
                    is activated (higher threshold)
-    :type thres2: Float
+    :type thres2: float
     :param thres2: Value below which trigger (of characteristic function)
         is deactivated (lower threshold)
-    :type max_len: Int
+    :type max_len: int
     :param max_len: Maximum length of triggered event in samples. A new
                     event will be triggered as soon as the signal reaches
                     again above thres1.
-    :type max_len_delete: Bool
+    :type max_len_delete: bool
     :param max_len_delete: Do not write events longer than max_len into
                            report file.
     :rtype: List
@@ -401,7 +401,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     # c_chcar_p strings are immutable, use string_buffer for pointers
     pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
-    reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
+    reltrc = np.ascontiguousarray(reltrc, np.float32)
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
@@ -433,13 +433,13 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     :param m_s: number of AR coefficients for sarrival
     :param l_p: length of variance window for parrival in seconds
     :param l_s: length of variance window for sarrival in seconds
-    :param s_pick: if true pick also S phase, elso only P
+    :param s_pick: if true pick also S phase, else only P
     :return: (ptime, stime) parrival and sarrival
     """
     # be nice and adapt type if necessary
-    a = np.require(a, 'float32', ['C_CONTIGUOUS'])
-    b = np.require(b, 'float32', ['C_CONTIGUOUS'])
-    c = np.require(c, 'float32', ['C_CONTIGUOUS'])
+    a = np.ascontiguousarray(a, np.float32)
+    b = np.ascontiguousarray(b, np.float32)
+    c = np.ascontiguousarray(c, np.float32)
     s_pick = C.c_int(s_pick)  # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
@@ -473,7 +473,7 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
     import matplotlib.pyplot as plt
     df = trace.stats.sampling_rate
     npts = trace.stats.npts
-    t = np.arange(npts, dtype='float32') / df
+    t = np.arange(npts, dtype=np.float32) / df
     fig = plt.figure()
     ax1 = fig.add_subplot(211)
     ax1.plot(t, trace.data, 'k')
@@ -508,12 +508,17 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     The routine works in the following steps:
       * take every single trace in the stream
-      * apply specified triggering routine
-      * evaluate triggering results
+      * apply specified triggering routine (can be skipped to work on
+        precomputed custom characteristic functions)
+      * evaluate all single station triggering results
       * compile chronological overall list of all single station triggers
       * find overlapping single station triggers
-      * calculate coincidence sum every individual overlapping trigger
+      * calculate coincidence sum of every individual overlapping trigger
       * add to coincidence trigger list if it exceeds the given threshold
+      * optional: if master event templates are provided, also check single
+        station triggers individually and include any single station trigger if
+        it exceeds the specified similarity threshold even if no other stations
+        coincide with the trigger
       * return list of network coincidence triggers
 
     .. note::
@@ -529,9 +534,9 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
-        further details. If set to None no triggering routine is applied, i.e.
-        data in traces is supposed to be a precomputed chracteristic function
-        on which the trigger thresholds are evaluated.
+        further details. If set to `None` no triggering routine is applied,
+        i.e.  data in traces is supposed to be a precomputed characteristic
+        function on which the trigger thresholds are evaluated.
     :type trigger_type: str or None
     :type thr_on: float
     :param thr_on: threshold for switching single station trigger on
@@ -544,7 +549,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param thr_coincidence_sum: Threshold for coincidence sum. The network
         coincidence sum has to be at least equal to this value for a trigger to
         be included in the returned trigger list.
-    :type trace_ids: list or dict (optional)
+    :type trace_ids: list or dict, optional
     :param trace_ids: Trace IDs to be used in the network coincidence sum. A
         dictionary with trace IDs as keys and weights as values can
         be provided. If a list of trace IDs is provided, all
@@ -555,17 +560,17 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     :param max_trigger_length: Maximum single station trigger length (in
         seconds). ``delete_long_trigger`` controls what happens to single
         station triggers longer than this value.
-    :type delete_long_trigger: bool (optional)
+    :type delete_long_trigger: bool, optional
     :param delete_long_trigger: If ``False`` (default), single station
         triggers are manually released at ``max_trigger_length``, although the
         characteristic function has not dropped below ``thr_off``. If set to
         ``True``, all single station triggers longer than
         ``max_trigger_length`` will be removed and are excluded from
         coincidence sum computation.
-    :type trigger_off_extension: int or float (optional)
+    :type trigger_off_extension: int or float, optional
     :param trigger_off_extension: Extends search window for next trigger
         on-time after last trigger off-time in coincidence sum computation.
-    :type details: bool (optional)
+    :type details: bool, optional
     :param details: If set to ``True`` the output coincidence triggers contain
         more detailed information: A list with the trace IDs (in addition to
         only the station names), as well as lists with single station
@@ -585,7 +590,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         three traces for Z, N, E component. A dictionary is expected where for
         each station used in the trigger, a list of streams can be provided as
         the value to the network/station key (e.g. {"GR.FUR": [stream1,
-        stream2]}).
+        stream2]}). Templates are compared against the provided `stream`
+        without the specified triggering routine (`trigger_type`) applied.
     :type event_templates: dict
     :param similarity_threshold: similarity threshold (0.0-1.0) at which a
         single station trigger gets included in the output network event

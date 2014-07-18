@@ -15,6 +15,13 @@ dist/
 distribute-*.egg
 distribute-*.tar.gz
 misc/docs/source/packages/autogen
-obspy/lib/*.pyd
+misc/docs/source/_static/css/
+misc/docs/source/_static/font.css
+misc/docs/source/_static/fonts/
+misc/docs/source/_templates/footer.html
+misc/docs/source/_templates/navbar-local.html
 misc/docs/_build/
+misc/docker_tests/logs/
+obspy/lib/*.pyd
 /obspy.pstats
+__pycache__

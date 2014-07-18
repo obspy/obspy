@@ -9,9 +9,10 @@ Utility objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
@@ -32,23 +33,23 @@ class BaseNode(ComparingObject):
                  end_date=None, restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type code: String
+        :type code: str
         :param code: The SEED network, station, or channel code
-        :type description: String, optional
+        :type description: str, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """
@@ -189,32 +190,33 @@ class Equipment(ComparingObject):
                  installation_date=None, removal_date=None,
                  calibration_dates=None, resource_id=None):
         """
-        :type type: String
+        :type type: str
         :param type: The equipment type
-        :type description: String
+        :type description: str
         :param description: Description of the equipment
-        :type manufacturer: String
+        :type manufacturer: str
         :param manufacturer: The manufacturer of the equipment
-        :type vendor: String
+        :type vendor: str
         :param vendor: The vendor of the equipment
-        :type model: String
+        :type model: str
         :param model: The model of the equipment
-        :type serial_number: String
+        :type serial_number: str
         :param serial_number: The serial number of the equipment
-        :type installation_date: `obspy.UTCDateTime`
+        :type installation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param installation_date: The installation date of the equipment
-        :type removal_date: `obspy.UTCDateTime`
+        :type removal_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param removal_date: The removal data of the equipment
-        :type calibration_dates: list of `obspy.UTCDateTime`
+        :type calibration_dates: list of
+            :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param calibration_dates: A list with all calibration dates of the
             equipment.
-        :type resource_id: String
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
-            same ID should contains the same information/be derived from the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
+            same ID should contain the same information/be derived from the
             same base instruments.
         """
         self.type = type
@@ -253,19 +255,19 @@ class Equipment(ComparingObject):
 
 class Operator(ComparingObject):
     """
-    An operating agency and associated contact persons. If there multiple
-    operators, each one should be encapsulated within an Operator tag. Since
+    An operating agency and associated contact persons. If there are multiple
+    operators, each one should be encapsulated within an Operator object. Since
     the Contact element is a generic type that represents any contact person,
     it also has its own optional Agency element.
     """
     def __init__(self, agencies, contacts=None, website=None):
         """
-        :type agencies: A list of strings.
+        :type agencies: list of str
         :param agencies: The agencies of the operator.
-        :type contacts: A list of `obspy.station.Person`
-        :param contacts: One or more contact persons, optional
-        :type website: str
-        :param website: The website, optional
+        :type contacts: list of :class:`Person`, optional
+        :param contacts: One or more contact persons.
+        :type website: str, optional
+        :param website: The website.
         """
         self.agencies = agencies
         self.contacts = contacts or []
@@ -304,15 +306,14 @@ class Person(ComparingObject):
     """
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
-        :type names: list of strings
-        :param names: Self-explanatory. Multiple names allowed. Optional.
-        :type agencies: list of strings
-        :param agencies: Self-explanatory. Multiple agencies allowed. Optional.
-        :type emails: list of strings
-        :param emails: Self-explanatory. Multiple emails allowed. Optional.
-        :type phones: list of `obspy.stations.PhoneNumber`
+        :type names: list of str, optional
+        :param names: Self-explanatory. Multiple names allowed.
+        :type agencies: list of str, optional
+        :param agencies: Self-explanatory. Multiple agencies allowed.
+        :type emails: list of str, optional
+        :param emails: Self-explanatory. Multiple emails allowed.
+        :type phones: list of :class:`PhoneNumber`, optional
         :param phones: Self-explanatory. Multiple phone numbers allowed.
-        Optional.
         """
         self.names = names or []
         self.agencies = agencies or []
@@ -373,14 +374,15 @@ class PhoneNumber(ComparingObject):
     def __init__(self, area_code, phone_number, country_code=None,
                  description=None):
         """
-        :type area_code: Integer
-        :param area_code: The area code
-        :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
+        :type area_code: int
+        :param area_code: The area code.
+        :type phone_number: str
         :param phone_number: The phone number minus the country and area code.
-        :type country_code: Integer
-        :param country_code: The country code, optional
-        :type description: String
-        :param description: Any additional information, optional.
+            Must be in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
+        :type country_code: int, optional
+        :param country_code: The country code.
+        :type description: str, optional
+        :param description: Any additional information.
         """
         self.country_code = country_code
         self.area_code = area_code
@@ -407,9 +409,9 @@ class ExternalReference(ComparingObject):
     """
     def __init__(self, uri, description):
         """
-        :type uri: String
+        :type uri: str
         :param uri: The URI to the external data.
-        :type description: String
+        :type description: str
         :param description: A description of the external data.
         """
         self.uri = uri
@@ -425,17 +427,18 @@ class Comment(ComparingObject):
     def __init__(self, value, id=None, begin_effective_time=None,
                  end_effective_time=None, authors=None):
         """
-        :type value: String
+        :type value: str
         :param value: The actual comment string
         :type id: int
         :param id: ID of comment, must be 0 or greater.
         :type begin_effective_time:
-            :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param begin_effective_time: The effective start date, Optional.
-        :type end_effective_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_effective_time: The effective end date. Optional.
-        :type authors: List of :class:`~obspy.station.util.Person` objects.
-        :param authors: The authors of this comment. Optional.
+            :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param begin_effective_time: The effective start date.
+        :type end_effective_time:
+            :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param end_effective_time: The effective end date.
+        :type authors: list of :class:`Person`, optional
+        :param authors: The authors of this comment.
         """
         self.value = value
         self.begin_effective_time = begin_effective_time
@@ -508,21 +511,21 @@ class Site(ComparingObject):
     def __init__(self, name, description=None, town=None, county=None,
                  region=None, country=None):
         """
-        :type name: String
+        :type name: str
         :param name: The commonly used name of this station, equivalent to the
             SEED blockette 50, field 9.
-        :type description: String, optional
+        :type description: str, optional
         :param description: A longer description of the location of this
             station, e.g.  "NW corner of Yellowstone National Park" or "20
             miles west of Highway 40."
-        :type town: String, optional
+        :type town: str, optional
         :param town: The town or city closest to the station.
-        :type county: String, optional
+        :type county: str, optional
         :param county: The county.
-        :type region: String, optional
+        :type region: str, optional
         :param region: The state, province, or region of this site.
-        :type country: String, optional
-        :param country: THe country.
+        :type country: str, optional
+        :param country: The country.
         """
         self.name = name
         self.description = description

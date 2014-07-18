@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: recordanalyzer.py
 #  Purpose: A command-line tool to analyze Mini-SEED records for development
 #           purposes.
@@ -8,7 +8,7 @@
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010-2012 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 USAGE: obspy-mseed-recordanalyzer filename.mseed
 
@@ -20,9 +20,10 @@ A command-line tool to analyze Mini-SEED records.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from copy import deepcopy
 from obspy import UTCDateTime
@@ -114,7 +115,7 @@ class RecordAnalyser(object):
         # Seek the year.
         self.file.seek(self.record_offset + 20, 0)
         # Get the year.
-        year = unpack('>H', self.file.read(2))[0]
+        year = unpack(native_str('>H'), self.file.read(2))[0]
         if year >= 1900 and year <= 2050:
             self.endian = '>'
         else:
@@ -133,7 +134,7 @@ class RecordAnalyser(object):
         # Read and unpack.
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
-        encoding = ('%s20c2H3Bx4H4Bl2H' % self.endian)
+        encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
         header_item = unpack(encoding, fixed_header)
         # Write values to dictionary.
         self.fixed_header['Sequence number'] = int(''.join(header_item[:6]))
@@ -180,8 +181,8 @@ class RecordAnalyser(object):
             self.file.seek(cur_blkt_offset, 0)
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
-            blkt_type, next_blockette = unpack('%s2H' % self.endian,
-                                               self.file.read(4))
+            encoding = native_str('%s2H' % self.endian)
+            blkt_type, next_blockette = unpack(encoding, self.file.read(4))
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
             cur_blkt_offset = next_blockette
@@ -198,17 +199,17 @@ class RecordAnalyser(object):
         blkt_dict = OrderedDict()
         # Check the blockette number.
         if blkt_type == 100:
-            unpack_values = unpack('%sfxxxx' % self.endian,
+            unpack_values = unpack(native_str('%sfxxxx' % self.endian),
                                    self.file.read(8))
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
         elif blkt_type == 1000:
-            unpack_values = unpack('%sBBBx' % self.endian,
+            unpack_values = unpack(native_str('%sBBBx' % self.endian),
                                    self.file.read(4))
             blkt_dict['Encoding Format'] = int(unpack_values[0])
             blkt_dict['Word Order'] = int(unpack_values[1])
             blkt_dict['Data Record Length'] = int(unpack_values[2])
         elif blkt_type == 1001:
-            unpack_values = unpack('%sBBxB' % self.endian,
+            unpack_values = unpack(native_str('%sBBxB' % self.endian),
                                    self.file.read(4))
             blkt_dict['Timing quality'] = int(unpack_values[0])
             blkt_dict['mu_sec'] = int(unpack_values[1])

@@ -9,12 +9,10 @@ Classes related to instrument responses.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import range
-from future.builtins import map
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import warnings
 import ctypes as C
 import numpy as np
@@ -42,58 +40,58 @@ class ResponseStage(ComparingObject):
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
         """
-        :type stage_sequence_number: integer greater or equal to zero
-        :param stage_sequence_number: Stage sequence number. This is used in
-            all the response SEED blockettes.
+        :type stage_sequence_number: int
+        :param stage_sequence_number: Stage sequence number, greater or equal
+            to zero. This is used in all the response SEED blockettes.
         :type stage_gain: float
         :param stage_gain: Value of stage gain.
         :type stage_gain_frequency: float
         :param stage_gain_frequency: Frequency of stage gain.
-        :param input_units: string
+        :type input_units: str
         :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :param output_units: string
+        :type output_units: str
         :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type resource_id2: string
+        :type resource_id2: str
         :param resource_id2: This field contains a string that should serve as
             a unique resource identifier. Resource identifier of the subgroup
             of the response stage that varies across different response stage
             types (e.g. the poles and zeros part or the FIR part).
-        :type name: string
+        :type name: str
         :param name: A name given to the filter stage.
-        :param input_units_description: string, optional
+        :type input_units_description: str, optional
         :param input_units_description: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type description: string, optional
+        :type description: str, optional
         :param description: A short description of of the filter.
         :type decimation_input_sample_rate:  float, optional
         :param decimation_input_sample_rate: The sampling rate before the
             decimation in samples per second.
-        :type decimation_factor: integer, optional
+        :type decimation_factor: int, optional
         :param decimation_factor: The applied decimation factor.
-        :type decimation_offset: integer, optional
+        :type decimation_offset: int, optional
         :param decimation_offset: The sample chosen for use. 0 denotes the
             first sample, 1 the second, and so forth.
         :type decimation_delay: float, optional
@@ -173,19 +171,21 @@ class PolesZerosResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type pz_transfer_function_type: String
+    :type pz_transfer_function_type: str
     :param pz_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
-            * ``LAPLACE (RADIANS/SECOND)``
-            * ``LAPLACE (HERTZ)``
-            * ``DIGITAL (Z-TRANSFORM)``
+
+        * ``LAPLACE (RADIANS/SECOND)``
+        * ``LAPLACE (HERTZ)``
+        * ``DIGITAL (Z-TRANSFORM)``
+
         The function tries to match inputs to one of three types if it can.
     :type normalization_frequency: float
     :param normalization_frequency: The frequency at which the normalization
         factor is normalized.
-    :type zeros: A list of complex numbers.
+    :type zeros: list of complex
     :param zeros: All zeros of the stage.
-    :type poles: A list of complex numbers.
+    :type poles: list of complex
     :param poles: All poles of the stage.
     :type normalization_factor: float, optional
     :param normalization_factor:
@@ -304,12 +304,14 @@ class CoefficientsTypeResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type cf_transfer_function_type: String
+    :type cf_transfer_function_type: str
     :param cf_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
-            * ``ANALOG (RADIANS/SECOND)``
-            * ``ANALOG (HERTZ)``
-            * ``DIGITAL``
+
+        * ``ANALOG (RADIANS/SECOND)``
+        * ``ANALOG (HERTZ)``
+        * ``DIGITAL``
+
         The function tries to match inputs to one of three types if it can.
     :type numerator: list of
         :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`
@@ -513,11 +515,13 @@ class FIRResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type symmetry: String
+    :type symmetry: str
     :param symmetry: A string describing the symmetry. Can be one of:
+
             * ``NONE``
             * ``EVEN``
             * ``ODD``
+
     :type coefficients: list of floats
     :param coefficients: List of FIR coefficients.
     """
@@ -674,12 +678,12 @@ class Response(ComparingObject):
     def __init__(self, resource_id=None, instrument_sensitivity=None,
                  instrument_polynomial=None, response_stages=None):
         """
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
         :type instrument_sensitivity:
@@ -692,7 +696,7 @@ class Response(ComparingObject):
         :param instrument_polynomial: The total sensitivity for the given
             channel, representing the complete acquisition system expressed as
             a polynomial.
-        :type response_stages: List of
+        :type response_stages: list of
             :class:`~obspy.station.response.ResponseStage` objects
         :param response_stages: A list of the response stages. Covers SEED
             blockettes 53 to 56.
@@ -719,9 +723,15 @@ class Response(ComparingObject):
         :type nfft: int
         :param nfft: Number of FFT points to use
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be
             used (disregarding all earlier stages).
@@ -886,7 +896,7 @@ class Response(ComparingObject):
                         msg = ("When no denominators are given it must "
                                "be a digital FIR filter.")
                         raise ValueError(msg)
-                    # Set the type to an assymetric FIR blockette.
+                    # Set the type to an asymmetric FIR blockette.
                     blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
                     fir = blkt.blkt_info.fir
                     fir.h0 = 1.0
@@ -1042,9 +1052,9 @@ class Response(ComparingObject):
 
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
 
-        output = np.empty(len(freqs), dtype="complex128")
+        output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
         clibevresp.check_channel(C.pointer(chan))
@@ -1052,7 +1062,7 @@ class Response(ComparingObject):
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
         # XXX: Check if this is really not needed.
-        #output *= scale_factor[0]
+        # output *= scale_factor[0]
 
         return output, freqs
 
@@ -1090,8 +1100,15 @@ class Response(ComparingObject):
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
         :type output: str
-        :param output: Output units. One of "DISP" (displacement), "VEL"
-            (velocity) or "ACC" (acceleration).
+        :param output: Output units. One of:
+
+                ``"DISP"``
+                    displacement
+                ``"VEL"``
+                    velocity
+                ``"ACC"``
+                    acceleration
+
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be
             used (disregarding all earlier stages).
@@ -1111,7 +1128,7 @@ class Response(ComparingObject):
             calculation, if it is not known, just provide the highest frequency
             that should be plotted times two.
         :type unwrap_phase: bool
-        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
@@ -1269,7 +1286,7 @@ class InstrumentSensitivity(ComparingObject):
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
@@ -1338,15 +1355,15 @@ class InstrumentPolynomial(ComparingObject):
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
             document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type name: string
+        :type name: str
         :param name: A name given to the filter stage.
         :param input_units_description: string, optional
         :param input_units_description: The units of the data as input from the
@@ -1354,13 +1371,13 @@ class InstrumentPolynomial(ComparingObject):
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type description: string, optional
+        :type description: str, optional
         :param description: A short description of of the filter.
         """
         self.input_units = input_units

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------
+# -----------------------------------------------------------------
 # Filename: freqattributes.py
 #   Author: Conny Hammer
 #    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
-#------------------------------------------------------------------
+# -----------------------------------------------------------------
 """
 Frequency Attributes
 
@@ -16,10 +16,9 @@ Frequency Attributes
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from operator import itemgetter
 from scipy import fftpack, signal, sparse
@@ -120,7 +119,7 @@ def cfrequency(data, fs, smoothie, fk):
             cfreq[i] = cfrequency_unwindowed(row, fs)
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
-        #cfreq_add = \
+        # cfreq_add = \
         #        np.append(np.append([cfreq[0]] * (np.size(fk) // 2), cfreq),
         #        [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2))
         # faster alternative
@@ -128,7 +127,8 @@ def cfrequency(data, fs, smoothie, fk):
             ([cfreq[0]] * (np.size(fk) // 2), cfreq,
              [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2)))
         dcfreq = signal.lfilter(fk, 1, cfreq_add)
-        #dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) - np.size(fk) // 2)]
+        # dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) -
+        #         np.size(fk) // 2)]
         # correct start and end values of time derivative
         dcfreq = dcfreq[np.size(fk) - 1:np.size(dcfreq)]
         return cfreq, dcfreq
@@ -149,7 +149,7 @@ def cfrequency_unwindowed(data, fs):
 
     The central frequency is returned in Hz.
 
-    :type data: :class:`~numpy.array`
+    :type data: :class:`~numpy.ndarray`
     :param data: Data to estimate central frequency from.
     :param fs: Sampling frequency in Hz.
     :return: **cfreq** - Central frequency in Hz
@@ -195,7 +195,7 @@ def bwith(data, fs, smoothie, fk):
             [mdist_ind, _mindist] = min(enumerate(minfc), key=itemgetter(1))
             bwith[i] = freqaxis[mdist_ind]
             i = i + 1
-        #bwith_add = \
+        # bwith_add = \
         #        np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
         #        [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
         # faster alternative
@@ -203,7 +203,8 @@ def bwith(data, fs, smoothie, fk):
             ([bwith[0]] * (np.size(fk) // 2), bwith,
              [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2)))
         dbwith = signal.lfilter(fk, 1, bwith_add)
-        #dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) - np.size(fk) // 2)]
+        # dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) -
+        #         np.size(fk) // 2)]
         # correct start and end values of time derivative
         dbwith = dbwith[np.size(fk) - 1:]
         bwith = util.smooth(bwith, smoothie)
@@ -248,14 +249,15 @@ def domperiod(data, fs, smoothie, fk):
             [mdist_ind, _mindist] = max(enumerate(abs(row)), key=itemgetter(1))
             dperiod[i] = freqaxis[mdist_ind]
             i = i + 1
-        #dperiod_add = np.append(np.append([dperiod[0]] * (np.size(fk) // 2), \
-        #    dperiod), [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2))
+        # dperiod_add = np.append(np.append([dperiod[0]] * \
+        #        (np.size(fk) // 2), dperiod),
+        #        [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2))
         # faster alternative
         dperiod_add = np.hstack(
             ([dperiod[0]] * (np.size(fk) // 2), dperiod,
              [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2)))
         ddperiod = signal.lfilter(fk, 1, dperiod_add)
-        #ddperiod = ddperiod[np.size(fk) / \
+        # ddperiod = ddperiod[np.size(fk) / \
         #    2:(np.size(ddperiod) - np.size(fk) // 2)]
         # correct start and end values of time derivative
         ddperiod = ddperiod[np.size(fk) - 1:]
@@ -295,7 +297,7 @@ def logbankm(p, n, fs, w):
     b3 = int(np.floor(bl[2]))
     b1 = int(np.floor(bl[0])) + 1
     b4 = int(min(fn2, np.ceil(bl[3]))) - 1
-    pf = np.log(((np.arange(b1 - 1, b4 + 1, dtype='f8') / n) * fs) / (fl)) / lr
+    pf = np.log(np.arange(b1 - 1, b4 + 1, dtype=np.float64) / n * fs / fl) / lr
     fp = np.floor(pf)
     pm = pf - fp
     k2 = b2 - b1 + 1
@@ -306,8 +308,8 @@ def logbankm(p, n, fs, w):
     v = 2 * np.append([1 - pm[k2:k4 + 1]], [pm[1:k3 + 1]])
     mn = b1 + 1
     mx = b4 + 1
-    #x = np.array([[c],[r]], dtype=[('x', 'float'), ('y', 'float')])
-    #ind=np.argsort(x, order=('x','y'))
+    # x = np.array([[c],[r]], dtype=[('x', np.float), ('y', np.float)])
+    # ind=np.argsort(x, order=('x','y'))
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
     elif (w == 'Hamming'):
@@ -345,12 +347,12 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     pw = np.real(np.multiply(f[a:b, :], np.conj(f[a:b, :])))
     pth = np.max(pw) * 1E-20
     ath = np.sqrt(pth)
-    #h1 = np.transpose(np.array([[ath] * int(b + 1 - a)]))
-    #h2 = m * abs(f[a - 1:b, :])
+    # h1 = np.transpose(np.array([[ath] * int(b + 1 - a)]))
+    # h2 = m * abs(f[a - 1:b, :])
     y = np.log(np.maximum(m * abs(f[a - 1:b, :]), ath))
     z = util.rdct(y)
     z = z[1:, :]
-    #nc = nc + 1
+    # nc = nc + 1
     nf = np.size(z, 1)
     if (p > nc):
         z = z[:nc, :]
@@ -370,7 +372,7 @@ def pgm(data, delta, freq, damp=0.1):
     Data must be displacement
 
     :type data: :class:`~numpy.ndarray`
-    :param data: Data in dispalcement to convolve with pendulum at freq.
+    :param data: Data in displacement to convolve with pendulum at freq.
     :type delta: float
     :param delta: Sampling interval
     :type freq: float

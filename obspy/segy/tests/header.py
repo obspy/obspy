@@ -2,7 +2,11 @@
 """
 Information about files/segy useful for all tests.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import numpy as np
 
 # All the files and information about them. These files will be used in
 # most tests. data_sample_enc is the encoding of the data value and
@@ -65,7 +69,7 @@ FILES = {'00001034.sgy_first_trace': {
              'sample_count': 8000, 'sample_size': 4,
              'non_normalized_samples': []}}
 # The expected NumPy dtypes for the various sample encodings.
-DTYPES = {1: 'float32',
-          2: 'int32',
-          3: 'int16',
-          5: 'float32'}
+DTYPES = {1: np.float32,
+          2: np.int32,
+          3: np.int16,
+          5: np.float32}

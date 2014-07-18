@@ -8,13 +8,14 @@ SEISAN bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import frombuffer
 import numpy as np
 
 
@@ -165,8 +166,8 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     # now parse each event file channel header + data
     stream = Stream()
     dlen = arch // 8
-    dtype = byteorder + 'i' + str(dlen)
-    stype = '=i' + str(dlen)
+    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
+    stype = native_str('=i' + str(dlen))
     for _i in range(number_of_channels):
         # get channel header
         temp = _readline(fh, 1040).decode()
@@ -192,7 +193,9 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = np.fromfile(fh, dtype=dtype, count=header['npts'] + 2)
+            data = frombuffer(
+                fh.read((header['npts'] + 2) * dtype.itemsize),
+                dtype=dtype)
             # convert to system byte order
             data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))

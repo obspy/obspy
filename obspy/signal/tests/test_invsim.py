@@ -3,17 +3,18 @@
 """
 The InvSim test suite.
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
-from obspy.core import compatibility
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
 from obspy.signal.invsim import cosTaper
+
+import io
 import gzip
 import numpy as np
 import os
@@ -82,8 +83,8 @@ class InvSimTestCase(unittest.TestCase):
         # paz of test file
         samp_rate = 200.0
         PAZ_LE3D = {'poles': [-4.21 + 4.66j,
-                              - 4.21 - 4.66j,
-                              - 2.105 + 0.0j],
+                              -4.21 - 4.66j,
+                              -2.105 + 0.0j],
                     'zeros': [0.0 + 0.0j] * 3,
                     'sensitivity': 1.0,
                     'gain': 0.4}
@@ -118,7 +119,7 @@ class InvSimTestCase(unittest.TestCase):
         # paz of test file
         samp_rate = 200.0
         PAZ_STS2 = {'poles': [-0.03736 - 0.03617j,
-                              - 0.03736 + 0.03617j],
+                              -0.03736 + 0.03617j],
                     'zeros': [0.0 + 0.0j] * 2,
                     'sensitivity': 1.0,
                     'gain': 1.5}
@@ -162,9 +163,9 @@ class InvSimTestCase(unittest.TestCase):
         mag_RNON = estimateMagnitude(paz, 6.78e4, 0.125, 1.538)
         self.assertAlmostEqual(mag_RNON, 1.4995311686507182)
 
-    #XXX: Test for really big signal is missing, where the water level is
+    # XXX: Test for really big signal is missing, where the water level is
     # actually acting
-    #def test_seisSimVsPitsa2(self):
+    # def test_seisSimVsPitsa2(self):
     #    from obspy.mseed import test as tests_
     #    path = os.path.dirname(__file__)
     #    file = os.path.join(path, 'data', 'BW.BGLD..EHE.D.2008.001')
@@ -193,9 +194,9 @@ class InvSimTestCase(unittest.TestCase):
         fl2 = 1.0 / plow
         fl3 = 1.0 / phigh
         fl4 = 1.0 / (phigh - 0.25 * phigh)
-        #Uncomment the following to run the sac-commands
-        #that created the testing file
-        #if 1:
+        # Uncomment the following to run the sac-commands
+        # that created the testing file
+        # if 1:
         #    import subprocess as sp
         #    p = sp.Popen('sac',shell=True,stdin=sp.PIPE)
         #    cd1 = p.stdin
@@ -280,14 +281,14 @@ class InvSimTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
         self.assertTrue(rms < 0.0094)
-        #import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
-        #plt.plot(trtest.data,'g')
-        #plt.figure()
-        #plt.psd(tr.data,Fs=100.,NFFT=32768)
-        #plt.psd(trtest.data,Fs=100.,NFFT=32768)
-        #plt.figure()
-        #plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
-        #plt.show()
+        # import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
+        # plt.plot(trtest.data,'g')
+        # plt.figure()
+        # plt.psd(tr.data,Fs=100.,NFFT=32768)
+        # plt.psd(trtest.data,Fs=100.,NFFT=32768)
+        # plt.figure()
+        # plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
+        # plt.show()
 
     def test_cosineTaper(self):
         # SAC trace was generated with:
@@ -302,18 +303,18 @@ class InvSimTestCase(unittest.TestCase):
         # The following lines compare the cosTaper result with
         # the result of the algorithm used by SAC in its taper routine
         # (taper.c)
-        #freqs = np.fft.fftfreq(2**15,0.01)
-        #fl1 = 0.00588
-        #fl2 = 0.00625
-        #fl3 = 30.0
-        #fl4 = 35.0
-        #npts = freqs.size
-        #tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
-        #tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
-        #import matplotlib.pyplot as plt
-        #plt.plot(tap,'b')
-        #plt.plot(tap2,'g--')
-        #plt.show()
+        # freqs = np.fft.fftfreq(2**15,0.01)
+        # fl1 = 0.00588
+        # fl2 = 0.00625
+        # fl3 = 30.0
+        # fl4 = 35.0
+        # npts = freqs.size
+        # tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
+        # tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
+        # import matplotlib.pyplot as plt
+        # plt.plot(tap,'b')
+        # plt.plot(tap2,'g--')
+        # plt.show()
 
     def test_evalrespUsingDifferentLineSeparator(self):
         """
@@ -374,12 +375,26 @@ class InvSimTestCase(unittest.TestCase):
                            seedresp=seedresp)
 
         with open(respf, 'rb') as fh:
-            stringio = compatibility.BytesIO(fh.read())
+            stringio = io.BytesIO(fh.read())
         seedresp['filename'] = stringio
         tr2.data = seisSim(tr2.data, tr2.stats.sampling_rate,
                            seedresp=seedresp)
 
         self.assertEqual(tr1, tr2)
+
+    def test_segfaulting_RESP_file(self):
+        """
+        Test case for a file that segfaults when compiled with clang and
+        active optimization.
+
+        As long as the test does not segfault it is ok.
+        """
+        filename = os.path.join(self.path, "segfaulting_RESPs",
+                                "RESP.IE.LLRI..EHZ")
+        date = UTCDateTime(2003, 11, 1, 0, 0, 0)
+        self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
+                          filename=filename, date=date, station="LLRI",
+                          channel="EHZ", network="IE", locid="*", units="VEL")
 
     def test_evalresp_seed_identifiers_work(self):
         """

@@ -9,9 +9,10 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from pkg_resources import load_entry_point
 import obspy
 from obspy.core.util.base import ComparingObject
@@ -59,19 +60,19 @@ class Inventory(ComparingObject):
     def __init__(self, networks, source, sender=None, created=None,
                  module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
         """
-        :type networks: List of :class:`~obspy.station.network.Network`
+        :type networks: list of :class:`~obspy.station.network.Network`
         :param networks: A list of networks part of this inventory.
-        :type source: String
+        :type source: str
         :param source: Network ID of the institution sending the message.
-        :type sender: String
-        :param sender: Name of the institution sending this message. Optional.
-        :type created: :class:`~obspy.core.utcddatetime.UTCDateTime`
+        :type sender: str, optional
+        :param sender: Name of the institution sending this message.
+        :type created: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param created: The time when the document was created. Will be set to
-            the current time if not given. Optional.
-        :type module: String
+            the current time if not given.
+        :type module: str
         :param module: Name of the software module that generated this
             document, defaults to ObsPy related information.
-        :type module_uri: String
+        :type module_uri: str
         :param module_uri: This is the address of the query that generated the
             document, or, if applicable, the address of the software that
             generated this document, defaults to ObsPy related information.
@@ -117,7 +118,8 @@ class Inventory(ComparingObject):
         """
         Returns a dictionary containing the contents of the object.
 
-        Example
+        .. rubric:: Example
+
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
         >>> inventory.get_contents()  \
@@ -281,10 +283,10 @@ class Inventory(ComparingObject):
                time=None, starttime=None, endtime=None, sampling_rate=None,
                keep_empty=False):
         """
-        Returns the :class:`Inventory` object only with these
-        :class:`~obspy.station.network.Network`s /
-        :class:`~obspy.station.station.Station`s /
-        :class:`~obspy.station.channel.Channel`s that match the given
+        Returns the :class:`Inventory` object with only the
+        :class:`~obspy.station.network.Network`\ s /
+        :class:`~obspy.station.station.Station`\ s /
+        :class:`~obspy.station.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -295,7 +297,7 @@ class Inventory(ComparingObject):
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
-        .. rubric:: Examples
+        .. rubric:: Example
 
         >>> from obspy import read_inventory, UTCDateTime
         >>> inv = read_inventory()
@@ -374,19 +376,23 @@ class Inventory(ComparingObject):
         object.
 
         :type projection: str, optional
-        :param projection: The map projection. Currently supported are
+        :param projection: The map projection. Currently supported are:
+
             * ``"cyl"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
-            Defaults to "cyl"
+
+            Defaults to ``"cyl"``
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
-            based directly to the basemap module. Possible values are
+            based directly to the basemap module. Possible values are:
+
             * ``"c"`` (crude)
             * ``"l"`` (low)
             * ``"i"`` (intermediate)
             * ``"h"`` (high)
             * ``"f"`` (full)
+
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
@@ -403,19 +409,20 @@ class Inventory(ComparingObject):
         :type color: str
         :param color: Face color of marker symbol (see
             :func:`matplotlib.pyplot.scatter`).
-        :type color_per_network: bool (or dict)
-        :param color_per_network: If set to `True`, each network will be drawn
-            in a different color. A dictionary can be provided that maps
+        :type color_per_network: bool or dict
+        :param color_per_network: If set to ``True``, each network will be
+            drawn in a different color. A dictionary can be provided that maps
             network codes to color values (e.g.
-            `color_per_network={"GR": "black", "II": "green"}).
-        :type colormap: str, optional, any matplotlib colormap
-        :param colormap: Only ued if `color_per_network=True`. Specifies which
-            colormap is used to draw the colors for the individual networks.
-        :type legend: str or `None`
+            ``color_per_network={"GR": "black", "II": "green"}``).
+        :type colormap: str, any matplotlib colormap, optional
+        :param colormap: Only used if ``color_per_network=True``. Specifies
+            which colormap is used to draw the colors for the individual
+            networks.
+        :type legend: str or None
         :param legend: Location string for legend, if networks are plotted in
-            different colors (i.e. option `color_per_network` in use). See
+            different colors (i.e. option ``color_per_network`` in use). See
             :func:`matplotlib.pyplot.legend` for possible values for
-            legend location string. To disable legend set to `None`.
+            legend location string. To disable legend set to ``None``.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only plot stations available at given point in time.
         :type show: bool
@@ -546,25 +553,28 @@ class Inventory(ComparingObject):
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+                * ``"DISP"`` -- displacement, output unit is meters;
+                * ``"VEL"`` -- velocity, output unit is meters/second; or,
+                * ``"ACC"`` -- acceleration, output unit is meters/second**2.
+
         :type network: str
         :param network: Only plot matching networks. Accepts UNIX style
-            patterns and wildcards (e.g. "G*", "*[ER]"; see
+            patterns and wildcards (e.g. ``"G*"``, ``"*[ER]"``; see
             :func:`~fnmatch.fnmatch`)
         :type station: str
         :param station: Only plot matching stations. Accepts UNIX style
-            patterns and wildcards (e.g. "L44*", "L4?A", "[LM]44A"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"L44*"``, ``"L4?A"``,
+            ``"[LM]44A"``; see :func:`~fnmatch.fnmatch`)
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only regard networks/stations/channels active at given
             point in time.
@@ -581,7 +591,7 @@ class Inventory(ComparingObject):
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
         :type unwrap_phase: bool
-        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.

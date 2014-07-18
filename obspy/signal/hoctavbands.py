@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: hoctavbands.py
 #   Author: Conny Hammer
 #    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Half Octave Bands
 
@@ -16,10 +16,9 @@ Half Octave Bands
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from scipy import fftpack
 import numpy as np
@@ -57,7 +56,7 @@ def sonogram(data, fs, fc1, nofb, no_win):
         fmin[i] = fc[i] / np.sqrt(float(5. / 3.))
         fmax[i] = fc[i] * np.sqrt(float(5. / 3.))
     nfft = util.nextpow2(data.shape[np.size(data.shape) - 1])
-    #c = np.zeros((data.shape), dtype='complex64')
+    # c = np.zeros((data.shape), dtype=np.complex64)
     c = fftpack.fft(data, nfft)
     z = np.zeros([len(c[:, 1]), nofb])
     z_tot = np.zeros(len(c[:, 1]))

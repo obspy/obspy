@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#--------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: cross_correlation.py
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.
 
@@ -16,8 +16,9 @@ Signal processing routines based on cross correlation techniques.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import warnings
@@ -73,7 +74,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
 
     .. rubric:: Example
 
-    >>> tr1 = np.random.randn(10000).astype('float32')
+    >>> tr1 = np.random.randn(10000).astype(np.float32)
     >>> tr2 = tr1.copy()
     >>> a, b = xcorr(tr1, tr2, 1000)
     >>> a
@@ -96,9 +97,9 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
               "use shift_len/2 which we want to avoid."
         raise ValueError(msg)
     # be nice and adapt type if necessary
-    tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
-    tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
-    corp = np.empty(2 * shift_len + 1, dtype='float64', order='C')
+    tr1 = np.ascontiguousarray(tr1, np.float32)
+    tr2 = np.ascontiguousarray(tr2, np.float32)
+    corp = np.empty(2 * shift_len + 1, dtype=np.float64, order='C')
 
     shift = C.c_int()
     coe_p = C.c_double()
@@ -132,7 +133,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
         component_id codes are ignored)
     :type shift_len: int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type components: List of strings
+    :type components: list of str
     :param components: List of components to use in cross-correlation, defaults
         to ``['Z', 'N', 'E']``.
     :type full_xcorr: bool
@@ -157,7 +158,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
                  for st in streams for component in components]:
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
-    corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
+    corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
 
     for component in components:
         xx = xcorr(streams[0].select(component=component)[0],
@@ -227,7 +228,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     picks the following can be tried::
 
         t_before=0.05, t_after=0.2, cc_maxlag=0.10,
-        filter="bandpass", filter_options={'filter_low': 1, 'filter_high': 20}
+        filter="bandpass", filter_options={'freqmin': 1, 'freqmax': 20}
 
     The appropriate parameter sets can and should be determined/verified
     visually using the option `show=True` on a representative set of picks.
@@ -256,7 +257,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     :type cc_maxlag: float
     :param cc_maxlag: Maximum lag time tested during cross correlation in
             seconds.
-    :type filter: string
+    :type filter: str
     :param filter: None for no filtering or name of filter type
             as passed on to :meth:`~obspy.core.Trace.trace.filter` if filter
             should be used. To avoid artifacts in filtering provide
@@ -268,7 +269,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     :param plot: Determines if pick is refined automatically (default, ""),
             if an informative matplotlib plot is shown ("plot"), or if an
             interactively changeable PyQt Window is opened ("interactive").
-    :type filename: string
+    :type filename: str
     :param filename: If plot option is selected, specifying a filename here
             (e.g. 'myplot.pdf' or 'myplot.png') will output the plot to a file
             instead of opening a plot window.
@@ -308,7 +309,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
             warnings.warn(msg)
         # apply signal processing and take correct slice of data
         if filter:
-            tr.data = tr.data.astype("float64")
+            tr.data = tr.data.astype(np.float64)
             tr.detrend(type='demean')
             tr.data *= cosTaper(len(tr), 0.1)
             tr.filter(type=filter, **filter_options)
@@ -414,7 +415,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         ax2.set_ylabel("correlation coefficient")
         ax2.set_ylim(-1, 1)
         ax2.legend(loc="lower right", prop={'size': "x-small"})
-        #plt.legend(loc="lower left")
+        # plt.legend(loc="lower left")
         if filename:
             fig.savefig(fname=filename)
         else:
@@ -447,7 +448,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
 
     >>> from obspy import read, UTCDateTime
     >>> import numpy as np
-    >>> np.random.seed(123)  # make test reproducable
+    >>> np.random.seed(123)  # make test reproducible
     >>> st = read()
     >>> t = UTCDateTime(2009, 8, 24, 0, 20, 7, 700000)
     >>> templ = st.copy().slice(t, t+5)

@@ -8,13 +8,11 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import range
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
+
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
@@ -106,11 +104,6 @@ class Stats(AttribDict):
         >>> stats.delta = 0.5
         >>> stats.endtime
         UTCDateTime(2009, 1, 1, 12, 0, 29, 500000)
-
-        .. note::
-            The attribute ``endtime`` is currently calculated as
-            ``endtime = starttime + (npts-1) * delta``. This behaviour may
-            change in the future to ``endtime = starttime + npts * delta``.
 
     (3) The attribute ``endtime`` is read only and can not be modified.
 
@@ -286,6 +279,14 @@ class Trace(object):
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
 
+    @property
+    def meta(self):
+        return self.stats
+
+    @meta.setter
+    def meta(self, value):
+        self.stats = value
+
     def __eq__(self, other):
         """
         Implements rich comparison of Trace objects for "==" operator.
@@ -335,6 +336,12 @@ class Trace(object):
         Too ambiguous, throw an Error.
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __nonzero__(self):
+        """
+        No data means no trace.
+        """
+        return bool(len(self.data))
 
     def __str__(self, id_length=None):
         """
@@ -424,7 +431,7 @@ class Trace(object):
         """
         Creates a new Stream containing num copies of this trace.
 
-        :rtype num: int
+        :type num: int
         :param num: Number of copies.
         :returns: New ObsPy Stream object.
 
@@ -539,11 +546,10 @@ class Trace(object):
         """
         Adds another Trace object to current trace.
 
-        :type method: ``0`` or ``1``, optional
+        :type method: int, optional
         :param method: Method to handle overlaps of traces. Defaults to ``0``.
             See the `Handling Overlaps`_ section below for further details.
-        :type fill_value: int or float, ``'latest'`` or ``'interpolate'``,
-            optional
+        :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
             gaps are present. If the keyword ``'latest'`` is provided it will
@@ -556,7 +562,7 @@ class Trace(object):
             the number of samples which are used to interpolate between
             overlapping traces. Defaults to ``0``. If set to ``-1`` all
             overlapping samples are interpolated.
-        :type sanity_checks: boolean, optional
+        :type sanity_checks: bool, optional
         :param sanity_checks: Enables some sanity checks before merging traces.
             Defaults to ``True``.
 
@@ -765,7 +771,7 @@ class Trace(object):
             # use fixed value or interpolate in between
             gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
-        # merge traces depending on numpy array type
+        # merge traces depending on NumPy array type
         if True in [isinstance(_i, np.ma.masked_array) for _i in data]:
             data = np.ma.concatenate(data)
         else:
@@ -861,9 +867,9 @@ class Trace(object):
         """
         Saves current trace into a file.
 
-        :type filename: string
+        :type filename: str
         :param filename: The name of the file to write.
-        :type format: string
+        :type format: str
         :param format: The format to write must be specified. One of
             ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
             ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
@@ -942,7 +948,12 @@ class Trace(object):
             self.data = np.empty(0, dtype=org_dtype)
             return
         elif delta > 0:
-            self.data = self.data[delta:]
+            try:
+                self.data = self.data[delta:]
+            except IndexError:
+                # a huge numbers for delta raises an IndexError
+                # here we just create empty array with same dtype
+                self.data = np.empty(0, dtype=org_dtype)
         return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):
@@ -1023,13 +1034,13 @@ class Trace(object):
             selected, if set to ``False``, the next sample containing the time
             is selected. Defaults to ``True``.
 
-                Given the following trace containing 4 samples, "|" are the
-                sample points, "A" is the requested starttime::
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
 
-                    |        A|         |         |
+                |        A|         |         |
 
-                ``nearest_sample=True`` will select the second sample point,
-                ``nearest_sample=False`` will select the first sample point.
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
 
         :type fill_value: int, float or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
@@ -1442,7 +1453,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
-        :type window: array_like, callable, string, float, or tuple, optional
+        :type window: array_like, callable, str, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
             Fourier domain. Defaults to ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
@@ -1450,8 +1461,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``True``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -1515,8 +1535,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
         :type strict_length: bool, optional
-        :param strict_length: Leave traces unchanged for which endtime of trace
-            would change. Defaults to ``False``.
+        :param strict_length: Leave traces unchanged for which end time of
+            trace would change. Defaults to ``False``.
 
         Currently a simple integer decimation is implemented.
         Only every ``decimation_factor``-th sample remains in the trace, all
@@ -1525,9 +1545,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         filtering can be deactivated with ``no_filter=True``.
 
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. To
-        abort downsampling in case of changing endtimes set
+        zero then the end time of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing end times set
         ``strict_length=True``.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
 
         .. note::
 
@@ -1608,7 +1637,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         :return: Standard deviation of ``trace.data``.
 
-        Standard deviation is calculated by numpy method
+        Standard deviation is calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data``.
 
         .. rubric:: Example
@@ -1628,7 +1657,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to differentiate the trace with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: str, optional
         :param type: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
@@ -1663,7 +1692,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to integrate the trace with respect to time.
 
-        :type type: ``'cumtrapz'``, optional
+        :type type: str, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See the `Supported Methods`_ section below for
             further details.
@@ -1701,7 +1730,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('integrate', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # scipy needs to set dx keyword if not given in options
+            # SciPy needs to set dx keyword if not given in options
             if 'dx' not in options:
                 options['dx'] = self.stats.delta
             args = [self.data]
@@ -1718,8 +1747,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Method to remove a linear trend from the trace.
 
-        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
-            optional
+        :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
 
@@ -1750,7 +1778,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('detrend', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # scipy need to set the type keyword
+            # SciPy need to set the type keyword
             if type == 'demean':
                 type = 'constant'
             options['type'] = type
@@ -1944,7 +1972,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             norm = self.max()
 
-        self.data = self.data.astype("float64")
+        self.data = self.data.astype(np.float64)
         self.data /= abs(norm)
 
         return self
@@ -1991,7 +2019,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def _addProcessingInfo(self, info):
         """
         Adds the given informational string to the `processing` field in the
-        trace's :class:`~obspy.core.trace.stats.Stats` object.
+        trace's :class:`~obspy.core.trace.Stats` object.
         """
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
@@ -2023,9 +2051,120 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             trace_list.append(tr)
         return Stream(trace_list)
 
+    @skipIfNoData
+    @raiseIfMasked
+    @_add_processing_info
+    def interpolate(self, sampling_rate, method="weighted_average_slopes",
+                    starttime=None, npts=None):
+        """
+        Interpolate the data using various interpolation techniques.
+
+        No filter, antialiasing, ... is applied so make sure the data is
+        suitable for the operation to be performed.
+
+        .. note::
+
+            The :class:`~Trace` object has three different methods to change
+            the sampling rate of its data: :meth:`~.resample`,
+            :meth:`~.decimate`, and :meth:`~.interpolate`
+
+            Make sure to choose the most appropriate one for the problem at
+            hand.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data will no longer be accessible afterwards. To keep your
+            original data, use :meth:`~.copy` to create a copy of your Trace
+            object.
+
+
+        :param sampling_rate: The new sampling rate in ``Hz``.
+        :param method: The kind of interpolation to perform as a string (
+            ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``,
+            ``"quadratic"``, ``"cubic"``, or ``"weighted_average_slopes"``
+            where ``"slinear"``, ``"quadratic"`` and ``"cubic"`` refer  to a
+            spline interpolation of first,  second or third order) or as an
+            integer specifying the order of the spline interpolator to use.
+            Defaults to ``"weighted_average_slopes"`` which is the
+            interpolation technique used by SAC. Refer to
+            :func:`~obspy.signal.interpolation.weighted_average_slopes` for
+            more details.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
+        :param starttime: The start time (or timestamp) for the new
+            interpolated stream. Will be set to current start time of the
+            trace if not given.
+        :type npts: int
+        :param npts: The new number of samples. Will be set to the best
+            fitting  number to retain the current end time of the trace if
+            not given.
+
+        .. rubric:: _`Usage Examples`
+
+
+        >>> from obspy import read
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> tr.interpolate(sampling_rate=111.1)  # doctest: +ELLIPSIS
+        <obspy.core.trace.Trace object at 0x...>
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
+
+        Setting ``starttime`` and/or ``npts`` will interpolate to sampling
+        points with the given start time and/or number of samples.
+        Extrapolation will not be performed.
+
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03... - ... | 100.0 Hz, 3000 samples
+        >>> tr.interpolate(sampling_rate=111.1,
+        ...                starttime=tr.stats.starttime + 10) \
+        # doctest:  +ELLIPSIS
+        <obspy.core.trace.Trace object at 0x...>
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:13... - ... | 111.1 Hz, 2221 samples
+        """
+        try:
+            method = method.lower()
+        except:
+            pass
+
+        dt = float(sampling_rate)
+        if dt <= 0.0:
+            raise ValueError("The time step must be positive.")
+        dt = 1.0 / sampling_rate
+
+        if isinstance(method, int) or method in ["linear", "nearest", "zero",
+                                                 "slinear", "quadratic",
+                                                 "cubic"]:
+            func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
+        else:
+            func = _getFunctionFromEntryPoint('interpolate', method)
+        old_start = self.stats.starttime.timestamp
+        old_dt = self.stats.delta
+
+        if starttime is not None:
+            try:
+                starttime = starttime.timestamp
+            except AttributeError:
+                pass
+        else:
+            starttime = self.stats.starttime.timestamp
+
+        if npts is None:
+            npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
+                                  dt)) + 1
+        self.data = func(np.require(self.data, dtype=np.float64), old_start,
+                         old_dt, starttime, dt, npts, type=method)
+        self.stats.starttime = UTCDateTime(starttime)
+        self.stats.delta = dt
+
+        return self
+
     def times(self):
         """
-        For convenient plotting compute a Numpy array of seconds since
+        For convenient plotting compute a NumPy array of seconds since
         starttime corresponding to the samples in Trace.
 
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
@@ -2161,12 +2300,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.plot()
 
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
         :type water_level: float
         :param water_level: Water level for deconvolution.
-        :type pre_filt: List or tuple of four float
+        :type pre_filt: list or tuple of four float
         :param pre_filt: Apply a bandpass filter in frequency domain to the
             data before deconvolution. The list or tuple defines
             the four corner frequencies `(f1, f2, f3, f4)` of a cosine taper
@@ -2217,7 +2362,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             return self
 
         # use evalresp
-        data = self.data.astype("float64")
+        data = self.data.astype(np.float64)
         npts = len(data)
         # time domain pre-processing
         if zero_mean:
@@ -2263,7 +2408,7 @@ def _data_sanity_checks(value):
         msg = "Trace.data must be a NumPy array."
         raise ValueError(msg)
     if value.ndim != 1:
-        msg = ("Numpy array for Trace.data has bad shape ('%s'). Only 1-d "
+        msg = ("NumPy array for Trace.data has bad shape ('%s'). Only 1-d "
                "arrays are allowed for initialization.") % str(value.shape)
         raise ValueError(msg)
 

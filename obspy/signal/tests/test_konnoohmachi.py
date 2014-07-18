@@ -3,7 +3,9 @@
 """
 The polarization.core test suite.
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal import konnoOhmachiSmoothing
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \
@@ -33,23 +35,23 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         # Frequency of zero results in a delta peak at zero (there usually
         # should be just one zero in the frequency array.
         window = konnoOhmachiSmoothingWindow(np.array([0, 1, 0, 3],
-                                                      dtype='float32'), 0)
+                                                      dtype=np.float32), 0)
         np.testing.assert_array_equal(window, np.array([1, 0, 1, 0],
-                                                       dtype='float32'))
+                                                       dtype=np.float32))
         # Wrong dtypes raises.
         self.assertRaises(ValueError, konnoOhmachiSmoothingWindow,
-                          np.arange(10, dtype='int32'), 10)
+                          np.arange(10, dtype=np.int32), 10)
         # If frequency=center frequency, log results in infinity. Limit of
         # whole formulae is 1.
         window = konnoOhmachiSmoothingWindow(np.array([5.0, 1.0, 5.0, 2.0],
-                                                      dtype='float32'), 5)
+                                                      dtype=np.float32), 5)
         np.testing.assert_array_equal(
-            window[[0, 2]], np.array([1.0, 1.0], dtype='float32'))
+            window[[0, 2]], np.array([1.0, 1.0], dtype=np.float32))
         # Output dtype should be the dtype of frequencies.
         self.assertEqual(konnoOhmachiSmoothingWindow(np.array([1, 6, 12],
-                         dtype='float32'), 5).dtype, np.float32)
+                         dtype=np.float32), 5).dtype, np.float32)
         self.assertEqual(konnoOhmachiSmoothingWindow(np.array([1, 6, 12],
-                         dtype='float64'), 5).dtype, np.float64)
+                         dtype=np.float64), 5).dtype, np.float64)
         # Check if normalizing works.
         window = konnoOhmachiSmoothingWindow(self.frequencies, 20)
         self.assertTrue(window.sum() > 1.0)
@@ -73,7 +75,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         temp = np.geterr()
         np.seterr(all='ignore')
         frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-                               dtype='float32')
+                               dtype=np.float32)
         matrix = calculateSmoothingMatrix(frequencies, 20.0)
         self.assertEqual(matrix.dtype, np.float32)
         for _i, freq in enumerate(frequencies):
@@ -87,13 +89,13 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         # Input should be output dtype.
         frequencies = np.array(
             [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-            dtype='float64')
+            dtype=np.float64)
         matrix = calculateSmoothingMatrix(frequencies, 20.0)
         self.assertEqual(matrix.dtype, np.float64)
         # Check normalization.
         frequencies = np.array(
             [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
-            dtype='float32')
+            dtype=np.float32)
         matrix = calculateSmoothingMatrix(frequencies, 20.0, normalize=True)
         self.assertEqual(matrix.dtype, np.float32)
         for _i, freq in enumerate(frequencies):
@@ -135,11 +137,11 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(smoothed_1, smoothed_2, 3)
         # Test the non-matrix mode for single spectra.
         smoothed_3 = konnoOhmachiSmoothing(
-            np.require(spectra[0], dtype='float64'),
-            np.require(frequencies, dtype='float64'))
+            np.require(spectra[0], dtype=np.float64),
+            np.require(frequencies, dtype=np.float64))
         smoothed_4 = konnoOhmachiSmoothing(
-            np.require(spectra[0], dtype='float64'),
-            np.require(frequencies, dtype='float64'),
+            np.require(spectra[0], dtype=np.float64),
+            np.require(frequencies, dtype=np.float64),
             normalize=True)
         # The normalized and not normalized should not be the same. That the
         # normalizing works has been tested before.

@@ -8,7 +8,10 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals, print_function
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import collections
 import copy
 
@@ -122,8 +125,8 @@ class AttribDict(collections.MutableMapping):
         """
         Return better readable string representation of AttribDict object.
 
-        :type priorized_keys: List of str, optional
-        :param priorized_keys: Keywords of current AttribtDict which will be
+        :type priorized_keys: list of str, optional
+        :param priorized_keys: Keywords of current AttribDict which will be
             shown before all other keywords. Those keywords must exists
             otherwise an exception will be raised. Defaults to empty list.
         :type min_label_length: int, optional

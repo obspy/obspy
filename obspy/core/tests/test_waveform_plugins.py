@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
-from obspy.core import compatibility
+
+import io
 from pkg_resources import load_entry_point
 import numpy as np
 import os
@@ -55,10 +55,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
                     # new trace object in native byte order
-                    dt = np.dtype("int").newbyteorder(native_byteorder)
+                    dt = np.dtype(np.int_).newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
                         # MiniSEED and GSE2 cannot write int64, enforce type
-                        dt = "int32"
+                        dt = np.int32
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
                     tr.stats.station = "MANZ1"
@@ -96,13 +96,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             self.assertEqual(st[0].stats._format, format)
                             # BytesIO without format
                             with open(outfile, 'rb') as fp:
-                                temp = compatibility.BytesIO(fp.read())
+                                temp = io.BytesIO(fp.read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # BytesIO with format
                             with open(outfile, 'rb') as fp:
-                                temp = compatibility.BytesIO(fp.read())
+                                temp = io.BytesIO(fp.read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
@@ -190,9 +190,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
 
-            dt = np.dtype("int")
+            dt = np.int_
             if format in ('MSEED', 'GSE2'):
-                dt = "int32"
+                dt = np.int32
             tr = Trace(data=data.astype(dt))
             tr.stats.network = "BW"
             tr.stats.station = "MANZ1"
@@ -231,7 +231,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
-                #for data in :
+                # for data in :
                 #    np.testing.assert_array_equal(values, original)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')
@@ -249,7 +249,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
-        data = np.arange(10, dtype='int32')
+        data = np.arange(10, dtype=np.int32)
         # make array non-contiguous
         data = data[::2]
         tr = Trace(data=data)
@@ -351,9 +351,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             stream = deepcopy(stream_orig)
             # set some data
-            dt = 'f4'
+            dt = np.float32
             if format in ('GSE2', 'MSEED'):
-                dt = 'i4'
+                dt = np.int32
             for tr in stream:
                 tr.data = np.arange(tr.stats.npts).astype(dt)
             with NamedTemporaryFile() as tf:

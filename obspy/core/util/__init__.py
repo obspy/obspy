@@ -18,7 +18,9 @@ obspy.core.util - Various utilities for ObsPy
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 # import order matters - NamedTemporaryFile must be one of the first!
 from obspy.core.util.attribdict import AttribDict
@@ -36,5 +38,4 @@ from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     scoreatpercentile, toIntOrZero, loadtxt, CatchOutput
 from obspy.core.util.obspy_types import OrderedDict, Enum, \
     ComplexWithUncertainties, FloatWithUncertainties
-from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
 from obspy.core.util.version import get_git_version as _getVersionString

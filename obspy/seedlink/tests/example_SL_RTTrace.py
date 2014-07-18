@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.realtime.rttrace import RtTrace
@@ -39,10 +37,12 @@ class MySLClient(SLClient):
 
         :type count: int
         :param count:  Packet counter.
-        :type slpack: :class:`~obspy.seedlink.SLPacket`
+        :type slpack: :class:`~obspy.seedlink.slpacket.SLPacket`
         :param slpack: packet to process.
-        :return: Boolean true if connection to SeedLink server should be \
-            closed and session terminated, false otherwise.
+
+        :rtype: bool
+        :return: True if connection to SeedLink server should be closed and
+            session terminated, False otherwise.
         """
         # check if not a complete packet
         if slpack is None or (slpack == SLPacket.SLNOPACKET) or \
@@ -85,11 +85,11 @@ class MySLClient(SLClient):
             print(" sampletype:" + str(trace.stats['sampletype']), end=' ')
             print(" dataquality:" + str(trace.stats['dataquality']))
             # Custom: append packet data to RtTrace
-            #g_o_check = True    # raises Error on gap or overlap
-            g_o_check = False   # clears RTTrace memory on gap or overlap
+            # g_o_check = True    # raises Error on gap or overlap
+            g_o_check = False  # clears RTTrace memory on gap or overlap
             self.rt_trace.append(trace, gap_overlap_check=g_o_check,
                                  verbose=True)
-            length = self.rt_trace.stats.npts /\
+            length = self.rt_trace.stats.npts / \
                 self.rt_trace.stats.sampling_rate
             print(self.__class__.__name__ + ":", end=' ')
             print("append to RTTrace: npts:",
@@ -106,7 +106,7 @@ class MySLClient(SLClient):
 def main():
     # initialize realtime trace
     rttrace = RtTrace(max_length=60)
-    #rttrace.registerRtProcess('integrate')
+    # rttrace.registerRtProcess('integrate')
     rttrace.registerRtProcess(np.abs)
     # width in num samples
     boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
@@ -123,11 +123,11 @@ def main():
         slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
         slClient.multiselect = ("GE_STU:BHZ")
         #
-        #slClient.slconn.setSLAddress("discovery.rm.ingv.it:39962")
-        #slClient.multiselect = ("IV_MGAB:BHZ")
+        # slClient.slconn.setSLAddress("discovery.rm.ingv.it:39962")
+        # slClient.multiselect = ("IV_MGAB:BHZ")
         #
-        #slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")
-        #slClient.multiselect = ("AT_TTA:BHZ")
+        # slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")
+        # slClient.multiselect = ("AT_TTA:BHZ")
         #
         # set a time window from 2 min in the past to 5 sec in the future
         dt = UTCDateTime()

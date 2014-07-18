@@ -1,5 +1,7 @@
-from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -96,7 +98,7 @@ class StatsTestCase(unittest.TestCase):
         """
         Various setter and getter tests.
         """
-        #1
+        # 1
         stats = Stats()
         stats.test = dict()
         stats.test['test2'] = 'muh'
@@ -109,11 +111,11 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats.test['test2'], 'maeh')
         self.assertEqual(stats['test'].test2, 'maeh')
         self.assertEqual(stats['test']['test2'], 'maeh')
-        #2 - multiple initialization
+        # 2 - multiple initialization
         stats = Stats({'muh': 'meah'})
         stats2 = Stats(Stats(Stats(stats)))
         self.assertEqual(stats2.muh, 'meah')
-        #3 - check conversion to AttribDict
+        # 3 - check conversion to AttribDict
         stats = Stats()
         stats.sub1 = {'muh': 'meah'}
         stats.sub2 = AttribDict({'muh2': 'meah2'})

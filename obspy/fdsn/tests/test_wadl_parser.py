@@ -9,10 +9,10 @@ The obspy.fdsn.wadl_parser test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from future.builtins import open
-from future.builtins import str  # NOQA
-from future.utils import native_str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
 
 from obspy.fdsn.wadl_parser import WADLParser
@@ -69,10 +69,10 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["endtime"]["type"], UTCDateTime)
         self.assertEqual(params["endtime"]["required"], True)
 
-        self.assertEqual(params["network"]["type"], native_str)
-        self.assertEqual(params["station"]["type"], native_str)
-        self.assertEqual(params["location"]["type"], native_str)
-        self.assertEqual(params["channel"]["type"], native_str)
+        self.assertEqual(params["network"]["type"], str)
+        self.assertEqual(params["station"]["type"], str)
+        self.assertEqual(params["location"]["type"], str)
+        self.assertEqual(params["channel"]["type"], str)
 
         self.assertEqual(sorted(params["quality"]["options"]),
                          sorted(["D", "R", "Q", "M", "B"]))
@@ -214,10 +214,10 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["startafter"]["type"], UTCDateTime)
         self.assertEqual(params["endbefore"]["type"], UTCDateTime)
         self.assertEqual(params["endafter"]["type"], UTCDateTime)
-        self.assertEqual(params["network"]["type"], native_str)
-        self.assertEqual(params["station"]["type"], native_str)
-        self.assertEqual(params["location"]["type"], native_str)
-        self.assertEqual(params["channel"]["type"], native_str)
+        self.assertEqual(params["network"]["type"], str)
+        self.assertEqual(params["station"]["type"], str)
+        self.assertEqual(params["location"]["type"], str)
+        self.assertEqual(params["channel"]["type"], str)
         self.assertEqual(params["minlatitude"]["type"], float)
         self.assertEqual(params["maxlatitude"]["type"], float)
         self.assertEqual(params["latitude"]["type"], float)
@@ -226,7 +226,7 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["longitude"]["type"], float)
         self.assertEqual(params["minradius"]["type"], float)
         self.assertEqual(params["maxradius"]["type"], float)
-        self.assertEqual(params["level"]["type"], native_str)
+        self.assertEqual(params["level"]["type"], str)
         self.assertEqual(params["includerestricted"]["type"], bool)
         self.assertEqual(params["includeavailability"]["type"], bool)
         self.assertEqual(params["updatedafter"]["type"], UTCDateTime)
@@ -241,11 +241,11 @@ class WADLParserTestCase(unittest.TestCase):
         # Assert that types have been assigned.
         self.assertEqual(params["starttime"]["type"], UTCDateTime)
         self.assertEqual(params["endtime"]["type"], UTCDateTime)
-        self.assertEqual(params["network"]["type"], native_str)
-        self.assertEqual(params["station"]["type"], native_str)
-        self.assertEqual(params["location"]["type"], native_str)
-        self.assertEqual(params["channel"]["type"], native_str)
-        self.assertEqual(params["quality"]["type"], native_str)
+        self.assertEqual(params["network"]["type"], str)
+        self.assertEqual(params["station"]["type"], str)
+        self.assertEqual(params["location"]["type"], str)
+        self.assertEqual(params["channel"]["type"], str)
+        self.assertEqual(params["quality"]["type"], str)
         self.assertEqual(params["minimumlength"]["type"], float)
         self.assertEqual(params["longestonly"]["type"], bool)
 
@@ -312,7 +312,7 @@ class WADLParserTestCase(unittest.TestCase):
             self.assertTrue("minimumlength" in msg)
             self.assertTrue("longestonly" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
@@ -342,7 +342,7 @@ class WADLParserTestCase(unittest.TestCase):
             self.assertTrue("includeallorigins" in msg)
             self.assertTrue("updatedafter" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)

@@ -2,8 +2,10 @@
 """
 CSS bindings to ObsPy core module.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
 import os
 import struct
 import numpy as np
@@ -17,7 +19,7 @@ def isCSS(filename):
     """
     Checks whether a file is CSS waveform data (header) or not.
 
-    :type filename: string
+    :type filename: str
     :param filename: CSS file to be checked.
     :rtype: bool
     :return: ``True`` if a CSS waveform header file.
@@ -55,7 +57,7 @@ def readCSS(filename, **kwargs):
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: CSS file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.

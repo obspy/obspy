@@ -9,10 +9,10 @@ Provides the Station class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from future.builtins import super
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
 from obspy.station.util import Longitude, Latitude, Distance
@@ -38,7 +38,7 @@ class Station(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type channels: A list of :class:`obspy.station.channel.Channel`
+        :type channels: list of :class:`~obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
         :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: The latitude of the station
@@ -51,7 +51,7 @@ class Station(BaseNode):
             etc
         :param geology: Type of rock and/or geologic formation.
         :param equiment: Equipment used by all channels at a station.
-        :type operators: A list of :class:`~obspy.station.util.Operator`
+        :type operators: list of :class:`~obspy.station.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
             Operator tag. Since the Contact element is a generic type that
@@ -60,36 +60,36 @@ class Station(BaseNode):
         :type creation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param creation_date: Date and time (UTC) when the station was first
             installed
-        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
         :param termination_date: Date and time (UTC) when the station was
             terminated or will be terminated. A blank value should be assumed
-            to mean that the station is still active. Optional
-        :type total_number_of_channels: Integer
+            to mean that the station is still active.
+        :type total_number_of_channels: int, optional
         :param total_number_of_channels: Total number of channels recorded at
-            this station. Optional.
-        :type selected_number_of_channels: Integer
+            this station.
+        :type selected_number_of_channels: int, optional
         :param selected_number_of_channels: Number of channels recorded at this
             station and selected by the query that produced this document.
-            Optional.
         :type external_references: list of
-            :class:`~obspy.station.util.ExternalReference`
+            :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as
-            IRIS data reports or dataless SEED volumes. Optional.
-        :type description: String, optional
+            IRIS data reports or dataless SEED volumes.
+        :type description: str, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """
@@ -148,7 +148,8 @@ class Station(BaseNode):
         """
         Returns a dictionary containing the contents of the object.
 
-        Example
+        .. rubric:: Example
+
         >>> from obspy import read_inventory
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
@@ -198,11 +199,11 @@ class Station(BaseNode):
             msg = "Equipments can only contain Equipment objects."
             raise ValueError(msg)
         self._equipments = value
-        #if value is None or isinstance(value, Equipment):
+        # if value is None or isinstance(value, Equipment):
         #    self._equipment = value
-        #elif isinstance(value, dict):
+        # elif isinstance(value, dict):
         #    self._equipment = Equipment(**value)
-        #else:
+        # else:
         #    msg = ("equipment needs to be be of type obspy.station.Equipment "
         #        "or contain a dictionary with values suitable for "
         #        "initialization.")
@@ -278,8 +279,8 @@ class Station(BaseNode):
     def select(self, location=None, channel=None, time=None, starttime=None,
                endtime=None, sampling_rate=None):
         """
-        Returns the :class:`Station` object only with these
-        :class:`~obspy.station.channel.Channel`s that match the given
+        Returns the :class:`Station` object with only the
+        :class:`~obspy.station.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -290,7 +291,7 @@ class Station(BaseNode):
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
-        .. rubric:: Examples
+        .. rubric:: Example
 
         >>> from obspy import read_inventory, UTCDateTime
         >>> sta = read_inventory()[0][0]
@@ -362,17 +363,23 @@ class Station(BaseNode):
         :type min_freq: float
         :param min_freq: Lowest frequency to plot.
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+                ``"DISP"``
+                    displacement, output unit is meters
+                ``"VEL"``
+                    velocity, output unit is meters/second
+                ``"ACC"``
+                    acceleration, output unit is meters/second**2
+
         :type location: str
         :param location: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :type channel: str
         :param channel: Only plot matching channels. Accepts UNIX style
-            patterns and wildcards (e.g. "BH*", "BH?", "*Z", "[LB]HZ"; see
-            :func:`~fnmatch.fnmatch`)
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
         :param time: Only show channels active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Only show channels active at or after given point in
@@ -385,7 +392,7 @@ class Station(BaseNode):
             amplitude/phase spectrum into. If not specified, a new figure is
             opened.
         :type unwrap_phase: bool
-        :param unwrap_phase: Set optional phase unwrapping using numpy.
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.

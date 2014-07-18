@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future import standard_library  # NOQA
-from future.builtins import super
-from future.builtins import range
-from future.builtins import str
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from lxml.etree import Element, SubElement
-from obspy.core import compatibility
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
 from obspy.xseed.utils import setXPath, getXPath
+
+import io
+from lxml.etree import Element, SubElement
 import sys
 
 
 class Blockette060(Blockette):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # @UnusedVariable
         """
         """
         self.stages = []
@@ -58,24 +57,24 @@ class Blockette060(Blockette):
     name = "Response Reference Blockette"
     fields = [
         Integer(3, "Number of stages", 2),
-        #REPEAT field 4, with appropriate fields 5 and 6, for each filter stage
+        # REPEAT field 4, with appropriate fields 5 and 6, for each stage
         Loop("FIR Coefficient", "Number of stages", [
             Integer(4, "Stage sequence number", 2),
             Integer(5, "Number of responses", 2),
-            #REPEAT field 6, one for each response within each stage:
+            # REPEAT field 6, one for each response within each stage:
             Loop("Response lookup key", "Number of responses", [
                 Integer(6, "Response lookup key", 4)], omit_tag=True),
         ]),
     ]
 
-    def parseSEED(self, data, length=0, *args, **kwargs):
+    def parseSEED(self, data, length=0, *args, **kwargs):  # @UnusedVariable
         """
         Read Blockette 60.
         """
         # convert to stream for test issues
         if isinstance(data, bytes):
             length = len(data)
-            data = compatibility.BytesIO(data)
+            data = io.BytesIO(data)
         elif isinstance(data, (str, native_str)):
             raise TypeError("data must be bytes, not string")
         new_data = data.read(length)
@@ -93,7 +92,7 @@ class Blockette060(Blockette):
                 self.stages[-1].append(int(new_data[counter:counter + 4]))
                 counter += 4
 
-    def getSEED(self, *args, **kwargs):
+    def getSEED(self, *args, **kwargs):  # @UnusedVariable
         """
         Writes Blockette 60.
         """
@@ -116,7 +115,7 @@ class Blockette060(Blockette):
         data = header + data
         return data
 
-    def getXML(self, xseed_version, *args, **kwargs):
+    def getXML(self, xseed_version, *args, **kwargs):  # @UnusedVariable
         """
         Write XML.
         """
@@ -140,7 +139,8 @@ class Blockette060(Blockette):
                     setXPath('dictionary', self.stages[_i][_j])
         return node
 
-    def parseXML(self, xml_doc, version='1.0', *args, **kwargs):
+    def parseXML(self, xml_doc,
+                 version='1.0', *args, **kwargs):  # @UnusedVariable
         """
         Read XML of blockette 60.
         """

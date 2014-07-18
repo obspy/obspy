@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Filename: konnoohmachismoothing.py
 #  Purpose: Small module to smooth spectra with the so called Konno & Ohmachi
 #           method.
@@ -8,7 +8,7 @@
 #  License: GPLv2
 #
 # Copyright (C) 2011 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions to smooth spectra with the so called Konno & Ohmachi method.
 
@@ -18,9 +18,9 @@ Functions to smooth spectra with the so called Konno & Ohmachi method.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
-from future.builtins import range
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import numpy as np
 import warnings
@@ -33,12 +33,12 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     frequencies.
 
     Returns the smoothing window around the center frequency with one value per
-    input frequency defined as follows (see [Konno1998]_):
+    input frequency defined as follows (see [Konno1998]_)::
 
-    [sin(b * log_10(f/f_c)) / (b * log_10(f/f_c)]^4
-        b   = bandwidth
-        f   = frequency
-        f_c = center frequency
+        [sin(b * log_10(f/f_c)) / (b * log_10(f/f_c)]^4
+            b   = bandwidth
+            f   = frequency
+            f_c = center frequency
 
     The bandwidth of the smoothing function is constant on a logarithmic scale.
     A small value will lead to a strong smoothing, while a large value of will
@@ -50,24 +50,29 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     reasons and therefore any negative parameters might have unexpected
     results.
 
-    This function might raise some numpy warnings due to divisions by zero and
+    This function might raise some NumPy warnings due to divisions by zero and
     logarithms of zero. This is intentional and faster than prefiltering the
-    special cases. You can disable numpy warnings (they usually do not show up
-    anyways) with:
+    special cases. You can disable NumPy warnings (they usually do not show up
+    anyways) with::
 
-    temp = np.geterr()
-    np.seterr(all='ignore')
-    ...code that raises numpy warning due to division by zero...
-    np.seterr(**temp)
+        temp = np.geterr()
+        np.seterr(all='ignore')
+        ...code that raises NumPy warning due to division by zero...
+        np.seterr(**temp)
 
-    :param frequencies: numpy.ndarray (float32 or float64)
+    :type frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param frequencies:
         All frequencies for which the smoothing window will be returned.
-    :param center_frequency: float >= 0.0
-        The frequency around which the smoothing is performed.
-    :param bandwidth: float > 0.0
+    :type center_frequency: float
+    :param center_frequency:
+        The frequency around which the smoothing is performed. Must be greater
+        or equal to 0.
+    :type bandwidth: float
+    :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
-        broader peak. Defaults to 40.
-    :param normalize: boolean, optional
+        broader peak. Must be greater than 0. Defaults to 40.
+    :type normalize: bool, optional
+    :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
@@ -104,7 +109,8 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     Ohmachi window for each frequency as the center frequency.
 
     Any spectrum with the same frequency bins as this matrix can later be
-    smoothed by a simple matrix multiplication with this matrix:
+    smoothed by a simple matrix multiplication with this matrix::
+
         smoothed_spectrum = np.dot(spectrum, smoothing_matrix)
 
     This also works for many spectra stored in one large matrix and is even
@@ -113,12 +119,15 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     This makes it very efficient for smoothing the same spectra again and again
     but it comes with a high memory consumption for larger frequency arrays!
 
-    :param frequencies: numpy.ndarray (float32 or float64)
+    :type frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param frequencies:
         The input frequencies.
-    :param bandwidth: float > 0.0
+    :type bandwidth: float
+    :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
-        broader peak. Defaults to 40.
-    :param normalize: boolean, optional
+        broader peak. Must be greater than 0. Defaults to 40.
+    :type normalize: bool, optional
+    :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
@@ -136,7 +145,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
                           enforce_no_matrix=False, max_memory_usage=512,
                           normalize=False):
     """
-    Smoothes a matrix containing one spectra per row with the Konno-Ohmachi
+    Smooths a matrix containing one spectra per row with the Konno-Ohmachi
     smoothing window.
 
     All spectra need to have frequency bins corresponding to the same
@@ -145,27 +154,34 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     This method first will estimate the memory usage and then either use a fast
     and memory intensive method or a slow one with a better memory usage.
 
-    :param spectra: numpy.ndarray (float32 or float64)
+    :type spectra: :class:`numpy.ndarray` (float32 or float64)
+    :param spectra:
         One or more spectra per row. If more than one the first spectrum has to
         be accessible via spectra[0], the next via spectra[1], ...
-    :param frequencies: numpy.ndarray (float32 or float64)
+    :type frequencies: :class:`numpy.ndarray` (float32 or float64)
+    :param frequencies:
         Contains the frequencies for the spectra.
-    :param bandwidth: float > 0.0
+    :type bandwidth: float
+    :param bandwidth:
         Determines the width of the smoothing peak. Lower values result in a
-        broader peak. Defaults to 40.
-    :param count: integer, optional
+        broader peak. Must be greater than 0. Defaults to 40.
+    :type count: int, optional
+    :param count:
         How often the apply the filter. For very noisy spectra it is useful to
         apply is more than once. Defaults to 1.
-    :param enforce_no_matrix: boolean, optional
+    :type enforce_no_matrix: bool, optional
+    :param enforce_no_matrix:
         An efficient but memory intensive matrix-multiplication algorithm is
         used in case more than one spectra is to be smoothed or one spectrum is
         to be smoothed more than once if enough memory is available. This flag
         disables the matrix algorithm altogether. Defaults to False
-    :param max_memory_usage: integer, optional
+    :type max_memory_usage: int, optional
+    :param max_memory_usage:
         Set the maximum amount of extra memory in MB for this method. Decides
         whether or not the matrix multiplication method is used. Defaults to
         512 MB.
-    :param normalize: boolean, optional
+    :type normalize: bool, optional
+    :param normalize:
         The Konno-Ohmachi smoothing window is normalized on a logarithmic
         scale. Set this parameter to True to normalize it on a normal scale.
         Default to False.
@@ -195,7 +211,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     # spectrum is to be smoothed.
     if enforce_no_matrix is False and (len(spectra.shape) > 1 or count > 1) \
        and approx_mem_usage < max_memory_usage:
-        # Disable numpy warnings due to possible divisions by zero/logarithms
+        # Disable NumPy warnings due to possible divisions by zero/logarithms
         # of zero.
         temp = np.geterr()
         np.seterr(all='ignore')
@@ -212,7 +228,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         new_spec = np.empty(spectra.shape, spectra.dtype)
         # Separate case for just one spectrum.
         if len(new_spec.shape) == 1:
-            # Disable numpy warnings due to possible divisions by
+            # Disable NumPy warnings due to possible divisions by
             # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')
@@ -224,7 +240,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             np.seterr(**temp)
         # Reuse smoothing window if more than one spectrum.
         else:
-            # Disable numpy warnings due to possible divisions by
+            # Disable NumPy warnings due to possible divisions by
             # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')

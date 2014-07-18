@@ -2,15 +2,18 @@
 """
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
-from __future__ import unicode_literals
-from future.builtins import open
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir
+import shutil
 import sys
+import tempfile
 import os
 import unittest
 
@@ -35,17 +38,36 @@ class ScanTestCase(unittest.TestCase):
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 3, 0]:
             reltol = 60
-        # using mseed increases test time by factor 2
-        waveform_dirs = [join(self.root, n, 'tests', 'data')
-                         for n in ('sac', 'gse2')]
-        with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
-            try:
-                tmp_stdout = sys.stdout
-                sys.stdout = open(os.devnull, 'wt')
-                obspy_scan(waveform_dirs + ['--output', ic.name])
-            finally:
-                sys.stdout.close()
-                sys.stdout = tmp_stdout
+
+        # Copy files to a temp folder to avoid wildcard scans.
+        sac_files = ["LMOW.BHE.SAC", "seism.sac", "dis.G.SCZ.__.BHE_short",
+                     "null_terminated.sac", "test.sac", "seism-longer.sac",
+                     "test.sac.swap", "seism-shorter.sac", "testxy.sac"]
+        gse2_files = ["STA2.testlines", "STA2.testlines_out", "acc.gse",
+                      "loc_RJOB20050831023349.z",
+                      "loc_RJOB20050831023349_first100_dos.z",
+                      "loc_RNON20040609200559.z", "loc_STAU20031119011659.z",
+                      "sta2.gse2", "twiceCHK2.gse2", "y2000.gse"]
+        all_files = [os.path.join(self.root, "sac", "tests", "data", i)
+                     for i in sac_files]
+        all_files.extend([os.path.join(self.root, "gse2", "tests", "data", i)
+                          for i in gse2_files])
+        tempdir = tempfile.mkdtemp(prefix="obspy-")
+        for filename in all_files:
+            shutil.copy(filename,
+                        os.path.join(tempdir, os.path.basename(filename)))
+
+        try:
+            with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
+                try:
+                    tmp_stdout = sys.stdout
+                    sys.stdout = open(os.devnull, 'wt')
+                    obspy_scan([tempdir] + ['--output', ic.name])
+                finally:
+                    sys.stdout.close()
+                    sys.stdout = tmp_stdout
+        finally:
+            shutil.rmtree(tempdir)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_multipleSamplingrates(self):

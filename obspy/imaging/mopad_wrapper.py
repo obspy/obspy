@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-#-----------------------------------------------
+# -----------------------------------------------
 # Filename: mopad_wrapper.py
 #  Purpose: Wrapper for mopad
 #   Author: Tobias Megies, Moritz Beyreuther
 #    Email: megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 ObsPy Development Team
-#-----------------------------------------------
+# -----------------------------------------------
 """
 ObsPy wrapper to the *Moment tensor Plotting and Decomposition tool* (MoPaD)
 written by Lars Krieger and Sebastian Heimann.
@@ -20,11 +20,12 @@ written by Lars Krieger and Sebastian Heimann.
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
 from matplotlib import patches, transforms

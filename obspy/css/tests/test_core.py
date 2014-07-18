@@ -3,10 +3,10 @@
 """
 The obspy.css.core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from __future__ import unicode_literals
-from future.builtins import zip
-from future.builtins import open
 from obspy import read
 from obspy.core import UTCDateTime, Trace, Stream
 from obspy.core.util import NamedTemporaryFile
@@ -36,7 +36,7 @@ class CoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, '201101311155.10.ascii.gz')
         # no with due to py 2.6
         fp = gzip.open(filename, 'rb')
-        data = np.loadtxt(fp, dtype='int')
+        data = np.loadtxt(fp, dtype=np.int_)
         fp.close()
         # traces in the test files are sorted ZEN
         st = Stream()

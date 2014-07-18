@@ -9,3 +9,4 @@
 ./debian/obspy-dataless2xseed.1
 ./debian/obspy-xseed2dataless.1
 ./debian/obspy-mseed-recordanalyzer.1
+./debian/obspy-print.1
