@@ -379,7 +379,7 @@ int count_delim_fields(char *line, char *delim) {
   }
   if(strlen((lcl_ptr+line_len))) {
     nfields++;
-  } else if (!strcmp((lcl_ptr+line_len-1),",")) {
+  } else if (line_len && !strcmp((lcl_ptr+line_len-1),",")) {
     nfields++;
   }
 
