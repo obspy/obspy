@@ -401,9 +401,9 @@ class WaveformPlotting(object):
         self.repeat = None
         intervals = self.extreme_values.shape[0]
         if self.interval < 60 and 60 % self.interval == 0:
-            self.repeat = 60 / self.interval
+            self.repeat = 60 // self.interval
         elif self.interval < 1800 and 3600 % self.interval == 0:
-            self.repeat = 3600 / self.interval
+            self.repeat = 3600 // self.interval
         # Otherwise use a maximum value of 10.
         else:
             if intervals >= 10:
