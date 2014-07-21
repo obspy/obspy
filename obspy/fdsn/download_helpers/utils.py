@@ -45,7 +45,8 @@ ChannelAvailability = collections.namedtuple(
                             "channel", "starttime", "endtime"])
 
 
-def get_availability(client, client_name, restrictions, domain, logger):
+def get_availability_from_client(client, client_name, restrictions, domain,
+                                 logger):
     """
     Returns availability information from an initialized FDSN client.
 
@@ -133,6 +134,12 @@ def get_availability(client, client_name, restrictions, domain, logger):
             if not filtered_channels:
                 continue
 
+            # One last selection stage. If more then one channel is present,
+            # count the number of channels per location and discard those
+            # with less then the maximum number of channels.
+            filtered_channels = filter_channels_based_on_count(
+                filtered_channels)
+
             availability[(network.code, station.code)] = Station(
                 network=network.code,
                 station=station.code,
@@ -147,6 +154,25 @@ def get_availability(client, client_name, restrictions, domain, logger):
                 (sum([len(_i.channels) for _i in availability.values()]),
                  client_name))
     return client_name, availability
+
+
+def filter_channels_based_on_count(channels):
+    """
+    Filters a list of channels and sorts them by their location. The amount
+    of channels per location is counted and only those locations whose count
+    is equal to the maximum amount of channels per location remain after the
+    filtering.
+    """
+    channels_per_locations = collections.defaultdict(list)
+    for channel in channels:
+        channels_per_locations[channel.location].append(channel)
+    max_count = max([len(_i) for _i in channels_per_locations.values()])
+    final_channels = []
+    for value in channels_per_locations.values():
+        if len(value) != max_count:
+            continue
+        final_channels.extend(value)
+    return final_channels
 
 
 class SphericalNearestNeighbour(object):

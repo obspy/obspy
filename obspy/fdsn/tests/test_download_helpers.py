@@ -274,7 +274,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Channel("20", "EHZ")]
         self.assertEqual(
             sorted(filter_channels_based_on_count(channels),
-                   key=lambda x: x.location + x.channel),
+                   key=lambda x: x.location + "." + x.channel),
             [Channel("", "EHE"), Channel("", "EHN"), Channel("", "EHZ"),
              Channel("10", "EHE"), Channel("10", "EHN"), Channel("10", "EHZ")]
         )
@@ -283,14 +283,14 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         channels = [Channel("", "EHE"), Channel("10", "EHE")]
         self.assertEqual(
             sorted(filter_channels_based_on_count(channels),
-                   key=lambda x: x.location + x.channel),
+                   key=lambda x: x.location + "." + x.channel),
             [Channel("", "EHE"), Channel("10", "EHE")])
 
         # Only channels from one location. leave all.
         channels = [Channel("", "EHE"), Channel("", "EHN")]
         self.assertEqual(
             sorted(filter_channels_based_on_count(channels),
-                   key=lambda x: x.location + x.channel),
+                   key=lambda x: x.location + "." + x.channel),
             [Channel("", "EHE"), Channel("", "EHN")])
 
         # Only one channel.
@@ -307,7 +307,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Channel("20", "EHE")]
         self.assertEqual(
             sorted(filter_channels_based_on_count(channels),
-                   key=lambda x: x.location + x.channel),
+                   key=lambda x: x.location + "." + x.channel),
             [Channel("", "EHE"), Channel("", "EHZ")])
 
 

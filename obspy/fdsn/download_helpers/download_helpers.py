@@ -24,7 +24,7 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 import warnings
 
-from .utils import filter_stations, merge_stations, get_availability
+from . import utils
 
 
 # Setup the logger.
@@ -99,18 +99,20 @@ class DownloadHelper(object):
         self.temp_dir = tempfile.mkdtemp(prefix="obspy_fdsn_download_helper")
         logger.info("Using temporary directory: %s" % self.temp_dir)
         try:
-            self._download(domain, restrictions, settings)
+            self.get_availability(domain, restrictions, settings)
         finally:
             shutil.rmtree(self.temp_dir)
             self.temp_dir = None
             logger.info("Deleted temporary directory.")
 
-    def _download(self, domain, restrictions, settings):
+    def get_availability(self, domain, restrictions, stationxml_path,
+                         mseed_path):
         """
         """
         def star_get_availability(args):
             try:
-                avail = get_availability(*args, logger=logger)
+                avail = utils.get_availability_from_client(*args,
+                                                           logger=logger)
             except FDSNException as e:
                 logger.error(str(e))
                 return None
@@ -134,6 +136,7 @@ class DownloadHelper(object):
             if client not in availabilities:
                 continue
             availability[client] = availabilities[client]
+        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
         if not availability:
             msg = "No suitable channel found across FDSN providers."
@@ -142,12 +145,12 @@ class DownloadHelper(object):
 
         # Create the master availability.
         master_availability = availabilities.values()[0]
-        master_availability = filter_stations(
+        master_availability = utils.filter_stations(
             master_availability,
             restrictions.minimum_interstation_distance_in_m)
 
         for stations in availabilities.values()[1:]:
-            master_availability = merge_stations(
+            master_availability = utils.merge_stations(
                 stations, restrictions.minimum_interstation_distance_in_m)
 
         # Filter out already existing files.
