@@ -18,6 +18,7 @@ from multiprocessing.pool import ThreadPool
 import itertools
 import shutil
 import tempfile
+import threading
 import obspy
 from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
@@ -82,6 +83,18 @@ class DownloadHelper(object):
         """
         if providers is None:
             providers = URL_MAPPINGS.keys()
+            # In that case make sure IRIS is first, and ORFEUS second! The
+            # remaining items will be sorted alphabetically.
+            _p = []
+            if "IRIS" in providers:
+                _p.append("IRIS")
+                providers.remove("IRIS")
+            if "ORFEUS" in providers:
+                _p.append("ORFEUS")
+                providers.remove("ORFEUS")
+            _p.extend(sorted(providers))
+            providers = _p
+
         # Immutable tuple.
         self.providers = tuple(providers)
 
@@ -99,14 +112,13 @@ class DownloadHelper(object):
         self.temp_dir = tempfile.mkdtemp(prefix="obspy_fdsn_download_helper")
         logger.info("Using temporary directory: %s" % self.temp_dir)
         try:
-            self.get_availability(domain, restrictions, settings)
+            self.get_availability(domain, restrictions)
         finally:
             shutil.rmtree(self.temp_dir)
             self.temp_dir = None
             logger.info("Deleted temporary directory.")
 
-    def get_availability(self, domain, restrictions, stationxml_path,
-                         mseed_path):
+    def get_availability(self, domain, restrictions):
         """
         """
         def star_get_availability(args):
@@ -157,17 +169,58 @@ class DownloadHelper(object):
         logger.info("%i stations remain after merging availability from all "
                     "clients." % len(master_availability))
 
-        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
-
-        # Filter out already existing files.
-        for station in stations:
-            pass
-
-        # Group available stations per client.
+        # Group available stations per client. Evaluate the iterator right
+        # away as it does not stick around.
         availability = {
-            (client_name, self._initialized_clients[client_name]): stations
-            for client_name, stations in
+            (client_name, self._initialized_clients[client_name]):
+            list(stations) for client_name, stations in
             itertools.groupby(master_availability, lambda x: x.client)}
+
+        # Final logging messages.
+        for client, stations in availability.items():
+            logger.info("%i station (%i channels) found for client %s." %
+                        (len(stations), sum([len(_i.channels) for _i in
+                                             stations]), client[0]))
+
+        return availability
+
+    def download_data(self, availability, restrictions, stationxml_path,
+                      mseed_path, chunk_size=50, threads_per_client=5):
+        avail = {}
+        for c, stations in availability.items():
+            s = []
+            for station in stations:
+                filename = utils.get_stationxml_filename(stationxml_path,
+                                                         station.network,
+                                                         station.station)
+                s.append((station, filename))
+            avail[c] = s
+
+        def star_download_station(args):
+            try:
+                utils.download_stationxml(*args, logger=logger)
+            except FDSNException as e:
+                logger.error(str(e))
+                return None
+            return None
+
+        # Make jobs.
+        thread_pools = []
+        thread_results = []
+        for c, s in avail.items():
+            client_name, client = c
+
+            p = ThreadPool(min(threads_per_client, len(stations)))
+            thread_pools.append(p)
+
+            thread_results.append(p.map(
+                star_download_station, [
+                    (client, client_name, restrictions.starttime,
+                     restrictions.endtime, station, filename) for
+                    station, filename in s]))
+
+        for p in thread_pools:
+            p.close()
 
     def __initialize_clients(self):
         """

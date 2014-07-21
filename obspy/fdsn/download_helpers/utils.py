@@ -45,6 +45,14 @@ ChannelAvailability = collections.namedtuple(
                             "channel", "starttime", "endtime"])
 
 
+def download_stationxml(client, client_name, starttime, endtime, station,
+                        filename, logger):
+    bulk = [(station.network, station.station, _i.location, _i.channel,
+             starttime, endtime) for _i in station.channels]
+    client.get_stations_bulk(bulk, level="response", filename=filename)
+    logger.info("Downloaded '%s' from %s." % (filename, client_name))
+
+
 def get_availability_from_client(client, client_name, restrictions, domain,
                                  logger):
     """
