@@ -362,10 +362,10 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     # Jump to the network, station, location and channel codes.
     file_object.seek(record_start + 8, 0)
     data = file_object.read(12)
-    info["station"] = str(data[:5].strip())
-    info["location"] = str(data[5:7].strip())
-    info["channel"] = str(data[7:10].strip())
-    info["network"] = str(data[10:12].strip())
+    info["station"] = data[:5].strip().decode()
+    info["location"] = data[5:7].strip().decode()
+    info["channel"] = data[7:10].strip().decode()
+    info["network"] = data[10:12].strip().decode()
 
     # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
