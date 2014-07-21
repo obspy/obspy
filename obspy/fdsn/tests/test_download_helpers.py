@@ -17,7 +17,8 @@ import unittest
 
 from obspy.fdsn.download_helpers import domain
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
-    filter_stations, merge_stations, Station
+    filter_stations, merge_stations, Station, Channel, \
+    filter_channels_based_on_count
 
 
 class DomainTestCase(unittest.TestCase):
@@ -255,6 +256,59 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         new_list = merge_stations(list_one, list_two, 8)
         self.assertEqual(new_list, list_one + [
             Station("11", "11", 0, 0, 10, [], None)])
+
+    def test_filter_channels_based_on_count(self):
+        """
+        Tests the filter_channels_based_on_count() utilility function.
+        """
+        # Each location has three channels, except location "20". Therefore
+        # all channels from location "20" should be removed
+        channels = [
+            Channel("", "EHE"),
+            Channel("", "EHZ"),
+            Channel("", "EHN"),
+            Channel("10", "EHE"),
+            Channel("10", "EHZ"),
+            Channel("10", "EHN"),
+            Channel("20", "EHE"),
+            Channel("20", "EHZ")]
+        self.assertEqual(
+            sorted(filter_channels_based_on_count(channels),
+                   key=lambda x: x.location + x.channel),
+            [Channel("", "EHE"), Channel("", "EHN"), Channel("", "EHZ"),
+             Channel("10", "EHE"), Channel("10", "EHN"), Channel("10", "EHZ")]
+        )
+
+        # Both locations only once, leave both.
+        channels = [Channel("", "EHE"), Channel("10", "EHE")]
+        self.assertEqual(
+            sorted(filter_channels_based_on_count(channels),
+                   key=lambda x: x.location + x.channel),
+            [Channel("", "EHE"), Channel("10", "EHE")])
+
+        # Only channels from one location. leave all.
+        channels = [Channel("", "EHE"), Channel("", "EHN")]
+        self.assertEqual(
+            sorted(filter_channels_based_on_count(channels),
+                   key=lambda x: x.location + x.channel),
+            [Channel("", "EHE"), Channel("", "EHN")])
+
+        # Only one channel.
+        channels = [Channel("", "EHE")]
+        self.assertEqual(filter_channels_based_on_count(channels),
+                         [Channel("", "EHE")])
+
+        # Twice only one channel and one two channels per location. Leave
+        # the one with two channels.
+        channels = [
+            Channel("", "EHE"),
+            Channel("", "EHZ"),
+            Channel("10", "EHE"),
+            Channel("20", "EHE")]
+        self.assertEqual(
+            sorted(filter_channels_based_on_count(channels),
+                   key=lambda x: x.location + x.channel),
+            [Channel("", "EHE"), Channel("", "EHZ")])
 
 
 def suite():
