@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import unittest
 
 from obspy.fdsn.download_helpers import domain
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     filter_stations, merge_stations, Station, Channel, \
-    filter_channels_based_on_count
+    filter_channels_based_on_count, get_stationxml_filename, get_mseed_filename
 
 
 class DomainTestCase(unittest.TestCase):
@@ -309,6 +310,62 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             sorted(filter_channels_based_on_count(channels),
                    key=lambda x: x.location + "." + x.channel),
             [Channel("", "EHE"), Channel("", "EHZ")])
+
+    def test_stationxml_filename_helper(self):
+        """
+        Tests the get_stationxml_filename() function.
+        """
+        # Passing a format string causes it to be used.
+        self.assertEqual(
+            get_stationxml_filename("{network}_{station}.xml",
+                                    network="BW", station="FURT"),
+            "BW_FURT.xml")
+
+        # A normal string is considered a path.
+        self.assertEqual(
+            get_stationxml_filename("FOLDER", network="BW", station="FURT"),
+            os.path.join("FOLDER", "BW.FURT.xml"))
+
+        # A passed function will be executed.
+        def get_name(network, station):
+            return "network" + "__" + station
+        self.assertEqual(
+            get_stationxml_filename(get_name, network="BW", station="FURT"),
+            "network__FURT")
+
+        # It will raise a type error, if the function does not return the
+        # proper type.
+        self.assertRaises(TypeError, get_stationxml_filename, lambda x: 1,
+                          "BW", "FURT")
+
+    def test_mseed_filename_helper(self):
+        """
+        Tests the get_mseed_filename() function.
+        """
+        # Passing a format string causes it to be used.
+        self.assertEqual(
+            get_mseed_filename("{network}_{station}_{location}_{channel}.ms",
+                               network="BW", station="FURT", location="",
+                               channel="BHE"), "BW_FURT__BHE.ms")
+
+        # A normal string is considered a path.
+        self.assertEqual(
+            get_mseed_filename("FOLDER", network="BW", station="FURT",
+                               location="", channel="BHE"),
+            os.path.join("FOLDER", "BW.FURT..BHE.mseed"))
+
+        # A passed function will be executed.
+        def get_name(network, station, location, channel):
+            return "network" + "__" + station + location + channel
+        self.assertEqual(
+            get_mseed_filename(get_name, network="BW", station="FURT",
+                               location="", channel="BHE"),
+            "network__FURTBHE")
+
+        # It will raise a type error, if the function does not return the
+        # proper type.
+        self.assertRaises(TypeError, get_mseed_filename, lambda x: 1,
+                          "BW", "FURT", "", "BHE")
 
 
 def suite():

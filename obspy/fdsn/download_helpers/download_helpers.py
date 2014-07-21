@@ -119,7 +119,7 @@ class DownloadHelper(object):
             return avail
 
         p = ThreadPool(len(self._initialized_clients))
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("default")
             availabilities = p.map(
                 star_get_availability,
@@ -136,7 +136,6 @@ class DownloadHelper(object):
             if client not in availabilities:
                 continue
             availability[client] = availabilities[client]
-        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
         if not availability:
             msg = "No suitable channel found across FDSN providers."
@@ -146,12 +145,19 @@ class DownloadHelper(object):
         # Create the master availability.
         master_availability = availabilities.values()[0]
         master_availability = utils.filter_stations(
-            master_availability,
+            master_availability.values(),
             restrictions.minimum_interstation_distance_in_m)
 
         for stations in availabilities.values()[1:]:
             master_availability = utils.merge_stations(
-                stations, restrictions.minimum_interstation_distance_in_m)
+                master_availability,
+                stations.values(),
+                restrictions.minimum_interstation_distance_in_m)
+
+        logger.info("%i stations remain after merging availability from all "
+                    "clients." % len(master_availability))
+
+        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
         # Filter out already existing files.
         for station in stations:

@@ -177,8 +177,8 @@ def filter_channels_based_on_count(channels):
 
 class SphericalNearestNeighbour(object):
     """
-    Spherical nearest neighbour queries using scipy's fast
-    kd-tree implementation.
+    Spherical nearest neighbour queries using scipy's fast kd-tree
+    implementation.
     """
     def __init__(self, data):
         cart_data = self.spherical2cartesian(data)
@@ -249,7 +249,6 @@ def filter_channel_priority(channels, priorities=("HH[Z,N,E]", "BH[Z,N,E]",
                 filtered_channels.append(channel)
                 continue
     return filtered_channels
-
 
 
 def filter_stations(stations, minimum_distance_in_m):
@@ -396,3 +395,61 @@ def get_stationxml_contents(filename):
             del elem.getparent()[0]
 
     return channels
+
+
+def get_stationxml_filename(str_or_fct, network, station):
+    """
+    Helper function getting the filename of a stationxml file.
+
+    The rule are simple, if it is a function, network and station are passed
+    as arguments and the resulting string is returned.
+
+    If it is a string, and it contains ``"{network}"``, and ``"{station}"``
+    formatting specifiers, ``str.format()`` is called.
+
+    Otherwise it is considered to be a folder name and the resulting
+    filename will be ``"FOLDER_NAME/NET.STA.xml"``
+    """
+    if callable(str_or_fct):
+        path = str_or_fct(network, station)
+    elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct):
+        path = str_or_fct.format(network=network, station=station)
+    else:
+        path = os.path.join(str_or_fct, "{network}.{station}.xml".format(
+            network=network, station=station))
+
+    if not isinstance(path, (str, bytes)):
+        raise TypeError("'%s' is not a filepath." % str(path))
+    return path
+
+
+def get_mseed_filename(str_or_fct, network, station, location, channel):
+    """
+    Helper function getting the filename of a MiniSEED file.
+
+    The rule are simple, if it is a function, network, station, location,
+    and channel are passed as arguments and the resulting string is returned.
+
+    If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
+    ``"{location}"``, and ``"{channel}"`` formatting specifiers,
+    ``str.format()`` is called.
+
+    Otherwise it is considered to be a folder name and the resulting
+    filename will be ``"FOLDER_NAME/NET.STA.LOC.CHAN.mseed"``
+    """
+    if callable(str_or_fct):
+        path = str_or_fct(network, station, location, channel)
+    elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct) and \
+            ("{location}" in str_or_fct) and ("{channel}" in str_or_fct):
+        path = str_or_fct.format(network=network, station=station,
+                                 location=location, channel=channel)
+    else:
+        path = os.path.join(
+            str_or_fct,
+            "{network}.{station}.{location}.{channel}.mseed".format(
+                network=network, station=station, location=location,
+                channel=channel))
+
+    if not isinstance(path, (str, bytes)):
+        raise TypeError("'%s' is not a filepath." % str(path))
+    return path
