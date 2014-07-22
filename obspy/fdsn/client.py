@@ -928,7 +928,6 @@ class Client(object):
             return inv
 
     def _get_bulk_string(self, bulk, arguments):
-        locs = locals()
         # If its an iterable, we build up the query string from it
         # StringIO objects also have __iter__ so check for 'read' as well
         if isinstance(bulk, collections.Iterable) \

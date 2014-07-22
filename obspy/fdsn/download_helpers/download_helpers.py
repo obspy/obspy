@@ -12,18 +12,23 @@ Download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
+with standard_library.hooks():
+    from urllib.error import HTTPError, URLError
 
+import copy
+import itertools
 import logging
 from multiprocessing.pool import ThreadPool
-import itertools
+import os
 import shutil
 import tempfile
-import threading
+import warnings
+
 import obspy
 from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
-import warnings
 
 from . import utils
 
@@ -125,7 +130,7 @@ class DownloadHelper(object):
             try:
                 avail = utils.get_availability_from_client(*args,
                                                            logger=logger)
-            except FDSNException as e:
+            except (FDSNException, HTTPError, URLError) as e:
                 logger.error(str(e))
                 return None
             return avail
@@ -184,8 +189,55 @@ class DownloadHelper(object):
 
         return availability
 
-    def download_data(self, availability, restrictions, stationxml_path,
-                      mseed_path, chunk_size=50, threads_per_client=5):
+    def download_mseed(self, availability, restrictions, mseed_path,
+                       temp_folder, chunk_size=25, threads_per_client=5):
+        if not os.path.exists(temp_folder):
+            os.makedirs(temp_folder)
+
+        avail = {}
+        for c, stations in availability.items():
+            stations = copy.deepcopy(stations)
+            for station in stations:
+                channels = []
+                for channel in station.channels:
+                    filename = utils.get_mseed_filename(mseed_path,
+                                                        station.network,
+                                                        station.station,
+                                                        channel.location,
+                                                        channel.channel)
+                    channels.append((channel, filename))
+                station.channels[:] = channels
+            # Split into chunks.
+            avail[c] = [stations[i:i + chunk_size]
+                        for i in range(0, len(stations), chunk_size)]
+
+        def star_download_mseed(args):
+            try:
+                ret_val = utils.download_and_split_mseed_bulk(
+                    *args, temp_folder=temp_folder, logger=logger)
+            except (FDSNException, HTTPError, URLError) as e:
+                logger.error(("Client '%s': " % args[1]) + str(e))
+                return None
+            return None
+
+        thread_pools = []
+        thread_results = []
+        for c, chunks in avail.items():
+            client_name, client = c
+
+            p = ThreadPool(min(threads_per_client, len(chunks)))
+            thread_pools.append(p)
+
+            thread_results.append(p.map(
+                star_download_mseed, [
+                    (client, client_name, restrictions.starttime,
+                     restrictions.endtime, chunk) for chunk in chunks]))
+
+        for p in thread_pools:
+            p.close()
+
+    def download_stationxml(self, availability, restrictions,
+                            stationxml_path, threads_per_client=5):
         avail = {}
         for c, stations in availability.items():
             s = []
@@ -199,18 +251,17 @@ class DownloadHelper(object):
         def star_download_station(args):
             try:
                 utils.download_stationxml(*args, logger=logger)
-            except FDSNException as e:
+            except (FDSNException, HTTPError, URLError) as e:
                 logger.error(str(e))
                 return None
             return None
 
-        # Make jobs.
         thread_pools = []
         thread_results = []
         for c, s in avail.items():
             client_name, client = c
 
-            p = ThreadPool(min(threads_per_client, len(stations)))
+            p = ThreadPool(min(threads_per_client, len(s)))
             thread_pools.append(p)
 
             thread_results.append(p.map(
@@ -232,7 +283,7 @@ class DownloadHelper(object):
         def _get_client(client_name):
             try:
                 this_client = Client(client_name)
-            except FDSNException:
+            except (FDSNException, HTTPError, URLError):
                 logger.warn("Failed to initialize client '%s'."
                             % client_name)
                 return client_name, None

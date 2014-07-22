@@ -21,11 +21,13 @@ import os
 from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
+from uuid import uuid4
 from urllib2 import HTTPError
 import obspy
 import warnings
 
 from obspy.fdsn.client import FDSNException
+from obspy.mseed.util import getRecordInformation
 
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics.
@@ -50,7 +52,66 @@ def download_stationxml(client, client_name, starttime, endtime, station,
     bulk = [(station.network, station.station, _i.location, _i.channel,
              starttime, endtime) for _i in station.channels]
     client.get_stations_bulk(bulk, level="response", filename=filename)
-    logger.info("Downloaded '%s' from %s." % (filename, client_name))
+    logger.info("Successfully downloaded '%s' from %s." %
+                (filename, client_name))
+
+
+def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
+                                  stations, temp_folder, logger):
+    """
+    Downloads the channels of a list of stations in bulk, saves it in the
+    temp folder and splits it at the record level to obtain the final
+    miniseed files.
+
+    :param client:
+    :param client_name:
+    :param starttime:
+    :param endtime:
+    :param stations:
+    :param temp_folder:
+    :return:
+    """
+    bulk = []
+    filenames = {}
+    for station in stations:
+        for channel, filename in station.channels:
+            net, sta, loc, chan = station.network, station.station, \
+                channel.location, channel.channel
+            filenames["%s.%s.%s.%s" % (net, sta, loc, chan)] = filename
+            bulk.append((net, sta, loc, chan, starttime, endtime))
+    temp_filename = os.path.join(temp_folder, str(uuid4()))
+    try:
+        client.get_waveforms_bulk(bulk, filename=temp_filename)
+
+        open_files = {}
+        # If that succeeds, split the old file into multiple new ones.
+        file_size = os.path.getsize(temp_filename)
+        with open(temp_filename, "rb") as fh:
+            try:
+                while True:
+                    if fh.tell() >= (file_size - 256):
+                        break
+                    info = getRecordInformation(fh)
+                    channel_id = "%s.%s.%s.%s" % (
+                        info["network"], info["station"], info["location"],
+                        info["channel"])
+                    filename = filenames[channel_id]
+                    if filename not in open_files:
+                        open_files[filename] = open(filename, "wb")
+                    open_files[filename].write(fh.read(info["record_length"]))
+            finally:
+                for f in open_files:
+                    try:
+                        f.close()
+                    except:
+                        pass
+    finally:
+        try:
+            os.remove(temp_filename)
+        except:
+            pass
+    logger.info("%s client: Downloaded %i channels" % (client_name,
+                                                       len(open_files)))
 
 
 def get_availability_from_client(client, client_name, restrictions, domain,
