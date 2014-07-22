@@ -181,6 +181,25 @@ class BaseNode(ComparingObject):
         return True
 
 
+class DataAvailability(ComparingObject):
+    """
+    A description of time series data availability. This information should
+    be considered transient and is primarily useful as a guide for
+    generating time series data requests. The information for a
+    DataAvailability:Span  may be specific to the time range used in a
+    request that resulted in the document or limited to the availability of
+    data  withing the request range. These details may or may not be
+    retained when synchronizing metadata between data centers.
+    """
+    def __init__(self, start, end):
+        self.start = UTCDateTime(start)
+        self.end = UTCDateTime(end)
+
+    def __str__(self):
+        return "Data Availability from %s to %s." % (str(self.start),
+                                                     str(self.end))
+
+
 class Equipment(ComparingObject):
     """
     An object containing a detailed description of an equipment.

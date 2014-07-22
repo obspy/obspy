@@ -17,7 +17,6 @@ import inspect
 import io
 from lxml import etree
 import os
-import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
@@ -280,6 +279,11 @@ def _read_channel(cha_element, _ns):
     equipment = cha_element.find(_ns("Equipment"))
     if equipment is not None:
         channel.equipment = _read_equipment(equipment, _ns)
+    # Availability.
+    data_availability = cha_element.find(_ns("DataAvailability"))
+    if data_availability is not None:
+        channel.data_availability = _read_data_availability(
+            data_availability, _ns)
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
     if response is not None:
@@ -569,6 +573,13 @@ def _read_operator(operator_element, _ns):
     website = _tag2obj(operator_element, _ns("WebSite"), str)
     return obspy.station.Operator(agencies=agencies, contacts=contacts,
                                   website=website)
+
+
+def _read_data_availability(avail_element, _ns):
+    extent = avail_element.find(_ns("Extent"))
+    start = obspy.UTCDateTime(extent.get("start"))
+    end = obspy.UTCDateTime(extent.get("end"))
+    return obspy.station.util.DataAvailability(start=start, end=end)
 
 
 def _read_equipment(equip_element, _ns):
@@ -1159,11 +1170,6 @@ def _tag2obj(element, tag, convert):
 
 def _tags2obj(element, tag, convert):
     values = []
-    # make sure, only unicode
-    if convert is str:
-        # XXX: this warning if raised with python3
-        warnings.warn("overriding 'str' with 'unicode'.")
-        convert = str
     for elem in element.findall(tag):
         values.append(convert(elem.text))
     return values
