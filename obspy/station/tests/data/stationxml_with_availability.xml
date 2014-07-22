@@ -1,45 +1,44 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-
-<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station_availability-1.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station_availability-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2013-01-01&amp;network=IU&amp;sta=ANMO&amp;level=channel&amp;nodata=404&amp;channel=BH1&amp;location=00&amp;includeavailability=true</ModuleURI>
- <Created>2014-07-22T09:51:56</Created>
- <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+ <Created>2014-07-22T09:51:56+00:00</Created>
+ <Network code="IU" startDate="1988-01-01T00:00:00+00:00" endDate="2500-12-12T23:59:59+00:00" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>260</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes=".EARTHSCOPE,_CEUSN,_FDSN,_GSN-BROADBAND,_US-TA,.UNRESTRICTED,_ANSS,.TEST,_CARIBE-EWS,_US-REF,_GSN,_ANSS-BB,.CEUSN-CONTRIB,_US-ALL,_FDSN-ALL,.EARTHSCOPE,_US-ALL,_REALTIME">
-   <Latitude>34.94591</Latitude>
-   <Longitude>-106.4572</Longitude>
+  <Station code="ANMO" startDate="2008-06-30T20:00:00+00:00" endDate="2599-12-31T23:59:59+00:00" restrictedStatus="open">
+   <Latitude unit="DEGREES">34.94591</Latitude>
+   <Longitude unit="DEGREES">-106.4572</Longitude>
    <Elevation>1820.0</Elevation>
    <Site>
     <Name>Albuquerque, New Mexico, USA</Name>
    </Site>
-   <CreationDate>1989-08-29T00:00:00</CreationDate>
+   <CreationDate>1989-08-29T00:00:00+00:00</CreationDate>
    <TotalNumberChannels>126</TotalNumberChannels>
    <SelectedNumberChannels>1</SelectedNumberChannels>
-   <Channel locationCode="00" startDate="2012-03-12T20:28:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BH1">
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00+00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59+00:00" code="BH1">
     <DataAvailability>
-     <Extent start="1998-10-26T20:35:58" end="2014-07-21T12:00:00"></Extent>
+     <Extent end="2014-07-21T12:00:00+00:00" start="1998-10-26T20:35:58+00:00"/>
     </DataAvailability>
-    <Latitude>34.945981</Latitude>
-    <Longitude>-106.457133</Longitude>
+    <Latitude unit="DEGREES">34.945981</Latitude>
+    <Longitude unit="DEGREES">-106.457133</Longitude>
     <Elevation>1671.0</Elevation>
     <Depth>145.0</Depth>
-    <Azimuth>328.0</Azimuth>
-    <Dip>0.0</Dip>
+    <Azimuth unit="DEGREES">328.0</Azimuth>
+    <Dip unit="DEGREES">0.0</Dip>
     <Type>CONTINUOUS</Type>
     <Type>GEOPHYSICAL</Type>
-    <SampleRate>20.0</SampleRate>
-    <ClockDrift>0.0</ClockDrift>
+    <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+    <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
     <Sensor>
      <Type>Geotech KS-54000 Borehole Seismometer</Type>
     </Sensor>
     <Response>
      <InstrumentSensitivity>
-      <Value>3.45661E9</Value>
+      <Value>345661000.0</Value>
       <Frequency>0.02</Frequency>
       <InputUnits>
        <Name>M/S</Name>
