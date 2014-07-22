@@ -663,12 +663,42 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
     """
-    root = etree.Element(
-        "FDSNStationXML",
-        attrib={
-            "xmlns": "http://www.fdsn.org/xml/station/1",
-            "schemaVersion": SCHEMA_VERSION}
-    )
+    # Check if any of the channels has a data availability element. In that
+    # case the namespaces needs to be adjusted.
+    data_availability = False
+    for net in inventory:
+        for sta in net:
+            for cha in sta:
+                if cha.data_availability is not None:
+                    data_availability = True
+                    break
+            else:
+                continue
+            break
+        else:
+            continue
+        break
+
+    if data_availability:
+        root = etree.Element(
+            "FDSNStationXML",
+            attrib={
+                ("{http://www.w3.org/2001/XMLSchema-instance}"
+                 "schemaLocation"): "http://www.fdsn.org/xml/station/1 "
+                "http://www.fdsn.org/xml/station/fdsn-station_"
+                "availability-1.0.xsd",
+                "schemaVersion": SCHEMA_VERSION},
+            nsmap={None: "http://www.fdsn.org/xml/station/1",
+                   "xsi": "http://www.w3.org/2001/XMLSchema-instance"}
+        )
+    else:
+        root = etree.Element(
+            "FDSNStationXML",
+            attrib={
+                "xmlns": "http://www.fdsn.org/xml/station/1",
+                "schemaVersion": SCHEMA_VERSION}
+        )
+
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
         etree.SubElement(root, "Sender").text = inventory.sender
@@ -872,6 +902,13 @@ def _write_channel(parent, channel):
     attribs['locationCode'] = channel.location_code
     channel_elem = etree.SubElement(parent, "Channel", attribs)
     _write_base_node(channel_elem, channel)
+
+    if channel.data_availability is not None:
+        da = etree.SubElement(channel_elem, "DataAvailability")
+        etree.SubElement(da, "Extent", {
+            "start": _format_time(channel.data_availability.start),
+            "end": _format_time(channel.data_availability.end)
+        })
 
     for ref in channel.external_references:
         _write_external_reference(channel_elem, ref)
