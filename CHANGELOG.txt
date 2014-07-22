@@ -23,6 +23,7 @@
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
+   * read/write support for DataAvailability tags in StationXML files.
 
 0.9.3:
  - obspy.core:
