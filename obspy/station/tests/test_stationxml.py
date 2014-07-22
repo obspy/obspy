@@ -594,6 +594,20 @@ class StationXMLTestCase(unittest.TestCase):
         # Assert that there are three stages.
         self.assertEqual(len(response.response_stages), 3)
 
+    def test_stationxml_with_availability(self):
+        """
+        A variant of StationXML has support for availability information.
+        Make sure this works.
+        """
+        filename = os.path.join(self.data_dir,
+                                "stationxml_with_availability.xml")
+        inv = obspy.station.read_inventory(filename, format="stationxml")
+        channel = inv[0][0][0]
+        self.assertEqual(channel.data_availability.start,
+                         obspy.UTCDateTime("1998-10-26T20:35:58"))
+        self.assertEqual(channel.data_availability.end,
+                         obspy.UTCDateTime("2014-07-21T12:00:00"))
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

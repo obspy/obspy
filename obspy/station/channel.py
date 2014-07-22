@@ -36,7 +36,7 @@ class Channel(BaseNode):
                  equipment=None, response=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type code: str
         :param code: The SEED channel code for this channel
@@ -121,6 +121,10 @@ class Channel(BaseNode):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`,
+            optional
+        :param data_availability: Information about time series availability
+            for the channel.
         """
         self.location_code = location_code
         self.latitude = latitude
@@ -146,6 +150,7 @@ class Channel(BaseNode):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
+        self.data_availability = data_availability
         super(Channel, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
@@ -155,6 +160,7 @@ class Channel(BaseNode):
     def __str__(self):
         ret = (
             "Channel '{id}', Location '{location}' {description}\n"
+            "{availability}"
             "\tTimerange: {start_date} - {end_date}\n"
             "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
             "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
@@ -166,6 +172,8 @@ class Channel(BaseNode):
             "{response}")\
             .format(
                 id=self.code, location=self.location_code,
+                availability=("\t%s\n" % str(self.data_availability))
+                if self.data_availability else "",
                 description="(%s)" % self.description
                 if self.description else "",
                 start_date=str(self.start_date),
