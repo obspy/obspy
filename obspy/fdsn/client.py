@@ -297,7 +297,8 @@ class Client(object):
                      maxlongitude=None, latitude=None, longitude=None,
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
-                     updatedafter=None, filename=None, **kwargs):
+                     updatedafter=None, matchtimeseries=None, filename=None,
+                     **kwargs):
         """
         Query the station service of the FDSN client.
 
@@ -446,6 +447,9 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param updatedafter: Limit to metadata updated after specified date;
             updates are data center specific.
+        :type matchtimeseries: bool
+        :param matchtimeseries: Only include data for which matching time
+            series data is available.
         :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
