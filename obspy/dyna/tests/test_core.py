@@ -23,7 +23,8 @@ class CoreTestCase(unittest.TestCase):
         """
         Testing reading DYNA file with (about) 9000 pts.
         """
-        testfile = os.path.join(self.path, 'data', 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
+        testfile = os.path.join(self.path, 'data',
+                                'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
         # read
         stream = readDYNA(testfile)
         stream.verify()
@@ -33,12 +34,14 @@ class CoreTestCase(unittest.TestCase):
         """
         Testing DYNA file format.
         """
-        testfile = os.path.join(self.path, 'data', 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
+        testfile = os.path.join(self.path, 'data',
+                                'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
         self.assertEqual(isDYNA(testfile), True)
 
     def _compareStream(self, stream):
         """
-        Helper function to verify stream from file 'data/IT.ARL..HGE.D.20140120.071240.X.ACC.ASC'.
+        Helper function to verify stream from file
+        'data/IT.ARL..HGE.D.20140120.071240.X.ACC.ASC'.
         """
         self.assertEqual(stream[0].stats.delta, 5.000000e-03)
         self.assertEqual(stream[0].stats.npts, 8997)
@@ -52,12 +55,12 @@ class CoreTestCase(unittest.TestCase):
         data = [-0.032737, -0.037417, -0.030865, -0.021271]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data, 5)
 
-
     def test_readAndWriteDYNAFile(self):
         """
         Read and write DYNA file via obspy.sh.core.readDYNA.
         """
-        origfile = os.path.join(self.path, 'data', 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
+        origfile = os.path.join(self.path, 'data',
+                                'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
         # read original
         stream1 = readDYNA(origfile)
         stream1.verify()
@@ -79,7 +82,8 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and write ASC file test via obspy.core.
         """
-        origfile = os.path.join(self.path, 'data', 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
+        origfile = os.path.join(self.path, 'data',
+                                'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
         # read original
         stream1 = read(origfile, format="DYNA")
         stream1.verify()
@@ -92,6 +96,7 @@ class CoreTestCase(unittest.TestCase):
         stream2.verify()
         self._compareStream(stream2)
         os.remove(tempfile)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
