@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 obspy_dyna - DYNA and ITACA read and write support for ObsPy
 =======================================================================
@@ -56,6 +57,9 @@ Writing is also done in the usual way:
 >>> st.write('filename.ASC', format = 'DYNA') #doctest: +SKIP
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 if __name__ == '__main__':
     import doctest

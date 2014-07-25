@@ -8,6 +8,9 @@ DYNA and ITACA bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
