@@ -15,6 +15,7 @@ import io
 import numpy as np
 import os
 import unittest
+import filecmp
 
 
 class SacIOTestCase(unittest.TestCase):
@@ -147,13 +148,7 @@ class SacIOTestCase(unittest.TestCase):
             tb = SacIO(tfileb)
             tb.swap_byte_order()
             tb.WriteSacBinary(tempfile)
-            tr1 = SacIO(tempfile)
-            tl = SacIO(tfilel)
-            np.testing.assert_array_equal(tl.seis, tr1.seis)
-            self.assertEqual(tl.GetHvalue('kevnm'), tr1.GetHvalue('kevnm'))
-            self.assertEqual(tl.GetHvalue('npts'), tr1.GetHvalue('npts'))
-            self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
-                             tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
+            self.assertTrue(filecmp.cmp(tfilel, tempfile, shallow=False))
 
     def test_getdist(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
