@@ -1176,7 +1176,10 @@ class SacIO(object):
         """
         If trace changed since read, adapt header values
         """
-        self.seis = np.require(self.seis, native_str('<f4'))
+        if self.byteorder == 'big':
+            self.seis = np.require(self.seis, native_str('>f4'))
+        else:
+            self.seis = np.require(self.seis, native_str('<f4'))
         self.SetHvalue('npts', self.seis.size)
         if self.seis.size == 0:
             return
@@ -1224,9 +1227,6 @@ class SacIO(object):
         """
         Swap byte order of SAC-file in memory.
 
-        Currently seems to work only for conversion from big-endian to
-        little-endian.
-
         :param: None
         :return: None
 
@@ -1235,15 +1235,14 @@ class SacIO(object):
         >>> t.swap_byte_order() # doctest: +SKIP
         """
         if self.byteorder == 'big':
-            bs = 'L'
+            bs = '<'
+            self.byteorder = 'little'
         elif self.byteorder == 'little':
-            bs = 'B'
-        self.seis.byteswap(True)
-        self.hf.byteswap(True)
-        self.hi.byteswap(True)
-        self.seis = self.seis.newbyteorder(bs)
-        self.hf = self.hf.newbyteorder(bs)
-        self.hi = self.hi.newbyteorder(bs)
+            bs = '>'
+            self.byteorder = 'big'
+        self.seis = self.seis.byteswap(True).newbyteorder(bs)
+        self.hf = self.hf.byteswap(True).newbyteorder(bs)
+        self.hi = self.hi.byteswap(True).newbyteorder(bs)
 
     def __getattr__(self, hname):
         """
