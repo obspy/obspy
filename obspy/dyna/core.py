@@ -12,7 +12,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from StringIO import StringIO
+from io import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
 import numpy as np
 import re
@@ -78,7 +78,7 @@ def isITACA(filename):
     # filename must match the following regexp: ^\d{8}_\d{6}\w{5}_\w{5}\w{3}.\w{3}$
     fname_regexp = '.*\d{8}_\d{6}\w{5}_\w{5}\w{3}.\w{3}$'
     if not re.match(fname_regexp, filename):
-        print "filename does not match ITACA format"
+        print("filename does not match ITACA format")
         return False
     return True
 
