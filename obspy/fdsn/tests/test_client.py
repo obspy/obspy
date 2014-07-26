@@ -461,7 +461,7 @@ class ClientTestCase(unittest.TestCase):
                 "Parameter description for the 'event' service (v1.0.6) of "
                 "'http://service.iris.edu':\n"
                 "The service offers the following non-standard parameters:\n"
-                "    originid (int)\n"
+                "    originid (str)\n"
                 "        Retrieve an event based on the unique origin ID "
                 "numbers assigned by\n"
                 "        the IRIS DMC\n"
