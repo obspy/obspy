@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 
 from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sh.core import readDYNA, writeDYNA, isDYNA
+from obspy.dyna.core import readDYNA, writeDYNA, isDYNA
 import numpy as np
 import os
 import unittest
