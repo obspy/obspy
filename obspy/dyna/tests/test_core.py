@@ -28,7 +28,7 @@ class CoreTestCase(unittest.TestCase):
         # read
         stream = readDYNA(testfile)
         stream.verify()
-        self.assertEqual(len(stream), 8997)
+        self.assertEqual(len(stream[0]), 8997)
 
     def test_isDYNAFile(self):
         """
@@ -49,7 +49,7 @@ class CoreTestCase(unittest.TestCase):
 #                         'TEST TRACE IN QFILE #1')215717
         self.assertEqual(stream[0].stats.starttime,
                          UTCDateTime(2014, 1, 20, 7, 12, 30))
-        self.assertEqual(stream[0].stats.channel, 'E')
+        self.assertEqual(stream[0].stats.channel, 'HGE')
         self.assertEqual(stream[0].stats.station, 'ARL')
         # check last 4 samples
         data = [-0.032737, -0.037417, -0.030865, -0.021271]
