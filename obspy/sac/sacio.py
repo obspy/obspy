@@ -58,7 +58,7 @@ SAC_EXTRA = ('depmin', 'depmax', 'odelta', 'o', 'a', 't0', 't1', 't2', 't3',
              'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
              'kdatrd', 'kinst', 'cmpinc', 'xminimum', 'xmaximum', 'yminimum',
              'ymaximum', 'unused6', 'unused7', 'unused8', 'unused9',
-             'unused10', 'unused11', 'unused12')
+             'unused10', 'unused11', 'unused12', 'unused13')
 
 FDICT = {'delta': 0, 'depmin': 1, 'depmax': 2, 'scale': 3,
          'odelta': 4, 'b': 5, 'e': 6, 'o': 7, 'a': 8, 'int1': 9,
@@ -82,7 +82,7 @@ IDICT = {'nzyear': 0, 'nzjday': 1, 'nzhour': 2, 'nzmin': 3,
          'istreg': 20, 'ievreg': 21, 'ievtype': 22, 'iqual': 23,
          'isynth': 24, 'imagtyp': 25, 'imagsrc': 26,
          'leven': 35, 'lpspol': 36, 'lovrok': 37,
-         'lcalda': 38}
+         'lcalda': 38, 'unused13': 39}
 
 SDICT = {'kstnm': 0, 'kevnm': 1, 'khole': 2, 'ko': 3, 'ka': 4,
          'kt0': 5, 'kt1': 6, 'kt2': 7, 'kt3': 8, 'kt4': 9,
