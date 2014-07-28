@@ -249,7 +249,7 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             tr.write(tmpfile, format="SAC")
-            filecmp.cmp(file, tmpfile, shallow=False)
+            self.assertTrue(filecmp.cmp(file, tmpfile, shallow=False))
         # test some more entries, I can see from the plot
         self.assertEqual(tr.stats.station, "CDV")
         self.assertEqual(tr.stats.channel, "Q")
