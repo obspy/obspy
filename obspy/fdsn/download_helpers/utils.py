@@ -21,6 +21,7 @@ import os
 from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
+import time
 from uuid import uuid4
 from urllib2 import HTTPError
 import obspy
@@ -35,16 +36,33 @@ EARTH_RADIUS = 6371009
 
 
 # Used to keep track of what to download.
-Station = collections.namedtuple("Station",
-                                 ["network", "station", "latitude",
-                                  "longitude", "elevation_in_m", "channels",
-                                  "client"])
-Channel = collections.namedtuple("Channel", ["location", "channel"])
+Station = collections.namedtuple(
+    "Station", ["network", "station", "latitude", "longitude",
+                "elevation_in_m", "channels", "client_name",
+                "filename", "is_downloaded"])
+Channel = collections.namedtuple(
+    "Channel", ["location", "channel", "filename", "is_downloaded"])
 
 # Used for the quick StationXML indexer.
 ChannelAvailability = collections.namedtuple(
     "ChannelAvailability", ["network", "station", "location",
                             "channel", "starttime", "endtime"])
+
+TimeRange = collections.namedtuple("TimeRange", ["start", "end"])
+
+
+class ChannelAvailability(object):
+    __slots__ = ["network", "station", "location", "channel", "_time_ranges"]
+
+    def __init__(self, network, station, location, channel):
+        self.network = network
+        self.station = station
+        self.location = location
+        self.channel = channel
+        self._time_ranges = []
+
+    def add_time_range(self, start, end):
+        self._time_ranges.append(TimeRange(start, end))
 
 
 def download_stationxml(client, client_name, starttime, endtime, station,
@@ -95,6 +113,10 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
                     channel_id = "%s.%s.%s.%s" % (
                         info["network"], info["station"], info["location"],
                         info["channel"])
+                    # Sometimes the services return something noone wants.
+                    if channel_id not in filenames:
+                        fh.read(info["record_length"])
+                        continue
                     filename = filenames[channel_id]
                     if filename not in open_files:
                         open_files[filename] = open(filename, "wb")
@@ -110,8 +132,8 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
             os.remove(temp_filename)
         except:
             pass
-    logger.info("%s client: Downloaded %i channels" % (client_name,
-                                                       len(open_files)))
+    logger.info("%s client: Successfully downloaded %i channels (of %i)" % (
+        client_name, len(open_files), len(bulk)))
 
 
 def get_availability_from_client(client, client_name, restrictions, domain,
@@ -168,16 +190,36 @@ def get_availability_from_client(client, client_name, restrictions, domain,
     # Add the domain specific query parameters.
     arguments.update(domain.get_query_parameters())
 
-    logger.info("Requesting availability from client '%s'" % client_name)
+    # Check the capabilities of the service and see what is the most
+    # appropriate way of acquiring availability information.
+    if "matchtimeseries" in client.services["station"]:
+        arguments["matchtimeseries"] = True
+        arguments["includeavailability"] = False
+    elif "includeavailability" in client.services["station"]:
+        arguments["matchtimeseries"] = False
+        arguments["includeavailability"] = True
+    else:
+        arguments["matchtimeseries"] = False
+        arguments["includeavailability"] = False
+
+    if arguments["includeavailability"] or arguments["matchtimeseries"]:
+        logger.info("Requesting reliable availability from client '%s'" %
+                    client_name)
+    else:
+        logger.info("Requesting unreliable availability from client '%s'" %
+                    client_name)
+
     try:
+        start = time.time()
         inv = client.get_stations(**arguments)
+        end = time.time()
     except (FDSNException, HTTPError) as e:
         logger.error(
             "Failed getting availability for client '{0}': %s".format(
                 client_name), str(e))
         return client_name, None
-    logger.info("Successfully requested availability from client '%s'" %
-                client_name)
+    logger.info("Successfully requested availability from client '%s' "
+                "(%.2f seconds)" % (client_name, end - start))
 
     availability = {}
 
@@ -189,11 +231,29 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                                             station.longitude):
                 continue
 
+            # Remove channels that somehow slipped past the temporal
+            # constraints due to weird behaviour from the data center.
+            channels = []
+            for channel in station.channels:
+                if (channel.start_date > restrictions.starttime) or \
+                        (channel.end_date < restrictions.endtime):
+                    continue
+                # Use availability information if possible. In the other
+                # cases it should already work.
+                if arguments["includeavailability"]:
+                    da = channel.data_availability
+                    if da is None:
+                        continue
+                    if (da.start > restrictions.starttime) or \
+                            (da.end < restrictions.endtime):
+                        continue
+                channels.append(channel)
+
             # Group by locations and apply the channel priority filter to
             # each.
             filtered_channels = []
             for location, channels in itertools.groupby(
-                    station.channels, lambda x: x.location_code):
+                    channels, lambda x: x.location_code):
                 channels = list(set([_i.code for _i in channels]))
                 filtered_channels.extend([
                     Channel(location, _i) for _i in
@@ -222,7 +282,10 @@ def get_availability_from_client(client, client_name, restrictions, domain,
     logger.info("Found %i matching channels from client '%s'." %
                 (sum([len(_i.channels) for _i in availability.values()]),
                  client_name))
-    return client_name, availability
+
+    return {"reliable": arguments["includeavailability"] or
+                        arguments["matchtimeseries"],
+            "availability": availability}
 
 
 def filter_channels_based_on_count(channels):
@@ -344,7 +407,7 @@ def filter_stations(stations, minimum_distance_in_m):
             enumerate(stations))]
 
 
-def merge_stations(stations, other_stations, minimum_distance_in_m=0.0):
+def merge_stations(stations, other_stations, minimum_distance_in_m=None):
     """
     Merges two lists containing station objects. The first list is assumed
     to already be filtered with
@@ -354,10 +417,19 @@ def merge_stations(stations, other_stations, minimum_distance_in_m=0.0):
     ``stations`` while ensuring the minimum inter-station distance will
     remain be honored.
     """
-    if not minimum_distance_in_m:
-        raise NotImplementedError
+    # Shallow copies.
+    stations = list(stations)
+    other_stations = list(other_stations)
 
-    stations = copy.copy(stations)
+    # A non-existing minimum inner station distance result in all stations
+    # being used.
+    if not minimum_distance_in_m:
+        stations.extend(other_stations)
+        return stations
+
+    if not stations:
+        stations.append(other_stations.pop(0))
+
     for station in other_stations:
         kd_tree = SphericalNearestNeighbour(stations)
         neighbours = kd_tree.query([station])[0][0]

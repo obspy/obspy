@@ -21,6 +21,7 @@ import itertools
 import logging
 from multiprocessing.pool import ThreadPool
 import os
+from socket import timeout as SocketTimeout
 import shutil
 import tempfile
 import warnings
@@ -31,6 +32,8 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 
 from . import utils
+
+ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 
 
 # Setup the logger.
@@ -56,10 +59,6 @@ class Restrictions(object):
     """
     Class storing non-domain bounds restrictions of a query.
     """
-    __slots__ = ("starttime", "endtime", "network", "station", "location",
-                 "channel", "channel_priorities",
-                 "minimum_interstation_distance_in_m")
-
     def __init__(self, starttime, endtime, network=None, station=None,
                  location=None, channel=None,
                  minimum_interstation_distance_in_m=1000,
@@ -111,17 +110,73 @@ class DownloadHelper(object):
         self._initialized_clients = OrderedDict()
         self.__initialize_clients()
 
-    def download(self, domain, restrictions, settings):
-        # Create a temporary directory which will be deleted after the
-        # downloading has been finished.
-        self.temp_dir = tempfile.mkdtemp(prefix="obspy_fdsn_download_helper")
-        logger.info("Using temporary directory: %s" % self.temp_dir)
-        try:
-            self.get_availability(domain, restrictions)
-        finally:
-            shutil.rmtree(self.temp_dir)
-            self.temp_dir = None
-            logger.info("Deleted temporary directory.")
+    def download(self, domain, restrictions, temp_folder,
+                 chunk_size=25, threads_per_client=5, mseed_path=None,
+                 stationxml_path=None):
+
+        existing_stations = []
+
+        # Do it sequentially for each client.
+        for client_name, client in self._initialized_clients.items():
+            try:
+                info = utils.get_availability_from_client(
+                    client, client_name, restrictions, domain, logger)
+            except ERRORS as e:
+                msg = "Availability for client '%s': %s" % (
+                    client_name,  str(e))
+                if "no data available" in msg.lower():
+                    logger.info(msg)
+                else:
+                    logger.error(msg)
+                continue
+
+            availability = info["availability"]
+            if not availability:
+                logger.info("Availability for client '%s': No suitable "
+                            "data found." % client_name)
+                continue
+
+            # Two cases. Reliable availability means that the client
+            # supports the `matchtimeseries` or `includeavailability`
+            # parameter and thus the availability information is treated as
+            # reliable. Otherwise not. If it is reliable, the stations will
+            # be filtered before they are downloaded, otherwise it will
+            # happen in reverse to assure as much data as possible is
+            # downloaded.
+            if info["reliable"]:
+                stations_to_download = [
+                    _i for _i in utils.merge_stations(existing_stations,
+                                                      availability.values())
+                    if _i.client == client_name]
+                # Now first download the data.
+                downloaded_miniseed_files = self.download_mseed(
+                    stations_to_download, mseed_path, temp_folder,
+                    chunk_size, threads_per_client)
+                # Now download the station information for the downloaded
+                # stations.
+                downloaded_stations = self.download_stationxml(
+                    downloaded_stations, stationxml_path, threads_per_client)
+                # Remove waveforms that did not succeed in having available
+                # stationxml files.
+                self.delete_extraneous_waveform_files()
+                existing_stations.extend(downloaded_stations)
+            else:
+                # If it is not reliable, e.g. the client does not have the
+                # "includeavailability" or "matchtimeseries" flags,
+                # then first download everything and filter later!
+                downloaded_miniseed_files = self.download_mseed(
+                    availability.values(), restrictions, mseed_path,
+                    temp_folder, chunk_size=chunk_size,
+                    threads_per_client=threads_per_client)
+                # Once that is done, filter as the coordinates of all
+                # stations are already known.
+                remaining_miniseed_files = self.do_stuff()
+                downloaded_stations = self.download_stationxml(
+                    remaining_miniseed_files, restrictions,
+                    stations_to_download,
+                    threads_per_client=threads_per_client)
+                self.delete_extraneous_waveform_files()
+                existing_stations.extend(downloaded_miniseed_files)
 
     def get_availability(self, domain, restrictions):
         """
@@ -130,7 +185,7 @@ class DownloadHelper(object):
             try:
                 avail = utils.get_availability_from_client(*args,
                                                            logger=logger)
-            except (FDSNException, HTTPError, URLError) as e:
+            except ERRORS as e:
                 logger.error(str(e))
                 return None
             return avail
@@ -215,8 +270,12 @@ class DownloadHelper(object):
             try:
                 ret_val = utils.download_and_split_mseed_bulk(
                     *args, temp_folder=temp_folder, logger=logger)
-            except (FDSNException, HTTPError, URLError) as e:
-                logger.error(("Client '%s': " % args[1]) + str(e))
+            except ERRORS as e:
+                msg = ("Client '%s': " % args[1]) + str(e)
+                if "no data available" in msg.lower():
+                    logger.info(msg)
+                else:
+                    logger.error(msg)
                 return None
             return None
 
@@ -251,7 +310,7 @@ class DownloadHelper(object):
         def star_download_station(args):
             try:
                 utils.download_stationxml(*args, logger=logger)
-            except (FDSNException, HTTPError, URLError) as e:
+            except ERRORS as e:
                 logger.error(str(e))
                 return None
             return None
@@ -283,7 +342,7 @@ class DownloadHelper(object):
         def _get_client(client_name):
             try:
                 this_client = Client(client_name)
-            except (FDSNException, HTTPError, URLError):
+            except ERRORS:
                 logger.warn("Failed to initialize client '%s'."
                             % client_name)
                 return client_name, None
