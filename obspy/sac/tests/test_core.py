@@ -13,7 +13,6 @@ import copy
 import numpy as np
 import os
 import unittest
-import filecmp
 
 
 class CoreTestCase(unittest.TestCase):
@@ -249,7 +248,13 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             tr.write(tmpfile, format="SAC")
-            self.assertTrue(filecmp.cmp(file, tmpfile, shallow=False))
+            tr2 = read(tmpfile)[0]
+            self.assertEqual(tr.stats.station, tr2.stats.station)
+            self.assertEqual(tr.stats.npts, tr2.stats.npts)
+            self.assertEqual(tr.stats.delta, tr2.stats.delta)
+            self.assertEqual(tr.stats.starttime, tr2.stats.starttime)
+            self.assertEqual(tr.stats.sac.b, tr2.stats.sac.b)
+            np.testing.assert_array_equal(tr.data, tr2.data)
         # test some more entries, I can see from the plot
         self.assertEqual(tr.stats.station, "CDV")
         self.assertEqual(tr.stats.channel, "Q")
