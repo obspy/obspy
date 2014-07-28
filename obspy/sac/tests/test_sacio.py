@@ -15,7 +15,6 @@ import io
 import numpy as np
 import os
 import unittest
-import filecmp
 
 
 class SacIOTestCase(unittest.TestCase):
@@ -135,8 +134,7 @@ class SacIOTestCase(unittest.TestCase):
         tb = SacIO(tfileb)
         self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
-        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
-                         tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
+        self.assertEqual(tl.GetHvalue('delta'), tb.GetHvalue('delta'))
         np.testing.assert_array_equal(tl.seis, tb.seis)
 
     def test_swapbytes(self):
@@ -148,7 +146,23 @@ class SacIOTestCase(unittest.TestCase):
             tb = SacIO(tfileb)
             tb.swap_byte_order()
             tb.WriteSacBinary(tempfile)
-            self.assertTrue(filecmp.cmp(tfilel, tempfile, shallow=False))
+            t = SacIO(tempfile)
+            tl = SacIO(tfilel)
+            self.assertEqual(t.GetHvalue('kevnm'), tl.GetHvalue('kevnm'))
+            self.assertEqual(t.GetHvalue('npts'), tl.GetHvalue('npts'))
+            self.assertEqual(t.GetHvalue('delta'), tl.GetHvalue('delta'))
+            np.testing.assert_array_equal(t.seis, tl.seis)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tl = SacIO(tfilel)
+            tl.swap_byte_order()
+            tl.WriteSacBinary(tempfile)
+            t = SacIO(tempfile)
+            tb = SacIO(tfileb)
+            self.assertEqual(t.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
+            self.assertEqual(t.GetHvalue('npts'), tb.GetHvalue('npts'))
+            self.assertEqual(t.GetHvalue('delta'), tb.GetHvalue('delta'))
+            np.testing.assert_array_equal(t.seis, tb.seis)
 
     def test_getdist(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
