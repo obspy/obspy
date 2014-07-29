@@ -17,7 +17,6 @@ import inspect
 import io
 from lxml import etree
 import os
-import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
@@ -1159,11 +1158,6 @@ def _tag2obj(element, tag, convert):
 
 def _tags2obj(element, tag, convert):
     values = []
-    # make sure, only unicode
-    if convert is str:
-        # XXX: this warning if raised with python3
-        warnings.warn("overriding 'str' with 'unicode'.")
-        convert = str
     for elem in element.findall(tag):
         values.append(convert(elem.text))
     return values
