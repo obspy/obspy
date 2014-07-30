@@ -19,7 +19,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from struct import unpack
 import xdrlib
 
 import numpy as np
@@ -68,41 +67,52 @@ def _get_AH_version(filename):
 
     :type filename: str
     :param filename: AH v1 file to be checked.
-    :rtype: float or None
-    :return: version of AH waveform data or ``None`` if unknown.
+    :rtype: float or False
+    :return: version of AH waveform data or ``False`` if unknown.
     """
-    try:
-        with open(filename, "rb") as fh:
-            temp = fh.read(788)
-            if temp[0] == 0:
-                endian = b'<'
-            else:
-                endian = b'>'
-            magic = unpack(endian + b'i', temp[0:4])[0]
-            if magic == 1100:
-                length = unpack(endian + b'L', temp[4:8])[0]
+    with open(filename, "rb") as fh:
+        # read first 8 bytes with XDR library
+        try:
+            data = xdrlib.Unpacker(fh.read(8))
+        except:
+            return False
+        # check for magic version number
+        magic = data.unpack_int()
+        if magic == 1100:
+            # get record length
+            length = data.unpack_uint()
+            # read first record
+            try:
                 fh.read(length)
-                return '2.0'
-            elif magic == 6:
-                # AH1 has no magic variable :/
-                # so we have to use some fixed values as indicators
-                if unpack(endian + b'i', temp[12:16])[0] != 6:
-                    return None
-                if unpack(endian + b'i', temp[24:28])[0] != 8:
-                    return None
-                if unpack(endian + b'i', temp[700:704])[0] != 80:
-                    return None
-                if unpack(endian + b'i', temp[784:788])[0] != 202:
-                    return None
-                return '1.0'
-            else:
-                return None
-    except:
-        return None
+            except:
+                return False
+            # seems to be AH v2
+            return '2.0'
+        elif magic == 6:
+            # AH1 has no magic variable :/
+            # so we have to use some fixed values as indicators
+            try:
+                fh.seek(12)
+                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 6:
+                    return False
+                fh.seek(24)
+                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 8:
+                    return False
+                fh.seek(700)
+                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 80:
+                    return False
+                fh.seek(784)
+                if xdrlib.Unpacker(fh.read(4)).unpack_int() != 202:
+                    return False
+            except:
+                return False
+            return '1.0'
+        else:
+            return False
 
 
 def _unpack_string(data):
-    return data.unpack_string().split(b'\x00', 1)[0].strip()
+    return data.unpack_string().split(b'\x00', 1)[0].strip().decode("utf-8")
 
 
 def read_AH1(filename):
