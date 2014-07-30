@@ -7,6 +7,8 @@ The file is portable among machines of varying architecture by virtue of
 its XDR implementation. It is composed of a variable-sized header containing
 a number of values followed by the time series data.
 
+.. seealso:: ftp://www.orfeus-eu.org/pub/software/mirror/ldeo.columbia/
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
