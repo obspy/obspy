@@ -450,9 +450,6 @@ class ParserTestCase(unittest.TestCase):
         paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
                         datetime=UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
-        paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
-                        datetime=UTCDateTime("2010-01-01"))
-        self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_getPAZFromXSEED(self):
         """
