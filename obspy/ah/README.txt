@@ -1,5 +1,5 @@
-package obspy.wav
-=================
+package obspy.ah
+================
 
 Copyright
 ---------
