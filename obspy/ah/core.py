@@ -74,15 +74,15 @@ def _get_AH_version(filename):
         # read first 8 bytes with XDR library
         try:
             data = xdrlib.Unpacker(fh.read(8))
+            # check for magic version number
+            magic = data.unpack_int()
         except:
             return False
-        # check for magic version number
-        magic = data.unpack_int()
         if magic == 1100:
-            # get record length
-            length = data.unpack_uint()
-            # read first record
             try:
+                # get record length
+                length = data.unpack_uint()
+                # read first record
                 fh.read(length)
             except:
                 return False
