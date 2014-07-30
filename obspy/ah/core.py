@@ -56,7 +56,7 @@ def read_AH(filename, **kwargs):  # @UnusedVariable
     :returns: Stream with Traces specified by given file.
     """
     version = _get_AH_version(filename)
-    if version == 2.0:
+    if version == '2.0':
         return read_AH2(filename)
     else:
         return read_AH1(filename)
@@ -82,7 +82,7 @@ def _get_AH_version(filename):
             if magic == 1100:
                 length = unpack(endian + b'L', temp[4:8])[0]
                 fh.read(length)
-                return 2.0
+                return '2.0'
             elif magic == 6:
                 # AH1 has no magic variable :/
                 # so we have to use some fixed values as indicators
@@ -94,7 +94,7 @@ def _get_AH_version(filename):
                     return None
                 if unpack(endian + b'i', temp[784:788])[0] != 202:
                     return None
-                return 1.0
+                return '1.0'
             else:
                 return None
     except:
@@ -117,7 +117,7 @@ def read_AH1(filename):
 
     def _unpack_trace(data):
         ah_stats = AttribDict({
-            'version': 1.0,
+            'version': '1.0',
             'event': AttribDict(),
             'station': AttribDict(),
             'record': AttribDict(),
@@ -230,7 +230,7 @@ def read_AH2(filename):
 
     def _unpack_trace(data):
         ah_stats = AttribDict({
-            'version': 2.0,
+            'version': '2.0',
             'event': AttribDict(),
             'station': AttribDict(),
             'record': AttribDict(),

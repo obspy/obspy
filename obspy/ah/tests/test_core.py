@@ -91,7 +91,7 @@ class CoreTestCase(unittest.TestCase):
         tr = st[0]
         ah = tr.stats.ah
         # station
-        self.assertEqual(ah.version, 1.0)
+        self.assertEqual(ah.version, '1.0')
         self.assertEqual(ah.station.code, 'RSCP')
         self.assertEqual(ah.station.channel, 'IPZ')
         self.assertEqual(ah.station.type, 'null')
@@ -139,7 +139,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st), 4)
         tr = st[0]
         ah = tr.stats.ah
-        self.assertEqual(ah.version, 2.0)
+        self.assertEqual(ah.version, '2.0')
         # station
         self.assertEqual(ah.station.code, 'RSCP')
         self.assertEqual(ah.station.channel, 'IPZ')
@@ -192,7 +192,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         tr = st[0]
         ah = tr.stats.ah
-        self.assertEqual(ah.version, 1.0)
+        self.assertEqual(ah.version, '1.0')
         # station
         self.assertEqual(ah.station.code, 'BRVK')
         self.assertEqual(ah.station.channel, 'lE21')
