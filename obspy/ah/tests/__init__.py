@@ -7,7 +7,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.wav"
+MODULE_NAME = "obspy.ah"
 
 
 def suite():
