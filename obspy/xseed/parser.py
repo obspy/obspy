@@ -27,8 +27,7 @@ import zipfile
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 import numpy as np
 
-import obspy
-from obspy import __version__
+from obspy import Trace, Stream, __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
 from obspy.xseed import DEFAULT_XSEED_VERSION, blockette
@@ -1202,13 +1201,13 @@ class Parser(object):
             "starttime": stream[0].stats.starttime,
             "sampling_rate": stream[0].stats.sampling_rate}
 
-        tr_z = obspy.Trace(data=z, header=common_header)
-        tr_n = obspy.Trace(data=n, header=common_header)
-        tr_e = obspy.Trace(data=e, header=common_header)
+        tr_z = Trace(data=z, header=common_header)
+        tr_n = Trace(data=n, header=common_header)
+        tr_e = Trace(data=e, header=common_header)
 
         # Fix the channel_codes
         tr_z.stats.channel += "Z"
         tr_n.stats.channel += "N"
         tr_e.stats.channel += "E"
 
-        return obspy.Stream(traces=[tr_z, tr_n, tr_e])
+        return Stream(traces=[tr_z, tr_n, tr_e])

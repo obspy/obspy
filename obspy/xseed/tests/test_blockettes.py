@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
-from glob import iglob
-from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
-from obspy.xseed.blockette.blockette import BlocketteLengthException
-from obspy.xseed.fields import SEEDTypeException
 import os
 import sys
 import unittest
 import warnings
+from glob import iglob
 
 from lxml import etree
+
+from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
+from obspy.xseed.blockette.blockette import BlocketteLengthException
+from obspy.xseed.fields import SEEDTypeException
 
 
 class BlocketteTestCase(unittest.TestCase):

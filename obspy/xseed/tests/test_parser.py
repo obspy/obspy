@@ -9,11 +9,10 @@ import os
 import unittest
 import warnings
 
-from lxml import etree
 import numpy as np
+from lxml import etree
 
-import obspy
-from obspy import UTCDateTime
+from obspy import read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
@@ -682,8 +681,8 @@ class ParserTestCase(unittest.TestCase):
         """
         Weak test for rotation of arbitrarily rotated components to ZNE.
         """
-        st = obspy.read(os.path.join(self.path,
-                        "II_COCO_three_channel_borehole.mseed"))
+        st = read(os.path.join(self.path,
+                               "II_COCO_three_channel_borehole.mseed"))
         # Read the SEED file and rotate the Traces with the information stored
         # in the SEED file.
         p = Parser(os.path.join(self.path, "dataless.seed.II_COCO"))
