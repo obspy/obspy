@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import gzip
+import io
+import os
+import unittest
+import warnings
+
+from lxml import etree
+import numpy as np
 
 import obspy
 from obspy import UTCDateTime
@@ -12,14 +21,6 @@ from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
-
-import gzip
-import io
-from lxml import etree
-import numpy as np
-import os
-import unittest
-import warnings
 
 
 class ParserTestCase(unittest.TestCase):
@@ -447,12 +448,8 @@ class ParserTestCase(unittest.TestCase):
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
                   'digitizer_gain': 1677850.0}
-        with warnings.catch_warnings(record=True) as w:
-            warnings.resetwarnings()
-            paz = sp.getPAZ(channel_id="BW.RJOB..EHZ",
-                            datetime=UTCDateTime("2010-01-01"))
-        self.assertEqual(len(w), 1)
-        self.assertEqual(w[0].category, DeprecationWarning)
+        paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
+                        datetime=UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
                         datetime=UTCDateTime("2010-01-01"))
