@@ -5,9 +5,7 @@ AH bindings to ObsPy core module.
 An AH file is used for the storage of binary seismic time series data.
 The file is portable among machines of varying architecture by virtue of
 its XDR implementation. It is composed of a variable-sized header containing
-a number of values followed by the time series data, which must be of one of
-two data types (single-precision floating point or complex single-precision
-floating point).
+a number of values followed by the time series data.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -30,12 +28,12 @@ from obspy.core.util.attribdict import AttribDict
 
 def is_AH(filename):
     """
-    Checks whether a file is AH waveform data (header) or not.
+    Checks whether a file is AH waveform data or not.
 
     :type filename: str
     :param filename: AH file to be checked.
     :rtype: bool
-    :return: ``True`` if a AH waveform header file.
+    :return: ``True`` if a AH waveform file.
     """
     if _get_AH_version(filename):
         return True
@@ -85,7 +83,7 @@ def _get_AH_version(filename):
                 return 2.0
             elif magic == 6:
                 # AH1 has no magic variable :/
-                # so we have to use soem fixed values as indicators
+                # so we have to use some fixed values as indicators
                 if unpack(endian + b'i', temp[12:16])[0] != 6:
                     return None
                 if unpack(endian + b'i', temp[24:28])[0] != 8:
@@ -185,7 +183,7 @@ def read_AH1(filename):
         # extras
         ah_stats.extras = data.unpack_array(data.unpack_float)
 
-        # read data
+        # unpack data using dtype from record info
         if dtype == 1:
             # float
             temp = data.unpack_farray(ndata, data.unpack_float)
@@ -316,7 +314,7 @@ def read_AH2(filename):
             value = _unpack_string(data)
             ah_stats.usrattr[key] = value
 
-        # read data
+        # unpack data using dtype from record info
         if dtype == 1:
             # float
             temp = data.unpack_farray(ndata, data.unpack_float)
