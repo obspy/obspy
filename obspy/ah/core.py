@@ -42,7 +42,7 @@ def is_AH(filename):
 
 def read_AH(filename, **kwargs):  # @UnusedVariable
     """
-    Reads a AH waveform file and returns a Stream object.
+    Reads an AH waveform file and returns a Stream object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
@@ -105,7 +105,7 @@ def _unpack_string(data):
 
 def read_AH1(filename):
     """
-    Reads a AH v1 waveform file and returns a Stream object.
+    Reads an AH v1 waveform file and returns a Stream object.
 
     :type filename: str
     :param filename: AH v1 file to be read.
@@ -218,7 +218,7 @@ def read_AH1(filename):
 
 def read_AH2(filename):
     """
-    Reads a AH v2 waveform file and returns a Stream object.
+    Reads an AH v2 waveform file and returns a Stream object.
 
     :type filename: str
     :param filename: AH v2 file to be read.

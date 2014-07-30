@@ -36,14 +36,6 @@ class CoreTestCase(unittest.TestCase):
         self.assertTrue(is_AH(testfile))
         testfile = os.path.join(self.path, 'ah1.t')
         self.assertTrue(is_AH(testfile))
-        testfile = os.path.join(self.path, 'Lopnor', 'brvk.KODB.SHE.ah')
-        self.assertTrue(is_AH(testfile))
-        testfile = os.path.join(self.path, 'Lopnor', 'brvk.KODB.SHN.ah')
-        self.assertTrue(is_AH(testfile))
-        testfile = os.path.join(self.path, 'Lopnor', 'brvk.KODB.SHZ.ah')
-        self.assertTrue(is_AH(testfile))
-        testfile = os.path.join(self.path, 'Lopnor', 'brvk.KODB.SLZb.ah')
-        self.assertTrue(is_AH(testfile))
         testfile = os.path.join(self.path, 'hrv.lh.zne')
         self.assertTrue(is_AH(testfile))
 
@@ -63,8 +55,6 @@ class CoreTestCase(unittest.TestCase):
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.KSM.sE12.asc')
         self.assertFalse(is_AH(testfile))
         testfile = os.path.join(self.path, 'TSG', 'Readme_TSG_response.txt')
-        self.assertFalse(is_AH(testfile))
-        testfile = os.path.join(self.path, 'Lopnor', 'brvk.KODB.SLZ.pdf')
         self.assertFalse(is_AH(testfile))
 
     def test_read(self):
