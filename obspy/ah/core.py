@@ -67,8 +67,8 @@ def _get_AH_version(filename):
 
     :type filename: str
     :param filename: AH v1 file to be checked.
-    :rtype: float or False
-    :return: version of AH waveform data or ``False`` if unknown.
+    :rtype: str or False
+    :return: version string of AH waveform data or ``False`` if unknown.
     """
     with open(filename, "rb") as fh:
         # read first 8 bytes with XDR library
