@@ -15,6 +15,9 @@
      obspy.imaging.maps.plot_basemap() (see #753).
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
+ - obspy.neries:
+   * Deprecated event related request methods (shut down on server side).
+     Replacement is obspy.fdsn Client with `base_url='NERIES'`.
  - obspy.signal:
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
