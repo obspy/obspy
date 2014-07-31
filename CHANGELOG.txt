@@ -1,7 +1,9 @@
 0.10.0:
  - general:
-   * support for Python 3.3 and 3.4
+   * Support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
+ - obspy.ah
+   * New submodule for reading the AH (Ad Hoc) waveform format 
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.

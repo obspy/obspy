@@ -134,6 +134,7 @@ ENTRY_POINTS = {
         'Q = obspy.sh.core',
         'SH_ASC = obspy.sh.core',
         'WAV = obspy.wav.core',
+        'AH = obspy.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.core.ascii:isTSPAIR',
@@ -218,6 +219,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.Y': [
         'isFormat = obspy.y.core:isY',
         'readFormat = obspy.y.core:readY',
+    ],
+    'obspy.plugin.waveform.AH': [
+        'isFormat = obspy.ah.core:is_AH',
+        'readFormat = obspy.ah.core:read_AH',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
