@@ -21,7 +21,7 @@
    <TotalNumberChannels>2</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes=".EARTHSCOPE,_US-REF,_US-ALL,_US-REGIONAL,_US-BB+A,_AFTAC,.UNRESTRICTED,_US-BB,_GSN,_GSN-BROADBAND">
+  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes=".EARTHSCOPE,_US-REF,_US-ALL,_US-REGIONAL,_US-BB+A,.UNRESTRICTED,_AFTAC,_US-BB,_GSN,_GSN-BROADBAND">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>

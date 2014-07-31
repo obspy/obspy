@@ -297,7 +297,8 @@ class Client(object):
                      maxlongitude=None, latitude=None, longitude=None,
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
-                     updatedafter=None, filename=None, **kwargs):
+                     matchtimeseries=None, updatedafter=None, filename=None,
+                     **kwargs):
         """
         Query the station service of the FDSN client.
 

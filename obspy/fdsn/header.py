@@ -83,7 +83,7 @@ PARAMETER_ALIASES = {
     "minmag": "minmagnitude",
     "maxmag": "maxmagnitude",
     "magtype": "magnitudetype",
-    }
+}
 
 
 # The default types if none are given. If the parameter can not be found in
