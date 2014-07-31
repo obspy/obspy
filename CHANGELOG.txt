@@ -16,8 +16,12 @@
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:
-   * Deprecated event related request methods (shut down on server side).
-     Replacement is obspy.fdsn Client with `base_url='NERIES'`.
+   * The whole module is deprecated and will be removed with the next major
+     release. To access EMSC event data please use the obspy.fdsn client
+     (use `Client(base_url='NERIES', ...)`), for access to ORFEUS waveform
+     data please use the obspy.fdsn client (use
+     `Client(base_url='ORFEUS', ...)`) and for travel times please use
+     obspy.taup.
  - obspy.signal:
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
