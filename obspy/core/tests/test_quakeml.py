@@ -941,7 +941,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 'another_attrib="another_value" '
                 'some_attrib="some_value">false</ns1:public>'
             ]
-            for lines in expected:
+            for line in expected:
                 self.assertTrue(line in content)
             # now, read again to test if its parsed correctly..
             cat = readQuakeML(tmpfile)
