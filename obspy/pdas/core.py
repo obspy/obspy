@@ -78,9 +78,9 @@ def readPDAS(filename, **kwargs):
     sampling_rate = 1.0 / float(items[6][1].decode())
     dtype = items[1][1].decode()
     if dtype.upper() == "LONG":
-        data = np.fromstring(data, dtype='int16')
+        data = np.fromstring(data, dtype=np.int16)
     elif dtype.upper() == "SHORT":
-        data = np.fromstring(data, dtype='int8')
+        data = np.fromstring(data, dtype=np.int8)
     else:
         raise NotImplementedError()
 
