@@ -26,7 +26,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/IDA)</Description>
   <TotalNumberStations>50</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,_STS-1,.UNRESTRICTED,_GSN,_FDSN-ALL,_CARIBE-EWS,_REALTIME">
+  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,_STS-1,.UNRESTRICTED,_GSN,_FDSN-ALL,_LACSN,_CARIBE-EWS,_REALTIME">
    <Comment>
     <Value>Day contains positive leap second (86401 s/day).</Value>
     <BeginEffectiveTime>1998-12-31T00:00:00</BeginEffectiveTime>

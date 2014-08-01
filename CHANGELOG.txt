@@ -10,6 +10,8 @@
  - obspy.fdsn:
    * WADL files are cached per Python process.
    * Bulk station downloading using POST requests.
+   * Support for FDSNWS 1.1, e.g. the `matchtimeseries` parameter for the
+     station service.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
@@ -28,6 +30,7 @@
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
+   * read/write support for DataAvailability tags in StationXML files.
 
 0.9.3:
  - obspy.core:
