@@ -9,7 +9,7 @@ to diverse, distributed European earthquake data provided in a unique joint
 initiative by observatories and research institutes in and around Europe.
 
 .. warning::
-    The `obspy.neries` module is deprecated in will be removed with the
+    The `obspy.neries` module is deprecated and will be removed with the
     next major release. To access EMSC event data please use the
     :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
     (use `Client(base_url='NERIES', ...)`), for access to
