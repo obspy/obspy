@@ -13,9 +13,177 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from io import StringIO
-from obspy.core import Stream, Trace, UTCDateTime, Stats
+from obspy.core import Stream, Trace, Stats, AttribDict, UTCDateTime
 import numpy as np
 import re
+
+
+class NativeHeader:
+    """
+    Base class for handling of native headers
+    """
+    pass
+
+
+class DynaHdr(NativeHeader):
+    """
+    Class to handle DYNA header
+    """
+    KEYS_DYNA_10 = [
+        # event related
+        "EVENT_NAME",
+        "EVENT_ID",
+        "EVENT_DATE_YYYYMMDD",
+        "EVENT_TIME_HHMMSS",
+        "EVENT_LATITUDE_DEGREE",
+        "EVENT_LONGITUDE_DEGREE",
+        "EVENT_DEPTH_KM",
+        "HYPOCENTER_REFERENCE",
+        "MAGNITUDE_W",
+        "MAGNITUDE_W_REFERENCE",
+        "MAGNITUDE_L",
+        "MAGNITUDE_L_REFERENCE",
+        "FOCAL_MECHANISM",
+        # station related
+        "NETWORK",
+        "STATION_CODE",
+        "STATION_NAME",
+        "STATION_LATITUDE_DEGREE",
+        "STATION_LONGITUDE_DEGREE",
+        "STATION_ELEVATION_M",
+        "LOCATION",
+        "VS30_M/S",
+        "SITE_CLASSIFICATION_EC8",
+        "MORPHOLOGIC_CLASSIFICATION",
+        # geometry
+        "EPICENTRAL_DISTANCE_KM",
+        "EARTHQUAKE_BACKAZIMUTH_DEGREE",
+        # seismic record
+        "DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS",
+        "DATE_TIME_FIRST_SAMPLE_PRECISION",
+        "SAMPLING_INTERVAL_S",
+        "NDATA",
+        "DURATION_S",
+        "STREAM",
+        "UNITS",
+        # instrumment
+        "INSTRUMENT",
+        "INSTRUMENT_ANALOG/DIGITAL",
+        "INSTRUMENTAL_FREQUENCY_HZ",
+        "INSTRUMENTAL_DAMPING",
+        "FULL_SCALE_G",
+        "N_BIT_DIGITAL_CONVERTER",
+        # conditional, meassures
+        ("peak"),
+        ("peak_time"),
+        # misc
+        "BASELINE_CORRECTION",
+        "FILTER_TYPE",
+        "FILTER_ORDER",
+        "LOW_CUT_FREQUENCY_HZ",
+        "HIGH_CUT_FREQUENCY_HZ",
+        "LATE/NORMAL_TRIGGERED",
+        "DATABASE_VERSION",
+        "HEADER_FORMAT",
+        "DATA_TYPE",
+        "PROCESSING",
+        "DATA_TIMESTAMP_YYYYMMDD_HHMMSS",
+        "USER1",
+        "USER2",
+        "USER3",
+        "USER4",
+        ]
+
+    # data type: acceleration
+    ACC = "ACCELERATION"
+    SA = "ACCELERATION RESPONSE SPECTRUM"
+    U1 = "PGA_CM/S^2"
+    U2 = "TIME_PGA_S"
+    # data type: velocity
+    VEL = "VELOCITY"
+    PSV = "PSEUDO-VELOCITY RESPONSE SPECTRUM"
+    U1 = "PGV_CM/S"
+    U2 = "TIME_PGV_S"
+    # data type: displacement
+    DIS = "DISPLACEMENT"
+    SD = "DISPLACEMENT RESPONSE SPECTRUM"
+    U1 = "PGD_CM"
+    U2 = "TIME_PGD_S"
+
+    def __init__(self):
+        self.is_acc = False
+        self.is_vel = False
+        self.is_disp = False
+
+    def _stats_key(key):
+        # TODO: to be decided!
+        # return key.translate(str.maketrans('/^', '__')).lower()
+        return key.translate(str.maketrans('/^', '__')).upper()
+
+    def get_template():
+        stats_dyna = AttribDict()
+        for key in DynaHdr.KEYS_DYNA_10:
+            if key == '*':
+                continue
+            skey = DynaHdr._stats_key(key)
+            # TODO: remove!
+            # print('file: {} to stats: {}'.format(key, skey))
+            stats_dyna[skey] = None
+
+        # format identifier
+        stats_dyna.header_format = 'DYNA 1.0'
+
+        return stats_dyna
+
+
+    def get_default(stats):
+        """
+        set default values
+        """
+
+        # from generic headers
+        stats.dyna['NETWORK'] = stats['network']
+        stats.dyna['STATION_CODE'] = stats['station']
+        stats.dyna['LOCATION'] = stats['location']
+        stats.dyna['STREAM'] = stats['channel']
+
+        stats.dyna['NDATA'] = stats['npts']
+        stats.dyna['SAMPLING_INTERVAL_S'] = stats['delta']
+
+        # conditional: seconds or milliseconds
+        # = stats.starttime
+        stats.dyna['DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS'] \
+                = stats['starttime']
+
+        # Warining?
+        if stats['calib'] != 1.0:
+            pass
+
+        # data type qis acceleration, acc, SA
+        # DATA_TYPE == "ACCELERATION"
+        # DATA_TYPE == "ACCELERATION RESPONSE SPECTRUM"
+        if is_acceleration:
+            # key_peak = "PGA_CM/S^2", "PGA_CM_S_2",
+            # key_peak_time = "TIME_PGA_S"
+            pass
+
+        # data type is velocity, vel, PSV
+        # DATA_TYPE == "VELOCITY"
+        # DATA_TYPE == "PSEUDO-VELOCITY RESPONSE SPECTRUM"
+        if is_velocity:
+            # key_peak = "PGV_CM/S", "PGV_CM_S",
+            # key_peak_time = "TIME_PGV_S"
+            pass
+
+        # data type is displacement, dis, SD
+        # DATA_TYPE == "DISPLACEMENT", not written?
+        # DATA_TYPE == "DISPLACEMENT RESPONSE SPECTRUM"
+        if is_displacement:
+            # key_peak = "PGD_CM"
+            # key_peak_time = "TIME_PGD_S"
+            pass
+
+        return
 
 
 def isDYNA(filename):
@@ -123,20 +291,23 @@ def readDYNA(filename, headonly=False, **kwargs):  # @UnusedVariable
     header = Stats()
     header['dyna'] = {}
 
+    # generic stats
     header['network'] = headers['NETWORK']
     header['station'] = headers['STATION_CODE']
     header['location'] = headers['LOCATION']
     header['channel'] = headers['STREAM']
+
     try:
         # use toUTCDateTime to convert from DYNA format
         header['starttime'] = toUTCDateTime(
             headers['DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS'])
     except:
         header['starttime'] = toUTCDateTime('19700101_000000')
+
     header['sampling_rate'] = 1 / float(headers['SAMPLING_INTERVAL_S'])
     header['delta'] = float(headers['SAMPLING_INTERVAL_S'])
     header['npts'] = int(headers['NDATA'])
-    header['calib'] = 1  # not in file header
+    header['calib'] = 1.0  # not in file header
 
     # DYNA dict float data
     header['dyna']['EVENT_LATITUDE_DEGREE'] = strtofloat(
@@ -317,7 +488,7 @@ def readITACA(filename, headonly=False, **kwargs):  # @UnusedVariable
     header['sampling_rate'] = 1 / float(headers['SAMPLING_INTERVAL_S'])
     header['delta'] = float(headers['SAMPLING_INTERVAL_S'])
     header['npts'] = int(headers['NDATA'])
-    header['calib'] = 1  # not in file header
+    header['calib'] = 1.0  # not in file header
 
     # ITACA dict float data
     header['itaca']['EVENT_LATITUDE_DEGREE'] = strtofloat(
@@ -429,6 +600,20 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
     :type filename: str
     :param filename: Name of the ASCII file to write.
     """
+
+    # TEMP: needs to deal with multiple traces as well, see SAC!
+    tr = stream[0]
+
+    # TEMP: add stats.dyna, if missing
+    if not hasattr(tr.stats, 'dyna'):
+        tr.stats.dyna = DynaHdr.get_template()
+        tr.stats.dyna.DATE_TIME_FIRST_SAMPLE_PRECISION = 'milliseconds'
+        if True:
+            tr.stats.dyna.DATA_TYPE = 'ACCELERATION'
+            tr.stats.dyna.PGA_CM_S_2 = None
+            tr.stats.dyna.TIME_PGA_S = None
+
+    # TODO: recheck mode
     fh = open(filename, 'wt')
 
     fh.write("EVENT_NAME: %s\n" % stream[0].stats.dyna.EVENT_NAME)
@@ -473,13 +658,15 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
              floattostr(stream[0].stats.dyna.EPICENTRAL_DISTANCE_KM, 1))
     fh.write("EARTHQUAKE_BACKAZIMUTH_DEGREE: %s\n" %
              floattostr(stream[0].stats.dyna.EARTHQUAKE_BACKAZIMUTH_DEGREE, 1))
-    if stream[0].stats.dyna.DATE_TIME_FIRST_SAMPLE_PRECISION == 'seconds' \
-           or stream[0].stats.dyna.DATE_TIME_FIRST_SAMPLE_PRECISION \
-           == 'milliseconds':  # NOQA
+
+    # XX: conditional, derived from stats
+    if stream[0].stats.dyna.DATE_TIME_FIRST_SAMPLE_PRECISION \
+           in ('seconds', 'milliseconds'):  # NOQA
         fh.write("DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS: %s\n" %
                  fromUTCDateTime(stream[0].stats.starttime))
     else:
         fh.write("DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS: \n")
+
     fh.write("DATE_TIME_FIRST_SAMPLE_PRECISION: %s\n" %
              stream[0].stats.dyna.DATE_TIME_FIRST_SAMPLE_PRECISION)
     fh.write("SAMPLING_INTERVAL_S: %s\n" %
@@ -500,6 +687,7 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
              floattostr(stream[0].stats.dyna.FULL_SCALE_G, 1))
     fh.write("N_BIT_DIGITAL_CONVERTER: %s\n" %
              floattostr(stream[0].stats.dyna.N_BIT_DIGITAL_CONVERTER, 0))
+
     # data type is acceleration
     if stream[0].stats.dyna.DATA_TYPE == "ACCELERATION" \
             or stream[0].stats.dyna.DATA_TYPE \
@@ -523,6 +711,7 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
         fh.write("PGD_CM: %s\n" % floattostr(stream[0].stats.dyna.PGD_CM, 6))
         fh.write("TIME_PGD_S: %s\n" %
                  floattostr(stream[0].stats.dyna.TIME_PGD_S, 6))
+
     fh.write("BASELINE_CORRECTION: %s\n" %
              stream[0].stats.dyna.BASELINE_CORRECTION)
     fh.write("FILTER_TYPE: %s\n" % stream[0].stats.dyna.FILTER_TYPE)
@@ -545,8 +734,7 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
     fh.write("USER3: %s\n" % stream[0].stats.dyna.USER3)
     fh.write("USER4: %s\n" % stream[0].stats.dyna.USER4)
 
-    if stream[0].stats.dyna.DATA_TYPE == "ACCELERATION" \
-            or stream[0].stats.dyna.DATA_TYPE == "VELOCITY":
+    if stream[0].stats.dyna.DATA_TYPE in ("ACCELERATION", "VELOCITY"):
         for d in stream[0].data:
             fh.write("%-.6f\n" % d)
     elif stream[0].stats.dyna.DATA_TYPE == "DISPLACEMENT":
