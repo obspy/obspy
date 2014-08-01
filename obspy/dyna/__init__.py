@@ -39,7 +39,7 @@ The trace will have a stats attribute containing the usual information.
    sampling_rate: 200.0
            delta: 0.005
             npts: 8997
-           calib: 1
+           calib: 1.0
          _format: DYNA
             dyna: AttribDict(...)
 

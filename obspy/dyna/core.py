@@ -115,19 +115,19 @@ class DynaHdr(NativeHeader):
         self.is_vel = False
         self.is_disp = False
 
+    @staticmethod
     def _stats_key(key):
         # TODO: to be decided!
         # return key.translate(str.maketrans('/^', '__')).lower()
         return key.translate(str.maketrans('/^', '__')).upper()
 
+    @staticmethod
     def get_template():
         stats_dyna = AttribDict()
         for key in DynaHdr.KEYS_DYNA_10:
             if key == '*':
                 continue
             skey = DynaHdr._stats_key(key)
-            # TODO: remove!
-            # print('file: {} to stats: {}'.format(key, skey))
             stats_dyna[skey] = None
 
         # format identifier
@@ -135,11 +135,9 @@ class DynaHdr(NativeHeader):
 
         return stats_dyna
 
-
+    @staticmethod
     def get_default(stats):
-        """
-        set default values
-        """
+        """set default values"""
 
         # from generic headers
         stats.dyna['NETWORK'] = stats['network']
@@ -152,8 +150,8 @@ class DynaHdr(NativeHeader):
 
         # conditional: seconds or milliseconds
         # = stats.starttime
-        stats.dyna['DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS'] \
-                = stats['starttime']
+        # XX: will need format conversion
+        stats.dyna.DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS = stats.starttime
 
         # Warining?
         if stats['calib'] != 1.0:
