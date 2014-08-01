@@ -40,7 +40,7 @@ def isDYNA(filename):
     if temp != 'EVENT_NAME:':
         return False
     f = open(filename, 'rt')
-    for i in xrange(55):
+    for i in range(55):
         line = f.readline()
         if i == 47 and line[:23] == 'HEADER_FORMAT: DYNA 1.0':
             return True
@@ -70,7 +70,7 @@ def isITACA(filename):
         return False
     # first 12 chars of line 8 should contain 'MAGNITUDE_S:'
     f = open(filename, 'rt')
-    for i in xrange(8):
+    for i in range(8):
         line = f.readline()
         if i == 7 and line[:12] != 'MAGNITUDE_S:':
             return False
@@ -114,7 +114,7 @@ def readDYNA(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     # read file
     fh = open(filename, 'rt')
-    for i in xrange(55):
+    for i in range(55):
         key, value = fh.readline().strip().split(':', 1)
         headers[key.strip()] = value.strip()
 
@@ -233,8 +233,8 @@ def readDYNA(filename, headonly=False, **kwargs):  # @UnusedVariable
         if headers['DATA_TYPE'][-8:] == "SPECTRUM":
             data_1 = np.array([], dtype=np.float32)
             data_2 = np.array([], dtype=np.float32)
-            for j in xrange(len(data)):
-                for i in xrange(2):
+            for j in range(len(data)):
+                for i in range(2):
                     if i == 0:
                         data_1 = np.append(data_1, data[j][i])
                     elif i == 1:
@@ -279,7 +279,7 @@ def readITACA(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     # read file
     fh = open(filename, 'rt')
-    for i in xrange(43):
+    for i in range(43):
         key, value = fh.readline().strip().split(':')
         headers[key.strip()] = value.strip()
 
@@ -400,8 +400,8 @@ def readITACA(filename, headonly=False, **kwargs):  # @UnusedVariable
         if headers['DATA_TYPE'][-8:] == "SPECTRUM":
             data_1 = np.array([], dtype=np.float32)
             data_2 = np.array([], dtype=np.float32)
-            for j in xrange(len(data)):
-                for i in xrange(2):
+            for j in range(len(data)):
+                for i in range(2):
                     if i == 0:
                         data_1 = np.append(data_1, data[j][i])
                     elif i == 1:
@@ -553,7 +553,7 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
         for d in stream[0].data:
             fh.write("%e\n" % d)
     elif stream[0].stats.dyna.DATA_TYPE[-8:] == "SPECTRUM":
-        for j in xrange(len(stream[0].data)):
+        for j in range(len(stream[0].data)):
             fh.write("%12.6f" % stream[0].data[j])
             fh.write("%13.6f\n" % stream[1].data[j])
 
