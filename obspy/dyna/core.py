@@ -429,7 +429,7 @@ def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
     :type filename: str
     :param filename: Name of the ASCII file to write.
     """
-    fh = open(filename, 'wb')
+    fh = open(filename, 'wt')
 
     fh.write("EVENT_NAME: %s\n" % stream[0].stats.dyna.EVENT_NAME)
     fh.write("EVENT_ID: %s\n" % stream[0].stats.dyna.EVENT_ID)
