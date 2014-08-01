@@ -12,6 +12,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
+import copy
 import math
 import warnings
 
@@ -20,8 +22,7 @@ import scipy as sp
 from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
-from obspy.core import Stream
-from obspy.core.util.decorator import deprecated
+from obspy.core import Stream, Trace
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 import warnings
@@ -44,6 +45,24 @@ class SeismicArray(object):
             raise NotImplementedError
         self.inventory = inv
 
+    def plot(self):
+        import matplotlib.pylab as plt
+        if self.inventory:
+            self.inventory.plot(projection="local", show=False)
+            bmap = plt.gca().basemap
+
+            grav = self.center_of_gravity
+            x, y = bmap(grav["longitude"], grav["latitude"])
+            bmap.scatter(x, y, marker="x", c="red", s=40, zorder=20)
+            plt.text(x, y, "Center of Gravity", color="red")
+
+            geo = self.geometrical_center
+            x, y = bmap(geo["longitude"], geo["latitude"])
+            bmap.scatter(x, y, marker="x", c="green", s=40, zorder=20)
+            plt.text(x, y, "Geometrical Center", color="green")
+
+            plt.show()
+
     def _get_geometry(self):
         if not self.inventory:
             return {}
@@ -55,10 +74,10 @@ class SeismicArray(object):
                                                 s=station.code)
                 for channel in station:
                     this_coordinates = \
-                        {"latitude": channel.latitude,
-                         "longitude": channel.longitude,
-                         "elevation": channel.elevation,
-                         "local_depth": channel.depth}
+                        {"latitude": float(channel.latitude),
+                         "longitude": float(channel.longitude),
+                         "elevation_in_m": float(channel.elevation),
+                         "local_depth_in_m": float(channel.depth)}
                     if station_code in geo and \
                             this_coordinates not in geo.values():
                         msg = ("Different coordinates for station '{n}.{s}' "
@@ -69,6 +88,29 @@ class SeismicArray(object):
                         continue
                     geo[station_code] = this_coordinates
         return geo
+
+    @property
+    def geometrical_center(self):
+        extend = self.extend
+        return {
+            "latitude": (extend["max_latitude"] +
+                         extend["min_latitude"]) / 2.0,
+            "longitude": (extend["max_longitude"] +
+                          extend["min_longitude"]) / 2.0,
+            "elevation_in_m": (extend["max_elevation_in_m"] +
+                               extend["min_elevation_in_m"]) / 2.0,
+            "local_depth_in_m": (extend["max_local_depth_in_m"] +
+                                 extend["min_local_depth_in_m"]) / 2.0,
+        }
+
+    @property
+    def center_of_gravity(self):
+        lats, lngs, ele, dep = self.__coordinate_values()
+        return {
+            "latitude": np.mean(lats),
+            "longitude": np.mean(lngs),
+            "elevation_in_m": np.mean(ele),
+            "local_depth_in_m": np.mean(dep)}
 
     @property
     def geometry(self):
@@ -94,14 +136,28 @@ class SeismicArray(object):
 
     @property
     def extend(self):
-        geo = self.geometry
-        lats, lngs = [], []
-        for coordinates in geo.values():
-            lats.append(coordinates["latitude"])
-            lngs.append(coordinates["longitude"])
+        lats, lngs, ele, dep = self.__coordinate_values()
 
-        return {"min_latitude": min(lats), "max_latitude": max(lats),
-                "min_lonitude": min(lngs), "max_lonitude": max(lngs)}
+        return {
+            "min_latitude": min(lats),
+            "max_latitude": max(lats),
+            "min_longitude": min(lngs),
+            "max_longitude": max(lngs),
+            "min_elevation_in_m": min(ele),
+            "max_elevation_in_m": max(ele),
+            "min_local_depth_in_m": min(dep),
+            "max_local_depth_in_m": max(dep)
+        }
+
+    def __coordinate_values(self):
+        geo = self.geometry
+        lats, lngs, ele, dep = [], [], [], []
+        for coordinates in geo.values():
+            lats.append(coordinates["latitude"]),
+            lngs.append(coordinates["longitude"]),
+            ele.append(coordinates["elevation_in_m"]),
+            dep.append(coordinates["local_depth_in_m"])
+        return lats, lngs, ele, dep
 
     def __unicode__(self):
         """
@@ -121,6 +177,121 @@ class SeismicArray(object):
         http://stackoverflow.com/questions/1307014/python-str-versus-unicode
         """
         return unicode(self).encode("utf-8")
+
+    def find_closest_station(self, latitude, longitude, elevation_in_m=0.0,
+                             local_depth_in_m=0.0):
+        min_distance = None
+        min_distance_station = None
+
+        true_elevation = elevation_in_m - local_depth_in_m
+
+        for key, value in self.geometry.items():
+            # output in [km]
+            x, y = utlGeoKm(longitude, latitude, value["longitude"],
+                            value["latitude"])
+            x *= 1000.0
+            y *= 1000.0
+
+            true_sta_elevation = value["elevation_in_m"] - \
+                value["local_depth_in_m"]
+            z = true_elevation - true_sta_elevation
+
+            distance = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+            if min_distance is None or distance < min_distance:
+                min_distance = distance
+                min_distance_station = key
+
+        return min_distance_station
+
+    def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
+                                   longitude, elevation_in_m=0.0,
+                                   local_depth_in_m=0.0):
+        geo = self.geometry
+
+        components = collections.defaultdict(list)
+        for tr in stream:
+            components[tr.stats.channel[-1].upper()].append(tr)
+
+        # Sanity checks.
+        if sorted(components.keys()) != ["E", "N", "Z"]:
+            raise ValueError("Three components necessary.")
+
+        for value in components.values():
+            value.sort(key=lambda x: "%s.%s" % (x.stats.network,
+                                                x.stats.station))
+
+        ids = [tuple([_i.id[:-1] for _i in traces]) for traces in
+               components.values()]
+        if len(set(ids)) != 1:
+            raise ValueError("All stations need to have three components.")
+
+        stats = [[(_i.stats.starttime.timestamp, _i.stats.npts,
+                   _i.stats.sampling_rate)
+                  for _i in traces] for traces in components.values()]
+        s = []
+        for st in stats:
+            s.extend(st)
+
+        if len(set(s)) != 1:
+            raise ValueError("starttime, npts, and sampling rate must be "
+                             "identical for all traces.")
+
+        stations = ["%s.%s" % (_i.stats.network, _i.stats.station)
+                    for _i in components.values()[0]]
+        for station in stations:
+            if station not in geo:
+                raise ValueError("No coordinates known for station '%s'" %
+                                 station)
+
+        array_coords = np.ndarray(shape=(len(geo), 3))
+        for _i, tr in enumerate(components.values()[0]):
+            station = "%s.%s" % (tr.stats.network, tr.stats.station)
+
+            x, y = utlGeoKm(longitude, latitude,
+                            geo[station]["longitude"],
+                            geo[station]["latitude"])
+            z = (elevation_in_m - local_depth_in_m) - \
+                (geo[station]["elevation_in_m"] -
+                 geo[station]["local_depth_in_m"])
+            array_coords[_i][0] = x * 1000.0
+            array_coords[_i][1] = y * 1000.0
+            array_coords[_i][2] = z
+
+        subarray = np.arange(len(geo))
+
+        tr = []
+        for _i, component in enumerate(["Z", "N", "E"]):
+            comp = components[component]
+            tr.append(np.empty((len(comp[0]), len(comp))))
+            for _j, trace in enumerate(comp):
+                tr[_i][:, _j][:] = np.require(trace.data, np.float64)
+
+        sp = array_rotation_strain(subarray, tr[0], tr[1], tr[2], vp=vp,
+                                   vs=vs,  array_coords=array_coords,
+                                   sigmau=sigmau)
+
+        d1 = sp.pop("ts_w1")
+        d2 = sp.pop("ts_w2")
+        d3 = sp.pop("ts_w3")
+
+        header = {"network": "XX",
+                  "station": "YY",
+                  "location": "99",
+                  "starttime": components.values()[0][0].stats.starttime,
+                  "sampling_rate":
+                  components.values()[0][0].stats.sampling_rate}
+
+        header["channel"] = "ROZ"
+        header["npts"] = len(d1)
+        tr1 = Trace(data=d1, header=copy.copy(header))
+        header["channel"] = "RON"
+        header["npts"] = len(d2)
+        tr2 = Trace(data=d2, header=copy.copy(header))
+        header["channel"] = "ROE"
+        header["npts"] = len(d3)
+        tr3 = Trace(data=d3, header=copy.copy(header))
+
+        return Stream(traces=[tr1, tr2, tr3]), sp
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
