@@ -39,7 +39,7 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH']
+                            'AH', 'PDAS']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 
 _sys_is_le = sys.byteorder == 'little'
