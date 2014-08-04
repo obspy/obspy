@@ -10,6 +10,7 @@ from future.builtins import *  # NOQA
 import io
 import os
 import unittest
+import numpy as np
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
@@ -92,8 +93,12 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
 
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        self.verify_stats_evt(st[0].stats.kinemetrics_evt)
+        self.verify_data_evt0(st[0].data)
+        self.verify_data_evt2(st[2].data)
+
         # 2
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         st = read(filename)
         st.verify()
         self.assertEqual(len(st), 6)
@@ -136,6 +141,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
+
+        self.verify_stats_evt(st[0].stats.kinemetrics_evt)
+        self.verify_data_evt0(st[0].data)
+        self.verify_data_evt2(st[2].data)
 
         # 2
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
@@ -182,8 +191,12 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
 
-        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
+        self.verify_stats_evt(st[0].stats.kinemetrics_evt)
+        self.verify_data_evt0(st[0].data)
+        self.verify_data_evt2(st[2].data)
+
         # 2
+        filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         st = read_evt(filename)
         st.verify()
         self.assertEqual(len(st), 6)
@@ -228,6 +241,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
 
+        self.verify_stats_evt(st[0].stats.kinemetrics_evt)
+        self.verify_data_evt0(st[0].data)
+        self.verify_data_evt2(st[2].data)
+
         # 2
         filename = os.path.join(self.path, 'BX456_MOLA-02351.evt')
         with open(filename, "rb") as fh:
@@ -252,6 +269,67 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
+
+    def verify_stats_evt(self, evt_stats):
+        dico = {'chan_fullscale': 2.5, 'chan_sensogain': 1,
+                'chan_calcoil': 0.0500, 'chan_damping': 0.7070,
+                'chan_natfreq': 196.00,
+                'latitude': 50.609795, 'longitude': 6.009250,
+                'elevation': 298}
+        # Values from Kinemetrics QLWin program for BI008_MEMA-04823.evt
+
+        for key in dico:
+            self.assertAlmostEqual(dico[key], evt_stats[key], 6)
+
+        self.assertEqual(UTCDateTime(2013, 8, 15, 9, 20, 28),
+                         evt_stats['startime'])
+
+    def verify_data_evt0(self, data):
+        valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
+                              -2.4467090145e-002, -2.4511529133e-002,
+                              -2.4478785694e-002, -2.4483462796e-002,
+                              -2.4434346706e-002, -2.4504512548e-002,
+                              -2.4527901784e-002, -2.4455396459e-002,
+                              -2.4509189650e-002, -2.4478785694e-002,
+                              -2.4541934952e-002, -2.4497495964e-002,
+                              -2.4448379874e-002, -2.4502173066e-002,
+                              -2.4420313537e-002, -2.4455396459e-002,
+                              -2.4546612054e-002, -2.4509189650e-002])
+        valuesend = np.array([-2.4488139898e-002, -2.4530241266e-002,
+                              -2.4525562301e-002, -2.4506852031e-002,
+                              -2.4424990639e-002])
+# Data values from Tsoft Program
+
+        lendata = len(data)
+        self.assertEqual(lendata, 5750)
+        for i in range(20):
+            self.assertAlmostEquals(valuesdeb[i], data[i], 8)
+        for i in range(5):
+            self.assertAlmostEquals(valuesend[i], data[5750-5+i], 8)
+
+    def verify_data_evt2(self, data):
+        valuesdeb = np.array([-4.4351171702e-002, -4.4479820877e-002,
+                              -4.4447075576e-002, -4.4367544353e-002,
+                              -4.4402632862e-002, -4.4386260211e-002,
+                              -4.4360529631e-002, -4.4440057129e-002,
+                              -4.4411987066e-002, -4.4395614415e-002,
+                              -4.4421344995e-002, -4.4433038682e-002,
+                              -4.4442396611e-002, -4.4423684478e-002,
+                              -4.4428363442e-002, -4.4419005513e-002,
+                              -4.4388595968e-002, -4.4360529631e-002,
+                              -4.4358190149e-002, -4.4362869114e-002])
+        valuesend = np.array([-4.4538296759e-002, -4.4549994171e-002,
+                              -4.4493857771e-002, -4.4451754540e-002,
+                              -4.4409647584e-002])
+
+# Data values from Tsoft Program
+
+        lendata = len(data)
+        self.assertEqual(lendata, 5750)
+        for i in range(20):
+            self.assertAlmostEquals(valuesdeb[i], data[i], 8)
+        for i in range(5):
+            self.assertAlmostEquals(valuesend[i], data[5750-5+i], 8)
 
 
 def suite():
