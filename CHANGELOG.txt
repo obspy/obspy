@@ -15,6 +15,8 @@
      obspy.imaging.maps.plot_basemap() (see #753).
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
+ - obspy.sac:
+   * New `byteorder` option for writing sac files to disk.
  - obspy.signal:
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
