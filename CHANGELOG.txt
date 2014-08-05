@@ -1,17 +1,44 @@
 0.10.0:
- - general:
-   * Support for Python 3.3 and 3.4
+ - General:
+   * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
    * More generic processing history for most Stream and Trace methods.
-   * Required SciPy version explicitly specified as 0.7.2+.
+   * Now requires NumPy >= 1.4.0
+   * Now requires SciPy >= 0.7.2
+   * Tested compatibility with most major Linux distributions still
+     receiving updates.
+   * The next major obspy release (0.11) will drop support for:
+     * Python < 2.7
+     * matplotlib < 1.1
+     * numpy < 1.6
+     * scipy < 0.10
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
+ - obspy.arclink:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
+   * fixed a problem with UTCDateTime with timestamps of far future
+     dates (larger than 2038, often seen in StationXML end dates,
+     see #805)
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
    * Dictionary values added to an AttribDict will now be converted to an
      AttribDict.
    * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
      provided by the future package.
+   * Removed 'type' argument from the Trace.integrate() method. Now always
+     performs a cumtrapz integration. The first value of an integrated trace
+     will now always be zero to avoid changes in the total length of the
+     time series. Furthermore no more options are allowed as they might mess
+     with the time of a trace.
+   * new plugins for NonLinLoc formats for readEvents() and
+     Catalog/Event.write() (see obspy.nlloc and #900)
+   * The wrap_long_string utility function is deprecated. Users may use the
+     textwrap module which provides similar functionality.
+   * new plugin for CNV event format (used by VELEST) for
+     Catalog/Event.write() (see obspy.cnv and #905)
+ - obspy.cnv:
+   * new plugin to write CNV event files (used by VELEST) from
+     Catalog/Event objects. (see #905)
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
    * Support exporting Inventory objects to CSS relations.
@@ -26,6 +53,7 @@
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
  - obspy.mseed:
+   * proper error reporting while reading
    * `details=True` when reading will now write to
      `Trace.stats.mseed.blkt1001.timing_quality` instead of
      `Trace.stats.mseed.timing_quality`.
@@ -46,9 +74,22 @@
      data please use the obspy.fdsn client (use
      `Client(base_url='ORFEUS', ...)`) and for travel times please use
      obspy.taup.
- - obspy.seedlink.easyseedlink:
-   * New submodule providing an easier way to create SeedLink clients
+ - obspy.nlloc:
+   * new plugins to write NonLinLoc Phase observations files from
+     Catalog/Event objects and to read NonLinLoc Hypocenter-Phase file into
+     Catalog/Event objects. (see #900)
+ - obspy.pdas:
+   * read support for PDAS waveform files
+ - obspy.sac:
+   * New `byteorder` option for writing sac files to disk.
+ - obspy.seedlink:
+   * bugfix: INFO responses from the IRIS ringserver are now parsed
+     correctly (see #807)
+   * New submodule `easyseedlink` providing an easier way to create
+     SeedLink clients
+   * Fix MiniSEED record leak in packet parser (see #918)
  - obspy.seishub:
+   * use specified timeout in all requests to server (see #786)
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
      from a seishub server of version 1.4.0 or higher.
  - obspy.signal:
@@ -57,12 +98,16 @@
      `weighted average slopes` method from Wiggins 1976.
    * PPSD has new methods to extract mean and mode of the histogram by
      frequency (see #804)
+   * PPSD: water level in instrument correction can now be specified by user
+     on PPSD initialization
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
    * write support for SACPZ ASCII representation of channel responses.
+ - obspy.xseed:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.zmap:
    * New module which adds ZMAP read/write support
  - scripts:
@@ -117,19 +162,6 @@
      * --nox is renamed to --no-x.
      * --nogaps is renamed to --no-gaps.
      * --starttime is renamed to --start-time.
-
-0.9.3:
- - obspy.core:
-   * fixed a problem with UTCDateTime with timestamps of far future
-     dates (larger than 2038, often seen in StationXML end dates,
-     see #805)
- - obspy.mseed:
-   * proper error reporting while reading
- - obspy.seedlink:
-   * bugfix: INFO responses from the IRIS ringserver are now parsed
-     correctly (see #807)
- - obspy.seishub:
-   * use specified timeout in all requests to server (see #786)
 
 0.9.2: (doi: 10.5281/zenodo.10648)
  - general:
