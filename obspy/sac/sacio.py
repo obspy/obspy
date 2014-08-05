@@ -2,10 +2,10 @@
 # ------------------------------------------------------------------
 # Filename: sacio.py
 #  Purpose: Read & Write Seismograms, Format SAC.
-#   Author: Yannik Behr, C. J. Ammon's
+#   Author: Yannik Behr, C. J. Ammon's, C. Satriano
 #    Email: yannik.behr@vuw.ac.nz
 #
-# Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
+# Copyright (C) 2008-2014 Yannik Behr, C. J. Ammon's, C. Satriano
 # ------------------------------------------------------------------
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
