@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import unittest
 
 from obspy.core import AttribDict
-import unittest
 
 
 class AttribDictTestCase(unittest.TestCase):
@@ -232,6 +233,10 @@ class AttribDictTestCase(unittest.TestCase):
         # should raise KeyError without default item
         self.assertRaises(KeyError, ad.__getitem__, 'xxx')
         self.assertRaises(AttributeError, ad.__getattr__, 'xxx')
+        # 2
+        ad2 = AttribDict(defaults={'test2': 'NEW'})
+        self.assertEqual(ad2.__getitem__('test2'), 'NEW')
+        self.assertRaises(KeyError, ad2.__getitem__, 'xxx')
 
     def test_set_readonly(self):
         """
@@ -266,6 +271,23 @@ class AttribDictTestCase(unittest.TestCase):
         ad = AttribDict(adict)
         self.assertEqual(ad, adict)
         self.assertEqual(adict, ad)
+
+    def test_pretty_str(self):
+        """
+        Test _pretty_str method of AttribDict.
+        """
+        # 1
+        ad = AttribDict({'test1': 1, 'test2': 2})
+        out = '           test1: 1\n           test2: 2'
+        self.assertEqual(ad._pretty_str(), out)
+        # 2
+        ad = AttribDict({'test1': 1, 'test2': 2})
+        out = '           test2: 2\n           test1: 1'
+        self.assertEqual(ad._pretty_str(priorized_keys=['test2']), out)
+        # 3
+        ad = AttribDict({'test1': 1, 'test2': 2})
+        out = ' test1: 1\n test2: 2'
+        self.assertEqual(ad._pretty_str(min_label_length=6), out)
 
 
 def suite():

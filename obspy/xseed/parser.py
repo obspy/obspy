@@ -10,29 +10,28 @@ Main module containing XML-SEED parser.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 from future import standard_library
 with standard_library.hooks():
-    import urllib.request
-
-import obspy
-from obspy import __version__
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import deprecated_keywords
-from obspy.core.util.decorator import map_example_filename
-from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
-from obspy.xseed.utils import SEEDParserException
+    import urllib.request  # @UnresolvedImport
 
 import copy
 import datetime
 import io
-from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 import math
 import os
 import warnings
 import zipfile
+
+from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 import numpy as np
+
+from obspy import Trace, Stream, __version__
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import map_example_filename
+from obspy.xseed import DEFAULT_XSEED_VERSION, blockette
+from obspy.xseed.utils import SEEDParserException, toTag, IGNORE_ATTR
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -221,7 +220,7 @@ class Parser(object):
             self._createBlockettes11and12(blockette12=True)
         # Now start actually filling the XML tree.
         # Volume header:
-        sub = SubElement(doc, utils.toTag('Volume Index Control Header'))
+        sub = SubElement(doc, toTag('Volume Index Control Header'))
         for blkt in self.volume:
             sub.append(blkt.getXML(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
@@ -229,21 +228,21 @@ class Parser(object):
             self._deleteBlockettes11and12()
         # Abbreviations:
         sub = SubElement(
-            doc, utils.toTag('Abbreviation Dictionary Control Header'))
+            doc, toTag('Abbreviation Dictionary Control Header'))
         for blkt in self.abbreviations:
             sub.append(blkt.getXML(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
-                sub = SubElement(doc, utils.toTag('Station Control Header'))
+                sub = SubElement(doc, toTag('Station Control Header'))
                 for blkt in station:
                     sub.append(blkt.getXML(xseed_version=version))
             if version == '1.0':
                 # To pass the XSD schema test an empty time span control header
                 # is added to the end of the file.
-                SubElement(doc, utils.toTag('Timespan Control Header'))
+                SubElement(doc, toTag('Timespan Control Header'))
                 # Also no data is present in all supported SEED files.
-                SubElement(doc, utils.toTag('Data Records'))
+                SubElement(doc, toTag('Data Records'))
             # Return single XML String.
             return tostring(doc, pretty_print=True, xml_declaration=True,
                             encoding='UTF-8')
@@ -252,15 +251,15 @@ class Parser(object):
             result = {}
             for station in self.stations:
                 cdoc = copy.copy(doc)
-                sub = SubElement(cdoc, utils.toTag('Station Control Header'))
+                sub = SubElement(cdoc, toTag('Station Control Header'))
                 for blkt in station:
                     sub.append(blkt.getXML(xseed_version=version))
                 if version == '1.0':
                     # To pass the XSD schema test an empty time span control
                     # header is added to the end of the file.
-                    SubElement(doc, utils.toTag('Timespan Control Header'))
+                    SubElement(doc, toTag('Timespan Control Header'))
                     # Also no data is present in all supported SEED files.
-                    SubElement(doc, utils.toTag('Data Records'))
+                    SubElement(doc, toTag('Data Records'))
                 try:
                     id = station[0].end_effective_date.datetime
                 except AttributeError:
@@ -470,7 +469,6 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
-    @deprecated_keywords({'channel_id': 'seed_id'})
     def getPAZ(self, seed_id, datetime=None):
         """
         Return PAZ.
@@ -541,7 +539,6 @@ class Parser(object):
                     data['zeros'].append(z)
         return data
 
-    @deprecated_keywords({'channel_id': 'seed_id'})
     def getCoordinates(self, seed_id, datetime=None):
         """
         Return Coordinates (from blockette 52)
@@ -820,7 +817,7 @@ class Parser(object):
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(list(XML_blockette.values())[0])
+        blockette_id = int(XML_blockette.values()[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
@@ -925,9 +922,9 @@ class Parser(object):
         """
         Compares two blockettes.
         """
-        for key in list(blkt1.__dict__.keys()):
+        for key in blkt1.__dict__.keys():
             # Continue if just some meta data.
-            if key in utils.IGNORE_ATTR:
+            if key in IGNORE_ATTR:
                 continue
             if blkt1.__dict__[key] != blkt2.__dict__[key]:
                 return False
@@ -1204,13 +1201,13 @@ class Parser(object):
             "starttime": stream[0].stats.starttime,
             "sampling_rate": stream[0].stats.sampling_rate}
 
-        tr_z = obspy.Trace(data=z, header=common_header)
-        tr_n = obspy.Trace(data=n, header=common_header)
-        tr_e = obspy.Trace(data=e, header=common_header)
+        tr_z = Trace(data=z, header=common_header)
+        tr_n = Trace(data=n, header=common_header)
+        tr_e = Trace(data=e, header=common_header)
 
         # Fix the channel_codes
         tr_z.stats.channel += "Z"
         tr_n.stats.channel += "N"
         tr_e.stats.channel += "E"
 
-        return obspy.Stream(traces=[tr_z, tr_n, tr_e])
+        return Stream(traces=[tr_z, tr_n, tr_e])

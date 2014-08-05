@@ -132,13 +132,13 @@ class SEGYFile(object):
         self.file.seek(3224, 1)
         format = unpack(b'>h', self.file.read(2))[0]
         # Check if valid.
-        if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
+        if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
             self.endian = '>'
         # Else test little endian.
         else:
             self.file.seek(-2, 1)
             format = unpack(b'<h', self.file.read(2))[0]
-            if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
+            if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
                 self.endian = '<'
             else:
                 msg = 'Unable to determine the endianness of the file. ' + \

@@ -3,12 +3,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from obspy import UTCDateTime
-from obspy.core.util.decorator import skipIf
 import copy
 import datetime
-import numpy as np
 import unittest
+
+import numpy as np
+
+from obspy import UTCDateTime
+from obspy.core.util.decorator import skipIf
 
 
 # some Python version don't support negative timestamps
@@ -867,9 +869,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
 
             def utcoffset(self, dt):  # @UnusedVariable
                 return datetime.timedelta(hours=8)
-
-            def tzname(self, dt):  # @UnusedVariable
-                return "Manila"
 
         dt = datetime.datetime(2006, 11, 21, 16, 30, tzinfo=ManilaTime())
         self.assertEqual(dt.isoformat(), '2006-11-21T16:30:00+08:00')

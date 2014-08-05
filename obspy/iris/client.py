@@ -893,13 +893,13 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         kwargs = {}
         kwargs['model'] = str(model)
-        kwargs['phases'] = ','.join([str(p) for p in list(phases)])
+        kwargs['phases'] = ','.join([str(p) for p in phases])
         kwargs['evdepth'] = float(evdepth)
         if distdeg:
             kwargs['distdeg'] = \
-                ','.join([str(float(d)) for d in list(distdeg)])
+                ','.join([str(float(d)) for d in distdeg])
         elif distkm:
-            kwargs['distkm'] = ','.join([str(float(d)) for d in list(distkm)])
+            kwargs['distkm'] = ','.join([str(float(d)) for d in distkm])
         elif evloc and staloc:
             if not isinstance(evloc, tuple):
                 raise TypeError("evloc needs to be a tuple")

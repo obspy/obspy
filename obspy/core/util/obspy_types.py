@@ -143,7 +143,7 @@ except ImportError:
             if isinstance(other, OrderedDict):
                 if len(self) != len(other):
                     return False
-                for p, q in zip(list(self.items()), list(other.items())):
+                for p, q in zip(self.items(), other.items()):
                     if p != q:
                         return False
                 return True
@@ -213,8 +213,7 @@ class Enum(object):
     __isabstractmethod__ = False
 
     def __init__(self, enums, replace={}):
-        self.__enums = OrderedDict(list(zip([str(e).lower()
-                                             for e in enums], enums)))
+        self.__enums = OrderedDict((str(e).lower(), e) for e in enums)
         self.__replace = replace
 
     def __call__(self, enum):

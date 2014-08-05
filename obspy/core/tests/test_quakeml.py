@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import io
+import difflib
+import math
+import os
+import unittest
+import warnings
+
+from lxml import etree
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
@@ -12,19 +21,9 @@ from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 
-import io
-import difflib
-from lxml import etree
-import math
-import os
-import unittest
-import warnings
-
-
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
-from lxml.etree import __version__
-version = float(__version__.rsplit('.', 1)[0])
+version = float(etree.__version__.rsplit('.', 1)[0])
 if version >= 2.3:
     IS_RECENT_LXML = True
 
@@ -67,9 +66,8 @@ class QuakeMLTestCase(unittest.TestCase):
         unified_diff = difflib.unified_diff(str1, str2)
 
         err_msg = "\n".join(unified_diff)
-        if err_msg:
-            msg = "Strings are not equal.\n"
-            raise AssertionError(msg + err_msg)
+        if err_msg:  # pragma: no cover
+            raise AssertionError("Strings are not equal.\n" + err_msg)
 
     def test_readQuakeML(self):
         """
@@ -941,7 +939,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 'another_attrib="another_value" '
                 'some_attrib="some_value">false</ns1:public>'
             ]
-            for lines in expected:
+            for line in expected:
                 self.assertTrue(line in content)
             # now, read again to test if its parsed correctly..
             cat = readQuakeML(tmpfile)

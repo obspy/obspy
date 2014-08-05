@@ -112,7 +112,7 @@ def mergePreviews(stream):
         return Stream()
     # Initialize new Stream object.
     new_stream = Stream()
-    for value in list(traces.values()):
+    for value in traces.values():
         if len(value) == 1:
             new_stream.append(value[0])
             continue

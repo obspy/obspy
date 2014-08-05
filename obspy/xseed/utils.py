@@ -10,11 +10,12 @@ Various additional utilities for ObsPy xseed.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from obspy import UTCDateTime
 import sys
+
+from obspy import UTCDateTime
 
 
 # Ignore Attributes of Blockettes
