@@ -245,7 +245,7 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
     return Stream([tr])
 
 
-def writeSAC(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
+def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     """
     Writes a SAC file.
 
@@ -260,7 +260,7 @@ def writeSAC(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     :param filename: Name of file to write.
     :type byteorder: int or str, optional
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
-        little-endian, ``1`` or ``'>'`` for MBF or big-endian.
+        little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
         Defaults to little endian.
 
     .. rubric:: Example
@@ -269,15 +269,13 @@ def writeSAC(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     >>> st = read()
     >>> st.write("test.sac", format="SAC")  #doctest: +SKIP
     """
-    if byteorder is not None and byteorder not in [0, 1]:
-        if byteorder == '<':
-            byteorder = 0
-        elif byteorder == '>':
-            byteorder = 1
-        else:
-            msg = "Invalid byte order. It must be either '<', '>', '=', " + \
-                  "0 or 1"
-            raise ValueError(msg)
+    if byteorder in ("<", 0, "0"):
+        byteorder = 0
+    elif byteorder in (">", 1, "1"):
+        byteorder = 1
+    else:
+        msg = "Invalid byte order. It must be either '<', '>', 0 or 1"
+        raise ValueError(msg)
 
     # Translate the common (renamed) entries
     base, ext = os.path.splitext(filename)
