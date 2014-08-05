@@ -120,7 +120,8 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.npts, trle.stats.npts)
             self.assertEqual(tr.stats.delta, trle.stats.delta)
             self.assertEqual(tr.stats.sac.b, trle.stats.sac.b)
-            np.testing.assert_array_almost_equal(tr.data[0:10], trle.data[0:10])
+            np.testing.assert_array_almost_equal(tr.data[0:10],
+                                                 trle.data[0:10])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             trle = read(self.file, format='SAC')[0]
@@ -131,7 +132,8 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.npts, trbe.stats.npts)
             self.assertEqual(tr.stats.delta, trbe.stats.delta)
             self.assertEqual(tr.stats.sac.b, trbe.stats.sac.b)
-            np.testing.assert_array_almost_equal(tr.data[0:10], trbe.data[0:10])
+            np.testing.assert_array_almost_equal(tr.data[0:10],
+                                                 trbe.data[0:10])
 
     def test_readHeadViaObsPy(self):
         """
