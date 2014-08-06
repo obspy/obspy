@@ -1404,7 +1404,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                  strict_length=False):
         """
         Resample trace data using Fourier method.
-
+ 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
         :type window: array_like, callable, string, float, or tuple, optional
@@ -1417,21 +1417,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which endtime of trace
             would change. Defaults to ``False``.
-
+ 
         .. note::
-
+ 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
             a copy of your trace object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
-
+ 
         Uses :func:`scipy.signal.resample`. Because a Fourier method is used,
         the signal is assumed to be periodic.
-
+ 
         .. rubric:: Example
-
+ 
         >>> tr = Trace(data=np.array([0.5, 0, 0.5, 1, 0.5, 0, 0.5, 1]))
         >>> len(tr)
         8
@@ -1446,7 +1446,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         array([ 0.5       ,  0.40432914,  0.3232233 ,  0.26903012,  0.25 ...
         """
-        from scipy.signal import resample
+        from scipy.signal.windows import get_window
         factor = self.stats.sampling_rate / float(sampling_rate)
         # check if endtime changes and this is not explicitly allowed
         if strict_length and len(self.data) % factor != 0.0:
@@ -1462,10 +1462,28 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ArithmeticError(msg)
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
-        # resample
+         
+        # resample in the frequency domain
         num = int(self.stats.npts / factor)
-        self.data = resample(self.data, num, window=window)
+        
+        X = np.fft.fft(self.data)
+        if window is not None:
+            if callable(window):
+                W = window(np.fft.fftfreq(self.stats.npts))
+            elif isinstance(window, np.ndarray) and window.shape == (self.stats.npts,):
+                W = window
+            else:
+                W = np.fft.ifftshift(get_window(window, self.stats.npts))
+            X = X * W         
+            
+        X = np.fft.fftshift(X)
+        f = np.fft.fftshift(np.fft.fftfreq(self.stats.npts, self.stats.delta))
+        F = np.fft.fftshift(np.fft.fftfreq(num, 1./sampling_rate))
+        Y = np.interp(F, f, X.real) + 1j*np.interp(F, f, X.imag)
+        y = np.fft.ifft(np.fft.ifftshift(Y)) * (float(num) / float(self.stats.npts))
+        self.data = y.real
         self.stats.sampling_rate = sampling_rate
+         
         # add processing information to the stats dictionary
         proc_info = "resample:%d:%s" % (sampling_rate, window)
         self._addProcessingInfo(proc_info)

@@ -1574,6 +1574,79 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
+    def test_resample(self):
+        """
+        Tests if Trace.resample works as expected and test that issue #857 is
+        resolved.
+        """
+        starttime = UTCDateTime("1970-01-01T00:00:00.000000Z")
+        # downsample
+        tr = Trace(np.sin(np.linspace(0,2*np.pi,10)), 
+                   {'sampling_rate':1.0,
+                    'starttime':starttime})
+        tr.resample(0.5, window='hanning', no_filter=True)
+        expected = np.array([ 0.19478735,  0.83618307,  0.32200221, 
+                             -0.7794053 , -0.57356732])
+        assert len(tr.data) == 5
+        assert np.all(np.abs(tr.data - expected) < 1e-7)
+        assert tr.stats.sampling_rate == 0.5
+        assert tr.stats.delta == 2.0
+        assert tr.stats.npts == 5
+        assert tr.stats.starttime == starttime
+        assert tr.stats.endtime == starttime + tr.stats.delta * (tr.stats.npts-1)
+        assert tr.stats.processing == ['resample:0:hanning']
+        
+        # upsample
+        tr = Trace(np.sin(np.linspace(0,2*np.pi,10)), 
+                   {'sampling_rate':1.0,
+                    'starttime':starttime})
+        tr.resample(2.0, window='hanning', no_filter=True)
+        assert len(tr.data) == 20
+        assert tr.stats.sampling_rate == 2.0
+        assert tr.stats.delta == 0.5
+        assert tr.stats.npts == 20
+        assert tr.stats.starttime == starttime
+        assert tr.stats.endtime == starttime + tr.stats.delta * (tr.stats.npts-1)
+        assert tr.stats.processing == ['resample:2:hanning']
+        
+        # downsample with non integer ratio
+        tr = Trace(np.sin(np.linspace(0,2*np.pi,10)), 
+                   {'sampling_rate':1.0,
+                    'starttime':starttime})
+        tr.resample(0.75, window='hanning', no_filter=True)
+        assert len(tr.data) == int(10*.75)
+        assert tr.stats.sampling_rate == 0.75
+        assert tr.stats.delta == 1/0.75
+        assert tr.stats.npts == int(10*.75)
+        assert tr.stats.starttime == starttime
+        assert tr.stats.endtime == starttime + tr.stats.delta * (tr.stats.npts-1)
+        assert tr.stats.processing == ['resample:0:hanning']
+        
+        # downsample without window
+        tr = Trace(np.sin(np.linspace(0,2*np.pi,10)), 
+                   {'sampling_rate':1.0,
+                    'starttime':starttime})
+        tr.resample(0.5, window=None, no_filter=True)
+        assert len(tr.data) == 5
+        assert tr.stats.sampling_rate == 0.5
+        assert tr.stats.delta == 2.0
+        assert tr.stats.npts == 5
+        assert tr.stats.starttime == starttime
+        assert tr.stats.endtime == starttime + tr.stats.delta * (tr.stats.npts-1)
+        assert tr.stats.processing == ['resample:0:None']
+        
+        # downsample with window and automatic filtering
+        tr = Trace(np.sin(np.linspace(0,2*np.pi,10)), 
+                   {'sampling_rate':1.0,
+                    'starttime':starttime})
+        tr.resample(0.5, window='hanning', no_filter=False)
+        assert len(tr.data) == 5
+        assert tr.stats.sampling_rate == 0.5
+        assert tr.stats.delta == 2.0
+        assert tr.stats.npts == 5
+        assert tr.stats.starttime == starttime
+        assert tr.stats.endtime == starttime + tr.stats.delta * (tr.stats.npts-1)
+        assert tr.stats.processing == ["filter:lowpasscheby2:{'freq': 0.25, 'maxorder': 12}", 'resample:0:hanning']
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
