@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+from struct import pack
 
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
     SAMPLETYPE, DATATYPES, UNSUPPORTED_ENCODINGS, \
@@ -508,13 +509,34 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
         # Figure out whether or not to use Blockette 1001. This check is done
         # once to ensure that Blockette 1001 is either written for every record
-        # in the file or for none. It checks the starttime as well as the
-        # sampling rate. If either one has a precision of more than 100
-        # microseconds, Blockette 1001 will be written for every record.
+        # in the file or for none. It checks the starttime, the sampling rate
+        # and the timing quality. If starttime or sampling rate has a precision
+        # of more than 100 microseconds, or if timing quality is set, \
+        # Blockette 1001 will be written for every record.
         starttime = util._convertDatetimeToMSTime(trace.stats.starttime)
         if starttime % 100 != 0 or \
            (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0:
             use_blkt_1001 += 1
+        
+        if hasattr(trace.stats, 'mseed') and \
+            hasattr(trace.stats['mseed'], 'timing_quality'):
+            
+            timing_quality = trace.stats['mseed']['timing_quality']
+            # Check timing quality type
+            try:
+                timing_quality = int(timing_quality)
+                if timing_quality < 0 or timing_quality > 100 :
+                    raise ValueError("Timing quality out of range")
+            except ValueError:
+                msg = "Invalid timing quality in Stream[%i].stats." % _i + \
+                    "mseed.timing_quality. It must be an integer ranging" + \
+                    " from 0 to 100"
+                raise ValueError(msg)
+            
+            trace_attr['timing_quality'] = timing_quality
+            use_blkt_1001 += 1
+        else :
+            trace_attr['timing_quality'] = timing_quality = 0
 
         # Determine if a blockette 100 will be needed to represent the input
         # sample rate or if the sample rate in the fixed section of the data
@@ -604,14 +626,14 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         if encoding is not None:
             # Check if the dtype for all traces is compatible with the enforced
             # encoding.
-            id, _, dtype, _ = ENCODINGS[encoding]
+            ident, _, dtype, _ = ENCODINGS[encoding]
             if trace.data.dtype.type != dtype:
                 msg = """
                     Wrong dtype for Stream[%i].data for encoding %s.
                     Please change the dtype of your data or use an appropriate
                     encoding. See the obspy.mseed documentation for more
                     information.
-                    """ % (_i, id)
+                    """ % (_i, ident)
                 raise Exception(msg)
             trace_attr['encoding'] = encoding
         elif hasattr(trace.stats, 'mseed') and hasattr(trace.stats.mseed,
@@ -703,15 +725,21 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:
+            #Timing quality has been set in trace_attr
+            
             size = C.sizeof(blkt_1001_s)
-            blkt1001 = C.c_char(b' ')
-            C.memset(C.pointer(blkt1001), 0, size)
-            ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
-                                                 size, 1001, 0)
+            # Only timing quality matters here, other blockette attributes will
+            # be filled by libmseed.msr_normalize_header
+            blkt_value = pack("BBBB" , trace_attr['timing_quality'], 0, 0, 0)
+            blkt_ptr = C.create_string_buffer(blkt_value, len(blkt_value))
+            
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
+            ret_val = clibmseed.msr_addblockette(msr, blkt_ptr,
+                                                 size, 1001, 0)
+            
             if bool(ret_val) is False:
                 clibmseed.msr_free(C.pointer(msr))
                 del msr
