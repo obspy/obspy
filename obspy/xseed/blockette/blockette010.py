@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString
@@ -26,9 +29,9 @@ class Blockette010(Blockette):
         Float(3, "Version of format", 4, mask='%2.1f', default_value=2.4,
               ignore=True, xseed_version='1.1'),
         Integer(4, "Logical record length", 2, default_value=12,
-              xseed_version='1.0'),
+                xseed_version='1.0'),
         Integer(4, "Logical record length", 2, default_value=12,
-              ignore=True, xseed_version='1.1'),
+                ignore=True, xseed_version='1.1'),
         VariableString(5, "Beginning time", 1, 22, 'T'),
         VariableString(6, "End time", 1, 22, 'T',
                        default_value=UTCDateTime(2038, 1, 1)),

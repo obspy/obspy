@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:iris="http://service.iris.edu/fdsnws/event/1/" xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance" xsi:schemaLocation="http://quakeml.org/schema/xsd http://quakeml.org/schema/xsd/QuakeML-1.2.xsd"><eventParameters publicID="smi:service.iris.edu/fdsnws/event/1/query"><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=963979">
+    <type>earthquake</type>
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="249">
+        <type>Flinn-Engdahl region</type>
+        <text>LUZON, PHILIPPINE ISLANDS</text>
+    </description>
+    <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7235696</preferredMagnitudeID>
+    <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1904811</preferredOriginID>
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1904811" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4491903" iris:contributorEventId="3435102">
+        <time>
+            <value>2001-01-07T21:15:55.4500</value>
+        </time>
+        <creationInfo>
+            <author>ISC</author>
+        </creationInfo>
+        <latitude>
+            <value>16.076</value>
+        </latitude>
+        <longitude>
+            <value>120.211</value>
+        </longitude>
+        <depth>
+            <value>13000.0</value>
+        </depth>
+    </origin>
+    <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7235696">
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1904812</originID>
+        <type>mb</type>
+        <mag>
+            <value>4.4</value>
+        </mag>
+        <creationInfo>
+            <author>MAN</author>
+        </creationInfo>
+    </magnitude>
+    <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7235694">
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1904812</originID>
+        <type>ML</type>
+        <mag>
+            <value>3.3</value>
+        </mag>
+        <creationInfo>
+            <author>MAN</author>
+        </creationInfo>
+    </magnitude>
+    <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7235695">
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1904812</originID>
+        <type>MS</type>
+        <mag>
+            <value>3.0</value>
+        </mag>
+        <creationInfo>
+            <author>MAN</author>
+        </creationInfo>
+    </magnitude>
+</event></eventParameters></q:quakeml>

@@ -3,12 +3,17 @@
 """
 The psd test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
 import numpy as np
 import os
+import gzip
 import unittest
 import warnings
 
@@ -26,7 +31,7 @@ class PsdTestCase(unittest.TestCase):
         Test to compare results of PITSA's psd routine to the
         :func:`matplotlib.mlab.psd` routine wrapped in
         :func:`obspy.signal.spectral_estimation.psd`.
-        The test works on 8192 samples long gaussian noise with a standard
+        The test works on 8192 samples long Gaussian noise with a standard
         deviation of 0.1 generated with PITSA, sampling rate for processing in
         PITSA was 100.0 Hz, length of nfft 512 samples. The overlap in PITSA
         cannot be controlled directly, instead only the number of overlapping
@@ -85,14 +90,18 @@ class PsdTestCase(unittest.TestCase):
         of testing.
         """
         # load test file
-        file_data = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
-        file_histogram = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
-        file_binning = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
+        file_data = os.path.join(
+            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
+        file_histogram = os.path.join(
+            self.path,
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
+        file_binning = os.path.join(
+            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
-        data = np.loadtxt(file_data)
+        # no with due to py 2.6
+        f = gzip.open(file_data)
+        data = np.loadtxt(f)
+        f.close()
         stats = {'_format': 'MSEED',
                  'calib': 1.0,
                  'channel': 'EHZ',
@@ -114,7 +123,7 @@ class PsdTestCase(unittest.TestCase):
                          (-131.04 + 467.29j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
-        ppsd = PPSD(tr.stats, paz)
+        ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
         ppsd.add(st)
         # read results and compare
         result_hist = np.load(file_histogram)
@@ -132,6 +141,32 @@ class PsdTestCase(unittest.TestCase):
         binning = np.load(file_binning)
         np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])
         np.testing.assert_array_equal(ppsd.period_bins, binning['period_bins'])
+
+        # test saving and loading of the PPSD (using a temporary file)
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            # test saving and loading an uncompressed file
+            ppsd.save(filename, compress=False)
+            ppsd_loaded = PPSD.load(filename)
+            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(ppsd_loaded.nfft, 65536)
+            self.assertEqual(ppsd_loaded.nlap, 49152)
+            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+                                          binning['spec_bins'])
+            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+                                          binning['period_bins'])
+            # test saving and loading a compressed file
+            ppsd.save(filename, compress=True)
+            ppsd_loaded = PPSD.load(filename)
+            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(ppsd_loaded.nfft, 65536)
+            self.assertEqual(ppsd_loaded.nlap, 49152)
+            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+                                          binning['spec_bins'])
+            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+                                          binning['period_bins'])
 
 
 def suite():

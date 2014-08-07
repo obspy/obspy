@@ -9,6 +9,10 @@ Headers for obspy.seg2.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 MONTHS = {'jan': 1,
           'feb': 2,
           'mar': 3,
@@ -20,4 +24,26 @@ MONTHS = {'jan': 1,
           'sep': 9,
           'oct': 10,
           'nov': 11,
-          'dec': 12}
+          'dec': 12,
+          '1': 1,
+          '2': 2,
+          '3': 3,
+          '4': 4,
+          '5': 5,
+          '6': 6,
+          '7': 7,
+          '8': 8,
+          '9': 9,
+          '10': 10,
+          '11': 11,
+          '12': 12,
+          '01': 1,
+          '02': 2,
+          '03': 3,
+          '04': 4,
+          '05': 5,
+          '06': 6,
+          '07': 7,
+          '08': 8,
+          '09': 9
+          }

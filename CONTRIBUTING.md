@@ -14,11 +14,14 @@ This document aims to give an overview of how to contribute to ObsPy. It tries t
 We love pull requests! Here's a quick guide:
 
  1. Fork the repo.
- 2. Run the tests. We only take pull requests with passing tests.
- 3. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding  functionality or fixing a bug, we need a test!
- 4. Make the test pass.
- 5. Push to your fork and submit a pull request.
- 6. Wait for our review. We may suggest some changes or improvements or alternatives.
+ 2. Make a new branch. For feature additions/changes base your new branch at "master", for pure bugfixes base your new branch at "releases" (see [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model)).
+ 3. Run the tests. We only take pull requests with passing tests.
+ 4. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
+ 5. Make the test pass.
+ 6. Push to your fork and submit a pull request.
+    - for feature branches set base branch to "obspy:master"
+    - for bugfix branches set base branch to "obspy:releases"
+ 7. Wait for our review. We may suggest some changes or improvements or alternatives.
 
 ## Additional Resources
 
@@ -27,6 +30,6 @@ We love pull requests! Here's a quick guide:
  * Performance Tips:
     * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
     * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
-    * [SciPy](http://www.scipy.org/PerformancePython)
-    * [NumPy Book](http://www.tramy.us/numpybook.pdf)
+    * [SciPy](http://wiki.scipy.org/PerformancePython)
+    * [NumPy Book](http://csc.ucdavis.edu/~chaos/courses/nlp/Software/NumPyBook.pdf)
  * [Interesting reading on git, github](https://github.com/obspy/obspy/wiki/Interesting-Reading-on-Git%2C-GitHub)

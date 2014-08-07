@@ -16,6 +16,13 @@
 #include "libmseed/libmseed.h"
 #include "libmseed/unpackdata.h"
 
+
+// Dummy wrapper around malloc.
+void * allocate_bytes(int count) {
+    return malloc(count);
+}
+
+
 // Linkable container of MSRecords
 typedef struct LinkedRecordList_s {
     struct MSRecord_s      *record;       // This record
@@ -62,7 +69,6 @@ LinkedIDList;
 
 
 // Forward declarations
-static int msr_unpack_data (MSRecord * msr, int swapflag, int verbose);
 LinkedIDList * lil_init(void);
 LinkedRecordList * lrl_init (void);
 ContinuousSegment * seg_init(void);
@@ -170,13 +176,17 @@ lil_free(LinkedIDList * lil)
     lil = NULL;
 }
 
+// Print function that does nothing.
+void empty_print(const char *string) {}
+
 
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 long (*allocData) (int, char))
+                 int header_byteorder, long (*allocData) (int, char),
+                 void (*diag_print) (const char*), void (*log_print) (const char*))
 {
     int retcode = 0;
     int retval = 0;
@@ -208,16 +218,117 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     LinkedRecordList *recordPrevious = NULL;
     LinkedRecordList *recordCurrent = NULL;
     int datasize;
+    int record_count = 0;
 
+    // A negative verbosity suppressed as much as possible.
+    if (verbose < 0) {
+        ms_loginit(&empty_print, NULL, &empty_print, NULL);
+    }
+    else {
+        ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
+    }
+
+    if (header_byteorder >= 0) {
+        // Enforce little endian.
+        if (header_byteorder == 0) {
+            MS_UNPACKHEADERBYTEORDER(0);
+        }
+        // Enforce big endian.
+        else {
+            MS_UNPACKHEADERBYTEORDER(1);
+        }
+    }
+    else {
+        MS_UNPACKHEADERBYTEORDER(-1);
+    }
 
     //
     // Read all records and save them in a linked list.
     //
-    int record_count = 0;
     while (offset < buflen) {
         msr = msr_init(NULL);
-        retcode = msr_parse ( (mseed+offset), buflen, &msr, reclen, dataflag, verbose);
-        if ( ! (retcode == MS_NOERROR)) {
+        if ( msr == NULL ) {
+            ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
+            return NULL;
+        }
+        if (verbose > 1) {
+            ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
+                      "mseed+offset=%d+%d, buflen=%d, reclen=%d, dataflag=%d, verbose=%d\n",
+                      mseed, offset, buflen, reclen, dataflag, verbose);
+        }
+
+        // If the record length is given, make sure at least that amount of data is available.
+        if (reclen != -1) {
+            if (offset + reclen > buflen) {
+                ms_log(1, "readMSEEDBuffer(): Last reclen exceeds buflen, skipping.\n");
+                msr_free(&msr);
+                break;
+            }
+        }
+        // Otherwise assume the smallest possible record length and assure that enough
+        // data is present.
+        else {
+            if (offset + 256 > buflen) {
+                ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
+                          "is not enough to constitute a full SEED record. Corrupt data? "
+                          "Record will be skipped.\n", buflen - offset);
+                msr_free(&msr);
+                break;
+            }
+        }
+
+        // Pass (buflen - offset) because msr_parse() expects only a single record. This
+        // way libmseed can take care to not overstep bounds.
+        retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
+        if (retcode != MS_NOERROR) {
+            switch ( retcode ) {
+                case MS_ENDOFFILE:
+                    ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
+                              "parsing record starting at offset %d. The rest "
+                              "of the file will not be read.\n", offset);
+                    break;
+                case MS_GENERROR:
+                    ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
+                              "record starting at offset %d. The rest of the "
+                              "file will not be read.\n", offset);
+                    break;
+                case MS_NOTSEED:
+                    ms_log(1, "readMSEEDBuffer(): Record starting at offset "
+                              "%d is not valid SEED. The rest of the file "
+                              "will not be read.\n", offset);
+                    break;
+                case MS_WRONGLENGTH:
+                    ms_log(1, "readMSEEDBuffer(): Length of data read was not "
+                              "correct when parsing record starting at "
+                              "offset %d. The rest of the file will not be "
+                              "read.\n", offset);
+                    break;
+                case MS_OUTOFRANGE:
+                    ms_log(1, "readMSEEDBuffer(): SEED record length out of "
+                              "range for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                case MS_UNKNOWNFORMAT:
+                    ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
+                              "format for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                case MS_STBADCOMPFLAG:
+                    ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
+                              "flag(s) in record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
+                default:
+                    ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
+                              "record starting at offset %d. The rest of the "
+                              "file will not be read.\n", retcode, offset);
+                    break;
+            }
+            msr_free(&msr);
+            break;
+        }
+        if (offset + msr->reclen > buflen) {
+            ms_log(1, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
             msr_free(&msr);
             break;
         }
@@ -254,8 +365,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
         recordCurrent->record = msr;
 
-        // Determine the byteorder swapflag only for the very first record. The byteorder
-        // should not change within the file.
+        // Determine the byte order swapflag only for the very first record.
+        // The byte order should not change within the file.
         // XXX: Maybe check for every record?
         if (swapflag <= 0) {
             // Returns 0 if the host is little endian, otherwise 1.
@@ -458,245 +569,3 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     }
     return idListHead;
 }
-
-
-
-// The following is a copy of msr_unpack_data from unpack.c because it
-// unfortunately is a static function.
-
-// Some declarations for the following msr_unpack_data
-flag unpackheaderbyteorder_2 = -2;
-flag unpackdatabyteorder_2   = -2;
-int unpackencodingformat_2   = -2;
-int unpackencodingfallback_2 = -2;
-char *UNPACK_SRCNAME_2 = NULL;
-
-/************************************************************************
- *  msr_unpack_data:
- *
- *  Unpack Mini-SEED data samples for a given MSRecord.  The packed
- *  data is accessed in the record indicated by MSRecord->record and
- *  the unpacked samples are placed in MSRecord->datasamples.  The
- *  resulting data samples are either 32-bit integers, 32-bit floats
- *  or 64-bit floats in host byte order.
- *
- *  Return number of samples unpacked or negative libmseed error code.
- ************************************************************************/
-static int
-msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
-{
-  int     datasize;             /* byte size of data samples in record  */
-  int     nsamples;             /* number of samples unpacked           */
-  int     unpacksize;           /* byte size of unpacked samples        */
-  int     samplesize = 0;       /* size of the data samples in bytes    */
-  const char *dbuf;
-  int32_t    *diffbuff;
-  int32_t     x0, xn;
-
-  /* Sanity record length */
-  if ( msr->reclen == -1 )
-  {
-      ms_log (2, "msr_unpack_data(%s): Record size unknown\n",
-              UNPACK_SRCNAME_2);
-      return MS_NOTSEED;
-  }
-  switch (msr->encoding)
-  {
-    case DE_ASCII:
-      samplesize = 1; break;
-    case DE_INT16:
-    case DE_INT32:
-    case DE_FLOAT32:
-    case DE_STEIM1:
-    case DE_STEIM2:
-    case DE_GEOSCOPE24:
-    case DE_GEOSCOPE163:
-    case DE_GEOSCOPE164:
-    case DE_CDSN:
-    case DE_SRO:
-    case DE_DWWSSN:
-      samplesize = 4; break;
-    case DE_FLOAT64:
-      samplesize = 8; break;
-    default:
-      samplesize = 0; break;
-  }
-
-  /* Calculate buffer size needed for unpacked samples */
-  unpacksize = msr->samplecnt * samplesize;
-
-  /* (Re)Allocate space for the unpacked data */
-  if ( unpacksize > 0 )
-    {
-      msr->datasamples = realloc (msr->datasamples, unpacksize);
-
-      if ( msr->datasamples == NULL )
-        {
-          ms_log (2, "msr_unpack_data(%s): Cannot (re)allocate memory\n",
-                  UNPACK_SRCNAME_2);
-          return MS_GENERROR;
-        }
-    }
-  else
-    {
-      if ( msr->datasamples )
-        free (msr->datasamples);
-      msr->datasamples = 0;
-      msr->numsamples = 0;
-    }
-
-  datasize = msr->reclen - msr->fsdh->data_offset;
-  dbuf = msr->record + msr->fsdh->data_offset;
-
-  if ( verbose > 2 )
-    ms_log (1, "%s: Unpacking %d samples\n",
-            UNPACK_SRCNAME_2, msr->samplecnt);
-
-  /* Decide if this is a encoding that we can decode */
-  switch (msr->encoding)
-    {
-
-    case DE_ASCII:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Found ASCII data\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr->samplecnt;
-      memcpy (msr->datasamples, dbuf, nsamples);
-      msr->sampletype = 'a';
-      break;
-
-    case DE_INT16:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking INT-16 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_int_16 ((int16_t *)dbuf, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples,
-                                    swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_INT32:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking INT-32 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_int_32 ((int32_t *)dbuf, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples,
-                                    swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_FLOAT32:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking FLOAT-32 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_float_32 ((uint32_t *)dbuf, msr->samplecnt,
-                                      msr->samplecnt, msr->datasamples,
-                                      swapflag);
-      msr->sampletype = 'f';
-      break;
-
-    case DE_FLOAT64:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking FLOAT-64 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_float_64 ((uint64_t *)dbuf, msr->samplecnt,
-                                      msr->samplecnt, msr->datasamples,
-                                      swapflag);
-      msr->sampletype = 'd';
-      break;
-
-    case DE_STEIM1:
-      diffbuff = (int32_t *) malloc(unpacksize);
-      if ( diffbuff == NULL )
-        {
-          ms_log (2, "msr_unpack_data(%s): Cannot allocate diff buffer\n",
-                  UNPACK_SRCNAME_2);
-          return MS_GENERROR;
-        }
-
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking Steim-1 data frames\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_steim1 ((FRAME *)dbuf, datasize, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples, diffbuff,
-                                    &x0, &xn, swapflag, verbose);
-      msr->sampletype = 'i';
-      free (diffbuff);
-      break;
-
-    case DE_STEIM2:
-      diffbuff = (int32_t *) malloc(unpacksize);
-      if ( diffbuff == NULL )
-        {
-          ms_log (2, "msr_unpack_data(%s): Cannot allocate diff buffer\n",
-                  UNPACK_SRCNAME_2);
-          return MS_GENERROR;
-        }
-
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking Steim-2 data frames\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_steim2 ((FRAME *)dbuf, datasize, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples, diffbuff,
-                                    &x0, &xn, swapflag, verbose);
-      msr->sampletype = 'i';
-      free (diffbuff);
-      break;
-
-    case DE_GEOSCOPE24:
-    case DE_GEOSCOPE163:
-    case DE_GEOSCOPE164:
-      if ( verbose > 1 )
-        {
-          if ( msr->encoding == DE_GEOSCOPE24 )
-            ms_log (1, "%s: Unpacking GEOSCOPE 24bit integer data samples\n",
-                    UNPACK_SRCNAME_2);
-          if ( msr->encoding == DE_GEOSCOPE163 )
-            ms_log (1, "%s: Unpacking GEOSCOPE 16bit gain ranged/3bit exponent data samples\n",
-                    UNPACK_SRCNAME_2);
-          if ( msr->encoding == DE_GEOSCOPE164 )
-            ms_log (1, "%s: Unpacking GEOSCOPE 16bit gain ranged/4bit exponent data samples\n",
-                    UNPACK_SRCNAME_2);
-        }
-
-      nsamples = msr_unpack_geoscope (dbuf, msr->samplecnt, msr->samplecnt,
-                                      msr->datasamples, msr->encoding, swapflag);
-      msr->sampletype = 'f';
-      break;
-
-    case DE_CDSN:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking CDSN encoded data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_cdsn ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
-                                  msr->datasamples, swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_SRO:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking SRO encoded data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_sro ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
-                                 msr->datasamples, swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_DWWSSN:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking DWWSSN encoded data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_dwwssn ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
-                                    msr->datasamples, swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    default:
-      ms_log (2, "%s: Unsupported encoding format %d (%s)\n",
-              UNPACK_SRCNAME_2, msr->encoding, (char *) ms_encodingstr(msr->encoding));
-
-      return MS_UNKNOWNFORMAT;
-    }
-
-  return nsamples;
-} /* End of msr_unpack_data() */

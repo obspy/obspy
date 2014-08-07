@@ -14,7 +14,7 @@
  *  (previously) ORFEUS/EC-Project MEREDIAN
  *  (currently) IRIS Data Management Center
  *
- *  modified: 2010.012
+ *  modified: 2012.357
  ************************************************************************/
 
 /*
@@ -131,25 +131,22 @@ int msr_unpack_int_32
  *  Return: # of samples returned.                                      *
  ************************************************************************/
 int msr_unpack_float_32
- (uint32_t	       *ibuf,		/* ptr to input data.			*/
+ (float	       *fbuf,		/* ptr to input data.			*/
   int		num_samples,	/* number of data samples in total.     */
   int		req_samples,	/* number of data desired by caller.	*/
   float	       *databuff,	/* ptr to unpacked data array.		*/
   int		swapflag)	/* if data should be swapped.	        */
 {
   int		nd = 0;		/* # of data points in packet.		*/
-  union _tmp {
-    uint32_t  u4;
-    float     f4;
-  } tmp;
+  float    	ftmp;
   
   if (num_samples < 0) return 0;
   if (req_samples < 0) return 0;
   
   for (nd=0; nd<req_samples && nd<num_samples; nd++) {
-    tmp.u4 = ibuf[nd];
-    if ( swapflag ) ms_gswap4a (&tmp.u4);
-    databuff[nd] = tmp.f4;
+    memcpy (&ftmp, &fbuf[nd], sizeof(float));
+    if ( swapflag ) ms_gswap4a (&ftmp);
+    databuff[nd] = ftmp;
   }
   
   return nd;
@@ -164,26 +161,22 @@ int msr_unpack_float_32
  *  Return: # of samples returned.                                      *
  ************************************************************************/
 int msr_unpack_float_64
- (uint64_t       *ibuf,		/* ptr to input data.			*/
+ (double       *fbuf,		/* ptr to input data.			*/
   int		num_samples,	/* number of data samples in total.     */
   int		req_samples,	/* number of data desired by caller.	*/
   double       *databuff,	/* ptr to unpacked data array.		*/
   int		swapflag)	/* if data should be swapped.	        */
 {
   int		nd = 0;		/* # of data points in packet.		*/
-  union _tmp {
-    uint64_t  u8;
-    double    f8;
-  } tmp;
-
+  double  	dtmp;
   
   if (num_samples < 0) return 0;
   if (req_samples < 0) return 0;
   
   for (nd=0; nd<req_samples && nd<num_samples; nd++) {
-    tmp.u8 = ibuf[nd];
-    if ( swapflag ) ms_gswap8a (&tmp.u8);
-    databuff[nd] = tmp.f8;
+    memcpy (&dtmp, &fbuf[nd], sizeof(double));
+    if ( swapflag ) ms_gswap8a (&dtmp);
+    databuff[nd] = dtmp;
   }
   
   return nd;

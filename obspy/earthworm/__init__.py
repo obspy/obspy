@@ -6,8 +6,8 @@ obspy.earthworm - Earthworm Wave Server client for ObsPy.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Basic Usage
 -----------
@@ -19,7 +19,7 @@ Basic Usage
     >>> from obspy.earthworm import Client
     >>> client = Client("pele.ess.washington.edu", 16017)
     >>> response = client.availability("UW", "TUCA", channel="BHZ")
-    >>> print response  # doctest: #SKIP
+    >>> print response  # doctest: +SKIP
     [('UW',
       'TUCA',
       '--',
@@ -34,14 +34,17 @@ Basic Usage
 
         from obspy.earthworm import Client
         from obspy import UTCDateTime
-        client = Client("pele.ess.washington.edu", 16017)
+        client = Client("pele.ess.washington.edu", 16017, timeout=5)
         response = client.availability("UW", "TUCA", channel="BHZ")
         t = response[0][4]
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

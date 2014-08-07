@@ -8,9 +8,14 @@ SEISAN bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.compatibility import frombuffer
 import numpy as np
 
 
@@ -25,16 +30,15 @@ def isSEISAN(filename):
 
     .. rubric:: Example
 
-    >>> isWAV("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
+    >>> isSEISAN("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
     True
     """
     try:
-        f = open(filename, 'rb')
+        with open(filename, 'rb') as f:
+            data = f.read(12 * 80)
     except:
         return False
     # read some data - contains at least 12 lines a 80 characters
-    data = f.read(12 * 80)
-    f.close()
     if _getVersion(data):
         return True
     return False
@@ -93,17 +97,17 @@ def _getVersion(data):
     # check size of data chunk
     if len(data) < 12 * 80:
         return False
-    if data[0:2] == 'KP' and data[82] == 'P':
+    if data[0:2] == b'KP' and data[82:83] == 'P':
         return ("<", 32, 6)
-    elif data[0:8] == '\x00\x00\x00\x00\x00\x00\x00P' and \
-        data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
+    elif data[0:8] == b'\x00\x00\x00\x00\x00\x00\x00P' and \
+            data[88:96] == b'\x00\x00\x00\x00\x00\x00\x00P':
         return (">", 64, 7)
-    elif data[0:8] == 'P\x00\x00\x00\x00\x00\x00\x00' and \
-        data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
+    elif data[0:8] == b'P\x00\x00\x00\x00\x00\x00\x00' and \
+            data[88:96] == b'\x00\x00\x00\x00\x00\x00\x00P':
         return ("<", 64, 7)
-    elif data[0:4] == '\x00\x00\x00P' and data[84:88] == '\x00\x00\x00P':
+    elif data[0:4] == b'\x00\x00\x00P' and data[84:88] == b'\x00\x00\x00P':
         return (">", 32, 7)
-    elif data[0:4] == 'P\x00\x00\x00' and data[84:88] == 'P\x00\x00\x00':
+    elif data[0:4] == b'P\x00\x00\x00' and data[84:88] == b'P\x00\x00\x00':
         return ("<", 32, 7)
     return None
 
@@ -157,16 +161,16 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     # line 2
     data = _readline(fh)
     # line 3
-    for _i in xrange(0, number_of_lines):
+    for _i in range(0, number_of_lines):
         data = _readline(fh)
     # now parse each event file channel header + data
     stream = Stream()
-    dlen = arch / 8
-    dtype = byteorder + 'i' + str(dlen)
-    stype = '=i' + str(dlen)
-    for _i in xrange(number_of_channels):
+    dlen = arch // 8
+    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
+    stype = native_str('=i' + str(dlen))
+    for _i in range(number_of_channels):
         # get channel header
-        temp = _readline(fh, 1040)
+        temp = _readline(fh, 1040).decode()
         # create Stats
         header = Stats()
         header['network'] = (temp[16] + temp[19]).strip()
@@ -189,10 +193,13 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = np.fromfile(fh, dtype=dtype, count=header['npts'] + 2)
+            data = frombuffer(
+                fh.read((header['npts'] + 2) * dtype.itemsize),
+                dtype=dtype)
             # convert to system byte order
             data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))
+    fh.close()
     return stream
 
 

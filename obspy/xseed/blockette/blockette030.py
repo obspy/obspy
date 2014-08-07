@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, Loop
@@ -8,7 +11,7 @@ class Blockette030(Blockette):
     """
     Blockette 030: Data Format Dictionary Blockette.
 
-    All volumes, with the exception of miniSEED data records, must have a Data
+    All volumes, with the exception of MiniSEED data records, must have a Data
     Format Dictionary Blockette [30]. Each Channel Identifier Blockette [52]
     has a reference (field 16) back to a Data Format Dictionary Blockette
     [30], so that SEED reading programs will know how to decode data for the

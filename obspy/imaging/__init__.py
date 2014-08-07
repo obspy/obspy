@@ -10,8 +10,8 @@ beachballs. The module :mod:`obspy.imaging` depends on the plotting module
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 
 Seismograms
@@ -20,7 +20,7 @@ This submodule can plot multiple :class:`~obspy.core.trace.Trace` in one
 :class:`~obspy.core.stream.Stream` object and has various other optional
 arguments to adjust the plot, such as color and tick format changes.
 
-Additionally the start- and endtime of the plot can be given as
+Additionally the start and end time of the plot can be given as
 :class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
 Examples files may be retrieved via http://examples.obspy.org.
@@ -118,7 +118,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 (2) The focal mechanism can also be specified using the 6 independent
     components of the moment tensor (M11, M22, M33, M12, M13, M23). For
     :func:`obspy.imaging.beachball.Beachball` (1, 2, 3) corresponds to
-    (Up, South, East) which is equvalent to (r, theta, phi). For
+    (Up, South, East) which is equivalent to (r, theta, phi). For
     :func:`obspy.imaging.mopad_wrapper.Beachball` the coordinate system can be
     chosen and includes the choices 'NED' (North, East, Down), 'USE' (Up,
     South, East), 'NWU' (North, West, Up) or 'XYZ'.
@@ -191,6 +191,9 @@ Common formats are png, svg, pdf or ps.
 >>> st = read()
 >>> st.plot(outfile='graph.png') #doctest: +SKIP
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 # Please do not import any modules using matplotlib - otherwise it will disturb
 # the test suite (running without X11 or any other display)

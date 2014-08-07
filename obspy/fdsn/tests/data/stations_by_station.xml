@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=ANMO&amp;endtime=2001-01-01T00%3A00%3A00.000000&amp;network=IU&amp;starttime=2000-01-01T00%3A00%3A00.000000</ModuleURI>
+ <Created>2014-07-26T09:15:09</Created>
+ <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+  <TotalNumberStations>260</TotalNumberStations>
+  <SelectedNumberStations>2</SelectedNumberStations>
+  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.UNRESTRICTED,.TEST,_GSN,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME">
+   <Comment>
+    <Value>Time Uncertain.</Value>
+    <BeginEffectiveTime>1996-05-20T19:20:00</BeginEffectiveTime>
+    <EndEffectiveTime>1996-05-24T14:13:00</EndEffectiveTime>
+   </Comment>
+   <Latitude>34.9459</Latitude>
+   <Longitude>-106.4572</Longitude>
+   <Elevation>1850.0</Elevation>
+   <Site>
+    <Name>Albuquerque, New Mexico, USA</Name>
+   </Site>
+   <CreationDate>1989-08-29T00:00:00</CreationDate>
+   <TotalNumberChannels>172</TotalNumberChannels>
+   <SelectedNumberChannels>0</SelectedNumberChannels>
+  </Station>
+  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.UNRESTRICTED,.TEST,_GSN,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME">
+   <Comment>
+    <Value>Station Maintenance.  Tests may be in progress.</Value>
+    <BeginEffectiveTime>2001-04-25T14:00:00</BeginEffectiveTime>
+    <EndEffectiveTime>2001-04-29T00:00:00</EndEffectiveTime>
+   </Comment>
+   <Latitude>34.9502</Latitude>
+   <Longitude>-106.4602</Longitude>
+   <Elevation>1839.0</Elevation>
+   <Site>
+    <Name>Albuquerque, New Mexico, USA</Name>
+   </Site>
+   <CreationDate>1989-08-29T00:00:00</CreationDate>
+   <TotalNumberChannels>77</TotalNumberChannels>
+   <SelectedNumberChannels>0</SelectedNumberChannels>
+  </Station>
+ </Network>
+</FDSNStationXML>

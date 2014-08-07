@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# ------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
 #   Author: Moritz Beyreuther, Yannik Behr
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Yannik Behr
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Python Module for Instrument Correction (Seismology).
 PAZ (Poles and zeros) information must be given in SEED convention, correction
@@ -18,17 +19,21 @@ to m/s.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated_keywords
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
+from obspy.signal.util import _npts2nfft
 import ctypes as C
 import math as M
 import numpy as np
 import os
 import scipy.signal
-import util
+from obspy.signal import util
 import warnings
 
 
@@ -45,25 +50,25 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     """
     Cosine Taper.
 
-    :type npts: Int
+    :type npts: int
     :param npts: Number of points of cosine taper.
-    :type p: Float
+    :type p: float
     :param p: Decimal percentage of cosine taper (ranging from 0 to 1). Default
         is 0.1 (10%) which tapers 5% from the beginning and 5% form the end.
-    :rtype: float NumPy ndarray
+    :rtype: float NumPy :class:`~numpy.ndarray`
     :return: Cosine taper array/vector of length npts.
-    :type freqs: NumPy ndarray
+    :type freqs: NumPy :class:`~numpy.ndarray`
     :param freqs: Frequencies as, for example, returned by fftfreq
-    :type flimit: List or tuple of floats
+    :type flimit: list or tuple of floats
     :param flimit: The list or tuple defines the four corner frequencies
         (f1, f2, f3, f4) of the cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
-    :type halfcosine: Boolean
+    :type halfcosine: bool
     :param halfcosine: If True the taper is a half cosine function. If False it
         is a quarter cosine function.
-    :type sactaper: Boolean
+    :type sactaper: bool
     :param sactaper: If set to True the cosine taper already tapers at the
-        corner frequency (SAC behaviour). By default, the taper has a value
+        corner frequency (SAC behavior). By default, the taper has a value
         of 1.0 at the corner frequencies.
 
     .. rubric:: Example
@@ -75,7 +80,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     >>> npts = 100
     >>> p = 0.1
     >>> tap3 = cosTaper(npts, p)
-    >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
+    >>> (tap3[int(npts*p/2):int(npts*(1-p/2))]==np.ones(int(npts*(1-p)))).all()
     True
     """
     if p < 0 or p > 1:
@@ -114,19 +119,23 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     # at idx2 and idx3 equals one
     cos_win = np.zeros(npts)
     if halfcosine:
-        #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
+        # cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
-        cos_win[idx1:idx2 + 1] = 0.5 * (1.0 - np.cos((np.pi * \
-            (np.arange(idx1, idx2 + 1) - idx1) / (idx2 - idx1))))
+        cos_win[idx1:idx2 + 1] = 0.5 * (
+            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /
+                          (idx2 - idx1))))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = 0.5 * (1.0 + np.cos((np.pi * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3))))
+        cos_win[idx3:idx4 + 1] = 0.5 * (
+            1.0 + np.cos((np.pi * (float(idx3) - np.arange(idx3, idx4 + 1)) /
+                          (idx4 - idx3))))
     else:
-        cos_win[idx1:idx2 + 1] = np.cos(-(np.pi / 2.0 * \
-               (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+        cos_win[idx1:idx2 + 1] = np.cos(-(
+            np.pi / 2.0 * (float(idx2) -
+                           np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = np.cos((np.pi / 2.0 * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+        cos_win[idx3:idx4 + 1] = np.cos((
+            np.pi / 2.0 * (float(idx3) -
+                           np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win
@@ -137,7 +146,14 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     return cos_win
 
 
-def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
+def c_sac_taper(freqs, flimit):
+    """
+    Generate frequency domain taper similar to sac.
+
+    :param freqs: frequency vector to use
+    :param flimit: sequence containing the 4  frequency limits
+    :returns: taper
+    """
     twopi = 6.283185307179586
     dblepi = 0.5 * twopi
     fl1, fl2, fl3, fl4 = flimit
@@ -155,7 +171,6 @@ def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
     return np.array(taper)
 
 
-@deprecated_keywords({'pitsa': None})
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
              debug=False):
@@ -167,9 +182,11 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :type filename: str
-    :param filename: SEED RESP-filename or content of RESP file
-    :type date: UTCDateTime
+    :type filename: str or file
+    :param filename: SEED RESP-filename or open file like object with RESP
+        information. Any object that provides a read() method will be
+        considered to be a file like object.
+    :type date: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param date: Date of interest
     :type station: str
     :param station: Station id
@@ -183,53 +200,57 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param units: Units to return response in. Can be either DIS, VEL or ACC
     :type debug: bool
     :param debug: Verbose output to stdout. Disabled by default.
-    :rtype: numpy.ndarray complex128
+    :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
+    if isinstance(filename, (str, native_str)):
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+    elif hasattr(filename, 'read'):
+        data = filename.read()
     # evalresp needs files with correct line separators depending on OS
-    data = open(filename, 'rb').read()
-    fh = NamedTemporaryFile()
-    tempfile = fh.name
-    fh.write(os.linesep.join(data.splitlines()))
-    fh.close()
+    with NamedTemporaryFile() as fh:
+        tempfile = fh.name
+        fh.write(os.linesep.encode('ascii', 'strict').join(data.splitlines()))
+        fh.close()
 
-    fy = 1 / (t_samp * 2.0)
-    # start at zero to get zero for offset/ DC of fft
-    freqs = np.linspace(0, fy, nfft // 2 + 1)
-    start_stage = C.c_int(-1)
-    stop_stage = C.c_int(0)
-    stdio_flag = C.c_int(0)
-    sta = C.create_string_buffer(station)
-    cha = C.create_string_buffer(channel)
-    net = C.create_string_buffer(network)
-    locid = C.create_string_buffer(locid)
-    unts = C.create_string_buffer(units)
-    if debug:
-        vbs = C.create_string_buffer("-v")
-    else:
-        vbs = C.create_string_buffer("")
-    rtyp = C.create_string_buffer("CS")
-    datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
-    fn = C.create_string_buffer(tempfile)
-    nfreqs = C.c_int(freqs.shape[0])
-    res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
-                            freqs, nfreqs, rtyp, vbs, start_stage,
-                            stop_stage, stdio_flag, C.c_int(0))
-    # optimizing performance, see
-    # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
-    nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
-    h = np.empty(nfreqs, dtype='complex128')
-    f = np.empty(nfreqs, dtype='float64')
-    for i in xrange(nfreqs):
-        h[i] = rvec[i].real + rvec[i].imag * 1j
-        f[i] = rfreqs[i]
-    clibevresp.free_response(res)
-    del nfreqs, rfreqs, rvec, res
-    # delete temporary file
-    try:
-        os.remove(tempfile)
-    except:
-        pass
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset/ DC of fft
+        freqs = np.linspace(0, fy, nfft // 2 + 1)
+        start_stage = C.c_int(-1)
+        stop_stage = C.c_int(0)
+        stdio_flag = C.c_int(0)
+        sta = C.create_string_buffer(station.encode('ascii', 'strict'))
+        cha = C.create_string_buffer(channel.encode('ascii', 'strict'))
+        net = C.create_string_buffer(network.encode('ascii', 'strict'))
+        locid = C.create_string_buffer(locid.encode('ascii', 'strict'))
+        unts = C.create_string_buffer(units.encode('ascii', 'strict'))
+        if debug:
+            vbs = C.create_string_buffer(b"-v")
+        else:
+            vbs = C.create_string_buffer(b"")
+        rtyp = C.create_string_buffer(b"CS")
+        datime = C.create_string_buffer(
+            date.formatSEED().encode('ascii', 'strict'))
+        fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
+        nfreqs = C.c_int(freqs.shape[0])
+        res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
+                                freqs, nfreqs, rtyp, vbs, start_stage,
+                                stop_stage, stdio_flag, C.c_int(0))
+        # optimizing performance, see
+        # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
+        try:
+            nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
+        except ValueError:
+            msg = "evalresp failed to calculate a response."
+            raise ValueError(msg)
+        h = np.empty(nfreqs, dtype=np.complex128)
+        f = np.empty(nfreqs, dtype=np.float64)
+        for i in range(nfreqs):
+            h[i] = rvec[i].real + rvec[i].imag * 1j
+            f[i] = rfreqs[i]
+        clibevresp.free_response(res)
+        del nfreqs, rfreqs, rvec, res
     if freq:
         return h, f
     return h
@@ -249,23 +270,22 @@ def cornFreq2Paz(fc, damp=0.707):
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
-@deprecated_keywords({'pitsa': None})
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
 
-    :type poles: List of complex numbers
+    :type poles: list of complex
     :param poles: The poles of the transfer function
-    :type zeros: List of complex numbers
+    :type zeros: list of complex
     :param zeros: The zeros of the transfer function
-    :type scale_fac: Float
+    :type scale_fac: float
     :param scale_fac: Gain factor
-    :type t_samp: Float
+    :type t_samp: float
     :param t_samp: Sampling interval in seconds
-    :type nfft: Integer
+    :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :rtype: numpy.ndarray complex128
+    :rtype: :class:`numpy.ndarray` complex128
     :return: Frequency response of PAZ of length nfft
 
     .. note::
@@ -312,10 +332,10 @@ def specInv(spec, wlev):
     amplitude. The water-level is given in db scale.
 
     :note: In place operations on spec, translated from PITSA spr_sinv.c
-    :param spec: Spectrum as returned by numpy.fft.rfft
+    :param spec: Spectrum as returned by :func:`numpy.fft.rfft`
     :param wlev: Water level to use
     """
-    # Calculated waterlevel in the scale of spec
+    # Calculated water level in the scale of spec
     swamp = waterlevel(spec, wlev)
 
     # Find length in real fft frequency domain, spec is complex
@@ -344,66 +364,68 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     """
     Simulate/Correct seismometer.
 
-    :type data: NumPy ndarray
+    :type data: NumPy :class:`~numpy.ndarray`
     :param data: Seismogram, detrend before hand (e.g. zero mean)
-    :type samp_rate: Float
+    :type samp_rate: float
     :param samp_rate: Sample Rate of Seismogram
-    :type paz_remove: Dictionary, None
+    :type paz_remove: dict, None
     :param paz_remove: Dictionary containing keys 'poles', 'zeros', 'gain'
         (A0 normalization factor). poles and zeros must be a list of complex
         floating point numbers, gain must be of type float. Poles and Zeros are
         assumed to correct to m/s, SEED convention. Use None for no inverse
         filtering.
-    :type paz_simulate: Dictionary, None
+    :type paz_simulate: dict, None
     :param paz_simulate: Dictionary containing keys 'poles', 'zeros', 'gain'.
         Poles and zeros must be a list of complex floating point numbers, gain
         must be of type float. Or None for no simulation.
-    :type remove_sensitivity: Boolean
+    :type remove_sensitivity: bool
     :param remove_sensitivity: Determines if data is divided by
         `paz_remove['sensitivity']` to correct for overall sensitivity of
         recording instrument (seismometer/digitizer) during instrument
         correction.
-    :type simulate_sensitivity: Boolean
+    :type simulate_sensitivity: bool
     :param simulate_sensitivity: Determines if data is multiplied with
         `paz_simulate['sensitivity']` to simulate overall sensitivity of
         new instrument (seismometer/digitizer) during instrument simulation.
-    :type water_level: Float
+    :type water_level: float
     :param water_level: Water_Level for spectrum to simulate
-    :type zero_mean: Boolean
+    :type zero_mean: bool
     :param zero_mean: If true the mean of the data is subtracted
-    :type taper: Boolean
+    :type taper: bool
     :param taper: If true a cosine taper is applied.
-    :type taper_fraction: Float
+    :type taper_fraction: float
     :param taper_fraction: Taper fraction of cosine taper to use
-    :type pre_filt: List or tuple of floats
+    :type pre_filt: list or tuple of floats
     :param pre_filt: Apply a bandpass filter to the data trace before
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
-    :type seedresp: Dictionary, None
+    :type seedresp: dict, None
     :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
         'filename' is the path to a RESP-file generated from a dataless SEED
-        volume;
-        'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
-        that the response function should be extracted for;
+        volume (or a file like object with RESP information);
+        'date' is a :class:`~obspy.core.utcdatetime.UTCDateTime` object for the
+        date that the response function should be extracted for (can be omitted
+        when calling simulate() on Trace/Stream. the Trace's starttime will
+        then be used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
-    :type nfft_pow2: Boolean
+    :type nfft_pow2: bool
     :param nfft_pow2: Number of frequency points to use for FFT. If True,
         the exact power of two is taken (default in PITSA). If False the
-        data are not zeropadded to the next power of two which makes a
+        data are not zero-padded to the next power of two which makes a
         slower FFT but is then much faster for e.g. evalresp which scales
         with the FFT points.
-    :type pitsasim: Boolean
+    :type pitsasim: bool
     :param pitsasim: Choose parameters to match
         instrument correction as done by PITSA.
-    :type sacsim: Boolean
+    :type sacsim: bool
     :param sacsim: Choose parameters to match
         instrument correction as done by SAC.
-    :type shsim: Boolean
+    :type shsim: bool
     :param shsim: Choose parameters to match
         instrument correction as done by Seismic Handler.
-    :return: The corrected data are returned as numpy.ndarray float64
+    :return: The corrected data are returned as :class:`numpy.ndarray` float64
         array. float64 is chosen to avoid numerical instabilities.
 
     This function works in the frequency domain, where nfft is the next power
@@ -415,7 +437,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     beforehand. If paz_simulate=None only the instrument correction is done.
     In the latter case, a broadband filter can be applied to the data trace
     using pre_filt. This restricts the signal to the valid frequency band and
-    thereby avoids artefacts due to amplification of frequencies outside of the
+    thereby avoids artifacts due to amplification of frequencies outside of the
     instrument's passband (for a detailed discussion see
     *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
 
@@ -439,7 +461,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     delta = 1.0 / samp_rate
     #
     ndat = len(data)
-    data = data.astype("float64")
+    data = data.astype(np.float64)
     if zero_mean:
         data -= data.mean()
     if taper:
@@ -453,13 +475,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # Numerical Recipes p. 429 calculate next power of 2.
     if nfft_pow2:
         nfft = util.nextpow2(2 * ndat)
-    # evalresp scales directly with nfft, therefor taking the next power of
+    # evalresp scales directly with nfft, therefore taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
-    elif ndat & 0x1:  # check if uneven
-        nfft = 2 * (ndat + 1)
     else:
-        nfft = 2 * ndat
+        nfft = _npts2nfft(ndat)
     # Transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
@@ -471,7 +491,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if seedresp:
         freq_response, freqs = evalresp(delta, nfft, seedresp['filename'],
                                         seedresp['date'],
-                                        units=seedresp['units'], freq=True)
+                                        units=seedresp['units'], freq=True,
+                                        network=seedresp['network'],
+                                        station=seedresp['station'],
+                                        locid=seedresp['location'],
+                                        channel=seedresp['channel'])
         if not remove_sensitivity:
             msg = "remove_sensitivity is set to False, but since seedresp " + \
                   "is selected the overall sensitivity will be corrected " + \
@@ -482,8 +506,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             # make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
             if sacsim:
-                cos_win = c_sac_taper(freqs.size, freqs=freqs,
-                                      flimit=(fl1, fl2, fl3, fl4))
+                cos_win = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
             else:
                 cos_win = cosTaper(freqs.size, freqs=freqs,
                                    flimit=(fl1, fl2, fl3, fl4))
@@ -493,8 +516,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         del freq_response
     # Forward filtering = Instrument simulation
     if paz_simulate:
-        data *= pazToFreqResp(paz_simulate['poles'],
-                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft)
+        data *= pazToFreqResp(paz_simulate['poles'], paz_simulate['zeros'],
+                              paz_simulate['gain'], delta, nfft)
 
     data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain
@@ -588,7 +611,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     # mean of input amplitudes (if more than one) should be used in final
     # magnitude estimation (usually N and E components)
     magnitude = np.log10(wa_ampl_mean) + np.log10(h_dist / 100.0) + \
-                0.00301 * (h_dist - 100.0) + 3.0
+        0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
 
 
@@ -610,7 +633,7 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
-            WOODANDERSON['sensitivity']
+        WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
     return wa_ampl
 

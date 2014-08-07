@@ -46,7 +46,7 @@ right-hand subplot:
     >>> plt.ylabel("Dissimilarity")
     >>> plt.show()
 
-.. plot:: source/tutorial/code_snippets/hierarchical_clustering.py
+.. plot:: tutorial/code_snippets/hierarchical_clustering.py
 
 
 .. _`hcluster`: http://pypi.python.org/pypi/hcluster

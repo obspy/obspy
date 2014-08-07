@@ -9,6 +9,9 @@ storing in into a standard SQL database.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import read
 from obspy.core.preview import createPreview
@@ -47,7 +50,7 @@ class WaveformFileCrawler(object):
             query = query.filter(WaveformChannel.station == data['station'])
             query = query.filter(WaveformChannel.location == data['location'])
             query = query.filter(WaveformChannel.channel == data['channel'])
-            query = query.filter(WaveformChannel.starttime == \
+            query = query.filter(WaveformChannel.starttime ==
                                  data['starttime'])
             query = query.filter(WaveformChannel.endtime == data['endtime'])
             if query.count() > 0:
@@ -91,7 +94,7 @@ class WaveformFileCrawler(object):
                 channel.features.append(WaveformFeatures(feature))
         try:
             session.commit()
-        except Exception, e:
+        except Exception as e:
             session.rollback()
             self.log.error(str(e))
         else:
@@ -108,12 +111,12 @@ class WaveformFileCrawler(object):
             query = session.query(WaveformFile)
             query = query.filter(WaveformPath.path == path)
             query = query.filter(WaveformFile.file == file)
-            query = query.filter(WaveformPath.archived == False)
+            query = query.filter(WaveformPath.archived is False)
             for file_obj in query:
                 session.delete(file_obj)
             try:
                 session.commit()
-            except Exception, e:
+            except Exception as e:
                 session.rollback()
                 msg = "Error deleting file '%s' in '%s': %s"
                 self.log.error(msg % (file, path, e))
@@ -122,12 +125,12 @@ class WaveformFileCrawler(object):
         else:
             query = session.query(WaveformPath)
             query = query.filter(WaveformPath.path == path)
-            query = query.filter(WaveformPath.archived == False)
+            query = query.filter(WaveformPath.archived is False)
             for path_obj in query:
                 session.delete(path_obj)
             try:
                 session.commit()
-            except Exception, e:
+            except Exception as e:
                 session.rollback()
                 self.log.error("Error deleting path '%s': %s" % (path, e))
             else:
@@ -230,7 +233,7 @@ class WaveformFileCrawler(object):
         self._current_files = []
         self._db_files = {}
         # get search paths for waveform crawler
-        self._roots = self.paths.keys()
+        self._roots = list(self.paths.keys())
         self._root = self._roots.pop(0)
         # create new walker
         self._walker = os.walk(self._root, topdown=True, followlinks=True)
@@ -254,7 +257,7 @@ class WaveformFileCrawler(object):
         """
         # try to fetch next directory
         try:
-            root, dirs, files = self._walker.next()
+            root, dirs, files = next(self._walker)
         except StopIteration:
             # finished cycling through all directories in current walker
             # try get next crawler search path
@@ -354,7 +357,7 @@ class WaveformFileCrawler(object):
         try:
             stats = os.stat(filepath)
             mtime = int(stats.st_mtime)
-        except Exception, e:
+        except Exception as e:
             self.log.error(str(e))
             return
         # check if recent
@@ -393,13 +396,13 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
-        for (key, ep) in _getEntryPoints('obspy.db.feature').iteritems():
+        for (key, ep) in _getEntryPoints('obspy.db.feature').items():
             try:
                 # load plug-in
                 cls = ep.load()
                 # initialize class
                 func = cls().process
-            except Exception, e:
+            except Exception as e:
                 msg = 'Could not initialize feature %s. (%s)'
                 log_queue.append(msg % (key, str(e)))
                 continue
@@ -437,7 +440,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 # merge channels and replace gaps/overlaps with 0 to prevent
                 # generation of masked arrays
                 stream.merge(fill_value=0)
-            except Exception, e:
+            except Exception as e:
                 msg = '[Reading stream] %s: %s'
                 log_queue.append(msg % (filepath, e))
                 try:
@@ -467,7 +470,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 result['file'] = file
                 result['filepath'] = filepath
                 # trace information
-                result['format'] = format = trace.stats._format
+                result['format'] = trace.stats._format
                 result['station'] = trace.stats.station
                 result['location'] = trace.stats.location
                 result['channel'] = trace.stats.channel
@@ -493,7 +496,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         result['channel'] = mapping['channel']
                         msg = "Mapping '%s' to '%s.%s.%s.%s'" % \
                             (old_id, mapping['network'], mapping['station'],
-                            mapping['location'], mapping['channel'])
+                             mapping['location'], mapping['channel'])
                         log_queue.append(msg)
                 # gaps/overlaps for current trace
                 result['gaps'] = gap_dict.get(trace.id, [])
@@ -505,10 +508,10 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                     try:
                         # run plug-in and update results
                         temp = all_features[key]['run'](trace)
-                        for key, value in temp.iteritems():
+                        for key, value in temp.items():
                             result['features'].append({'key': key,
                                                        'value': value})
-                    except Exception, e:
+                    except Exception as e:
                         msg = '[Processing feature] %s: %s'
                         log_queue.append(msg % (filepath, e))
                         continue
@@ -521,7 +524,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         result['preview'] = trace.data.dumps()
                     except ValueError:
                         pass
-                    except Exception, e:
+                    except Exception as e:
                         msg = '[Creating preview] %s: %s'
                         log_queue.append(msg % (filepath, e))
                 # update dataset

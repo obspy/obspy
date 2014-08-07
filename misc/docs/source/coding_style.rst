@@ -19,7 +19,7 @@ why ``b`` get changed when we change ``a``:
 >>> b = [5, 6]
 >>> b.append(a)
 >>> a[0] = -99
->>> print b
+>>> print(b)
 [5, 6, [-99, 2, 3, 4]]
 
 Import Conventions
@@ -58,23 +58,23 @@ Naming
 * Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module
   names.
 
-==================  ====================  ====================================
-Type                Public                Internal
-==================  ====================  ====================================
-Packages            ``lower_with_under``    
-Modules             ``lower_with_under``  ``_lower_with_under``
-Classes             ``CamelCase``         ``_CamelCase``
+==================  ======================  ===================================
+Type                Public                  Internal
+==================  ======================  ===================================
+Packages            ``lower_with_under``      
+Modules             ``lower_with_under``    ``_lower_with_under``
+Classes             ``CamelCase``           ``_CamelCase``
 Exceptions          ``CamelCase``    
-Functions           ``mixedCase()``       ``_mixedCase()``
-Constants           ``CAPS_WITH_UNDER``   ``_CAPS_WITH_UNDER``
-Class Variables     ``lower_with_under``  ``_lower_with_under``
-Instance Variables  ``lower_with_under``  ``_lower_with_under`` (protected) or
-                                          ``__lower_with_under`` (private)
-Methods             ``mixedCase()``       ``_mixedCase()`` (protected) or
-                                          ``__mixedCase()`` (private)
-Attributes          ``lower_with_under``    
-Local Variables     ``lower_with_under``    
-==================  ====================  ====================================
+Functions           ``lower_with_under()``  ``_lower_with_under()``
+Constants           ``CAPS_WITH_UNDER``     ``_CAPS_WITH_UNDER``
+Class Variables     ``lower_with_under``    ``_lower_with_under``
+Instance Variables  ``lower_with_under``    ``_lower_with_under`` (protected)
+                                            ``__lower_with_under`` (private)
+Methods             ``lower_with_under()``  ``_lower_with_under()`` (protected)
+                                            ``__lower_with_under()`` (private)
+Attributes          ``lower_with_under``      
+Local Variables     ``lower_with_under``      
+==================  ======================  ===================================
 
 Doc Strings
 -----------
@@ -87,7 +87,7 @@ Doc Strings
           """
           This is a one line doc string.
           """
-          print "test"
+          print("test")
 
 * Multiple lines: both ``"""`` are in new lines - also you should try provide
   a meaningful one-liner description at the top, followed by two linebreaks
@@ -102,7 +102,7 @@ Doc Strings
           The long story is, this docstring would not have been able to fit in
           one line. Therefore we have to break lines.
           """
-          print "test"
+          print("test")
 
 Function/Method Definitions
 ---------------------------
@@ -172,7 +172,7 @@ Tests
 
           But fails badly. See ticket #number.
           """
-          print "test"
+          print("test")
           ...
           # XXX: here it fails
           ...

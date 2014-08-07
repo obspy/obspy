@@ -5,7 +5,7 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2009-2012 by:
+Copyright (c) 2009-2013 by:
     * Moritz Beyreuther
     * Lion Krischer
     * Robert Barsch
@@ -34,4 +34,4 @@ For more information visit http://www.obspy.org.
 Dependencies
 ------------
 * distribute
-* numpy
+* NumPy

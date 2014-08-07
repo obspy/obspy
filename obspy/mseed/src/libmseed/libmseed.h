@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.7"
-#define LIBMSEED_RELEASE "2012.138"
+#define LIBMSEED_VERSION "2.12"
+#define LIBMSEED_RELEASE "2013.273"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -79,6 +79,17 @@ extern "C" {
 
 /* Macro to test default sample rate tolerance: abs(1-sr1/sr2) < 0.0001 */
 #define MS_ISRATETOLERABLE(A,B) (ms_dabs (1.0 - (A / B)) < 0.0001)
+
+/* Macro to test for sane year and day values, used primarily to
+ * determine if byte order swapping is needed.
+ * 
+ * Year : between 1900 and 2100
+ * Day  : between 1 and 366
+ *
+ * This test is non-unique (non-deterministic) for days 1, 256 and 257
+ * in the year 2056 because the swapped values are also within range.
+ */
+#define MS_ISVALIDYEARDAY(Y,D) (Y >= 1900 && Y <= 2100 && D >= 1 && D <= 366)
 
 /* Macro to test memory for a SEED data record signature by checking
  * SEED data record header values at known byte offsets to determine
@@ -510,6 +521,10 @@ extern int unpackencodingfallback;
 extern int           msr_parse (char *record, int recbuflen, MSRecord **ppmsr, int reclen,
 				flag dataflag, flag verbose);
 
+extern int           msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
+					   MSRecord **ppmsr, int reclen,
+					   Selections *selections, flag dataflag, flag verbose );
+
 extern int           msr_unpack (char *record, int reclen, MSRecord **ppmsr,
 				 flag dataflag, flag verbose);
 
@@ -517,6 +532,8 @@ extern int           msr_pack (MSRecord *msr, void (*record_handler) (char *, in
 		 	       void *handlerdata, int64_t *packedsamples, flag flush, flag verbose );
 
 extern int           msr_pack_header (MSRecord *msr, flag normalize, flag verbose);
+
+extern int           msr_unpack_data (MSRecord *msr, int swapflag, flag verbose);
 
 extern MSRecord*     msr_init (MSRecord *msr);
 extern void          msr_free (MSRecord **ppmsr);
@@ -558,6 +575,7 @@ extern MSTrace*      mst_addmsrtogroup (MSTraceGroup *mstg, MSRecord *msr, flag 
 extern MSTrace*      mst_addtracetogroup (MSTraceGroup *mstg, MSTrace *mst);
 extern int           mst_groupheal (MSTraceGroup *mstg, double timetol, double sampratetol);
 extern int           mst_groupsort (MSTraceGroup *mstg, flag quality);
+extern int           mst_convertsamples (MSTrace *mst, char type, flag truncate);
 extern char *        mst_srcname (MSTrace *mst, char *srcname, flag quality);
 extern void          mst_printtracelist (MSTraceGroup *mstg, flag timeformat,
 					 flag details, flag gaps);
@@ -578,6 +596,7 @@ extern MSTraceList * mstl_init ( MSTraceList *mstl );
 extern void          mstl_free ( MSTraceList **ppmstl, flag freeprvtptr );
 extern MSTraceSeg *  mstl_addmsr ( MSTraceList *mstl, MSRecord *msr, flag dataquality,
 				   flag autoheal, double timetol, double sampratetol );
+extern int           mstl_convertsamples ( MSTraceSeg *seg, char type, flag truncate );
 extern void          mstl_printtracelist ( MSTraceList *mstl, flag timeformat,
 					   flag details, flag gaps );
 extern void          mstl_printsynclist ( MSTraceList *mstl, char *dccid, flag subsecond );
@@ -599,30 +618,30 @@ typedef struct MSFileParam_s
   int   recordcount;
 } MSFileParam;
 
-extern int      ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *fpos, int *last,
+extern int      ms_readmsr (MSRecord **ppmsr, const char *msfile, int reclen, off_t *fpos, int *last,
 			    flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile, int reclen,
+extern int      ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile, int reclen,
 			      off_t *fpos, int *last, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile, int reclen,
+extern int      ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile, int reclen,
 				 off_t *fpos, int *last, flag skipnotdata, flag dataflag, Selections *selections, flag verbose);
-extern int      ms_readtraces (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtraces (MSTraceGroup **ppmstg, const char *msfile, int reclen, double timetol, double sampratetol,
 			       flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtraces_timewin (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtraces_timewin (MSTraceGroup **ppmstg, const char *msfile, int reclen, double timetol, double sampratetol,
 				       hptime_t starttime, hptime_t endtime, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtraces_selection (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtraces_selection (MSTraceGroup **ppmstg, const char *msfile, int reclen, double timetol, double sampratetol,
 					 Selections *selections, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtracelist (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtracelist (MSTraceList **ppmstl, const char *msfile, int reclen, double timetol, double sampratetol,
 				  flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtracelist_timewin (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtracelist_timewin (MSTraceList **ppmstl, const char *msfile, int reclen, double timetol, double sampratetol,
 					  hptime_t starttime, hptime_t endtime, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_readtracelist_selection (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+extern int      ms_readtracelist_selection (MSTraceList **ppmstl, const char *msfile, int reclen, double timetol, double sampratetol,
 					    Selections *selections, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
 
-extern int      msr_writemseed ( MSRecord *msr, char *msfile, flag overwrite, int reclen,
+extern int      msr_writemseed ( MSRecord *msr, const char *msfile, flag overwrite, int reclen,
 				 flag encoding, flag byteorder, flag verbose );
-extern int      mst_writemseed ( MSTrace *mst, char *msfile, flag overwrite, int reclen,
+extern int      mst_writemseed ( MSTrace *mst, const char *msfile, flag overwrite, int reclen,
 				 flag encoding, flag byteorder, flag verbose );
-extern int      mst_writemseedgroup ( MSTraceGroup *mstg, char *msfile, flag overwrite,
+extern int      mst_writemseedgroup ( MSTraceGroup *mstg, const char *msfile, flag overwrite,
 				      int reclen, flag encoding, flag byteorder, flag verbose );
 
 /* General use functions */
@@ -647,7 +666,7 @@ extern hptime_t ms_timestr2hptime (char *timestr);
 extern double   ms_nomsamprate (int factor, int multiplier);
 extern int      ms_genfactmult (double samprate, int16_t *factor, int16_t *multiplier);
 extern int      ms_ratapprox (double real, int *num, int *den, int maxval, double precision);
-extern int      ms_bigendianhost ();
+extern int      ms_bigendianhost (void);
 extern double   ms_dabs (double val);
 
 
@@ -664,19 +683,19 @@ extern char *   ms_errorstr (int errorcode);
 /* Logging parameters */
 typedef struct MSLogParam_s
 {
-  void (*log_print)();
+  void (*log_print)(const char*);
   const char *logprefix;
-  void (*diag_print)();
+  void (*diag_print)(const char*);
   const char *errprefix;
 } MSLogParam;
 
 extern int    ms_log (int level, ...);
 extern int    ms_log_l (MSLogParam *logp, int level, ...);
-extern void   ms_loginit (void (*log_print)(char*), const char *logprefix,
-			  void (*diag_print)(char*), const char *errprefix);
+extern void   ms_loginit (void (*log_print)(const char*), const char *logprefix,
+			  void (*diag_print)(const char*), const char *errprefix);
 extern MSLogParam *ms_loginit_l (MSLogParam *logp,
-			         void (*log_print)(char*), const char *logprefix,
-			         void (*diag_print)(char*), const char *errprefix);
+			         void (*log_print)(const char*), const char *logprefix,
+			         void (*diag_print)(const char*), const char *errprefix);
 
 /* Selection functions */
 extern Selections *ms_matchselect (Selections *selections, char *srcname,

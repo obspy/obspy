@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# ------------------------------------------------------------------
 # Filename: calibration.py
 #  Purpose: Functions for relative calibration (e.g. Huddle test calibration)
 #   Author: Felix Bernauer, Simon Kremers
 #    Email: bernauer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2011 Felix Bernauer, Simon Kremers
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions for relative calibration.
 
@@ -16,6 +17,9 @@ Functions for relative calibration.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
@@ -33,17 +37,17 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
 
     :param st1: Stream or Trace object, (known)
     :param st2: Stream or Trace object, (unknown)
-    :type calib_file: String
+    :type calib_file: str
     :param calib_file: file name of calibration file containing the PAZ of the
         known instrument in GSE2 standard.
-    :type window_len: Float
+    :type window_len: float
     :param window_len: length of sliding window in seconds
     :type overlap_frac: float
     :param overlap_frac: fraction of overlap, defaults to fifty percent (0.5)
-    :type smooth: Float
+    :type smooth: float
     :param smooth: variable that defines if the Konno-Ohmachi taper is used or
         not. default = 0 -> no taper generally used in geopsy: smooth = 40
-    :type save_data: Boolean
+    :type save_data: bool
     :param save_data: Whether or not to save the result to a file. If True, two
         output files will be created:
         * The new response in station_name.window_length.resp
@@ -87,15 +91,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     auto, _freq, _t = \
         spectral_helper(tr1, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
     cross, freq, _t = \
-        spectral_helper(tr1, tr2, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
+        spectral_helper(tr2, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
 
-    # 180 Grad Phasenverschiebung
-    cross.imag *= -1.0
-
-    # Replaces the following in compact form:
-    # res = np.zeros(nfft / 2 + 1, dtype='complex128')
-    # for i in range(nwin):
-    #     res += (cross[:, i] / auto[:, i]) * gg
     res = (cross / auto).sum(axis=1) * gg
 
     # The first item might be zero. Problems with phase calculations.
@@ -110,18 +107,21 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         spectra = np.empty((2, len(res.real)))
         spectra[0] = res.real
         spectra[1] = res.imag
-        new_spectra = konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth,
-                count=1, max_memory_usage=1024, normalize=True)
+        new_spectra = \
+            konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth, count=1,
+                                  max_memory_usage=1024, normalize=True)
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
     amp = np.abs(res)
-    phase = np.arctan(res.imag / res.real)
+    # include phase unwrapping
+    phase = np.unwrap(np.angle(res))  # + 2.0 * np.pi
     ra = np.abs(gg)
-    rpha = np.arctan(gg.imag / gg.real)
+    rpha = np.unwrap(np.angle(gg))
 
     if save_data:
-        trans_new = st2[0].stats.station + "." + str(window_len) + ".resp"
+        trans_new = (st2[0].stats.station + "." + st2[0].stats.channel +
+                     "." + str(window_len) + ".resp")
         trans_ref = st1[0].stats.station + ".refResp"
         # Create empty array for easy saving
         temp = np.empty((len(freq), 3))
@@ -140,7 +140,7 @@ def _calcresp(calfile, nfft, sampfreq):
     """
     Calculate transfer function of known system.
 
-    :type calfile: String
+    :type calfile: str
     :param calfile: file containing poles, zeros and scale factor for known
         system
     :returns: complex transfer function, array of frequencies
@@ -158,17 +158,17 @@ def _calcresp(calfile, nfft, sampfreq):
 # it is essential for the above relcalstack function and only present in recent
 # matplotlib versions.
 
-#This is a helper function that implements the commonality between the
-#psd, csd, and spectrogram.  It is *NOT* meant to be used outside of mlab
+# This is a helper function that implements the commonality between the
+# psd, csd, and spectrogram.  It is *NOT* meant to be used outside of mlab
 def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
                     sides='default', scale_by_freq=None):
-    #The checks for if y is x are so that we can use the same function to
-    #implement the core of psd(), csd(), and spectrogram() without doing
-    #extra calculations.  We return the unaveraged Pxy, freqs, and t.
+    # The checks for if y is x are so that we can use the same function to
+    # implement the core of psd(), csd(), and spectrogram() without doing
+    # extra calculations.  We return the unaveraged Pxy, freqs, and t.
     same_data = y is x
 
-    #Make sure we're dealing with a numpy array. If y and x were the same
-    #object to start with, keep them that way
+    # Make sure we're dealing with a NumPy array. If y and x were the same
+    # object to start with, keep them that way
 
     x = np.asarray(x)
     if not same_data:
@@ -200,7 +200,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
         scaling_factor = 2.
     else:
         raise ValueError("sides must be one of: 'default', 'onesided', or "
-            "'twosided'")
+                         "'twosided'")
 
     # Matlab divides by the sampling frequency so that density function
     # has units of dB/Hz and can be integrated by the plotted frequency
@@ -210,8 +210,8 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
     windowVals = np.hanning(NFFT)
 
-    step = NFFT - noverlap
-    ind = np.arange(0, len(x) - NFFT + 1, step)
+    step = int(NFFT) - int(noverlap)
+    ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
     Pxy = np.zeros((numFreqs, n), np.complex_)
 

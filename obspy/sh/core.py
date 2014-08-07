@@ -8,11 +8,16 @@ SH bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
-from StringIO import StringIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import loadtxt
+
+import io
 import numpy as np
 import os
 
@@ -56,9 +61,9 @@ SH_IDX = {
 
 STANDARD_ASC_HEADERS = ['START', 'COMP', 'CHAN1', 'CHAN2', 'STATION', 'CALIB']
 
-SH_KEYS_INT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('I')]
-SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('R')]
-INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
+SH_KEYS_INT = [k for (k, v) in SH_IDX.items() if v.startswith('I')]
+SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.items() if v.startswith('R')]
+INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.items()])
 
 
 def isASC(filename):
@@ -77,16 +82,17 @@ def isASC(filename):
     """
     # first six chars should contain 'DELTA:'
     try:
-        temp = open(filename, 'rb').read(6)
+        with open(filename, 'rb') as f:
+            temp = f.read(6)
     except:
         return False
-    if temp != 'DELTA:':
+    if temp != b'DELTA:':
         return False
     return True
 
 
 def readASC(filename, headonly=False, skip=0, delta=None, length=None,
-                                                  **kwargs):  # @UnusedVariable
+            **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
 
@@ -103,10 +109,11 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     :param skip: Number of lines to be skipped from top of file. If defined
         only one trace is read from file.
     :type delta: float, optional
-    :param delta: If "skip" is used, "delta" defines sample offset in seconds.
+    :param delta: If ``skip`` is used, ``delta`` defines sample offset in
+        seconds.
     :type length: int, optional
-    :param length: If "skip" is used, "length" defines the number of values to
-        be read.
+    :param length: If ``skip`` is used, ``length`` defines the number of values
+        to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -126,19 +133,19 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     # read file and split text into channels
     channels = []
     headers = {}
-    data = StringIO()
+    data = io.StringIO()
     for line in fh.readlines()[skip:]:
         if line.isspace():
             # blank line
             # check if any data fetched yet
-            if len(headers) == 0 and data.len == 0:
+            if len(headers) == 0 and data.tell() == 0:
                 continue
             # append current channel
             data.seek(0)
             channels.append((headers, data))
             # create new channel
             headers = {}
-            data = StringIO()
+            data = io.StringIO()
             if skip:
                 # if skip is set only one trace is read, everything else makes
                 # no sense.
@@ -169,7 +176,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
         header['sh'] = {}
         channel = [' ', ' ', ' ']
         # generate headers
-        for key, value in headers.iteritems():
+        for key, value in headers.items():
             if key == 'DELTA':
                 header['delta'] = float(value)
             elif key == 'LENGTH':
@@ -203,7 +210,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = loadtxt(data, dtype='float32', ndlim=1)
+            data = loadtxt(data, dtype=np.float32, ndmin=1)
 
             # cut data if requested
             if skip and length:
@@ -237,7 +244,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
     :param included_headers: If set to a list, only these header entries will
         be written to file. DELTA and LENGTH are written in any case. If it's
         set to None, a basic set will be included.
-    :type custom_format: string, optional
+    :type custom_format: str, optional
     :param custom_format: Parameter for number formatting of samples, defaults
         to "%-.6e".
     :type append: bool, optional
@@ -246,44 +253,47 @@ def writeASC(stream, filename, included_headers=None, npl=4,
     if included_headers is None:
         included_headers = STANDARD_ASC_HEADERS
 
-    if append:
-        fh = open(filename, 'ab')
-    else:
-        fh = open(filename, 'wb')
+    sio = io.StringIO()
     for trace in stream:
         # write headers
-        fh.write("DELTA: %-.6e\n" % (trace.stats.delta))
-        fh.write("LENGTH: %d\n" % trace.stats.npts)
+        sio.write("DELTA: %-.6e\n" % (trace.stats.delta))
+        sio.write("LENGTH: %d\n" % trace.stats.npts)
         # additional headers
-        for key, value in trace.stats.get('sh', {}).iteritems():
+        for key, value in trace.stats.get('sh', {}).items():
             if included_headers and key not in included_headers:
                 continue
-            fh.write("%s: %s\n" % (key, value))
+            sio.write("%s: %s\n" % (key, value))
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
-            fh.write("START: %s\n" % fromUTCDateTime(dt))
+            sio.write("START: %s\n" % fromUTCDateTime(dt))
         # component must be split
         if len(trace.stats.channel) > 2 and "COMP" in included_headers:
-            fh.write("COMP: %c\n" % trace.stats.channel[2])
+            sio.write("COMP: %c\n" % trace.stats.channel[2])
         if len(trace.stats.channel) > 0 and "CHAN1" in included_headers:
-            fh.write("CHAN1: %c\n" % trace.stats.channel[0])
+            sio.write("CHAN1: %c\n" % trace.stats.channel[0])
         if len(trace.stats.channel) > 1 and "CHAN2" in included_headers:
-            fh.write("CHAN2: %c\n" % trace.stats.channel[1])
+            sio.write("CHAN2: %c\n" % trace.stats.channel[1])
         if "STATION" in included_headers:
-            fh.write("STATION: %s\n" % trace.stats.station)
+            sio.write("STATION: %s\n" % trace.stats.station)
         if "CALIB" in included_headers:
-            fh.write("CALIB: %-.6e\n" % (trace.stats.calib))
+            sio.write("CALIB: %-.6e\n" % (trace.stats.calib))
         # write data in npl columns
         mask = ([''] * (npl - 1)) + ['\n']
-        delimiter = mask * ((trace.stats.npts / npl) + 1)
+        delimiter = mask * ((trace.stats.npts // npl) + 1)
         delimiter = delimiter[:trace.stats.npts - 1]
         delimiter.append('\n')
         for (sample, delim) in zip(trace.data, delimiter):
             value = custom_format % (sample)
-            fh.write("%s %s" % (value, delim))
-        fh.write("\n")
-    fh.close()
+            sio.write("%s %s" % (value, delim))
+        sio.write("\n")
+    if append:
+        mode = 'ab'
+    else:
+        mode = 'wb'
+    with open(filename, mode=mode) as fh:
+        sio.seek(0)
+        fh.write(sio.read().encode('ascii', 'strict'))
 
 
 def isQ(filename):
@@ -302,10 +312,11 @@ def isQ(filename):
     """
     # file must start with magic number 43981
     try:
-        temp = open(filename, 'rb').read(5)
+        with open(filename, 'rb') as f:
+            temp = f.read(5)
     except:
         return False
-    if temp != '43981':
+    if temp != b'43981':
         return False
     return True
 
@@ -328,18 +339,19 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     :type data_directory: str, optional
     :param data_directory: Data directory where the corresponding QBN file can
         be found.
-    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
+    :type byteorder: str, optional
     :param byteorder: Enforce byte order for data file. This is important for
         Q files written in older versions of Seismic Handler, which don't
-        explicit state the `BYTEORDER` flag within the header file. Defaults
-        to ``'='`` (local byte order).
+        explicit state the `BYTEORDER` flag within the header file. Can be
+        little endian (``'<'``), big endian (``'>'``), or native byte order
+        (``'='``). Defaults to ``'='``.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
     Q files consists of two files per data set:
 
-     * a ASCII header file with file extension `QHD` and the
-     * binary data file with file extension `QBN`.
+    * a ASCII header file with file extension `QHD` and the
+    * binary data file with file extension `QBN`.
 
     The read method only accepts header files for the ``filename`` parameter.
     ObsPy assumes that the corresponding data file is within the same directory
@@ -376,7 +388,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     cmtlines = int(line[5:7]) - 1
     # comment lines
     comments = []
-    for _i in xrange(0, cmtlines):
+    for _i in range(0, cmtlines):
         comments += [fh.readline()]
     # trace lines
     traces = {}
@@ -453,13 +465,14 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
                 continue
             # read data
             data = fh_data.read(npts * 4)
-            dtype = byteorder + 'f4'
+            dtype = native_str(byteorder + 'f4')
             data = np.fromstring(data, dtype=dtype)
             # convert to system byte order
-            data = np.require(data, '=f4')
+            data = np.require(data, native_str('=f4'))
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
+    fh.close()
     return stream
 
 
@@ -480,9 +493,10 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     :type data_directory: str, optional
     :param data_directory: Data directory where the corresponding QBN will be
         written.
-    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
-    :param byteorder: Enforce byte order for data file. Defaults to ``'='``
-        (local byte order).
+    :type byteorder: str, optional
+    :param byteorder: Enforce byte order for data file. Can be little endian
+        (``'<'``), big endian (``'>'``), or native byte order (``'='``).
+        Defaults to ``'='``.
     :type append: bool, optional
     :param append: If filename exists append all data to file, default False.
     """
@@ -533,7 +547,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
         # special format for start time
         dt = trace.stats.starttime
         temp += "S021:%s~ " % fromUTCDateTime(dt)
-        for key, value in trace.stats.get('sh', {}).iteritems():
+        for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
@@ -549,20 +563,23 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     # first line: magic number, cmtlines, trclines
     # XXX: comment lines are ignored
     if not append:
-        fh.write("43981 1 %d\n" % minnol)
+        line = "43981 1 %d\n" % minnol
+        fh.write(line.encode('ascii', 'strict'))
 
     for i, trace in enumerate(stream):
         # write headers
         temp = [headers[i][j:j + 74] for j in range(0, len(headers[i]), 74)]
-        for j in xrange(0, minnol):
+        for j in range(0, minnol):
             try:
-                fh.write("%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j]))
+                line = "%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j])
+                fh.write(line.encode('ascii', 'strict'))
             except:
-                fh.write("%02d|\n" % ((i + 1 + count_offset) % 100))
+                line = "%02d|\n" % ((i + 1 + count_offset) % 100)
+                fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
-        dtype = byteorder + 'f4'
+        dtype = native_str(byteorder + 'f4')
         data = np.require(trace.data, dtype=dtype)
-        data.tofile(fh_data)
+        fh_data.write(data.data)
     fh.close()
     fh_data.close()
 
@@ -573,7 +590,7 @@ def toUTCDateTime(value):
 
     :type value: str
     :param value: A Date time string.
-    :return: Converted :class:`~obspy.core.UTCDateTime` object.
+    :return: Converted :class:`~obspy.core.utcdatetime.UTCDateTime` object.
 
     .. rubric:: Example
 
@@ -623,7 +640,7 @@ def fromUTCDateTime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
-    :type dt: :class:`~obspy.core.UTCDateTime`
+    :type dt: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param dt: A UTCDateTime object.
     :return: Converted date time string usable by Seismic Handler.
 
@@ -631,13 +648,13 @@ def fromUTCDateTime(dt):
 
     >>> from obspy import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
-    >>> fromUTCDateTime(dt)
-    ' 2-JAN-2008_03:04:05.123'
+    >>> print(fromUTCDateTime(dt))
+     2-JAN-2008_03:04:05.123
     """
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
-                        dt.minute, dt.second, dt.microsecond / 1000)
+                      dt.minute, dt.second, dt.microsecond / 1000)
 
 
 if __name__ == '__main__':

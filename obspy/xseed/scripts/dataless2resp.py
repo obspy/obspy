@@ -3,6 +3,9 @@
 """
 A command-line program that converts Dataless SEED into RESP files.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from glob import glob
 from obspy.xseed.parser import Parser
@@ -43,7 +46,7 @@ def dataless2resp(filename, options):
                 parser.writeRESP(folder=folder, zipped=True)
             else:
                 parser.writeRESP(folder=os.path.curdir, zipped=False)
-        except Exception, e:
+        except Exception as e:
             if options.debug:
                 raise
             msg = '\tError parsing file %s' % file + os.linesep

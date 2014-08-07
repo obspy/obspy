@@ -15,9 +15,6 @@ filter settings) and to validate and check the results the options `plot` and
 See the documentation of
 :func:`~obspy.signal.cross_correlation.xcorrPickCorrection` for more details.
 
-.. include:: xcorr_pick_correction.py
-   :literal:
-
 The example will print the time correction for pick 2 and the respective
 correlation coefficient and open a plot window for correlations on both the
 original and preprocessed data::
@@ -29,4 +26,5 @@ original and preprocessed data::
       Time correction for pick 2: -0.013025
       Correlation coefficient: 0.98
 
-.. plot:: source/tutorial/code_snippets/xcorr_pick_correction.py
+.. plot:: tutorial/code_snippets/xcorr_pick_correction.py
+   :include-source:

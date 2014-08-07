@@ -1,0 +1,96 @@
+
+2012/12/11
+An outline of the variations between FDSN-StationXML and SEED 2.4.
+
+This should not be considered complete but highlights the major differences.
+
+
+Features and content supported by SEED and not in FDSN-StationXML:
+
+* Dictionary and lookup reference blockettes, there are no such concepts
+ in FDSN-StationXML.
+
+* Data record blockettes, 100 and higher.  FDSN-StationXML does not include
+ anything that would be included in MiniSEED.
+
+* Event and time span indexing blockettes.  No event parameters and no
+ indexing relating to data records in files are contained in
+ FDSN-StationXML.
+
+* Comment code keys, class code and units of comment level (blockette 31
+ referenced by 51 and 59).  FDSN-StationXML contains comments but does not
+ retain these rather esoteric features.
+
+* Generic Response Blockette 56, a simple response defined by a list of
+ corner frequencies and corner slopes, documented as not acceptable on their
+ own and should be combined with other response blockettes.  This blockette
+ is not used by any metadata at the IRIS DMC, likely it is not widely used
+ or ever used at all.
+
+
+Features and content supported by FDSN StationXML and not in SEED:
+
+* Instead of the instrument identifier field of blockette 52,
+ FDSN-StationXML has structures at the Channel level for describing a
+ Sensor, Preamplifier and Datalogger with many details for each component
+ such as manufacturer, vendor, model, serial number, etc.
+
+* Uncertainties for latitude, longitude, elevation, depth, azimuth, dip
+ and frequency.
+
+* Start times and end times are allowed at the Network level, in addition
+ to the Station and Channel levels.  The start times are required but the
+ end times are optional, allowing for currently operating epochs.
+
+* Comments are allowed at the Network level, in addition to the Station and
+ Channel levels.
+
+* Optionally specify a sampling rate as a ratio in addition to a required
+ value in samples per second.
+
+* Name and description fields for each response filter type, similar to the
+ name field for blockette 61 but broadened to all response structures.
+
+* Station and Channel entries may contain an ExternalResource element to
+ indicate a URL to an external report or dataless or other relevant
+ documentation.
+
+* Station and Channel entries can contain CreationDate and TerminationDate
+ attributes.  These are independent of the start and end dates that define
+ the epoch.
+
+* A Station entry can include one or many Equipment elements to list the
+ equipment common to all channels at a station.
+
+* A Station entry can contain a Site element that includes: name,
+ description, town, county, region, country.
+
+* A Station entry can include Vault and Geology descriptions.
+
+* A Station entry can include one or many Operators.  Each Operator
+ designation can include an agency name, a web site and contact details.
+
+* A Contact element, used for Operators or comment Authors, can contain
+ name, agency, email and phone number.
+
+* A Comment can include an Author designation.
+
+* An alternateCode and historicalCode may be designated in addition to the
+ "code" for a Network, Station or Channel.
+
+* A generic description string is supported for Network, Station and Channel
+ elements.
+
+* The storage format can be denoted for Channels as a simple string
+ (e.g. SEED, V0, etc.)
+
+* The restriction status (open, closed or partial) can be denoted for a
+ Network, Station and Channel levels.
+
+* A resource identifier can be associated with Equipment and response filter
+ entries.  This can be used to identify equipment in an inventory system or
+ entries in a catalog of response filters.
+
+* Using a schema extension, the time series data availability can be
+ described for at the Network, Station and Channel levels.  Availability
+ can be described as either extents or a subset of spans.

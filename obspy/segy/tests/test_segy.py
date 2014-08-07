@@ -2,14 +2,18 @@
 """
 The obspy.segy test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from StringIO import StringIO
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
 from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile, \
     readSEGY
 from obspy.segy.tests.header import FILES, DTYPES
+
+import io
 import numpy as np
 import os
 import unittest
@@ -33,7 +37,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Tests the unpacking of various SEG Y files.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             data_format = attribs['data_sample_enc']
             endian = attribs['endian']
             count = attribs['sample_count']
@@ -43,8 +47,8 @@ class SEGYTestCase(unittest.TestCase):
                 # Jump to the beginning of the data.
                 f.seek(3840)
                 # Unpack the data.
-                data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[data_format](f,
-                                count, endian)
+                data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[data_format](
+                    f, count, endian)
             # Check the dtype of the data.
             self.assertEqual(data.dtype, self.dtypes[data_format])
             # Proven data values, read with Madagascar.
@@ -57,7 +61,7 @@ class SEGYTestCase(unittest.TestCase):
         Tests the packing of various SEG Y files.
         """
         # Loop over all files.
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             # Get some attributes.
             data_format = attribs['data_sample_enc']
             endian = attribs['endian']
@@ -76,7 +80,7 @@ class SEGYTestCase(unittest.TestCase):
                 f.seek(3200 + 400 + 240)
                 packed_data = f.read(count * size)
             # The pack functions all write to file objects.
-            f = StringIO()
+            f = io.BytesIO()
             # Pack the data.
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_format](f, data, endian)
             # Read again.0.
@@ -97,9 +101,9 @@ class SEGYTestCase(unittest.TestCase):
                 # Read the data as uint8 to be able to directly access the
                 # different bytes.
                 # Original data.
-                packed_data = np.fromstring(packed_data, 'uint8')
+                packed_data = np.fromstring(packed_data, np.uint8)
                 # Newly written.
-                new_packed_data = np.fromstring(new_packed_data, 'uint8')
+                new_packed_data = np.fromstring(new_packed_data, np.uint8)
 
                 # Figure out the non normalized fractions in the original data
                 # because these cannot be compared directly.
@@ -132,11 +136,11 @@ class SEGYTestCase(unittest.TestCase):
                 # to get 4 byte numbers.
                 packed_data_copy = packed_data.copy()
                 new_packed_data_copy = new_packed_data.copy()
-                packed_data_copy.dtype = 'int32'
-                new_packed_data_copy.dtype = 'int32'
+                packed_data_copy.dtype = np.int32
+                new_packed_data_copy.dtype = np.int32
                 # Equalize the non normalized parts.
                 packed_data_copy[non_normalized] = \
-                        new_packed_data_copy[non_normalized]
+                    new_packed_data_copy[non_normalized]
                 np.testing.assert_array_equal(packed_data_copy,
                                               new_packed_data_copy)
 
@@ -144,23 +148,23 @@ class SEGYTestCase(unittest.TestCase):
                 # same.
                 data = data[non_normalized]
                 # Unpack the data again.
-                new_packed_data.dtype = 'int32'
+                new_packed_data.dtype = np.int32
                 new_packed_data = new_packed_data[non_normalized]
                 length = len(new_packed_data)
-                f = StringIO()
+                f = io.BytesIO()
                 f.write(new_packed_data.tostring())
                 f.seek(0, 0)
-                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        length, endian)
+                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, length, endian)
                 f.close()
-                packed_data.dtype = 'int32'
+                packed_data.dtype = np.int32
                 packed_data = packed_data[non_normalized]
                 length = len(packed_data)
-                f = StringIO()
+                f = io.BytesIO()
                 f.write(packed_data.tostring())
                 f.seek(0, 0)
-                old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        length, endian)
+                old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, length, endian)
                 f.close()
                 # This works because the normalized and the non normalized IBM
                 # floating point numbers will be close enough for the internal
@@ -184,16 +188,16 @@ class SEGYTestCase(unittest.TestCase):
             data = 200000.0 * np.random.ranf(50000) - 100000.0
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
-                f = StringIO()
+                f = io.BytesIO()
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
-                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        len(data), endian)
+                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, len(data), endian)
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
@@ -214,16 +218,16 @@ class SEGYTestCase(unittest.TestCase):
             data = 1E-5 * np.random.ranf(50000)
             # Convert to float64 in case native floats are different to be
             # able to utilize double precision.
-            data = np.require(data, 'float64')
+            data = np.require(data, np.float64)
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
-                f = StringIO()
+                f = io.BytesIO()
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
-                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        len(data), endian)
+                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, len(data), endian)
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
@@ -237,22 +241,22 @@ class SEGYTestCase(unittest.TestCase):
         endians = ['>', '<']
         # Create the first 10 powers of 16.
         data = []
-        for i in xrange(10):
+        for i in range(10):
             data.append(16 ** i)
             data.append(-16 ** i)
         data = np.array(data)
         # Convert to float64 in case native floats are different to be
         # able to utilize double precision.
-        data = np.require(data, 'float64')
+        data = np.require(data, np.float64)
         # Loop over little and big endian.
         for endian in endians:
             # Pack.
-            f = StringIO()
+            f = io.BytesIO()
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
             # Jump to beginning and read again.
             f.seek(0, 0)
-            new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                    len(data), endian)
+            new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                f, len(data), endian)
             f.close()
             # Test both.
             np.testing.assert_array_equal(new_data, data)
@@ -261,7 +265,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing should not change the binary file header.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             endian = attribs['endian']
             file = os.path.join(self.path, file)
             # Read the file.
@@ -270,7 +274,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_header = f.read(400)
             header = SEGYBinaryFileHeader(header=org_header, endian=endian)
             # The header writes to a file like object.
-            new_header = StringIO()
+            new_header = io.BytesIO()
             header.write(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -283,27 +287,25 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing should not change the textual file header.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             endian = attribs['endian']
             header_enc = attribs['textual_header_enc']
             file = os.path.join(self.path, file)
             # Read the file.
-            f = open(file, 'rb')
-            org_header = f.read(3200)
-            f.seek(0, 0)
-            # Initialize an empty SEGY object and set certain attributes.
-            segy = SEGYFile()
-            segy.endian = endian
-            segy.file = f
-            segy.textual_header_encoding = None
-            # Read the textual header.
-            segy._readTextualHeader()
-            # Assert the encoding and compare with known values.
-            self.assertEqual(segy.textual_header_encoding, header_enc)
-            # Close the file.
-            f.close()
+            with open(file, 'rb') as f:
+                org_header = f.read(3200)
+                f.seek(0, 0)
+                # Initialize an empty SEGY object and set certain attributes.
+                segy = SEGYFile()
+                segy.endian = endian
+                segy.file = f
+                segy.textual_header_encoding = None
+                # Read the textual header.
+                segy._readTextualHeader()
+                # Assert the encoding and compare with known values.
+                self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
-            new_header = StringIO()
+            new_header = io.BytesIO()
             segy._writeTextualHeader(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -316,7 +318,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing should not change the trace header.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             endian = attribs['endian']
             file = os.path.join(self.path, file)
             # Read the file.
@@ -325,7 +327,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_header = f.read(240)
             header = SEGYTraceHeader(header=org_header, endian=endian)
             # The header writes to a file like object.
-            new_header = StringIO()
+            new_header = io.BytesIO()
             header.write(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -338,19 +340,19 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing again should not change a file.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             file = os.path.join(self.path, file)
             non_normalized_samples = attribs['non_normalized_samples']
             # Read the file.
             with open(file, 'rb') as f:
                 org_data = f.read()
             segy_file = readSEGY(file, headonly=headonly)
-            out_file = NamedTemporaryFile().name
-            segy_file.write(out_file)
-            # Read the new file again.
-            with open(out_file, 'rb') as f:
-                new_data = f.read()
-            os.remove(out_file)
+            with NamedTemporaryFile() as tf:
+                out_file = tf.name
+                segy_file.write(out_file)
+                # Read the new file again.
+                with open(out_file, 'rb') as f:
+                    new_data = f.read()
             # The two files should have the same length.
             self.assertEqual(len(org_data), len(new_data))
             # Replace the not normalized samples. The not normalized
@@ -358,17 +360,17 @@ class SEGYTestCase(unittest.TestCase):
             # tested again here.
             if len(non_normalized_samples) != 0:
                 # Convert to 4 byte integers. Any 4 byte numbers work.
-                org_data = np.fromstring(org_data, 'int32')
-                new_data = np.fromstring(new_data, 'int32')
+                org_data = np.fromstring(org_data, np.int32)
+                new_data = np.fromstring(new_data, np.int32)
                 # Skip the header (4*960 bytes) and replace the non normalized
                 # data samples.
                 org_data[960:][non_normalized_samples] = \
-                        new_data[960:][non_normalized_samples]
+                    new_data[960:][non_normalized_samples]
                 # Create strings again.
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
             # Always write the SEGY File revision number!
-            #org_data[3500:3502] = new_data[3500:3502]
+            # org_data[3500:3502] = new_data[3500:3502]
             # Test the identity without the SEGY revision number
             self.assertEqual(org_data[:3500], new_data[:3500])
             self.assertEqual(org_data[3502:], new_data[3502:])
@@ -394,13 +396,14 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.number_of_data_traces_per_ensemble, 24)
         self.assertEqual(header.number_of_auxiliary_traces_per_ensemble, 0)
         self.assertEqual(header.sample_interval_in_microseconds, 250)
-        self.assertEqual( \
+        self.assertEqual(
             header.sample_interval_in_microseconds_of_original_field_recording,
-                         250)
+            250)
         self.assertEqual(header.number_of_samples_per_data_trace, 8000)
-        self.assertEqual( \
-          header.number_of_samples_per_data_trace_for_original_field_recording,
-                         8000)
+        self.assertEqual(
+            header.
+            number_of_samples_per_data_trace_for_original_field_recording,
+            8000)
         self.assertEqual(header.data_sample_format_code, 2)
         self.assertEqual(header.ensemble_fold, 0)
         self.assertEqual(header.trace_sorting_code, 1)
@@ -419,9 +422,9 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.measurement_system, 0)
         self.assertEqual(header.impulse_signal_polarity, 0)
         self.assertEqual(header.vibratory_polarity_code, 0)
-        self.assertEqual( \
-             header.number_of_3200_byte_ext_file_header_records_following,
-                         0)
+        self.assertEqual(
+            header.number_of_3200_byte_ext_file_header_records_following,
+            0)
 
     def test_unpackTraceHeader(self):
         """
@@ -436,19 +439,20 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.trace_sequence_number_within_segy_file, 0)
         self.assertEqual(header.original_field_record_number, 1)
         self.assertEqual(header.trace_number_within_the_original_field_record,
-                        1)
+                         1)
         self.assertEqual(header.energy_source_point_number, 0)
         self.assertEqual(header.ensemble_number, 0)
         self.assertEqual(header.trace_number_within_the_ensemble, 0)
         self.assertEqual(header.trace_identification_code, 1)
-        self.assertEqual( \
+        self.assertEqual(
             header.number_of_vertically_summed_traces_yielding_this_trace,
-                         5)
-        self.assertEqual( \
+            5)
+        self.assertEqual(
             header.number_of_horizontally_stacked_traces_yielding_this_trace,
-                         0)
+            0)
         self.assertEqual(header.data_use, 0)
-        self.assertEqual(getattr(header, 'distance_from_center_of_the_' + \
+        self.assertEqual(getattr(
+            header, 'distance_from_center_of_the_' +
             'source_point_to_the_center_of_the_receiver_group'), 0)
         self.assertEqual(header.receiver_group_elevation, 0)
         self.assertEqual(header.surface_elevation_at_source, 0)
@@ -457,7 +461,7 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.datum_elevation_at_source, 0)
         self.assertEqual(header.water_depth_at_source, 0)
         self.assertEqual(header.water_depth_at_group, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.scalar_to_be_applied_to_all_elevations_and_depths, -100)
         self.assertEqual(header.scalar_to_be_applied_to_all_coordinates, -100)
         self.assertEqual(header.source_coordinate_x, 0)
@@ -505,23 +509,23 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.second_of_minute, 54)
         self.assertEqual(header.time_basis_code, 0)
         self.assertEqual(header.trace_weighting_factor, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.geophone_group_number_of_roll_switch_position_one, 2)
         self.assertEqual(header.geophone_group_number_of_trace_number_one, 2)
         self.assertEqual(header.geophone_group_number_of_last_trace, 0)
         self.assertEqual(header.gap_size, 0)
         self.assertEqual(header.over_travel_associated_with_taper, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.x_coordinate_of_ensemble_position_of_this_trace, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.y_coordinate_of_ensemble_position_of_this_trace, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.for_3d_poststack_data_this_field_is_for_in_line_number, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.for_3d_poststack_data_this_field_is_for_cross_line_number,
-                         0)
+            0)
         self.assertEqual(header.shotpoint_number, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.scalar_to_be_applied_to_the_shotpoint_number, 0)
         self.assertEqual(header.trace_value_measurement_unit, 0)
         self.assertEqual(header.transduction_constant_mantissa, 0)
@@ -536,34 +540,39 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.source_measurement_exponent, 0)
         self.assertEqual(header.source_measurement_unit, 0)
 
-    def test_readStringIO(self):
+    def test_readBytesIO(self):
         """
-        Tests reading from StringIO instances.
+        Tests reading from BytesIO instances.
         """
         # 1
         file = os.path.join(self.path, 'example.y_first_trace')
-        data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        with open(file, 'rb') as f:
+            data = f.read()
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 500)
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
-        data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        with open(file, 'rb') as f:
+            data = f.read()
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2050)
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
-        data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        with open(file, 'rb') as f:
+            data = f.read()
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
-        data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        with open(file, 'rb') as f:
+            data = f.read()
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2001)
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
-        data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        with open(file, 'rb') as f:
+            data = f.read()
+        st = readSEGY(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
 
 

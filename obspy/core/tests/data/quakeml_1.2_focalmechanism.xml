@@ -6,7 +6,9 @@
       <focalMechanism publicID="smi:ISC/fmid=292309">
         <waveformID networkCode="BW" stationCode="FUR"
           >smi:ch.ethz.sed/waveform/201754</waveformID>
-        <triggeringOriginID>smi:originId=7680412</triggeringOriginID>
+        <waveformID networkCode="BW" stationCode="MANZ"
+          >smi:ch.ethz.sed/waveform/201755</waveformID>
+        <triggeringOriginID>smi:local/originId=7680412</triggeringOriginID>
         <azimuthalGap>0.123</azimuthalGap>
         <stationPolarityCount>987</stationPolarityCount>
         <misfit>1.234</misfit>
@@ -60,7 +62,7 @@
           </pAxis>
         </principalAxes>
         <methodID>smi:ISC/methodID=Best_double_couple</methodID>
-        <momentTensor>
+        <momentTensor publicID="smi:ISC/mtid=123321">
           <derivedOriginID>smi:ISC/origid=13145006</derivedOriginID>
           <scalarMoment>
             <value>1.1e+18</value>
@@ -101,7 +103,7 @@
           <agencyURI>smi:smi-registry/organization/MUH</agencyURI>
           <author>Erika Mustermann</author>
           <authorURI>smi:smi-registry/organization/MUH</authorURI>
-          <creationTime>2012-04-04T16:40:50+00:00</creationTime>
+          <creationTime>2012-04-04T16:40:50.000000Z</creationTime>
           <version>1.0.1</version>
         </creationInfo>
       </focalMechanism>
@@ -155,7 +157,7 @@
           </pAxis>
         </principalAxes>
         <methodID>smi:ISC/methodID=Best_double_couple</methodID>
-        <momentTensor>
+        <momentTensor publicID="smi:ISC/mtid=123456">
           <derivedOriginID>smi:ISC/origid=13145007</derivedOriginID>
           <scalarMoment>
             <value>1.1e+18</value>

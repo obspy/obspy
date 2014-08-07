@@ -2,6 +2,9 @@
 """
 The seisan.core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
@@ -24,11 +27,13 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1 - big endian, 32 bit
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
-        data = open(file, 'rb').read(80 * 12)
+        with open(file, 'rb') as fp:
+            data = fp.read(80 * 12)
         self.assertEqual(_getVersion(data), ('>', 32, 7))
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
-        data = open(file, 'rb').read(80 * 12)
+        with open(file, 'rb') as fp:
+            data = fp.read(80 * 12)
         self.assertEqual(_getVersion(data), ('<', 32, 7))
 
     def test_isSEISAN(self):
@@ -67,7 +72,7 @@ class CoreTestCase(unittest.TestCase):
         # XXX: extracted ASCII file contains less values than the original
         # Seisan file!
         self.assertEqual(list(st1[20].data[0:3665]),
-                         list(np.fromfile(datafile, dtype=int, sep=' ')))
+                         np.loadtxt(datafile, dtype=np.int32).tolist())
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         st2 = readSEISAN(file)

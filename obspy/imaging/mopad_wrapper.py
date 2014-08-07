@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-#-----------------------------------------------
+# -----------------------------------------------
 # Filename: mopad_wrapper.py
 #  Purpose: Wrapper for mopad
 #   Author: Tobias Megies, Moritz Beyreuther
 #    Email: megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 ObsPy Development Team
-#-----------------------------------------------
+# -----------------------------------------------
 """
 ObsPy wrapper to the *Moment tensor Plotting and Decomposition tool* (MoPaD)
 written by Lars Krieger and Sebastian Heimann.
@@ -20,12 +20,16 @@ written by Lars Krieger and Sebastian Heimann.
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from matplotlib import patches, collections
+from matplotlib import patches, transforms
+import matplotlib.collections as mpl_collections
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
 from obspy.imaging.scripts.mopad import epsilon
@@ -49,7 +53,7 @@ KWARG_MAP = {
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          zorder=100, mopad_basis='USE'):
+          zorder=100, mopad_basis='USE', axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection). Based on MoPaD.
@@ -87,6 +91,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param mopad_basis: The basis system. Defaults to ``'USE'``. See the
         `Supported Basis Systems`_ section below for a full list of supported
         systems.
+    :type axes: :class:`matplotlib.axes.Axes`
+    :param axes: Used to make beach balls circular on non-scaled axes. Also
+        maintains the aspect ratio when resizing the figure. Will not add
+        the returned collection to the axes instance.
 
     .. rubric:: _`Supported Basis Systems`
 
@@ -164,8 +172,21 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     # transform the patches to a path collection and set
     # the appropriate attributes
-    collection = collections.PatchCollection(coll, match_original=False)
+    collection = mpl_collections.PatchCollection(coll, match_original=False)
     collection.set_facecolors(fc)
+    # Use the given axes to maintain the aspect ratio of beachballs on figure
+    # resize.
+    if axes is not None:
+        # This is what holds the aspect ratio (but breaks the positioning)
+        collection.set_transform(transforms.IdentityTransform())
+        # Next is a dirty hack to fix the positioning:
+        # 1. Need to bring the all patches to the origin (0, 0).
+        for p in collection._paths:
+            p.vertices -= xy
+        # 2. Then use the offset property of the collection.ection to
+        # position the patches
+        collection.set_offsets(xy)
+        collection._transOffset = axes.transData
     collection.set_edgecolors(edgecolor)
     collection.set_alpha(alpha)
     collection.set_linewidth(linewidth)
@@ -281,7 +302,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
                 mopad_kwargs['plot_outfile'].split(".")[-1]
         else:
             # append file format if not already at end of outfile
-            if not mopad_kwargs['plot_outfile'].endswith(\
+            if not mopad_kwargs['plot_outfile'].endswith(
                mopad_kwargs['plot_outfile_format']):
                 mopad_kwargs['plot_outfile'] += "." + \
                     mopad_kwargs['plot_outfile_format']

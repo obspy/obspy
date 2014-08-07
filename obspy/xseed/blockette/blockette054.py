@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, FixedString, Loop
@@ -59,52 +62,56 @@ class Blockette054(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+               +----------------------------------------' + \
-        '---+                 +\n' + \
-        '#\t\t+               |   Response (Coefficients),' + \
-        '%6s ch %s   |                 +\n' % (station, channel) + \
-        '#\t\t+               +----------------------------------------' + \
-        '---+                 +\n' + \
-        '#\t\t\n' + \
-        'B054F03     Transfer function type:                %s\n' \
-                % self.response_type + \
-        'B054F04     Stage sequence number:                 %s\n' \
-                % self.stage_sequence_number + \
-        'B054F05     Response in units lookup:              %s\n'\
-            % Blockette34Lookup(abbreviations, self.signal_input_units) + \
-        'B054F06     Response out units lookup:             %s\n'\
-            % Blockette34Lookup(abbreviations, self.signal_output_units) + \
-        'B054F07     Number of numerators:                  %s\n' \
+            '#\t\t+               +----------------------------------------' +\
+            '---+                 +\n' + \
+            '#\t\t+               |   Response (Coefficients),' + \
+            '%6s ch %s   |                 +\n' % (station, channel) + \
+            '#\t\t+               +----------------------------------------' +\
+            '---+                 +\n' + \
+            '#\t\t\n' + \
+            'B054F03     Transfer function type:                %s\n' \
+            % self.response_type + \
+            'B054F04     Stage sequence number:                 %s\n' \
+            % self.stage_sequence_number + \
+            'B054F05     Response in units lookup:              %s\n'\
+            % Blockette34Lookup(abbreviations, self.signal_input_units) +\
+            'B054F06     Response out units lookup:             %s\n'\
+            % Blockette34Lookup(abbreviations, self.signal_output_units) +\
+            'B054F07     Number of numerators:                  %s\n' \
             % self.number_of_numerators + \
-        'B054F10     Number of denominators:                %s\n' \
+            'B054F10     Number of denominators:                %s\n' \
             % self.number_of_denominators
         if self.number_of_numerators:
             string += \
-                    '#\t\tNumerator coefficients:\n' + \
-                    '#\t\t  i, coefficient,  error\n'
+                '#\t\tNumerator coefficients:\n' + \
+                '#\t\t  i, coefficient,  error\n'
             if self.number_of_numerators > 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_numerators):
-                    string += 'B054F08-09  %3s %13s %13s\n' % (_i,
+                    string += 'B054F08-09  %3s %13s %13s\n' % (
+                        _i,
                         formatRESP(self.numerator_coefficient[_i], 6),
                         formatRESP(self.numerator_error[_i], 6))
             else:
-                string += 'B054F08-09  %3s %13s %13s\n' % (0,
-                        formatRESP(self.numerator_coefficient, 6),
-                        formatRESP(self.numerator_error, 6))
+                string += 'B054F08-09  %3s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.numerator_coefficient, 6),
+                    formatRESP(self.numerator_error, 6))
         if self.number_of_denominators:
             string += \
-                    '#\t\tDenominator coefficients:\n' + \
-                    '#\t\t i, coefficient, error\n'
+                '#\t\tDenominator coefficients:\n' + \
+                '#\t\t i, coefficient, error\n'
             if self.number_of_denominators > 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_numerators):
-                    string += 'B054F11-12  %3s %13s %13s\n' % (_i,
+                    string += 'B054F11-12  %3s %13s %13s\n' % (
+                        _i,
                         formatRESP(self.denominator_coefficient[_i], 6),
                         formatRESP(self.denominator_error[_i], 6))
             else:
-                string += 'B054F11-12  %3s %13s %13s\n' % (0,
-                        formatRESP(self.denominator_coefficient, 6),
-                        formatRESP(self.denominator_error, 6))
+                string += 'B054F11-12  %3s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.denominator_coefficient, 6),
+                    formatRESP(self.denominator_error, 6))
         string += '#\t\t\n'
-        return string
+        return string.encode()

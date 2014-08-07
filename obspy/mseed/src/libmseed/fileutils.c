@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified: 2011.129
+ * modified: 2013.117
  ***************************************************************************/
 
 #include <stdio.h>
@@ -98,7 +98,7 @@ MSFileParam gMSFileParam = {NULL, "", NULL, 0, 0, 0, 0, 0, 0, 0};
  * further description of arguments.
  *********************************************************************/
 int
-ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *fpos,
+ms_readmsr (MSRecord **ppmsr, const char *msfile, int reclen, off_t *fpos,
 	    int *last, flag skipnotdata, flag dataflag, flag verbose)
 {
   MSFileParam *msfp = &gMSFileParam;
@@ -120,7 +120,7 @@ ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *fpos,
  * further description of arguments.
  *********************************************************************/
 int
-ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile,
+ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
 	      int reclen, off_t *fpos, int *last, flag skipnotdata,
 	      flag dataflag, flag verbose)
 {
@@ -220,7 +220,7 @@ ms_shift_msfp (MSFileParam *msfp, int shift)
  * NULL.
  *********************************************************************/
 int
-ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile,
+ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, const char *msfile,
 		 int reclen, off_t *fpos, int *last, flag skipnotdata,
 		 flag dataflag, Selections *selections, flag verbose)
 {
@@ -722,7 +722,7 @@ ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile,
  * and further description of arguments.
  *********************************************************************/
 int
-ms_readtraces (MSTraceGroup **ppmstg, char *msfile, int reclen,
+ms_readtraces (MSTraceGroup **ppmstg, const char *msfile, int reclen,
 	       double timetol, double sampratetol, flag dataquality,
 	       flag skipnotdata, flag dataflag, flag verbose)
 {
@@ -743,7 +743,7 @@ ms_readtraces (MSTraceGroup **ppmstg, char *msfile, int reclen,
  * and further description of arguments.
  *********************************************************************/
 int
-ms_readtraces_timewin (MSTraceGroup **ppmstg, char *msfile, int reclen,
+ms_readtraces_timewin (MSTraceGroup **ppmstg, const char *msfile, int reclen,
 		       double timetol, double sampratetol,
 		       hptime_t starttime, hptime_t endtime, flag dataquality,
 		       flag skipnotdata, flag dataflag, flag verbose)
@@ -784,8 +784,8 @@ ms_readtraces_timewin (MSTraceGroup **ppmstg, char *msfile, int reclen,
  * in libmseed.h).
  *********************************************************************/
 int
-ms_readtraces_selection (MSTraceGroup **ppmstg, char *msfile, int reclen,
-			 double timetol, double sampratetol,
+ms_readtraces_selection (MSTraceGroup **ppmstg, const char *msfile,
+			 int reclen, double timetol, double sampratetol,
 			 Selections *selections, flag dataquality,
 			 flag skipnotdata, flag dataflag, flag verbose)
 {
@@ -848,7 +848,7 @@ ms_readtraces_selection (MSTraceGroup **ppmstg, char *msfile, int reclen,
  * values and further description of arguments.
  *********************************************************************/
 int
-ms_readtracelist (MSTraceList **ppmstl, char *msfile, int reclen,
+ms_readtracelist (MSTraceList **ppmstl, const char *msfile, int reclen,
 		  double timetol, double sampratetol, flag dataquality,
 		  flag skipnotdata, flag dataflag, flag verbose)
 {
@@ -869,8 +869,8 @@ ms_readtracelist (MSTraceList **ppmstl, char *msfile, int reclen,
  * and further description of arguments.
  *********************************************************************/
 int
-ms_readtracelist_timewin (MSTraceList **ppmstl, char *msfile, int reclen,
-			  double timetol, double sampratetol,
+ms_readtracelist_timewin (MSTraceList **ppmstl, const char *msfile,
+			  int reclen, double timetol, double sampratetol,
 			  hptime_t starttime, hptime_t endtime, flag dataquality,
 			  flag skipnotdata, flag dataflag, flag verbose)
 {
@@ -910,8 +910,8 @@ ms_readtracelist_timewin (MSTraceList **ppmstl, char *msfile, int reclen,
  * in libmseed.h).
  *********************************************************************/
 int
-ms_readtracelist_selection (MSTraceList **ppmstl, char *msfile, int reclen,
-			    double timetol, double sampratetol,
+ms_readtracelist_selection (MSTraceList **ppmstl, const char *msfile,
+			    int reclen, double timetol, double sampratetol,
 			    Selections *selections, flag dataquality,
 			    flag skipnotdata, flag dataflag, flag verbose)
 {
@@ -1017,8 +1017,8 @@ ms_record_handler_int (char *record, int reclen, void *ofp)
  * Returns the number of records written on success and -1 on error.
  ***************************************************************************/
 int
-msr_writemseed ( MSRecord *msr, char *msfile, flag overwrite, int reclen,
-		 flag encoding, flag byteorder, flag verbose )
+msr_writemseed ( MSRecord *msr, const char *msfile, flag overwrite,
+		 int reclen, flag encoding, flag byteorder, flag verbose )
 {
   FILE *ofp;
   char srcname[50];
@@ -1072,8 +1072,8 @@ msr_writemseed ( MSRecord *msr, char *msfile, flag overwrite, int reclen,
  * Returns the number of records written on success and -1 on error.
  ***************************************************************************/
 int
-mst_writemseed ( MSTrace *mst, char *msfile, flag overwrite, int reclen,
-		 flag encoding, flag byteorder, flag verbose )
+mst_writemseed ( MSTrace *mst, const char *msfile, flag overwrite,
+		 int reclen, flag encoding, flag byteorder, flag verbose )
 {
   FILE *ofp;
   char srcname[50];
@@ -1124,7 +1124,7 @@ mst_writemseed ( MSTrace *mst, char *msfile, flag overwrite, int reclen,
  * Returns the number of records written on success and -1 on error.
  ***************************************************************************/
 int
-mst_writemseedgroup ( MSTraceGroup *mstg, char *msfile, flag overwrite,
+mst_writemseedgroup ( MSTraceGroup *mstg, const char *msfile, flag overwrite,
 		      int reclen, flag encoding, flag byteorder, flag verbose )
 {
   MSTrace *mst;

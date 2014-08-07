@@ -3,8 +3,13 @@
 Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.segy import pack, unpack
+
+import numpy as np
 
 
 # The format of the 400 byte long binary file header.
@@ -60,7 +65,7 @@ TRACE_HEADER_FORMAT = [
     [2, 'number_of_horizontally_stacked_traces_yielding_this_trace', False,
      32],
     [2, 'data_use', False, 34],
-    [4, 'distance_from_center_of_the_source_point_to_' + \
+    [4, 'distance_from_center_of_the_source_point_to_' +
      'the_center_of_the_receiver_group', False, 36],
     [4, 'receiver_group_elevation', False, 40],
     [4, 'surface_elevation_at_source', False, 44],
@@ -196,10 +201,10 @@ DATA_SAMPLE_FORMAT_SAMPLE_SIZE = {
 
 # Map the data format sample code and the corresponding dtype.
 DATA_SAMPLE_FORMAT_CODE_DTYPE = {
-    1: 'float32',
-    2: 'int32',
-    3: 'int16',
-    5: 'float32'}
+    1: np.float32,
+    2: np.int32,
+    3: np.int16,
+    5: np.float32}
 
 # Map the endianness to bigger/smaller sign.
 ENDIAN = {

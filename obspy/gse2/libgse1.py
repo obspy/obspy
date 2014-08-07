@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: libgse1.py
 #  Purpose: Python wrapper for reading GSE1 files
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 """
 Low-level module internally used for handling GSE1 files
 
@@ -16,6 +16,9 @@ Low-level module internally used for handling GSE1 files
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
 from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum
@@ -32,13 +35,13 @@ def read(fh, verify_chksum=True):
     for correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
 
-    :type fh: File Pointer
+    :type fh: file
     :param fh: Open file pointer of GSE1 file to read, opened in binary mode,
         e.g. fh = open('myfile','rb')
-    :type verify_chksum: Bool
+    :type verify_chksum: bool
     :param verify_chksum: If True verify Checksum and raise Exception if not
         correct
-    :rtype: Dictionary, Numpy.ndarray int32
+    :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     header = readHeader(fh)
@@ -60,13 +63,19 @@ def readIntegerData(fh, npts):
     Reads npts points of uncompressed integers from given file handler.
     """
     # find next DAT1 section within file
-    buf = fh.readline()
-    while buf:
-        if buf.startswith("DAT1"):
-            data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
-            break
+    data = []
+    in_data_section = False
+
+    while len(data) < npts:
         buf = fh.readline()
-    return data
+        if buf.startswith(b"DAT1"):
+            in_data_section = True
+            continue
+        if not in_data_section:
+            continue
+        data.extend(buf.strip().split(b" "))
+
+    return np.array(data, dtype=np.int32)
 
 
 def readHeader(fh):
@@ -79,11 +88,11 @@ def readHeader(fh):
     # search for WID1 field
     line = fh.readline()
     while line:
-        if line.startswith("WID1"):
+        if line.startswith(b"WID1"):
             # valid GSE1 header
             break
         line = fh.readline()
-    if line == '':
+    else:
         raise EOFError
     # fetch header
     header = {}
@@ -102,7 +111,9 @@ def readHeader(fh):
     header['npts'] = int(line[27:35])
     header['station'] = line[36:42].strip()
     header['gse1']['instype'] = line[43:51].strip()
-    header['channel'] = "%03s" % line[52:54].strip().upper()
+    _chan = line[52:54].strip()
+    _chan = "%03s" % _chan.decode().upper()
+    header['channel'] = _chan.encode('ascii', 'strict')
     header['sampling_rate'] = float(line[55:66])
     header['gse1']['type'] = line[67:73].strip()
     header['gse1']['datatype'] = line[74:78].strip()
@@ -119,7 +130,11 @@ def readHeader(fh):
     header['gse1']['unknown2'] = float(line[66:73])
     header['gse1']['unknown3'] = float(line[74:81])
     header['gse1']['unknown4'] = float(line[74:80])
-    return header
+    # Py3k: convert to unicode
+    header['gse1'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                          for k, v in header['gse1'].items())
+    return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                for k, v in header.items())
 
 
 if __name__ == '__main__':

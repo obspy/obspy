@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, Loop
@@ -46,28 +49,28 @@ class Blockette055(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                     +---------------------------------+' + \
-        '                     +\n' + \
-        '#\t\t+                     |   Response List,%6s ch %s   |' + \
-        '                     +\n' % (station, channel) + \
-        '#\t\t+                     +---------------------------------+' + \
-        '                     +\n' + \
-        '#\t\t\n' + \
-        'B055F03     Stage sequence number:                 %s\n' \
-                % self.stage_sequence_number + \
-        'B055F04     Response in units lookup:              %s\n' \
-                % Blockette34Lookup(abbreviations, self.stage_input_units) + \
-        'B055F05     Response out units lookup:             %s\n' \
-                % Blockette34Lookup(abbreviations, self.stage_output_units) + \
-        'B055F06     Number of responses:                   %s\n' \
-                % self.number_of_responses_listed
+            '#\t\t+                     +---------------------------------+' +\
+            '                     +\n' + \
+            '#\t\t+                     |   Response List,%6s ch %s   |' + \
+            '                     +\n' % (station, channel) + \
+            '#\t\t+                     +---------------------------------+' +\
+            '                     +\n' + \
+            '#\t\t\n' + \
+            'B055F03     Stage sequence number:                 %s\n' \
+            % self.stage_sequence_number + \
+            'B055F04     Response in units lookup:              %s\n' \
+            % Blockette34Lookup(abbreviations, self.stage_input_units) + \
+            'B055F05     Response out units lookup:             %s\n' \
+            % Blockette34Lookup(abbreviations, self.stage_output_units) + \
+            'B055F06     Number of responses:                   %s\n' \
+            % self.number_of_responses_listed
         if self.number_of_responses_listed:
             string += \
                 '#\t\tResponses:\n' + \
                 '#\t\t  frequency\t amplitude\t amp error\t    ' + \
                 'phase\t phase error\n'
             if self.number_of_responses_listed > 1:
-                for _i in xrange(self.number_of_responses_listed):
+                for _i in range(self.number_of_responses_listed):
                     string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
                         (formatRESP(self.frequency[_i], 6),
                          formatRESP(self.amplitude[_i], 6),

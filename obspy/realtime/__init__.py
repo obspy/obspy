@@ -4,10 +4,10 @@ obspy.realtime - Real time support for ObsPy
 ============================================
 
 The obspy.realtime package extends the ObsPy core classes with real time
-functionalities.
+functionality.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
+    The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -19,6 +19,10 @@ Mitigation" under the European Community's Seventh Framework Programme
 activities of the JRA2/WP12 "Tools for real-time seismology, acquisition and
 mining".
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.realtime.rtmemory import RtMemory
 from obspy.realtime.rttrace import RtTrace
 

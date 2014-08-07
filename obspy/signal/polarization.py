@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# ------------------------------------------------------------------
 # Filename: polarization.py
 #   Author: Conny Hammer,Joachim Wassermann
 #    Email: conny.hammer@geo.uni-potsdam.de,j.wassermann@lmu.de
 #
 # Copyright (C) 2008-2012 Conny Hammer, 2013 Joachim Wassermann
-#-------------------------------------------------------------------
 """
 Polarization Analysis
 
@@ -15,6 +15,11 @@ Polarization Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+from scipy import signal
 import math
 import warnings
 import numpy as np
@@ -34,11 +39,11 @@ def eigval(datax, datay, dataz, fk, normf=1):
     parameter ``fk`` describes the coefficients of the used polynomial. The
     values of ``fk`` depend on the order of the derivative you want to
     calculate. If you do not want to use derivatives you can simply
-    use [1,1,1,1,1] for ``fk``.
+    use [1, 1, 1, 1, 1] for ``fk``.
 
-    The algorithm is mainly based on the paper by Jurkevics. The rest is just
-    the numerical differentiation by central differences (carried out by the
-    routine :func:`scipy.signal.lfilter(data, 1, fk)`).
+    The algorithm is mainly based on the paper by [Jurkevics1988]_. The rest is
+    just the numerical differentiation by central differences (carried out by
+    the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
     :type datax: :class:`~numpy.ndarray`
     :param datax: Data of x component.
@@ -54,18 +59,16 @@ def eigval(datax, datay, dataz, fk, normf=1):
         dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
         time derivative of rectilinearity, Time derivative of planarity.
-
-    .. seealso:: [Jurkevics1988]_
     """
     covmat = np.zeros([3, 3])
-    leigenv1 = np.zeros(datax.shape[0], dtype='float64')
-    leigenv2 = np.zeros(datax.shape[0], dtype='float64')
-    leigenv3 = np.zeros(datax.shape[0], dtype='float64')
-    dleigenv = np.zeros([datax.shape[0], 3], dtype='float64')
-    rect = np.zeros(datax.shape[0], dtype='float64')
-    plan = np.zeros(datax.shape[0], dtype='float64')
+    leigenv1 = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv2 = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv3 = np.zeros(datax.shape[0], dtype=np.float64)
+    dleigenv = np.zeros([datax.shape[0], 3], dtype=np.float64)
+    rect = np.zeros(datax.shape[0], dtype=np.float64)
+    plan = np.zeros(datax.shape[0], dtype=np.float64)
     i = 0
-    for i in xrange(datax.shape[0]):
+    for i in range(datax.shape[0]):
         covmat[0][0] = np.cov(datax[i, :], rowvar=False)
         covmat[0][1] = covmat[1][0] = np.cov(datax[i, :], datay[i, :],
                                              rowvar=False)[0, 1]
@@ -92,8 +95,8 @@ def eigval(datax, datay, dataz, fk, normf=1):
                              (np.size(fk) // 2))
     dleigenv1 = signal.lfilter(fk, 1, leigenv1_add)
     dleigenv[:, 0] = dleigenv1[len(fk) - 1:]
-    #dleigenv1 = dleigenv1[np.size(fk) // 2:(np.size(dleigenv1) - np.size(fk) /
-    #        2)]
+    # dleigenv1 = dleigenv1[np.size(fk) // 2:(np.size(dleigenv1) -
+    #        np.size(fk) / 2)]
 
     leigenv2_add = np.append(np.append([leigenv2[0]] * (np.size(fk) // 2),
                                        leigenv2),
@@ -101,8 +104,8 @@ def eigval(datax, datay, dataz, fk, normf=1):
                              (np.size(fk) // 2))
     dleigenv2 = signal.lfilter(fk, 1, leigenv2_add)
     dleigenv[:, 1] = dleigenv2[len(fk) - 1:]
-    #dleigenv2 = dleigenv2[np.size(fk) // 2:(np.size(dleigenv2) - np.size(fk) /
-    #        2)]
+    # dleigenv2 = dleigenv2[np.size(fk) // 2:(np.size(dleigenv2) -
+    #        np.size(fk) / 2)]
 
     leigenv3_add = np.append(np.append([leigenv3[0]] * (np.size(fk) // 2),
                                        leigenv3),
@@ -110,20 +113,20 @@ def eigval(datax, datay, dataz, fk, normf=1):
                              (np.size(fk) // 2))
     dleigenv3 = signal.lfilter(fk, 1, leigenv3_add)
     dleigenv[:, 2] = dleigenv3[len(fk) - 1:]
-    #dleigenv3 = dleigenv3[np.size(fk) // 2:(np.size(dleigenv3) - np.size(fk) /
-    #        2)]
+    # dleigenv3 = dleigenv3[np.size(fk) // 2:(np.size(dleigenv3) -
+    #        np.size(fk) / 2)]
 
     rect_add = np.append(np.append([rect[0]] * (np.size(fk) // 2), rect),
                          [rect[np.size(rect) - 1]] * (np.size(fk) // 2))
     drect = signal.lfilter(fk, 1, rect_add)
     drect = drect[len(fk) - 1:]
-    #drect = drect[np.size(fk) // 2:(np.size(drect3) - np.size(fk) // 2)]
+    # drect = drect[np.size(fk) // 2:(np.size(drect3) - np.size(fk) // 2)]
 
     plan_add = np.append(np.append([plan[0]] * (np.size(fk) // 2), plan),
                          [plan[np.size(plan) - 1]] * (np.size(fk) // 2))
     dplan = signal.lfilter(fk, 1, plan_add)
     dplan = dplan[len(fk) - 1:]
-    #dplan = dplan[np.size(fk) // 2:(np.size(dplan) - np.size(fk) // 2)]
+    # dplan = dplan[np.size(fk) // 2:(np.size(dplan) - np.size(fk) // 2)]
 
     return leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect, dplan
 

@@ -1,13 +1,51 @@
-# We pretend to be erlang because we can't use the python support in travis-ci
-# see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
-language: erlang
+language: python
+python:
+  - 2.6
+  - 2.7
+  - 3.3
+  - 3.4
 before_install:
-  - lsb_release -a  # get info on the operating system
-  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
-  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
+  - lsb_release -a # get info on the operating system
+  - sudo apt-get update
+  - sudo apt-get install -qq gfortran
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
+  - pip install wheel
+  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy scipy suds-jurko lxml sqlalchemy m2crypto mock nose
+  - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
+  - pip install --use-mirrors geographiclib
+  - pip install --use-mirrors suds-jurko
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib==1.3.1
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
+  - pip install --use-mirrors flake8
+  - pip install --use-mirrors future
+  # current pyimgur stable release has a py2.6 incompatibility
+  - pip install https://github.com/megies/PyImgur/archive/py26.zip
+  - pip freeze
 install:
-  - sudo python setup.py -q install
+  - git version
+  - git fetch origin --tags --unshallow
+  - git remote add obspy git://github.com/obspy/obspy.git
+  - git fetch obspy --tags
+  - git status
+  - pip install --no-deps --use-mirrors .
+  - git status
 script:
-  - sudo obspy-runtests -n travis-ci -r
+  # We change directories to make sure that python won't find the copy
+  # of obspy in the source directory, see
+  # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
+  - mkdir empty
+  - cd empty
+  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
+  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r
+after_success:
+  - mv .coverage ../.coverage.empty
+  - cd ..
+  - coverage combine
+  - coveralls
 notifications:
     email: false
+env:
+  global:
+    - secure: "qZzgI89uD606mP/l2IDLFmocZ8YFhXRngtWR1wroirhodKzdg89Qax8+UxkdmAyYKgl4+mLA8ZYMpHtojO2l2v96cOJemf/vhdp3Y+HnIURVwoPnPGXCFdC5SlQe6GB+zGqP7EBSRnsib8aexnHY7WFZAb+DOgpKi2gLs2AZeQo="

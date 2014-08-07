@@ -2,6 +2,11 @@
 """
 The obspy.realtime.rttrace test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
 from obspy import Trace
 from obspy.core.stream import read
 from obspy.realtime import RtTrace
@@ -160,7 +165,7 @@ class RtTraceTestCase(unittest.TestCase):
         Test for not using float32.
         """
         tr = read()[0]
-        tr.data = np.require(tr.data, dtype='>f4')
+        tr.data = np.require(tr.data, dtype=native_str('>f4'))
         traces = tr / 3
         rtr = RtTrace()
         for trace in traces:

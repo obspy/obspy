@@ -3,6 +3,9 @@
 """
 The hoctavbands.core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.signal import hoctavbands, util
 from scipy import signal
@@ -28,9 +31,9 @@ class HoctavbandsTestCase(unittest.TestCase):
         f = open(file)
         data = np.loadtxt(f)
         f.close()
-        #self.path = os.path.dirname(__file__)
-        #self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
-        #data = np.loadtxt("MBGA_Z.ASC")
+        # self.path = os.path.dirname(__file__)
+        # self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
+        # data = np.loadtxt("MBGA_Z.ASC")
         self.n = 256
         self.fs = 75
         self.smoothie = 3
@@ -38,50 +41,50 @@ class HoctavbandsTestCase(unittest.TestCase):
         self.inc = int(0.05 * self.fs)
         self.fc1 = 0.68
         self.nofb = 8
-        #[0] Time (k*inc)
-        #[1] A_norm
-        #[2] dA_norm
-        #[3] dAsum
-        #[4] dA2sum
-        #[5] ct
-        #[6] dct
-        #[7] omega
-        #[8] domega
-        #[9] sigma
-        #[10] dsigma
-        #[11] logcep
-        #[12] logcep
-        #[13] logcep
-        #[14] dperiod
-        #[15] ddperiod
-        #[16] bwith
-        #[17] dbwith
-        #[18] cfreq
-        #[19] dcfreq
-        #[20] hob1
-        #[21] hob2
-        #[22] hob3
-        #[23] hob4
-        #[24] hob5
-        #[25] hob6
-        #[26] hob7
-        #[27] hob8
-        #[28] phi12
-        #[29] dphi12
-        #[30] phi13
-        #[31] dphi13
-        #[32] phi23
-        #[33] dphi23
-        #[34] lv_h1
-        #[35] lv_h2
-        #[36] lv_h3
-        #[37] dlv_h1
-        #[38] dlv_h2
-        #[39] dlv_h3
-        #[40] rect
-        #[41] drect
-        #[42] plan
-        #[43] dplan
+        # [0] Time (k*inc)
+        # [1] A_norm
+        # [2] dA_norm
+        # [3] dAsum
+        # [4] dA2sum
+        # [5] ct
+        # [6] dct
+        # [7] omega
+        # [8] domega
+        # [9] sigma
+        # [10] dsigma
+        # [11] logcep
+        # [12] logcep
+        # [13] logcep
+        # [14] dperiod
+        # [15] ddperiod
+        # [16] bwith
+        # [17] dbwith
+        # [18] cfreq
+        # [19] dcfreq
+        # [20] hob1
+        # [21] hob2
+        # [22] hob3
+        # [23] hob4
+        # [24] hob5
+        # [25] hob6
+        # [26] hob7
+        # [27] hob8
+        # [28] phi12
+        # [29] dphi12
+        # [30] phi13
+        # [31] dphi13
+        # [32] phi23
+        # [33] dphi23
+        # [34] lv_h1
+        # [35] lv_h2
+        # [36] lv_h3
+        # [37] dlv_h1
+        # [38] dlv_h2
+        # [39] dlv_h3
+        # [40] rect
+        # [41] drect
+        # [42] plan
+        # [43] dplan
         self.data_win, self.nwin, self.no_win = \
             util.enframe(data, signal.hamming(self.n), self.inc)
 

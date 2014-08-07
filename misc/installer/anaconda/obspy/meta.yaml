@@ -1,0 +1,71 @@
+package:
+  name: obspy
+  version: !!str 0.9.0
+
+source:
+  fn: obspy-0.9.0.zip
+  url: https://pypi.python.org/packages/source/o/obspy/obspy-0.9.0.zip
+  md5: f720f675e66e8b2b6518e41b9ab9ada4
+#  patches:
+   # List any patch files here
+   # - fix.patch
+
+build:
+  preserve_egg_dir: True
+  #entry_points:
+    # Put any entry points (scripts to be generated automatically) here. The
+    # syntax is module:function.  For example
+    #
+    # - obspy = obspy:main
+    #
+    # Would create an entry point called obspy that calls obspy.main()
+
+
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  # number: 1
+
+requirements:
+  build:
+    - python
+    - numpy
+    - setuptools
+    - suds
+    - scipy
+    - matplotlib
+    - lxml
+    - future
+    - sqlalchemy
+    - nose
+    - mock
+    - flake8
+
+  run:
+    - python
+    - numpy
+    - setuptools
+    - suds
+    - scipy
+    - matplotlib
+    - lxml
+    - future
+    - sqlalchemy
+    - nose
+    - mock
+    - flake8
+
+test:
+  # Python imports
+  imports:
+    - obspy
+
+  commands:
+    - obspy-runtests -d
+
+about:
+  home: http://www.obspy.org
+  license: GNU Library or Lesser General Public License (LGPL)
+
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml

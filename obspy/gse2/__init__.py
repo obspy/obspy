@@ -35,7 +35,7 @@ behavior of reading the file:
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st) #doctest: +NORMALIZE_WHITESPACE
 1 Trace(s) in Stream:
-.RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z
+.RJOB..Z | 2005-08-31T02:33:49.850000Z - 2005-08-31T02:34:49.845000Z
 | 200.0 Hz, 12000 samples
 
 The format will be determined automatically. Each trace (multiple 'WID2'
@@ -44,21 +44,33 @@ containing the usual information. When reading a GSE2 file it will have one
 additional attribute named ``gse2``. This attribute contains all GSE2 specific
 attributes:
 
+>>> gse2 = st[0].stats.pop('gse2')
 >>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
          network:
          station: RJOB
         location:
          channel: Z
-       starttime: 2005-08-31T02:33:49.849998Z
-         endtime: 2005-08-31T02:34:49.844998Z
+       starttime: 2005-08-31T02:33:49.850000Z
+         endtime: 2005-08-31T02:34:49.845000Z
    sampling_rate: 200.0
            delta: 0.005
             npts: 12000
-           calib: 0.0948999971151
+           calib: 0.0949
          _format: GSE2
-            gse2: AttribDict({'instype': '      ', 'datatype': 'CM6',
-                              'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0,
-                              'calper': 1.0})
+
+>>> for k, v in sorted(gse2.items()):
+...     print(k, v) #doctest: +NORMALIZE_WHITESPACE
+auxid RJOB
+calper 1.0
+coordsys
+datatype CM6
+edepth -0.999
+elev -0.999
+hang -1.0
+instype
+lat -99.0
+lon -999.0
+vang -1.0
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.
@@ -74,6 +86,9 @@ You may export the data to the file system using the
 
 >>> st.write('GSE2-filename.gse', format='GSE2') #doctest: +SKIP
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

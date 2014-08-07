@@ -14,12 +14,13 @@ create big endian Mini-SEED records (header and data).
 Reading MiniSEED - how libmseed determines the byte order of a record:
 
 The byte order of a record header including blockettes is determined
-by checking if the record start year is a sane value (e.g. between 1920
-and 2020).  The byte order of encoded data samples is determined by the
-byte order flag in the Blockette 1000, if a Blockette 1000 is not
-present the byte order is assumed to be the same as the header.  To
-force the byte order determination of either the header or data section
-of a record the following environment variables can be set:
+by checking if the record start year and day is a sane value (e.g. year
+between 1900 and 2100 and day between 1 and 366).  The byte order of
+encoded data samples is determined by the byte order flag in the
+Blockette 1000, if a Blockette 1000 is not present the byte order is
+assumed to be the same as the header.  To force the byte order
+determination of either the header or data section of a record the
+following environment variables can be set:
 
 UNPACK_HEADER_BYTEORDER
 UNPACK_DATA_BYTEORDER
@@ -47,10 +48,8 @@ These variables should be set to either 0 (little endian) or 1 (big
 endian).  A programmatic equivalent of setting these environment
 variables is provided via the following macros:
 
-.nf
 MS_PACKHEADERBYTEORDER(X)
 MS_PACKDATABYTEORDER(X)
-.fi
 
 
 Note that some interpretations of the SEED 2.4 format imply that

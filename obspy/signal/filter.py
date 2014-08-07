@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# ------------------------------------------------------------------
 # Filename: filter.py
 #  Purpose: Various Seismogram Filtering Functions
 #   Author: Tobias Megies, Moritz Beyreuther, Yannik Behr
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2009 Tobias Megies, Moritz Beyreuther, Yannik Behr
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Various Seismogram Filtering Functions
 
@@ -16,6 +17,9 @@ Various Seismogram Filtering Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import warnings
 from numpy import array, where, fft
@@ -28,16 +32,20 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandpass Filter.
 
-    Filter data from ``freqmin`` to ``freqmax`` using ``corners`` corners.
+    Filter data from ``freqmin`` to ``freqmax`` using ``corners``
+    corners.
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
-        This results in twice the number of corners but zero phase shift in
+        This results in twice the filter order but zero phase shift in
         the resulting filtered trace.
     :return: Filtered data.
     """
@@ -68,13 +76,15 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
 
     Filter data removing data between frequencies ``freqmin`` and ``freqmax``
     using ``corners`` corners.
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freqmin: Stop band low corner frequency.
     :param freqmax: Stop band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -107,12 +117,14 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -141,12 +153,14 @@ def highpass(data, freq, df, corners=4, zerophase=False):
 
     Filter data removing data below certain frequency ``freq`` using
     ``corners`` corners.
+    The filter uses :func:`scipy.signal.iirfilter` (for design)
+    and :func:`scipy.signal.lfilter` (for applying the filter).
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's
-        filter sections
+    :param corners: Filter corners / order.
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
         the resulting filtered trace.
@@ -176,7 +190,8 @@ def envelope(data):
     and then taking the square-root. (See [Kanasewich1981]_)
     The envelope at the start/end should not be taken too seriously.
 
-    :param data: Data to make envelope of, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to make envelope of.
     :return: Envelope of input data.
     """
     hilb = hilbert(data)
@@ -190,7 +205,8 @@ def remezFIR(data, freqmin, freqmax, df):
 
     .. warning:: This is experimental code. Use with caution!
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freqmin: Low corner frequency.
     :param freqmax: High corner frequency.
     :param df: Sampling rate in Hz.
@@ -198,7 +214,7 @@ def remezFIR(data, freqmin, freqmax, df):
 
     Finite impulse response (FIR) filter whose transfer function minimizes
     the maximum error between the desired gain and the realized gain in the
-    specified bands using the remez exchange algorithm.
+    specified bands using the Remez exchange algorithm.
 
     .. versionadded:: 0.6.2
     """
@@ -264,7 +280,8 @@ def lowpassFIR(data, freq, df, winlen=2048):
 
     Filter data by passing data only below a certain frequency.
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: Data below this frequency pass.
     :param df: Sampling rate in Hz.
     :param winlen: Window length for filter in samples, must be power of 2;
@@ -306,6 +323,7 @@ def integerDecimation(data, decimation_factor):
     lowpass filter beforehand!
     New sampling rate is old sampling rate divided by decimation_factor.
 
+    :type data: numpy.ndarray
     :param data: Data to filter.
     :param decimation_factor: Integer decimation factor
     :return: Downsampled data (array length: old length / decimation_factor)
@@ -332,7 +350,8 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
     band frequency is determined dynamically, such that the
     values above the stop band frequency are lower than -96dB.
 
-    :param data: Data to filter, type numpy.ndarray.
+    :type data: numpy.ndarray
+    :param data: Data to filter.
     :param freq: The frequency above which signals are attenuated
         with 95 dB
     :param df: Sampling rate in Hz.
@@ -347,7 +366,7 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
     # rp - maximum ripple of passband, rs - attenuation of stopband
     rp, rs, order = 1, 96, 1e99
     ws = freq / nyquist  # stop band frequency
-    wp = ws              # pass band frequency
+    wp = ws  # pass band frequency
     # raise for some bad scenarios
     if ws > 1:
         ws = 1.0

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer
@@ -62,4 +65,4 @@ class Blockette057(Blockette):
                       self.decimation_offset,
                       formatRESP(self.estimated_delay, 6),
                       formatRESP(self.correction_applied, 6))
-        return out
+        return out.encode()

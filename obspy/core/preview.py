@@ -8,6 +8,11 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
 from copy import copy
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
@@ -23,9 +28,9 @@ def createPreview(trace, delta=60):
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
 
-    :type delta: integer, optional
+    :type delta: int, optional
     :param delta: Difference between two preview points. Defaults to ``60``.
-    :rtype: :class:`~obspy.core.Trace`
+    :rtype: :class:`~obspy.core.trace.Trace`
     :return: New Trace object.
 
     This method will modify the original Trace object. Create a copy of the
@@ -41,7 +46,7 @@ def createPreview(trace, delta=60):
     if samples_per_slice < 1:
         raise ValueError('samples_per_slice is less than 0 - skipping')
     # minimum and maximum of samples before a static time marker
-    start = (delta - start_time % delta) * int(trace.stats.sampling_rate)
+    start = int((delta - start_time % delta) * int(trace.stats.sampling_rate))
     start_time = start_time - start_time % delta
     if start > (delta / 2) and data[0:start].size:
         first_diff = [data[0:start].max() - data[0:start].min()]
@@ -69,7 +74,7 @@ def createPreview(trace, delta=60):
     if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)
     data = np.concatenate([first_diff, diff, last_diff])
-    data = np.require(data, dtype="float32")
+    data = np.require(data, dtype=np.float32)
     tr = Trace(data=data, header=trace.stats)
     tr.stats.delta = delta
     tr.stats.npts = len(data)
@@ -83,9 +88,9 @@ def mergePreviews(stream):
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
 
-    :type stream: :class:`~obspy.core.Stream`
+    :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: Stream object to be merged
-    :rtype: :class:`~obspy.core.Stream`
+    :rtype: :class:`~obspy.core.stream.Stream`
     :return: Merged Stream object.
     """
     copied_traces = copy(stream.traces)
@@ -122,7 +127,7 @@ def mergePreviews(stream):
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = set([str(tr.data.dtype) for tr in value])
+        dtypes = set([native_str(tr.data.dtype) for tr in value])
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)
@@ -130,7 +135,7 @@ def mergePreviews(stream):
         # Get the minimum start and maximum endtime for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
-        samples = (max_endtime - min_starttime) / delta + 1
+        samples = int(round((max_endtime - min_starttime) / delta)) + 1
         data = np.empty(samples, dtype=dtype)
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
@@ -154,7 +159,7 @@ def resamplePreview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
-    :type trace: :class:`~obspy.core.Trace`
+    :type trace: :class:`~obspy.core.trace.Trace`
     :param trace: Trace object to be resampled.
     :type samples: int
     :param samples: Desired number of samples.
@@ -198,9 +203,9 @@ def resamplePreview(trace, samples, method='accurate'):
         return 0
     # Fast method.
     if method == 'fast':
-        trace.data = trace.data[:int(npts / samples) * samples]
-        trace.data = trace.data.reshape(samples, len(trace.data) // samples)
-        trace.data = trace.data.max(axis=1)
+        data = trace.data[:int(npts / samples) * samples]
+        data = data.reshape(samples, len(data) // samples)
+        trace.data = data.max(axis=1)
         # Set new sampling rate.
         trace.stats.delta = (endtime - trace.stats.starttime) / \
             float(samples - 1)
@@ -210,7 +215,7 @@ def resamplePreview(trace, samples, method='accurate'):
     elif method == 'accurate':
         new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
-        for _i in xrange(samples):
+        for _i in range(samples):
             new_data[_i] = trace.data[int(_i * step):
                                       int((_i + 1) * step)].max()
         trace.data = new_data

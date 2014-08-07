@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Purpose: Core classes of ObsPy: Python for Seismological Observatories
 #   Author: Robert Barsch
 #           Moritz Beyreuther
@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2008-2012 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 obspy.core - Core classes of ObsPy
 ==================================
@@ -25,8 +25,11 @@ files.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
+Waveform Data
+-------------
+
 Summary
--------
+^^^^^^^
 Seismograms of various formats (e.g. SAC, MiniSEED, GSE2, SEISAN, Q, etc.) can
 be imported into a :class:`~obspy.core.stream.Stream` object using the
 :func:`~obspy.core.stream.read` function.
@@ -41,9 +44,14 @@ which contains all meta information in a dict-like
 :class:`~obspy.core.trace.Stats` object. Both attributes ``starttime`` and
 ``endtime`` of the Stats object are
 :class:`~obspy.core.utcdatetime.UTCDateTime` objects.
+A multitude of helper methods are attached to
+:class:`~obspy.core.stream.Stream` and :class:`~obspy.core.trace.Trace` objects
+for handling and modifying the waveform data.
+
+.. figure:: /_images/Stream_Trace.png
 
 Example
--------
+^^^^^^^
 A :class:`~obspy.core.stream.Stream` with an example seismogram can be created
 by calling :func:`~obspy.core.stream.read()` without any arguments.
 Local files can be read by specifying the filename, files stored on http
@@ -63,7 +71,7 @@ BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 >>> tr.data
 array([ 0.        ,  0.00694644,  0.07597424, ...,  1.93449584,
         0.98196204,  0.44196924])
->>> print tr.stats  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+>>> print(tr.stats)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
          network: BW
          station: RJOB
         location:
@@ -78,8 +86,21 @@ array([ 0.        ,  0.00694644,  0.07597424, ...,  1.93449584,
 >>> tr.stats.starttime
 UTCDateTime(2009, 8, 24, 0, 20, 3)
 
+Event Metadata
+--------------
+
+Event metadata are handled in a hierarchy of classes closely modelled after the
+de-facto standard format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
+See the IPython notebooks mentioned in the :ref:`ObsPy Tutorial <tutorial>` for
+more detailed usage examples.
+
+.. figure:: /_images/Event.png
+
 .. _NumPy: http://docs.scipy.org
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime

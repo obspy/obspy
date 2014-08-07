@@ -17,13 +17,14 @@
        ~geodetics.gps2DistAzimuth
        ~geodetics.kilometer2degrees
        ~geodetics.locations2degrees
+       ~geodetics.FlinnEngdahl
        ~misc.BAND_CODE
        ~misc.complexifyString
        ~misc.guessDelta
        ~misc.scoreatpercentile
        ~misc.toIntOrZero
-       ~types.OrderedDict
-       ~types.Enum
+       ~obspy_types.OrderedDict
+       ~obspy_types.Enum
 
 
     .. comment to end block
@@ -39,7 +40,10 @@
        decorator
        geodetics
        misc
-       types
+       obspy_types
+       testing
+       xmlwrapper
+       version
 
     .. comment to end block
 

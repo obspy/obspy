@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import unittest
 
 from obspy.core import AttribDict
-import unittest
 
 
 class AttribDictTestCase(unittest.TestCase):
@@ -18,7 +22,7 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via pop
         temp = ad.pop('test')
-        self.assertEquals(temp, 1)
+        self.assertEqual(temp, 1)
         self.assertFalse('test' in ad)
         self.assertTrue('test2' in ad)
         self.assertFalse('test' in ad.__dict__)
@@ -36,7 +40,7 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via popitem
         temp = ad.popitem()
-        self.assertEquals(temp, ('test2', 'test'))
+        self.assertEqual(temp, ('test2', 'test'))
         self.assertFalse('test2' in ad)
         self.assertFalse('test2' in ad.__dict__)
         self.assertFalse(hasattr(ad, 'test2'))
@@ -205,7 +209,7 @@ class AttribDictTestCase(unittest.TestCase):
         """
         # one dict works as expected
         ad = AttribDict({'test': 1})
-        self.assertEquals(ad.test, 1)
+        self.assertEqual(ad.test, 1)
         # multiple dicts results into TypeError
         self.assertRaises(TypeError, AttribDict, {}, {})
         self.assertRaises(TypeError, AttribDict, {}, {}, blah=1)
@@ -228,7 +232,11 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getattr__('test', 'blub'), 'NEW')
         # should raise KeyError without default item
         self.assertRaises(KeyError, ad.__getitem__, 'xxx')
-        self.assertRaises(KeyError, ad.__getattr__, 'xxx')
+        self.assertRaises(AttributeError, ad.__getattr__, 'xxx')
+        # 2
+        ad2 = AttribDict(defaults={'test2': 'NEW'})
+        self.assertEqual(ad2.__getitem__('test2'), 'NEW')
+        self.assertRaises(KeyError, ad2.__getitem__, 'xxx')
 
     def test_set_readonly(self):
         """
@@ -239,7 +247,7 @@ class AttribDictTestCase(unittest.TestCase):
             defaults = {'test': 1}
 
         ad = MyAttribDict()
-        self.assertEquals(ad.test, 1)
+        self.assertEqual(ad.test, 1)
         self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
 
     def test_deepcopy(self):
@@ -252,8 +260,8 @@ class AttribDictTestCase(unittest.TestCase):
         ad = MyAttribDict()
         ad.muh = 2
         ad2 = ad.__deepcopy__()
-        self.assertEquals(ad2.test, 1)
-        self.assertEquals(ad2.muh, 2)
+        self.assertEqual(ad2.test, 1)
+        self.assertEqual(ad2.muh, 2)
 
     def test_compare_with_dict(self):
         """
@@ -261,8 +269,25 @@ class AttribDictTestCase(unittest.TestCase):
         """
         adict = {'test': 1}
         ad = AttribDict(adict)
-        self.assertEquals(ad, adict)
-        self.assertEquals(adict, ad)
+        self.assertEqual(ad, adict)
+        self.assertEqual(adict, ad)
+
+    def test_pretty_str(self):
+        """
+        Test _pretty_str method of AttribDict.
+        """
+        # 1
+        ad = AttribDict({'test1': 1, 'test2': 2})
+        out = '           test1: 1\n           test2: 2'
+        self.assertEqual(ad._pretty_str(), out)
+        # 2
+        ad = AttribDict({'test1': 1, 'test2': 2})
+        out = '           test2: 2\n           test1: 1'
+        self.assertEqual(ad._pretty_str(priorized_keys=['test2']), out)
+        # 3
+        ad = AttribDict({'test1': 1, 'test2': 2})
+        out = ' test1: 1\n test2: 2'
+        self.assertEqual(ad._pretty_str(min_label_length=6), out)
 
 
 def suite():

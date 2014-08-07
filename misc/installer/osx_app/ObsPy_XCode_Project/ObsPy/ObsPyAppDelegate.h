@@ -35,6 +35,7 @@
 @property (nonatomic, retain) ApplicationDataModel * dataModel;
 
 - (IBAction)launchIpython:(id)pId;
+- (IBAction)launchIpythonNotebook:(id)pId;
 - (IBAction)runQuickTest:(id)pId;
 - (IBAction)runObsPyTests:(id)pId;
 - (IBAction)runNumpyTests:(id)pId;

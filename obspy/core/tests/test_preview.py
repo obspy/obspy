@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.preview import createPreview, mergePreviews, resamplePreview
@@ -91,9 +94,9 @@ class UtilTestCase(unittest.TestCase):
         st = Stream(traces=[tr1, tr2])
         self.assertRaises(Exception, mergePreviews, st)
         # Different data types should raise.
-        tr1 = Trace(data=np.empty(10, dtype='int32'))
+        tr1 = Trace(data=np.empty(10, dtype=np.int32))
         tr1.stats.preview = True
-        tr2 = Trace(data=np.empty(10, dtype='float64'))
+        tr2 = Trace(data=np.empty(10, dtype=np.float64))
         tr2.stats.preview = True
         st = Stream(traces=[tr1, tr2])
         self.assertRaises(Exception, mergePreviews, st)

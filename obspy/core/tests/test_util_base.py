@@ -1,18 +1,43 @@
 # -*- coding: utf-8 -*-
-from obspy.core.util.base import getMatplotlibVersion
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.testing import ImageComparison, \
+    ImageComparisonException, HAS_COMPARE_IMAGE
+from obspy.core.util.decorator import skipIf
+import os
 import unittest
+import shutil
+
+
+# checking for matplotlib
+try:
+    import matplotlib  # @UnusedImport
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
+
+def image_comparison_in_function(path, img_basename, img_to_compare):
+    """
+    This is just used to wrap an image comparison to check if it raises or not.
+    """
+    with ImageComparison(path, img_basename) as ic:
+        shutil.copy(img_to_compare, ic.name)
 
 
 class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
     """
+    @skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_getMatplotlibVersion(self):
         """
         Tests for the getMatplotlibVersion() function as it continues to cause
         problems.
         """
-        import matplotlib
         original_version = matplotlib.__version__
 
         matplotlib.__version__ = "1.2.3"
@@ -36,6 +61,58 @@ class UtilBaseTestCase(unittest.TestCase):
 
         # Set it to the original version str just in case.
         matplotlib.__version__ = original_version
+
+    def test_NamedTemporaryFile_ContextManager(self):
+        """
+        Tests the automatic closing/deleting of NamedTemporaryFile using the
+        context manager.
+        """
+        content = b"burn after writing"
+        # write something to tempfile and check closing/deletion afterwards
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            tf.write(content)
+        self.assertFalse(os.path.exists(filename))
+        # write something to tempfile and check that it is written correctly
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            tf.write(content)
+            tf.close()
+            with open(filename, 'rb') as fh:
+                tmp_content = fh.read()
+        self.assertEqual(content, tmp_content)
+        self.assertFalse(os.path.exists(filename))
+        # check that closing/deletion works even when nothing is done with file
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+        self.assertFalse(os.path.exists(filename))
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_image_comparison(self):
+        """
+        Tests the image comparison mechanism with an expected fail and an
+        expected passing test.
+        Also tests that temporary files are deleted after both passing and
+        failing tests.
+        """
+        path = os.path.join(os.path.dirname(__file__), "images")
+        img_basename = "image.png"
+        img_ok = os.path.join(path, "image_ok.png")
+        img_fail = os.path.join(path, "image_fail.png")
+
+        # image comparison that should pass
+        with ImageComparison(path, img_basename) as ic:
+            shutil.copy(img_ok, ic.name)
+            self.assertTrue(os.path.exists(ic.name))
+        # check that temp file is deleted
+        self.assertFalse(os.path.exists(ic.name))
+
+        # image comparison that should raise
+        self.assertRaises(ImageComparisonException,
+                          image_comparison_in_function, path, img_basename,
+                          img_fail)
+        # check that temp file is deleted
+        self.assertFalse(os.path.exists(ic.name))
 
 
 def suite():

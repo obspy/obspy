@@ -1,3 +1,7 @@
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy.core.util import Enum
 
 OriginUncertaintyDescription = Enum([
@@ -95,6 +99,7 @@ MomentTensorCategory = Enum([
 ])
 
 EventType = Enum([
+    "not existing",
     "not reported",
     "earthquake",
     "anthropogenic event",
@@ -138,7 +143,7 @@ EventType = Enum([
     "rockslide",
     "meteorite",
     "volcanic eruption",
-])
+], replace={'other': 'other event'})
 
 EventTypeCertainty = Enum([
     "known",

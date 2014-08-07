@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-#--------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------
 # Filename: cpxtrace.py
 #   Author: Conny Hammer
 #    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 """
 Complex Trace Analysis
 
@@ -15,12 +16,15 @@ Complex Trace Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from numpy import size, pi
 from scipy import signal
 from scipy.integrate import cumtrapz
 import numpy as np
-import util
+from . import util
 
 
 def envelope(data):
@@ -40,8 +44,8 @@ def envelope(data):
         input data.
     """
     nfft = util.nextpow2(data.shape[size(data.shape) - 1])
-    A_cpx = np.zeros((data.shape), dtype='complex64')
-    A_abs = np.zeros((data.shape), dtype='float64')
+    A_cpx = np.zeros((data.shape), dtype=np.complex64)
+    A_abs = np.zeros((data.shape), dtype=np.float64)
     if (np.size(data.shape) > 1):
         i = 0
         for row in data:
@@ -79,19 +83,16 @@ def normEnvelope(data, fs, smoothie, fk):
     fs = float(fs)
     if (size(x[1].shape) > 1):
         i = 0
-        Anorm = np.zeros(x[1].shape[0], dtype='float64')
+        Anorm = np.zeros(x[1].shape[0], dtype=np.float64)
         for row in x[1]:
             A_win_smooth = util.smooth(row, int(np.floor(len(row) / 3)))
             # Differentiation of original signal, dA/dt
-            #A_win_add = append(append([row[0]]*(size(fk)/2),row),
-            #                      [row[size(row)-1]]*(size(fk)/2))
             # Better, because faster, calculation of A_win_add
             A_win_add = np.hstack(([A_win_smooth[0]] * (size(fk) // 2),
                                    A_win_smooth,
-                                   [A_win_smooth[size(A_win_smooth) - 1]] * \
+                                   [A_win_smooth[size(A_win_smooth) - 1]] *
                                    (size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
-            #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             # correct start and end values of time derivative
             t = t[size(fk) - 1:size(t)]
             A_win_smooth[A_win_smooth < 1] = 1
@@ -102,33 +103,28 @@ def normEnvelope(data, fs, smoothie, fk):
             t_ = np.concatenate((t_[0:1], t_))
             Anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
             i = i + 1
-        #Anorm = util.smooth(Anorm,smoothie)
-        #Anorm_add = np.append(np.append([Anorm[0]] * (size(fk) // 2), Anorm),
-        #                      [Anorm[size(Anorm) - 1]] * (size(fk) // 2))
         # faster alternative to calculate Anorm_add
-        Anorm_add = np.hstack(([Anorm[0]] * (np.size(fk) // 2), Anorm, \
-                  [Anorm[np.size(Anorm) - 1]] * (np.size(fk) // 2)))
+        Anorm_add = np.hstack(
+            ([Anorm[0]] * (np.size(fk) // 2), Anorm,
+             [Anorm[np.size(Anorm) - 1]] * (np.size(fk) // 2)))
         dAnorm = signal.lfilter(fk, 1, Anorm_add)
         # correct start and end values of time derivative
         dAnorm = dAnorm[size(fk) - 1:size(dAnorm)]
-        #dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
+        # dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
         return Anorm, dAnorm
     else:
-        Anorm = np.zeros(1, dtype='float64')
+        Anorm = np.zeros(1, dtype=np.float64)
         A_win_smooth = util.smooth(x[1], smoothie)
         # Differentiation of original signal, dA/dt
-        #A_win_add = np.append(np.append([x[1][0]] * (size(fk) // 2), x[1]),
-        #                      [x[1][size(x[1]) - 1]] * (size(fk) // 2))
         # Better, because faster, calculation of A_win_add
-        A_win_add = np.hstack(([A_win_smooth[0]] * (size(fk) // 2), \
-                  A_win_smooth, [A_win_smooth[size(A_win_smooth) - 1]] * \
-                  (size(fk) // 2)))
+        A_win_add = np.hstack(
+            ([A_win_smooth[0]] * (size(fk) // 2),
+             A_win_smooth, [A_win_smooth[size(A_win_smooth) - 1]] *
+             (size(fk) // 2)))
         t = signal.lfilter(fk, 1, A_win_add)
-        #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
         # correct start and end values of time derivative
         t = t[size(fk) - 1:size(t)]
         A_win_smooth[A_win_smooth < 1] = 1
-        # (dA/dt) / 2*PI*smooth(A)*fs/2
         t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
         # Integral within window
         t_ = cumtrapz(t_, dx=(1.0 / fs))
@@ -157,13 +153,13 @@ def centroid(data, fk):
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):
-        centroid = np.zeros(x[1].shape[0], dtype='float64')
+        centroid = np.zeros(x[1].shape[0], dtype=np.float64)
         i = 0
         for row in x[1]:
             # Integral within window
             half = 0.5 * sum(row)
             # Estimate energy centroid
-            for k in xrange(2, size(row)):
+            for k in range(2, size(row)):
                 t = sum(row[0:k])
                 if (t >= half):
                     frac = (half - (t - sum(row[0:k - 1]))) / \
@@ -172,22 +168,19 @@ def centroid(data, fk):
                         (float(k - 1) + float(frac)) / float(size(row))
                     break
             i = i + 1
-        #centroid_add = np.append(np.append([centroid[0]] * (size(fk) // 2), \
-        #    centroid), [centroid[size(centroid) - 1]] * (size(fk) // 2))
-        centroid_add = np.hstack(([centroid[0]] * (np.size(fk) // 2), \
-                  centroid, [centroid[np.size(centroid) - 1]] * \
-                  (np.size(fk) // 2)))
+        centroid_add = np.hstack(
+            ([centroid[0]] * (np.size(fk) // 2),
+             centroid, [centroid[np.size(centroid) - 1]] *
+             (np.size(fk) // 2)))
         dcentroid = signal.lfilter(fk, 1, centroid_add)
-        #dcentroid = dcentroid[size(fk) // 2:(size(dcentroid) - size(fk) // 2)]
-        # correct start and end values of time derivative
         dcentroid = dcentroid[size(fk) - 1:size(dcentroid)]
         return centroid, dcentroid
     else:
-        centroid = np.zeros(1, dtype='float64')
+        centroid = np.zeros(1, dtype=np.float64)
         # Integral within window
         half = 0.5 * sum(x[1])
         # Estimate energy centroid
-        for k in xrange(2, size(x[1])):
+        for k in range(2, size(x[1])):
             t = sum(x[1][0:k])
             if (t >= half):
                 frac = (half - (t - sum(x[1][0:k - 1]))) / \
@@ -215,63 +208,53 @@ def instFreq(data, fs, fk):
     """
     x = envelope(data)
     if (size(x[0].shape) > 1):
-        omega = np.zeros(x[0].shape[0], dtype='float64')
+        omega = np.zeros(x[0].shape[0], dtype=np.float64)
         i = 0
         for row in x[0]:
             f = np.real(row)
             h = np.imag(row)
-            #f_add = np.append(np.append([f[0]] * (size(fk) // 2), f),
-            #                      [f[size(f) - 1]] * (size(fk) // 2))
             # faster alternative to calculate f_add
-            f_add = np.hstack(([f[0]] * (np.size(fk) // 2), f, \
-                  [f[np.size(f) - 1]] * (np.size(fk) // 2)))
+            f_add = np.hstack(
+                ([f[0]] * (np.size(fk) // 2), f,
+                 [f[np.size(f) - 1]] * (np.size(fk) // 2)))
             fd = signal.lfilter(fk, 1, f_add)
-            #fd = fd[size(fk) // 2:(size(fd) - size(fk) // 2)]
             # correct start and end values of time derivative
             fd = fd[size(fk) - 1:size(fd)]
-            #h_add = np.append(np.append([h[0]] * (size(fk) // 2), h),
-            #                      [h[size(h) - 1]] * (size(fk) // 2))
             # faster alternative to calculate h_add
-            h_add = np.hstack(([h[0]] * (np.size(fk) // 2), h, \
-                  [h[np.size(h) - 1]] * (np.size(fk) // 2)))
+            h_add = np.hstack(
+                ([h[0]] * (np.size(fk) // 2), h,
+                 [h[np.size(h) - 1]] * (np.size(fk) // 2)))
             hd = signal.lfilter(fk, 1, h_add)
-            #hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
             # correct start and end values of time derivative
             hd = hd[size(fk) - 1:size(hd)]
-            omega_win = abs(((f * hd - fd * h) / (f * f + h * h)) * \
-                             fs / 2 / pi)
+            omega_win = abs(((f * hd - fd * h) / (f * f + h * h)) *
+                            fs / 2 / pi)
             omega[i] = np.median(omega_win)
             i = i + 1
-        #omega_add = np.append(np.append([omega[0]] * (size(fk) // 2), omega),
-        #                      [omega[size(omega) - 1]] * (size(fk) // 2))
         # faster alternative to calculate omega_add
-        omega_add = np.hstack(([omega[0]] * (np.size(fk) // 2), omega, \
-                  [omega[np.size(omega) - 1]] * (np.size(fk) // 2)))
+        omega_add = np.hstack(
+            ([omega[0]] * (np.size(fk) // 2), omega,
+             [omega[np.size(omega) - 1]] * (np.size(fk) // 2)))
         domega = signal.lfilter(fk, 1, omega_add)
-        #domega = domega[size(fk) // 2:(size(domega) - size(fk) // 2)]
         # correct start and end values of time derivative
         domega = domega[size(fk) - 1:size(domega)]
         return omega, domega
     else:
-        omega = np.zeros(size(x[0]), dtype='float64')
+        omega = np.zeros(size(x[0]), dtype=np.float64)
         f = np.real(x[0])
         h = np.imag(x[0])
-        #f_add = np.append(np.append([f[0]] * (size(fk) // 2), f),
-        #                      [f[size(f) - 1]] * (size(fk) // 2))
         # faster alternative to calculate f_add
-        f_add = np.hstack(([f[0]] * (np.size(fk) // 2), f, \
-                [f[np.size(f) - 1]] * (np.size(fk) // 2)))
+        f_add = np.hstack(
+            ([f[0]] * (np.size(fk) // 2), f,
+             [f[np.size(f) - 1]] * (np.size(fk) // 2)))
         fd = signal.lfilter(fk, 1, f_add)
-        #fd = fd[size(fk) // 2:(size(fd) - size(fk) // 2)]
         # correct start and end values of time derivative
         fd = fd[size(fk) - 1:size(fd)]
-        #h_add = np.append(np.append([h[0]] * (size(fk) // 2), h),
-        #                      [h[size(h) - 1]] * (size(fk) // 2))
         # faster alternative to calculate h_add
-        h_add = np.hstack(([h[0]] * (np.size(fk) // 2), h, \
-                  [h[np.size(h) - 1]] * (np.size(fk) // 2)))
+        h_add = np.hstack(
+            ([h[0]] * (np.size(fk) // 2), h,
+             [h[np.size(h) - 1]] * (np.size(fk) // 2)))
         hd = signal.lfilter(fk, 1, h_add)
-        #hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
         # correct start and end values of time derivative
         hd = hd[size(fk) - 1:size(hd)]
         omega = abs(((f * hd - fd * h) / (f * f + h * h)) * fs / 2 / pi)
@@ -295,40 +278,36 @@ def instBwith(data, fs, fk):
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):
-        sigma = np.zeros(x[1].shape[0], dtype='float64')
+        sigma = np.zeros(x[1].shape[0], dtype=np.float64)
         i = 0
         for row in x[1]:
-            #A_win_add = np.append(np.append([row[0]] * (size(fk) // 2), row),
-            #                      [row[size(row) - 1]] * (size(fk) // 2))
             # faster alternative to calculate A_win_add
-            A_win_add = np.hstack(([row[0]] * (np.size(fk) // 2), row, \
-                  [row[np.size(row) - 1]] * (np.size(fk) // 2)))
+            A_win_add = np.hstack(
+                ([row[0]] * (np.size(fk) // 2), row,
+                 [row[np.size(row) - 1]] * (np.size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
-            #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
+            # t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             # correct start and end values
             t = t[size(fk) - 1:size(t)]
             sigma_win = abs((t * fs) / (row * 2 * pi))
             sigma[i] = np.median(sigma_win)
             i = i + 1
-        #sigma_add = np.append(np.append([sigma[0]] * (size(fk) // 2), sigma),
-        #                  [sigma[size(sigma) - 1]] * (size(fk) // 2))
         # faster alternative to calculate sigma_add
-        sigma_add = np.hstack(([sigma[0]] * (np.size(fk) // 2), sigma, \
-                  [sigma[np.size(sigma) - 1]] * (np.size(fk) // 2)))
+        sigma_add = np.hstack(
+            ([sigma[0]] * (np.size(fk) // 2), sigma,
+             [sigma[np.size(sigma) - 1]] * (np.size(fk) // 2)))
         dsigma = signal.lfilter(fk, 1, sigma_add)
-        #dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
+        # dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
         # correct start and end values
         dsigma = dsigma[size(fk) - 1:size(dsigma)]
         return sigma, dsigma
     else:
-        sigma = np.zeros(size(x[0]), dtype='float64')
-        #A_win_add = np.append(np.append([x[1][0]] * (size(fk) // 2), x[1]),
-        #                      [x[1][size(x[1]) - 1]] * (size(fk) // 2))
+        sigma = np.zeros(size(x[0]), dtype=np.float64)
         # faster alternative to calculate A_win_add
-        A_win_add = np.hstack(([row[0]] * (np.size(fk) // 2), row, \
-                  [row[np.size(row) - 1]] * (np.size(fk) // 2)))
+        A_win_add = np.hstack(
+            ([row[0]] * (np.size(fk) // 2), row,
+             [row[np.size(row) - 1]] * (np.size(fk) // 2)))
         t = signal.lfilter(fk, 1, A_win_add)
-        #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
         # correct start and end values
         t = t[size(fk) - 1:size(t)]
         sigma = abs((t * fs) / (x[1] * 2 * pi))

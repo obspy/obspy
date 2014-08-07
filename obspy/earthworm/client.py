@@ -5,11 +5,14 @@ Earthworm Wave Server client for ObsPy.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from fnmatch import fnmatch
 from obspy import Stream, UTCDateTime
@@ -73,9 +76,8 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client("pele.ess.washington.edu", 16017)
-        >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
+        >>> dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
         >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
         >>> st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
@@ -85,8 +87,8 @@ class Client(object):
 
             from obspy.earthworm import Client
             from obspy import UTCDateTime
-            client = Client("pele.ess.washington.edu", 16017)
-            dt = UTCDateTime() - 2000  # now - 2000 seconds
+            client = Client("pele.ess.washington.edu", 16017, timeout=5)
+            dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
             st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
             st.plot()
             st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
@@ -105,7 +107,8 @@ class Client(object):
             location = '--'
         scnl = (station, channel, network, location)
         # fetch waveform
-        tbl = readWaveServerV(self.host, self.port, scnl, starttime, endtime)
+        tbl = readWaveServerV(self.host, self.port, scnl, starttime, endtime,
+                              timeout=self.timeout)
         # create new stream
         st = Stream()
         for tb in tbl:
@@ -151,7 +154,6 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
         >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',
@@ -182,16 +184,16 @@ class Client(object):
         :rtype: list
         :return: List of tuples with information on the available data. One
             tuple consists of network, station, location, channel
-            (all strings), starttime and endtime
+            (all strings), start time and end time
             (both as :class:`~obspy.core.utcdatetime.UTCDateTime`).
 
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017)
+        >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
         >>> response = client.availability(network="UW", station="TUCA",
         ...         channel="BH*")
-        >>> print response  # doctest: +SKIP
+        >>> print(response)  # doctest: +SKIP
         [('UW',
           'TUCA',
           '--',
@@ -215,11 +217,11 @@ class Client(object):
         pattern = ".".join((network, station, location, channel))
         # get overview of all available data, winston wave servers can not
         # restrict the query via network, station etc. so we do that manually
-        response = getMenu(self.host, self.port)
+        response = getMenu(self.host, self.port, timeout=self.timeout)
         # reorder items and convert time info to UTCDateTime
         response = [(x[3], x[1], x[4], x[2], UTCDateTime(x[5]),
                      UTCDateTime(x[6])) for x in response]
-        # restrict results acording to user input
+        # restrict results according to user input
         response = [x for x in response if fnmatch(".".join(x[:4]), pattern)]
         return response
 

@@ -2,6 +2,10 @@
 """
 The obspy.realtime.signal test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from obspy import read
 from obspy.core.stream import Stream
 from obspy.realtime import RtTrace, signal
@@ -23,9 +27,10 @@ class RealTimeSignalTestCase(unittest.TestCase):
         super(RealTimeSignalTestCase, self).__init__(*args, **kwargs)
         # read test data as float64
         self.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
-                                            'II.TLY.BHZ.SAC'), dtype='f8')[0]
+                                            'II.TLY.BHZ.SAC'),
+                               dtype=np.float64)[0]
         # make really sure test data is float64
-        self.orig_trace.data = np.require(self.orig_trace.data, 'f8')
+        self.orig_trace.data = np.require(self.orig_trace.data, np.float64)
         self.orig_trace_chunks = self.orig_trace / NUM_PACKETS
 
     def setUp(self):
@@ -113,6 +118,38 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertEqual(peak, 1045237000.0)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
+
+    def test_offset(self):
+        """
+        Testing offset function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'offset': 500}
+        # filtering manual
+        self.filt_trace_data = signal.offset(trace, **options)
+        # filtering real time
+        process_list = [('offset', options)]
+        self._runRtProcess(process_list)
+        # check results
+        diff = self.rt_trace.data - self.orig_trace.data
+        self.assertEqual(np.mean(diff), 500)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
+
+    def test_kurtosis(self):
+        """
+        Testing kurtosis function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'win': 5}
+        # filtering manual
+        self.filt_trace_data = signal.kurtosis(trace, **options)
+        # filtering real time
+        process_list = [('kurtosis', options)]
+        self._runRtProcess(process_list)
+        # check results
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
@@ -205,7 +242,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         trace = self.orig_trace.copy()
         np.testing.assert_almost_equal(self.filt_trace_data,
-                                        self.rt_trace.data)
+                                       self.rt_trace.data)
         np.testing.assert_almost_equal(trace.data[1:], self.rt_trace.data[1:])
         np.testing.assert_almost_equal(trace.data[1:],
                                        self.filt_trace_data[1:])

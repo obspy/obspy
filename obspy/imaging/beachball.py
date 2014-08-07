@@ -1,34 +1,37 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: beachball.py
 #  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
 #   Author: Robert Barsch
-#    Email: barsch@geophysik.uni-muenchen.de
+#    Email: barsch@egu.eu
 #
 # Copyright (C) 2008-2012 Robert Barsch
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 """
 Draws a beachball diagram of an earthquake focal mechanism
 
 Most source code provided here are adopted from
 
-1. MatLab script `bb.m`_ written by Andy Michael and Oliver Boyd.
+1. MatLab script `bb.m`_ written by Andy Michael, Chen Ji and Oliver Boyd.
 2. ps_meca program from the `Generic Mapping Tools (GMT)`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
+import io
 import matplotlib.pyplot as plt
-from matplotlib import patches, collections, path as mplpath
-import StringIO
+from matplotlib import patches, collections, transforms, path as mplpath
 import numpy as np
 
 
@@ -39,7 +42,7 @@ EPSILON = 0.00001
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          zorder=100):
+          zorder=100, axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -67,13 +70,18 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         (opaque).
     :param xy: Origin position of the beach ball as tuple. Defaults to
         ``(0, 0)``.
-    :type width: int
-    :param width: Symbol size of beach ball. Defaults to ``200``.
+    :type width: int or tuple
+    :param width: Symbol size of beach ball, or tuple for elliptically
+        shaped patches. Defaults to size ``200``.
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
+    :type axes: :class:`matplotlib.axes.Axes`
+    :param axes: Used to make beach balls circular on non-scaled axes. Also
+        maintains the aspect ratio when resizing the figure. Will not add
+        the returned collection to the axes instance.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -119,6 +127,20 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # Replace color dummies 'b' and 'w' by face and bgcolor
         fc = [facecolor if c == 'b' else bgcolor for c in colors]
         col.set_facecolors(fc)
+
+    # Use the given axes to maintain the aspect ratio of beachballs on figure
+    # resize.
+    if axes is not None:
+        # This is what holds the aspect ratio (but breaks the positioning)
+        col.set_transform(transforms.IdentityTransform())
+        # Next is a dirty hack to fix the positioning:
+        # 1. Need to bring the all patches to the origin (0, 0).
+        for p in col._paths:
+            p.vertices -= xy
+        # 2. Then use the offset property of the collection to position the
+        #    patches
+        col.set_offsets(xy)
+        col._transOffset = axes.transData
 
     col.set_edgecolor(edgecolor)
     col.set_alpha(alpha)
@@ -204,7 +226,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
     elif format and not outfile:
-        imgdata = StringIO.StringIO()
+        imgdata = io.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
         return imgdata.read()
@@ -341,9 +363,9 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
 
             xz = can * spd + san * sfi * spb + san * cfi * spm
             xn = can * cpd * cad + san * sfi * cpb * cab + \
-                 san * cfi * cpm * cam
+                san * cfi * cpm * cam
             xe = can * cpd * sad + san * sfi * cpb * sab + \
-                 san * cfi * cpm * sam
+                san * cfi * cpm * sam
 
             if np.fabs(xn) < EPSILON and np.fabs(xe) < EPSILON:
                 takeoff = 0.
@@ -352,7 +374,7 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
                 az = np.arctan2(xe, xn)
                 if az < 0.:
                     az += np.pi * 2.
-                takeoff = np.arccos(xz / float(np.sqrt(xz * xz + xn * xn + \
+                takeoff = np.arccos(xz / float(np.sqrt(xz * xz + xn * xn +
                                                        xe * xe)))
             if takeoff > np.pi / 2.:
                 takeoff = np.pi - takeoff
@@ -545,7 +567,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -574,12 +596,16 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     if D2 >= 90:
         D2 = 89.9999
 
-    # arange checked for numerical stablility, np.pi is not multiple of 0.1
+    # arange checked for numerical stability, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
-    l1 = np.sqrt(np.power(90 - D1, 2) / (np.power(np.sin(phi), 2) + \
-        np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
-    l2 = np.sqrt(np.power(90 - D2, 2) / (np.power(np.sin(phi), 2) + \
-        np.power(np.cos(phi), 2) * np.power(90 - D2, 2) / np.power(90, 2)))
+    l1 = np.sqrt(
+        np.power(90 - D1, 2) / (
+            np.power(np.sin(phi), 2) +
+            np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
+    l2 = np.sqrt(
+        np.power(90 - D2, 2) / (
+            np.power(np.sin(phi), 2) + np.power(np.cos(phi), 2) *
+            np.power(90 - D2, 2) / np.power(90, 2)))
 
     inc = 1
     (X1, Y1) = Pol2Cart(phi + S1 * D2R, l1)
@@ -605,8 +631,8 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         Y2 = Y2[::-1]
         th2 = np.arange(S2, S1, inc)
     (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * np.ones((1, len(th2))))
-    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]), 1)
-    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]), 1)
+    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]))
+    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]))
 
     X = X * D / 90
     Y = Y * D / 90
@@ -629,7 +655,7 @@ def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system
     x = x * res[0] + xy[0]
     y = y * res[1] + xy[1]
-    verts = zip(x.tolist(), y.tolist())
+    verts = list(zip(x.tolist(), y.tolist()))
     codes = [mplpath.Path.MOVETO]
     codes.extend([mplpath.Path.LINETO] * (len(x) - 2))
     codes.append(mplpath.Path.CLOSEPOLY)
@@ -652,7 +678,7 @@ def StrikeDip(n, e, u):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
     if u < 0:
@@ -677,7 +703,7 @@ def AuxPlane(s1, d1, r1):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
 
@@ -699,6 +725,11 @@ def AuxPlane(s1, d1, r1):
 
     z = h1 * n1 + h2 * n2
     z = z / np.sqrt(h1 * h1 + h2 * h2)
+    # we might get above 1.0 only due to floating point
+    # precision. Clip for those cases.
+    float64epsilon = 2.2204460492503131e-16
+    if 1.0 < abs(z) < 1.0 + 100 * float64epsilon:
+        z = np.copysign(1.0, z)
     z = np.arccos(z)
     rake = 0
     if sl3 > 0:
@@ -717,13 +748,13 @@ def MT2Plane(mt):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
     D = np.array([d[1], d[0], d[2]])
     V = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
-               [v[2, 1], -v[2, 0], -v[2, 2]],
-               [-v[0, 1], v[0, 0], v[0, 2]]])
+                 [v[2, 1], -v[2, 0], -v[2, 2]],
+                 [-v[0, 1], v[0, 0], v[0, 2]]])
     IMAX = D.argmax()
     IMIN = D.argmin()
     AE = (V[:, IMAX] + V[:, IMIN]) / np.sqrt(2.0)
@@ -731,7 +762,10 @@ def MT2Plane(mt):
     AER = np.sqrt(np.power(AE[0], 2) + np.power(AE[1], 2) + np.power(AE[2], 2))
     ANR = np.sqrt(np.power(AN[0], 2) + np.power(AN[1], 2) + np.power(AN[2], 2))
     AE = AE / AER
-    AN = AN / ANR
+    if not ANR:
+        AN = np.array([np.nan, np.nan, np.nan])
+    else:
+        AN = AN / ANR
     if AN[2] <= 0.:
         AN1 = AN
         AE1 = AE
@@ -748,7 +782,7 @@ def TDL(AN, BN):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     XN = AN[0]
     YN = AN[1]
@@ -785,7 +819,7 @@ def TDL(AN, BN):
         if SL < 0. and CL > 0:
             FL = -FL
     else:
-        if - ZN > 1.0:
+        if -ZN > 1.0:
             ZN = -1.0
         FDH = np.arccos(-ZN)
         FD = FDH * CON

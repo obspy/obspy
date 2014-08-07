@@ -5,7 +5,7 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2009-2012 by:
+Copyright (c) 2009-2013 by:
     * Robert Barsch
 
 

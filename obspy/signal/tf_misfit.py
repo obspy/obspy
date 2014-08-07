@@ -1,17 +1,16 @@
 #!/usr/bin/env python
-#-------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# ------------------------------------------------------------------
 # Filename: tf_misfit.py
 #  Purpose: Various Time Frequency Misfit Functions
 #   Author: Martin van Driel
 #    Email: vandriel@sed.ethz.ch
 #
 # Copyright (C) 2012 Martin van Driel
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
-Various Time Frequency Misfit Functions based on Kristekova et. al. (2006) and
-Kristekova et. al. (2009).
-
-.. seealso:: [Kristekova2006]_ and [Kristekova2009]_
+Various Time Frequency Misfit Functions based on [Kristekova2006]_ and
+[Kristekova2009]_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -19,36 +18,39 @@ Kristekova et. al. (2009).
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import numpy as np
 from obspy.signal import util
-import matplotlib.pyplot as plt
-from matplotlib.ticker import NullFormatter
-from matplotlib.colors import LinearSegmentedColormap
 
 
-def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
+def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     """
     Continuous Wavelet Transformation in the Frequency Domain.
 
     .. seealso:: [Kristekova2006]_, eq. (4)
 
     :param st: time dependent signal.
-    :param dt: time step between two samples in st
+    :param dt: time step between two samples in st (in seconds)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param f: frequency discretization, type numpy.ndarray.
+    :param fmin: minimum frequency (in Hz)
+    :param fmax: maximum frequency (in Hz)
+    :param nf: number of logarithmically spaced frequencies between fmin and
+        fmax
     :param wl: wavelet to use, for now only 'morlet' is implemented
 
     :return: time frequency representation of st, type numpy.ndarray of complex
-        values.
+        values, shape = (nf, len(st)).
     """
     npts = len(st) * 2
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.zeros((npts / 2, nf), dtype=np.complex)
+    cwt = np.zeros((npts // 2, nf), dtype=np.complex)
 
     if wl == 'morlet':
         psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
@@ -66,7 +68,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
         psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
         psihf = np.fft.fft(psih, n=nfft)
         tminin = int(t[-1] / 2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts / 2] * \
+        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
             (t[1] - t[0])
     return cwt.T
 
@@ -89,8 +91,9 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: time frequency representation of Envelope Misfit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
@@ -122,14 +125,14 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return  TFEM[0] / np.max(Ar)
+            return TFEM[0] / np.max(Ar)
         else:
-            return  TFEM / np.max(Ar)
+            return TFEM / np.max(Ar)
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return  TFEM[0] / Ar[0]
+            return TFEM[0] / Ar[0]
         else:
-            return  TFEM / Ar
+            return TFEM / Ar
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -152,8 +155,9 @@ def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: time frequency representation of Phase Misfit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
@@ -215,8 +219,9 @@ def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Time-dependent Envelope Misfit, type numpy.ndarray with shape
         (len(st1),) for single component data and (number of components,
@@ -278,8 +283,9 @@ def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Time-dependent Phase Misfit, type numpy.ndarray with shape
         (len(st1),) for single component data and (number of components,
@@ -342,8 +348,9 @@ def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray with shape
         (nf,) for single component data and (number of components, nf) for
@@ -406,8 +413,9 @@ def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray with shape
         (nf,) for single component data and (number of components, nf) for
@@ -470,8 +478,9 @@ def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Single Valued Envelope Misfit
     """
@@ -531,8 +540,9 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
 
     :return: Single Valued Phase Misfit
     """
@@ -579,7 +589,7 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True, A=10., k=1.):
     """
-    Time Frequency Envelope Goodness-Of-Fit
+    Time Frequency Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -594,12 +604,13 @@ def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time frequency representation of Envelope Goodness-Of-Fit,
+    :return: time frequency representation of Envelope Goodness-of-Fit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
         and (number of components, nf, len(st1)) for multicomponent data
     """
@@ -611,7 +622,7 @@ def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True, A=10., k=1.):
     """
-    Time Frequency Phase Goodness-Of-Fit
+    Time Frequency Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -626,12 +637,13 @@ def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time frequency representation of Phase Goodness-Of-Fit,
+    :return: time frequency representation of Phase Goodness-of-Fit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
         and (number of components, nf, len(st1)) for multicomponent data
     """
@@ -643,7 +655,7 @@ def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Time Dependent Envelope Goodness-Of-Fit
+    Time-dependent Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -658,24 +670,25 @@ def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time dependent Envelope Goodness-Of-Fit, type numpy.ndarray with
+    :return: time dependent Envelope Goodness-of-Fit, type numpy.ndarray with
         shape (len(st1),) for single component data and (number of components,
         len(st1)) for multicomponent data
     """
     TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-               st2_isref=st2_isref)
+              st2_isref=st2_isref)
     return A * np.exp(-np.abs(TEM) ** k)
 
 
 def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Time Dependent Phase Goodness-Of-Fit
+    Time-dependent Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -690,24 +703,25 @@ def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: time dependent Phase Goodness-Of-Fit, type numpy.ndarray with
+    :return: time dependent Phase Goodness-of-Fit, type numpy.ndarray with
         shape (len(st1),) for single component data and (number of components,
         len(st1)) for multicomponent data
     """
     TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-               st2_isref=st2_isref)
+              st2_isref=st2_isref)
     return A * (1 - np.abs(TPM) ** k)
 
 
 def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Frequency Dependent Envelope Goodness-Of-Fit
+    Frequency-dependent Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -722,24 +736,25 @@ def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: frequency dependent Envelope Goodness-Of-Fit, type numpy.ndarray
+    :return: frequency dependent Envelope Goodness-of-Fit, type numpy.ndarray
         with shape (nf,) for single component data and (number of components,
         nf) for multicomponent data
     """
     FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-               st2_isref=st2_isref)
+              st2_isref=st2_isref)
     return A * np.exp(-np.abs(FEM) ** k)
 
 
 def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
-    Frequency Dependent Phase Goodness-Of-Fit
+    Frequency-dependent Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -754,24 +769,25 @@ def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: frequency dependent Phase Goodness-Of-Fit, type numpy.ndarray
+    :return: frequency dependent Phase Goodness-of-Fit, type numpy.ndarray
         with shape (nf,) for single component data and (number of components,
         nf) for multicomponent data
     """
     FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-               st2_isref=st2_isref)
+              st2_isref=st2_isref)
     return A * (1 - np.abs(FPM) ** k)
 
 
 def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True, A=10., k=1.):
     """
-    Single Valued Envelope Goodness-Of-Fit
+    Single Valued Envelope Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(15)
 
@@ -786,22 +802,23 @@ def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: Single Valued Envelope Goodness-Of-Fit
+    :return: Single Valued Envelope Goodness-of-Fit
     """
     EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-               st2_isref=st2_isref)
+            st2_isref=st2_isref)
     return A * np.exp(-np.abs(EM) ** k)
 
 
 def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True, A=10., k=1.):
     """
-    Single Valued Phase Goodness-Of-Fit
+    Single Valued Phase Goodness-of-Fit
 
     .. seealso:: [Kristekova2009]_, Eq.(16)
 
@@ -816,15 +833,16 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
 
-    :return: Single Valued Phase Goodness-Of-Fit
+    :return: Single Valued Phase Goodness-of-Fit
     """
     PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-               st2_isref=st2_isref)
+            st2_isref=st2_isref)
     return A * (1 - np.abs(PM) ** k)
 
 
@@ -834,7 +852,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                   d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
                   clim=0., cmap=None):
     """
-    Plot all timefrequency misfits and the time series in one plot (per
+    Plot all time frequency misfits and the time series in one plot (per
     component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
@@ -849,8 +867,9 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
     :param left: plot distance from the left of the figure
     :param bottom: plot distance from the bottom of the figure
     :param h_1: height of the signal axes
@@ -868,8 +887,9 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
 
-    :return: If show is False, returns a maplotlib.pyplot.figure object (single
-        component data) or a list of figure objects (multi component data)
+    :return: If show is False, returns a matplotlib.pyplot.figure object
+        (single component data) or a list of figure objects (multi component
+        data)
 
     .. rubric:: Example
 
@@ -926,12 +946,15 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                                             phase_shift * np.pi) * 1j))
         plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    from matplotlib.colors import LinearSegmentedColormap
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    if cmap == None:
+    if cmap is None:
         CDICT_TFM = {'red': ((0.0, 0.0, 0.0),
                              (0.2, 0.0, 0.0),
                              (0.4, 0.0, 0.0),
@@ -966,7 +989,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
             st2_isref=st2_isref)
     TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
+                st2_isref=st2_isref)
     TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref)
     FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
@@ -1006,10 +1029,14 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         # plot TFEM
         ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
-        img_TFEM = ax_TFEM.imshow(TFEM[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
-                                  aspect='auto', origin='lower')
-        ax_TFEM.set_yscale('log')
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           TFEM[itr].shape[0]))
+        img_TFEM = ax_TFEM.pcolormesh(x, y, TFEM[itr], cmap=cmap)
+        img_TFEM.set_rasterized(True)
+        ax_TFEM.set_yscale("log")
+        ax_TFEM.set_ylim(fmin, fmax)
 
         # plot FEM
         ax_FEM = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
@@ -1022,10 +1049,12 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
         # plot TFPM
         ax_TFPM = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
-        img_TFPM = ax_TFPM.imshow(TFPM[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
-                                  aspect='auto', origin='lower')
-        ax_TFPM.set_yscale('log')
+
+        x, y = np.meshgrid(t, f)
+        img_TFPM = ax_TFPM.pcolormesh(x, y, TFPM[itr], cmap=cmap)
+        img_TFPM.set_rasterized(True)
+        ax_TFPM.set_yscale("log")
+        ax_TFPM.set_ylim(f[0], f[-1])
 
         # add colorbars
         ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
@@ -1105,7 +1134,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     if show:
         plt.show()
     else:
-        if len(st1.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
@@ -1117,8 +1146,8 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
                ylim=0., clim=0., cmap=None):
     """
-    Plot all timefrequency Goodnes-Of-Fits and the time series in one plot (per
-    component).
+    Plot all time frequency Goodness-of-Fits and the time series in one plot
+    (per component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
         shape (number of components, number of time samples) or (number of
@@ -1132,10 +1161,11 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
-        is a reference
-    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
-    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :type st2_isref: bool
+    :param st2_isref: True if st2 is a reference signal, False if none is a
+        reference
+    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-of-Fit to the misfit
     :param left: plot distance from the left of the figure
     :param bottom: plot distance from the bottom of the figure
     :param h_1: height of the signal axes
@@ -1153,15 +1183,15 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
 
-    :return: If show is False, returns a maplotlib.pyplot.figure object (single
-        component data) or a list of figure objects (multi component data)
+    :return: If show is False, returns a matplotlib.pyplot.figure object
+        (single component data) or a list of figure objects (multi component
+        data)
 
     .. rubric:: Example
 
     For a signal with pure amplitude error
 
     >>> import numpy as np
-    >>> from scipy.signal import hilbert
     >>> tmax = 6.
     >>> dt = 0.01
     >>> npts = int(tmax / dt + 1)
@@ -1202,12 +1232,15 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         st1 = st1 * 3.
         plotTfGofs(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    from matplotlib.colors import LinearSegmentedColormap
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    if cmap == None:
+    if cmap is None:
         CDICT_GOF = {'red': ((0.0, 0.6, 0.6),
                              (0.4, 0.6, 1.0),
                              (0.6, 1.0, 1.0),
@@ -1236,7 +1269,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     EG = eg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
             st2_isref=st2_isref, A=A, k=k)
     TFPG = tfpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref, A=A, k=k)
+                st2_isref=st2_isref, A=A, k=k)
     TPG = tpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref, A=A, k=k)
     FPG = fpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
@@ -1276,10 +1309,14 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         # plot TFEG
         ax_TFEG = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
-        img_TFEG = ax_TFEG.imshow(TFEG[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
-                                  aspect='auto', origin='lower')
-        ax_TFEG.set_yscale('log')
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           TFEG[itr].shape[0]))
+        img_TFEG = ax_TFEG.pcolormesh(x, y, TFEG[itr], cmap=cmap)
+        img_TFEG.set_rasterized(True)
+        ax_TFEG.set_yscale("log")
+        ax_TFEG.set_ylim(fmin, fmax)
 
         # plot FEG
         ax_FEG = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
@@ -1292,10 +1329,12 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
         # plot TFPG
         ax_TFPG = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
-        img_TFPG = ax_TFPG.imshow(TFPG[itr], interpolation='nearest',
-                                  cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
-                                  aspect='auto', origin='lower')
-        ax_TFPG.set_yscale('log')
+
+        x, y = np.meshgrid(t, f)
+        img_TFPG = ax_TFPG.pcolormesh(x, y, TFPG[itr], cmap=cmap)
+        img_TFPG.set_rasterized(True)
+        ax_TFPG.set_yscale("log")
+        ax_TFPG.set_ylim(f[0], f[-1])
 
         # add colorbars
         ax_cb_TFPG = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
@@ -1375,18 +1414,18 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     if show:
         plt.show()
     else:
-        if len(st1.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
 
 
 def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
-             bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
-             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
-             mode='absolute', fft_zero_pad_fac=0):
+            bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
+            d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
+            mode='absolute', fft_zero_pad_fac=0):
     """
-    Plot time-frequency representation, spectrum and time series of the signal.
+    Plot time frequency representation, spectrum and time series of the signal.
 
     :param st: signal, type numpy.ndarray with shape (number of components,
         number of time samples) or (number of timesamples, ) for single
@@ -1412,21 +1451,22 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     :param clim: limits of the colorbars
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
-    :param mode: 'absolute' for absolute value of TFR, 'power' for |TFR|^2
-    :param fft_zero_pad_fac: integer, if > 0, the signal is zero padded to nfft
-        = nextpow2(len(st)) * fft_zero_pad_fac to get smoother spectrum in the
-        low frequencies (has no effect on the TFR and might make
-        demeaning/tapering necessary to avoid artefacts)
+    :param mode: 'absolute' for absolute value of TFR, 'power' for ``|TFR|^2``
+    :param fft_zero_pad_fac: integer, if > 0, the signal is zero padded to
+        ``nfft = nextpow2(len(st)) * fft_zero_pad_fac`` to get smoother
+        spectrum in the low frequencies (has no effect on the TFR and might
+        make demeaning/tapering necessary to avoid artifacts)
 
-    :return: If show is False, returns a maplotlib.pyplot.figure object (single
-        component data) or a list of figure objects (multi component data)
+    :return: If show is False, returns a matplotlib.pyplot.figure object
+        (single component data) or a list of figure objects (multi component
+        data)
 
     .. rubric:: Example
 
     >>> from obspy import read
     >>> tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
     >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
-    ...         fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
+    ...         fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
 
     .. plot::
 
@@ -1434,8 +1474,11 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         from obspy import read
         tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
         plotTfr(tr.data, dt=tr.stats.delta, fmin=.01,
-                fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
+                fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    from matplotlib.colors import LinearSegmentedColormap
     npts = st.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
@@ -1445,9 +1488,9 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     else:
         nfft = util.nextpow2(npts) * fft_zero_pad_fac
 
-    f_lin = np.linspace(0, 0.5 / dt, nfft / 2 + 1)
+    f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
 
-    if cmap == None:
+    if cmap is None:
         CDICT_TFR = {'red': ((0.0, 1.0, 1.0),
                              (0.05, 1.0, 1.0),
                              (0.2, 0.0, 0.0),
@@ -1477,21 +1520,19 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         W[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
-        spec = np.zeros((1, nfft / 2 + 1), dtype=np.complex)
+        spec = np.zeros((1, nfft // 2 + 1), dtype=np.complex)
         spec[0] = np.fft.rfft(st, n=nfft) * dt
 
         st = st.reshape((1, npts))
     else:
         W = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
-        spec = np.zeros((st.shape[0], nfft / 2 + 1), dtype=np.complex)
+        spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=np.complex)
 
         for i in np.arange(st.shape[0]):
             W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
             spec[i] = np.fft.rfft(st[i], n=nfft) * dt
 
         ntr = st.shape[0]
-
-    print W.shape
 
     if mode == 'absolute':
         TFR = np.abs(W)
@@ -1513,10 +1554,14 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
         # plot TFR
         ax_TFR = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
-        img_TFR = ax_TFR.imshow(TFR[itr], interpolation='nearest',
-                                cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
-                                aspect='auto', origin='lower')
-        ax_TFR.set_yscale('log')
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           TFR[itr].shape[0]))
+        img_TFR = ax_TFR.pcolormesh(x, y, TFR[itr], cmap=cmap)
+        img_TFR.set_rasterized(True)
+        ax_TFR.set_yscale("log")
+        ax_TFR.set_ylim(fmin, fmax)
 
         # plot spectrum
         ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
@@ -1553,7 +1598,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     if show:
         plt.show()
     else:
-        if len(st.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs

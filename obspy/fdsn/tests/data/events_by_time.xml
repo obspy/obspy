@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:iris="http://service.iris.edu/fdsnws/event/1/" xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:xsi="http://www.w3.org/2000/10/XMLSchema-instance" xsi:schemaLocation="http://quakeml.org/schema/xsd http://quakeml.org/schema/xsd/QuakeML-1.2.xsd"><eventParameters publicID="smi:service.iris.edu/fdsnws/event/1/query"><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=958596">
+    <type>earthquake</type>
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="232">
+        <type>Flinn-Engdahl region</type>
+        <text>WESTERN HONSHU, JAPAN</text>
+    </description>
+    <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227894</preferredMagnitudeID>
+    <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896815</preferredOriginID>
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896815" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4071866" iris:contributorEventId="3043941">
+        <time>
+            <value>2001-01-07T01:04:31.5000</value>
+        </time>
+        <creationInfo>
+            <author>JMA</author>
+        </creationInfo>
+        <latitude>
+            <value>35.37</value>
+        </latitude>
+        <longitude>
+            <value>133.33</value>
+        </longitude>
+        <depth>
+            <value>13000.0</value>
+        </depth>
+    </origin>
+    <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227894">
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896815</originID>
+        <mag>
+            <value>1.6</value>
+        </mag>
+        <creationInfo>
+            <author>JMA</author>
+        </creationInfo>
+    </magnitude>
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=958584">
+    <type>earthquake</type>
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="227">
+        <type>Flinn-Engdahl region</type>
+        <text>EASTERN HONSHU, JAPAN</text>
+    </description>
+    <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227879</preferredMagnitudeID>
+    <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896800</preferredOriginID>
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896800" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4071865" iris:contributorEventId="3043939">
+        <time>
+            <value>2001-01-07T01:04:17.6000</value>
+        </time>
+        <creationInfo>
+            <author>JMA</author>
+        </creationInfo>
+        <latitude>
+            <value>36.95</value>
+        </latitude>
+        <longitude>
+            <value>138.78</value>
+        </longitude>
+        <depth>
+            <value>5000.0</value>
+        </depth>
+    </origin>
+    <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227879">
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896800</originID>
+        <mag>
+            <value>1.8</value>
+        </mag>
+        <creationInfo>
+            <author>JMA</author>
+        </creationInfo>
+    </magnitude>
+</event><event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=958573">
+    <type>earthquake</type>
+    <description xmlns:iris="http://service.iris.edu/fdsnws/event/1/" iris:FEcode="61">
+        <type>Flinn-Engdahl region</type>
+        <text>CHIAPAS, MEXICO</text>
+    </description>
+    <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896788</preferredOriginID>
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896788" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4278142" iris:contributorEventId="3345775">
+        <time>
+            <value>2001-01-07T01:02:18.4000</value>
+        </time>
+        <creationInfo>
+            <author>PMEL</author>
+        </creationInfo>
+        <latitude>
+            <value>16.4211</value>
+        </latitude>
+        <longitude>
+            <value>-93.0174</value>
+        </longitude>
+    </origin>
+    <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227879">
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896800</originID>
+        <mag>
+            <value>1.8</value>
+        </mag>
+        <creationInfo>
+            <author>JMA</author>
+        </creationInfo>
+    </magnitude>
+</event></eventParameters></q:quakeml>

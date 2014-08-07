@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, VariableString, \
@@ -45,7 +48,7 @@ class Blockette061(Blockette):
         Integer(6, "Signal In Units", 3, xpath=34),
         Integer(7, "Signal Out Units", 3, xpath=34),
         Integer(8, "Number of Coefficients", 4),
-        #REPEAT field 9 for the Number of Coefficients
+        # REPEAT field 9 for the Number of Coefficients
         Loop("FIR Coefficient", "Number of Coefficients", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
@@ -69,7 +72,7 @@ class Blockette061(Blockette):
         if self.number_of_coefficients > 1:
             out += '#\t\tNumerator coefficients:\n'
             out += '#\t\t  i, coefficient\n'
-            for _i in xrange(self.number_of_coefficients):
+            for _i in range(self.number_of_coefficients):
                 out += 'B061F09    %4s %13s\n' % \
                     (_i, formatRESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_coefficients == 1:
@@ -78,4 +81,4 @@ class Blockette061(Blockette):
             out += 'B061F09    %4s %13s\n' % \
                 (0, formatRESP(self.FIR_coefficient, 6))
         out += '#\t\t\n'
-        return out
+        return out.encode()

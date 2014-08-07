@@ -1,0 +1,69 @@
+.TH MST_FINDMATCH 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Searching a MSTraceGroup for specific MSTrace structures.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSTrace  *\fBmst_findmatch\fP ( MSTrace *" startmst ", char " dataquality ",
+.BI "                          char *" network ", char *" station ",
+.BI "                          char *" location ", char *" channel " );
+
+.BI "MSTrace  *\fBmst_findadjacent\fP ( MSTraceGroup *" mstg ",
+.BI "                             flag *" whence ", char " dataquality ",
+.BI "                             char *" network ", char *" station ",
+.BI "                             char *" location ", char *" channel ",
+.BI "                             double " samprate ", double " sampleratetol ", 
+.BI "                             hptime_t " starttime ", hptime_t " endtime ",
+.BI "                             double " timetol ");"
+
+.SH DESCRIPTION
+\fBmst_findmatch\fP traverses a MSTrace chain starting at
+\fIstartmst\fP and returns the first entry that matches the source
+name identifiers.  If \fIdataquality\fP is not zero it must also match
+the found entry.  A calling program commonly calls this routine in a
+loop in order to find all matching MSTraces in a MSTraceGroup.
+
+\fBmst_findadjacent\fP finds the first entry in the MSTraceGroup
+pointed to by \fImstg\fP that matches the given source name
+identifiers and is time adjacent to the time coverage described by the
+\fIsamprate\fP, \fIstarttime\fP and \fIendtime\fP.  If
+\fIdataquality\fP is not zero it must also match the found entry.  See
+\fBms_time(3)\fP for a description of the high precision epoch time
+format needed for \fIstarttime\fP and \fIendtime\fP.
+
+The tolerance for sample rate and time matching can also be specified.
+If \fIsampratetol\fP is -1.0 the default tolerance of abs(1-sr1/sr2) <
+0.0001 is used.  If \fItimetol\fP is -1.0 the default time tolerance
+of 1/2 the sample period will be used.  If \fIsampratetol\fP or
+\fItimetol\fP is -2.0 the respective tolerance check will not be
+performed.  If time tolerance is not checked \fIwhence\fP will be set
+to whichever end fits best.  The time tolerance is specified in
+seconds.
+
+When an adjacent MSTrace is found the \fIwhence\fP flag will be set to
+indicate where the indicated time span is adjacent in the following
+way:
+.sp
+.nf
+1: time span fits at the end of the MSTrace
+2: time span fits at the beginning of the MSTrace
+.fi
+
+.SH RETURN VALUES
+\fBmst_findmatch\fP returns a pointer to the matching MSTrace structure 
+or 0 if no match found or error.
+
+\fBmst_findadjacent\fP returns a pointer to the adjacent MSTrace
+structure and the \fIwhence\fP flag is set when an adjacent MSTrace is
+found or 0 when no adjacent MSTrace is found.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmst_init(3)\fP and \fBms_time(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

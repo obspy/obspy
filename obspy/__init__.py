@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Purpose: Convenience imports for obspy
 #   Author: Robert Barsch
 #           Moritz Beyreuther
 #           Lion Krischer
 #           Tobias Megies
 #
-# Copyright (C) 2008-2012 Robert Barsch, Moritz Beyreuther, Lion Krischer,
+# Copyright (C) 2008-2014 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 ObsPy: A Python Toolbox for seismology/seismological observatories
 ==================================================================
@@ -27,16 +27,46 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 # don't change order
-from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _getVersionString
-from obspy.core.trace import Trace
+__version__ = _getVersionString(abbrev=10)
+from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
-from obspy.core.event import readEvents
+from obspy.core.event import readEvents, Catalog
+from obspy.station import read_inventory  # NOQA
 
+# insert supported read/write format plugin lists dynamically in docstrings
+from obspy.core.util.base import make_format_plugin_table
+read.__doc__ = \
+    read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
+readEvents.__doc__ = \
+    readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
 
-__version__ = _getVersionString()
+from future.utils import PY2
+if PY2:
+    Stream.write.im_func.func_doc = \
+        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
+                                                        numspaces=8)
+    Catalog.write.im_func.func_doc = \
+        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
+                                                         numspaces=8)
+else:
+    Stream.write.__doc__ = \
+        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
+                                                        numspaces=8)
+    Catalog.write.__doc__ = \
+        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
+                                                         numspaces=8)
+
+__all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
+           "readEvents", "Catalog", "read_inventory"]
+__all__ = [native_str(i) for i in __all__]
 
 
 if __name__ == '__main__':

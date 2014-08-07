@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-obspy.mseed - Mini-SEED read and write support
+obspy.mseed - MiniSEED read and write support
 ==============================================
-This module provides read and write support for `Mini-SEED
-<http://www.iris.edu/manuals/SEED_appG.htm>`_ waveform data and some other
-convenient methods to handle Mini-SEED files. Most methods are based on
-`libmseed <http://www.iris.edu/software/libraries/>`_, a C library framework
-by Chad Trabant and interfaced via Python :mod:`ctypes`.
+This module provides read and write support for the `MiniSEED
+<http://www.iris.edu/dms/nodes/dmc/data/formats/#miniseed>`_ (and the
+data part of full SEED) waveform data format and some other convenient
+methods to handle MiniSEED files. It utilizes
+`libmseed <http://www.iris.edu/dms/nodes/dmc/software/downloads/libmseed/>`_,
+a C library by Chad Trabant.
 
-.. seealso:: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
+.. seealso::
+
+    The format is  defined in the
+    `SEED Manual <http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf>`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
@@ -18,7 +22,10 @@ by Chad Trabant and interfaced via Python :mod:`ctypes`.
 
 Reading
 -------
-Similar to reading any other waveform data format using obspy.core:
+
+Reading MiniSEED (and the data part of full SEED files) is handled by using
+ObsPy's standard :func:`~obspy.core.stream.read` function. The format is
+detected automatically.
 
 >>> from obspy import read
 >>> st = read("/path/to/test.mseed")
@@ -27,14 +34,7 @@ Similar to reading any other waveform data format using obspy.core:
 >>> print(st)  #doctest: +ELLIPSIS
 1 Trace(s) in Stream:
 NL.HGN.00.BHZ | 2003-05-29T02:13:22.043400Z - ... | 40.0 Hz, 11947 samples
-
-The format will be determined automatically.
-
-Each trace will have a ``stats`` attribute containing the usual information.
-When reading a Mini-SEED file it will have one additional attribute ``mseed``.
-This attribute contains all Mini-SEED specific attributes.
-
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
+>>> print(st[0].stats) # doctest: +ELLIPSIS
          network: NL
          station: HGN
         location: 00
@@ -46,54 +46,100 @@ This attribute contains all Mini-SEED specific attributes.
             npts: 11947
            calib: 1.0
          _format: MSEED
-           mseed: AttribDict({'record_length': 4096, 'encoding': 'STEIM2',
-                              'filesize': 8192L, 'dataquality': 'R',
-                              'number_of_records': 2L, 'byteorder': '>'})
+           mseed: ...
 
-The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
-of each trace.
+MiniSEED specific metadata is stored in ``stats.mseed``.
+
+>>> for k, v in sorted(st[0].stats.mseed.items()):
+...     print("'%s': %s" % (k, str(v))) # doctest: +NORMALIZE_WHITESPACE
+    'byteorder':  >
+    'dataquality': R
+    'encoding': STEIM2
+    'filesize': 8192
+    'number_of_records':  2
+    'record_length': 4096
+
+The actual data is stored as a :class:`~numpy.ndarray` in the ``data``
+attribute of each trace.
 
 >>> print(st[0].data)
 [2787 2776 2774 ..., 2850 2853 2853]
 
+
+Several key word arguments are available which can be used for example to
+only read certain records from a file or force the header byteorder:
+``starttime``, ``endtime``, ``headonly``, ``sourcename``, ``reclen``,
+``details``, and ``header_byteorder``. They are passed to the
+:meth:`~obspy.mseed.core.readMSEED` method so refer to it for details to
+each parameter.
+
 Writing
 -------
-You may export the data to the file system using the
-:meth:`~obspy.core.stream.Stream.write` method of an existing
-:class:`~obspy.core.stream.Stream` object :
+Write data back to disc or a file like object using the
+:meth:`~obspy.core.stream.Stream.write` method of a
+:class:`~obspy.core.stream.Stream` or
+:class:`~obspy.core.trace.Trace` object.
 
 >>> st.write('Mini-SEED-filename.mseed', format='MSEED') #doctest: +SKIP
 
 You can also specify several keyword arguments that change the resulting
-Mini-SEED file:
+Mini-SEED file: ``reclen``, ``encoding``, ``byteorder``, ``flush``,  and
+``verbose``.
+They are are passed to the :meth:`~obspy.mseed.core.writeMSEED` method so
+refer to it for details to each parameter.
 
-* ``reclen`` : Record length in bytes of the resulting Mini-SEED file. The
-  record length needs to be expressible as 2 to the power of X where X is in
-  between and including 8 and 20. If no reclen is given it will default to
-  4096 bytes.
-* ``encoding``: Encoding of the Mini-SEED file. You can either give the a
-  string or the corresponding number. Available encodings are ``ASCII``
-  (``0``)*, ``INT16`` (``1``), ``INT32`` (``3``), ``FLOAT32`` (``4``)*,
-  ``FLOAT64`` (``5``)*, ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. Default
-  data types a marked with an asterisk. Currently ``INT24`` (``2``) is not
-  supported due to lacking NumPy support.
-* ``byteorder``: Byte order of the Mini-SEED file. ``0`` will result in a
-  little-endian file and ``1`` in a big-endian file. Defaults to big-endian.
-  Do not change this if you don't know what you are doing because most other
-  programs can only read big-endian Mini-SEED files.
-* ``flush``: If it is not zero all of the data will be packed into records,
-  otherwise records will only be packed while there are enough data samples to
-  completely fill a record. The default value is ``-1`` and thus every data
-  value will be packed by default.
-* ``verbose``: Controls verbosity of the underlying libmseed. A value higher
-  than ``0`` will give diagnostic output. Defaults to ``0``.
+Refer to the :meth:`~obspy.mseed.core.writeMSEED` method for details to
+each parameter.
 
-So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
+So in order to write a STEIM1 encoded Mini-SEED file with a record length of
 512 byte do the following:
 
 >>> st.write('out.mseed', format='MSEED', reclen=512,  # doctest: +SKIP
 ...          encoding='STEIM1')
+
+Many of these can also be set at each Trace`s ``stats.mseed`` attribute which
+allows for per Trace granularity. Values passed to the
+:func:`~obspy.core.stream.read` function have priority.
+
+
+Encoding Support
+----------------
+
+MiniSEED is a format with a large variety of different blockettes,
+byte order issues, and encodings. The capabilities of ``obspy.mseed``
+largely coincide with the capabilities of ``libmseed``, which is the de-facto
+standard MiniSEED library and used internally by ObsPy.
+
+In regards to the different encodings for the data part of MiniSEED files
+this means the following:
+
+* Read support for: ACSII, 16 and 32 bit integers, 32 and 64 bit floats,
+  STEIM 1 + 2, all GEOSCOPE encodings, the CDSN encoding, the SRO encoding,
+  and the DWWSSN encoding
+* Write support for: ACSII, 16 and 32 bit integers, 32 and 64 bit floats,
+  and STEIM 1 + 2
+* Unsupported: 24 bit integers, US National Network compression,
+  Graefenberg 16 bit gain ranged encoding, IPG - Strasbourg 16 bit gain ranged
+  encoding, STEIM 3, the HGLP encoding, and the RSTN 16 bit gain ranged
+  encoding
+
+Utilities
+---------
+
+This module also contains a couple of utility functions which are useful for
+some purposes. Refer to the documentation of each for details.
+
++---------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.getStartAndEndTime`      | Fast way of getting the temporal bounds of a well-behaved MiniSEED file. |
++---------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.getTimingAndDataQuality` |  Returns information about the data and timing quality flags in a file.  |
++---------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.shiftTimeOfFile`         |      Shifts the time of a file preserving all blockettes and flags.      |
++---------------------------------------------------+--------------------------------------------------------------------------+
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

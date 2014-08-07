@@ -14,6 +14,7 @@ The functionality is provided through the following packages:
    obspy.imaging
    obspy.realtime
    obspy.signal
+   obspy.station
    obspy.taup
    obspy.xseed
 
@@ -23,6 +24,8 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.ah
+   obspy.css
    obspy.datamark
    obspy.gse2
    obspy.mseed
@@ -32,6 +35,17 @@ The functionality is provided through the following packages:
    obspy.segy
    obspy.sh
    obspy.wav
+   obspy.y
+
+.. rubric:: Event Data Import/Export Plug-ins
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
+
+   obspy.core.quakeml
+   obspy.ndk
+   obspy.pde
 
 .. rubric:: Database or Web Service Access Clients
 
@@ -42,6 +56,9 @@ The functionality is provided through the following packages:
    obspy.arclink
    obspy.db
    obspy.earthworm
+   obspy.fdsn
    obspy.iris
+   obspy.neic
    obspy.neries
+   obspy.seedlink
    obspy.seishub
