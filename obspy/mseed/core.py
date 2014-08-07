@@ -226,13 +226,13 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # If its a filename just read it.
     if isinstance(mseed_object, (str, native_str)):
         # Read to NumPy array which is used as a buffer.
-        buffer = np.fromfile(mseed_object, dtype=np.int8)
+        bfrNp = np.fromfile(mseed_object, dtype=np.int8)
     elif hasattr(mseed_object, 'read'):
-        buffer = np.fromstring(mseed_object.read(), dtype=np.int8)
+        bfrNp = np.fromstring(mseed_object.read(), dtype=np.int8)
 
     # Get the record length
     try:
-        record_length = pow(2, int(''.join([chr(_i) for _i in buffer[19:21]])))
+        record_length = pow(2, int(''.join([chr(_i) for _i in bfrNp[19:21]])))
     except ValueError:
         record_length = 4096
 
@@ -246,16 +246,16 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     isdigit = lambda x: True if (x - min_ascii).max() <= 9 else False
     while True:
         # This should never happen
-        if (isdigit(buffer[offset:offset + 6]) is False) or \
-                (buffer[offset + 6] not in VALID_CONTROL_HEADERS):
+        if (isdigit(bfrNp[offset:offset + 6]) is False) or \
+                (bfrNp[offset + 6] not in VALID_CONTROL_HEADERS):
             msg = 'Not a valid (Mini-)SEED file'
             raise Exception(msg)
-        elif buffer[offset + 6] in SEED_CONTROL_HEADERS:
+        elif bfrNp[offset + 6] in SEED_CONTROL_HEADERS:
             offset += record_length
             continue
         break
-    buffer = buffer[offset:]
-    buflen = len(buffer)
+    bfrNp = bfrNp[offset:]
+    buflen = len(bfrNp)
 
     # If no selection is given pass None to the C function.
     if starttime is None and endtime is None and sourcename is None:
@@ -336,7 +336,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         verbose = 0
 
     lil = clibmseed.readMSEEDBuffer(
-        buffer, buflen, selections, C.c_int8(unpack_data),
+        bfrNp, buflen, selections, C.c_int8(unpack_data),
         reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
         allocData, diag_print, log_print)
 
@@ -519,9 +519,10 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             use_blkt_1001 += 1
         
         if hasattr(trace.stats, 'mseed') and \
-            hasattr(trace.stats['mseed'], 'timing_quality'):
+            hasattr(trace.stats['mseed'], 'blkt1001') and \
+            hasattr(trace.stats['mseed']['blkt1001'], 'timing_quality'):
             
-            timing_quality = trace.stats['mseed']['timing_quality']
+            timing_quality = trace.stats['mseed']['blkt1001']['timing_quality']
             # Check timing quality type
             try:
                 timing_quality = int(timing_quality)
@@ -725,12 +726,12 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:
-            #Timing quality has been set in trace_attr
+            # Timing quality has been set in trace_attr
             
             size = C.sizeof(blkt_1001_s)
             # Only timing quality matters here, other blockette attributes will
             # be filled by libmseed.msr_normalize_header
-            blkt_value = pack("BBBB" , trace_attr['timing_quality'], 0, 0, 0)
+            blkt_value = pack("BBBB", trace_attr['timing_quality'], 0, 0, 0)
             blkt_ptr = C.create_string_buffer(blkt_value, len(blkt_value))
             
             # Usually returns a pointer to the added blockette in the
