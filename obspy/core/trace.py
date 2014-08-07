@@ -1403,8 +1403,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
-        Resample trace data using Fourier method.
- 
+        Resample trace data using Fourier method. Spectra are linearly
+        interpolated if required.
+
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
         :type window: array_like, callable, string, float, or tuple, optional
@@ -1417,21 +1418,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which endtime of trace
             would change. Defaults to ``False``.
- 
+
         .. note::
- 
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
             a copy of your trace object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
- 
+
         Uses :func:`scipy.signal.resample`. Because a Fourier method is used,
         the signal is assumed to be periodic.
- 
+
         .. rubric:: Example
- 
+
         >>> tr = Trace(data=np.array([0.5, 0, 0.5, 1, 0.5, 0, 0.5, 1]))
         >>> len(tr)
         8
@@ -1447,11 +1448,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         array([ 0.5       ,  0.40432914,  0.3232233 ,  0.26903012,  0.25 ...
         """
         from scipy.signal.windows import get_window
+        from scipy.fftpack import rfft, irfft
         factor = self.stats.sampling_rate / float(sampling_rate)
         # check if endtime changes and this is not explicitly allowed
-        if strict_length and len(self.data) % factor != 0.0:
-            msg = "Endtime of trace would change and strict_length=True."
-            raise ValueError(msg)
+        if strict_length:
+            if len(self.data) % factor != 0.0:
+                msg = "Endtime of trace would change and strict_length=True."
+                raise ValueError(msg)
         # do automatic lowpass filtering
         if not no_filter:
             # be sure filter still behaves good
@@ -1462,28 +1465,46 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ArithmeticError(msg)
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
-         
+
         # resample in the frequency domain
-        num = int(self.stats.npts / factor)
-        
-        X = np.fft.fft(self.data)
+        X = rfft(self.data)
+        X = np.insert(X, 1, 0)
+        if self.stats.npts % 2 == 0:
+            X = np.append(X, [0])
+        Xr = X[::2]
+        Xi = X[1::2]
+
         if window is not None:
             if callable(window):
                 W = window(np.fft.fftfreq(self.stats.npts))
-            elif isinstance(window, np.ndarray) and window.shape == (self.stats.npts,):
+            elif isinstance(window, np.ndarray):
+                if window.shape != (self.stats.npts,):
+                    msg = "Window has the wrong shape. Window length must " + \
+                          "equal the number of points."
+                    raise ValueError(msg)
                 W = window
             else:
                 W = np.fft.ifftshift(get_window(window, self.stats.npts))
-            X = X * W         
-            
-        X = np.fft.fftshift(X)
-        f = np.fft.fftshift(np.fft.fftfreq(self.stats.npts, self.stats.delta))
-        F = np.fft.fftshift(np.fft.fftfreq(num, 1./sampling_rate))
-        Y = np.interp(F, f, X.real) + 1j*np.interp(F, f, X.imag)
-        y = np.fft.ifft(np.fft.ifftshift(Y)) * (float(num) / float(self.stats.npts))
-        self.data = y.real
+            Xr *= W[:self.stats.npts//2+1]
+            Xi *= W[:self.stats.npts//2+1]
+
+        # interpolate
+        num = int(self.stats.npts / factor)
+        df = 1.0 / (self.stats.npts * self.stats.delta)
+        dF = 1.0 / num * sampling_rate
+        f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=int)
+        nF = num // 2 + 1
+        F = dF * np.arange(0, nF, dtype=int)
+        Y = np.zeros((2*nF))
+        Y[::2] = np.interp(F, f, Xr)
+        Y[1::2] = np.interp(F, f, Xi)
+
+        Y = np.delete(Y, 1)
+        if num % 2 == 0:
+            Y = np.delete(Y, -1)
+        self.data = irfft(Y) * (float(num) / float(self.stats.npts))
         self.stats.sampling_rate = sampling_rate
-         
+
         # add processing information to the stats dictionary
         proc_info = "resample:%d:%s" % (sampling_rate, window)
         self._addProcessingInfo(proc_info)
