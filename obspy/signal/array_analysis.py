@@ -2,6 +2,14 @@
 """
 Function for Array Analysis
 
+
+Coordinate conventions:
+
+* Right handed
+* X positive to east
+* Y positive to north
+* Z positive up
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -33,12 +41,11 @@ import matplotlib.pyplot as plt
 
 class SeismicArray(object):
     """
-    Class representing a seismic array.
+    Class representing a seismic array.up
     """
-    def __init__(self, name=u""):
+    def __init__(self, name=u"",):
         self.name = name
         self.inventory = None
-        self.event = None
 
     def add_inventory(self, inv):
         if self.inventory is not None:
@@ -76,8 +83,8 @@ class SeismicArray(object):
                     this_coordinates = \
                         {"latitude": float(channel.latitude),
                          "longitude": float(channel.longitude),
-                         "elevation_in_m": float(channel.elevation),
-                         "local_depth_in_m": float(channel.depth)}
+                         "absolute_height_in_km":
+                         float(channel.elevation - channel.depth) / 1000.0}
                     if station_code in geo and \
                             this_coordinates not in geo.values():
                         msg = ("Different coordinates for station '{n}.{s}' "
@@ -97,20 +104,18 @@ class SeismicArray(object):
                          extend["min_latitude"]) / 2.0,
             "longitude": (extend["max_longitude"] +
                           extend["min_longitude"]) / 2.0,
-            "elevation_in_m": (extend["max_elevation_in_m"] +
-                               extend["min_elevation_in_m"]) / 2.0,
-            "local_depth_in_m": (extend["max_local_depth_in_m"] +
-                                 extend["min_local_depth_in_m"]) / 2.0,
+            "absolute_height_in_km":
+            (extend["min_absolute_height_in_km"] +
+             extend["max_absolute_height_in_km"]) / 2.0
         }
 
     @property
     def center_of_gravity(self):
-        lats, lngs, ele, dep = self.__coordinate_values()
+        lats, lngs, hgts = self.__coordinate_values()
         return {
             "latitude": np.mean(lats),
             "longitude": np.mean(lngs),
-            "elevation_in_m": np.mean(ele),
-            "local_depth_in_m": np.mean(dep)}
+            "absolute_height_in_km": np.mean(hgts)}
 
     @property
     def geometry(self):
@@ -136,28 +141,24 @@ class SeismicArray(object):
 
     @property
     def extend(self):
-        lats, lngs, ele, dep = self.__coordinate_values()
+        lats, lngs, hgt = self.__coordinate_values()
 
         return {
             "min_latitude": min(lats),
             "max_latitude": max(lats),
             "min_longitude": min(lngs),
             "max_longitude": max(lngs),
-            "min_elevation_in_m": min(ele),
-            "max_elevation_in_m": max(ele),
-            "min_local_depth_in_m": min(dep),
-            "max_local_depth_in_m": max(dep)
-        }
+            "min_absolute_height_in_km": min(hgt),
+            "max_absolute_height_in_km": max(hgt)}
 
     def __coordinate_values(self):
         geo = self.geometry
-        lats, lngs, ele, dep = [], [], [], []
+        lats, lngs, hgt = [], [], []
         for coordinates in geo.values():
             lats.append(coordinates["latitude"]),
             lngs.append(coordinates["longitude"]),
-            ele.append(coordinates["elevation_in_m"]),
-            dep.append(coordinates["local_depth_in_m"])
-        return lats, lngs, ele, dep
+            hgt.append(coordinates["absolute_height_in_km"])
+        return lats, lngs, hgt
 
     def __unicode__(self):
         """
@@ -177,6 +178,59 @@ class SeismicArray(object):
         http://stackoverflow.com/questions/1307014/python-str-versus-unicode
         """
         return unicode(self).encode("utf-8")
+
+    def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
+                         correct_3dplane=False):
+        """
+        Method to calculate the array geometry and the center coordinates in km
+
+        :param correct_3dplane: applies a 3D best fitting plane to the array.
+               This might be important if the array is located on a inclinde
+               slope (e.g., at a volcano)
+        :return: Returns the geometry of the stations as 2d numpy.ndarray
+                The first dimension are the station indexes with the same order
+                as the traces in the stream object. The second index are the
+                values of [lat, lon, elev] in km
+                last index contains center [lat, lon, elev] in degrees and
+                km if return_center is true
+        """
+        geometry = {}
+
+        for key, value in self.geometry.items():
+            x, y = utlGeoKm(longitude, latitude, value["longitude"],
+                            value["latitude"])
+            geometry[key] = {
+                "x": x,
+                "y": y,
+                "z": absolute_height_in_km - value["absolute_height_in_km"]
+            }
+
+        # XXX: Adjust to dictionary based distances!!
+        if correct_3dplane:
+            A = geometry
+            u, s, vh = np.linalg.linalg.svd(A)
+            v = vh.conj().transpose()
+            # satisfies the plane equation a*x + b*y + c*z = 0
+            result = np.zeros((nstat, 3))
+            # now we are seeking the station positions on that plane
+            # geometry[:,2] += v[2,-1]
+            n = v[:, -1]
+            result[:, 0] = (geometry[:, 0] - n[0] * (
+                n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+                geometry[:, 2]) / (
+                                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+            result[:, 1] = (geometry[:, 1] - n[1] * (
+                n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+                geometry[:, 2]) / (
+                                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+            result[:, 2] = (geometry[:, 2] - n[2] * (
+                n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+                geometry[:, 2]) / (
+                                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+            geometry = result[:]
+            print("Best fitting plane-coordinates :", geometry)
+
+        return geometry
 
     def find_closest_station(self, latitude, longitude, elevation_in_m=0.0,
                              local_depth_in_m=0.0):
@@ -202,6 +256,106 @@ class SeismicArray(object):
                 min_distance_station = key
 
         return min_distance_station
+
+    def get_timeshift_baz(self, sll, slm, sls, baz, latitude, longitude,
+                          absolute_height_in_km, static_3D=False,
+                          vel_cor=4.0):
+        """
+        Returns timeshift table for given array geometry and a pre-defined
+        backazimuth.
+
+        :param sll_x: slowness x min (lower)
+        :param slm_y: slowness x max (lower)
+        :param sl_s: slowness step
+        :param baz:  backazimuth applied
+        :param vel_cor: correction velocity (upper layer) in km/s
+        :param static_3D: a correction of the station height is applied using
+            vel_cor the correction is done according to the formula:
+            t = rxy*s - rz*cos(inc)/vel_cor
+            where inc is defined by inv = asin(vel_cor*slow)
+        """
+        geom = self.get_geometry_xyz(latitude, longitude,
+                                     absolute_height_in_km)
+
+        baz = math.pi * baz / 180.0
+
+        time_shift_tbl = {}
+        sx = sll
+        while sx < slm:
+            inc = min(math.asin(vel_cor * sx), np.pi / 2.0)
+
+            time_shifts = {}
+            for key, value in geom.items():
+                time_shifts[key] = sx * (value["x"] * math.sin(baz) +
+                                         value["y"] * math.cos(baz))
+
+                if static_3D:
+                    try:
+                        v = vel_cor[key]
+                    except TypeError:
+                        v = vel_cor
+                    time_shifts[key] += value["z"] * math.cos(inc) / v
+
+                time_shift_tbl[sx] = time_shifts
+            sx += sls
+
+        return time_shift_tbl
+
+    def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x,
+                      grdpts_y, vel_cor=4., static_3D=False):
+        """
+        Returns timeshift table for given array geometry
+
+        :param geometry: Nested list containing the arrays geometry,
+            as returned by get_group_geometry
+        :param sll_x: slowness x min (lower)
+        :param sll_y: slowness y min (lower)
+        :param sl_s: slowness step
+        :param grdpts_x: number of grid points in x direction
+        :param grdpts_x: number of grid points in y direction
+        :param vel_cor: correction velocity (upper layer) in km/s
+        :param static_3D: a correction of the station height is applied using
+            vel_cor the correction is done according to the formula:
+            t = rxy*s - rz*cos(inc)/vel_cor
+            where inc is defined by inv = asin(vel_cor*slow)
+        """
+        if static_3D:
+            nstat = len(geometry)  # last index are center coordinates
+            time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+            for k in xrange(grdpts_x):
+                sx = sll_x + k * sl_s
+                for l in xrange(grdpts_y):
+                    sy = sll_y + l * sl_s
+                    slow = np.sqrt(sx*sx + sy*sy)
+                    if vel_cor*slow <= 1.:
+                        inc = np.arcsin(vel_cor*slow)
+                    else:
+                        print ("Warning correction velocity smaller than apparent "
+                               "velocity")
+                        inc = np.pi/2.
+                    time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * \
+                                                                    geometry[:, 1] + geometry[:, 2] * np.cos(inc) / vel_cor
+            return time_shift_tbl
+        # optimized version
+        else:
+            mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
+            my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
+            return np.require(
+                mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
+                my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
+                dtype='float32')
+
+    def vespagram(self, stream, event_or_baz, sll, slm, sls, latitude,
+                  longitude, absolute_height_in_km, method="DLS", nthroot=1,
+                  static_3D=False, vel_cor=4.0):
+        baz = float(event_or_baz)
+        time_shift_table = self.get_timeshift_baz(
+            sll, slm, sls, baz, latitude, longitude, absolute_height_in_km,
+            static_3D=static_3D, vel_cor=vel_cor)
+
+        vg = vespagram_baz(stream, sll, slm, sls, baz, method=method,
+                           nthroot=nthroot, static_3D=static_3D,
+                           vel_cor=vel_cor)
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
                                    longitude, elevation_in_m=0.0,
@@ -961,87 +1115,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         return geometry
 
 
-def get_timeshift_baz(geometry, sll, slm, sls, baze, vel_cor=4.,
-                      static_3D=False):
-    """
-    Returns timeshift table for given array geometry and a pre-definded
-    backazimut
-
-    :param geometry: Nested list containing the arrays geometry, as returned by
-            get_group_geometry
-    :param sll_x: slowness x min (lower)
-    :param slm_y: slowness x max (lower)
-    :param sl_s: slowness step
-    :param baze:  backazimuth applied
-    :param vel_cor: correction velocity (upper layer) in km/s
-    :param static_3D: a correction of the station height is applied using
-        vel_cor the correction is done according to the formula:
-        t = rxy*s - rz*cos(inc)/vel_cor
-        where inc is defined by inv = asin(vel_cor*slow)
-    """
-    nstat = len(geometry)  # last index are center coordinates
-    baz = math.pi*baze/180.
-    nbeams = int((slm - sll) / sls + 0.5) + 1
-    time_shift_tbl = np.empty((nstat, nbeams), dtype="float32")
-    for k in xrange(nbeams):
-        sx = sll + k * sls
-        if vel_cor*sx < 1.:
-            inc = np.arcsin(vel_cor*sx)
-        else:
-            inc = np.pi/2.
-        time_shift_tbl[:, k] = sx * (geometry[:, 0] * math.sin(baz) +
-                                     geometry[:, 1] * math.cos(baz))
-        if static_3D:
-            time_shift_tbl[:, k] += geometry[:, 2] * np.cos(inc) / vel_cor
-
-    return time_shift_tbl
-
-
-def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x,
-                  grdpts_y, vel_cor=4., static_3D=False):
-    """
-    Returns timeshift table for given array geometry
-
-    :param geometry: Nested list containing the arrays geometry, as returned by
-            get_group_geometry
-    :param sll_x: slowness x min (lower)
-    :param sll_y: slowness y min (lower)
-    :param sl_s: slowness step
-    :param grdpts_x: number of grid points in x direction
-    :param grdpts_x: number of grid points in y direction
-    :param vel_cor: correction velocity (upper layer) in km/s
-    :param static_3D: a correction of the station height is applied using
-        vel_cor the correction is done according to the formula:
-        t = rxy*s - rz*cos(inc)/vel_cor
-        where inc is defined by inv = asin(vel_cor*slow)
-    """
-    if static_3D:
-        nstat = len(geometry)  # last index are center coordinates
-        time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
-        for k in xrange(grdpts_x):
-            sx = sll_x + k * sl_s
-            for l in xrange(grdpts_y):
-                sy = sll_y + l * sl_s
-                slow = np.sqrt(sx*sx + sy*sy)
-                if vel_cor*slow <= 1.:
-                    inc = np.arcsin(vel_cor*slow)
-                else:
-                    print ("Warning correction velocity smaller than apparent "
-                           "velocity")
-                    inc = np.pi/2.
-                time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * \
-                    geometry[:, 1] + geometry[:, 2] * np.cos(inc) / vel_cor
-        return time_shift_tbl
-    # optimized version
-    else:
-        mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
-        my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
-        return np.require(
-            mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
-            my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
-            dtype='float32')
-
-def get_spoint(stream, stime, etime):
+def get_stream_offsets(stream, stime, etime):
     """
     Calculates start and end offsets relative to stime and etime for each
     trace in stream in samples.
@@ -1298,7 +1372,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     mini = np.min(time_shift_table[:, :, :])
     maxi = np.max(time_shift_table[:, :, :])
 
-    spoint, _epoint = get_spoint(stream, stime, etime)
+    spoint, _epoint = get_stream_offsets(stream, stime, etime)
 
     # loop with a sliding window over the dat trace array and apply bbfk
     nstat = len(stream)
@@ -1505,7 +1579,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
 
     mini = np.min(time_shift_table[:, :, :])
     maxi = np.max(time_shift_table[:, :, :])
-    spoint, _epoint = get_spoint(stream, (stime-mini), (etime-maxi))
+    spoint, _epoint = get_stream_offsets(stream, (stime-mini), (etime-maxi))
     minend = np.min(_epoint)
     maxstart = np.max(spoint)
 
@@ -1672,9 +1746,8 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
 #    return(baz,slow,slow_x,slow_y,abspow_map,beam_max)
 
 
-def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False,
-                  coordsys='lonlat', method="DLS", nthroot=1,
-                  correct_3dplane=False, static_3D=False, vel_cor=4.):
+def vespagram_baz(stream, time_shift_table, starttime, endtime,
+                  method="DLS", nthroot=1):
     """
     Estimating the azimuth or slowness vespagram
 
@@ -1682,95 +1755,55 @@ def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False,
         contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
         degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
         items/attributes. See param coordsys
-    :type sll: Float
-    :param sll: slowness  min (lower)
-    :type slm: Float
-    :param slm: slowness max
-    :type sls: Float
-    :param sls: slowness step
-    :type baz: Float
-    :param baz: given backazimuth
-    :type stime: UTCDateTime
-    :param stime: Starttime of interest
-    :type etime: UTCDateTime
-    :param etime: Endtime of interest
-    :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
-        attributes to use for coordinates
-    :type timestamp: string
-    :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
-        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
-        returns the timestamp in days (decimals represent hours, minutes
-        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlibs num2date)
-    :type store: function
-    :param store: A custom function which gets called on each iteration. It is
-        called with the relative power map and the time offset as first and
-        second arguments and the iteration number as third argument. Useful for
-        storing or plotting the map for each iteration. For this purpose the
-        dump function of this module can be used.
+    :type starttime: UTCDateTime
+    :param starttime: Starttime of interest
+    :type endtime: UTCDateTime
+    :param endtime: Endtime of interest
     :return: numpy.ndarray of beams with different slownesses
     """
-    # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
-    nstat = len(stream)
-    if len(stream) != len(stream.select(sampling_rate=fs)):
-        msg = 'in sonic sampling rates of traces in stream are not equal'
-        raise ValueError(msg)
-
-    ndat = int((etime - stime)*fs)
-
-    nbeams = int(((slm - sll) / sls + 0.5) + 1)
-
-    geometry = get_geometry(stream, coordsys=coordsys,
-                            correct_3dplane=correct_3dplane, verbose=verbose)
-
-    if verbose:
-        print("geometry:")
-        print(geometry)
-        print("stream contains following traces:")
-        print(stream)
-        print("stime = " + str(stime) + ", etime = " + str(etime))
-
-    time_shift_table = get_timeshift_baz(geometry, sll, slm, sls, baz,
-                                         vel_cor=vel_cor, static_3D=static_3D)
 
     mini = np.min(time_shift_table[:, :])
     maxi = np.max(time_shift_table[:, :])
-    spoint, _epoint = get_spoint(stream, (stime - mini), (etime - maxi))
+    spoint, _ = get_stream_offsets(stream, (starttime - mini),
+                                   (endtime - maxi))
 
-    # recalculate the maximum possible trace length
-    ndat = int(((etime - maxi) - (stime - mini)) * fs)
-    beams = np.zeros((nbeams, ndat), dtype='f8')
+    # Recalculate the maximum possible trace length
+    ndat = int(((endtime - maxi) - (starttime - mini)) * fs)
+    beams = np.zeros((len(time_shift_table), ndat), dtype='f8')
 
-    stream.detrend()
-    max_beam = 0.
-    slow = 0.
+    max_beam = 0.0
+    slow = 0.0
 
-    for x in xrange(nbeams):
-        singlet = 0.
+    slownesses = sorted(time_shift_table.keys())
+    sll = slownesses[0]
+    sls = slownesses[1] - sll
+
+    for _i, slowness in enumerate(time_shift_table.keys()):
+        singlet = 0.0
         if method == 'DLS':
-            for i in xrange(nstat):
-                s = spoint[i]+int(time_shift_table[i, x]*fs + 0.5)
-                shifted = stream[i].data[s: s + ndat]
-                singlet += 1. / nstat * np.sum(shifted * shifted)
-                beams[x] += 1. / nstat * np.power(np.abs(shifted),
-                                                  1. / nthroot) \
-                    * shifted / np.abs(shifted)
-            beams[x] = np.power(np.abs(beams[x]), nthroot) * beams[x] / \
-                np.abs(beams[x])
-            bs = np.sum(beams[x]*beams[x])
+            for _j, tr in stream:
+                station = "%s.%s" % (tr.stats.network, tr.stats.station)
+                s = spoint[_j] + int(time_shift_table[slowness][station] *
+                                     fs + 0.5)
+                shifted = tr.data[s: s + ndat]
+                singlet += 1. / len(stream) * np.sum(shifted * shifted)
+                beams[_i] += 1. / len(stream) * np.power(
+                    np.abs(shifted), 1. / nthroot) * shifted / np.abs(shifted)
+
+            beams[_i] = np.power(np.abs(beams[_i]), nthroot) * beams[_i] / \
+                np.abs(beams[_i])
+
+            bs = np.sum(beams[_i] * beams[_i])
             bs /= singlet
-            #bs = np.abs(np.max(beams[x]))
+
             if bs > max_beam:
                 max_beam = bs
-                beam_max = x
-                slow = np.abs(sll + x * sls)
-                if (slow) < 1e-8:
-                    slow = 1e-8
-        if method == 'PWS':
+                beam_max = _i
+                slow = np.abs(sll + slowness * sls)
+
+        elif method == 'PWS':
             stack = np.zeros(ndat, dtype='c8')
-            phase = np.zeros(ndat, dtype='f8')
-            coh = np.zeros(ndat, dtype='f8')
             for i in xrange(nstat):
                 s = spoint[i] + int(time_shift_table[i, x] * fs + 0.5)
                 try:
@@ -1794,6 +1827,9 @@ def vespagram_baz(stream, sll, slm, sls, baz, stime, etime, verbose=False,
                 slow = np.abs(sll + x * sls)
                 if (slow) < 1e-8:
                     slow = 1e-8
+        else:
+            msg = "Method '%s' unknown." % method
+            raise ValueError(msg)
 
     return(slow, beams, beam_max, max_beam)
 

@@ -4,6 +4,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util import AttribDict
+from obspy.signal.array_analysis import array_transff_freqslowness, \
+    array_processing, array_transff_wavenumber, get_stream_offsets
+from obspy.signal.util import utlLonLat
+
 import io
 import unittest
 
@@ -159,7 +165,7 @@ class SonicTestCase(unittest.TestCase):
             Trace(data, {'starttime': stime - 4}),
             Trace(data, {'starttime': stime - 2}),
         ])
-        spoint, epoint = get_spoint(st, stime, etime)
+        spoint, epoint = get_stream_offsets(st, stime, etime)
         self.assertTrue(np.allclose([1, 4, 2], spoint))
         self.assertTrue(np.allclose([8, 5, 7], epoint))
 
