@@ -7,7 +7,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.ah"
+MODULE_NAME = "obspy.adhoc"
 
 
 def suite():

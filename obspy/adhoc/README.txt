@@ -1,5 +1,5 @@
-package obspy.ah
-================
+package obspy.adhoc
+===================
 
 Copyright
 ---------
@@ -11,9 +11,9 @@ Copyright (c) 2014 by:
 
 Overview
 --------
-AH (Ad Hoc) read support for ObsPy.
+AD HOC read support for ObsPy.
 
-This module provides read support for the AH (Ad Hoc) waveform format
+This module provides read support for the AD HOC waveform format
 introduced by the Lamont-Doherty Geological Observatory.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
