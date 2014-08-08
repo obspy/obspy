@@ -22,6 +22,8 @@ class FDSNException(Exception):
     pass
 
 
+# A curated list collecting some implementation:
+# http://www.fdsn.org/webservices/datacenters/
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "ORFEUS": "http://www.orfeus-eu.org",
                 "USGS": "http://comcat.cr.usgs.gov",
