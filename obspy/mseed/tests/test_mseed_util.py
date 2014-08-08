@@ -2,11 +2,16 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
+from datetime import datetime
+from _struct import pack
 
 from obspy import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import Stream, Trace
+from obspy.mseed.util import set_flags_in_fixed_headers
 
 import io
 import numpy as np
@@ -15,6 +20,7 @@ import random
 import sys
 import unittest
 import warnings
+import copy
 
 
 class MSEEDUtilTestCase(unittest.TestCase):
@@ -289,6 +295,181 @@ class MSEEDUtilTestCase(unittest.TestCase):
             st_after = readMSEED(output_filename)
             st_before[0].stats.starttime -= 2.2222
             self.assertEqual(st_before, st_after)
+
+
+    def test_set_flags_in_fixed_header(self):
+        """
+        Test case for obspy.mseed.util.set_flags_in_fixed_headers
+        """
+
+        # Write mseed file with several traces
+
+        npts = 1000
+        np.random.seed(42)  # make test reproducable
+        data = np.random.randint(-1000, 1000, npts).astype(np.int32)
+
+        # Test valid data
+        stat_header = {'network': 'NE', 'station': 'STATI', 'location': 'LO',
+                       'channel': 'CHA', 'npts': len(data), 'sampling_rate': 1,
+                       'mseed': {'dataquality': 'D',
+                                 'blkt1001': {'timing_quality': 63}}}
+
+        stat_header['starttime'] = UTCDateTime(datetime(2012, 8, 1,
+                                                        12, 0, 0, 0))
+        trace1 = Trace(data=data, header=stat_header)
+
+        stat_header['channel'] = 'CHB'
+        trace2 = Trace(data=data, header=stat_header)
+
+        stat_header['station'] = 'STATJ'
+        trace3 = Trace(data=data, header=stat_header)
+
+        st = Stream([trace1, trace2, trace3])
+        with NamedTemporaryFile() as tf:
+            st.write(tf, format="mseed", encoding=11, reclen=512)
+            tf.seek(0, os.SEEK_SET)
+            file_name = tf.name
+
+            # Initialize dummy flags with known binary value
+            # Matching bytes are 0x15, 0x28, 0x88
+            classic_flags = {'activity_flags': {'calib_signal': True,
+                                                'begin_event': True,
+                                                'positive_leap': True,
+                                                'negative_leap': False},
+                             'io_clock_flags': {'start_of_time_series': True,
+                                                'clock_locked': True},
+                             'data_qual_flags': {'glitches_detected': True,
+                                                 'time_tag_questionable': 1}}
+
+            expected_classic = pack(native_str('BBB'), 0x15, 0x28, 0x88)
+            expected_leap_mod = pack(native_str('BBB'), 0x05, 0x28, 0x88)
+            expected_glitch_mod = pack(native_str('BBB'), 0x15, 0x28, 0x88)
+
+            # Test update all traces
+            all_traces = {'...': copy.deepcopy(classic_flags)}
+            set_flags_in_fixed_headers(file_name, all_traces)
+            # Check that values changed
+            self._check_values(tf, '...', expected_classic, 512)
+
+            # Update one trace
+            one_trace = {'NE.STATI.LO.CHA': copy.deepcopy(classic_flags)}
+            cur_dict = one_trace['NE.STATI.LO.CHA']['activity_flags']
+            cur_dict['positive_leap'] = False
+            set_flags_in_fixed_headers(file_name, one_trace)
+            # Check that values changed
+            self._check_values(tf, 'NE.STATI.LO.CHA', expected_leap_mod, 512)
+            # Check that values that should not change, have not
+            self._check_values(tf, 'NE.STATI.LO.CHB', expected_classic, 512)
+            self._check_values(tf, 'NE.STATJ.LO.CHB', expected_classic, 512)
+            # Put back previous values
+            set_flags_in_fixed_headers(file_name, all_traces)
+
+            # Update specific trace without paying attention to station name
+            no_sta = {'NE..LO.CHB': copy.deepcopy(classic_flags)}
+            no_sta['NE..LO.CHB']['activity_flags']['positive_leap'] = False
+            set_flags_in_fixed_headers(file_name, no_sta)
+            self._check_values(tf, 'NE.STATI.LO.CHA', expected_classic, 512)
+            self._check_values(tf, 'NE.STATI.LO.CHB', expected_leap_mod, 512)
+            self._check_values(tf, 'NE.STATJ.LO.CHB', expected_leap_mod, 512)
+            # Put back previous values
+            set_flags_in_fixed_headers(file_name, all_traces)
+
+            # Wildcard plus specific traces
+            wild_plus = {'NE..LO.CHB': copy.deepcopy(classic_flags),
+                         'NE.STATI.LO.CHB': copy.deepcopy(classic_flags)}
+            wild_plus['NE..LO.CHB']['activity_flags']['positive_leap'] = False
+            cur_dict = wild_plus['NE.STATI.LO.CHB']['data_qual_flags']
+            cur_dict['glitches_detected'] = False
+            set_flags_in_fixed_headers(file_name, wild_plus)
+            self._check_values(tf, 'NE.STATI.LO.CHA', expected_classic, 512)
+            self._check_values(tf, 'NE.STATI.LO.CHB', expected_glitch_mod, 512)
+            self._check_values(tf, 'NE.STATJ.LO.CHB', expected_leap_mod, 512)
+            # Put back previous values
+            set_flags_in_fixed_headers(file_name, all_traces)
+
+            # Update trace not present in the file
+            not_pres = {'NE.NOSTA.LO.CHA': copy.deepcopy(classic_flags)}
+            cur_dict = not_pres['NE.NOSTA.LO.CHA']['data_qual_flags']
+            cur_dict['glitches_detected'] = False
+            set_flags_in_fixed_headers(file_name, not_pres)
+            self._check_values(tf, '...', expected_classic, 512)
+            # Put back previous values
+            set_flags_in_fixed_headers(file_name, all_traces)
+            self._check_values(tf, '...', expected_classic, 512)
+            # Non-existing flag values
+            wrong_flag = {'...': copy.deepcopy(classic_flags)}
+            wrong_flag['...']['activity_flags']['inexistent'] = True
+            wrong_flag['...']['wrong_flag_group'] = {}
+            wrong_flag['...']['wrong_flag_group']['inexistent_too'] = True
+            set_flags_in_fixed_headers(file_name, wrong_flag)
+            self._check_values(tf, '...', expected_classic, 512)
+            # Put back previous values
+            set_flags_in_fixed_headers(file_name, all_traces)
+
+            # Incorrect trace identification
+            wrong_trace = {'not_three_points': copy.deepcopy(classic_flags)}
+            self.assertRaises(ValueError, set_flags_in_fixed_headers,
+                              file_name, wrong_trace)
+
+    def _check_values(self, file_bfr, trace_id, expected_bytes, reclen):
+        """
+        Check fixed header flags value in a file. Raises AssertError if the
+        result is not the one expected by expected_bytes.
+
+        This method is meant to be used by test_set_flags_in_fixed_header. It
+        checks the value of the fixed header bytes against expected_bytes in
+        every record matching the trace identifier trace_id.
+
+        Trace identification is expected as  a string looking like
+        Network.Station.Location.Channel. Empty fields are allowed and will
+        match any value.
+
+        :type file_bfr: File or NamedTemporaryFile
+        :param file_bfr: the file to test.
+        :type trace_id: string
+        :param trace_id: trace identification: Network.Station.Location.Channel
+        :type expected_bytes: binary string
+        :param expected_bytes: the values of the expected flags
+        :type reclen: int
+        :param reclen: record length across the file
+        """
+
+        prev_pos = file_bfr.tell()
+        file_bfr.seek(0, os.SEEK_END)
+        filesize = file_bfr.tell()
+        file_bfr.seek(0, os.SEEK_SET)
+
+        while file_bfr.tell() < filesize:
+            file_bfr.seek(8, os.SEEK_CUR)
+            # Read trace id
+            sta = file_bfr.read(5)
+            loc = file_bfr.read(2)
+            cha = file_bfr.read(3)
+            net = file_bfr.read(2)
+
+            # Check wether we want to check this trace
+            expectedtrace = trace_id.split(".")
+            exp_net = expectedtrace[0]
+            exp_sta = expectedtrace[1]
+            exp_loc = expectedtrace[2]
+            exp_cha = expectedtrace[3]
+
+            if (exp_net == "" or exp_net == net) and \
+               (exp_sta == "" or exp_sta == sta) and \
+               (exp_loc == "" or exp_loc == loc) and \
+               (exp_cha == "" or exp_net == cha):
+
+                file_bfr.seek(16, os.SEEK_CUR)
+                readbytes = file_bfr.read(3)
+                self.assertEqual(readbytes, expected_bytes, "Expected bytes")
+                # Move to the next record
+                file_bfr.seek(reclen - 39, os.SEEK_CUR)
+            else:
+                # No match, move directly to the next record
+                file_bfr.seek(reclen - 20, os.SEEK_CUR)
+
+        # Move the file_bfr to where it was before
+        file_bfr.seek(prev_pos, os.SEEK_SET)
 
 
 def suite():

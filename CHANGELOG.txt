@@ -3,10 +3,12 @@
    * Support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
  - obspy.ah
-   * New submodule for reading the AH (Ad Hoc) waveform format 
+   * New submodule for reading the AH (Ad Hoc) waveform format
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
+   * Dictionary values added to an AttribDict will now be converted to an
+     AttribDict.
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
  - obspy.fdsn:
@@ -19,6 +21,16 @@
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.mseed:
+   * `details=True` when reading will now write to
+     `Trace.stats.mseed.blkt1001.timing_quality` instead of
+     `Trace.stats.mseed.timing_quality`.
+   * The timing quality will now also be written to a file if it is set.
+   * Non-existing values when reading with `details=True` will now be set to
+     `False` instead of `-1`.
+   * New utility function `obspy.mseed.util.set_flags_in_fixed_header()`
+     giving the ability to overwrite flags in the fixed header of exiting
+     MiniSEED files.
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:

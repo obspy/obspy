@@ -133,12 +133,17 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         Note, that the traces are then also split on these additional
         information. Thus the number of traces in a stream will change.
         Details are stored in the mseed stats AttribDict of each trace.
-        -1 specifies for both cases, that these information is not available.
-        ``timing_quality`` specifies the timing quality from 0 to 100 [%].
-        ``calibration_type`` specifies the type of available calibration
-        information: 1 == Step Calibration, 2 == Sine Calibration, 3 ==
-        Pseudo-random Calibration, 4 == Generic Calibration and -2 ==
-        Calibration Abort.
+        ``False`` specifies for both cases, that this information is not
+        available. ``blkt1001.timing_quality`` specifies the timing quality
+        from 0 to 100 [%]. ``calibration_type`` specifies the type of available
+        calibration information blockettes:
+
+        - ``1``: Step Calibration (Blockette 300)
+        - ``2``: Sine Calibration (Blockette 310)
+        - ``3``: Pseudo-random Calibration (Blockette 320)
+        - ``4``: Generic Calibration  (Blockette 390)
+        - ``-2``: Calibration Abort (Blockette 395)
+
     :type header_byteorder: int or str, optional
     :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
@@ -161,6 +166,25 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     NL.HGN.00.BHZ | 2003-05-29T02:15:59.993400Z - ... | 40.0 Hz, 5629 samples
+
+    Read with ``details=True`` to read more details of the file if present.
+
+    >>> st = read("/path/to/timingquality.mseed", details=True)
+    >>> print(st[0].stats.mseed.blkt1001.timing_quality)
+    55
+
+    ``False`` means that the necessary information could not be found in the
+    file.
+
+    >>> print(st[0].stats.mseed.calibration_type)
+    False
+
+    Note that each change in timing quality from record to record may trigger a
+    new Trace object to be created so the Stream object may contain many Trace
+    objects if ``details=True`` is used.
+
+    >>> print(len(st))
+    101
     """
     # Parse the headonly and reclen flags.
     if headonly is True:
@@ -217,20 +241,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         raise ValueError(msg)
 
     # Only keep information relevant for the whole file.
-    if info.has_key('timing_quality'):
-        blkt1001_value = {'timing_quality' : info['timing_quality']}
-    else:
-        blkt1001_value = None
-    
     info = {'encoding': info['encoding'],
             'filesize': info['filesize'],
             'record_length': info['record_length'],
             'byteorder': info['byteorder'],
             'number_of_records': info['number_of_records']}
-    
-    if blkt1001_value is not None:
-        info['blkt1001'] = blkt1001_value
-    
+
     # If its a filename just read it.
     if isinstance(mseed_object, (str, native_str)):
         # Read to NumPy array which is used as a buffer.
@@ -376,14 +392,15 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             header['sampling_rate'] = currentSegment.samprate
             header['starttime'] = \
                 util._convertMSTimeToDatetime(currentSegment.starttime)
-            # TODO: write support is missing
             if details:
                 timing_quality = currentSegment.timing_quality
                 if timing_quality == 0xFF:  # 0xFF is mask for not known timing
-                    timing_quality = -1
-                header['mseed']['timing_quality'] = timing_quality
+                    timing_quality = False
+                header['mseed']['blkt1001'] = {}
+                header['mseed']['blkt1001']['timing_quality'] = timing_quality
                 header['mseed']['calibration_type'] = \
-                    currentSegment.calibration_type
+                    currentSegment.calibration_type \
+                    if currentSegment.calibration_type != -1 else False
 
             if headonly is False:
                 # The data always will be in sequential order.
@@ -465,6 +482,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         well as ``kwargs`` of this function. If both are given the ``kwargs``
         will be used.
 
+        The ``stats.mseed.blkt1001.timing_quality`` value will also be written
+        if it is set.
+
     .. rubric:: Example
 
     >>> from obspy import read
@@ -525,27 +545,27 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         if starttime % 100 != 0 or \
            (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0:
             use_blkt_1001 += 1
-        
+
         if hasattr(trace.stats, 'mseed') and \
-            hasattr(trace.stats['mseed'], 'blkt1001') and \
-            hasattr(trace.stats['mseed']['blkt1001'], 'timing_quality'):
-            
+           hasattr(trace.stats['mseed'], 'blkt1001') and \
+           hasattr(trace.stats['mseed']['blkt1001'], 'timing_quality'):
+
             timing_quality = trace.stats['mseed']['blkt1001']['timing_quality']
             # Check timing quality type
             try:
                 timing_quality = int(timing_quality)
-                if timing_quality < 0 or timing_quality > 100 :
-                    raise ValueError("Timing quality out of range. It must be "\
-                                     "between 0 and 100.")
+                if timing_quality < 0 or timing_quality > 100:
+                    raise ValueError("Timing quality out of range. It must be "
+                                     + "between 0 and 100.")
             except ValueError:
                 msg = "Invalid timing quality in Stream[%i].stats." % _i + \
                     "mseed.timing_quality. It must be an integer ranging" + \
                     " from 0 to 100"
                 raise ValueError(msg)
-            
+
             trace_attr['timing_quality'] = timing_quality
             use_blkt_1001 += 1
-        else :
+        else:
             trace_attr['timing_quality'] = timing_quality = 0
 
         # Determine if a blockette 100 will be needed to represent the input
@@ -571,7 +591,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                   'The dataquality for Mini-SEED must be either D, R, Q ' + \
                   'or M. See the SEED manual for further information.'
             raise ValueError(msg)
-        
+
         # Check that data is of the right type.
         if not isinstance(trace.data, np.ndarray):
             msg = "Unsupported data type %s" % type(trace.data) + \
@@ -736,20 +756,21 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:
             # Timing quality has been set in trace_attr
-            
+
             size = C.sizeof(blkt_1001_s)
             # Only timing quality matters here, other blockette attributes will
             # be filled by libmseed.msr_normalize_header
-            blkt_value = pack("BBBB", trace_attr['timing_quality'], 0, 0, 0)
+            blkt_value = pack(native_str("BBBB"), trace_attr['timing_quality'],
+                              0, 0, 0)
             blkt_ptr = C.create_string_buffer(blkt_value, len(blkt_value))
-            
+
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
             ret_val = clibmseed.msr_addblockette(msr, blkt_ptr,
                                                  size, 1001, 0)
-            
+
             if bool(ret_val) is False:
                 clibmseed.msr_free(C.pointer(msr))
                 del msr

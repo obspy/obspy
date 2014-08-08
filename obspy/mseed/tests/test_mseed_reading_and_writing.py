@@ -18,6 +18,8 @@ import numpy as np
 import os
 import unittest
 import warnings
+from datetime import datetime
+from _struct import unpack
 
 
 class MSEEDReadingAndWritingTestCase(unittest.TestCase):
@@ -938,7 +940,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st = read(filename, details=True)
         dt = np.dtype([(native_str('npts'), native_str('i4')),
                        (native_str('qual'), native_str('i4'))])
-        res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
+        res = np.array([(tr.stats.npts, tr.stats.mseed.blkt1001.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info
         # timing_quality splits the stream additionally when timing quality
@@ -1079,10 +1081,72 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(
             tr.data[:5], np.array([294, 32, 26, 285, 389]), rtol=1E-5))
 
+    def test_write_timing_quality(self):
+        """
+        Test setting blockette 1001's timing quality
+        """
+        npts = 1000
+        np.random.seed(42)  # make test reproducable
+        data = np.random.randint(-1000, 1000, npts).astype(np.int32)
+
+        # Test valid data
+        stat_header = {'network': 'NE', 'station': 'STATI', 'location': 'LO',
+                       'channel': 'CHA', 'npts': len(data), 'sampling_rate': 1,
+                       'mseed': {'dataquality': 'D',
+                                 'blkt1001': {'timing_quality': 63}}}
+
+        stat_header['starttime'] = UTCDateTime(datetime(2012, 8, 1,
+                                                        12, 0, 0, 0))
+        st = Stream([Trace(data=data, header=stat_header)])
+
+        with NamedTemporaryFile() as tf:
+            st.write(tf, format="mseed", encoding=11, reclen=512)
+
+            # Check values
+            tf.seek(0, os.SEEK_SET)
+            # Check timing quality value in the file. Check first, second and
+            # third record and assume all others are ok
+            for recnum in range(0, 3):
+                rec_start = 512 * recnum
+                tf.seek(rec_start + 46, os.SEEK_SET)
+                next_blockette = unpack(native_str(">H"), tf.read(2))[0]
+                while next_blockette != 0:
+                    tf.seek(rec_start + next_blockette, os.SEEK_SET)
+                    blkt_nbr = unpack(native_str(">H"), tf.read(2))[0]
+                    if blkt_nbr == 1001:
+                        tf.seek(2, os.SEEK_CUR)
+                        timing_qual = unpack(native_str("B"), tf.read(1))[0]
+                        self.assertEqual(timing_qual, 63, "timing_qual")
+                        break
+                    else:
+                        next_blockette = unpack(native_str(">H"), tf.read(2))[0]
+
+        # Test invalid data: string
+        stat_header['mseed']['blkt1001']['timing_quality'] = "obviouslyinvalid"
+        st = Stream([Trace(data=data, header=stat_header)])
+        with NamedTemporaryFile() as tf:
+            self.assertRaises(ValueError, st.write, tf, format="mseed",
+                              encoding=11, reclen=512)
+
+        # Test invalid data: <0 value
+        stat_header['mseed']['blkt1001']['timing_quality'] = -1
+        st = Stream([Trace(data=data, header=stat_header)])
+        with NamedTemporaryFile() as tf:
+            self.assertRaises(ValueError, st.write, tf, format="mseed",
+                              encoding=11, reclen=512)
+
+        # Test invalid data: > 100 value
+        stat_header['mseed']['blkt1001']['timing_quality'] = 254
+        st = Stream([Trace(data=data, header=stat_header)])
+        with NamedTemporaryFile() as tf:
+            self.assertRaises(ValueError, st.write, tf, format="mseed",
+                              encoding=11, reclen=512)
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
 
 
 if __name__ == '__main__':
+
     unittest.main(defaultTest='suite')
