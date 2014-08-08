@@ -22,7 +22,7 @@ class FDSNException(Exception):
     pass
 
 
-# A curated list collecting some implementation:
+# A curated list collecting some implementations:
 # http://www.fdsn.org/webservices/datacenters/
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "ORFEUS": "http://www.orfeus-eu.org",
@@ -33,7 +33,8 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "GFZ": "http://geofon.gfz-potsdam.de",
                 "NERIES": "http://www.seismicportal.eu",
                 "SCEC": "http://www.data.scec.org",
-                "GEONET": "http://service.geonet.org.nz"
+                "GEONET": "http://service.geonet.org.nz",
+                "INGV": "http://webservices.rm.ingv.it"
                 }
 
 FDSNWS = ("dataselect", "event", "station")
