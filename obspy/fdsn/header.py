@@ -30,6 +30,8 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USP": "http://sismo.iag.usp.br",
                 "GFZ": "http://geofon.gfz-potsdam.de",
                 "NERIES": "http://www.seismicportal.eu",
+                "SCEC": "http://www.data.scec.org",
+                "GEONET": "http://service.geonet.org.nz"
                 }
 
 FDSNWS = ("dataselect", "event", "station")
