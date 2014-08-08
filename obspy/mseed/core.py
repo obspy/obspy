@@ -217,12 +217,20 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         raise ValueError(msg)
 
     # Only keep information relevant for the whole file.
+    if info.has_key('timing_quality'):
+        blkt1001_value = {'timing_quality' : info['timing_quality']}
+    else:
+        blkt1001_value = None
+    
     info = {'encoding': info['encoding'],
             'filesize': info['filesize'],
             'record_length': info['record_length'],
             'byteorder': info['byteorder'],
             'number_of_records': info['number_of_records']}
-
+    
+    if blkt1001_value is not None:
+        info['blkt1001'] = blkt1001_value
+    
     # If its a filename just read it.
     if isinstance(mseed_object, (str, native_str)):
         # Read to NumPy array which is used as a buffer.
@@ -527,7 +535,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             try:
                 timing_quality = int(timing_quality)
                 if timing_quality < 0 or timing_quality > 100 :
-                    raise ValueError("Timing quality out of range")
+                    raise ValueError("Timing quality out of range. It must be "\
+                                     "between 0 and 100.")
             except ValueError:
                 msg = "Invalid timing quality in Stream[%i].stats." % _i + \
                     "mseed.timing_quality. It must be an integer ranging" + \
@@ -562,7 +571,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                   'The dataquality for Mini-SEED must be either D, R, Q ' + \
                   'or M. See the SEED manual for further information.'
             raise ValueError(msg)
-
+        
         # Check that data is of the right type.
         if not isinstance(trace.data, np.ndarray):
             msg = "Unsupported data type %s" % type(trace.data) + \

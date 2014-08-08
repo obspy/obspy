@@ -8,15 +8,17 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
-    ENDIAN, ENCODINGS, UNSUPPORTED_ENCODINGS
+    ENDIAN, ENCODINGS, UNSUPPORTED_ENCODINGS, FIXED_HEADER_ACTIVITY_FLAGS, \
+    FIXED_HEADER_DATA_QUAL_FLAGS, FIXED_HEADER_IO_CLOCK_FLAGS
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
-from struct import unpack
+from struct import pack, unpack
 import sys
 import ctypes as C
 import numpy as np
 import math
 import warnings
+import os
 
 
 def getStartAndEndTime(file_or_file_object):
@@ -571,6 +573,212 @@ def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples
+
+
+def set_flags_in_fixed_headers(filename, flags):
+    """
+    Updates a given miniSEED file with some fixed header flags. Raises an
+    exception if the file is not a miniSEED file.
+    
+    Flags are stored as a nested dictionary:
+    { trace_id: { flag_group : { flag_name : flag_value, ... }, ...}, ...}
+    with:
+    * trace_id: a string identifying the trace. A string looking like
+    NETWORK.STATION.LOCATION.CHANNEL is expeted, the values will be compared
+    to those found in the fixed header of every record. An empty field will be
+    interpreted  as "every possible value", so "..." will apply to every single
+    trace in the file. Padding spaces are ignored.
+    * flag_group: which flag group is to be changed. One of 'activity_flags',
+    'io_clock_flags', 'data_qual_flags' is expected. Invalid flag groups will
+    be ignored.
+    * flag_name: the name of the flag. Possible values are matched with 
+    obspy.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS, 
+    FIXED_HEADER_IO_CLOCK_FLAGS or FIXED_HEADER_DATA_QUAL_FLAGS depending on the
+    flag_group. Invalid flags are ignored.
+    * flag_value: the value you want for this flag. The method will try to 
+    convert your value to bool, this should not break but might set unexpected
+    values in your records.
+    
+    Example: to add a 'Calibration Signals Presents' flag (which belongs to the
+    Activity Flags section of the fixed header) to every record, flags should
+    be:
+    { "..." : { 'activity_flags' : { 'calib_signal' : True }}}
+    
+    :type filename: string
+    :param filename: name of the miniSEED file to be changed
+    :type flags: dict { string: dict { string: dict{ string: bool}}}
+    :param flags: the flags to update in the miniSEED file
+    """
+    
+    # import has to be here to break import loop
+    from obspy.mseed.core import isMSEED
+    # Basic check
+    if not os.path.isfile(filename) or not isMSEED(filename):
+        raise Exception("File %s is not a valid miniSEED file" % filename)
+    filesize = os.path.getsize(filename)
+    
+    # Nested dictionaries to allow empty strings as wildcards
+    class NestedDict(dict):
+            def __missing__(self, key):
+                value = self[key] = type(self)()
+                return value
+    # Define wildcard character
+    wildcard = ""
+    
+    # Check channel identifier value
+    flags_bytes = NestedDict()
+    for (key, value) in flags.items():
+        splitted_key = key.split(".")
+        if len(splitted_key) != 4:
+            msg = "Invalid channel identifier. " +\
+                    "Expected 'Network.Station.Location.Channel' " +\
+                    "(empty fields allowed), got '%s'."
+            raise Exception(msg % key)
+        
+        # Convert flags to bytes : activity
+        if value.has_key('activity_flags'):
+            act_flag = _convertFlagsToRawByte(FIXED_HEADER_ACTIVITY_FLAGS,\
+                                              value['activity_flags'])
+        else:
+            act_flag = 0
+        # Convert flags to bytes : i/o and clock
+        if value.has_key('io_clock_flags'):
+            io_clock_flag = _convertFlagsToRawByte(\
+                                               FIXED_HEADER_IO_CLOCK_FLAGS,\
+                                               value['io_clock_flags'])
+        else:
+            io_clock_flag = 0
+        
+        # Convert flags to bytes : data quality flags
+        if value.has_key('data_qual_flags'):
+            data_qual_flag = _convertFlagsToRawByte(
+                                                FIXED_HEADER_DATA_QUAL_FLAGS,\
+                                                value['data_qual_flags'])
+        else:
+            data_qual_flag = 0
+            
+        flagsbytes = pack("BBB", act_flag, io_clock_flag, data_qual_flag)
+        
+        # Remove padding spaces and store in new dict
+        net = splitted_key[0].strip()
+        sta = splitted_key[1].strip()
+        loc = splitted_key[2].strip()
+        chan = splitted_key[3].strip()
+        flags_bytes[net][sta][loc][chan] = flagsbytes
+        
+        
+    
+    # Open file
+    with open(filename, 'r+b') as mseed_file:
+        # Run through all records
+        while mseed_file.tell() < filesize:
+            record_start = mseed_file.tell()
+            
+            # Ignore sequence number and data header
+            mseed_file.seek(8, os.SEEK_CUR)
+            # Read identifier
+            sta = mseed_file.read(5).strip()
+            loc = mseed_file.read(2).strip()
+            chan = mseed_file.read(3).strip()
+            net = mseed_file.read(2).strip()
+            
+            # Search the nested dict for the network identifier
+            if flags_bytes.has_key(net):
+                dict_to_use = flags_bytes[net]
+            elif flags_bytes.has_key(wildcard):
+                dict_to_use = flags_bytes[wildcard]
+            else:
+                dict_to_use = None
+            
+            # Search the nested dict for the station identifier
+            if dict_to_use is not None and dict_to_use.has_key(sta):
+                dict_to_use = dict_to_use[sta]
+            elif dict_to_use is not None and dict_to_use.has_key(wildcard):
+                dict_to_use = dict_to_use[wildcard]
+            else:
+                dict_to_use = None
+            
+            # Search the nested dict for the location identifier
+            if dict_to_use is not None and dict_to_use.has_key(loc):
+                dict_to_use = dict_to_use[loc]
+            elif dict_to_use is not None and dict_to_use.has_key(wildcard):
+                dict_to_use = dict_to_use[wildcard]
+            else:
+                dict_to_use = None
+            
+            # Search the nested dict for the channel identifier
+            if dict_to_use is not None and dict_to_use.has_key(chan):
+                flags_value = dict_to_use[chan]
+            elif dict_to_use is not None and dict_to_use.has_key(wildcard):
+                flags_value = dict_to_use[wildcard]
+            else:
+                flags_value = None
+            
+            if flags_value is not None:
+                mseed_file.seek(16, os.SEEK_CUR)
+                # Update flags*
+                mseed_file.write(flags_value)
+                # Seek to "First blockette"
+                mseed_file.seek(7, os.SEEK_CUR)
+            else:
+                # Seek directly to "First blockette"
+                mseed_file.seek(26, os.SEEK_CUR)
+            
+            # Read record length in blockette 1000 to seek to the next record
+            next_blockette = int(mseed_file.read(2).encode("hex"), 16)
+            reclen = -1
+            while next_blockette != 0:
+                mseed_file.seek(record_start + next_blockette, os.SEEK_SET)
+                blkt_nbr = int(mseed_file.read(2).encode("hex"), 16)
+                if blkt_nbr == 1000:
+                    mseed_file.seek(4, os.SEEK_CUR)
+                    reclen_pow = int(mseed_file.read(1).encode("hex"), 16)
+                    reclen = 2**reclen_pow
+                    break
+                else:
+                    next_blockette = int(mseed_file.read(2).encode("hex"), 16)
+            
+            if reclen == -1:
+                msg = "Invalid miniSEED file. No blockette 1000 was found."
+                raise Exception(msg)
+            else:
+                mseed_file.seek(record_start + reclen, os.SEEK_SET)
+
+
+def _convertFlagsToRawByte(expected_flags, user_flags):
+    """
+    Converts a flag dictionary to a byte, ready to be encoded in a miniSEED 
+    header.
+    
+    This is a utility function for set_flags_in_fixed_headers and was not 
+    designed to be called by someone else.
+    
+    expected_signals describes all the possible bit names for the user flags 
+    and their place in the result byte. Expected: dict { exponent: bit_name }.
+    The fixed header flags are available in obspy.mseed.headers as
+    FIXED_HEADER_ACTIVITY_FLAGS, FIXED_HEADER_DATA_QUAL_FLAGS and
+    FIXED_HEADER_IO_CLOCK_FLAGS.
+    
+    It expected a user_flags as a dictionary { bit_name : value }. bit_name is 
+    compared to the expected_signals, and its value is converted to bool. 
+    Missing values are considered false.
+    
+    :type expected_flags: dict {int: string}
+    :param expected_flags: every possible flag in this field, with its offset
+    :type user_flags: dict {string: bool}
+    :param user_flags: user defined flags and its value
+    :return:
+    
+    """
+    
+    flag_byte = 0
+    
+    for (bit, key) in expected_flags.items():
+        if user_flags.has_key(key) and bool(user_flags[key]):
+            flag_byte += 2**bit
+    
+    return flag_byte
+
 
 
 def shiftTimeOfFile(input_file, output_file, timeshift):

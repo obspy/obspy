@@ -80,7 +80,11 @@ class AttribDict(collections.MutableMapping):
         if key in self.readonly:
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
-        self.__dict__[key] = value
+        
+        if isinstance(value, dict):
+            self.__dict__[key] = AttribDict(value)
+        else:
+            self.__dict__[key] = value
 
     def __delitem__(self, name):
         del self.__dict__[name]
