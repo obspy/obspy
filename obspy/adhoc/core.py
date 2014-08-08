@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-AH bindings to ObsPy core module.
+AD HOC bindings to ObsPy core module.
 
-An AH file is used for the storage of binary seismic time series data.
+An AD HOC file is used for the storage of binary seismic time series data.
 The file is portable among machines of varying architecture by virtue of
 its XDR implementation. It is composed of a variable-sized header containing
 a number of values followed by the time series data.
@@ -27,48 +27,48 @@ from obspy import UTCDateTime, Trace, Stream
 from obspy.core.util.attribdict import AttribDict
 
 
-def is_AH(filename):
+def is_ADHOC(filename):
     """
-    Checks whether a file is AH waveform data or not.
+    Checks whether a file is AD HOC waveform data or not.
 
     :type filename: str
-    :param filename: AH file to be checked.
+    :param filename: AD HOC file to be checked.
     :rtype: bool
-    :return: ``True`` if a AH waveform file.
+    :return: ``True`` if a AD HOC waveform file.
     """
-    if _get_AH_version(filename):
+    if _get_ADHOC_version(filename):
         return True
     return False
 
 
-def read_AH(filename, **kwargs):  # @UnusedVariable
+def read_ADHOC(filename, **kwargs):  # @UnusedVariable
     """
-    Reads an AH waveform file and returns a Stream object.
+    Reads an AD HOC waveform file and returns a Stream object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: str
-    :param filename: AH file to be read.
+    :param filename: AD HOC file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
-    version = _get_AH_version(filename)
+    version = _get_ADHOC_version(filename)
     if version == '2.0':
-        return read_AH2(filename)
+        return read_ADHOC2(filename)
     else:
-        return read_AH1(filename)
+        return read_ADHOC1(filename)
 
 
-def _get_AH_version(filename):
+def _get_ADHOC_version(filename):
     """
-    Returns version of AH waveform data.
+    Returns version of AD HOC waveform data.
 
     :type filename: str
-    :param filename: AH v1 file to be checked.
+    :param filename: AD HOC v1 file to be checked.
     :rtype: str or False
-    :return: version string of AH waveform data or ``False`` if unknown.
+    :return: version string of AD HOC waveform data or ``False`` if unknown.
     """
     with open(filename, "rb") as fh:
         # read first 8 bytes with XDR library
@@ -86,10 +86,10 @@ def _get_AH_version(filename):
                 fh.read(length)
             except:
                 return False
-            # seems to be AH v2
+            # seems to be AD HOC v2
             return '2.0'
         elif magic == 6:
-            # AH1 has no magic variable :/
+            # AD HOC 1 has no magic variable :/
             # so we have to use some fixed values as indicators
             try:
                 fh.seek(12)
@@ -115,12 +115,12 @@ def _unpack_string(data):
     return data.unpack_string().split(b'\x00', 1)[0].strip().decode("utf-8")
 
 
-def read_AH1(filename):
+def read_ADHOC1(filename):
     """
-    Reads an AH v1 waveform file and returns a Stream object.
+    Reads an AD HOC v1 waveform file and returns a Stream object.
 
     :type filename: str
-    :param filename: AH v1 file to be read.
+    :param filename: AD HOC v1 file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
@@ -204,7 +204,7 @@ def read_AH1(filename):
             temp = data.unpack_farray(ndata, data.unpack_double)
         else:
             # e.g. 3 (vector), 2 (complex), 4 (tensor)
-            msg = 'Unsupported AH v1 record type %d'
+            msg = 'Unsupported AD HOC v1 record type %d'
             raise NotImplementedError(msg % (dtype))
         tr = Trace(np.array(temp))
         tr.stats.ah = ah_stats
@@ -228,12 +228,12 @@ def read_AH1(filename):
         return st
 
 
-def read_AH2(filename):
+def read_ADHOC2(filename):
     """
-    Reads an AH v2 waveform file and returns a Stream object.
+    Reads an AD HOC v2 waveform file and returns a Stream object.
 
     :type filename: str
-    :param filename: AH v2 file to be read.
+    :param filename: AD HOC v2 file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
@@ -335,7 +335,7 @@ def read_AH2(filename):
             temp = data.unpack_farray(ndata, data.unpack_double)
         else:
             # e.g. 3 (vector), 2 (complex), 4 (tensor)
-            msg = 'Unsupported AH v2 record type %d'
+            msg = 'Unsupported AD HOC v2 record type %d'
             raise NotImplementedError(msg % (dtype))
 
         tr = Trace(np.array(temp))
@@ -358,7 +358,7 @@ def read_AH2(filename):
             except EOFError:
                 break
             if magic != 1100:
-                raise Exception('Not a AH v2 file')
+                raise Exception('Not a AD HOC v2 file')
             try:
                 # get record length
                 length = data.unpack_uint()

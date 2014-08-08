@@ -9,59 +9,59 @@ import unittest
 
 import numpy as np
 
-from obspy.ah.core import is_AH, read_AH
+from obspy.adhoc.core import is_ADHOC, read_ADHOC
 from obspy import read, UTCDateTime
 
 
 class CoreTestCase(unittest.TestCase):
     """
-    AH (Ad Hoc) file test suite.
+    AD HOC file test suite.
     """
     def setUp(self):
         # Directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_is_AH(self):
+    def test_is_ADHOC(self):
         """
-        Testing AH file format.
+        Testing AD HOC file format.
         """
-        # AH v1
+        # v1
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.resp')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.KSM.sE12.resp')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'ah1.f')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'ah1.c')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'ah1.t')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'hrv.lh.zne')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
 
-        # AH v2
+        # v2
         testfile = os.path.join(self.path, 'ah2.f')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'ah2.f-e')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'ah2.c')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'ah2.t')
-        self.assertTrue(is_AH(testfile))
+        self.assertTrue(is_ADHOC(testfile))
 
-        # non AH files
+        # non AD HOC files
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.asc')
-        self.assertFalse(is_AH(testfile))
+        self.assertFalse(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.KSM.sE12.asc')
-        self.assertFalse(is_AH(testfile))
+        self.assertFalse(is_ADHOC(testfile))
         testfile = os.path.join(self.path, 'TSG', 'Readme_TSG_response.txt')
-        self.assertFalse(is_AH(testfile))
+        self.assertFalse(is_ADHOC(testfile))
 
     def test_read(self):
         """
-        Testing reading AH file format using read() function.
+        Testing reading AD HOC file format using read() function.
         """
-        # AH v1
+        # v1
         testfile = os.path.join(self.path, 'hrv.lh.zne')
         st = read(testfile)
         self.assertEqual(len(st), 3)
@@ -70,23 +70,23 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st), 4)
         # not supported data types (vector, complex, tensor)
         testfile = os.path.join(self.path, 'ah1.c')
-        self.assertRaises(NotImplementedError, read_AH, testfile)
+        self.assertRaises(NotImplementedError, read_ADHOC, testfile)
         testfile = os.path.join(self.path, 'ah1.t')
-        self.assertRaises(NotImplementedError, read_AH, testfile)
+        self.assertRaises(NotImplementedError, read_ADHOC, testfile)
 
-        # AH v2
+        # v2
         # float
         testfile = os.path.join(self.path, 'ah2.f')
         st = read(testfile)
         self.assertEqual(len(st), 4)
 
-    def test_read_AH(self):
+    def test_read_ADHOC(self):
         """
-        Testing reading AH file format using read_AH() function.
+        Testing reading AD HOC file format using read_ADHOC() function.
         """
-        # AH v1
+        # v1
         testfile = os.path.join(self.path, 'ah1.f')
-        st = read_AH(testfile)
+        st = read_ADHOC(testfile)
         self.assertEqual(len(st), 4)
         tr = st[0]
         ah = tr.stats.ah
@@ -129,13 +129,13 @@ class CoreTestCase(unittest.TestCase):
 
         # not supported data types (vector, complex, tensor)
         testfile = os.path.join(self.path, 'ah1.c')
-        self.assertRaises(NotImplementedError, read_AH, testfile)
+        self.assertRaises(NotImplementedError, read_ADHOC, testfile)
         testfile = os.path.join(self.path, 'ah1.t')
-        self.assertRaises(NotImplementedError, read_AH, testfile)
+        self.assertRaises(NotImplementedError, read_ADHOC, testfile)
 
-        # AH v2
+        # v2
         testfile = os.path.join(self.path, 'ah2.f')
-        st = read_AH(testfile)
+        st = read_ADHOC(testfile)
         self.assertEqual(len(st), 4)
         tr = st[0]
         ah = tr.stats.ah
@@ -178,17 +178,17 @@ class CoreTestCase(unittest.TestCase):
 
         # not supported data types (vector, complex, tensor)
         testfile = os.path.join(self.path, 'ah2.t')
-        self.assertRaises(NotImplementedError, read_AH, testfile)
+        self.assertRaises(NotImplementedError, read_ADHOC, testfile)
 
     def test_TSG(self):
         """
-        Test reading AH v1 files of the STsR-TSG System at Borovoye.
+        Test reading AD HOC v1 files of the STsR-TSG System at Borovoye.
 
         .. seealso:: http://www.ldeo.columbia.edu/res/pi/Monitoring/Data/
         """
         # 1 - BRV.TSG.DS.lE21
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.resp')
-        st = read_AH(testfile)
+        st = read_ADHOC(testfile)
         self.assertEqual(len(st), 1)
         tr = st[0]
         ah = tr.stats.ah

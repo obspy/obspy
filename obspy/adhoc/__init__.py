@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-obspy.ah - AH (Ad Hoc) read support for ObsPy
-=============================================
-This module provides read support for the AH (Ad Hoc) waveform format
+obspy.adhoc - AD HOC read support for ObsPy
+===========================================
+This module provides read support for the AD HOC waveform format
 introduced by the Lamont-Doherty Geological Observatory.
 
 :copyright:
