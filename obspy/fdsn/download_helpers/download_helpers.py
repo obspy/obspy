@@ -72,6 +72,8 @@ class Restrictions(object):
         self.station = station
         self.location = location
         self.channel = channel
+        self.reject_channels_with_gaps = True,
+        self.minimum_length = 0.9,
         self.channel_priorities = channel_priorities
         self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \
@@ -116,7 +118,7 @@ class DownloadHelper(object):
                  chunk_size=25, threads_per_client=5, mseed_path=None,
                  stationxml_path=None):
 
-        existing_stations = []
+        existing_stations = set()
 
         # Do it sequentially for each client.
         for client_name, client in self._initialized_clients.items():
@@ -146,24 +148,51 @@ class DownloadHelper(object):
             # happen in reverse to assure as much data as possible is
             # downloaded.
             if info["reliable"]:
-                #stations_to_download = [
-                #    _i for _i in utils.merge_stations(existing_stations,
-                #                                      availability.values())
-                #    if _i.client == client_name]
-                ### # Now first download the data.
-                ### downloaded_miniseed_files = self.download_mseed(
-                ###     stations_to_download, mseed_path, temp_folder,
-                ###     chunk_size, threads_per_client)
-                ### # Now download the station information for the downloaded
-                ### # stations.
-                downloaded_stations = availability.values()
+                all_stations = utils.merge_stations(
+                    existing_stations, info["availability"].values(),
+                    restrictions.minimum_interstation_distance_in_m)
+                new_stations = all_stations - existing_stations
+                if not new_stations:
+                    continue
+
+                stations = []
+                for station in new_stations:
+                    channels = []
+                    for channel in station.channels:
+                        filename = utils.get_mseed_filename(
+                            mseed_path, station.network, station.station,
+                            channel.location, channel.channel)
+                        if not filename or os.path.exists(filename):
+                            continue
+                        dirname = os.path.dirname(filename)
+                        if not os.path.exists(dirname):
+                            os.makedirs(dirname)
+                        channel.mseed_filename = filename
+                        channels.append(channel)
+                    if not channels:
+                        continue
+                    station.channels = channels
+                    stations.append(station)
+
+                if not stations:
+                    logger.info("Nothing to be downloaded for client %s." %
+                                client_name)
+                    continue
+
+                downloaded_miniseed_stations = self.download_mseed(
+                    client, client_name,
+                    stations, restrictions, chunk_size=chunk_size,
+                    threads_per_client=threads_per_client)
+
+                # Now download the station information for the downloaded
+                # stations.
                 downloaded_stations = self.download_stationxml(
                     client, client_name, downloaded_stations,
                     restrictions, threads_per_client)
+
                 # Remove waveforms that did not succeed in having available
                 # stationxml files.
                 #self.delete_extraneous_waveform_files()
-                import ipdb; ipdb.set_trace()
                 existing_stations.extend(downloaded_stations)
             else:
                 # If it is not reliable, e.g. the client does not have the
@@ -183,67 +212,44 @@ class DownloadHelper(object):
                 self.delete_extraneous_waveform_files()
                 existing_stations.extend(downloaded_miniseed_files)
 
-
-    def download_mseed(self, availability, restrictions, mseed_path,
-                       temp_folder, chunk_size=25, threads_per_client=5):
-        if not os.path.exists(temp_folder):
-            os.makedirs(temp_folder)
-
-        avail = {}
-        for c, stations in availability.items():
-            stations = copy.deepcopy(stations)
-            for station in stations:
-                channels = []
-                for channel in station.channels:
-                    filename = utils.get_mseed_filename(mseed_path,
-                                                        station.network,
-                                                        station.station,
-                                                        channel.location,
-                                                        channel.channel)
-                    channels.append((channel, filename))
-                station.channels[:] = channels
-            # Split into chunks.
-            avail[c] = [stations[i:i + chunk_size]
-                        for i in range(0, len(stations), chunk_size)]
+    def download_mseed(self, client, client_name, stations, restrictions,
+                       chunk_size=25, threads_per_client=5):
+        # Split into chunks.
+        station_chunks = [stations[i:i + chunk_size]
+                          for i in range(0, len(stations), chunk_size)]
 
         def star_download_mseed(args):
             try:
                 ret_val = utils.download_and_split_mseed_bulk(
-                    *args, temp_folder=temp_folder, logger=logger)
+                    *args, logger=logger)
             except ERRORS as e:
                 msg = ("Client '%s': " % args[1]) + str(e)
                 if "no data available" in msg.lower():
                     logger.info(msg)
                 else:
                     logger.error(msg)
-                return None
-            return None
+                return []
+            return ret_val
 
-        thread_pools = []
-        thread_results = []
-        for c, chunks in avail.items():
-            client_name, client = c
+        pool = ThreadPool(min(threads_per_client, len(station_chunks)))
 
-            p = ThreadPool(min(threads_per_client, len(chunks)))
-            thread_pools.append(p)
+        result = pool.map(
+            star_download_mseed,
+            [(client, client_name, restrictions.starttime,
+              restrictions.endtime, chunk) for chunk in station_chunks])
 
-            thread_results.append(p.map(
-                star_download_mseed, [
-                    (client, client_name, restrictions.starttime,
-                     restrictions.endtime, chunk) for chunk in chunks]))
+        pool.close()
 
-        for p in thread_pools:
-            p.close()
+        filenames = itertools.chain.from_iterable(result)
 
-    def download_stationxml(self, client, client_name, station_availability, restrictions,
-                            threads_per_client=5):
+    def download_stationxml(self, client, client_name, station_availability,
+                            restrictions, threads_per_client=5):
 
         avail = []
         for station in station_availability:
             station.stationxml_filename = 'test'
-            filename = utils.get_stationxml_filename(station.stationxml_filename,
-                                                     station.network,
-                                                     station.station)
+            filename = utils.get_stationxml_filename(
+                station.stationxml_filename, station.network, station.station)
             avail.append((station, filename))
 
         def star_download_station(args):
@@ -271,7 +277,6 @@ class DownloadHelper(object):
         all_channels = []
         for check_xml in avail:
             all_channels.extend(utils.get_stationxml_contents(check_xml[1]))
-        import ipdb; ipdb.set_trace()
 
     def __initialize_clients(self):
         """

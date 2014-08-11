@@ -21,12 +21,14 @@ import os
 from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
+import tempfile
 import time
 from uuid import uuid4
 from urllib2 import HTTPError
 import obspy
 import warnings
 
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.fdsn.client import FDSNException
 from obspy.mseed.util import getRecordInformation
 
@@ -112,7 +114,7 @@ def download_stationxml(client, client_name, starttime, endtime, station,
 
 
 def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
-                                  stations, temp_folder, logger):
+                                  stations, logger):
     """
     Downloads the channels of a list of stations in bulk, saves it in the
     temp folder and splits it at the record level to obtain the final
@@ -129,12 +131,15 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
     bulk = []
     filenames = {}
     for station in stations:
-        for channel, filename in station.channels:
+        for channel in station.channels:
             net, sta, loc, chan = station.network, station.station, \
                 channel.location, channel.channel
-            filenames["%s.%s.%s.%s" % (net, sta, loc, chan)] = filename
+            filenames["%s.%s.%s.%s" % (net, sta, loc, chan)] = \
+                channel.mseed_filename
             bulk.append((net, sta, loc, chan, starttime, endtime))
-    temp_filename = os.path.join(temp_folder, str(uuid4()))
+
+    temp_filename = NamedTemporaryFile().name
+
     try:
         client.get_waveforms_bulk(bulk, filename=temp_filename)
 
@@ -171,6 +176,7 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
             pass
     logger.info("%s client: Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), len(bulk)))
+    return open_files.keys()
 
 
 def get_availability_from_client(client, client_name, restrictions, domain,
@@ -426,40 +432,39 @@ def filter_stations(stations, minimum_distance_in_m):
             enumerate(stations))]
 
 
-def merge_stations(stations, other_stations, minimum_distance_in_m=None):
+def merge_stations(existing_stations, new_stations,
+                   minimum_distance_in_m=0):
     """
-    Merges two lists containing station objects. The first list is assumed
-    to already be filtered with
-    :func:`~obspy.fdsn.download_helpers.utils.filter_stations` and therefore
-    contain no two stations within ``minimum_distance_in_m`` from each other.
-    The stations in the ``other_station`` list will be successively added to
-    ``stations`` while ensuring the minimum inter-station distance will
-    remain be honored.
+    Merges two lists of stations, successively adding each station in one
+    list to the stations in the list of existing stations satisfying the
+    required minimum inter-station distances. If minimum distance in meter
+    is 0, it will just merge both lists and return.
     """
     # Shallow copies.
-    stations = list(stations)
-    other_stations = list(other_stations)
+    existing_stations = copy.copy(existing_stations)
+    new_stations = copy.copy(new_stations)
 
-    # A non-existing minimum inner station distance result in all stations
-    # being used.
+    # If no requirement given, just merge
     if not minimum_distance_in_m:
-        stations.extend(other_stations)
-        return stations
+        return set(existing_stations + new_stations)
 
-    if not stations:
-        stations.append(other_stations.pop(0))
+    # If no existing stations yet, just make sure the minimum inner station
+    # distances are satisfied.
+    if not existing_stations:
+        new_stations = filter_stations(new_stations, minimum_distance_in_m)
+        return set(new_stations)
 
-    for station in other_stations:
-        kd_tree = SphericalNearestNeighbour(stations)
+    for station in new_stations:
+        kd_tree = SphericalNearestNeighbour(existing_stations)
         neighbours = kd_tree.query([station])[0][0]
         if np.isinf(neighbours[0]):
             continue
         min_distance = neighbours[0]
         if min_distance < minimum_distance_in_m:
             continue
-        stations.append(station)
+        existing_stations.append(station)
 
-    return stations
+    return existing_stations
 
 
 def download_waveforms_and_stations(client, client_name, station_list,
