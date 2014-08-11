@@ -36,9 +36,12 @@ from obspy.mseed.util import getRecordInformation
 # Geodesy and Geophysics.
 EARTH_RADIUS = 6371009
 
+
 ChannelAvailability = collections.namedtuple(
     "ChannelAvailability",
-    ["network", "station", "location", "channel", "starttime", "endtime"])
+    ["network", "station", "location", "channel", "starttime", "endtime",
+     "filename"])
+
 
 class Station(object):
     __slots__ = ["network", "station", "latitude", "longitude",

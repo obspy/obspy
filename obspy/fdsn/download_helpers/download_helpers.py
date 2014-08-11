@@ -72,8 +72,8 @@ class Restrictions(object):
         self.station = station
         self.location = location
         self.channel = channel
-        self.reject_channels_with_gaps = True,
-        self.minimum_length = 0.9,
+        self.reject_channels_with_gaps = True
+        self.minimum_length = 0.9
         self.channel_priorities = channel_priorities
         self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \
@@ -179,10 +179,12 @@ class DownloadHelper(object):
                                 client_name)
                     continue
 
-                downloaded_miniseed_stations = self.download_mseed(
+                downloaded_miniseed_channels = self.download_mseed(
                     client, client_name,
                     stations, restrictions, chunk_size=chunk_size,
                     threads_per_client=threads_per_client)
+
+                from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
                 # Now download the station information for the downloaded
                 # stations.
@@ -240,7 +242,42 @@ class DownloadHelper(object):
 
         pool.close()
 
+        time_range = restrictions.minimum_length * (restrictions.endtime -
+                                                    restrictions.starttime)
+
         filenames = itertools.chain.from_iterable(result)
+        channel_availability = []
+        for filename in filenames:
+            st = obspy.read(filename, format="MSEED", headonly=True)
+            if restrictions.reject_channels_with_gaps and len(st) > 1:
+                logger.warning("Channel %i has gap or overlap. Will be "
+                               "removed." % st[0].id)
+                try:
+                    os.remove(filename)
+                except:
+                    pass
+                continue
+            elif len(st) == 0:
+                logger.error("MiniSEED file with no data detected. Should "
+                             "not happen!")
+                continue
+            tr = st[0]
+            duration = tr.stats.endtime - tr.stats.starttime
+            if restrictions.minimum_length and duration < time_range:
+                logger.warning("Channel %s does not satisfy the minimum "
+                               "length requirement. %.2f seconds instead of "
+                               "the required %.2f seconds." % (
+                               tr.id, duration, time_range))
+                try:
+                    os.remove(filename)
+                except:
+                    pass
+                continue
+            channel_availability.append(utils.ChannelAvailability(
+                tr.stats.network, tr.stats.station, tr.stats.location,
+                tr.stats.channel, tr.stats.starttime, tr.stats.endtime,
+                filename))
+        return channel_availability
 
     def download_stationxml(self, client, client_name, station_availability,
                             restrictions, threads_per_client=5):
