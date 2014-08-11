@@ -146,21 +146,24 @@ class DownloadHelper(object):
             # happen in reverse to assure as much data as possible is
             # downloaded.
             if info["reliable"]:
-                stations_to_download = [
-                    _i for _i in utils.merge_stations(existing_stations,
-                                                      availability.values())
-                    if _i.client == client_name]
-                # Now first download the data.
-                downloaded_miniseed_files = self.download_mseed(
-                    stations_to_download, mseed_path, temp_folder,
-                    chunk_size, threads_per_client)
-                # Now download the station information for the downloaded
-                # stations.
+                #stations_to_download = [
+                #    _i for _i in utils.merge_stations(existing_stations,
+                #                                      availability.values())
+                #    if _i.client == client_name]
+                ### # Now first download the data.
+                ### downloaded_miniseed_files = self.download_mseed(
+                ###     stations_to_download, mseed_path, temp_folder,
+                ###     chunk_size, threads_per_client)
+                ### # Now download the station information for the downloaded
+                ### # stations.
+                downloaded_stations = availability.values()
                 downloaded_stations = self.download_stationxml(
-                    downloaded_stations, stationxml_path, threads_per_client)
+                    client, client_name, downloaded_stations,
+                    restrictions, threads_per_client)
                 # Remove waveforms that did not succeed in having available
                 # stationxml files.
-                self.delete_extraneous_waveform_files()
+                #self.delete_extraneous_waveform_files()
+                import ipdb; ipdb.set_trace()
                 existing_stations.extend(downloaded_stations)
             else:
                 # If it is not reliable, e.g. the client does not have the
@@ -232,17 +235,16 @@ class DownloadHelper(object):
         for p in thread_pools:
             p.close()
 
-    def download_stationxml(self, availability, restrictions,
-                            stationxml_path, threads_per_client=5):
-        avail = {}
-        for c, stations in availability.items():
-            s = []
-            for station in stations:
-                filename = utils.get_stationxml_filename(stationxml_path,
-                                                         station.network,
-                                                         station.station)
-                s.append((station, filename))
-            avail[c] = s
+    def download_stationxml(self, client, client_name, station_availability, restrictions,
+                            threads_per_client=5):
+
+        avail = []
+        for station in station_availability:
+            station.stationxml_filename = 'test'
+            filename = utils.get_stationxml_filename(station.stationxml_filename,
+                                                     station.network,
+                                                     station.station)
+            avail.append((station, filename))
 
         def star_download_station(args):
             try:
@@ -254,20 +256,22 @@ class DownloadHelper(object):
 
         thread_pools = []
         thread_results = []
-        for c, s in avail.items():
-            client_name, client = c
-
+        for s in avail:
             p = ThreadPool(min(threads_per_client, len(s)))
             thread_pools.append(p)
 
             thread_results.append(p.map(
                 star_download_station, [
                     (client, client_name, restrictions.starttime,
-                     restrictions.endtime, station, filename) for
-                    station, filename in s]))
+                     restrictions.endtime, s[0], s[1])]))
 
         for p in thread_pools:
             p.close()
+
+        all_channels = []
+        for check_xml in avail:
+            all_channels.extend(utils.get_stationxml_contents(check_xml[1]))
+        import ipdb; ipdb.set_trace()
 
     def __initialize_clients(self):
         """
