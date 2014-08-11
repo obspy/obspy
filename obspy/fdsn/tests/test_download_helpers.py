@@ -89,44 +89,97 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Tests the channel priority filtering.
         """
-        channels = ["BHE", "SHE", "BHZ", "HHE"]
+        c1 = Channel("", "BHE")
+        c2 = Channel("10", "SHE")
+        c3 = Channel("00", "BHZ")
+        c4 = Channel("", "HHE")
+        channels = [c1, c2, c3, c4]
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "HH[Z,N,E]", "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
-        self.assertEqual(filtered_channels, ["HHE"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=[
+                "HH[Z,N,E]", "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]",
+                "LH[Z,N,E]"])
+        self.assertEqual(filtered_channels, [c4])
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
-        self.assertEqual(filtered_channels, ["BHE", "BHZ"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=[
+                "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
+        self.assertEqual(filtered_channels, [c1, c3])
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "LH[Z,N,E]"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=["LH[Z,N,E]"])
         self.assertEqual(filtered_channels, [])
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "*"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=["*"])
         self.assertEqual(filtered_channels, channels)
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "BH*", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
-        self.assertEqual(filtered_channels, ["BHE", "BHZ"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=[
+                "BH*", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
+        self.assertEqual(filtered_channels, [c1, c3])
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "BH[N,Z]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
-        self.assertEqual(filtered_channels, ["BHZ"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=[
+                "BH[N,Z]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
+        self.assertEqual(filtered_channels, [c3])
 
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "S*", "BH*"])
-        self.assertEqual(filtered_channels, ["SHE"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=["S*", "BH*"])
+        self.assertEqual(filtered_channels, [c2])
 
         # Different ways to not filter.
-        filtered_channels = filter_channel_priority(channels, priorities=[
-            "*"])
-        self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=["*"])
+        self.assertEqual(filtered_channels, channels)
 
-        filtered_channels = filter_channel_priority(channels,
-                                                    priorities=None)
-        self.assertEqual(filtered_channels, ["BHE", "SHE", "BHZ", "HHE"])
+        filtered_channels = filter_channel_priority(
+            channels, key="channel", priorities=None)
+        self.assertEqual(filtered_channels, channels)
+
+    def test_location_priority_filtering(self):
+        """
+        Tests the channel priority filtering.
+        """
+        c1 = Channel("", "BHE")
+        c2 = Channel("10", "SHE")
+        c3 = Channel("00", "BHZ")
+        c4 = Channel("", "HHE")
+        channels = [c1, c2, c3, c4]
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=["*0"])
+        self.assertEqual(filtered_channels, [c2, c3])
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=["00"])
+        self.assertEqual(filtered_channels, [c3])
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=[""])
+        self.assertEqual(filtered_channels, [c1, c4])
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=["1?"])
+        self.assertEqual(filtered_channels, [c2])
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=["", "*0"])
+        self.assertEqual(filtered_channels, [c1, c4])
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=["*0", ""])
+        self.assertEqual(filtered_channels, [c2, c3])
+
+        # Different ways to not filter.
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=["*"])
+        self.assertEqual(filtered_channels, channels)
+
+        filtered_channels = filter_channel_priority(
+            channels, key="location", priorities=None)
+        self.assertEqual(filtered_channels, channels)
+
 
     def test_station_list_nearest_neighbour_filter(self):
         """

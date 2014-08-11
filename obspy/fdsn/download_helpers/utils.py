@@ -389,9 +389,7 @@ class SphericalNearestNeighbour(object):
         return cart_data
 
 
-def filter_channel_priority(channels, priorities=("HH[Z,N,E]", "BH[Z,N,E]",
-                                                  "MH[Z,N,E]", "EH[Z,N,E]",
-                                                  "LH[Z,N,E]")):
+def filter_channel_priority(channels, key, priorities=None):
     """
     This function takes a dictionary containing channels keys and returns a new
     one filtered with the given priorities list.
@@ -404,9 +402,9 @@ def filter_channel_priority(channels, priorities=("HH[Z,N,E]", "BH[Z,N,E]",
     :param channels: A list containing channel names.
     :type priorities: list of unicode or None
     :param priorities: The desired channels with descending priority. Channels
-        will be matched by fnmatch.fnmatch() so wildcards and sequences are
-        supported. The advisable form to request the three standard components
-        of a channel is "HH[Z,N,E]" to avoid getting e.g. rotated components.
+    will be matched by fnmatch.fnmatch() so wildcards and sequences are
+    supported. The advisable form to request the three standard components
+    of a channel is "HH[Z,N,E]" to avoid getting e.g. rotated components.
     :returns: A new list containing only the filtered channels.
     """
     if priorities is None:
@@ -416,7 +414,7 @@ def filter_channel_priority(channels, priorities=("HH[Z,N,E]", "BH[Z,N,E]",
         if filtered_channels:
             break
         for channel in channels:
-            if fnmatch.fnmatch(channel, pattern):
+            if fnmatch.fnmatch(getattr(channel, key), pattern):
                 filtered_channels.append(channel)
                 continue
     return filtered_channels
