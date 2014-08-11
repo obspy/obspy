@@ -17,6 +17,7 @@ with standard_library.hooks():
     from urllib.error import HTTPError, URLError
 
 import copy
+import collections
 import itertools
 import logging
 from multiprocessing.pool import ThreadPool
@@ -199,16 +200,52 @@ class DownloadHelper(object):
 
                 # Now download the station information for the downloaded
                 # stations.
-                downloaded_stations = self.download_stationxml(
+                del stations[0]
+                downloaded_stationxml = self.download_stationxml(
                     client, client_name, stations,
                     restrictions, threads_per_client)
 
-                from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+                dict_downloaded_mseed = collections.defaultdict(list)
+                dict_downloaded_xmls = collections.defaultdict(list)
+
+                mseed_tspan = collections.namedtuple("mseed_tspan", ["starttime", "endtime", "filename"])
+                xml_tspan = collections.namedtuple("xml_tspan", ["starttime", "endtime"])
+                for chans in downloaded_miniseed_channels:
+                    dict_downloaded_mseed['%s.%s.%s.%s' % (chans.network, chans.station, chans.location,
+                                                           chans.channel)].append(mseed_tspan(chans.starttime,
+                                                                                              chans.endtime,
+                                                                                              chans.filename))
+                for chans in downloaded_stationxml:
+                    dict_downloaded_xmls['%s.%s.%s.%s' % (chans.network, chans.station, chans.location,
+                                                          chans.channel)].append(xml_tspan(chans.starttime,
+                                                                                           chans.endtime))
+
+                for mseed_chan in dict_downloaded_mseed.keys():
+                    if not mseed_chan in dict_downloaded_xmls.keys():
+                        logger.warning("Stationxml for %s has not been downloaded, the mseed file is removed!" %
+                                       mseed_chan)
+                        os.remove(dict_downloaded_mseed[mseed_chan][0].filename)
+                        continue
+
+                    xml_time_spans = dict_downloaded_xmls[mseed_chan]
+                    all_good = True
+                    for t in xml_time_spans:
+                        for mseed_range in dict_downloaded_mseed[mseed_chan]:
+                            if t.starttime <= mseed_range.starttime and t.endtime >= mseed_range.endtime:
+                                break
+                        else:
+
+                    else:
+                        logger.warning("Stationxml for %s does not cover the whole time span of the mseed file, "
+                                       "the mseed file is removed!" % mseed_chan)
+                        os.remove(dict_downloaded_mseed[mseed_chan][0].filename)
+                        continue
+
 
                 # Remove waveforms that did not succeed in having available
                 # stationxml files.
                 #self.delete_extraneous_waveform_files()
-                existing_stations.extend(downloaded_stations)
+                #existing_stations.extend(downloaded_stations)
             else:
                 # If it is not reliable, e.g. the client does not have the
                 # "includeavailability" or "matchtimeseries" flags,
