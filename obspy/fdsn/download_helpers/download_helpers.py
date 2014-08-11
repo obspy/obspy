@@ -184,13 +184,26 @@ class DownloadHelper(object):
                     stations, restrictions, chunk_size=chunk_size,
                     threads_per_client=threads_per_client)
 
-                from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+                stations = utils.filter_stations_with_channel_list(
+                    stations, downloaded_miniseed_channels)
+
+                for station in stations:
+                    filename = utils.get_stationxml_filename(
+                        stationxml_path, station.network, station.station)
+                    if not filename or os.path.exists(filename):
+                        continue
+                    dirname = os.path.dirname(filename)
+                    if not os.path.exists(dirname):
+                        os.makedirs(dirname)
+                    station.stationxml_filename = filename
 
                 # Now download the station information for the downloaded
                 # stations.
                 downloaded_stations = self.download_stationxml(
-                    client, client_name, downloaded_stations,
+                    client, client_name, stations,
                     restrictions, threads_per_client)
+
+                from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
                 # Remove waveforms that did not succeed in having available
                 # stationxml files.
@@ -279,41 +292,33 @@ class DownloadHelper(object):
                 filename))
         return channel_availability
 
-    def download_stationxml(self, client, client_name, station_availability,
-                            restrictions, threads_per_client=5):
+    def _attach_miniseed_filenames(self, stations, restrictions):
+        pass
 
-        avail = []
-        for station in station_availability:
-            station.stationxml_filename = 'test'
-            filename = utils.get_stationxml_filename(
-                station.stationxml_filename, station.network, station.station)
-            avail.append((station, filename))
+    def download_stationxml(self, client, client_name, stations,
+                            restrictions, threads_per_client=10):
 
         def star_download_station(args):
             try:
-                utils.download_stationxml(*args, logger=logger)
+                ret_val = utils.download_stationxml(*args, logger=logger)
             except ERRORS as e:
                 logger.error(str(e))
                 return None
-            return None
+            return ret_val
 
-        thread_pools = []
-        thread_results = []
-        for s in avail:
-            p = ThreadPool(min(threads_per_client, len(s)))
-            thread_pools.append(p)
+        pool = ThreadPool(min(threads_per_client, len(stations)))
 
-            thread_results.append(p.map(
-                star_download_station, [
-                    (client, client_name, restrictions.starttime,
-                     restrictions.endtime, s[0], s[1])]))
-
-        for p in thread_pools:
-            p.close()
+        results = pool.map(star_download_station, [
+                           (client, client_name, restrictions.starttime,
+                            restrictions.endtime, s) for s in stations])
+        pool.close()
 
         all_channels = []
-        for check_xml in avail:
-            all_channels.extend(utils.get_stationxml_contents(check_xml[1]))
+        for filename in results:
+            if not filename:
+                continue
+            all_channels.extend(utils.get_stationxml_contents(filename))
+        return all_channels
 
     def __initialize_clients(self):
         """

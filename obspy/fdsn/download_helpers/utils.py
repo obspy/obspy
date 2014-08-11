@@ -107,13 +107,42 @@ class Channel(object):
         return not self.__eq__(other)
 
 
+def filter_stations_with_channel_list(stations, channels):
+    station_channels = {}
+    for s, channels in itertools.groupby(
+            channels, lambda x: "%s.%s" % (x.network, x.station)):
+        station_channels[s] = [(_i.location, _i.channel) for _i in channels]
+
+    final_stations = []
+    for station in stations:
+        station_chan = station_channels["%s.%s" % (station.network,
+                                                   station.station)]
+        good_channels = []
+        for channel in station.channels:
+            if (channel.location, channel.channel) not in station_chan:
+                continue
+            good_channels.append(channel)
+        if good_channels:
+            station.channels = good_channels
+            final_stations.append(station)
+    return final_stations
+
+
 def download_stationxml(client, client_name, starttime, endtime, station,
-                        filename, logger):
+                        logger):
     bulk = [(station.network, station.station, _i.location, _i.channel,
              starttime, endtime) for _i in station.channels]
-    client.get_stations_bulk(bulk, level="response", filename=filename)
+    try:
+        client.get_stations_bulk(bulk, level="response",
+                                 filename=station.stationxml_filename)
+    except Exception as e:
+        logger.info("Failed to downloaded StationXML from %s for station "
+                    "%s.%s." %
+                    (client_name, station.network, station.station))
+        return None
     logger.info("Successfully downloaded '%s' from %s." %
-                (filename, client_name))
+                (station.stationxml_filename, client_name))
+    return station.stationxml_filename
 
 
 def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
@@ -549,7 +578,7 @@ def get_stationxml_contents(filename):
             endtime = obspy.UTCDateTime(elem.get('endDate'))
         elif elem.tag == response_tag:
             channels.append(ChannelAvailability(
-                network, station, location, channel, starttime, endtime
+                network, station, location, channel, starttime, endtime, None
             ))
         elif elem.tag == station_tag:
             station = elem.get('code')
