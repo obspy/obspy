@@ -118,7 +118,7 @@ class DownloadHelper(object):
     def download(self, domain, restrictions, chunk_size=25,
                  threads_per_client=5, mseed_path=None,
                  stationxml_path=None):
-
+        # Collect all the downloaded stations.
         existing_stations = set()
 
         # Do it sequentially for each client.
@@ -158,6 +158,10 @@ class DownloadHelper(object):
                 if not new_stations:
                     continue
 
+                # "Filter" the station list to get a list of channels that
+                # are actually required and a list of existing filenames.
+                # The existing filenames will be parsed to download
+                # StationXML files for them in case they do not yet exist.
                 mseed_stations, existing_miniseed_filenames = \
                     self._attach_miniseed_filenames(
                         stations=new_stations, restrictions=restrictions,
@@ -168,6 +172,8 @@ class DownloadHelper(object):
                                 client_name)
                     continue
 
+                # Download the missing channels and get a list of filenames
+                # that just got downloaded.
                 if mseed_stations:
                     downloaded_miniseed_filenames = self.download_mseed(
                         client, client_name, mseed_stations, restrictions,
@@ -179,26 +185,48 @@ class DownloadHelper(object):
                 # Parse the just downloaded and existing MiniSEED files and
                 # make a list of stations that require StationXML files.
                 miniseed_channels = self._parse_miniseed_filenames(
-                    downloaded_miniseed_filenames, restrictions)
-                miniseed_channels.extend(self._parse_miniseed_filenames(
-                    existing_miniseed_filenames, restrictions))
+                    downloaded_miniseed_filenames +
+                    existing_miniseed_filenames, restrictions)
+                # Stations will be list of Stations with Channels that all
+                # need a StationXML file.
                 stations = utils.filter_stations_with_channel_list(
                     new_stations, miniseed_channels)
 
+                # Attach filenames to the StationXML files and get a list of
+                # already existing StationXML files.
                 stations_to_download = []
-                existing_stationxml_files = []
-
-                for station in stations:
+                existing_stationxml_channels = []
+                for stat in stations:
                     filename = utils.get_stationxml_filename(
-                        stationxml_path, station.network, station.station)
-                    if not filename or os.path.exists(filename):
-                        existing_stationxml_files.append(filename)
+                        stationxml_path, stat.network, stat.station)
+                    if not filename:
                         continue
+                    # If the StationXML file already exists, make sure it
+                    # contains all the necessary information. Otherwise
+                    # delete it and it will be downloaded again in the
+                    # following.
+                    if os.path.exists(filename):
+                        contents = utils.get_stationxml_contents(filename)
+                        all_channels_good = True
+                        for chan in stat.channels:
+                            if utils.is_in_list_of_channel_availability(
+                                    stat.network, stat.station,
+                                    chan.location, chan.channel,
+                                    restrictions.starttime,
+                                    restrictions.endtime, contents):
+                                continue
+                            all_channels_good = False
+                            break
+                        if all_channels_good is False:
+                            os.remove(filename)
+                        else:
+                            existing_stationxml_channels.append(contents)
+                            continue
                     dirname = os.path.dirname(filename)
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
-                    station.stationxml_filename = filename
-                    stations_to_download.append(station)
+                    stat.stationxml_filename = filename
+                    stations_to_download.append(stat)
 
                 # Now download the station information for the downloaded
                 # stations.

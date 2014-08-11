@@ -107,6 +107,31 @@ class Channel(object):
         return not self.__eq__(other)
 
 
+def is_in_list_of_channel_availability(network, station, location, channel,
+                                       starttime, endtime, availabilities):
+    """
+    Helper function checking if a given channel is in a list of
+    ChannelAvailability tuples.
+
+    :param network: The network code.
+    :param station: The station code.
+    :param location: The location code.
+    :param channel: The channel code.
+    :param starttime: The starttime of the data.
+    :param endtime: The endtime of the data
+    :param availabilities: List of ChannelAvailability objects.
+    """
+    for avail in availabilities:
+        if (avail.network == network) and \
+                (avail.station == station) and \
+                (avail.location == location) and \
+                (avail.channel == channel) and \
+                (avail.starttime <= starttime) and \
+                (avail.endtime >= endtime):
+            return True
+    return False
+
+
 def filter_stations_with_channel_list(stations, channels):
     station_channels = {}
     for s, channels in itertools.groupby(
