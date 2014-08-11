@@ -115,8 +115,8 @@ class DownloadHelper(object):
         self._initialized_clients = OrderedDict()
         self.__initialize_clients()
 
-    def download(self, domain, restrictions, temp_folder,
-                 chunk_size=25, threads_per_client=5, mseed_path=None,
+    def download(self, domain, restrictions, chunk_size=25,
+                 threads_per_client=5, mseed_path=None,
                  stationxml_path=None):
 
         existing_stations = set()
@@ -149,6 +149,8 @@ class DownloadHelper(object):
             # happen in reverse to assure as much data as possible is
             # downloaded.
             if info["reliable"]:
+                # Filter the stations to be downloaded based on geographical
+                # and geometric factors.
                 all_stations = utils.merge_stations(
                     existing_stations, info["availability"].values(),
                     restrictions.minimum_interstation_distance_in_m)
@@ -156,47 +158,47 @@ class DownloadHelper(object):
                 if not new_stations:
                     continue
 
-                stations = []
-                for station in new_stations:
-                    channels = []
-                    for channel in station.channels:
-                        filename = utils.get_mseed_filename(
-                            mseed_path, station.network, station.station,
-                            channel.location, channel.channel)
-                        if not filename or os.path.exists(filename):
-                            continue
-                        dirname = os.path.dirname(filename)
-                        if not os.path.exists(dirname):
-                            os.makedirs(dirname)
-                        channel.mseed_filename = filename
-                        channels.append(channel)
-                    if not channels:
-                        continue
-                    station.channels = channels
-                    stations.append(station)
+                mseed_stations, existing_miniseed_filenames = \
+                    self._attach_miniseed_filenames(
+                        stations=new_stations, restrictions=restrictions,
+                        mseed_path=mseed_path)
 
-                if not stations:
+                if not mseed_stations and not existing_miniseed_filenames:
                     logger.info("Nothing to be downloaded for client %s." %
                                 client_name)
                     continue
 
-                downloaded_miniseed_channels = self.download_mseed(
-                    client, client_name,
-                    stations, restrictions, chunk_size=chunk_size,
-                    threads_per_client=threads_per_client)
+                if mseed_stations:
+                    downloaded_miniseed_filenames = self.download_mseed(
+                        client, client_name, mseed_stations, restrictions,
+                        chunk_size=chunk_size,
+                        threads_per_client=threads_per_client)
+                else:
+                    downloaded_miniseed_filenames = []
 
+                # Parse the just downloaded and existing MiniSEED files and
+                # make a list of stations that require StationXML files.
+                miniseed_channels = self._parse_miniseed_filenames(
+                    downloaded_miniseed_filenames, restrictions)
+                miniseed_channels.extend(self._parse_miniseed_filenames(
+                    existing_miniseed_filenames, restrictions))
                 stations = utils.filter_stations_with_channel_list(
-                    stations, downloaded_miniseed_channels)
+                    new_stations, miniseed_channels)
+
+                stations_to_download = []
+                existing_stationxml_files = []
 
                 for station in stations:
                     filename = utils.get_stationxml_filename(
                         stationxml_path, station.network, station.station)
                     if not filename or os.path.exists(filename):
+                        existing_stationxml_files.append(filename)
                         continue
                     dirname = os.path.dirname(filename)
                     if not os.path.exists(dirname):
                         os.makedirs(dirname)
                     station.stationxml_filename = filename
+                    stations_to_download.append(station)
 
                 # Now download the station information for the downloaded
                 # stations.
@@ -208,61 +210,56 @@ class DownloadHelper(object):
                 dict_downloaded_mseed = collections.defaultdict(list)
                 dict_downloaded_xmls = collections.defaultdict(list)
 
-                mseed_tspan = collections.namedtuple("mseed_tspan", ["starttime", "endtime", "filename"])
-                xml_tspan = collections.namedtuple("xml_tspan", ["starttime", "endtime"])
-                for chans in downloaded_miniseed_channels:
-                    dict_downloaded_mseed['%s.%s.%s.%s' % (chans.network, chans.station, chans.location,
-                                                           chans.channel)].append(mseed_tspan(chans.starttime,
-                                                                                              chans.endtime,
-                                                                                              chans.filename))
+                mseed_tspan = collections.namedtuple(
+                    "mseed_tspan", ["starttime", "endtime", "filename"])
+                xml_tspan = collections.namedtuple(
+                    "xml_tspan", ["starttime", "endtime"])
+                for chans in miniseed_channels:
+                    dict_downloaded_mseed['%s.%s.%s.%s' % (
+                        chans.network, chans.station, chans.location,
+                        chans.channel)].append(mseed_tspan(
+                            chans.starttime, chans.endtime, chans.filename))
                 for chans in downloaded_stationxml:
-                    dict_downloaded_xmls['%s.%s.%s.%s' % (chans.network, chans.station, chans.location,
-                                                          chans.channel)].append(xml_tspan(chans.starttime,
-                                                                                           chans.endtime))
+                    dict_downloaded_xmls['%s.%s.%s.%s' % (
+                        chans.network, chans.station, chans.location,
+                        chans.channel)].append(xml_tspan(
+                            chans.starttime, chans.endtime))
 
                 for mseed_chan in dict_downloaded_mseed.keys():
                     if not mseed_chan in dict_downloaded_xmls.keys():
-                        logger.warning("Stationxml for %s has not been downloaded, the mseed file is removed!" %
-                                       mseed_chan)
-                        os.remove(dict_downloaded_mseed[mseed_chan][0].filename)
+                        logger.warning(
+                            "Stationxml for %s has not been downloaded, "
+                            "the mseed file is removed!" % mseed_chan)
+                        os.remove(
+                            dict_downloaded_mseed[mseed_chan][0].filename)
                         continue
 
                     xml_time_spans = dict_downloaded_xmls[mseed_chan]
-                    all_good = True
                     for t in xml_time_spans:
                         for mseed_range in dict_downloaded_mseed[mseed_chan]:
-                            if t.starttime <= mseed_range.starttime and t.endtime >= mseed_range.endtime:
+                            if t.starttime <= mseed_range.starttime and \
+                                    t.endtime >= mseed_range.endtime:
                                 break
                         else:
+                            pass
 
                     else:
-                        logger.warning("Stationxml for %s does not cover the whole time span of the mseed file, "
-                                       "the mseed file is removed!" % mseed_chan)
-                        os.remove(dict_downloaded_mseed[mseed_chan][0].filename)
+                        logger.warning(
+                            "Stationxml for %s does not cover the whole time "
+                            "span of the mseed file, the mseed file is "
+                            "removed!" % mseed_chan)
+                        os.remove(
+                            dict_downloaded_mseed[mseed_chan][0].filename)
                         continue
-
 
                 # Remove waveforms that did not succeed in having available
                 # stationxml files.
                 #self.delete_extraneous_waveform_files()
-                #existing_stations.extend(downloaded_stations)
             else:
                 # If it is not reliable, e.g. the client does not have the
                 # "includeavailability" or "matchtimeseries" flags,
                 # then first download everything and filter later!
-                downloaded_miniseed_files = self.download_mseed(
-                    availability.values(), restrictions, mseed_path,
-                    temp_folder, chunk_size=chunk_size,
-                    threads_per_client=threads_per_client)
-                # Once that is done, filter as the coordinates of all
-                # stations are already known.
-                remaining_miniseed_files = self.do_stuff()
-                downloaded_stations = self.download_stationxml(
-                    remaining_miniseed_files, restrictions,
-                    stations_to_download,
-                    threads_per_client=threads_per_client)
-                self.delete_extraneous_waveform_files()
-                existing_stations.extend(downloaded_miniseed_files)
+                raise NotImplementedError
 
     def download_mseed(self, client, client_name, stations, restrictions,
                        chunk_size=25, threads_per_client=5):
@@ -292,10 +289,12 @@ class DownloadHelper(object):
 
         pool.close()
 
+        filenames = itertools.chain.from_iterable(result)
+        return list(filenames)
+
+    def _parse_miniseed_filenames(self, filenames, restrictions):
         time_range = restrictions.minimum_length * (restrictions.endtime -
                                                     restrictions.starttime)
-
-        filenames = itertools.chain.from_iterable(result)
         channel_availability = []
         for filename in filenames:
             st = obspy.read(filename, format="MSEED", headonly=True)
@@ -304,7 +303,7 @@ class DownloadHelper(object):
                                "removed." % st[0].id)
                 try:
                     os.remove(filename)
-                except:
+                except OSError:
                     pass
                 continue
             elif len(st) == 0:
@@ -320,7 +319,7 @@ class DownloadHelper(object):
                                tr.id, duration, time_range))
                 try:
                     os.remove(filename)
-                except:
+                except OSError:
                     pass
                 continue
             channel_availability.append(utils.ChannelAvailability(
@@ -329,8 +328,32 @@ class DownloadHelper(object):
                 filename))
         return channel_availability
 
-    def _attach_miniseed_filenames(self, stations, restrictions):
-        pass
+    def _attach_miniseed_filenames(self, stations, restrictions, mseed_path):
+        stations_to_download = []
+        existing_miniseed_filenames = []
+
+        for station in stations:
+            channels = []
+            for channel in station.channels:
+                filename = utils.get_mseed_filename(
+                    mseed_path, station.network, station.station,
+                    channel.location, channel.channel)
+                if not filename:
+                    continue
+                if os.path.exists(filename):
+                    existing_miniseed_filenames.append(filename)
+                    continue
+                dirname = os.path.dirname(filename)
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+                channel.mseed_filename = filename
+                channels.append(channel)
+            if not channels:
+                continue
+            station.channels = channels
+            stations_to_download.append(station)
+
+        return stations_to_download, existing_miniseed_filenames
 
     def download_stationxml(self, client, client_name, stations,
                             restrictions, threads_per_client=10):

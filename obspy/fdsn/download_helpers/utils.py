@@ -578,8 +578,8 @@ def get_stationxml_contents(filename):
             endtime = obspy.UTCDateTime(elem.get('endDate'))
         elif elem.tag == response_tag:
             channels.append(ChannelAvailability(
-                network, station, location, channel, starttime, endtime, None
-            ))
+                network, station, location, channel, starttime, endtime,
+                filename))
         elif elem.tag == station_tag:
             station = elem.get('code')
             location, channel, starttime, endtime = \
