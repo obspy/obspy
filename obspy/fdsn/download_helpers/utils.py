@@ -57,7 +57,7 @@ class Station(object):
             self.longitude.__repr__(),
             self.elevation_in_m.__repr__(),
             self.channels.__repr__(),
-            self.station_xml_filename.__repr__())
+            self.stationxml_filename.__repr__())
 
     def __eq__(self, other):
         try:
@@ -266,10 +266,10 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                                             station.longitude):
                 continue
 
-            # Remove channels that somehow slipped past the temporal
-            # constraints due to weird behaviour from the data center.
             channels = []
             for channel in station.channels:
+                # Remove channels that somehow slipped past the temporal
+                # constraints due to weird behaviour from the data center.
                 if (channel.start_date > restrictions.starttime) or \
                         (channel.end_date < restrictions.endtime):
                     continue
@@ -287,27 +287,27 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                     if (da.start > restrictions.starttime) or \
                             (da.end < restrictions.endtime):
                         continue
-                channels.append(channel)
+                channels.append(Channel(location=channel.location_code,
+                                        channel=channel.code))
 
             # Group by locations and apply the channel priority filter to
             # each.
             filtered_channels = []
-            for location, channels in itertools.groupby(
-                    channels, lambda x: x.location_code):
-                channels = list(set([_i.code for _i in channels]))
-                filtered_channels.extend([
-                    Channel(location, _i) for _i in
-                    filter_channel_priority(
-                        channels, priorities=restrictions.channel_priorities)])
+            for location, _channels in itertools.groupby(
+                    channels, lambda x: x.location):
+                filtered_channels.extend(filter_channel_priority(
+                    list(_channels), key="channel",
+                    priorities=restrictions.channel_priorities))
+            channels = filtered_channels
 
-            if not filtered_channels:
+            # Filter to remove unwanted locations according to the priority
+            # list.
+            channels = filter_channel_priority(
+                channels, key="location",
+                priorities=restrictions.location_priorities)
+
+            if not channels:
                 continue
-
-            # One last selection stage. If more then one channel is present,
-            # count the number of channels per location and discard those
-            # with less then the maximum number of channels.
-            filtered_channels = filter_channels_based_on_count(
-                filtered_channels)
 
             availability[(network.code, station.code)] = Station(
                 network=network.code,
@@ -315,9 +315,7 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                 latitude=station.latitude,
                 longitude=station.longitude,
                 elevation_in_m=station.elevation,
-                channels=filtered_channels,
-                client=client_name
-            )
+                channels=channels)
 
     logger.info("Found %i matching channels from client '%s'." %
                 (sum([len(_i.channels) for _i in availability.values()]),
@@ -325,25 +323,6 @@ def get_availability_from_client(client, client_name, restrictions, domain,
 
     return {"reliable": arguments["includeavailability"] or
             arguments["matchtimeseries"], "availability": availability}
-
-
-def filter_channels_based_on_count(channels):
-    """
-    Filters a list of channels and sorts them by their location. The amount
-    of channels per location is counted and only those locations whose count
-    is equal to the maximum amount of channels per location remain after the
-    filtering.
-    """
-    channels_per_locations = collections.defaultdict(list)
-    for channel in channels:
-        channels_per_locations[channel.location].append(channel)
-    max_count = max([len(_i) for _i in channels_per_locations.values()])
-    final_channels = []
-    for value in channels_per_locations.values():
-        if len(value) != max_count:
-            continue
-        final_channels.extend(value)
-    return final_channels
 
 
 class SphericalNearestNeighbour(object):
