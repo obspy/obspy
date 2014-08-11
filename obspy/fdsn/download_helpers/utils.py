@@ -35,34 +35,68 @@ from obspy.mseed.util import getRecordInformation
 EARTH_RADIUS = 6371009
 
 
-# Used to keep track of what to download.
-Station = collections.namedtuple(
-    "Station", ["network", "station", "latitude", "longitude",
-                "elevation_in_m", "channels", "client_name",
-                "filename", "is_downloaded"])
-Channel = collections.namedtuple(
-    "Channel", ["location", "channel", "filename", "is_downloaded"])
+class Station(object):
+    __slots__ = ["network", "station", "latitude", "longitude",
+                 "elevation_in_m", "channels", "stationxml_filename"]
 
-# Used for the quick StationXML indexer.
-ChannelAvailability = collections.namedtuple(
-    "ChannelAvailability", ["network", "station", "location",
-                            "channel", "starttime", "endtime"])
-
-TimeRange = collections.namedtuple("TimeRange", ["start", "end"])
-
-
-class ChannelAvailability(object):
-    __slots__ = ["network", "station", "location", "channel", "_time_ranges"]
-
-    def __init__(self, network, station, location, channel):
+    def __init__(self, network, station, latitude, longitude,
+                 elevation_in_m, channels=None, stationxml_filename=None):
         self.network = network
         self.station = station
+        self.latitude = latitude
+        self.longitude = longitude
+        self.elevation_in_m = elevation_in_m
+        self.channels = channels if channels else []
+        self.stationxml_filename = stationxml_filename
+
+    def __repr__(self):
+        return "Station(%s, %s, %s, %s, %s, %s, %s)" % (
+            self.network.__repr__(),
+            self.station.__repr__(),
+            self.latitude.__repr__(),
+            self.longitude.__repr__(),
+            self.elevation_in_m.__repr__(),
+            self.channels.__repr__(),
+            self.station_xml_filename.__repr__())
+
+    def __eq__(self, other):
+        try:
+            for key in self.__slots__:
+                if getattr(self, key) != getattr(other, key):
+                    return False
+        except AttributeError as e:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class Channel(object):
+    __slots__ = ["location", "channel", "mseed_filename"]
+
+    def __init__(self, location, channel, mseed_filename=None):
         self.location = location
         self.channel = channel
-        self._time_ranges = []
+        self.mseed_filename = mseed_filename
 
-    def add_time_range(self, start, end):
-        self._time_ranges.append(TimeRange(start, end))
+    def __repr__(self):
+        return "Channel(%s, %s, %s)" % (
+            self.location.__repr__(),
+            self.channel.__repr__(),
+            self.mseed_filename.__repr__())
+
+    def __eq__(self, other):
+        try:
+            for key in self.__slots__:
+                if getattr(self, key) != getattr(other, key):
+                    return False
+        except AttributeError:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 def download_stationxml(client, client_name, starttime, endtime, station,
@@ -170,7 +204,8 @@ def get_availability_from_client(client, client_name, restrictions, domain,
          }
     """
     # Check if stations needs to be filtered after downloading or if the
-    # restrictions one can impose with FDSN webservice query are enough.
+    # restrictions one can impose with the FDSN webservices queries are enough.
+    # This depends on the domain definition.
     try:
         domain.is_in_domain(0, 0)
         needs_filtering = True
@@ -243,6 +278,11 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                 if arguments["includeavailability"]:
                     da = channel.data_availability
                     if da is None:
+                        logger.warning(
+                            "Client '%s' supports the 'includeavailability'"
+                            "parameter but returns channels without "
+                            "availability information. The final "
+                            "availability might not be complete" % client_name)
                         continue
                     if (da.start > restrictions.starttime) or \
                             (da.end < restrictions.endtime):
@@ -284,8 +324,7 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                  client_name))
 
     return {"reliable": arguments["includeavailability"] or
-                        arguments["matchtimeseries"],
-            "availability": availability}
+            arguments["matchtimeseries"], "availability": availability}
 
 
 def filter_channels_based_on_count(channels):

@@ -64,7 +64,8 @@ class Restrictions(object):
                  minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
                                      "MH[Z,N,E]", "EH[Z,N,E]",
-                                     "LH[Z,N,E]")):
+                                     "LH[Z,N,E]"),
+                 location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
         self.network = network
@@ -72,6 +73,7 @@ class Restrictions(object):
         self.location = location
         self.channel = channel
         self.channel_priorities = channel_priorities
+        self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \
             float(minimum_interstation_distance_in_m)
 
