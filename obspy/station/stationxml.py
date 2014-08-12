@@ -577,6 +577,9 @@ def _read_operator(operator_element, _ns):
 
 def _read_data_availability(avail_element, _ns):
     extent = avail_element.find(_ns("Extent"))
+    # Recovery from empty Extent tags.
+    if extent is None:
+        return extent
     start = obspy.UTCDateTime(extent.get("start"))
     end = obspy.UTCDateTime(extent.get("end"))
     return obspy.station.util.DataAvailability(start=start, end=end)
