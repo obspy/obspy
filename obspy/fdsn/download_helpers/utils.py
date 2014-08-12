@@ -157,6 +157,26 @@ def is_in_list_of_channel_availability(network, station, location, channel,
     return False
 
 
+def filter_stations_based_on_duplicate_id(existing_stations,
+                                          discarded_station_ids, new_stations):
+    """
+    :param existing_stations: A set of :class:`~.Station` object. detailing
+        already existing stations.
+    :param discarded_station_ids: A set of strings denoting discarded
+        station ids, e.g. station ids that have been discarded due to some
+        reason.
+    :param new_stations: A set or list of new :class:`~.Station` objects
+        that will be filtered.
+    :return: A set of filtered :class:`~.Station` objects.
+    """
+    existing_stations = [(_i.network, _i.station) for _i in existing_stations]
+    invalid_station_ids = existing_stations.union(discarded_station_ids)
+
+    return list(itertools.ifilterfalse(
+        lambda x: (x.network, x.station) in invalid_station_ids,
+        new_stations))
+
+
 def filter_stations_with_channel_list(stations, channels):
     station_channels = {}
     get_station = lambda x: "%s.%s" % (x.network, x.station)

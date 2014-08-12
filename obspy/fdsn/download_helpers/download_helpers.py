@@ -120,7 +120,7 @@ class DownloadHelper(object):
             # remaining items will be sorted alphabetically.
             _p = []
             if "IRIS" in providers:
-                _p.append("IRIS")
+                p.append("IRIS")
                 providers.remove("IRIS")
             if "ORFEUS" in providers:
                 _p.append("ORFEUS")
@@ -142,7 +142,8 @@ class DownloadHelper(object):
         report = []
         discarded_stationids = set()
 
-        # Do it sequentially for each client.
+        # Do it sequentially for each client. Doing it in parallel is not
+        # really feasible as long as the availability queries are not reliable.
         for client_name, client in self._initialized_clients.items():
             logger.info("Stations already acquired during this run: %i" %
                         len(existing_stations))
@@ -151,22 +152,21 @@ class DownloadHelper(object):
                 client, client_name, restrictions, domain, logger)
 
             availability = info["availability"]
-            if not availability:
-                report.append({"client": client_name, "data": []})
-                continue
-            availability = availability.values()
+            if not info["availability"]:
+                availability = []
+            else:
+                availability = availability.values()
 
-            ex_stations = [(_i.network, _i.station) for _i in
-                           existing_stations]
-            count_before_filtering = len(availability)
-            availability = list(itertools.ifilterfalse(
-                lambda x: (x.network, x.station)
-                in ex_stations + list(discarded_stationids), availability))
-            count_after_filtering = len(availability)
-            if count_before_filtering != count_after_filtering:
-                logger.info("After discarding duplicate stations: %i "
-                            "stations remain." % count_after_filtering)
-            if not count_after_filtering:
+            # First filter stage. Remove stations based on the station id,
+            # e.g. NETWORK.STATION. Remove all that already exist and all
+            # the are in the discarded station ids set.
+            availability = utils.filter_stations_based_on_duplicate_id(
+                existing_stations, discarded_stationids, availability)
+            logger.info("Client '%s' - After discarding duplicates based on "
+                        "the station id, %i stations remain." % (
+                        client_name, len(availability)))
+            # If nothing is there, no need to keep going.
+            if not availability:
                 report.append({"client": client_name, "data": []})
                 continue
 
@@ -374,7 +374,7 @@ class DownloadHelper(object):
                 stations_for_loop.add(station)
 
             if not stations_for_loop:
-                report({"client": client_name, "data": []})
+                report.append({"client": client_name, "data": []})
                 continue
 
             if info["reliable"]:
@@ -391,6 +391,7 @@ class DownloadHelper(object):
                     new_stations)
                 report.append({"client": client_name, "data": copy.copy(
                     new_stations)})
+                existing_stations = existing_stations.union(new_stations)
                 if not extraneous_stations:
                     continue
                 else:
