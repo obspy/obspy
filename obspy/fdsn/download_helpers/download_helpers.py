@@ -121,6 +121,8 @@ class DownloadHelper(object):
                  stationxml_path=None):
         # Collect all the downloaded stations.
         existing_stations = set()
+        report = []
+        discarded_stationids = set()
 
         # Do it sequentially for each client.
         for client_name, client in self._initialized_clients.items():
@@ -132,6 +134,7 @@ class DownloadHelper(object):
 
             availability = info["availability"]
             if not availability:
+                report.append({"client": client_name, "data": []})
                 continue
             availability = availability.values()
 
@@ -139,13 +142,14 @@ class DownloadHelper(object):
                            existing_stations]
             count_before_filtering = len(availability)
             availability = list(itertools.ifilterfalse(
-                lambda x: (x.network, x.station) in ex_stations,
-                availability))
+                lambda x: (x.network, x.station)
+                in ex_stations + list(discarded_stationids), availability))
             count_after_filtering = len(availability)
             if count_before_filtering != count_after_filtering:
                 logger.info("After discarding duplicate stations: %i "
                             "stations remain." % count_after_filtering)
             if not count_after_filtering:
+                report.append({"client": client_name, "data": []})
                 continue
 
             # Two cases. Reliable availability means that the client
@@ -162,6 +166,9 @@ class DownloadHelper(object):
                     existing_stations, availability,
                     restrictions.minimum_interstation_distance_in_m)
                 new_stations = all_stations - existing_stations
+                discarded_stationids = discarded_stationids.union(
+                    (i.network, i.station) for i in
+                    set(availability).difference(new_stations))
             else:
                 new_stations = availability
 
@@ -169,6 +176,7 @@ class DownloadHelper(object):
                         "minimum inter-station distance found." % (
                         client_name, len(new_stations)))
             if not new_stations:
+                report.append({"client": client_name, "data": []})
                 continue
 
             # "Filter" the station list to get a list of channels that
@@ -184,6 +192,7 @@ class DownloadHelper(object):
             if not mseed_stations and not existing_miniseed_filenames:
                 logger.info("Nothing to be downloaded for client %s." %
                             client_name)
+                report.append({"client": client_name, "data": []})
                 continue
 
             logger.info("Client '%s' - MiniSEED data from %i channels "
@@ -346,10 +355,58 @@ class DownloadHelper(object):
                 station.channels = available_miniseed_channels[station_id]
                 stations_for_loop.add(station)
 
+            if not stations_for_loop:
+                report({"client": client_name, "data": []})
+                continue
+
             if info["reliable"]:
+                report.append({"client": client_name, "data": copy.copy(
+                    stations_for_loop)})
                 existing_stations = existing_stations.union(stations_for_loop)
             else:
-                from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+
+                all_stations = utils.merge_stations(
+                    existing_stations, stations_for_loop,
+                    restrictions.minimum_interstation_distance_in_m)
+                new_stations = all_stations - existing_stations
+                extraneous_stations = stations_for_loop.difference(
+                    new_stations)
+                report.append({"client": client_name, "data": copy.copy(
+                    new_stations)})
+                if not extraneous_stations:
+                    continue
+                else:
+                    discarded_stationids = discarded_stationids.union(
+                        (_i.network, _i.station) for _i in extraneous_stations)
+
+                    logger.info("Data from %i stations does not fulfill the "
+                                "minimum inter-station distance requirement. "
+                                "It will be deleted." %
+                                len(extraneous_stations))
+                    for station in extraneous_stations:
+                        logger.info("Deleting '%s'." %
+                                    station.stationxml_filename)
+                        utils.safe_delete(station.stationxml_filename)
+                        for channel in station.channels:
+                            utils.safe_delete(channel.mseed_filename)
+                            logger.info("Deleting '%s'." %
+                                        channel.mseed_filename)
+        return report
+
+    def format_report(self, report):
+        print("\nAttempted to acquire data from %i clients." % len(report))
+        for info in report:
+            stationxmls = []
+            mseeds = []
+            for station in info["data"]:
+                stationxmls.append(station.stationxml_filename)
+                mseeds.extend([i.mseed_filename for i in station.channels])
+            filesize = sum(os.path.getsize(i) for i in (mseeds + stationxmls))
+            filesize /= (1024.0 * 1024.0)
+            print("\tClient %10s - %4i StationXML files | %5i MiniSEED files "
+                  "| Total Size: %.2f MB" %
+                  ('%s' % info["client"], len(stationxmls), len(mseeds), \
+                   filesize))
 
     def download_mseed(self, client, client_name, stations, restrictions,
                        chunk_size=25, threads_per_client=5):

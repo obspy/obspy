@@ -519,12 +519,12 @@ def merge_stations(existing_stations, new_stations,
     is 0, it will just merge both lists and return.
     """
     # Shallow copies.
-    existing_stations = copy.copy(existing_stations)
-    new_stations = copy.copy(new_stations)
+    existing_stations = set(copy.copy(existing_stations))
+    new_stations = set(copy.copy(new_stations))
 
     # If no requirement given, just merge
     if not minimum_distance_in_m:
-        return set(existing_stations + new_stations)
+        return existing_stations.intersection(new_stations)
 
     # If no existing stations yet, just make sure the minimum inner station
     # distances are satisfied.
@@ -540,7 +540,7 @@ def merge_stations(existing_stations, new_stations,
         min_distance = neighbours[0]
         if min_distance < minimum_distance_in_m:
             continue
-        existing_stations.append(station)
+        existing_stations.add(station)
 
     return existing_stations
 
@@ -621,7 +621,11 @@ def get_stationxml_contents(filename):
             channel = elem.get('code')
             location = elem.get('locationCode').strip()
             starttime = obspy.UTCDateTime(elem.get('startDate'))
-            endtime = obspy.UTCDateTime(elem.get('endDate'))
+            end_date = elem.get('endDate')
+            if end_date is not None:
+                endtime = obspy.UTCDateTime(elem.get('endDate'))
+            else:
+                endtime = obspy.UTCDateTime(2599, 1, 1)
         elif elem.tag == response_tag:
             channels.append(ChannelAvailability(
                 network, station, location, channel, starttime, endtime,
