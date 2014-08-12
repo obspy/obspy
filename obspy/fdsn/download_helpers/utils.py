@@ -112,6 +112,26 @@ class Channel(object):
         return not self.__eq__(other)
 
 
+def format_report(report):
+    """
+    Pretty print the report returned from the download() function of the
+    download helper.
+    """
+    print("\nAttempted to acquire data from %i clients." % len(report))
+    for info in report:
+        stationxmls = []
+        mseeds = []
+        for station in info["data"]:
+            stationxmls.append(station.stationxml_filename)
+            mseeds.extend([i.mseed_filename for i in station.channels])
+        filesize = sum(os.path.getsize(i) for i in (mseeds + stationxmls))
+        filesize /= (1024.0 * 1024.0)
+        print("\tClient %10s - %4i StationXML files | %5i MiniSEED files "
+              "| Total Size: %.2f MB" %
+              ('%s' % info["client"], len(stationxmls), len(mseeds),
+               filesize))
+
+
 def is_in_list_of_channel_availability(network, station, location, channel,
                                        starttime, endtime, availabilities):
     """

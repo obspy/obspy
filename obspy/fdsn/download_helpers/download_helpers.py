@@ -23,8 +23,6 @@ import logging
 from multiprocessing.pool import ThreadPool
 import os
 from socket import timeout as SocketTimeout
-import shutil
-import tempfile
 import time
 import warnings
 
@@ -35,6 +33,8 @@ from obspy.fdsn import Client
 
 from . import utils
 
+# Different types of errors that can happen when downloading data via the
+# FDSN clients.
 ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 
 
@@ -59,11 +59,31 @@ class FDSNDownloadHelperException(FDSNException):
 
 class Restrictions(object):
     """
-    Class storing non-domain bounds restrictions of a query.
+    Class storing non-domain restrictions of a query.
+
+    :param starttime: The starttime of the data.
+    :param endtime: The endtime of the data.
+    :param network: The network code.
+    :param station: The station code.
+    :param location: The location code.
+    :param channel: The channel code.
+    :param reject_channels_with_gaps: If True (default), MiniSEED files with
+        gaps and/or overlaps will be deleted.
+    :param minimum_length: The minimum length of the data as a fraction of
+        the requested time frame. After a channel has been downloaded it
+        will be checked that its total length is at least that fraction of
+        the requested time span. Will be deleted otherwise.
+    :param minimum_interstation_distance_in_m: The minimum inter-station
+        distance. Data from any new station closer to any existing station
+        will not be downloaded. Also used for duplicate station detection as
+        sometimes stations have different names for different webservice
+        providers.
+    :param channel_priorities: Priority list for the channels.
+    :param location_priorities: Priority list for the locations.
     """
     def __init__(self, starttime, endtime, network=None, station=None,
-                 location=None, channel=None,
-                 minimum_interstation_distance_in_m=1000,
+                 location=None, channel=None, reject_channels_with_gaps=True,
+                 minimum_length=0.9, minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
                                      "MH[Z,N,E]", "EH[Z,N,E]",
                                      "LH[Z,N,E]"),
@@ -74,8 +94,8 @@ class Restrictions(object):
         self.station = station
         self.location = location
         self.channel = channel
-        self.reject_channels_with_gaps = True
-        self.minimum_length = 0.9
+        self.reject_channels_with_gaps = reject_channels_with_gaps
+        self.minimum_length = minimum_length
         self.channel_priorities = channel_priorities
         self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \
@@ -83,14 +103,17 @@ class Restrictions(object):
 
 
 class DownloadHelper(object):
+    """
+    Class facilitating data acquistion across all FDSN web service
+    implementation.
+
+    :param providers: List of FDSN client names or service URLS. Will use
+        all FDSN implementations known to ObsPy if set to None. The order
+        in the list also determines their priority, if data is available at
+        more then one provider it will always be downloaded from the
+        provider that comes first in the list.
+    """
     def __init__(self, providers=None):
-        """
-        :param providers: List of FDSN client names or service URLS. Will use
-            all FDSN implementations known to ObsPy if set to None. The order
-            in the list also determines the priority, if data is available at
-            more then one provider it will always be downloaded from the
-            provider that comes first in the list.
-        """
         if providers is None:
             providers = URL_MAPPINGS.keys()
             # In that case make sure IRIS is first, and ORFEUS second! The
@@ -105,12 +128,7 @@ class DownloadHelper(object):
             _p.extend(sorted(providers))
             providers = _p
 
-        # Immutable tuple.
         self.providers = tuple(providers)
-
-        # Each call to self.download() will create a new temporary directory
-        # and save it in this variable.
-        self.temp_dir = None
 
         # Initialize all clients.
         self._initialized_clients = OrderedDict()
@@ -392,21 +410,6 @@ class DownloadHelper(object):
                             logger.info("Deleting '%s'." %
                                         channel.mseed_filename)
         return report
-
-    def format_report(self, report):
-        print("\nAttempted to acquire data from %i clients." % len(report))
-        for info in report:
-            stationxmls = []
-            mseeds = []
-            for station in info["data"]:
-                stationxmls.append(station.stationxml_filename)
-                mseeds.extend([i.mseed_filename for i in station.channels])
-            filesize = sum(os.path.getsize(i) for i in (mseeds + stationxmls))
-            filesize /= (1024.0 * 1024.0)
-            print("\tClient %10s - %4i StationXML files | %5i MiniSEED files "
-                  "| Total Size: %.2f MB" %
-                  ('%s' % info["client"], len(stationxmls), len(mseeds),
-                   filesize))
 
     def download_mseed(self, client, client_name, stations, restrictions,
                        chunk_size_in_mb=25, threads_per_client=5):
