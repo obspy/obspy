@@ -18,7 +18,7 @@ import unittest
 
 from obspy.fdsn.download_helpers import domain
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
-    filter_stations, merge_stations, Station, Channel, \
+    filter_stations, filter_based_on_interstation_distance, Station, Channel, \
     filter_channels_based_on_count, get_stationxml_filename, get_mseed_filename
 
 
@@ -303,11 +303,11 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Station("11", "11", 0, 0, 505, [], None),
             Station("11", "11", 0, 0, 1505, [], None),
         ]
-        new_list = merge_stations(list_one, list_two, 20)
+        new_list = filter_based_on_interstation_distance(list_one, list_two, 20)
         self.assertEqual(new_list, list_one)
-        new_list = merge_stations(list_one, list_two, 2)
+        new_list = filter_based_on_interstation_distance(list_one, list_two, 2)
         self.assertEqual(new_list, list_one + list_two)
-        new_list = merge_stations(list_one, list_two, 8)
+        new_list = filter_based_on_interstation_distance(list_one, list_two, 8)
         self.assertEqual(new_list, list_one + [
             Station("11", "11", 0, 0, 10, [], None)])
 

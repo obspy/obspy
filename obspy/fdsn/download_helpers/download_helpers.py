@@ -120,7 +120,7 @@ class DownloadHelper(object):
             # remaining items will be sorted alphabetically.
             _p = []
             if "IRIS" in providers:
-                p.append("IRIS")
+                _p.append("IRIS")
                 providers.remove("IRIS")
             if "ORFEUS" in providers:
                 _p.append("ORFEUS")
@@ -170,45 +170,37 @@ class DownloadHelper(object):
                 report.append({"client": client_name, "data": []})
                 continue
 
-            # Two cases. Reliable availability means that the client
-            # supports the `matchtimeseries` or `includeavailability`
-            # parameter and thus the availability information is treated as
-            # reliable. Otherwise not. If it is reliable, the stations will
-            # be filtered before they are downloaded, otherwise it will
-            # happen in reverse to assure as much data as possible is
-            # downloaded.
-            if info["reliable"]:
-                # Filter the stations to be downloaded based on geographical
-                # and geometric factors.
-                all_stations = utils.merge_stations(
-                    existing_stations, availability,
-                    restrictions.minimum_interstation_distance_in_m)
-                new_stations = all_stations - existing_stations
-                discarded_stationids = discarded_stationids.union(
-                    (i.network, i.station) for i in
-                    set(availability).difference(new_stations))
-            else:
-                new_stations = availability
+            # Filter based on the distance to the next closest station. If
+            # info["reliable"] is True, it is assumed that we can actually
+            # get all the data in the availability, otherwise everything
+            # will be attempted to be downloaded.
+            f = utils.filter_based_on_interstation_distance(
+                existing_stations=existing_stations,
+                new_stations=availability,
+                reliable_new_stations=info["reliable"],
+                minimum_distance_in_m=
+                restrictions.minimum_interstation_distance_in_m)
+            # Add the rejected stations to the set of discarded station ids
+            # so they will not be attempted to be downloaded again.
+            for station in f["rejected_stations"]:
+                discarded_stationids.add((station.network, station.station))
+            availability = f["accepted_stations"]
 
             logger.info("Client '%s' - %i station(s) satisfying the "
                         "minimum inter-station distance found." % (
-                        client_name, len(new_stations)))
-            if not new_stations:
+                        client_name, len(availability)))
+            if not availability:
                 report.append({"client": client_name, "data": []})
                 continue
 
-            # "Filter" the station list to get a list of channels that
-            # are actually required and a list of existing filenames.
-            # The existing filenames will be parsed to download
-            # StationXML files for them in case they do not yet exist.
-            mseed_stations, existing_miniseed_filenames = \
-                self._attach_miniseed_filenames(
-                    stations=copy.deepcopy(new_stations),
-                    restrictions=restrictions,
-                    mseed_path=mseed_path)
+            # Now attach filenames to the channel objects, and split into a
+            # set of existing and non-existing data files.
+            f = utils.attach_miniseed_filenames(availability, mseed_path)
+            mseed_availability = f["stations_to_download"]
+            existing_miniseed_filenames = f["existing_miniseed_filenames"]
 
-            if not mseed_stations and not existing_miniseed_filenames:
-                logger.info("Nothing to be downloaded for client %s." %
+            if not mseed_availability and not existing_miniseed_filenames:
+                logger.info("Nothing to be done for client %s." %
                             client_name)
                 report.append({"client": client_name, "data": []})
                 continue
@@ -219,14 +211,14 @@ class DownloadHelper(object):
             logger.info("Client '%s' - MiniSEED data from %i channels "
                         "will be downloaded." % (
                         client_name, sum(len(_i.channels) for _i in
-                                         mseed_stations)))
+                                         mseed_availability)))
 
             # Download the missing channels and get a list of filenames
             # that just got downloaded.
-            if mseed_stations:
+            if mseed_availability:
                 a = time.time()
                 downloaded_miniseed_filenames = self.download_mseed(
-                    client, client_name, mseed_stations, restrictions,
+                    client, client_name, mseed_availability, restrictions,
                     chunk_size_in_mb=chunk_size_in_mb,
                     threads_per_client=threads_per_client)
                 b = time.time()
@@ -243,57 +235,22 @@ class DownloadHelper(object):
                 downloaded_miniseed_filenames = []
 
             # Parse the just downloaded and existing MiniSEED files and
-            # make a list of stations that require StationXML files.
-            miniseed_channels = self._parse_miniseed_filenames(
+            # thus create a list of stations that require StationXML files.
+            available_miniseed_data = self._parse_miniseed_filenames(
                 downloaded_miniseed_filenames +
                 existing_miniseed_filenames, restrictions)
+
             # Stations will be list of Stations with Channels that all
             # need a StationXML file. This is necessary as MiniSEED data
             # might not be available for all stations.
-            stations = utils.filter_stations_with_channel_list(
-                new_stations, miniseed_channels)
-
-            # Attach filenames to the StationXML files and get a list of
-            # already existing StationXML files.
-            stations_to_download = []
-            existing_stationxml_channels = []
-            for stat in copy.deepcopy(stations):
-                filename = utils.get_stationxml_filename(
-                    stationxml_path, stat.network, stat.station)
-                if not filename:
-                    continue
-                # If the StationXML file already exists, make sure it
-                # contains all the necessary information. Otherwise
-                # delete it and it will be downloaded again in the
-                # following.
-                if os.path.exists(filename):
-                    contents = utils.get_stationxml_contents(filename)
-                    all_channels_good = True
-                    for chan in stat.channels:
-                        if utils.is_in_list_of_channel_availability(
-                                stat.network, stat.station,
-                                chan.location, chan.channel,
-                                restrictions.starttime,
-                                restrictions.endtime, contents):
-                            continue
-                        all_channels_good = False
-                        break
-                    if all_channels_good is False:
-                        logger.warning(
-                            "StationXML file '%s' already exists but it "
-                            "does not contain matching data for all "
-                            "MiniSEED data available for this stations. "
-                            "It will be deleted and redownloaded." %
-                            filename)
-                        utils.safe_delete(filename)
-                    else:
-                        existing_stationxml_channels.extend(contents)
-                        continue
-                dirname = os.path.dirname(filename)
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
-                stat.stationxml_filename = filename
-                stations_to_download.append(stat)
+            station_availability = utils.filter_stations_with_channel_list(
+                mseed_availability, available_miniseed_data)
+            f = utils.attach_stationxml_filenames(
+                stations=station_availability,
+                restrictions=restrictions, stationxml_path=stationxml_path,
+                logger=logger)
+            existing_stationxml_channels = f["existing_stationxml_contents"]
+            stations_availability = f["stations_to_download"]
 
             logger.info("Client '%s' - StationXML data for %i stations ("
                         "%i channels) already exists." % (client_name,
@@ -302,14 +259,13 @@ class DownloadHelper(object):
                         len(existing_stationxml_channels)))
             logger.info("Client '%s' - StationXML data for %i stations ("
                         "%i channels) will be downloaded." % (
-                        client_name, len(stations_to_download), sum(len(
-                        _i.channels) for _i in stations_to_download)))
+                        client_name, len(stations_availability), sum(len(
+                        _i.channels) for _i in stations_availability)))
 
-            # Now download the station information for the downloaded
-            # MiniSEED files.
-            if stations_to_download:
+            # Now actually download the missing StationXML files.
+            if stations_availability:
                 i = self.download_stationxml(
-                    client, client_name, stations_to_download,
+                    client, client_name, stations_availability,
                     restrictions, threads_per_client)
                 b = time.time()
                 f = sum(os.path.getsize(_i) for _i in i)
@@ -327,21 +283,24 @@ class DownloadHelper(object):
             else:
                 downloaded_stationxml_channels = []
 
-            stationxml_channels = collections.defaultdict(list)
+            # Collect all StationXML channels in a dictionary..
+            available_stationxml_channels = collections.defaultdict(list)
             for i in existing_stationxml_channels + \
                     downloaded_stationxml_channels:
-                stationxml_channels["%s.%s" % (i.network,
-                                               i.station)].append(i)
+                available_stationxml_channels["%s.%s" % (i.network,
+                                                         i.station)].append(i)
 
+            # Do the same for the MiniSEED data while also removing MiniSEED
+            # files that have no corresponding station file.
             available_miniseed_channels = collections.defaultdict(list)
-            for mseed in miniseed_channels:
+            for mseed in available_miniseed_data:
                 station_id = "%s.%s" % (mseed.network, mseed.station)
-                if station_id not in stationxml_channels:
+                if station_id not in available_stationxml_channels:
                     msg = "No station file for '%s'. Will be deleted."
                     logger.warning(msg % mseed.filename)
                     utils.safe_delete(mseed.filename)
                     continue
-                station = stationxml_channels[station_id]
+                station = available_stationxml_channels[station_id]
                 # Try to find the correct timespan!
                 found_ts = False
                 for channel in station:
@@ -363,13 +322,14 @@ class DownloadHelper(object):
             # Assemble everything that has been downloaded for this loop
             # iteration including station and channel filenames.
             stations_for_loop = set()
-            for station in stations:
+            for station in availability:
                 station_id = "%s.%s" % (station.network, station.station)
-                if station_id not in stationxml_channels:
+                if station_id not in available_stationxml_channels or \
+                        station_id not in available_miniseed_channels:
                     continue
                 station = copy.deepcopy(station)
                 station.stationxml_filename = \
-                    stationxml_channels[station_id][0].filename
+                    available_stationxml_channels[station_id][0].filename
                 station.channels = available_miniseed_channels[station_id]
                 stations_for_loop.add(station)
 
@@ -382,34 +342,33 @@ class DownloadHelper(object):
                     stations_for_loop)})
                 existing_stations = existing_stations.union(stations_for_loop)
             else:
-
-                all_stations = utils.merge_stations(
+                f = utils.filter_based_on_interstation_distance(
                     existing_stations, stations_for_loop,
+                    reliable_new_stations=True,
+                    minimum_distance_in_m=
                     restrictions.minimum_interstation_distance_in_m)
-                new_stations = all_stations - existing_stations
-                extraneous_stations = stations_for_loop.difference(
-                    new_stations)
                 report.append({"client": client_name, "data": copy.copy(
-                    new_stations)})
-                existing_stations = existing_stations.union(new_stations)
-                if not extraneous_stations:
-                    continue
-                else:
-                    discarded_stationids = discarded_stationids.union(
-                        (_i.network, _i.station) for _i in extraneous_stations)
+                    f["accepted_stations"])})
+                existing_stations = existing_stations.union(f[
+                    "accepted_stations"])
 
+                if f["rejected_stations"]:
                     logger.info("Data from %i stations does not fulfill the "
                                 "minimum inter-station distance requirement. "
                                 "It will be deleted." %
-                                len(extraneous_stations))
-                    for station in extraneous_stations:
+                                len(f["rejected_stations"]))
+
+                for station in f["rejected_stations"]:
+                    discarded_stationids.add((station.network,
+                                              station.station))
+
+                    logger.info("Deleting '%s'." %
+                                station.stationxml_filename)
+                    utils.safe_delete(station.stationxml_filename)
+                    for channel in station.channels:
+                        utils.safe_delete(channel.mseed_filename)
                         logger.info("Deleting '%s'." %
-                                    station.stationxml_filename)
-                        utils.safe_delete(station.stationxml_filename)
-                        for channel in station.channels:
-                            utils.safe_delete(channel.mseed_filename)
-                            logger.info("Deleting '%s'." %
-                                        channel.mseed_filename)
+                                    channel.mseed_filename)
         return report
 
     def download_mseed(self, client, client_name, stations, restrictions,
@@ -502,33 +461,6 @@ class DownloadHelper(object):
                 tr.stats.channel, tr.stats.starttime, tr.stats.endtime,
                 filename))
         return channel_availability
-
-    def _attach_miniseed_filenames(self, stations, restrictions, mseed_path):
-        stations_to_download = []
-        existing_miniseed_filenames = []
-
-        for station in stations:
-            channels = []
-            for channel in station.channels:
-                filename = utils.get_mseed_filename(
-                    mseed_path, station.network, station.station,
-                    channel.location, channel.channel)
-                if not filename:
-                    continue
-                if os.path.exists(filename):
-                    existing_miniseed_filenames.append(filename)
-                    continue
-                dirname = os.path.dirname(filename)
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
-                channel.mseed_filename = filename
-                channels.append(channel)
-            if not channels:
-                continue
-            station.channels = channels
-            stations_to_download.append(station)
-
-        return stations_to_download, existing_miniseed_filenames
 
     def download_stationxml(self, client, client_name, stations,
                             restrictions, threads_per_client=10):

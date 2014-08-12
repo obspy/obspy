@@ -157,12 +157,100 @@ def is_in_list_of_channel_availability(network, station, location, channel,
     return False
 
 
+def attach_stationxml_filenames(stations, restrictions, stationxml_path,
+                                logger):
+    # Attach filenames to the StationXML files and get a list of
+    # already existing StationXML files.
+    stations_to_download = []
+    existing_stationxml_channels = []
+
+    for stat in copy.deepcopy(stations):
+        filename = get_stationxml_filename(
+            stationxml_path, stat.network, stat.station)
+        if not filename:
+            continue
+        # If the StationXML file already exists, make sure it
+        # contains all the necessary information. Otherwise
+        # delete it and it will be downloaded again in the
+        # following.
+        if os.path.exists(filename):
+            contents = get_stationxml_contents(filename)
+            all_channels_good = True
+            for chan in stat.channels:
+                if is_in_list_of_channel_availability(
+                        stat.network, stat.station,
+                        chan.location, chan.channel,
+                        restrictions.starttime,
+                        restrictions.endtime, contents):
+                    continue
+                all_channels_good = False
+                break
+            if all_channels_good is False:
+                logger.warning(
+                    "StationXML file '%s' already exists but it "
+                    "does not contain matching data for all "
+                    "MiniSEED data available for this stations. "
+                    "It will be deleted and redownloaded." %
+                    filename)
+                safe_delete(filename)
+            else:
+                existing_stationxml_channels.extend(contents)
+                continue
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        stat.stationxml_filename = filename
+        stations_to_download.append(stat)
+
+    return {
+        "stations_to_download": stations_to_download,
+        "existing_stationxml_contents": existing_stationxml_channels
+    }
+
+
+def attach_miniseed_filenames(stations, mseed_path):
+    """
+    Attach filenames to the channels in the stations list splitting the
+    dataset into already existing channels and new channels.
+    """
+    stations_to_download = []
+    existing_miniseed_filenames = []
+
+    stations = copy.deepcopy(stations)
+
+    for station in stations:
+        channels = []
+        for channel in station.channels:
+            filename = get_mseed_filename(
+                mseed_path, station.network, station.station,
+                channel.location, channel.channel)
+            if not filename:
+                continue
+            if os.path.exists(filename):
+                existing_miniseed_filenames.append(filename)
+                continue
+            dirname = os.path.dirname(filename)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            channel.mseed_filename = filename
+            channels.append(channel)
+        if not channels:
+            continue
+        station.channels = channels
+        stations_to_download.append(station)
+
+    return {
+        "stations_to_download": stations_to_download,
+        "existing_miniseed_filenames": existing_miniseed_filenames
+    }
+
+
 def filter_stations_based_on_duplicate_id(existing_stations,
                                           discarded_station_ids, new_stations):
     """
     :param existing_stations: A set of :class:`~.Station` object. detailing
         already existing stations.
-    :param discarded_station_ids: A set of strings denoting discarded
+    :param discarded_station_ids: A set of tuples denoting discarded
         station ids, e.g. station ids that have been discarded due to some
         reason.
     :param new_stations: A set or list of new :class:`~.Station` objects
@@ -170,7 +258,7 @@ def filter_stations_based_on_duplicate_id(existing_stations,
     :return: A set of filtered :class:`~.Station` objects.
     """
     existing_stations = [(_i.network, _i.station) for _i in existing_stations]
-    invalid_station_ids = existing_stations.union(discarded_station_ids)
+    invalid_station_ids = set(existing_stations).union(discarded_station_ids)
 
     return list(itertools.ifilterfalse(
         lambda x: (x.network, x.station) in invalid_station_ids,
@@ -562,18 +650,31 @@ def filter_stations(stations, minimum_distance_in_m):
         nns = list(itertools.ifilterfalse(lambda x: most_common in x, nns))
 
     # Remove these indices.
-    return [_i[1] for _i in itertools.ifilterfalse(
-            lambda x: x[0] in indexes_to_remove,
-            enumerate(stations))]
+    return set([_i[1] for _i in itertools.ifilterfalse(
+                lambda x: x[0] in indexes_to_remove,
+                enumerate(stations))])
 
 
-def merge_stations(existing_stations, new_stations,
-                   minimum_distance_in_m=0):
+def filter_based_on_interstation_distance(
+        existing_stations, new_stations, reliable_new_stations,
+        minimum_distance_in_m=0):
     """
-    Merges two lists of stations, successively adding each station in one
+    Filter two lists of stations, successively adding each station in one
     list to the stations in the list of existing stations satisfying the
     required minimum inter-station distances. If minimum distance in meter
     is 0, it will just merge both lists and return.
+
+    The duplicate ids between new and existing stations can be assumed to
+    already have been removed.
+
+    Returns a dictionary containing two sets, one with the accepted stations
+    and one with the rejected stations.
+
+    :param reliable_new_stations: Determines if the contribution of the new
+        stations will also be taken into account when calculating the
+        minimum inter-station distance. If True, the check for each new
+        station will be performed by successively adding stations. Otherwise
+        it will be performed only against the existing stations.
     """
     # Shallow copies.
     existing_stations = set(copy.copy(existing_stations))
@@ -581,25 +682,50 @@ def merge_stations(existing_stations, new_stations,
 
     # If no requirement given, just merge
     if not minimum_distance_in_m:
-        return existing_stations.intersection(new_stations)
+        return {
+            "accepted_stations": existing_stations.intersection(new_stations),
+            "rejected_stations": set()
+        }
 
     # If no existing stations yet, just make sure the minimum inner station
     # distances are satisfied.
     if not existing_stations:
-        new_stations = filter_stations(new_stations, minimum_distance_in_m)
-        return set(new_stations)
+        if reliable_new_stations:
+            accepted_stations = filter_stations(new_stations,
+                                                minimum_distance_in_m)
+            return {
+                "accepted_stations": accepted_stations,
+                "rejected_stations": new_stations.difference(accepted_stations)
+            }
+        else:
+            return {
+                "accepted_stations": new_stations,
+                "rejected_stations": set()
+            }
+
+    accepted_stations = set()
+    rejected_stations = set()
+
+    test_set = copy.copy(existing_stations)
 
     for station in new_stations:
-        kd_tree = SphericalNearestNeighbour(existing_stations)
+        kd_tree = SphericalNearestNeighbour(test_set)
         neighbours = kd_tree.query([station])[0][0]
         if np.isinf(neighbours[0]):
+            from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
             continue
         min_distance = neighbours[0]
         if min_distance < minimum_distance_in_m:
+            rejected_stations.add(station)
             continue
-        existing_stations.add(station)
+        accepted_stations.add(station)
+        if reliable_new_stations:
+            test_set.add(station)
 
-    return existing_stations
+    return {
+        "accepted_stations": accepted_stations,
+        "rejected_stations": rejected_stations,
+    }
 
 
 def download_waveforms_and_stations(client, client_name, station_list,
