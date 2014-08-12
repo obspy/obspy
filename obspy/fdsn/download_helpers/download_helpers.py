@@ -116,7 +116,7 @@ class DownloadHelper(object):
         self._initialized_clients = OrderedDict()
         self.__initialize_clients()
 
-    def download(self, domain, restrictions, chunk_size=25,
+    def download(self, domain, restrictions, chunk_size=100,
                  threads_per_client=5, mseed_path=None,
                  stationxml_path=None):
         # Collect all the downloaded stations.
@@ -409,10 +409,29 @@ class DownloadHelper(object):
                    filesize))
 
     def download_mseed(self, client, client_name, stations, restrictions,
-                       chunk_size=25, threads_per_client=5):
-        # Split into chunks.
-        station_chunks = [stations[i:i + chunk_size]
-                          for i in range(0, len(stations), chunk_size)]
+                       chunk_size=100, threads_per_client=5):
+
+        # Calculating how many stations should be requested in one chunk
+        duration_req = restrictions.endtime - restrictions.starttime
+        channel_sampling_rate = {'F': 5000, 'G': 5000, 'D': 1000, 'C': 1000, 'E': 250, 'S': 80, 'H': 250, 'B': 80,
+                                 'M': 10, 'L': 1, 'V': 0.1, 'U': 0.01, 'R': 0.001, 'P': 0.0001, 'T': 0.00001,
+                                 'Q': 0.000001, 'A': 5000, 'O': 5000}
+
+        station_chunks = []
+        station_chunks_curr = []
+        curr_chunks_mb = 0
+        for sta in stations:
+            for cha in sta.channels:
+                # Assume that each sample needs 4 byte, compressed needs 1/3, chunk size is in MB
+                curr_chunks_mb += channel_sampling_rate[cha.channel[0].upper()]*duration_req*4./3./1024./1024.
+            if curr_chunks_mb >= chunk_size:
+                station_chunks.append(station_chunks_curr)
+                station_chunks_curr = []
+                curr_chunks_mb = 0
+            else:
+                station_chunks_curr.append(sta)
+        if not station_chunks_curr:
+            station_chunks.append(station_chunks_curr)
 
         def star_download_mseed(args):
             try:
