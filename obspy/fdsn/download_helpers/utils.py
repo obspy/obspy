@@ -134,9 +134,10 @@ def is_in_list_of_channel_availability(network, station, location, channel,
 
 def filter_stations_with_channel_list(stations, channels):
     station_channels = {}
-    for s, channels in itertools.groupby(
-            channels, lambda x: "%s.%s" % (x.network, x.station)):
-        station_channels[s] = [(_i.location, _i.channel) for _i in channels]
+    get_station = lambda x: "%s.%s" % (x.network, x.station)
+    for s, c in itertools.groupby(sorted(channels, key=get_station),
+                                  get_station):
+        station_channels[s] = [(_i.location, _i.channel) for _i in c]
 
     final_stations = []
     for station in stations:
@@ -148,6 +149,7 @@ def filter_stations_with_channel_list(stations, channels):
                 continue
             good_channels.append(channel)
         if good_channels:
+            station = copy.deepcopy(station)
             station.channels = good_channels
             final_stations.append(station)
     return final_stations
@@ -231,7 +233,7 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
             os.remove(temp_filename)
         except:
             pass
-    logger.info("%s client: Successfully downloaded %i channels (of %i)" % (
+    logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), len(bulk)))
     return open_files.keys()
 
@@ -359,8 +361,9 @@ def get_availability_from_client(client, client_name, restrictions, domain,
             # Group by locations and apply the channel priority filter to
             # each.
             filtered_channels = []
+            get_loc = lambda x: x.location
             for location, _channels in itertools.groupby(
-                    channels, lambda x: x.location):
+                    sorted(channels, key=get_loc), get_loc):
                 filtered_channels.extend(filter_channel_priority(
                     list(_channels), key="channel",
                     priorities=restrictions.channel_priorities))
