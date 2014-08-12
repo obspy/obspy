@@ -12,6 +12,9 @@ Utility functions required for the download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
+with standard_library.hooks():
+    from urllib.error import HTTPError, URLError
 
 import collections
 import copy
@@ -21,6 +24,7 @@ import os
 from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
+from socket import timeout as SocketTimeout
 import tempfile
 import time
 from uuid import uuid4
@@ -31,6 +35,11 @@ import warnings
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.fdsn.client import FDSNException
 from obspy.mseed.util import getRecordInformation
+
+
+# Different types of errors that can happen when downloading data via the
+# FDSN clients.
+ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 
 # Some application.wadls are wrong...
 OVERWRITE_CAPABILITIES = {
@@ -462,7 +471,7 @@ def get_availability_from_client(client, client_name, restrictions, domain,
         start = time.time()
         inv = client.get_stations(**arguments)
         end = time.time()
-    except (FDSNException, HTTPError) as e:
+    except ERRORS as e:
         if "no data available" in str(e).lower():
             logger.info("Client '%s' - No data available for request." %
                         client_name)

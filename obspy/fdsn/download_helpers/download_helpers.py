@@ -12,17 +12,14 @@ Download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
-with standard_library.hooks():
-    from urllib.error import HTTPError, URLError
 
 import copy
 import collections
 import itertools
 import logging
+import lxml.etree
 from multiprocessing.pool import ThreadPool
 import os
-from socket import timeout as SocketTimeout
 import time
 import warnings
 
@@ -32,10 +29,6 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 
 from . import utils
-
-# Different types of errors that can happen when downloading data via the
-# FDSN clients.
-ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 
 
 # Setup the logger.
@@ -277,9 +270,15 @@ class DownloadHelper(object):
                                 len(i), f_mb,
                                 b - a, f_kb / (b - a)))
 
-                downloaded_stationxml_channels = \
-                    list(itertools.chain.from_iterable([
-                        utils.get_stationxml_contents(_i) for _i in i]))
+                downloaded_stationxml_channels = []
+                for _i in i:
+                    try:
+                        downloaded_stationxml_channels.extend(
+                            utils.get_stationxml_contents(_i))
+                    except lxml.etree.Error:
+                        logger.error("StationXML file '%s' is not a valid "
+                                     "XML file. Will be deleted." % i)
+                        utils.safe_delete(i)
             else:
                 downloaded_stationxml_channels = []
 
@@ -405,7 +404,7 @@ class DownloadHelper(object):
             try:
                 ret_val = utils.download_and_split_mseed_bulk(
                     *args, logger=logger)
-            except ERRORS as e:
+            except utils.ERRORS as e:
                 msg = ("Client '%s': " % args[1]) + str(e)
                 if "no data available" in msg.lower():
                     logger.info(msg)
@@ -468,7 +467,7 @@ class DownloadHelper(object):
         def star_download_station(args):
             try:
                 ret_val = utils.download_stationxml(*args, logger=logger)
-            except ERRORS as e:
+            except utils.ERRORS as e:
                 logger.error(str(e))
                 return None
             return ret_val
@@ -494,9 +493,13 @@ class DownloadHelper(object):
         def _get_client(client_name):
             try:
                 this_client = Client(client_name)
-            except ERRORS:
-                logger.warn("Failed to initialize client '%s'."
-                            % client_name)
+            except utils.ERRORS as e:
+                if "timeout" in str(e).lower():
+                    extra = " (timeout)"
+                else:
+                    extra = ""
+                logger.warn("Failed to initialize client '%s'.%s"
+                            % (client_name, extra))
                 return client_name, None
             services = sorted([_i for _i in this_client.services.keys()
                                if not _i.startswith("available")])
