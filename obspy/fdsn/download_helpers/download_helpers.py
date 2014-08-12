@@ -237,7 +237,7 @@ class DownloadHelper(object):
             # need a StationXML file. This is necessary as MiniSEED data
             # might not be available for all stations.
             station_availability = utils.filter_stations_with_channel_list(
-                mseed_availability, available_miniseed_data)
+                availability, available_miniseed_data)
             f = utils.attach_stationxml_filenames(
                 stations=station_availability,
                 restrictions=restrictions, stationxml_path=stationxml_path,
