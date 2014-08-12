@@ -25,6 +25,7 @@ import os
 from socket import timeout as SocketTimeout
 import shutil
 import tempfile
+import time
 import warnings
 
 import obspy
@@ -123,6 +124,9 @@ class DownloadHelper(object):
 
         # Do it sequentially for each client.
         for client_name, client in self._initialized_clients.items():
+            logger.info("Stations already acquired during this run: %i" %
+                        len(existing_stations))
+
             try:
                 info = utils.get_availability_from_client(
                     client, client_name, restrictions, domain, logger)
@@ -140,9 +144,6 @@ class DownloadHelper(object):
                 logger.info("Client '%s' - No suitable data found." %
                             client_name)
                 continue
-
-            logger.info("Stations already acquired during this run: %i" %
-                        len(existing_stations))
 
             # Two cases. Reliable availability means that the client
             # supports the `matchtimeseries` or `includeavailability`
@@ -190,10 +191,21 @@ class DownloadHelper(object):
                 # Download the missing channels and get a list of filenames
                 # that just got downloaded.
                 if mseed_stations:
+                    a = time.time()
                     downloaded_miniseed_filenames = self.download_mseed(
                         client, client_name, mseed_stations, restrictions,
                         chunk_size=chunk_size,
                         threads_per_client=threads_per_client)
+                    b = time.time()
+                    f = sum(os.path.getsize(_i) for _i in
+                            downloaded_miniseed_filenames)
+                    f_kb = f / 1024.0
+                    f_mb = f_kb / 1024.0
+                    logger.info("Client '%s' - Downloaded %i MiniSEED files "
+                                "(%.2f MB) in %.1f seconds (%.1f KB/sec)" % (
+                                client_name,
+                                len(downloaded_miniseed_filenames), f_mb,
+                                b - a, f_kb / (b - a)))
                 else:
                     downloaded_miniseed_filenames = []
 
@@ -266,6 +278,16 @@ class DownloadHelper(object):
                     i = self.download_stationxml(
                         client, client_name, stations_to_download,
                         restrictions, threads_per_client)
+                    b = time.time()
+                    f = sum(os.path.getsize(_i) for _i in i)
+                    f_kb = f / 1024.0
+                    f_mb = f_kb / 1024.0
+                    logger.info("Client '%s' - Downloaded %i StationXML files "
+                                "(%.2f MB) in %.1f seconds (%.1f KB/sec)" % (
+                                    client_name,
+                                    len(i), f_mb,
+                                    b - a, f_kb / (b - a)))
+
                     downloaded_stationxml_channels = \
                         list(itertools.chain.from_iterable([
                             utils.get_stationxml_contents(_i) for _i in i]))

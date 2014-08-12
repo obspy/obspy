@@ -167,8 +167,8 @@ def download_stationxml(client, client_name, starttime, endtime, station,
                     "%s.%s." %
                     (client_name, station.network, station.station))
         return None
-    logger.info("Successfully downloaded '%s' from %s." %
-                (station.stationxml_filename, client_name))
+    logger.info("Client '%s' - Successfully downloaded '%s'." %
+                (client_name, station.stationxml_filename))
     return station.stationxml_filename
 
 
