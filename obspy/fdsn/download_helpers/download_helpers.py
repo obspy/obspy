@@ -220,7 +220,7 @@ class DownloadHelper(object):
                         if all_channels_good is False:
                             os.remove(filename)
                         else:
-                            existing_stationxml_channels.append(contents)
+                            existing_stationxml_channels.extend(contents)
                             continue
                     dirname = os.path.dirname(filename)
                     if not os.path.exists(dirname):
@@ -230,59 +230,43 @@ class DownloadHelper(object):
 
                 # Now download the station information for the downloaded
                 # stations.
-                del stations[0]
-                downloaded_stationxml = self.download_stationxml(
-                    client, client_name, stations,
-                    restrictions, threads_per_client)
+                if stations_to_download:
+                    i = self.download_stationxml(
+                        client, client_name, stations_to_download,
+                        restrictions, threads_per_client)
+                    downloaded_stationxml_channels = \
+                        itertools.chain.from_iterable([
+                            utils.get_stationxml_contents(_i) for _i in i])
+                else:
+                    downloaded_stationxml_channels = []
 
-                dict_downloaded_mseed = collections.defaultdict(list)
-                dict_downloaded_xmls = collections.defaultdict(list)
+                stationxml_channels = collections.defaultdict(list)
+                for i in existing_stationxml_channels + \
+                        downloaded_stationxml_channels:
+                    stationxml_channels["%s.%s" % (i.network,
+                                                   i.station)].append(i)
 
-                mseed_tspan = collections.namedtuple(
-                    "mseed_tspan", ["starttime", "endtime", "filename"])
-                xml_tspan = collections.namedtuple(
-                    "xml_tspan", ["starttime", "endtime"])
-                for chans in miniseed_channels:
-                    dict_downloaded_mseed['%s.%s.%s.%s' % (
-                        chans.network, chans.station, chans.location,
-                        chans.channel)].append(mseed_tspan(
-                            chans.starttime, chans.endtime, chans.filename))
-                for chans in downloaded_stationxml:
-                    dict_downloaded_xmls['%s.%s.%s.%s' % (
-                        chans.network, chans.station, chans.location,
-                        chans.channel)].append(xml_tspan(
-                            chans.starttime, chans.endtime))
-
-                for mseed_chan in dict_downloaded_mseed.keys():
-                    if not mseed_chan in dict_downloaded_xmls.keys():
-                        logger.warning(
-                            "Stationxml for %s has not been downloaded, "
-                            "the mseed file is removed!" % mseed_chan)
-                        os.remove(
-                            dict_downloaded_mseed[mseed_chan][0].filename)
-                        continue
-
-                    xml_time_spans = dict_downloaded_xmls[mseed_chan]
-                    for t in xml_time_spans:
-                        for mseed_range in dict_downloaded_mseed[mseed_chan]:
-                            if t.starttime <= mseed_range.starttime and \
-                                    t.endtime >= mseed_range.endtime:
-                                break
-                        else:
-                            pass
-
-                    else:
-                        logger.warning(
-                            "Stationxml for %s does not cover the whole time "
-                            "span of the mseed file, the mseed file is "
-                            "removed!" % mseed_chan)
-                        os.remove(
-                            dict_downloaded_mseed[mseed_chan][0].filename)
-                        continue
-
-                # Remove waveforms that did not succeed in having available
-                # stationxml files.
-                #self.delete_extraneous_waveform_files()
+                for mseed in miniseed_channels:
+                    station = "%s.%s" % (mseed.network, mseed.station)
+                    if station not in stationxml_channels:
+                        msg = "No station file for '%s'. Will be deleted."
+                        logger.warning(msg % mseed.filename)
+                        utils.safe_delete(mseed.filename)
+                    station = stationxml_channels[station]
+                    # Try to find the correct timespan!
+                    found_ts = False
+                    for channel in station:
+                        if (channel.location == mseed.location) and \
+                                (channel.channel == mseed.channel) and \
+                                (channel.starttime <= mseed.starttime) and \
+                                (channel.endtime >= mseed.endtime):
+                            found_ts = True
+                            break
+                    if found_ts is False:
+                        msg = "No corresponding station file coule be " \
+                              "retrieved for '%s'. Will be deleted."
+                        logger.warning(msg % mseed.filename)
+                        utils.safe_delete(mseed.filename)
             else:
                 # If it is not reliable, e.g. the client does not have the
                 # "includeavailability" or "matchtimeseries" flags,
@@ -401,12 +385,8 @@ class DownloadHelper(object):
                             restrictions.endtime, s) for s in stations])
         pool.close()
 
-        all_channels = []
-        for filename in results:
-            if not filename:
-                continue
-            all_channels.extend(utils.get_stationxml_contents(filename))
-        return all_channels
+        results = itertools.chain.from_iterable(results)
+        return [_i for _i in results if _i is not None]
 
     def __initialize_clients(self):
         """

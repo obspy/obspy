@@ -465,6 +465,20 @@ def filter_channel_priority(channels, key, priorities=None):
     return filtered_channels
 
 
+def safe_delete(filename):
+    """
+    Safely delete a file.
+
+    :param filename: The filename to delete.
+    :return:
+    """
+    if not os.path.exists(filename):
+        return
+    elif not os.path.isfile(filename):
+        raise ValueError("'%s' is not a file." % filename)
+    os.remove(filename)
+
+
 def filter_stations(stations, minimum_distance_in_m):
     """
     Removes stations until all stations have a certain minimum distance to
