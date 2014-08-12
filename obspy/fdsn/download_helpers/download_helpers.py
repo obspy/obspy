@@ -116,7 +116,7 @@ class DownloadHelper(object):
         self._initialized_clients = OrderedDict()
         self.__initialize_clients()
 
-    def download(self, domain, restrictions, chunk_size=100,
+    def download(self, domain, restrictions, chunk_size_in_mb=50,
                  threads_per_client=5, mseed_path=None,
                  stationxml_path=None):
         # Collect all the downloaded stations.
@@ -209,7 +209,7 @@ class DownloadHelper(object):
                 a = time.time()
                 downloaded_miniseed_filenames = self.download_mseed(
                     client, client_name, mseed_stations, restrictions,
-                    chunk_size=chunk_size,
+                    chunk_size_in_mb=chunk_size_in_mb,
                     threads_per_client=threads_per_client)
                 b = time.time()
                 f = sum(os.path.getsize(_i) for _i in
@@ -405,26 +405,31 @@ class DownloadHelper(object):
             filesize /= (1024.0 * 1024.0)
             print("\tClient %10s - %4i StationXML files | %5i MiniSEED files "
                   "| Total Size: %.2f MB" %
-                  ('%s' % info["client"], len(stationxmls), len(mseeds), \
+                  ('%s' % info["client"], len(stationxmls), len(mseeds),
                    filesize))
 
     def download_mseed(self, client, client_name, stations, restrictions,
-                       chunk_size=100, threads_per_client=5):
-
-        # Calculating how many stations should be requested in one chunk
+                       chunk_size_in_mb=25, threads_per_client=5):
+        # Estimate the download size to have equally sized chunks.
         duration_req = restrictions.endtime - restrictions.starttime
-        channel_sampling_rate = {'F': 5000, 'G': 5000, 'D': 1000, 'C': 1000, 'E': 250, 'S': 80, 'H': 250, 'B': 80,
-                                 'M': 10, 'L': 1, 'V': 0.1, 'U': 0.01, 'R': 0.001, 'P': 0.0001, 'T': 0.00001,
-                                 'Q': 0.000001, 'A': 5000, 'O': 5000}
+        channel_sampling_rate = {
+            "F": 5000, "G": 5000, "D": 1000, "C": 1000, "E": 250, "S": 80,
+            "H": 250, "B": 80, "M": 10, "L": 1, "V": 0.1, "U": 0.01,
+            "R": 0.001, "P": 0.0001, "T": 0.00001, "Q": 0.000001, "A": 5000,
+            "O": 5000}
 
         station_chunks = []
         station_chunks_curr = []
         curr_chunks_mb = 0
         for sta in stations:
             for cha in sta.channels:
-                # Assume that each sample needs 4 byte, compressed needs 1/3, chunk size is in MB
-                curr_chunks_mb += channel_sampling_rate[cha.channel[0].upper()]*duration_req*4./3./1024./1024.
-            if curr_chunks_mb >= chunk_size:
+                # Assume that each sample needs 4 byte, STEIM
+                # compression reduces size to about a third.
+                # chunk size is in MB
+                curr_chunks_mb += \
+                    channel_sampling_rate[cha.channel[0].upper()] * \
+                    duration_req * 4.0 / 3.0 / 1024.0 / 1024.0
+            if curr_chunks_mb >= chunk_size_in_mb:
                 station_chunks.append(station_chunks_curr)
                 station_chunks_curr = []
                 curr_chunks_mb = 0
