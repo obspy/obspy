@@ -435,7 +435,7 @@ class DownloadHelper(object):
                 curr_chunks_mb = 0
             else:
                 station_chunks_curr.append(sta)
-        if not station_chunks_curr:
+        if station_chunks_curr:
             station_chunks.append(station_chunks_curr)
 
         def star_download_mseed(args):

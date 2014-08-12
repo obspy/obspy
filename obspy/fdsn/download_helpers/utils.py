@@ -32,6 +32,11 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.fdsn.client import FDSNException
 from obspy.mseed.util import getRecordInformation
 
+# Some application.wadls are wrong...
+OVERWRITE_CAPABILITIES = {
+    "resif": None
+}
+
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics.
 EARTH_RADIUS = 6371009
@@ -297,7 +302,19 @@ def get_availability_from_client(client, client_name, restrictions, domain,
 
     # Check the capabilities of the service and see what is the most
     # appropriate way of acquiring availability information.
-    if "matchtimeseries" in client.services["station"]:
+    if client_name.lower() in OVERWRITE_CAPABILITIES:
+        cap = OVERWRITE_CAPABILITIES[client_name.lower()]
+        if cap is None:
+            reliable = False
+        elif cap == "matchtimeseries":
+            reliable = True
+            arguments["matchtimeseries"] = True
+        elif cap == "includeavailability":
+            reliable = True
+            arguments["includeavailability"] = True
+        else:
+            raise NotImplementedError
+    elif "matchtimeseries" in client.services["station"]:
         arguments["matchtimeseries"] = True
         reliable = True
     elif "includeavailability" in client.services["station"]:
