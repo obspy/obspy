@@ -297,15 +297,14 @@ def get_availability_from_client(client, client_name, restrictions, domain,
     # appropriate way of acquiring availability information.
     if "matchtimeseries" in client.services["station"]:
         arguments["matchtimeseries"] = True
-        arguments["includeavailability"] = False
+        reliable = True
     elif "includeavailability" in client.services["station"]:
-        arguments["matchtimeseries"] = False
+        reliable = True
         arguments["includeavailability"] = True
     else:
-        arguments["matchtimeseries"] = False
-        arguments["includeavailability"] = False
+        reliable = False
 
-    if arguments["includeavailability"] or arguments["matchtimeseries"]:
+    if reliable:
         logger.info("Client '%s' - Requesting reliable availability." %
                     client_name)
     else:
@@ -317,10 +316,14 @@ def get_availability_from_client(client, client_name, restrictions, domain,
         inv = client.get_stations(**arguments)
         end = time.time()
     except (FDSNException, HTTPError) as e:
+        if "no data available" in str(e).lower():
+            logger.info("Client '%s' - No data available for request." %
+                        client_name)
+            return {"reliable": reliable, "availability": None}
         logger.error(
             "Client '{0}' - Failed getting availability: %s".format(
                 client_name), str(e))
-        return client_name, None
+        return {"reliable": reliable, "availability": None}
     logger.info("Client '%s' - Successfully requested availability "
                 "(%.2f seconds)" % (client_name, end - start))
 
@@ -343,7 +346,8 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                     continue
                 # Use availability information if possible. In the other
                 # cases it should already work.
-                if arguments["includeavailability"]:
+                if "includeavailability" in arguments and \
+                        arguments["includeavailability"]:
                     da = channel.data_availability
                     if da is None:
                         logger.warning(
@@ -389,8 +393,7 @@ def get_availability_from_client(client, client_name, restrictions, domain,
         client_name, len(availability),
         sum([len(_i.channels) for _i in availability.values()])))
 
-    return {"reliable": arguments["includeavailability"] or
-            arguments["matchtimeseries"], "availability": availability}
+    return {"reliable": reliable, "availability": availability}
 
 
 class SphericalNearestNeighbour(object):
