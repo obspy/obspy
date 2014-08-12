@@ -134,7 +134,7 @@ class Unpickler(object):
         return val
 
     def _floatWithFormat(self, string, format_string, scale=1):
-        ndigits, ndec = list(map(int, format_string.split('.')))
+        ndigits, ndec = map(int, format_string.split('.'))
         nint = ndigits - ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint + ndec])
         if val is not None:

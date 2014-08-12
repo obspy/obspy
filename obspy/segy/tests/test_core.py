@@ -39,7 +39,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSEGY method.
         """
         # Test all files in the test directory.
-        for file in list(self.files.keys()):
+        for file in self.files.keys():
             file = os.path.join(self.path, file)
             self.assertEqual(isSEGY(file), True)
         # Also check all the other files in the test directory and they should
@@ -54,7 +54,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSU method.
         """
         # Test all SEG Y files in the test directory.
-        for file in list(self.files.keys()):
+        for file in self.files.keys():
             file = os.path.join(self.path, file)
             self.assertEqual(isSU(file), False)
         # Also check all the other files in the test directory and they should

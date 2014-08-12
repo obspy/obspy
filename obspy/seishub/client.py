@@ -197,7 +197,7 @@ class Client(object):
         params = {}
         # map keywords
         for key, value in KEYWORDS.items():
-            if key in list(kwargs.keys()):
+            if key in kwargs.keys():
                 kwargs[value] = kwargs[key]
                 del kwargs[key]
         # check for ranges and empty values
@@ -884,7 +884,7 @@ master/seishub/plugins/seismology/event.py
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
         descrip_str += "\n".join(["=".join((str(k), str(v)))
-                                  for k, v in list(kwargs.items())])
+                                  for k, v in kwargs.items()])
         SubElement(folder, "description").text = descrip_str
 
         style = SubElement(folder, "Style")

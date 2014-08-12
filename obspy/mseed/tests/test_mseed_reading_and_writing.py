@@ -121,7 +121,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over every combination.
         for reclen in record_length_values:
             for byteorder in byteorder_values:
-                for encoding in list(encoding_values.keys()):
+                for encoding in encoding_values.keys():
                     this_stream = copy.deepcopy(stream)
                     this_stream[0].data = \
                         np.require(this_stream[0].data,
@@ -481,7 +481,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over the attributes to be able to assert them because a
         # dictionary is not a stats dictionary.
         # This also assures that there are no additional keys.
-        for key in list(stats.keys()):
+        for key in stats.keys():
             self.assertEqual(stats[key], stream[0].stats[key])
 
     def test_readingAndWritingViaTheStatsAttribute(self):
@@ -497,11 +497,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         byteorders = ['>', '<']
         # Only select encoding that have write support.
-        encodings = [value[0] for value in list(ENCODINGS.values()) if
-                     value[3]]
+        encodings = [value[0] for value in ENCODINGS.values() if value[3]]
         np_encodings = {}
         # Special handling for ASCII encoded files.
-        for value in list(ENCODINGS.values()):
+        for value in ENCODINGS.values():
             if value[0] == 'ASCII':
                 np_encodings[value[0]] = np.dtype(native_str("|S1"))
             else:
@@ -690,7 +689,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             (np.float64, 'd', 5, def_content.astype(np.float64))
         }
         # Loop over all files and read them.
-        for file in list(files.keys()):
+        for file in files.keys():
             # Check little and big Endian for each file.
             for _i in ('littleEndian', 'bigEndian'):
                 cur_file = file[:-6] + '_' + _i + '.mseed'

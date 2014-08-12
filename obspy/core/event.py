@@ -337,8 +337,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 error_key = key + "_errors"
                 if hasattr(self, error_key) and\
                    _bool(getattr(self, error_key)):
-                    err_items = list(getattr(self, error_key).items())
-                    err_items.sort()
+                    err_items = sorted(getattr(self, error_key).items())
                     repr_str += " [%s]" % ', '.join(
                         [str(k) + "=" + str(v) for k, v in err_items])
                 return repr_str
@@ -415,7 +414,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             inheriting from AttribDict.
             """
             # Pass to the parent method if not a custom property.
-            if name not in list(self._property_dict.keys()):
+            if name not in self._property_dict.keys():
                 AttribDict.__setattr__(self, name, value)
                 return
             attrib_type = self._property_dict[name]

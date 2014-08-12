@@ -219,10 +219,10 @@ class Inventory(ComparingObject):
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
            4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
               Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
         :type seed_id: str
         :param seed_id: SEED ID string of channel to get response for.

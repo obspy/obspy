@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.event import readEvents
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
@@ -345,6 +346,57 @@ class WaveformTestCase(unittest.TestCase):
         image_name = 'waveform_reftime_relative.png'
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name, type='relative', reftime=ref)
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDayPlot(self):
+        '''
+        Plots day plot, starting Jan 1970.
+        '''
+        start = UTCDateTime(0)
+        st = self._createStream(start, start + 3 * 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5)
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDayPlotExplicitEvent(self):
+        '''
+        Plots day plot, starting Jan 1970, with several events.
+        '''
+        start = UTCDateTime(0)
+        event1 = UTCDateTime(30)       # Event: Top left; Note: below right
+        event2 = UTCDateTime(14 * 60)  # Event: Top right; Note: below left
+        event3 = UTCDateTime(46 * 60)  # Event: Bottom left; Note: above right
+        event4 = UTCDateTime(59 * 60)  # Event: Bottom right; Note: above left
+        event5 = UTCDateTime(61 * 60)  # Should be ignored
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot_event.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5,
+                    events=[{'time': event1, 'text': 'Event 1'},
+                            {'time': event2, 'text': 'Event 2'},
+                            {'time': event3, 'text': 'Event 3'},
+                            {'time': event4, 'text': 'Event 4'},
+                            {'time': event5, 'text': 'Event 5'}])
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_plotDayPlotCatalog(self):
+        '''
+        Plots day plot, with a catalog of events.
+        '''
+        start = UTCDateTime(2012, 4, 4, 14, 0, 0)
+        cat = readEvents()
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot_catalog.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5,
+                    events=cat)
 
 
 def suite():

@@ -458,10 +458,10 @@ class ClientTestCase(unittest.TestCase):
             sys.stdout = sys.__stdout__
             tmp.close()
             expected = (
-                "Parameter description for the 'event' service (v1.0.6) of "
+                "Parameter description for the 'event' service (v1.1.0) of "
                 "'http://service.iris.edu':\n"
                 "The service offers the following non-standard parameters:\n"
-                "    originid (int)\n"
+                "    originid (str)\n"
                 "        Retrieve an event based on the unique origin ID "
                 "numbers assigned by\n"
                 "        the IRIS DMC\n"
@@ -484,13 +484,9 @@ class ClientTestCase(unittest.TestCase):
             sys.stdout = sys.__stdout__
             tmp.close()
             expected = (
-                "Parameter description for the 'station' service (v1.0.7) of "
-                "'http://service.iris.edu':\n"
-                "The service offers the following non-standard parameters:\n"
-                "    matchtimeseries (bool)\n"
-                "        Specify that the availabilities line up with "
-                "available data. This is\n"
-                "        an IRIS extension to the FDSN specification\n")
+                "Parameter description for the 'station' service (v1.1.4) "
+                "of 'http://service.iris.edu':\n"
+                "No derivations from standard detected")
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
                              failmsg(normalize_version_number(got),

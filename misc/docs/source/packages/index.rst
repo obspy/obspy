@@ -24,6 +24,7 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.ah
    obspy.css
    obspy.datamark
    obspy.gse2

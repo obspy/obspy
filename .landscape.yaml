@@ -1,0 +1,8 @@
+doc-warnings: yes
+test-warnings: no
+strictness: medium
+max-line-length: 79
+autodetect: yes
+ignore-patterns:
+    - (^|/)data(/|$)
+    - (^|/)docs(/|$)

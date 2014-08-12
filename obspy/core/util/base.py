@@ -10,7 +10,7 @@ Base utilities and constants for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy.core.util.misc import toIntOrZero
@@ -28,7 +28,7 @@ import tempfile
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk']
+                   'ndk', 'ah']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -36,7 +36,8 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
-                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS']
+                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
+                            'AH']
 EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
@@ -265,7 +266,7 @@ def _getFunctionFromEntryPoint(group, type):
             entry_point = ep_dict[type]
         else:
             # search using lower cases only
-            entry_point = [v for k, v in list(ep_dict.items())
+            entry_point = [v for k, v in ep_dict.items()
                            if k.lower() == type.lower()][0]
     except (KeyError, IndexError):
         # check if any entry points are available at all
@@ -338,7 +339,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in list(EPS.values()):
+        for format_ep in EPS.values():
             # search isFormat for given entry point
             isFormat = load_entry_point(
                 format_ep.dist.key,

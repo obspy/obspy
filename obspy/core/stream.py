@@ -1790,7 +1790,7 @@ class Stream(object):
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for _id in list(traces_dict.keys()):
+        for _id in traces_dict.keys():
             cur_trace = traces_dict[_id].pop(0)
             # loop through traces of same id
             for _i in range(len(traces_dict[_id])):
@@ -2697,7 +2697,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for id_ in list(traces_dict.keys()):
+        for id_ in traces_dict.keys():
             trace_list = traces_dict[id_]
             cur_trace = trace_list.pop(0)
             # work through all traces of same id
@@ -2763,10 +2763,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
            4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
               Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
         :type inventories: :class:`~obspy.station.inventory.Inventory` or
             :class:`~obspy.station.network.Network` or a list containing
@@ -2806,10 +2806,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
             Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
             4 stages:
-                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
                 Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
         >>> st.remove_response()  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP

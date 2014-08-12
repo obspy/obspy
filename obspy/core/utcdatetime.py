@@ -11,7 +11,7 @@ Module containing a UTC-based datetime class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str, PY2
+from future.utils import native_str
 
 import datetime
 import time
@@ -19,10 +19,6 @@ import math
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
-
-# Py3k compat, avoid circular import
-if not PY2:
-    unicode = str
 
 
 class UTCDateTime(object):
@@ -910,12 +906,12 @@ class UTCDateTime(object):
         """
         Returns ISO8601 unicode representation from current UTCDateTime object.
 
-        :return: unicode
+        :return: string
 
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> unicode(dt)
+        >>> dt.__unicode__()
         '2008-10-01T12:30:35.045020Z'
         """
         return str(self.__str__())

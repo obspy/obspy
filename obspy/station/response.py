@@ -141,10 +141,10 @@ class ResponseStage(ComparingObject):
                 if self.description else "") if self.name else "",
             resource_id="\tResource Id: %s" % self.resource_id
             if self.resource_id else "",
-            input_units=self.input_units,
+            input_units=self.input_units if self.input_units else "UNKNOWN",
             input_desc=" (%s)" % self.input_units_description
             if self.input_units_description else "",
-            output_units=self.output_units,
+            output_units=self.output_units if self.output_units else "UNKNOWN",
             output_desc=" (%s)" % self.output_units_description
             if self.output_units_description else "",
             gain=self.stage_gain,
@@ -829,7 +829,7 @@ class Response(ComparingObject):
                     continue
             all_stages[stage.stage_sequence_number].append(stage)
 
-        stage_lengths = set(map(len, list(all_stages.values())))
+        stage_lengths = set(map(len, all_stages.values()))
         if len(stage_lengths) != 1 or stage_lengths.pop() != 1:
             msg = "Each stage can only appear once."
             raise ValueError(msg)
@@ -1067,27 +1067,45 @@ class Response(ComparingObject):
         return output, freqs
 
     def __str__(self):
+        i_s = self.instrument_sensitivity
+        if i_s:
+            input_units = i_s.input_units \
+                if i_s.input_units else "UNKNOWN"
+            input_units_description = i_s.input_units_description \
+                if i_s.input_units_description else ""
+            output_units = i_s.output_units \
+                if i_s.output_units else "UNKNOWN"
+            output_units_description = i_s.output_units_description \
+                if i_s.output_units_description else ""
+            sensitivity = ("%g" % i_s.value) if i_s.value else "UNKNOWN"
+            freq = ("%.3f" % i_s.frequency) if i_s.frequency else "UNKNOWN"
+        else:
+            input_units = "UNKNOWN"
+            input_units_description = ""
+            output_units = "UNKNOWN"
+            output_units_description = ""
+            sensitivity = "UNKNOWN"
+            freq = "UNKNOWN"
+
         ret = (
             "Channel Response\n"
             "\tFrom {input_units} ({input_units_description}) to "
             "{output_units} ({output_units_description})\n"
-            "\tOverall Sensitivity: {sensitivity:g} defined at {freq:.3f} Hz\n"
+            "\tOverall Sensitivity: {sensitivity} defined at {freq} Hz\n"
             "\t{stages} stages:\n{stage_desc}").format(
-            input_units=self.instrument_sensitivity.input_units,
-            input_units_description=self.instrument_sensitivity.
-            input_units_description,
-            output_units=self.instrument_sensitivity.output_units,
-            output_units_description=self.instrument_sensitivity.
-            output_units_description,
-            sensitivity=self.instrument_sensitivity.value,
-            freq=self.instrument_sensitivity.frequency,
+            input_units=input_units,
+            input_units_description=input_units_description,
+            output_units=output_units,
+            output_units_description=output_units_description,
+            sensitivity=sensitivity,
+            freq=freq,
             stages=len(self.response_stages),
             stage_desc="\n".join(
                 ["\t\tStage %i: %s from %s to %s,"
-                 " gain: %.2f" % (
+                 " gain: %s" % (
                      i.stage_sequence_number, i.__class__.__name__,
                      i.input_units, i.output_units,
-                     i.stage_gain)
+                     ("%g" % i.stage_gain) if i.stage_gain else "UNKNOWN")
                  for i in self.response_stages]))
         return ret
 
