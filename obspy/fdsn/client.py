@@ -16,6 +16,7 @@ from future.utils import PY2, native_str
 from future import standard_library
 with standard_library.hooks():
     import queue
+    import urllib.error
     import urllib.parse
     import urllib.request
 
@@ -32,6 +33,7 @@ from obspy.core.util.misc import wrap_long_string
 import collections
 import io
 from lxml import etree
+from socket import timeout as SocketTimeout
 import threading
 import warnings
 import os
@@ -1249,6 +1251,10 @@ class Client(object):
                             wadl_queue.put((url, None))
                         else:
                             raise
+                    except urllib.error.URLError as e:
+                        wadl_queue.put((url, "timeout"))
+                    except SocketTimeout as e:
+                        wadl_queue.put((url, "timeout"))
             return ThreadURL()
 
         threads = list(map(get_download_thread, urls))
@@ -1263,6 +1269,8 @@ class Client(object):
             url, wadl = item
             if wadl is None:
                 continue
+            elif wadl == "timeout":
+                raise FDSNException("Timeout while requesting '%s'." % url)
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
