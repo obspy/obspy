@@ -392,7 +392,7 @@ class DownloadHelper(object):
         """
         Initialize all clients.
         """
-        logger.info("Initializing FDSN clients for %s."
+        logger.info("Initializing FDSN client(s) for %s."
                     % ", ".join(self.providers))
 
         def _get_client(client_name):
@@ -429,6 +429,6 @@ class DownloadHelper(object):
                 continue
             self._initialized_clients[client] = clients[client]
 
-        logger.info("Successfully initialized %i clients: %s."
+        logger.info("Successfully initialized %i client(s): %s."
                     % (len(self._initialized_clients),
                        ", ".join(self._initialized_clients.keys())))

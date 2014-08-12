@@ -304,10 +304,10 @@ def get_availability_from_client(client, client_name, restrictions, domain,
         arguments["includeavailability"] = False
 
     if arguments["includeavailability"] or arguments["matchtimeseries"]:
-        logger.info("Requesting reliable availability from client '%s'" %
+        logger.info("Client '%s' - Requesting reliable availability." %
                     client_name)
     else:
-        logger.info("Requesting unreliable availability from client '%s'" %
+        logger.info("Client '%s' - Requesting unreliable availability." %
                     client_name)
 
     try:
@@ -316,10 +316,10 @@ def get_availability_from_client(client, client_name, restrictions, domain,
         end = time.time()
     except (FDSNException, HTTPError) as e:
         logger.error(
-            "Failed getting availability for client '{0}': %s".format(
+            "Client '{0}' - Failed getting availability: %s".format(
                 client_name), str(e))
         return client_name, None
-    logger.info("Successfully requested availability from client '%s' "
+    logger.info("Client '%s' - Successfully requested availability "
                 "(%.2f seconds)" % (client_name, end - start))
 
     availability = {}
@@ -382,10 +382,9 @@ def get_availability_from_client(client, client_name, restrictions, domain,
                 longitude=station.longitude,
                 elevation_in_m=station.elevation,
                 channels=channels)
-
-    logger.info("Found %i matching channels from client '%s'." %
-                (sum([len(_i.channels) for _i in availability.values()]),
-                 client_name))
+    logger.info("Client '%s' - Found %i station (%i channels)." % (
+        client_name, len(availability),
+        sum([len(_i.channels) for _i in availability.values()])))
 
     return {"reliable": arguments["includeavailability"] or
             arguments["matchtimeseries"], "availability": availability}
