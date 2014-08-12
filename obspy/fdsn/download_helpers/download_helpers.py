@@ -133,6 +133,20 @@ class DownloadHelper(object):
             availability = info["availability"]
             if not availability:
                 continue
+            availability = availability.values()
+
+            ex_stations = [(_i.network, _i.station) for _i in
+                           existing_stations]
+            count_before_filtering = len(availability)
+            availability = list(itertools.ifilterfalse(
+                lambda x: (x.network, x.station) in ex_stations,
+                availability))
+            count_after_filtering = len(availability)
+            if count_before_filtering != count_after_filtering:
+                logger.info("After discarding duplicate stations: %i "
+                            "stations remain." % count_after_filtering)
+            if not count_after_filtering:
+                continue
 
             # Two cases. Reliable availability means that the client
             # supports the `matchtimeseries` or `includeavailability`
@@ -145,12 +159,12 @@ class DownloadHelper(object):
                 # Filter the stations to be downloaded based on geographical
                 # and geometric factors.
                 all_stations = utils.merge_stations(
-                    existing_stations, info["availability"].values(),
+                    existing_stations, availability,
                     restrictions.minimum_interstation_distance_in_m)
+                new_stations = all_stations - existing_stations
             else:
-                all_stations = info["availabilty"].values()
+                new_stations = availability
 
-            new_stations = all_stations - existing_stations
             logger.info("Client '%s' - %i station(s) satisfying the "
                         "minimum inter-station distance found." % (
                         client_name, len(new_stations)))
@@ -292,14 +306,15 @@ class DownloadHelper(object):
                 stationxml_channels["%s.%s" % (i.network,
                                                i.station)].append(i)
 
+            available_miniseed_channels = collections.defaultdict(list)
             for mseed in miniseed_channels:
-                station = "%s.%s" % (mseed.network, mseed.station)
-                if station not in stationxml_channels:
+                station_id = "%s.%s" % (mseed.network, mseed.station)
+                if station_id not in stationxml_channels:
                     msg = "No station file for '%s'. Will be deleted."
                     logger.warning(msg % mseed.filename)
                     utils.safe_delete(mseed.filename)
                     continue
-                station = stationxml_channels[station]
+                station = stationxml_channels[station_id]
                 # Try to find the correct timespan!
                 found_ts = False
                 for channel in station:
@@ -314,7 +329,26 @@ class DownloadHelper(object):
                           "retrieved for '%s'. Will be deleted."
                     logger.warning(msg % mseed.filename)
                     utils.safe_delete(mseed.filename)
-            if not info["reliable"]:
+                available_miniseed_channels[station_id].append(utils.Channel(
+                    mseed.location, mseed.channel, mseed.filename
+                ))
+
+            # Assemble everything that has been downloaded for this loop
+            # iteration including station and channel filenames.
+            stations_for_loop = set()
+            for station in stations:
+                station_id = "%s.%s" % (station.network, station.station)
+                if station_id not in stationxml_channels:
+                    continue
+                station = copy.deepcopy(station)
+                station.stationxml_filename = \
+                    stationxml_channels[station_id][0].filename
+                station.channels = available_miniseed_channels[station_id]
+                stations_for_loop.add(station)
+
+            if info["reliable"]:
+                existing_stations = existing_stations.union(stations_for_loop)
+            else:
                 from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
     def download_mseed(self, client, client_name, stations, restrictions,

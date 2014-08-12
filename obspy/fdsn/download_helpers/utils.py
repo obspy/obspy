@@ -141,8 +141,10 @@ def filter_stations_with_channel_list(stations, channels):
 
     final_stations = []
     for station in stations:
-        station_chan = station_channels["%s.%s" % (station.network,
-                                                   station.station)]
+        station_id = "%s.%s" % (station.network, station.station)
+        if station_id not in station_channels:
+            continue
+        station_chan = station_channels[station_id]
         good_channels = []
         for channel in station.channels:
             if (channel.location, channel.channel) not in station_chan:
