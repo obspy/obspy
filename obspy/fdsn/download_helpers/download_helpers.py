@@ -405,7 +405,7 @@ class DownloadHelper(object):
                 ret_val = utils.download_and_split_mseed_bulk(
                     *args, logger=logger)
             except utils.ERRORS as e:
-                msg = ("Client '%s': " % args[1]) + str(e)
+                msg = ("Client '%s' - " % args[1]) + str(e)
                 if "no data available" in msg.lower():
                     logger.info(msg)
                 else:
