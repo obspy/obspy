@@ -170,7 +170,8 @@ class DownloadHelper(object):
                 # StationXML files for them in case they do not yet exist.
                 mseed_stations, existing_miniseed_filenames = \
                     self._attach_miniseed_filenames(
-                        stations=new_stations, restrictions=restrictions,
+                        stations=copy.deepcopy(new_stations),
+                        restrictions=restrictions,
                         mseed_path=mseed_path)
 
                 if not mseed_stations and not existing_miniseed_filenames:
@@ -295,7 +296,7 @@ class DownloadHelper(object):
                             found_ts = True
                             break
                     if found_ts is False:
-                        msg = "No corresponding station file coule be " \
+                        msg = "No corresponding station file could be " \
                               "retrieved for '%s'. Will be deleted."
                         logger.warning(msg % mseed.filename)
                         utils.safe_delete(mseed.filename)
