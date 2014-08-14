@@ -1,4 +1,4 @@
-python-obspy (x.x.x-x) unstable; urgency=low
+obspy (x.x.x-x) unstable; urgency=low
 
   * This changelog file is overwritten for every release, only the version
     is not kept up to date. Visit www.obspy.org for more information about

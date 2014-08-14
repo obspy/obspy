@@ -2,20 +2,45 @@
 
 .PHONY: binary
 
+export DH_ALWAYS_EXCLUDE=CVS:.git:.gitignore:__pycache__:src
+export PYBUILD_SYSTEM=distutils
+
 %:
-	dh $@ --buildsystem=python_distutils --with=python2
+	dh $@ --buildsystem=pybuild --with=python2,python3
 
 binary:
 	dh binary
 
+override_dh_auto_build:
+	dh_auto_build
+	set -ex; for python in $(shell py3versions -r); do \
+	    $$python setup.py build; \
+	done;
+
 override_dh_auto_install:
 	dh_auto_install #-- release
 	dh_numpy
+	dh_numpy3
+	set -ex; for python in $(shell py3versions -r); do \
+	    $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
+	done;
+
+override_dh_install:
+	# Separate test files (-dbg packages)..
+	dh_install -p python3-obspy-dbg "debian/tmp/usr/lib/python3*/*-packages/obspy/*/tests"
+	dh_install -p python3-obspy-dbg "debian/tmp/usr/lib/python3*/*-packages/obspy/core/scripts/runtests.py"
+	dh_install -p python-obspy-dbg "debian/tmp/usr/lib/python2*/*-packages/obspy/*/tests"
+	dh_install -p python-obspy-dbg "debian/tmp/usr/bin/obspy-runtests"
+	dh_install -p python-obspy-dbg "debian/tmp/usr/lib/python2*/*-packages/obspy/core/scripts/runtests.py"
+	# .. from normal program files
+	dh_install -p python3-obspy -X"tests" "debian/tmp/usr/lib/python3*/*-packages/*"
+	dh_install -p python-obspy -X"debian/tmp/usr/bin/obspy-runtests" "debian/tmp/usr/bin/*"
+	dh_install -p python-obspy -X"tests" -X"debian/tmp/usr/bin/obspy-runtests" "debian/tmp/usr/lib/python2*/*-packages/*"
+	# Continue with regular dh_install
+	dh_install
 
 override_dh_installdeb:
 	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
 	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
 	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
-	find $(CURDIR)/debian -type d -name src | xargs rm -rf \; # in principle only needed for some modules
-	find $(CURDIR) -name .gitignore | xargs rm -rf \; # obspy/libs/.gitignore strangely gets included in package
 	dh_installdeb

@@ -78,7 +78,7 @@ VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}
 # dch --newversion ${VERSION}-$DEBVERSION "New release" 
 # just write a changelog template with only updated version info
 cat > debian/changelog << EOF
-python-obspy (${VERSION_COMPLETE}) unstable; urgency=low
+obspy (${VERSION_COMPLETE}) unstable; urgency=low
 
 EOF
 sed "s/^/  /" CHANGELOG.txt >> debian/changelog
@@ -90,8 +90,9 @@ EOF
 if [ $CODENAME = "lucid" ]
     then
     ex ./debian/rules << EOL
-%s/--with=python2/ /g
+%s/--with=python2,python3/ /g
 g/dh_numpy/d
+g/dh_numpy3/d
 wq
 EOL
 fi
@@ -105,16 +106,16 @@ elif [ $CODENAME = "squeeze" ]
 fi
 # build the package
 export FFLAGS="$FFLAGS -fPIC"  # needed for gfortran
-export LDFLAGS="$LDFLAGS -shared"  # needed for gfortran
+export LDFLAGS="$LDFLAGS -shared -z relro -z now"  # needed for gfortran
 fakeroot ./debian/rules clean build binary
 # generate changes file
 DEBARCH=`dpkg-architecture -qDEB_HOST_ARCH`
 dpkg-genchanges -b > ../python-obspy_${VERSION_COMPLETE}_${DEBARCH}.changes
 # move deb and changes files
-mv ../python-obspy_*.deb ../python-obspy_*.changes $PACKAGEDIR/
+mv ../*.deb ../*.changes $PACKAGEDIR/
 
 # run lintian to verify the packages
-for PACKAGE in `ls $PACKAGEDIR/python-obspy_*.deb`; do
+for PACKAGE in `ls $PACKAGEDIR/*.deb`; do
     echo "#### lintian for $PACKAGE"
     #lintian -i $PACKAGE # verbose output
     lintian $PACKAGE
