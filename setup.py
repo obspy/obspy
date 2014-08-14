@@ -92,12 +92,12 @@ INSTALL_REQUIRES = [
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy',
-    'suds-jurko']
+    'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
-              'pyimgur']}
+              'pyimgur'],
+    'neries': ['suds-jurko']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
