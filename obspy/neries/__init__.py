@@ -8,6 +8,16 @@ Commission-funded NERIES project. The Portal provides a single point of access
 to diverse, distributed European earthquake data provided in a unique joint
 initiative by observatories and research institutes in and around Europe.
 
+.. warning::
+    The `obspy.neries` module is deprecated and will be removed with the
+    next major release. To access EMSC event data please use the
+    :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
+    (use `Client(base_url='NERIES', ...)`), for access to
+    ORFEUS waveform data please use the
+    :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
+    (use `Client(base_url='ORFEUS', ...)`) and for travel times please use
+    :mod:`obspy.taup`.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -66,9 +76,28 @@ Basic Usage
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from .client import Client  # NOQA
 
+import warnings
+
+msg = ("The obspy.neries module is deprecated and will be removed with the "
+       "next major release. To access EMSC event data please use the "
+       "obspy.fdsn client (use `Client(base_url='NERIES')`), for access to "
+       "ORFEUS waveform data please use the obspy.fdsn client "
+       "(use `Client(base_url='ORFEUS')`) and for travel times please use "
+       "obspy.taup.")
+warnings.warn(msg, DeprecationWarning)
+
+try:
+    import suds  # NOQA
+except ImportError:
+    msg = ("To use obspy.neries you need to install either 'suds' (works on "
+           "Python 2.x) or 'suds-jurko' (works on Python 2.x and Python 3.x)")
+    raise ImportError(msg)
+
+__all__ = [native_str("Client")]
 
 if __name__ == '__main__':
     import doctest
