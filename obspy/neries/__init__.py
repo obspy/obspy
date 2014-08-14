@@ -79,6 +79,7 @@ from future.builtins import *  # NOQA
 
 from .client import Client  # NOQA
 
+import warnings
 
 msg = ("The obspy.neries module is deprecated and will be removed with the "
        "next major release. To access EMSC event data please use the "
@@ -95,6 +96,7 @@ except ImportError:
            "Python 2.x) or 'suds-jurko' (works on Python 2.x and Python 3.x)")
     raise ImportError(msg)
 
+__all__ = [native_str("Client")]
 
 if __name__ == '__main__':
     import doctest
