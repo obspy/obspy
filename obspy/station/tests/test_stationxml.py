@@ -29,6 +29,7 @@ class StationXMLTestCase(unittest.TestCase):
     """
     """
     def setUp(self):
+        self.maxDiff = 10000
         # Most generic way to get the actual data directory.
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
@@ -593,6 +594,33 @@ class StationXMLTestCase(unittest.TestCase):
                          "Digital Counts")
         # Assert that there are three stages.
         self.assertEqual(len(response.response_stages), 3)
+
+    def test_stationxml_with_availability(self):
+        """
+        A variant of StationXML has support for availability information.
+        Make sure this works.
+        """
+        filename = os.path.join(self.data_dir,
+                                "stationxml_with_availability.xml")
+        inv = obspy.station.read_inventory(filename, format="stationxml")
+        channel = inv[0][0][0]
+        self.assertEqual(channel.data_availability.start,
+                         obspy.UTCDateTime("1998-10-26T20:35:58"))
+        self.assertEqual(channel.data_availability.end,
+                         obspy.UTCDateTime("2014-07-21T12:00:00"))
+
+        # Now write it again and compare to the original file.
+        file_buffer = io.BytesIO()
+        inv.write(file_buffer, format="StationXML",
+                  _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+                                          expected_xml_file_buffer)
 
 
 def suite():

@@ -13,6 +13,7 @@ from obspy.mseed.headers import clibmseed, ENCODINGS
 from obspy.mseed.msstruct import _MSStruct
 
 import copy
+import io
 import numpy as np
 import os
 import unittest
@@ -120,7 +121,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over every combination.
         for reclen in record_length_values:
             for byteorder in byteorder_values:
-                for encoding in list(encoding_values.keys()):
+                for encoding in encoding_values.keys():
                     this_stream = copy.deepcopy(stream)
                     this_stream[0].data = \
                         np.require(this_stream[0].data,
@@ -480,7 +481,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over the attributes to be able to assert them because a
         # dictionary is not a stats dictionary.
         # This also assures that there are no additional keys.
-        for key in list(stats.keys()):
+        for key in stats.keys():
             self.assertEqual(stats[key], stream[0].stats[key])
 
     def test_readingAndWritingViaTheStatsAttribute(self):
@@ -495,10 +496,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # byte order.
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         byteorders = ['>', '<']
-        encodings = [value[0] for value in list(ENCODINGS.values())]
+        # Only select encoding that have write support.
+        encodings = [value[0] for value in ENCODINGS.values() if value[3]]
         np_encodings = {}
         # Special handling for ASCII encoded files.
-        for value in list(ENCODINGS.values()):
+        for value in ENCODINGS.values():
             if value[0] == 'ASCII':
                 np_encodings[value[0]] = np.dtype(native_str("|S1"))
             else:
@@ -687,7 +689,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             (np.float64, 'd', 5, def_content.astype(np.float64))
         }
         # Loop over all files and read them.
-        for file in list(files.keys()):
+        for file in files.keys():
             # Check little and big Endian for each file.
             for _i in ('littleEndian', 'bigEndian'):
                 cur_file = file[:-6] + '_' + _i + '.mseed'
@@ -864,6 +866,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
         for encoding, value in ENCODINGS.items():
+            # Skip encodings that cannot be written.
+            if not value[3]:
+                continue
+
             seed_dtype = value[2]
             # Special handling for the ASCII dtype. NumPy 1.7 changes the
             # default dtype of numpy.string_ from "|S1" to "|S32". Enforce
@@ -977,6 +983,101 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
                         out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
+
+    def test_writing_with_some_encoding_fails(self):
+        """
+        Writing with some encoding fails as libmseed does not support those.
+        Make sure an appropriate error is raised.
+        """
+        tr = read()[0]
+        tr.data = tr.data[:10]
+
+        for encoding, value in ENCODINGS.items():
+            # Convert the data to the appropriate type to make it does not
+            # fail because of that.
+            tr2 = tr.copy()
+            tr2.data = np.require(tr2.data, dtype=value[2])
+
+            buf = io.BytesIO()
+
+            # Test writing by forcing the encoding.
+            # Should not fail with write support.
+            if value[3]:
+                # Test with integer code and string name.
+                tr2.write(buf, format="mseed", encoding=encoding)
+                tr2.write(buf, format="mseed", encoding=value[0])
+            # Should fail without write support.
+            else:
+                # Test with integer code and string name.
+                self.assertRaises(ValueError, tr2.write, buf,
+                                  format="mseed", encoding=encoding)
+                self.assertRaises(ValueError, tr2.write, buf,
+                                  format="mseed", encoding=value[0])
+
+            # Test again by setting the encoding on the trace stats.
+            tr2.stats.mseed = AttribDict()
+            tr2.stats.mseed.encoding = encoding
+            if value[3]:
+                tr2.write(buf, format="mseed")
+            else:
+                self.assertRaises(ValueError, tr2.write, buf, format="mseed")
+            # Again with setting the string code.
+            tr2.stats.mseed.encoding = value[0]
+            if value[3]:
+                tr2.write(buf, format="mseed")
+            else:
+                self.assertRaises(ValueError, tr2.write, buf, format="mseed")
+
+    def test_reading_geoscope_16bit_4bit_exponent_format(self):
+        """
+        Tests reading miniseed data with the GEOSCOPE Multiplexed 16 bit
+        ranged, 4 bit exponent encoding.
+        """
+        tr = read(os.path.join(self.path, "data",
+                               "GEOSCOPE16_4_encoding.mseed"))[0]
+
+        self.assertEqual(tr.stats.mseed.encoding, "GEOSCOPE16_4")
+        self.assertEqual(tr.data.dtype, np.float32)
+        # Test data is from the IRIS ASCII timeseries service.
+        self.assertTrue(np.allclose(
+            tr.data[:5],
+            np.array([-1.1015625, -1.11328125, -1.109375, -1.12890625,
+                      -1.1171875]),
+            rtol=1E-5))
+
+    def test_reading_SRO_format(self):
+        """
+        Tests reading miniseed data with the SRO encoding.
+        """
+        tr = read(os.path.join(self.path, "data",
+                               "SRO_encoding.mseed")).select(component="Z")[0]
+        self.assertEqual(tr.stats.mseed.encoding, "SRO")
+        self.assertEqual(tr.data.dtype, np.int32)
+        # Test data is from the IRIS ASCII timeseries service.
+        self.assertTrue(np.allclose(
+            tr.data[:5], np.array([126, 67, -11, -95, -167]), rtol=1E-5))
+
+    def test_reading_DWWSSN_format(self):
+        """
+        Tests reading miniseed data with the DWWSSN encoding.
+        """
+        tr = read(os.path.join(self.path, "data", "DWWSSN_encoding.mseed"))[0]
+        self.assertEqual(tr.stats.mseed.encoding, "DWWSSN")
+        self.assertEqual(tr.data.dtype, np.int32)
+        # Test data is from the IRIS ASCII timeseries service.
+        self.assertTrue(np.allclose(
+            tr.data[:5], np.array([-38, -38, -36, -37, -36]), rtol=1E-5))
+
+    def test_reading_CDSN_format(self):
+        """
+        Tests reading miniseed data with the CDSN encoding.
+        """
+        tr = read(os.path.join(self.path, "data", "CDSN_encoding.mseed"))[0]
+        self.assertEqual(tr.stats.mseed.encoding, "CDSN")
+        self.assertEqual(tr.data.dtype, np.int32)
+        # Test data is from the IRIS ASCII timeseries service.
+        self.assertTrue(np.allclose(
+            tr.data[:5], np.array([294, 32, 26, 285, 389]), rtol=1E-5))
 
 
 def suite():

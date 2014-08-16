@@ -261,14 +261,14 @@ class RecordAnalyser(object):
                        'Header Endianness: %s\n\n') % \
                       (filename, self.record_offset, endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
-        for key in list(self.fixed_header.keys()):
+        for key in self.fixed_header.keys():
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
         ret_val += '\nBLOCKETTES\n'
-        for key in list(self.blockettes.keys()):
+        for key in self.blockettes.keys():
             ret_val += '\t%i:' % key
             if not len(self.blockettes[key]):
                 ret_val += '\tNOT YET IMPLEMENTED\n'
-            for _i, blkt_key in enumerate(list(self.blockettes[key].keys())):
+            for _i, blkt_key in enumerate(self.blockettes[key].keys()):
                 if _i == 0:
                     tabs = '\t'
                 else:

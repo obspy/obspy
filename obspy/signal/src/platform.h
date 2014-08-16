@@ -16,7 +16,11 @@ extern "C" {
   #include <limits.h>
   #include <malloc.h>
   #include <math.h>
-  #define fmax max
+  #if defined(_MSC_VER)
+    // MSC
+    #define fmax max
+    #define fmin min
+  #endif
 #else
   #include <limits.h>
   #include <malloc.h>

@@ -592,7 +592,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # documentation for more details.
         # Use every 5th year. Otherwise the test takes too long. Use 1901 as
         # start to get year 2056.
-        years = list(range(1901, 2101, 5))
+        years = range(1901, 2101, 5)
         for year in years:
             for byteorder in ["<", ">"]:
                 memfile = io.BytesIO()

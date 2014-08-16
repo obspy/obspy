@@ -168,7 +168,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     raise NotImplementedError(msg)
 
     traces = []
-    for i in list(output.keys()):
+    for i in output.keys():
         t = Trace(data=np.array(output[i]))
         t.stats.channel = str(i)
         t.stats.sampling_rate = float(srates[i])

@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import io
+import difflib
+import math
+import os
+import unittest
+import warnings
+
+from lxml import etree
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
     Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
@@ -11,26 +20,12 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
-from obspy.core.util.xmlwrapper import LXML_ETREE
-
-import io
-from xml.etree.ElementTree import tostring, fromstring
-import difflib
-import math
-import os
-import unittest
-import warnings
-
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
-try:
-    from lxml.etree import __version__
-    version = float(__version__.rsplit('.', 1)[0])
-    if version >= 2.3:
-        IS_RECENT_LXML = True
-except:
-    pass
+version = float(etree.__version__.rsplit('.', 1)[0])
+if version >= 2.3:
+    IS_RECENT_LXML = True
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -47,22 +42,32 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Simple helper function to compare two XML strings.
         """
-        obj1 = fromstring(doc1)
-        obj2 = fromstring(doc2)
-        str1 = [_i.strip() for _i in tostring(obj1).split(b"\n")]
-        str2 = [_i.strip() for _i in tostring(obj2).split(b"\n")]
-        # when xml is used instead of old lxml in obspy.core.util.xmlwrapper
-        # there is no pretty_print option and we get a string without line
-        # breaks, so we have to allow for that in the test
-        if not LXML_ETREE:
-            str1 = b"".join(str1)
-            str2 = b"".join(str2)
+        # Compat py2k and py3k
+        try:
+            doc1 = doc1.encode()
+            doc2 = doc2.encode()
+        except:
+            pass
+        obj1 = etree.fromstring(doc1).getroottree()
+        obj2 = etree.fromstring(doc2).getroottree()
+
+        buf = io.BytesIO()
+        obj1.write_c14n(buf)
+        buf.seek(0, 0)
+        str1 = buf.read()
+        str1 = [_i.strip() for _i in str1.splitlines()]
+
+        buf = io.BytesIO()
+        obj2.write_c14n(buf)
+        buf.seek(0, 0)
+        str2 = buf.read()
+        str2 = [_i.strip() for _i in str2.splitlines()]
 
         unified_diff = difflib.unified_diff(str1, str2)
+
         err_msg = "\n".join(unified_diff)
-        if err_msg:
-            msg = "Strings are not equal.\n"
-            raise AssertionError(msg + err_msg)
+        if err_msg:  # pragma: no cover
+            raise AssertionError("Strings are not equal.\n" + err_msg)
 
     def test_readQuakeML(self):
         """
@@ -616,11 +621,8 @@ class QuakeMLTestCase(unittest.TestCase):
         If obspy.core.event will ever be more loosely coupled to QuakeML this
         test WILL HAVE to be changed.
         """
-        # Currently only works with lxml.
-        try:
-            from lxml.etree import parse
-        except ImportError:
-            return
+        from lxml.etree import parse
+
         xsd_enum_definitions = {}
         xsd_file = os.path.join(
             self.path, "..", "..", "docs", "QuakeML-BED-1.2.xsd")
@@ -681,6 +683,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         with open(self.neries_filename, 'rb') as fp:
             data = fp.read()
+
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 
@@ -832,7 +835,6 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(amp.time_window.reference,
                          UTCDateTime("2007-10-10T14:40:39.055"))
 
-    @skipIf(not LXML_ETREE, "lxml too old to run this test.")
     def test_write_amplitude_time_window(self):
         """
         Tests writing an QuakeML Amplitude with TimeWindow.
@@ -915,30 +917,30 @@ class QuakeMLTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write file
-            cat.write(tmpfile, "QUAKEML", nsmap=nsmap)
+            cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
             # check contents
-            with open(tmpfile, "rb") as fh:
-                lines = fh.readlines()
+            with open(tmpfile, "r") as fh:
+                content = fh.read()
             # check namespace definitions in root element
-            got = sorted(lines[1].strip()[:-1].split())
-            expected = [b'<q:quakeml',
-                        b'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
-                        b'xmlns:ns0="http://test.org/xmlns/0.1"',
-                        b'xmlns:ns1="http://some-page.de/xmlns/1.0"',
-                        b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
-                        b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
-            self.assertEqual(got, expected)
+            expected = ['<q:quakeml',
+                        'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
+                        'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            for line in expected:
+                self.assertTrue(line in content)
             # check additional tags
-            got = sorted([lines[i_].strip() for i_ in range(85, 89)])
             expected = [
-                b'<ns0:custom>True</ns0:custom>',
-                b'<ns0:new_tag>1234</ns0:new_tag>',
-                b'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
-                b'<ns1:public ' +
-                b'another_attrib="another_value" ' +
-                b'some_attrib="some_value">false</ns1:public>',
-                ]
-            self.assertEqual(got, expected)
+                '<ns0:custom>True</ns0:custom>',
+                '<ns0:new_tag>1234</ns0:new_tag>',
+                '<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
+                '<ns1:public '
+                'another_attrib="another_value" '
+                'some_attrib="some_value">false</ns1:public>'
+            ]
+            for line in expected:
+                self.assertTrue(line in content)
             # now, read again to test if its parsed correctly..
             cat = readQuakeML(tmpfile)
         # when reading..

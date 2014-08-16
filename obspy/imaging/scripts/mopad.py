@@ -1138,10 +1138,10 @@ class MomentTensor:
         """
         Returns the decomposition type.
         """
-        decomp_dict = dict(list(zip(('20', '21', '31'),
-                                    ('ISO + DC + CLVD',
-                                     'ISO + major DC + minor DC',
-                                     'ISO + DC1 + DC2 + DC3'))))
+        decomp_dict = dict(zip(('20', '21', '31'),
+                               ('ISO + DC + CLVD',
+                                'ISO + major DC + minor DC',
+                                'ISO + DC1 + DC2 + DC3')))
         if style == 'f':
             print('\n Decomposition type: \n  ')
             return decomp_dict[str(self._decomposition_key)]
@@ -2292,7 +2292,7 @@ class BeachBall:
             fontsize = plot_size_in_points / 66.
             symsize = plot_size_in_points / 77.
 
-            direction_letters = list('NSEWDU')
+            direction_letters = 'NSEWDU'
             for idx, val in enumerate(BV_2_plot):
                 x_coord = val[0]
                 y_coord = val[1]
@@ -2488,7 +2488,7 @@ class BeachBall:
         the object, the value is updated. Otherwise, the keyword is
         ignored.
         """
-        for key in list(kwargs.keys()):
+        for key in kwargs.keys():
             if key[0] == '_':
                 kw = key[1:]
             else:
@@ -3353,7 +3353,7 @@ class BeachBall:
         # check, if perhaps more values with same r - if so, take point with
         # lowest phi
         other_idces = \
-            list(np.where(r_phi_curve[:, 0] == r_phi_curve[largest_r_idx, 0]))
+            np.where(r_phi_curve[:, 0] == r_phi_curve[largest_r_idx, 0])
         if len(other_idces) > 1:
             best_idx = np.argmin(r_phi_curve[other_idces, 1])
             start_idx_curve = other_idces[best_idx]
@@ -3635,7 +3635,7 @@ class BeachBall:
 
         lo_visible_BV = []
         dummy_list1 = []
-        direction_letters = list('NSEWDU')
+        direction_letters = 'NSEWDU'
 
         for idx, val in enumerate(self._all_BV_2D.transpose()):
             r_bv = math.sqrt(val[0] ** 2 + val[1] ** 2)
@@ -3840,7 +3840,7 @@ class BeachBall:
             fontsize = plot_size_in_points / 40.
             symsize = plot_size_in_points / 61.
 
-            direction_letters = list('NSEWDU')
+            direction_letters = 'NSEWDU'
 
             for val in self._all_BV_2D_US:
                 x_coord = val[0]
@@ -4095,35 +4095,35 @@ def main(argv=None):
         # otherwise:
         else:
             # argument dictionary - setting the appropriate calls
-            do_calls = dict(list(zip(('in', 'out',
-                                      'type',
-                                      'full', 'm',
-                                      'iso', 'iso_perc',
-                                      'dev', 'devi', 'devi_perc',
-                                      'dc', 'dc_perc',
-                                      'dc2', 'dc2_perc',
-                                      'dc3', 'dc3_perc',
-                                      'clvd', 'clvd_perc',
-                                      'mom', 'mag',
-                                      'eigvals', 'eigvecs',
-                                      't', 'n', 'p',
-                                      'fps', 'faultplanes', 'fp',
-                                      'decomp_key'),
-                                     ('input_system', 'output_system',
-                                      'decomp_type',
-                                      'M', 'M',
-                                      'iso', 'iso_percentage',
-                                      'devi', 'devi', 'devi_percentage',
-                                      'DC', 'DC_percentage',
-                                      'DC2', 'DC2_percentage',
-                                      'DC3', 'DC3_percentage',
-                                      'CLVD', 'CLVD_percentage',
-                                      'moment', 'mag',
-                                      'eigvals', 'eigvecs',
-                                      't_axis', 'null_axis', 'p_axis',
-                                      'fps', 'fps', 'fps',
-                                      'decomp_type')
-                                     )))
+            do_calls = dict(zip(('in', 'out',
+                                 'type',
+                                 'full', 'm',
+                                 'iso', 'iso_perc',
+                                 'dev', 'devi', 'devi_perc',
+                                 'dc', 'dc_perc',
+                                 'dc2', 'dc2_perc',
+                                 'dc3', 'dc3_perc',
+                                 'clvd', 'clvd_perc',
+                                 'mom', 'mag',
+                                 'eigvals', 'eigvecs',
+                                 't', 'n', 'p',
+                                 'fps', 'faultplanes', 'fp',
+                                 'decomp_key'),
+                                ('input_system', 'output_system',
+                                 'decomp_type',
+                                 'M', 'M',
+                                 'iso', 'iso_percentage',
+                                 'devi', 'devi', 'devi_percentage',
+                                 'DC', 'DC_percentage',
+                                 'DC2', 'DC2_percentage',
+                                 'DC3', 'DC3_percentage',
+                                 'CLVD', 'CLVD_percentage',
+                                 'moment', 'mag',
+                                 'eigvals', 'eigvecs',
+                                 't_axis', 'null_axis', 'p_axis',
+                                 'fps', 'fps', 'fps',
+                                 'decomp_type')
+                                ))
 
             # build argument for local call within MT object:
             lo_args = kwargs_dict['decomp_out_part']
@@ -4462,7 +4462,7 @@ def main(argv=None):
             try:
                 sec_colour_raw = args.plot_pressure_colour.split(',')
                 if len(sec_colour_raw) == 1:
-                    if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                    if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                         consistent_kwargs_dict['plot_pressure_colour'] = \
                             sec_colour_raw[0].lower()[0]
                     else:
@@ -4484,7 +4484,7 @@ def main(argv=None):
             try:
                 sec_colour_raw = args.plot_tension_colour.split(',')
                 if len(sec_colour_raw) == 1:
-                    if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                    if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                         consistent_kwargs_dict['plot_tension_colour'] = \
                             sec_colour_raw[0].lower()[0]
                     else:
@@ -4530,7 +4530,7 @@ def main(argv=None):
                     sec_colour_raw = fp_args[2].split(',')
                     if len(sec_colour_raw) == 1:
                         sc = sec_colour_raw[0].lower()[0]
-                        if sc not in list('bgrcmykw'):
+                        if sc not in 'bgrcmykw':
                             raise
                         consistent_kwargs_dict['plot_faultplane_colour'] = \
                             sec_colour_raw[0].lower()[0]
@@ -4579,7 +4579,7 @@ def main(argv=None):
                 try:
                     sec_colour_raw = fp_args[1].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                        if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                             consistent_kwargs_dict['plot_outerline_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:
@@ -4619,7 +4619,7 @@ def main(argv=None):
                 try:
                     sec_colour_raw = fp_args[1].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                        if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                             consistent_kwargs_dict['plot_nodalline_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:

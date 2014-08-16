@@ -23,7 +23,6 @@ from obspy.core.util import NamedTemporaryFile, loadtxt
 import io
 import json
 import platform
-import warnings
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -94,11 +93,6 @@ class Client(object):
 
         See :mod:`obspy.iris` for all parameters.
         """
-        msg = ("Development and maintenance efforts will focus on the new "
-               "obspy.fdsn client. Please consider moving all code from using "
-               "obspy.iris to using obspy.fdsn.")
-        warnings.warn(msg, DeprecationWarning)
-
         self.base_url = base_url
         self.timeout = timeout
         self.debug = debug
@@ -899,13 +893,13 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         kwargs = {}
         kwargs['model'] = str(model)
-        kwargs['phases'] = ','.join([str(p) for p in list(phases)])
+        kwargs['phases'] = ','.join([str(p) for p in phases])
         kwargs['evdepth'] = float(evdepth)
         if distdeg:
             kwargs['distdeg'] = \
-                ','.join([str(float(d)) for d in list(distdeg)])
+                ','.join([str(float(d)) for d in distdeg])
         elif distkm:
-            kwargs['distkm'] = ','.join([str(float(d)) for d in list(distkm)])
+            kwargs['distkm'] = ','.join([str(float(d)) for d in distkm])
         elif evloc and staloc:
             if not isinstance(evloc, tuple):
                 raise TypeError("evloc needs to be a tuple")

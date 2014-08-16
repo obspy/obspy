@@ -1,13 +1,17 @@
 0.10.0:
  - general:
-   * support for Python 3.3 and 3.4
+   * Support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
+ - obspy.ah
+   * New submodule for reading the AH (Ad Hoc) waveform format 
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
  - obspy.fdsn:
    * WADL files are cached per Python process.
    * Bulk station downloading using POST requests.
+   * Support for FDSNWS 1.1, e.g. the `matchtimeseries` parameter for the
+     station service.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
@@ -15,6 +19,13 @@
      obspy.imaging.maps.plot_basemap() (see #753).
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
+ - obspy.neries:
+   * The whole module is deprecated and will be removed with the next major
+     release. To access EMSC event data please use the obspy.fdsn client
+     (use `Client(base_url='NERIES', ...)`), for access to ORFEUS waveform
+     data please use the obspy.fdsn client (use
+     `Client(base_url='ORFEUS', ...)`) and for travel times please use
+     obspy.taup.
  - obspy.signal:
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
@@ -23,6 +34,7 @@
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
+   * read/write support for DataAvailability tags in StationXML files.
  - scripts:
    * All scripts now require argparse instead of optparse.
    * All scripts now accept -V or --version to print version information.
@@ -81,6 +93,8 @@
    * fixed a problem with UTCDateTime with timestamps of far future
      dates (larger than 2038, often seen in StationXML end dates,
      see #805)
+ - obspy.mseed:
+   * proper error reporting while reading
  - obspy.seedlink:
    * bugfix: INFO responses from the IRIS ringserver are now parsed
      correctly (see #807)

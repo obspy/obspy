@@ -118,7 +118,7 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = str("").join(list(map(chr, list(range(32, 127)))) +
+    text_characters = str("").join(list(map(chr, range(32, 127))) +
                                    list("\n\r\t\b")).encode('ascii', 'ignore')
     _null_trans = compatibility.maketrans(b"", b"")
     with open(filename, 'rb') as fp:

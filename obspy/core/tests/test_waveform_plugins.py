@@ -34,7 +34,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             open(tmpfile, 'wb').close()
             formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
             # using format keyword
-            for ep in list(formats_ep.values()):
+            for ep in formats_ep.values():
                 isFormat = load_entry_point(ep.dist.key,
                                             'obspy.plugin.waveform.' + ep.name,
                                             'isFormat')

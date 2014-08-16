@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
-import obspy
-from obspy import UTCDateTime
+import gzip
+import io
+import os
+import unittest
+import warnings
+
+import numpy as np
+from lxml import etree
+
+from obspy import read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
@@ -12,14 +20,6 @@ from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
-
-import gzip
-import io
-from lxml import etree
-import numpy as np
-import os
-import unittest
-import warnings
 
 
 class ParserTestCase(unittest.TestCase):
@@ -447,13 +447,6 @@ class ParserTestCase(unittest.TestCase):
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
                   'digitizer_gain': 1677850.0}
-        with warnings.catch_warnings(record=True) as w:
-            warnings.resetwarnings()
-            paz = sp.getPAZ(channel_id="BW.RJOB..EHZ",
-                            datetime=UTCDateTime("2010-01-01"))
-        self.assertEqual(len(w), 1)
-        self.assertEqual(w[0].category, DeprecationWarning)
-        self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
                         datetime=UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
@@ -685,8 +678,8 @@ class ParserTestCase(unittest.TestCase):
         """
         Weak test for rotation of arbitrarily rotated components to ZNE.
         """
-        st = obspy.read(os.path.join(self.path,
-                        "II_COCO_three_channel_borehole.mseed"))
+        st = read(os.path.join(self.path,
+                               "II_COCO_three_channel_borehole.mseed"))
         # Read the SEED file and rotate the Traces with the information stored
         # in the SEED file.
         p = Parser(os.path.join(self.path, "dataless.seed.II_COCO"))

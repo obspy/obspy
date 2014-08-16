@@ -449,8 +449,8 @@ class _TextTestRunner:
         wasSuccessful = True
         if self.verbosity:
             self.stream.writeln()
-        for result in list(results.values()):
-            failed, errored = list(map(len, (result.failures, result.errors)))
+        for result in results.values():
+            failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
@@ -531,7 +531,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     # sort tests by time taken
     mydict = {}
     # loop over modules
-    for mod in list(ttr.values()):
+    for mod in ttr.values():
         mydict.update(dict(mod.timer))
     sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
     sorted_tests = sorted_tests[::-1]
@@ -653,11 +653,11 @@ def run(argv=None, interactive=True):
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
-    if args.report or 'OBSPY_REPORT' in list(os.environ.keys()):
+    if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
     else:
         report = False
-    if 'OBSPY_REPORT_SERVER' in list(os.environ.keys()):
+    if 'OBSPY_REPORT_SERVER' in os.environ.keys():
         args.server = os.environ['OBSPY_REPORT_SERVER']
     # check interactivity settings
     if interactive and args.dontask:

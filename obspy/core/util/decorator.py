@@ -63,7 +63,7 @@ def deprecated_keywords(keywords):
 
         @functools.wraps(func)
         def echo_func(*args, **kwargs):
-            for kw in list(kwargs.keys()):
+            for kw in kwargs.keys():
                 if kw in keywords:
                     nkw = keywords[kw]
                     if nkw is None:

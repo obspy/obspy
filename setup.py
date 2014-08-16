@@ -88,18 +88,18 @@ KEYWORDS = [
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
-    'future>=0.12.1',
+    'future>=0.12.4',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy',
-    'suds-jurko']
+    'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
-              'pyimgur']}
-# Add mock for Python 2. stdlib package for Python >= 3.3.
+              'pyimgur'],
+    'neries': ['suds-jurko']}
+# PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
 # Add argparse for Python 2.6. stdlib package for Python >= 2.7
@@ -140,6 +140,7 @@ ENTRY_POINTS = {
         'Q = obspy.sh.core',
         'SH_ASC = obspy.sh.core',
         'WAV = obspy.wav.core',
+        'AH = obspy.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.core.ascii:isTSPAIR',
@@ -224,6 +225,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.Y': [
         'isFormat = obspy.y.core:isY',
         'readFormat = obspy.y.core:readY',
+    ],
+    'obspy.plugin.waveform.AH': [
+        'isFormat = obspy.ah.core:is_AH',
+        'readFormat = obspy.ah.core:read_AH',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
