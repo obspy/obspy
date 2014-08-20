@@ -1885,6 +1885,98 @@ class TraceTestCase(unittest.TestCase):
             self.assertRaises(ValueError, tr.copy().interpolate,
                               sampling_rate=-1.0)
 
+    def test_resample(self):
+        """
+        Tests if Trace.resample works as expected and test that issue #857 is
+        resolved.
+        """
+        starttime = UTCDateTime("1970-01-01T00:00:00.000000Z")
+        tr0 = Trace(np.sin(np.linspace(0, 2*np.pi, 10)),
+                    {'sampling_rate': 1.0,
+                     'starttime': starttime})
+        # downsample
+        tr = tr0.copy()
+        tr.resample(0.5, window='hanning', no_filter=True)
+        self.assertEqual(len(tr.data), 5)
+        expected = np.array([0.19478735, 0.83618307, 0.32200221,
+                             -0.7794053, -0.57356732])
+        self.assertTrue(np.all(np.abs(tr.data - expected) < 1e-7))
+        self.assertEqual(tr.stats.sampling_rate, 0.5)
+        self.assertEqual(tr.stats.delta, 2.0)
+        self.assertEqual(tr.stats.npts, 5)
+        self.assertEqual(tr.stats.starttime, starttime)
+        self.assertEqual(tr.stats.endtime,
+                         starttime + tr.stats.delta * (tr.stats.npts-1))
+        self.assertEqual(tr.stats.processing, ['resample:0:hanning'])
+
+        # upsample
+        tr = tr0.copy()
+        tr.resample(2.0, window='hanning', no_filter=True)
+        self.assertEqual(len(tr.data), 20)
+        self.assertEqual(tr.stats.sampling_rate, 2.0)
+        self.assertEqual(tr.stats.delta, 0.5)
+        self.assertEqual(tr.stats.npts, 20)
+        self.assertEqual(tr.stats.starttime, starttime)
+        self.assertEqual(tr.stats.endtime,
+                         starttime + tr.stats.delta * (tr.stats.npts-1))
+        self.assertEqual(tr.stats.processing, ['resample:2:hanning'])
+
+        # downsample with non integer ratio
+        tr = tr0.copy()
+        tr.resample(0.75, window='hanning', no_filter=True)
+        self.assertEqual(len(tr.data), int(10*.75))
+        expected = np.array([0.15425413, 0.66991128, 0.74610418, 0.11960477,
+                             -0.60644662, -0.77403839, -0.30938935])
+        self.assertTrue(np.all(np.abs(tr.data - expected) < 1e-7))
+        self.assertEqual(tr.stats.sampling_rate, 0.75)
+        self.assertEqual(tr.stats.delta, 1/0.75)
+        self.assertEqual(tr.stats.npts, int(10*.75))
+        self.assertEqual(tr.stats.starttime, starttime)
+        self.assertEqual(tr.stats.endtime,
+                         starttime + tr.stats.delta * (tr.stats.npts-1))
+        self.assertEqual(tr.stats.processing, ['resample:0:hanning'])
+
+        # downsample without window
+        tr = tr0.copy()
+        tr.resample(0.5, window=None, no_filter=True)
+        self.assertEqual(len(tr.data), 5)
+        self.assertEqual(tr.stats.sampling_rate, 0.5)
+        self.assertEqual(tr.stats.delta, 2.0)
+        self.assertEqual(tr.stats.npts, 5)
+        self.assertEqual(tr.stats.starttime, starttime)
+        self.assertEqual(tr.stats.endtime,
+                         starttime + tr.stats.delta * (tr.stats.npts-1))
+        self.assertEqual(tr.stats.processing, ['resample:0:None'])
+
+        # downsample with window and automatic filtering
+        tr = tr0.copy()
+        tr.resample(0.5, window='hanning', no_filter=False)
+        self.assertEqual(len(tr.data), 5)
+        self.assertEqual(tr.stats.sampling_rate, 0.5)
+        self.assertEqual(tr.stats.delta, 2.0)
+        self.assertEqual(tr.stats.npts, 5)
+        self.assertEqual(tr.stats.starttime, starttime)
+        self.assertEqual(tr.stats.endtime,
+                         starttime + tr.stats.delta * (tr.stats.npts-1))
+        self.assertEqual(tr.stats.processing,
+                         ["filter:lowpasscheby2:" +
+                          "{'freq': 0.25, 'maxorder': 12}",
+                          "resample:0:hanning"])
+
+        # downsample with custom window
+        tr = tr0.copy()
+        window = np.ones((tr.stats.npts))
+        tr.resample(0.5, window=window, no_filter=True)
+        self.assertEqual(tr.stats.processing,
+                         ["resample:0:" +
+                          "[ 1.  1.  1.  1.  1.  1.  1.  1.  1.  1.]"])
+
+        # downsample with bad window
+        tr = tr0.copy()
+        window = np.array([0, 1, 2, 3])
+        self.assertRaises(ValueError, tr.resample,
+                          sampling_rate=0.5, window=window, no_filter=True)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
