@@ -470,7 +470,10 @@ def configuration(parent_package="", top_path=None):
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
-    files = glob.glob(os.path.join(path, "evalresp", "*.c"))
+    if external_libs:
+        files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
+    else:
+        files = glob.glob(os.path.join(path, "evalresp", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -478,6 +481,8 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    if external_libs:
+        kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
