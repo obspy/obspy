@@ -383,6 +383,29 @@ def export_symbols(*path):
     return [s.strip() for s in lines if s.strip() != '']
 
 
+# adds --with-system-libs command-line option if possible
+def add_features():
+    if 'setuptools' not in sys.modules:
+        return {}
+
+    class ExternalLibFeature(setuptools.Feature):
+        def include_in(self, dist):
+            global external_libs
+            external_libs = True
+
+        def exclude_from(self, dist):
+            global external_libs
+            external_libs = False
+
+    return {
+        'system-libs': ExternalLibFeature(
+            'use of system C libraries',
+            standard=False,
+            external_libs=True
+        )
+    }
+
+
 def configuration(parent_package="", top_path=None):
     """
     Config function mainly used to compile C and Fortran code.
@@ -540,6 +563,7 @@ def setupPackage():
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
+        features=add_features(),
         # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"
                       "#egg=obspy=dev"),
