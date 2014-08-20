@@ -2197,8 +2197,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if npts is None:
             npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
                                   dt)) + 1
-        self.data = func(np.require(self.data, dtype=np.float64), old_start,
-                         old_dt, starttime, dt, npts, type=method)
+        self.data = np.atleast_1d(func(np.require(self.data, dtype=np.float64),
+                                       old_start, old_dt, starttime, dt, npts,
+                                       type=method))
         self.stats.starttime = UTCDateTime(starttime)
         self.stats.delta = dt
 
