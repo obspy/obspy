@@ -1574,7 +1574,7 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
-    def test_resample(self):
+    def test_resample_new(self):
         """
         Tests if Trace.resample works as expected and test that issue #857 is
         resolved.
