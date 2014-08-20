@@ -919,8 +919,13 @@ class QuakeMLTestCase(unittest.TestCase):
             # write file
             cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
             # check contents
-            with open(tmpfile, "r") as fh:
-                content = fh.read()
+            with open(tmpfile, "rb") as fh:
+                # enforce reproducable attribute orders through write_c14n
+                obj = etree.fromstring(fh.read()).getroottree()
+                buf = io.BytesIO()
+                obj.write_c14n(buf)
+                buf.seek(0, 0)
+                content = buf.read()
             # check namespace definitions in root element
             expected = ['<q:quakeml',
                         'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
