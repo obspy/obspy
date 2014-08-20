@@ -425,8 +425,9 @@ def configuration(parent_package="", top_path=None):
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
-    files = glob.glob(os.path.join(path, "libmseed", "*.c"))
-    files.append(os.path.join(path, "obspy-readbuffer.c"))
+    files = [os.path.join(path, "obspy-readbuffer.c")]
+    if not external_libs:
+        files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -440,6 +441,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
+    if external_libs:
+        kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
                          files, **kwargs)
 
