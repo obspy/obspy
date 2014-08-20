@@ -116,21 +116,21 @@ Modifications have been requested by IRIS DMC.
 
 These modifications include:
 
-(1)    Version  3.2.17  supports  IIR digital filters in coeffi­
-       cients format with a non-zero phase  shift.   IIR  coeffi­
+(1)    Version  3.2.17  supports  IIR digital filters in coeffi-
+       cients format with a non-zero phase  shift.   IIR  coeffi-
        cients  for a single stage must fit in a single blockette.
        The algorithm was adopted from the FORTRAN code provided by
        B. Hutt (hutt@asl.cr.usgs.gov).
 
-(2)     Version 3.2.17 and above supports generic response block­
+(2)     Version 3.2.17 and above supports generic response block-
        ette  (SEED blockettes 55).  Generic response blockette is
-       a list of phases and amplitudes computed  for  the  prese­
+       a list of phases and amplitudes computed  for  the  prese-
        lected  set  of frequencies. This filter type is supported
        only if the response input file contains  blockette(s)  55
        as a stage 1 and possibly channel sensitivity blockette as
        a stage 0.  If generic response blockette is recognized in
        the  input,  evalresp  ignores  the user-defined frequency
-       sampling from the command line. The ouput, therefore, con­
+       sampling from the command line. The ouput, therefore, con-
        tains responses for only those frequencies which have been 			
        defined in the generic response blockette.
 
