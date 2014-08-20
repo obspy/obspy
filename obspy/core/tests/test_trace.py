@@ -1902,7 +1902,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:0:hanning'])
 
         # upsample
         tr = tr0.copy()
@@ -1914,7 +1913,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:2:hanning'])
 
         # downsample with non integer ratio
         tr = tr0.copy()
@@ -1929,7 +1927,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:0:hanning'])
 
         # downsample without window
         tr = tr0.copy()
@@ -1941,7 +1938,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:0:None'])
 
         # downsample with window and automatic filtering
         tr = tr0.copy()
@@ -1953,18 +1949,11 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing,
-                         ["filter:lowpasscheby2:" +
-                          "{'freq': 0.25, 'maxorder': 12}",
-                          "resample:0:hanning"])
 
         # downsample with custom window
         tr = tr0.copy()
         window = np.ones((tr.stats.npts))
         tr.resample(0.5, window=window, no_filter=True)
-        self.assertEqual(tr.stats.processing,
-                         ["resample:0:" +
-                          "[ 1.  1.  1.  1.  1.  1.  1.  1.  1.  1.]"])
 
         # downsample with bad window
         tr = tr0.copy()

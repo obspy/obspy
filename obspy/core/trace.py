@@ -1539,7 +1539,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise ValueError(msg)
                 W = window
             else:
-                W = np.fft.ifftshift(get_window(window, self.stats.npts))
+                W = np.fft.ifftshift(get_window(native_str(window),
+                                                self.stats.npts))
             Xr *= W[:self.stats.npts//2+1]
             Xi *= W[:self.stats.npts//2+1]
 
@@ -1547,9 +1548,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         num = int(self.stats.npts / factor)
         df = 1.0 / (self.stats.npts * self.stats.delta)
         dF = 1.0 / num * sampling_rate
-        f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=int)
+        f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
         nF = num // 2 + 1
-        F = dF * np.arange(0, nF, dtype=int)
+        F = dF * np.arange(0, nF, dtype=np.int32)
         Y = np.zeros((2*nF))
         Y[::2] = np.interp(F, f, Xr)
         Y[1::2] = np.interp(F, f, Xi)
@@ -1560,9 +1561,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = irfft(Y) * (float(num) / float(self.stats.npts))
         self.stats.sampling_rate = sampling_rate
 
-        # add processing information to the stats dictionary
-        proc_info = "resample:%d:%s" % (sampling_rate, window)
-        self._addProcessingInfo(proc_info)
         return self
 
     @_add_processing_info
