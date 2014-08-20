@@ -1880,7 +1880,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertRaises(ValueError, tr.copy().interpolate,
                               sampling_rate=-1.0)
 
-    def test_resample(self):
+    def test_resample_new(self):
         """
         Tests if Trace.resample works as expected and test that issue #857 is
         resolved.
