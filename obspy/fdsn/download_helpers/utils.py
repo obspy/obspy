@@ -14,12 +14,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future import standard_library
 with standard_library.hooks():
+    import itertools
     from urllib.error import HTTPError, URLError
 
 import collections
 import copy
 import fnmatch
-import itertools
 import os
 from lxml import etree
 import numpy as np
@@ -28,7 +28,6 @@ from socket import timeout as SocketTimeout
 import tempfile
 import time
 from uuid import uuid4
-from urllib2 import HTTPError
 import obspy
 import warnings
 
@@ -93,6 +92,9 @@ class Station(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash(tuple(str(getattr(self, i)) for i in self.__slots__))
+
 
 class Channel(object):
     __slots__ = ["location", "channel", "mseed_filename"]
@@ -119,6 +121,9 @@ class Channel(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(tuple(getattr(self, i) for i in self.__slots__))
 
 
 def format_report(report):
@@ -269,7 +274,7 @@ def filter_stations_based_on_duplicate_id(existing_stations,
     existing_stations = [(_i.network, _i.station) for _i in existing_stations]
     invalid_station_ids = set(existing_stations).union(discarded_station_ids)
 
-    return list(itertools.ifilterfalse(
+    return list(itertools.filterfalse(
         lambda x: (x.network, x.station) in invalid_station_ids,
         new_stations))
 
@@ -656,10 +661,10 @@ def filter_stations(stations, minimum_distance_in_m):
         most_common = collections.Counter(
             itertools.chain.from_iterable(nns)).most_common()[0][0]
         indexes_to_remove.append(most_common)
-        nns = list(itertools.ifilterfalse(lambda x: most_common in x, nns))
+        nns = list(itertools.filterfalse(lambda x: most_common in x, nns))
 
     # Remove these indices.
-    return set([_i[1] for _i in itertools.ifilterfalse(
+    return set([_i[1] for _i in itertools.filterfalse(
                 lambda x: x[0] in indexes_to_remove,
                 enumerate(stations))])
 

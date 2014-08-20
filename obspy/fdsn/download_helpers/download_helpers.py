@@ -12,10 +12,12 @@ Download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
+with standard_library.hooks():
+    import itertools
 
 import copy
 import collections
-import itertools
 import logging
 import lxml.etree
 from multiprocessing.pool import ThreadPool
@@ -108,16 +110,16 @@ class DownloadHelper(object):
     """
     def __init__(self, providers=None):
         if providers is None:
-            providers = URL_MAPPINGS.keys()
+            providers = dict(URL_MAPPINGS.items())
             # In that case make sure IRIS is first, and ORFEUS second! The
             # remaining items will be sorted alphabetically.
             _p = []
             if "IRIS" in providers:
                 _p.append("IRIS")
-                providers.remove("IRIS")
+                del providers["IRIS"]
             if "ORFEUS" in providers:
                 _p.append("ORFEUS")
-                providers.remove("ORFEUS")
+                del providers["ORFEUS"]
             _p.extend(sorted(providers))
             providers = _p
 
