@@ -1057,31 +1057,34 @@ class Response(ComparingObject):
         output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
+        # Set global variables
         if self.resource_id:
-            clibevresp.curr_file = C.c_char_p(self.resource_id.encode('utf-8'))
+            clibevresp.curr_file.value = self.resource_id.encode('utf-8')
         else:
-            clibevresp.curr_file = C.c_char_p(None)
+            clibevresp.curr_file.value = None
 
-        rc = clibevresp._obspy_check_channel(C.pointer(chan))
-        if rc:
-            clibevresp.curr_file = C.c_char_p(None)
-            e, m = ew.ENUM_ERROR_CODES[rc]
-            raise e('check_channel: ' + m)
-        rc = clibevresp._obspy_norm_resp(C.pointer(chan), -1, 0)
-        if rc:
-            clibevresp.curr_file = C.c_char_p(None)
-            e, m = ew.ENUM_ERROR_CODES[rc]
-            raise e('norm_resp: ' + m)
-        rc = clibevresp._obspy_calc_resp(C.pointer(chan), freqs, len(freqs),
-                                         output, out_units, -1, 0, 0)
-        if rc:
-            clibevresp.curr_file = C.c_char_p(None)
-            e, m = ew.ENUM_ERROR_CODES[rc]
-            raise e('calc_resp: ' + m)
-        # XXX: Check if this is really not needed.
-        # output *= scale_factor[0]
+        try:
+            rc = clibevresp._obspy_check_channel(C.byref(chan))
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('check_channel: ' + m)
 
-        clibevresp.curr_file = C.c_char_p(None)
+            rc = clibevresp._obspy_norm_resp(C.byref(chan), -1, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('norm_resp: ' + m)
+
+            rc = clibevresp._obspy_calc_resp(C.byref(chan), freqs, len(freqs),
+                                             output, out_units, -1, 0, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('calc_resp: ' + m)
+
+            # XXX: Check if this is really not needed.
+            # output *= scale_factor[0]
+
+        finally:
+            clibevresp.curr_file.value = None
 
         return output, freqs
 

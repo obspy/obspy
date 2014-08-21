@@ -392,9 +392,11 @@ class InvSimTestCase(unittest.TestCase):
         filename = os.path.join(self.path, "segfaulting_RESPs",
                                 "RESP.IE.LLRI..EHZ")
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
-        self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
-                          filename=filename, date=date, station="LLRI",
-                          channel="EHZ", network="IE", locid="*", units="VEL")
+        with CatchOutput():
+            self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
+                              filename=filename, date=date, station="LLRI",
+                              channel="EHZ", network="IE", locid="*",
+                              units="VEL")
 
     def test_evalresp_seed_identifiers_work(self):
         """

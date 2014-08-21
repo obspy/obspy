@@ -399,8 +399,8 @@ def CatchOutput():
         out.stdout = ""
         out.stderr = ""
 
-        with os.fdopen(os.dup(sys.stdout.fileno()), "w") as old_stdout:
-            with os.fdopen(os.dup(sys.stderr.fileno()), "w") as old_stderr:
+        with os.fdopen(os.dup(sys.stdout.fileno()), "wb") as old_stdout:
+            with os.fdopen(os.dup(sys.stderr.fileno()), "wb") as old_stderr:
                 sys.stdout.flush()
                 sys.stderr.flush()
 
@@ -424,9 +424,9 @@ def CatchOutput():
                     os.dup2(old_stdout.fileno(), sys.stdout.fileno())
                     os.dup2(old_stderr.fileno(), sys.stderr.fileno())
 
-                    with open(stdout_filename, "r") as fh:
+                    with open(stdout_filename, "rb") as fh:
                         out.stdout = fh.read()
-                    with open(stderr_filename, "r") as fh:
+                    with open(stderr_filename, "rb") as fh:
                         out.stderr = fh.read()
 
     finally:

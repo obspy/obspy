@@ -25,6 +25,7 @@ import os
 import unittest
 from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
+from obspy.core.util.misc import CatchOutput
 import warnings
 
 # checking for matplotlib/basemap
@@ -156,9 +157,10 @@ class ResponseTest(unittest.TestCase):
         t_samp = 0.05
         nfft = 256
 
-        self.assertRaises(ValueError,
-                          inv[0][0][0].response.get_evalresp_response,
-                          t_samp, nfft, output="DISP")
+        with CatchOutput():
+            self.assertRaises(ValueError,
+                              inv[0][0][0].response.get_evalresp_response,
+                              t_samp, nfft, output="DISP")
 
 
 def suite():
