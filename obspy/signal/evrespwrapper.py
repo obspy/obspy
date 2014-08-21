@@ -218,6 +218,9 @@ channel._fields_ = [
 ]
 
 
+clibevresp.curr_file = C.c_char_p.in_dll(clibevresp, 'curr_file')
+
+
 # int _obspy_calc_resp(struct channel *chan, double *freq, int nfreqs,
 #                      struct complex *output,
 #                      char *out_units, int start_stage, int stop_stage,
