@@ -12,7 +12,7 @@
 #include <memory.h>
 #include <float.h>
 
-void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat2, int *shift, double* coe_p)
+int X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat2, int *shift, double* coe_p)
 {
     int a, b;
     int len;
@@ -31,14 +31,13 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
     tra1 = (float *)calloc(ndat1, sizeof(float));
     if (tra1 == NULL) 
     {
-        fprintf(stderr,"\nMemory allocation error!\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
     tra2 = (float *)calloc(ndat2, sizeof(float));
     if (tra2 == NULL) 
     {
-        fprintf(stderr,"\nMemory allocation error!\n");
-        exit(EXIT_FAILURE);
+        free(tra1);
+        return 2;
     }
 
     /* Determing the maximum 'usable' window */
@@ -171,4 +170,5 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
     }  /* else */
     free(tra1);
     free(tra2);
+    return 0;
 }

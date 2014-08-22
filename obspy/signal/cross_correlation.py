@@ -104,8 +104,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     shift = C.c_int()
     coe_p = C.c_double()
 
-    clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
-                      C.byref(shift), C.byref(coe_p))
+    res = clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
+                            C.byref(shift), C.byref(coe_p))
+    if res:
+        raise MemoryError
 
     if full_xcorr:
         return shift.value, coe_p.value, corp
