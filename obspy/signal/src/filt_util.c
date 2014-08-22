@@ -398,18 +398,18 @@ int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef
 
     extra_tr1 = (float *) calloc(n, sizeof(float));// allocate extra_tr1
     if (extra_tr1 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (extra_tr1)!\n");
-        exit(EXIT_FAILURE);
+        return 13;
     }
     extra_tr2 = (float *) calloc(n, sizeof(float));// allocate extra_tr2
     if (extra_tr2 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (extra_tr2)!\n");
-        exit(EXIT_FAILURE);
+        free(extra_tr1);
+        return 14;
     }
     extra_tr3 = (float *) calloc(m, sizeof(float));// allocate extra_tr3
     if (extra_tr3 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (extra_tr3)!\n");
-        exit(EXIT_FAILURE);
+        free(extra_tr1);
+        free(extra_tr2);
+        return 15;
     }
 
     // calculating mean square
@@ -447,7 +447,7 @@ int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef
             free(extra_tr1);
             free(extra_tr2);
             free(extra_tr3);
-            return(0);
+            return 0;
         }
         for (i=1;i<=k;i++) {
             extra_tr3[i] = coef[i];
@@ -461,5 +461,5 @@ int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef
     free(extra_tr1);
     free(extra_tr2);
     free(extra_tr3);
-    return(1);
+    return -1;
 }

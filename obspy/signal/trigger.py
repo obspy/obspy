@@ -448,7 +448,12 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             C.byref(stime), l_p, l_s, s_pick)
     errcode = clibsignal.ar_picker(a, b, c, *args)
     if errcode != 0:
-        raise Exception("Error in function ar_picker of arpicker.c")
+        BUFS = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
+                'f_error', 'b_error', 'ar_f', 'ar_b', 'buf_sta', 'buf_lta',
+                'extra_tr1', 'extra_tr2', 'extra_tr3']
+        if errcode <= len(BUFS):
+            raise MemoryError('Unable to allocate %s!' % (BUFS[errcode - 1]))
+        raise Exception('Error during PAZ calculation!')
     return ptime.value, stime.value
 
 

@@ -35,11 +35,11 @@ static float calc_aic(double f_err, double b_err) {
 
 int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, float f1, float f2, float lta_p, float sta_p, float lta_s, float sta_s, int m1_p, int m1_s, float *ptime, float *stime, double l_p, double l_s, int s_pick)
 {
-    float *buff1,*buff2,*buff3,*buff4; 
-    float *buff1_s,*buff4_s;
-    float *f_error,*b_error;
-    float *buf_sta,*buf_lta;
-    float *ar_f,*ar_b;
+    float *buff1=NULL,*buff2=NULL,*buff3=NULL,*buff4=NULL;
+    float *buff1_s=NULL,*buff4_s=NULL;
+    float *f_error=NULL,*b_error=NULL;
+    float *buf_sta=NULL,*buf_lta=NULL;
+    float *ar_f=NULL,*ar_b=NULL;
     float env_max;
     float f,b,lta_max,stlt;
     float u;
@@ -54,57 +54,62 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     int trace_flag=0;
     int errcode = 0;
 
+#define EXIT(code) \
+    free(buff1); \
+    free(buff1_s); \
+    free(buff2); \
+    free(buff3); \
+    free(buff4); \
+    free(buff4_s); \
+    free(f_error); \
+    free(b_error); \
+    free(ar_f); \
+    free(ar_b); \
+    free(buf_sta); \
+    free(buf_lta); \
+    return code;
+
     *ptime = 0.0f;
     *stime = 0.0f;
     buff1 = (float *)calloc(ndat,sizeof(float));
     if (buff1 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buff1)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(1);
     }
     buff1_s = (float *)calloc(ndat,sizeof(float));
     if (buff1_s == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buff1_s)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(2);
     }
     buff2 = (float *)calloc(ndat,sizeof(float));
     if (buff2 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buff2)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(3);
     }
     buff3 = (float *)calloc(ndat,sizeof(float));
     if (buff3 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buff3)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(4);
     }
     buff4 = (float *)calloc(ndat,sizeof(float));
     if (buff4 == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buff4)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(5);
     }
     buff4_s = (float *)calloc(ndat,sizeof(float));
     if (buff4_s == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buff4_s)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(6);
     }
     f_error = (float *)calloc(ndat,sizeof(float));
     if (f_error == NULL) {
-        fprintf(stderr,"\nMemory allocation error (f_error)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(7);
     }
     b_error = (float *)calloc(ndat,sizeof(float));
     if (b_error == NULL) {
-        fprintf(stderr,"\nMemory allocation error (b_error)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(8);
     }
     ar_f = (float *)calloc(ndat/2,sizeof(float));
     if (ar_f == NULL) {
-        fprintf(stderr,"\nMemory allocation error (ar_f)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(9);
     }
     ar_b = (float *)calloc(ndat/2,sizeof(float));
     if (ar_b == NULL) {
-        fprintf(stderr,"\nMemory allocation error (ar_b)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(10);
     }
     memcpy(buff1,tr,ndat*sizeof(float));
     memcpy(buff1_s,tr_1,ndat*sizeof(float));
@@ -171,13 +176,11 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     stlt = 0.;
     buf_sta = (float *)calloc(ndat,sizeof(float));
     if (buf_sta == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buf_sta)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(11);
     }
     buf_lta = (float *)calloc(ndat,sizeof(float));
     if (buf_lta == NULL) {
-        fprintf(stderr,"\nMemory allocation error (buf_lta)!\n");
-        exit(EXIT_FAILURE);
+        EXIT(12);
     }
 
     for(i=0;i<(i1-nlta);i++){
@@ -210,11 +213,13 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         buff2[i2+nl_p-i-1] = buff1[i];
     }
 
-    errcode  = spr_coef_paz(buff1-1,nl_p,m1_p,&pm,ar_f-1);
-    errcode += spr_coef_paz(buff2-1,nl_p,m1_p,&pm,ar_b-1);
+    errcode = spr_coef_paz(buff1-1,nl_p,m1_p,&pm,ar_f-1);
     if (errcode != 0) {
-        fprintf(stderr,"\nError during PAZ calculation!\n");
-        exit(EXIT_FAILURE);
+        EXIT(errcode);
+    }
+    errcode = spr_coef_paz(buff2-1,nl_p,m1_p,&pm,ar_b-1);
+    if (errcode != 0) {
+        EXIT(errcode);
     }
 
     //estimating the Forward-BackwardAIC 
@@ -267,11 +272,13 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         buff2[n32-i-1] = buff1[i];
     }
 
-    errcode  = spr_coef_paz(buff1-1,nl_p,m1_p,&pm,ar_f-1);
-    errcode += spr_coef_paz(buff2-1,nl_p,m1_p,&pm,ar_b-1);
+    errcode = spr_coef_paz(buff1-1,nl_p,m1_p,&pm,ar_f-1);
     if (errcode != 0) {
-        fprintf(stderr,"\nError during PAZ calculation!\n");
-        exit(EXIT_FAILURE);
+        EXIT(errcode);
+    }
+    errcode = spr_coef_paz(buff2-1,nl_p,m1_p,&pm,ar_b-1);
+    if (errcode != 0) {
+        EXIT(errcode);
     }
 
     //estimating the Forward-AIC 
@@ -380,11 +387,13 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 buff2[n65-i-1] = buff1[i];
             }
 
-            errcode  = spr_coef_paz(buff1_s-1,nl_s,m1_s,&pm,ar_f-1);
-            errcode += spr_coef_paz(buff2-1,nl_s,m1_s,&pm,ar_b-1);
+            errcode = spr_coef_paz(buff1_s-1,nl_s,m1_s,&pm,ar_f-1);
             if (errcode != 0) {
-                fprintf(stderr,"\nError during PAZ calculation!\n");
-                exit(EXIT_FAILURE);
+                EXIT(errcode);
+            }
+            errcode = spr_coef_paz(buff2-1,nl_s,m1_s,&pm,ar_b-1);
+            if (errcode != 0) {
+                EXIT(errcode);
             }
 
             //estimating the Forward-AIC 
@@ -428,20 +437,6 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             *stime = 0.0f;
     }
 
-
-    //we free all
-    free(buff1);
-    free(buff2);
-    free(buff3);
-    free(buff4);
-    free(buff1_s);
-    free(buff4_s);
-    free(f_error);
-    free(b_error);
-    free(buf_sta);
-    free(buf_lta);
-    free(ar_f);
-    free(ar_b);
-
-    return(0);
+    EXIT(0);
 }
+#undef EXIT
