@@ -128,8 +128,7 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
 
       trace = (int *)calloc(npts+1,sizeof(int));
       if (trace == NULL) {
-          fprintf(stderr,"\nMemory allocation error!\n");
-          exit(EXIT_FAILURE);
+          return -1;
       }
 
       max = min = reltrc[1];
@@ -233,7 +232,7 @@ label160:
 
         *pptime = ptime;
         free(trace);
-        return(0);
+        return 0;
 
       }
 
@@ -377,7 +376,7 @@ label160:
 
                         *pptime = ptime;
                         free(trace);
-                        return(0);
+                        return 0;
 
                      }
                      /* don't overwrite  already existing phases */

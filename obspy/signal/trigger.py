@@ -408,7 +408,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
     errcode = clibsignal.ppick(reltrc, *args)
     if errcode != 0:
-        raise Exception("Error in function ppick of mk_mbaer.c")
+        raise MemoryError("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
     # pfm has to be decoded from byte to string
     return pptime.value + 1, pfm.value.decode('utf-8')
