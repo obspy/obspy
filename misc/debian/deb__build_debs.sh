@@ -54,7 +54,7 @@ git clean -fxd
 # first of all selectively use debian build instructions for either
 # buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
 # (newer Debuntu releases)
-if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "lucid" ] || [ "$CODENAME" == "precise" ] || [ "$CODENAME" == "quantal" ] || [ "$CODENAME" == "raring" ]
+if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "lucid" ] || [ "$CODENAME" == "precise" ]
 then
     mv debian.python_distutils debian
 else
