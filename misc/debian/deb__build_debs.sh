@@ -56,9 +56,9 @@ git clean -fxd
 # (newer Debuntu releases)
 if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "lucid" ] || [ "$CODENAME" == "precise" ] || [ "$CODENAME" == "quantal" ] || [ "$CODENAME" == "raring" ]
 then
-    ln -s debian.python_distutils debian
+    mv debian.python_distutils debian
 else
-    ln -s debian.pybuild debian
+    mv debian.pybuild debian
 fi
 # remove dependencies of distribute for obspy.core
 # distribute is not packed for python2.5 in Debian

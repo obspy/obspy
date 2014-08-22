@@ -29,6 +29,15 @@ echo '#############'
 echo "#### `date`"
 
 git clone git://github.com/obspy/obspy.git $GITDIR
+if [ "$GITFORK" != "obspy" ]
+then
+    git remote add upstream git://github.com/obspy/obspy.git
+    git fetch upstream
+fi
+git clean -fxd
+git checkout -- .
+git checkout $GITTARGET
+git clean -fxd
 
 for DIST in squeeze wheezy lucid precise quantal raring saucy trusty; do
     for ARCH in i386 amd64; do
