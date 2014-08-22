@@ -371,7 +371,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
                 continue
             of.appendleft(on[0] + max_len)
         pick.append([on[0], of[0]])
-    return np.array(pick)
+    return np.array(pick, dtype=np.int64)
 
 
 def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
@@ -625,7 +625,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             continue
         if trigger_type is not None:
             tr.trigger(trigger_type, **options)
-        kwargs['max_len'] = max_trigger_length * tr.stats.sampling_rate
+        kwargs['max_len'] = int(max_trigger_length * tr.stats.sampling_rate
+                                + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
             cft_peak = tr.data[on:off].max()
