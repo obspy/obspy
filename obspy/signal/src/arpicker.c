@@ -56,99 +56,99 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
 
     *ptime = 0.0f;
     *stime = 0.0f;
-    buff1 = (float *)calloc((size_t) ndat,sizeof(float));
+    buff1 = (float *)calloc(ndat,sizeof(float));
     if (buff1 == NULL) {
         fprintf(stderr,"\nMemory allocation error (buff1)!\n");
         exit(EXIT_FAILURE);
     }
-    buff1_s = (float *)calloc((size_t) ndat,sizeof(float));
+    buff1_s = (float *)calloc(ndat,sizeof(float));
     if (buff1_s == NULL) {
         fprintf(stderr,"\nMemory allocation error (buff1_s)!\n");
         exit(EXIT_FAILURE);
     }
-    buff2 = (float *)calloc((size_t) ndat,sizeof(float));
+    buff2 = (float *)calloc(ndat,sizeof(float));
     if (buff2 == NULL) {
         fprintf(stderr,"\nMemory allocation error (buff2)!\n");
         exit(EXIT_FAILURE);
     }
-    buff3 = (float *)calloc((size_t) ndat,sizeof(float));
+    buff3 = (float *)calloc(ndat,sizeof(float));
     if (buff3 == NULL) {
         fprintf(stderr,"\nMemory allocation error (buff3)!\n");
         exit(EXIT_FAILURE);
     }
-    buff4 = (float *)calloc((size_t) ndat,sizeof(float));
+    buff4 = (float *)calloc(ndat,sizeof(float));
     if (buff4 == NULL) {
         fprintf(stderr,"\nMemory allocation error (buff4)!\n");
         exit(EXIT_FAILURE);
     }
-    buff4_s = (float *)calloc((size_t) ndat,sizeof(float));
+    buff4_s = (float *)calloc(ndat,sizeof(float));
     if (buff4_s == NULL) {
         fprintf(stderr,"\nMemory allocation error (buff4_s)!\n");
         exit(EXIT_FAILURE);
     }
-    f_error = (float *)calloc((size_t) ndat,sizeof(float));
+    f_error = (float *)calloc(ndat,sizeof(float));
     if (f_error == NULL) {
         fprintf(stderr,"\nMemory allocation error (f_error)!\n");
         exit(EXIT_FAILURE);
     }
-    b_error = (float *)calloc((size_t) ndat,sizeof(float));
+    b_error = (float *)calloc(ndat,sizeof(float));
     if (b_error == NULL) {
         fprintf(stderr,"\nMemory allocation error (b_error)!\n");
         exit(EXIT_FAILURE);
     }
-    ar_f = (float *)calloc((size_t) (ndat/2),sizeof(float));
+    ar_f = (float *)calloc(ndat/2,sizeof(float));
     if (ar_f == NULL) {
         fprintf(stderr,"\nMemory allocation error (ar_f)!\n");
         exit(EXIT_FAILURE);
     }
-    ar_b = (float *)calloc((size_t) (ndat/2),sizeof(float));
+    ar_b = (float *)calloc(ndat/2,sizeof(float));
     if (ar_b == NULL) {
         fprintf(stderr,"\nMemory allocation error (ar_b)!\n");
         exit(EXIT_FAILURE);
     }
-    memcpy((void *)buff1,(void *)tr,ndat*sizeof(float));
-    memcpy((void *)buff1_s,(void *)tr_1,ndat*sizeof(float));
-    memcpy((void *)buff4_s,(void *)tr_2,ndat*sizeof(float));
+    memcpy(buff1,tr,ndat*sizeof(float));
+    memcpy(buff1_s,tr_1,ndat*sizeof(float));
+    memcpy(buff4_s,tr_2,ndat*sizeof(float));
 
     // we follow the recipes of Akazawa and Leonardt & Kennet
 
     // first we apply a bandpassfilter for lta sta trigger of p wave
     spr_bp_fast_bworth(buff1,ndat,1/sample_rate,f1,f2,2,1);
-    memcpy((void *)buff4,(void *)buff1,ndat*sizeof(float));
+    memcpy(buff4,buff1,ndat*sizeof(float));
 
     spr_bp_fast_bworth(buff1_s,ndat,1/sample_rate,f1,f2,2,1);
     spr_bp_fast_bworth(buff4_s,ndat,1/sample_rate,f1,f2,2,1);
     // estimate which of the horizontals has the maximum
     buff4_max = 0.0;
     for(i=0;i<ndat;i++){
-        if(fabs(buff1_s[i]) > buff4_max){
-            buff4_max = (float) fabs(buff1_s[i]);
+        if(fabsf(buff1_s[i]) > buff4_max){
+            buff4_max = fabsf(buff1_s[i]);
             trace_flag = 1;
         }
-        if(fabs(buff4_s[i]) > buff4_max){
-            buff4_max = (float) fabs(buff4_s[i]);
+        if(fabsf(buff4_s[i]) > buff4_max){
+            buff4_max = fabsf(buff4_s[i]);
             trace_flag = 2;
         }
     }
 
     if (trace_flag == 2){
-        memcpy((void *)buff1_s,(void *)buff4_s,ndat*sizeof(float));
+        memcpy(buff1_s,buff4_s,ndat*sizeof(float));
     }else{
-        memcpy((void *)buff4_s,(void *)buff1_s,ndat*sizeof(float));
+        memcpy(buff4_s,buff1_s,ndat*sizeof(float));
     }
 
 
     // estimate the maximum of the trace
     buff4_max = 0.0;
     for(i=0;i<ndat;i++){
-        if(fabs(buff4[i]) > buff4_max)
-            buff4_max = (float) fabs(buff4[i]);
+        if(fabsf(buff4[i]) > buff4_max)
+            buff4_max = fabsf(buff4[i]);
     }
 
     // next cummulative envelope function
     env_max = 0.0;
     for(i=0;i<ndat;i++){
-        buff2[i] = (float)fabs(buff4[i])/buff4_max - buff4[i]*buff4[i]/(buff4_max*buff4_max);
+        buff2[i] = fabsf(buff4[i])/buff4_max - buff4[i]*buff4[i]/(buff4_max*buff4_max);
         if(i == 0){
             buff3[0] = buff2[i];
         }else{
@@ -169,12 +169,12 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     nsta = (int)(sta_p*sample_rate);
     nlta = (int)(lta_p*sample_rate);
     stlt = 0.;
-    buf_sta = (float *)calloc((size_t) ndat,sizeof(float));
+    buf_sta = (float *)calloc(ndat,sizeof(float));
     if (buf_sta == NULL) {
         fprintf(stderr,"\nMemory allocation error (buf_sta)!\n");
         exit(EXIT_FAILURE);
     }
-    buf_lta = (float *)calloc((size_t) ndat,sizeof(float));
+    buf_lta = (float *)calloc(ndat,sizeof(float));
     if (buf_lta == NULL) {
         fprintf(stderr,"\nMemory allocation error (buf_lta)!\n");
         exit(EXIT_FAILURE);
@@ -323,10 +323,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         stlt = 0.;
         for(i=0;i<(ndat-nlta);i++){
             for(j=(i+nlta-nsta);j<(i+nlta);j++){
-                buf_sta[i+nlta] += (float)fabs(buff4_s[j])/(float)nsta;
+                buf_sta[i+nlta] += fabsf(buff4_s[j])/(float)nsta;
             }
             for(j=(i);j<(i+nlta);j++){
-                buf_lta[i+nlta] += (float)fabs(buff4_s[j])/(float)nlta;
+                buf_lta[i+nlta] += fabsf(buff4_s[j])/(float)nlta;
             }
         }
 
@@ -351,10 +351,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         memset(buf_lta,0,ndat*sizeof(float));
         for(i=(ndat-nlta-1);i>nlta;i--){
             for(j=(i+nsta-1);j>=(i);j--){
-                buf_sta[i] += (float)fabs(buff4[j])/(float)nsta;
+                buf_sta[i] += fabsf(buff4[j])/(float)nsta;
             }
             for(j=(i+nlta-1);j>=(i);j--){
-                buf_lta[i] += (float)fabs(buff4[j])/(float)nlta;
+                buf_lta[i] += fabsf(buff4[j])/(float)nlta;
             }
         }
         lta_max = 0.;
@@ -430,18 +430,18 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
 
 
     //we free all
-    free((void *)buff1);
-    free((void *)buff2);
-    free((void *)buff3);
-    free((void *)buff4);
-    free((void *)buff1_s);
-    free((void *)buff4_s);
-    free((void *)f_error);
-    free((void *)b_error);
-    free((void *)buf_sta);
-    free((void *)buf_lta);
-    free((void *)ar_f);
-    free((void *)ar_b);
+    free(buff1);
+    free(buff2);
+    free(buff3);
+    free(buff4);
+    free(buff1_s);
+    free(buff4_s);
+    free(f_error);
+    free(b_error);
+    free(buf_sta);
+    free(buf_lta);
+    free(ar_f);
+    free(ar_b);
 
     return(0);
 }

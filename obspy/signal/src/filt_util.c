@@ -348,13 +348,13 @@ void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
 
     /* Applying Integer Decimation with decimation ratio dec_ratio */
 
-    max = (float) fabs(tr1[0]);
+    max = fabsf(tr1[0]);
     max_pos = 0;
 
     for (j = 0; j < ndat;j++)
     {
-        if(fabs(tr1[j]) > max){
-            max = (float) fabs(tr1[j]);
+        if(fabsf(tr1[j]) > max){
+            max = fabsf(tr1[j]);
             max_pos = j;
         }
     }
@@ -362,7 +362,7 @@ void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
        position of the maximum */
     if (pos >= 0) max_pos = pos;  
   
-    x  = (float *)calloc((size_t) (ndat2+1),sizeof(double));
+    x  = (float *)calloc(ndat2+1,sizeof(float));
     if (x == NULL) {
         fprintf(stderr,"\nMemory allocation error (x)!\n");
         exit(EXIT_FAILURE);
@@ -382,7 +382,7 @@ void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
         tr1[j] = 0.0;
     for (j = 0; j < ndat2;j++)
         tr1[j] = x[j];
-    free((void *)x);
+    free(x);
    
 }
 
@@ -396,17 +396,17 @@ int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef
     float num;
     float denom;
 
-    extra_tr1 = (float *) calloc ((size_t) n, sizeof(float));// allocate extra_tr1
+    extra_tr1 = (float *) calloc(n, sizeof(float));// allocate extra_tr1
     if (extra_tr1 == NULL) {
         fprintf(stderr,"\nMemory allocation error (extra_tr1)!\n");
         exit(EXIT_FAILURE);
     }
-    extra_tr2 = (float *) calloc ((size_t) n, sizeof(float));// allocate extra_tr2
+    extra_tr2 = (float *) calloc(n, sizeof(float));// allocate extra_tr2
     if (extra_tr2 == NULL) {
         fprintf(stderr,"\nMemory allocation error (extra_tr2)!\n");
         exit(EXIT_FAILURE);
     }
-    extra_tr3 = (float *) calloc ((size_t) m, sizeof(float));// allocate extra_tr3
+    extra_tr3 = (float *) calloc(m, sizeof(float));// allocate extra_tr3
     if (extra_tr3 == NULL) {
         fprintf(stderr,"\nMemory allocation error (extra_tr3)!\n");
         exit(EXIT_FAILURE);
@@ -444,9 +444,9 @@ int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef
             }
         }
         if (k == m) {
-            free( (void*) extra_tr1);
-            free( (void*) extra_tr2);
-            free( (void*) extra_tr3);
+            free(extra_tr1);
+            free(extra_tr2);
+            free(extra_tr3);
             return(0);
         }
         for (i=1;i<=k;i++) {
@@ -458,8 +458,8 @@ int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef
         }
     }
     // we should never reach this point
-    free( (void*) extra_tr1);
-    free( (void*) extra_tr2);
-    free( (void*) extra_tr3);
+    free(extra_tr1);
+    free(extra_tr2);
+    free(extra_tr3);
     return(1);
 }

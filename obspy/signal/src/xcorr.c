@@ -28,13 +28,13 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
     int max=0;
     int eff_lag;
 
-    tra1 = (float *)calloc((size_t) ndat1, sizeof(float));
+    tra1 = (float *)calloc(ndat1, sizeof(float));
     if (tra1 == NULL) 
     {
         fprintf(stderr,"\nMemory allocation error!\n");
         exit(EXIT_FAILURE);
     }
-    tra2 = (float *)calloc((size_t) ndat2, sizeof(float));
+    tra2 = (float *)calloc(ndat2, sizeof(float));
     if (tra2 == NULL) 
     {
         fprintf(stderr,"\nMemory allocation error!\n");
@@ -169,6 +169,6 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
             *coe_p = 0.0;
         }
     }  /* else */
-    free((char *)tra1);
-    free((char *)tra2);
+    free(tra1);
+    free(tra2);
 }

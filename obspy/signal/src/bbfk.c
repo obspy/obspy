@@ -70,7 +70,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     double *p_n;
 
     /* we allocate the taper buffer, size nsamp! */
-    p_n = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
+    p_n = (double *) calloc(grdpts_x * grdpts_y, sizeof(double));
     if (p_n == NULL ) {
         return 1;
     }
@@ -124,7 +124,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     }
 
 
-    free((void *) p_n);
+    free(p_n);
 
     return 0;
 }
