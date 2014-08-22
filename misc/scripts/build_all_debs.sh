@@ -34,6 +34,7 @@ then
     git remote add upstream git://github.com/obspy/obspy.git
     git fetch upstream
 fi
+cd $GITDIR
 git clean -fxd
 git checkout -- .
 git checkout $GITTARGET

@@ -87,7 +87,7 @@ VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}
 # dch --newversion ${VERSION}-$DEBVERSION "New release" 
 # just write a changelog template with only updated version info
 cat > debian/changelog << EOF
-obspy (${VERSION_COMPLETE}) unstable; urgency=low
+python-obspy (${VERSION_COMPLETE}) unstable; urgency=low
 
 EOF
 sed "s/^/  /" CHANGELOG.txt >> debian/changelog

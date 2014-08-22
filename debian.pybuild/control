@@ -1,4 +1,4 @@
-Source: obspy
+Source: python-obspy
 Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
