@@ -51,6 +51,15 @@ git clean -fxd
 git checkout -- .
 git checkout $GITTARGET
 git clean -fxd
+# first of all selectively use debian build instructions for either
+# buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
+# (newer Debuntu releases)
+if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "lucid" ] || [ "$CODENAME" == "precise" ] || [ "$CODENAME" == "quantal" ] || [ "$CODENAME" == "raring" ]
+then
+    ln -s debian.python_distutils debian
+else
+    ln -s debian.pybuild debian
+fi
 # remove dependencies of distribute for obspy.core
 # distribute is not packed for python2.5 in Debian
 # Note: the space before distribute is essential
@@ -91,6 +100,7 @@ if [ $CODENAME = "lucid" ]
     then
     ex ./debian/rules << EOL
 %s/--with=python2,python3/ /g
+%s/--with=python2/ /g
 g/dh_numpy/d
 g/dh_numpy3/d
 wq
@@ -110,7 +120,7 @@ export LDFLAGS="$LDFLAGS -shared -z relro -z now"  # needed for gfortran
 fakeroot ./debian/rules clean build binary
 # generate changes file
 DEBARCH=`dpkg-architecture -qDEB_HOST_ARCH`
-dpkg-genchanges -b > ../python-obspy_${VERSION_COMPLETE}_${DEBARCH}.changes
+dpkg-genchanges -b > ../obspy_${VERSION_COMPLETE}_${DEBARCH}.changes
 # move deb and changes files
 mv ../*.deb ../*.changes $PACKAGEDIR/
 
