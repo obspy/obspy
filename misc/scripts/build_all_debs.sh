@@ -40,7 +40,7 @@ git checkout -- .
 git checkout $GITTARGET
 git clean -fxd
 
-for DIST in squeeze wheezy lucid precise trusty; do
+for DIST in squeeze wheezy precise trusty; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
         echo "#### $DISTARCH"

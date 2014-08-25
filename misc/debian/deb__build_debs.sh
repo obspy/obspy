@@ -54,10 +54,14 @@ git clean -fxd
 # first of all selectively use debian build instructions for either
 # buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
 # (newer Debuntu releases)
-if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "lucid" ] || [ "$CODENAME" == "precise" ]
+if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
 then
+    # old build style, python2 only
     mv debian.python_distutils debian
 else
+    # new build style, python2 and python3
+    # Ubuntu: trusty and higher
+    # Debian: jessie and higher
     mv debian.pybuild debian
 fi
 # remove dependencies of distribute for obspy.core
@@ -95,22 +99,8 @@ cat >> debian/changelog << EOF
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
-# dh doesn't know option python2 in lucid
-if [ $CODENAME = "lucid" ]
-    then
-    ex ./debian/rules << EOL
-%s/--with=python2,python3/ /g
-%s/--with=python2/ /g
-g/dh_numpy/d
-g/dh_numpy3/d
-wq
-EOL
-fi
 # adjust dh compatibility for older dh versions
-if [ $CODENAME = "lucid" ]
-    then
-    echo "7" > ./debian/compat
-elif [ $CODENAME = "squeeze" ]
+if [ $CODENAME = "squeeze" ]
     then
     echo "8" > ./debian/compat
 fi
