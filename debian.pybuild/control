@@ -16,7 +16,7 @@ Package: python-obspy
 Architecture: any
 Section: python
 Priority: extra
-Depends: python (>= 2.6), python (<< 3), ${python:Depends},
+Depends: python (>= 2.6), ${python:Depends},
  python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
  python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
  python-suds (>= 0.4), ${shlibs:Depends}, python-tornado,
@@ -74,7 +74,7 @@ Package: python-obspy-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: python (>= 2.6), python (<< 3), ${python:Depends},
+Depends: python (>= 2.6), ${python:Depends},
  python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
  python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
  python-suds (>= 0.4), ${shlibs:Depends}, python-tornado,
