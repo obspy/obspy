@@ -55,7 +55,7 @@ Priority: extra
 Depends: python3 (>= 3.2), ${python3:Depends},
  python3-numpy (>= 1:1.1), python3-setuptools (>= 0.6), python3-lxml (>= 2.1),
  python3-matplotlib (>= 0.98.1), python3-scipy, python3-sqlalchemy,
- ${shlibs:Depends}, python3-tornado, python-future (>= 0.12.4)
+ ${shlibs:Depends}, python3-tornado, python3-future (>= 0.12.4)
 Recommends: python3-mpltoolkits.basemap, python3-geographiclib,
  python3-imaging
 Suggests: python3-pyproj, ipython3, ipython3-notebook
@@ -100,7 +100,7 @@ Priority: extra
 Depends: python3 (>= 3.2), ${python3:Depends},
  python3-numpy (>= 1:1.1), python3-setuptools (>= 0.6), python3-lxml (>= 2.1),
  python3-matplotlib (>= 0.98.1), python3-scipy, python3-sqlalchemy,
- ${shlibs:Depends}, python3-tornado, python-future (>= 0.12.4),
+ ${shlibs:Depends}, python3-tornado, python3-future (>= 0.12.4),
  python3-obspy (= ${binary:Version})
 Recommends: python3-nose, python3-flake8, python3-mock
 Description: ObsPy: A Python Toolbox for seismology (test suite)
