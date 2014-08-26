@@ -466,5 +466,31 @@ class ComparingObject(object):
         return not self.__eq__(other)
 
 
+def _DeprecatedArgumentAction(old_name, new_name, real_action='store'):
+    """
+    Specifies deprecated command-line arguments to scripts
+    """
+    message = '%s has been deprecated. Please use %s in the future.' % (
+        old_name, new_name
+    )
+
+    from argparse import Action
+
+    class _Action(Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            import warnings
+            warnings.warn(message)
+
+            # I wish there were an easier way...
+            if real_action == 'store':
+                setattr(namespace, self.dest, values)
+            elif real_action == 'store_true':
+                setattr(namespace, self.dest, True)
+            elif real_action == 'store_false':
+                setattr(namespace, self.dest, False)
+
+    return _Action
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

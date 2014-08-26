@@ -89,7 +89,7 @@ from future.utils import native_str
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
-from optparse import OptionParser, OptionGroup
+from argparse import ArgumentParser
 import types
 import copy
 import doctest
@@ -560,7 +560,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         return errors
 
 
-def run(interactive=True):
+def run(argv=None, interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
@@ -569,91 +569,83 @@ def run(interactive=True):
     except:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
-    usage = "USAGE: %prog [options] module1 module2 ...\n\n"
-    parser = OptionParser(usage.strip())
-    parser.add_option("-v", "--verbose", default=False,
-                      action="store_true", dest="verbose",
-                      help="verbose mode")
-    parser.add_option("-q", "--quiet", default=False,
-                      action="store_true", dest="quiet",
-                      help="quiet mode")
+
+    parser = ArgumentParser(prog='obspy-runtests',
+                            description='A command-line program that runs all '
+                                        'ObsPy tests.')
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + get_git_version())
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbose mode')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='quiet mode')
+
     # filter options
-    filter = OptionGroup(
-        parser, "Module Filter", "Providing no modules " +
-        "will test all ObsPy modules which don't require a " +
-        "active network connection.")
-    filter.add_option("--all", default=False,
-                      action="store_true", dest="all",
-                      help="test all modules (including network modules)")
-    filter.add_option("-x", "--exclude",
-                      action="append", type="str", dest="module",
-                      help="exclude given module from test")
-    parser.add_option_group(filter)
+    filter = parser.add_argument_group('Module Filter',
+                                       'Providing no modules will test all '
+                                       'ObsPy modules which do not require an '
+                                       'active network connection.')
+    filter.add_argument('-a', '--all', action='store_true',
+                        help='test all modules (including network modules)')
+    filter.add_argument('-x', '--exclude', action='append',
+                        help='exclude given module from test')
+    filter.add_argument('tests', nargs='*',
+                        help='test modules to run')
+
     # timing / profile options
-    timing = OptionGroup(parser, "Timing/Profile Options")
-    timing.add_option("-t", "--timeit", default=False,
-                      action="store_true", dest="timeit",
-                      help="shows accumulated run times of each module")
-    timing.add_option("-s", "--slowest", default=0,
-                      type='int', dest="n",
-                      help="lists n slowest test cases")
-    timing.add_option("-p", "--profile", default=False,
-                      action="store_true", dest="profile",
-                      help="uses cProfile, saves the results to file " +
-                           "obspy.pstats and prints some profiling numbers")
-    parser.add_option_group(timing)
+    timing = parser.add_argument_group('Timing/Profile Options')
+    timing.add_argument('-t', '--timeit', action='store_true',
+                        help='shows accumulated run times of each module')
+    timing.add_argument('-s', '--slowest', default=0, type=int, dest='n',
+                        help='lists n slowest test cases')
+    timing.add_argument('-p', '--profile', action='store_true',
+                        help='uses cProfile, saves the results to file ' +
+                             'obspy.pstats and prints some profiling numbers')
+
     # reporting options
-    report = OptionGroup(parser, "Reporting Options")
-    report.add_option("-r", "--report", default=False,
-                      action="store_true", dest="report",
-                      help="automatically submit a test report")
-    report.add_option("-d", "--dontask", default=False,
-                      action="store_true", dest="dontask",
-                      help="don't explicitly ask for submitting a test report")
-    report.add_option("-u", "--server", default="tests.obspy.org",
-                      type="string", dest="server",
-                      help="report server (default is tests.obspy.org)")
-    report.add_option("-n", "--node", default=HOSTNAME,
-                      type="string", dest="hostname",
-                      help="nodename visible at the report server")
-    report.add_option("-l", "--log", default=None,
-                      type="string", dest="log",
-                      help="append log file to test report")
-    parser.add_option_group(report)
+    report = parser.add_argument_group('Reporting Options')
+    report.add_argument('-r', '--report', action='store_true',
+                        help='automatically submit a test report')
+    report.add_argument('-d', '--dontask', action='store_true',
+                        help="don't explicitly ask for submitting a test "
+                             "report")
+    report.add_argument('-u', '--server', default='tests.obspy.org',
+                        help='report server (default is tests.obspy.org)')
+    report.add_argument('-n', '--node', dest='hostname', default=HOSTNAME,
+                        help='nodename visible at the report server')
+    report.add_argument('-l', '--log', default=None,
+                        help='append log file to test report')
+
     # other options
-    others = OptionGroup(parser, "Additional Options")
-    others.add_option("--tutorial", default=False,
-                      action="store_true", dest="tutorial",
-                      help="add doctests in tutorial")
-    others.add_option("--no-flake8", default=False,
-                      dest="no_flake8", action="store_true",
-                      help="skip code formatting test")
-    others.add_option("--keep-images", default=False,
-                      dest="keep_images", action="store_true",
-                      help="store images created during image comparison "
-                           "tests in subfolders of baseline images")
-    others.add_option("--keep-only-failed-images", default=False,
-                      dest="keep_only_failed_images", action="store_true",
-                      help="when storing images created during testing, only "
-                           "store failed images and the corresponding diff "
-                           "images (but not images that passed the "
-                           "corresponding test).")
-    parser.add_option_group(others)
-    (options, _) = parser.parse_args()
+    others = parser.add_argument_group('Additional Options')
+    others.add_argument('--tutorial', action='store_true',
+                        help='add doctests in tutorial')
+    others.add_argument('--no-flake8', action='store_true',
+                        help='skip code formatting test')
+    others.add_argument('--keep-images', action='store_true',
+                        help='store images created during image comparison '
+                             'tests in subfolders of baseline images')
+    others.add_argument('--keep-only-failed-images', action='store_true',
+                        help='when storing images created during testing, '
+                             'only store failed images and the corresponding '
+                             'diff images (but not images that passed the '
+                             'corresponding test).')
+
+    args = parser.parse_args(argv)
     # set correct verbosity level
-    if options.verbose:
+    if args.verbose:
         verbosity = 2
         # raise all NumPy warnings
         np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
-    elif options.quiet:
+    elif args.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
         warnings.simplefilter("ignore", DeprecationWarning)
         warnings.simplefilter("ignore", UserWarning)
         # don't ask to send a report
-        options.dontask = True
+        args.dontask = True
     else:
         verbosity = 1
         # show all NumPy warnings
@@ -661,29 +653,28 @@ def run(interactive=True):
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
-    if options.report or 'OBSPY_REPORT' in os.environ.keys():
+    if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
     else:
         report = False
     if 'OBSPY_REPORT_SERVER' in os.environ.keys():
-        options.server = os.environ['OBSPY_REPORT_SERVER']
+        args.server = os.environ['OBSPY_REPORT_SERVER']
     # check interactivity settings
-    if interactive and options.dontask:
+    if interactive and args.dontask:
         interactive = False
-    if options.keep_images:
+    if args.keep_images:
         os.environ['OBSPY_KEEP_IMAGES'] = ""
-    if options.keep_only_failed_images:
+    if args.keep_only_failed_images:
         os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
-    if options.no_flake8:
+    if args.no_flake8:
         os.environ['OBSPY_NO_FLAKE8'] = ""
-    return runTests(
-        verbosity, parser.largs, report, options.log,
-        options.server, options.all, options.timeit, interactive, options.n,
-        exclude=options.module, tutorial=options.tutorial,
-        hostname=options.hostname)
+    return runTests(verbosity, args.tests, report, args.log, args.server,
+                    args.all, args.timeit, interactive, args.n,
+                    exclude=args.exclude, tutorial=args.tutorial,
+                    hostname=args.hostname)
 
 
-def main(interactive=True):
+def main(argv=None, interactive=True):
     """
     Entry point for setup.py.
 
@@ -712,7 +703,7 @@ def main(interactive=True):
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
         print(PSTATS_HELP)
     else:
-        errors = run(interactive)
+        errors = run(argv, interactive)
         if errors:
             sys.exit(1)
 
