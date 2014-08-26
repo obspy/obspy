@@ -49,7 +49,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -65,7 +65,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
     def test_script_convert_type_tensor_large(self):
         with CatchOutput() as out:
@@ -81,7 +81,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
     def test_script_convert_basis(self):
         expected = [
@@ -125,7 +125,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         expected = str(self.mt) + '\n'
 
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
     #
     # obspy-mopad decompose
@@ -146,7 +146,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
     #
     # obspy-mopad gmt
@@ -163,18 +163,18 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         expected = os.path.join(self.path, exp_file)
 
         # Test headers
-        with open(expected) as expf:
-            with io.StringIO(out.stdout) as sio:
+        with open(expected, 'rb') as expf:
+            with io.BytesIO(out.stdout) as bio:
                 for exp_line, out_line in zip_longest(expf.readlines(),
-                                                      sio.readlines(),
+                                                      bio.readlines(),
                                                       fillvalue=''):
-                    if exp_line.startswith('>') or out_line.startswith('>'):
+                    if exp_line.startswith(b'>') or out_line.startswith(b'>'):
                         self.assertEqual(exp_line, out_line,
                                          msg='Headers do not match!')
 
         # Test actual data
         exp_data = np.genfromtxt(expected, comments='>')
-        with io.BytesIO(out.stdout.encode('utf-8')) as bio:
+        with io.BytesIO(out.stdout) as bio:
             out_data = np.genfromtxt(bio, comments='>')
         self.assertEqual(exp_data.shape, out_data.shape,
                          msg='Data does not match!')
