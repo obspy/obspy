@@ -26,18 +26,10 @@ override_dh_auto_install:
 	done;
 
 override_dh_install:
-	# Separate test files (-dbg packages)..
-	dh_install -p python3-obspy-dbg "debian/tmp/usr/lib/python3*/*-packages/obspy/*/tests"
-	dh_install -p python3-obspy-dbg "debian/tmp/usr/bin/obspy3-runtests"
-	dh_install -p python3-obspy-dbg "debian/tmp/usr/lib/python3*/*-packages/obspy/core/scripts/runtests.py"
-	dh_install -p python-obspy-dbg "debian/tmp/usr/lib/python2*/*-packages/obspy/*/tests"
-	dh_install -p python-obspy-dbg "debian/tmp/usr/bin/obspy-runtests"
-	dh_install -p python-obspy-dbg "debian/tmp/usr/lib/python2*/*-packages/obspy/core/scripts/runtests.py"
-	# .. from normal program files
-	dh_install -p python3-obspy -X"debian/tmp/usr/bin/obspy-runtests" -X"debian/tmp/usr/bin/obspy3-runtests" "debian/tmp/usr/bin/obspy3-*"
-	dh_install -p python3-obspy -X"tests" "debian/tmp/usr/lib/python3*/*-packages/*"
-	dh_install -p python-obspy -X"debian/tmp/usr/bin/obspy-runtests" -X"debian/tmp/usr/bin/obspy3-runtests" "debian/tmp/usr/bin/obspy-*"
-	dh_install -p python-obspy -X"tests" "debian/tmp/usr/lib/python2*/*-packages/*"
+	dh_install -p python3-obspy "debian/tmp/usr/bin/obspy3-*"
+	dh_install -p python3-obspy "debian/tmp/usr/lib/python3*/*-packages/*"
+	dh_install -p python-obspy "debian/tmp/usr/bin/obspy-*"
+	dh_install -p python-obspy "debian/tmp/usr/lib/python2*/*-packages/*"
 	# Continue with regular dh_install
 	dh_install
 

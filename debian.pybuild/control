@@ -35,7 +35,8 @@ Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
  python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
  python-obspy-wav, python-obspy-xseed
-Recommends: python-mpltoolkits.basemap, python-geographiclib, python-imaging
+Recommends: python-mpltoolkits.basemap, python-geographiclib, python-imaging,
+ python-nose, python-flake8, python-mock
 Suggests: python-mlpy, python-pyproj, ipython
 Description: ObsPy: A Python Toolbox for seismology
  ObsPy is an open-source project dedicated to provide a Python framework for
@@ -57,7 +58,7 @@ Depends: python3 (>= 3.2), ${python3:Depends},
  python3-matplotlib (>= 0.98.1), python3-scipy, python3-sqlalchemy,
  ${shlibs:Depends}, python3-tornado, python3-future (>= 0.12.4)
 Recommends: python3-mpltoolkits.basemap, python3-geographiclib,
- python3-imaging
+ python3-imaging, python3-nose, python3-flake8, python3-mock
 Suggests: python3-pyproj, ipython3, ipython3-notebook
 Description: ObsPy: A Python Toolbox for seismology
  ObsPy is an open-source project dedicated to provide a Python framework for
@@ -66,52 +67,6 @@ Description: ObsPy: A Python Toolbox for seismology
  which allow the manipulation of seismological time series.
  .
  For more information visit http://www.obspy.org.
- .
- This is the Python 3 version of the package.
-Homepage: http://www.obspy.org
-
-Package: python-obspy-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: python (>= 2.6), ${python:Depends},
- python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
- python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
- python-suds (>= 0.4), ${shlibs:Depends}, python-tornado,
- python-future (>= 0.12.4), python-obspy (= ${binary:Version})
-Recommends: python-nose, python-flake8, python-mock
-Description: ObsPy: A Python Toolbox for seismology (test suite)
- ObsPy is an open-source project dedicated to provide a Python framework for
- processing seismological data. It provides parsers for common file formats,
- clients to access data centers and seismological signal processing routines
- which allow the manipulation of seismological time series.
- .
- For more information visit http://www.obspy.org.
- .
- This package includes the ObsPy test suite.
- .
- This is the Python 2 version of the package.
-Homepage: http://www.obspy.org
-
-Package: python3-obspy-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: python3 (>= 3.2), ${python3:Depends},
- python3-numpy (>= 1:1.1), python3-setuptools (>= 0.6), python3-lxml (>= 2.1),
- python3-matplotlib (>= 0.98.1), python3-scipy, python3-sqlalchemy,
- ${shlibs:Depends}, python3-tornado, python3-future (>= 0.12.4),
- python3-obspy (= ${binary:Version})
-Recommends: python3-nose, python3-flake8, python3-mock
-Description: ObsPy: A Python Toolbox for seismology (test suite)
- ObsPy is an open-source project dedicated to provide a Python framework for
- processing seismological data. It provides parsers for common file formats,
- clients to access data centers and seismological signal processing routines
- which allow the manipulation of seismological time series.
- .
- For more information visit http://www.obspy.org.
- .
- This package includes the ObsPy test suite.
  .
  This is the Python 3 version of the package.
 Homepage: http://www.obspy.org
