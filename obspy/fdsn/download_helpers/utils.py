@@ -180,7 +180,7 @@ def attach_stationxml_filenames(stations, restrictions, stationxml_path,
 
     for stat in copy.deepcopy(stations):
         filename = get_stationxml_filename(
-            stationxml_path, stat.network, stat.station)
+            stationxml_path, stat.network, stat.station, stat.channels)
         if not filename:
             continue
         # If the StationXML file already exists, make sure it
@@ -841,12 +841,13 @@ def get_stationxml_contents(filename):
     return channels
 
 
-def get_stationxml_filename(str_or_fct, network, station):
+def get_stationxml_filename(str_or_fct, network, station, channels):
     """
     Helper function getting the filename of a stationxml file.
 
     The rule are simple, if it is a function, network and station are passed
-    as arguments and the resulting string is returned.
+    as arguments and the resulting string is returned. Furthermore a list of
+    channels is passed.
 
     If it is a string, and it contains ``"{network}"``, and ``"{station}"``
     formatting specifiers, ``str.format()`` is called.
@@ -855,7 +856,7 @@ def get_stationxml_filename(str_or_fct, network, station):
     filename will be ``"FOLDER_NAME/NET.STA.xml"``
     """
     if callable(str_or_fct):
-        path = str_or_fct(network, station)
+        path = str_or_fct(network, station, channels)
     elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct):
         path = str_or_fct.format(network=network, station=station)
     else:

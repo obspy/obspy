@@ -434,7 +434,7 @@ class DownloadHelper(object):
         for filename in filenames:
             st = obspy.read(filename, format="MSEED", headonly=True)
             if restrictions.reject_channels_with_gaps and len(st) > 1:
-                logger.warning("Channel %i has gap or overlap. Will be "
+                logger.warning("Channel %s has gap or overlap. Will be "
                                "removed." % st[0].id)
                 try:
                     os.remove(filename)
