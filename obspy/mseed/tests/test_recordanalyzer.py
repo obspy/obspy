@@ -53,7 +53,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2003-05-29T02:13:22.043400Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
     def test_second_record(self):
         with CatchOutput() as out:
@@ -92,7 +92,7 @@ CALCULATED VALUES
 	Corrected Starttime: 2003-05-29T02:15:51.543400Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected, out.stdout)
+        self.assertEqual(expected.encode('utf-8'), out.stdout)
 
 
 def suite():

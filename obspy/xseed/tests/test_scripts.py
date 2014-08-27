@@ -39,7 +39,7 @@ class ScriptTestCase(unittest.TestCase):
             expected = '''Found 1 files.
 Parsing file %s
 ''' % (self.dataless_file,)
-            self.assertEqual(expected, out.stdout)
+            self.assertEqual(expected.encode('utf-8'), out.stdout)
 
             expected = ['RESP.BW.FURT..EHE',
                         'RESP.BW.FURT..EHN',
@@ -55,7 +55,7 @@ Parsing file %s
             expected = '''Found 1 files.
 Parsing file %s
 ''' % (self.dataless_file,)
-            self.assertEqual(expected, out.stdout)
+            self.assertEqual(expected.encode('utf-8'), out.stdout)
 
             self.assertTrue(os.path.exists('dataless.seed.BW_FURT.zip'))
 
@@ -79,7 +79,7 @@ Parsing file %s
             expected = '''Found 1 files.
 Parsing file %s
 ''' % (self.dataless_file,)
-            self.assertEqual(expected, out.stdout)
+            self.assertEqual(expected.encode('utf-8'), out.stdout)
 
             self.assertTrue(os.path.exists(self.xseed_name))
 
@@ -103,7 +103,7 @@ Parsing file %s
             expected = '''Found 1 files.
 Parsing file %s
 ''' % (dataless_multi_file,)
-            self.assertEqual(expected, out.stdout)
+            self.assertEqual(expected.encode('utf-8'), out.stdout)
 
             expected = ['CL.AIO.dataless.xml',
                         'CL.AIO.dataless.xml.1028697240.0.xml',
@@ -125,7 +125,7 @@ Parsing file %s
             expected = '''Found 1 files.
 Parsing file %s
 ''' % (self.xseed_file,)
-            self.assertEqual(expected, out.stdout)
+            self.assertEqual(expected.encode('utf-8'), out.stdout)
 
             with open(self.dataless_file, 'rb') as fh:
                 expected = fh.read()

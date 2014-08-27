@@ -22,7 +22,7 @@ class PrintTestCase(unittest.TestCase):
         self.assertEqual(
             '''1 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
-''',  # noqa
+'''.encode('utf-8'),  # noqa
             out.stdout
         )
 
@@ -34,7 +34,7 @@ XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 
             '''2 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
-''',  # noqa
+'''.encode('utf-8'),  # noqa
             out.stdout
         )
 

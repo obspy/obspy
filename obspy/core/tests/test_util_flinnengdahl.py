@@ -31,7 +31,7 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
                 self.assertEqual(
                     region,
                     checked_region,
-                    msg="%f, %f got %s instead of %s" % (
+                    msg="(%f, %f) got %s instead of %s" % (
                         longitude,
                         latitude,
                         region,
@@ -51,8 +51,8 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
 
             self.assertEqual(
                 region,
-                checked_region,
-                msg='%s, %s got %s instead of %s' % (
+                checked_region.encode('utf-8'),
+                msg='(%s, %s) got %s instead of %s' % (
                     longitude,
                     latitude,
                     region,
