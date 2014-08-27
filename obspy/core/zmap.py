@@ -87,7 +87,8 @@ class Pickler(object):
         else:
             file_opened = False
             fh = filename
-        fh.write(self._serialize(catalog))
+        cat_string = self._serialize(catalog)
+        fh.write(cat_string.encode('utf-8'))
         if file_opened:
             fh.close()
 

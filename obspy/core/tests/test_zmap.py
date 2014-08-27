@@ -69,7 +69,8 @@ class ZMAPTestCase(unittest.TestCase):
         f = tempfile.TemporaryFile()
         zmap.writeZmap(self.catalog, f)
         f.seek(0)
-        self.assertTrue(self._expected_string(self.test_data) in f.read())
+        file_content = f.read().decode('utf-8')
+        self.assertTrue(self._expected_string(self.test_data) in file_content)
 
     def test_dump_to_filename(self):
         """
@@ -78,7 +79,8 @@ class ZMAPTestCase(unittest.TestCase):
         f = tempfile.NamedTemporaryFile()
         zmap.writeZmap(self.catalog, f.name)
         f.seek(0)
-        self.assertTrue(self._expected_string(self.test_data) in f.read())
+        file_content = f.read().decode('utf-8')
+        self.assertTrue(self._expected_string(self.test_data) in file_content)
 
     def test_dump_with_uncertainty(self):
         """
