@@ -33,6 +33,7 @@
        util
        preview
        json
+       zmap
 
     .. comment to end block
 

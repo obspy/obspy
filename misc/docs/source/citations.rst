@@ -139,6 +139,10 @@ Citations
      - | Tsuboi, S., Tromp, J., and Komatitsch, D. (2004),
        | **An XML-SEED Format for the Exchange of Synthetic Seismograms**,
        | *AGU Fall Meeting Abstracts*, B3.
+   * - .. [Wiemer2001]
+     - | Wiemer, S. (2001),
+       | **A software package to analyze seismicity: ZMAP**,
+       | *Seismological Research Letters*, 72 (3), 373-382.
    * - .. [Wiggins1976]
      - | Wiggins, R. A. (1976),
        | **Interpolation of Digitized Curves**,

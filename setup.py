@@ -244,6 +244,7 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
+        'ZMAP = obspy.core.zmap',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
         'NDK = obspy.ndk.core'
@@ -259,6 +260,9 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
+    ],
+    'obspy.plugin.event.ZMAP': [
+        'writeFormat = obspy.core.zmap:writeZmap',
     ],
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.ndk.core:is_ndk',

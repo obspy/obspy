@@ -404,6 +404,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
         ======= ================= =======================================
         JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
         QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
+        ZMAP    :mod:`obspy.core` :func:`obspy.core.zmap.writeZmap`
         ======= ================= =======================================
 
     :type group: str
