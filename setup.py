@@ -389,6 +389,29 @@ def export_symbols(*path):
     return [s.strip() for s in lines if s.strip() != '']
 
 
+# adds --with-system-libs command-line option if possible
+def add_features():
+    if 'setuptools' not in sys.modules:
+        return {}
+
+    class ExternalLibFeature(setuptools.Feature):
+        def include_in(self, dist):
+            global external_libs
+            external_libs = True
+
+        def exclude_from(self, dist):
+            global external_libs
+            external_libs = False
+
+    return {
+        'system-libs': ExternalLibFeature(
+            'use of system C libraries',
+            standard=False,
+            external_libs=True
+        )
+    }
+
+
 def configuration(parent_package="", top_path=None):
     """
     Config function mainly used to compile C and Fortran code.
@@ -408,8 +431,9 @@ def configuration(parent_package="", top_path=None):
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
-    files = glob.glob(os.path.join(path, "libmseed", "*.c"))
-    files.append(os.path.join(path, "obspy-readbuffer.c"))
+    files = [os.path.join(path, "obspy-readbuffer.c")]
+    if not external_libs:
+        files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -423,6 +447,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
+    if external_libs:
+        kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
                          files, **kwargs)
 
@@ -450,7 +476,10 @@ def configuration(parent_package="", top_path=None):
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
-    files = glob.glob(os.path.join(path, "evalresp", "*.c"))
+    if external_libs:
+        files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
+    else:
+        files = glob.glob(os.path.join(path, "evalresp", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -458,6 +487,8 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    if external_libs:
+        kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
@@ -546,6 +577,7 @@ def setupPackage():
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
+        features=add_features(),
         # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"
                       "#egg=obspy=dev"),
