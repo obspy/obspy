@@ -231,8 +231,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
-                # for data in :
-                #    np.testing.assert_array_equal(values, original)
+                for st in streams:
+                    np.testing.assert_array_equal(st[0].data, tr.data)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
