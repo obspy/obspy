@@ -71,6 +71,9 @@ if platform.system() == "Windows" and (
 else:
     IS_MSVC = False
 
+# Use system libraries? Set later...
+EXTERNAL_LIBS = False
+
 # package specific settings
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
@@ -396,18 +399,18 @@ def add_features():
 
     class ExternalLibFeature(setuptools.Feature):
         def include_in(self, dist):
-            global external_libs
-            external_libs = True
+            global EXTERNAL_LIBS
+            EXTERNAL_LIBS = True
 
         def exclude_from(self, dist):
-            global external_libs
-            external_libs = False
+            global EXTERNAL_LIBS
+            EXTERNAL_LIBS = False
 
     return {
         'system-libs': ExternalLibFeature(
             'use of system C libraries',
             standard=False,
-            external_libs=True
+            EXTERNAL_LIBS=True
         )
     }
 
@@ -432,7 +435,7 @@ def configuration(parent_package="", top_path=None):
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
     files = [os.path.join(path, "obspy-readbuffer.c")]
-    if not external_libs:
+    if not EXTERNAL_LIBS:
         files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
@@ -447,7 +450,7 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
-    if external_libs:
+    if EXTERNAL_LIBS:
         kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
                          files, **kwargs)
@@ -476,7 +479,7 @@ def configuration(parent_package="", top_path=None):
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
-    if external_libs:
+    if EXTERNAL_LIBS:
         files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
     else:
         files = glob.glob(os.path.join(path, "evalresp", "*.c"))
@@ -487,7 +490,7 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    if external_libs:
+    if EXTERNAL_LIBS:
         kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
