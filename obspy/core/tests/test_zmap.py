@@ -5,8 +5,8 @@ from future.builtins import *  # NOQA
 
 from obspy.core import zmap
 from obspy.core.event import readEvents
+from obspy.core.util import NamedTemporaryFile
 
-import tempfile
 import unittest
 import os
 
@@ -21,7 +21,7 @@ class ZMAPTestCase(unittest.TestCase):
         self.catalog = readEvents(path_to_catalog)
         self.zmap_fields = ['lon', 'lat', 'year', 'month', 'day', 'mag',
                             'depth', 'hour', 'minute', 'second']
-        # Exctract our favorite test event from the catalog
+        # Extract our favorite test event from the catalog
         test_event_id = 'quakeml:eu.emsc/event/20120404_0000041'
         self.test_event = next(e for e in self.catalog.events
                                if e.resource_id.id == test_event_id)
@@ -43,7 +43,6 @@ class ZMAPTestCase(unittest.TestCase):
         """
         Test serialization to zmap format
         """
-        pass
         pickler = zmap.Pickler()
         # test full event (including origin/magnitude)
         dump = pickler.dumps(self.catalog)
@@ -66,7 +65,7 @@ class ZMAPTestCase(unittest.TestCase):
         """
         Test output to pre-opened file
         """
-        f = tempfile.TemporaryFile()
+        f = NamedTemporaryFile()
         zmap.writeZmap(self.catalog, f)
         f.seek(0)
         file_content = f.read().decode('utf-8')
@@ -76,7 +75,7 @@ class ZMAPTestCase(unittest.TestCase):
         """
         Test output to file with a filename specified
         """
-        f = tempfile.NamedTemporaryFile()
+        f = NamedTemporaryFile()
         zmap.writeZmap(self.catalog, f.name)
         f.seek(0)
         file_content = f.read().decode('utf-8')

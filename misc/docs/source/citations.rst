@@ -143,6 +143,7 @@ Citations
      - | Wiemer, S. (2001),
        | **A software package to analyze seismicity: ZMAP**,
        | *Seismological Research Letters*, 72 (3), 373-382.
+       | http://srl.geoscienceworld.org/content/72/3/373.short
    * - .. [Wiggins1976]
      - | Wiggins, R. A. (1976),
        | **Interpolation of Digitized Curves**,

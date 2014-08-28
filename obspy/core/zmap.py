@@ -11,7 +11,7 @@ Column #            Value
 =================   ==============================================
  1                  Longitude [deg]
  2                  Latitude [deg]
- 3                  Decimal year (e.g., 2005.5 for July 1st, 2005)
+ 3                  Decimal year (e.g., 2005.5 for July 2nd, 2005)
  4                  Month
  5                  Day
  6                  Magnitude
@@ -63,7 +63,6 @@ from obspy.core import UTCDateTime
 class Pickler(object):
 
     def __init__(self, with_uncertainties=False):
-        self.with_uncertainties = with_uncertainties
         # This is ZMAP column order, don't change it
         zmap_columns = ['lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
                         'hour', 'minute', 'second']
@@ -77,8 +76,8 @@ class Pickler(object):
 
         :type catalog: :class:`~obspy.core.event.Catalog`
         :param catalog: ObsPy Catalog object.
-        :type fh: file
-        :param fh: File name.
+        :type filename: str or file
+        :param filename: Target file name or open file-like object.
         """
         # Open filehandler or use an existing file like object.
         if not hasattr(filename, "write"):
@@ -122,11 +121,9 @@ class Pickler(object):
             lon_err = origin.longitude_errors.uncertainty
             if lat_err is None or lon_err is None:
                 return None
-
-            h_err = math.sqrt(math.pow(lat_err * km_per_deg, 2) +
-                              math.pow(lon_err * math.cos(origin.latitude *
-                                       math.pi/180.0)
-                                       * km_per_deg, 2))
+            d_lat = lat_err
+            d_lon = lon_err * math.cos(origin.latitude * math.pi/180.0)
+            h_err = km_per_deg * math.hypot(d_lat, d_lon)
             return h_err
 
     @staticmethod
@@ -214,7 +211,7 @@ def writeZmap(catalog, filename, with_uncertainties=False,
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
-    :type with_uncertainties: boolean
+    :type with_uncertainties: bool
     :param with_uncertainties: appends non-standard columns for horizontal,
         magnitude and depth uncertainty (see :mod:`~obspy.core.zmap`).
     """
