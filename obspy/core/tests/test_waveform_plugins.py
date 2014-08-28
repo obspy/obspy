@@ -209,6 +209,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     outfile += '.QHD'
                 n_threads = 30
                 streams = []
+                timeout = 120
+                if 'TRAVIS' in os.environ:
+                    timeout = 600
 
                 def testFunction(streams):
                     st = read(outfile, format=format)
@@ -224,10 +227,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 while True:
                     if threading.activeCount() == 1:
                         break
-                    # Avoid infinite loop and leave after 120 seconds
-                    # such a long time is needed for debugging with valgrind
-                    elif time.time() - start >= 120:  # pragma: no cover
-                        msg = 'Not all threads finished!'
+                    # Avoid infinite loop and leave after some time; such a
+                    # long time is needed for debugging with valgrind or Travis
+                    elif time.time() - start >= timeout:  # pragma: no cover
+                        msg = 'Not all threads finished after %d seconds!' % (
+                            timeout)
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
