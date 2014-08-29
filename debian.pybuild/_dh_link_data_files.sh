@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 rm -rf debian/python-obspy.links debian/python3-obspy.links
 for DIRTYPE in data images

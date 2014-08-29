@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 CODENAME=`lsb_release -cs`
 
@@ -8,7 +8,7 @@ do
     for FILE in `find debian/tmp -type f -regex ".*/python2.*/obspy/.*?/tests/${DIRTYPE}/.*"`
     do
         SOURCE=`echo $FILE | sed 's#.*-packages/obspy/#usr/share/obspy/#'`
-        if [ "$CODENAME" == "squeeze" ]
+        if [ "$CODENAME" = "squeeze" ]
         then
             DESTINATION=`echo $FILE | sed 's#.*-packages/obspy/#usr/share/pyshared/obspy/##'`
         else
