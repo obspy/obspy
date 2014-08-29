@@ -12,6 +12,21 @@ override_dh_auto_install:
 	dh_auto_install #-- release
 	dh_numpy
 
+override_dh_install:
+	# data files get separated into /usr/share for both python2/3 to use
+	sh -x debian/_dh_install_data_files.sh
+	# files for normal packages
+	## bin
+	dh_install -p python-obspy "debian/tmp/usr/bin/obspy-*"
+	## lib
+	dh_install -p python-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python2*/*-packages/*"
+	# Continue with regular dh_install
+	dh_install
+
+override_dh_link:
+	sh -x debian/_dh_link_data_files.sh
+	dh_link
+
 override_dh_installdeb:
 	find $(CURDIR)/debian/ -name LICENSE.txt -exec rm -f {} \;
 	find $(CURDIR)/debian/ -name README.txt -exec rm -f {} \;
