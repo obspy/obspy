@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/sh
+
+CODENAME=`lsb_release -cs`
 
 for DIRTYPE in data images
 do
