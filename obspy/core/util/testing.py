@@ -367,10 +367,12 @@ def get_matplotlib_defaul_tolerance():
     matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
     matplotlib v1.2.1: 1.7e-3 and 3.6e-3
     """
-    if getMatplotlibVersion() < [1, 3, 0]:
-        return 2e-3
-    else:
+    # Baseline images are created with 1.3.1,
+    # be very generous when testing other matplotlib versions.
+    if getMatplotlibVersion() == [1, 3, 1]:
         return 2
+    else:
+        return 20
 
 
 FLAKE8_EXCLUDE_FILES = [
