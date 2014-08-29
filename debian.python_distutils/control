@@ -3,7 +3,7 @@ Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
 X-Python-Version: >= 2.6
-Build-Depends: debhelper (>= 5), python (>= 2.6), python-dev,
+Build-Depends: debhelper (>= 5), python (>= 2.6), python-all-dev,
  python-support (>= 0.7.1), python-numpy, python-setuptools (>=0.6.21), gcc,
  gfortran
 Standards-Version: 3.9.3
