@@ -212,20 +212,25 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 timeout = 120
                 if 'TRAVIS' in os.environ:
                     timeout = 600
+                cond = threading.Condition()
 
-                def testFunction(streams):
+                def testFunction(streams, cond):
                     st = read(outfile, format=format)
                     streams.append(st)
+                    with cond:
+                        cond.notify()
                 # Read the ten files at one and save the output in the just
                 # created class.
                 for _i in range(n_threads):
                     thread = threading.Thread(target=testFunction,
-                                              args=(streams,))
+                                              args=(streams, cond))
                     thread.start()
                 # Loop until all threads are finished.
                 start = time.time()
                 while True:
-                    if threading.activeCount() == 1:
+                    with cond:
+                        cond.wait(1)
+                    if threading.active_count() == 1:
                         break
                     # Avoid infinite loop and leave after some time; such a
                     # long time is needed for debugging with valgrind or Travis
