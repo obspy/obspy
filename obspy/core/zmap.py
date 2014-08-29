@@ -86,10 +86,12 @@ class Pickler(object):
         else:
             file_opened = False
             fh = filename
-        cat_string = self._serialize(catalog)
-        fh.write(cat_string.encode('utf-8'))
-        if file_opened:
-            fh.close()
+        try:
+            cat_string = self._serialize(catalog)
+            fh.write(cat_string.encode('utf-8'))
+        finally:
+            if file_opened:
+                fh.close()
 
     def dumps(self, catalog):
         """
@@ -161,7 +163,7 @@ class Pickler(object):
         return time.year + year_fraction
 
     def _serialize(self, catalog):
-        zmap = ''
+        rows = []
         for ev in catalog:
             strings = dict.fromkeys(self.zmap_columns, 'NaN')
             # origin
@@ -189,7 +191,8 @@ class Pickler(object):
                     'mag_err': self._num2str(magnitude.mag_errors.uncertainty)
                 })
             # create tab separated row
-            zmap += '\t'.join([strings[c] for c in self.zmap_columns]) + '\n'
+            rows.append('\t'.join([strings[c] for c in self.zmap_columns]))
+        zmap = '\n'.join(rows) + '\n'
         return zmap
 
 

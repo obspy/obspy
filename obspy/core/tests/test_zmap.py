@@ -33,9 +33,8 @@ class ZMAPTestCase(unittest.TestCase):
         }
 
     def tearDown(self):
-        # Not sure exactly why this is required. Without this event.py
-        # starts to spew warnings about already existing resource identifiers
-        # after the first test.
+        # Make sure events are deleted before the next test to prevent
+        # resource identifier warnings
         self.catalog = None
         self.test_event = None
 
@@ -61,24 +60,34 @@ class ZMAPTestCase(unittest.TestCase):
         del test_data['mag']
         self.assertTrue(self._expected_string(test_data) in dump)
 
+    def test_plugin_interface(self):
+        """
+        Test if zmap writing works via obspy's plugin interface
+        """
+        with NamedTemporaryFile() as f:
+            self.catalog.write(f, format='ZMAP')
+            f.seek(0)
+            file_content = f.read().decode('utf-8')
+        self.assertTrue(self._expected_string(self.test_data) in file_content)
+
     def test_dump_to_file(self):
         """
         Test output to pre-opened file
         """
-        f = NamedTemporaryFile()
-        zmap.writeZmap(self.catalog, f)
-        f.seek(0)
-        file_content = f.read().decode('utf-8')
+        with NamedTemporaryFile() as f:
+            zmap.writeZmap(self.catalog, f)
+            f.seek(0)
+            file_content = f.read().decode('utf-8')
         self.assertTrue(self._expected_string(self.test_data) in file_content)
 
     def test_dump_to_filename(self):
         """
         Test output to file with a filename specified
         """
-        f = NamedTemporaryFile()
-        zmap.writeZmap(self.catalog, f.name)
-        f.seek(0)
-        file_content = f.read().decode('utf-8')
+        with NamedTemporaryFile() as f:
+            zmap.writeZmap(self.catalog, f.name)
+            f.seek(0)
+            file_content = f.read().decode('utf-8')
         self.assertTrue(self._expected_string(self.test_data) in file_content)
 
     def test_dump_with_uncertainty(self):
