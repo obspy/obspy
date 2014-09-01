@@ -30,8 +30,8 @@ PropertyLoader:
     
 SphericalSModel extends SlownessModel:
     There are three constructors; the middle one is called here, as
-    createTauModel passes 7 arguments after vmod. I only vmod was supplied, the 
-    first constructor would would call the middle one with some default 
+    createTauModel passes 7 arguments after vmod. If only vmod was supplied, the 
+    first constructor would call the middle one with some default 
     arguments. The middle constructor calls its superclass (i.e. SlownessModel) 
     constructor with super()!
 
@@ -111,6 +111,7 @@ SlownessModel:
         some vMod/Layer methods
         toSlowness
         interpolate
+        depthInFluid
 
     interpolate
         Here, it's only an abstract method: no implementation is provided (body 
@@ -120,6 +121,7 @@ SlownessModel:
 
     toSlownessLayer
         also an abstract method.
+        replaced (by me) by SlownessLayer.create_from_vlayer 
           
     coarseSample
         some vlayer, slayer methods and PLayers.clear, where PLayers is simply a 

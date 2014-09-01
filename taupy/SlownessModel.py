@@ -22,6 +22,7 @@ class DepthRange:
         self.rayParam = rayParam
 
 
+# noinspection PyPep8Naming
 class SlownessModel(object):
     """This class provides storage and methods for generating slowness-depth pairs."""
     DEBUG = False
@@ -330,7 +331,8 @@ class SlownessModel(object):
         return self.findDepth(rayParam, topLayerNum, botLayerNum, isPWave)
 
     def findDepth(self, p, topCriticalLayer, botCriticalLayer, isPWave):
-        """Finds a depth corresponding to a slowness between two given velocity
+        """Finds a depth corresponding to a slowness p (here defined as (6731-depth) / velocity ,
+        and sometimes called ray parameter)  between two given velocity
         layers, including the top and the bottom. We also check to see if the
         slowness is less than the bottom slowness of these layers but greater
         than the top slowness of the next deeper layer. This corresponds to a
@@ -424,10 +426,49 @@ class SlownessModel(object):
             return depth
 
     def depthInFluid(self, depth, fluidZoneDepth=DepthRange()):
-        pass
+        """ Determines if the given depth is contained within a fluid zone. The fluid
+        zone includes its upper boundary but not its lower boundary. The top and
+        bottom of the fluid zone are not returned as a DepthRange, just like in the java code,
+        despite its claims to the contrary."""
+        for elem in self.fluidLayerDepths:
+            if elem.topDepth <= depth < elem.botDepth:
+                return True
+        return False
 
     def coarseSample(self):
-        pass
+        PLayers = []
+        SLayers = []
+        # to initialise prevVLayer
+        origVLayer = self.vMod.layers[0]
+        for layer in self.vMod.layers:
+            prevVLayer = origVLayer
+            origVLayer = layer
+            # Check for first order discontinuity. However, we only
+            # consider S discontinuities in the inner core if
+            # allowInnerCoreS is true.
+            if prevVLayer.botPVelocity != origVLayer.topPVelocity or(
+                prevVLayer.botSVelocity != origVLayer.topSVelocity and
+                (self.allowInnerCoreS or origVLayer.topDepth < self.vMod.iocbDepth)):
+                # If we are going from a fluid to a solid or solid to
+                # fluid, ex core mantle or outer core to inner core then we
+                # need to use the P velocity for determining the S
+                # discontinuity.
+                if prevVLayer.botSVelocity == 0:
+                    topSVel = prevVLayer.botPVelocity
+                else:
+                    topSVel = prevVLayer.botSVelocity
+                if origVLayer.topSVelocity == 0:
+                    botSVel = origVLayer.topPVelocity
+                else:
+                    botSVel = origVLayer.topSVelocity
+                # Add the zero thickness, but with nonzero slowness step,
+                # layer corresponding to the discontinuity.
+                currVLayer = VelocityLayer(layer.layer_number, prevVLayer.botDepth, prevVLayer.botDepth,
+                                           prevVLayer.botPVelocity, origVLayer.topPVelocity,
+                                           topSVel, botSVel)
+                currPLayer = SlownessLayer.create_from_vlayer(currVLayer, self.PWAVE)
+
+
 
     def rayParamIncCheck(self):
         pass
@@ -446,7 +487,7 @@ class SlownessModel(object):
 
     def getNumLayers(self, isPWave):
         '''This is meant to return the number of pLayers and sLayers.
-        I have not yet been able to find out how these are known in 
+        I have not yet been able to find out how these are known in
         the java code.'''
         # translated Java code:
         # def getNumLayers(self, isPWave):
