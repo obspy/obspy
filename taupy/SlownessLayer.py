@@ -12,8 +12,11 @@ class SlownessLayer:
         else:
             raise ValueError('botDepth must not be negative')
 
-    def create_from_vlayer( vLayer, isPWave,  radiusOfEarth = 6371, isSpherical = True):
-        ''' Compute the slowness layer from a velocity layer. '''
+    def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371, isSpherical=True):
+        """ Compute the slowness layer from a velocity layer.
+
+        Note first argument is NOT meant to be self, this
+        throws at least my IDE off into flagging wrong class errors."""
         topDepth = vLayer.topDepth
         botDepth = vLayer.botDepth
         waveType = ('p' if isPWave else 's')

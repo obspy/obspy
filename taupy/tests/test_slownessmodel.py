@@ -6,6 +6,7 @@ from taupy.VelocityModel import VelocityModel
 from taupy.SlownessLayer import SlownessLayer
 from taupy.VelocityLayer import VelocityLayer
 
+
 class TestSlownessModel(unittest.TestCase):
     def test_createSample(self):
         testmod = SlownessModel(VelocityModel.readVelocityFile('./data/iasp91.tvel'))
@@ -41,6 +42,8 @@ class TestSlownessModel(unittest.TestCase):
         b = SlownessLayer.create_from_vlayer(vLayer, False)
         self.assertEqual(b.topP, 3180.5)
 
+    def test_findDepth(self):
+        testmod = SlownessModel(VelocityModel.readVelocityFile('./data/iasp91.tvel'))
 
 if __name__ == '__main__':
     unittest.main(buffer=True)
