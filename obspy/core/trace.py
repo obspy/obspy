@@ -1502,7 +1502,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         array([ 0.5       ,  0.40432914,  0.3232233 ,  0.26903012,  0.25 ...
         """
-        from scipy.signal.windows import get_window
+        from scipy.signal import get_window
         from scipy.fftpack import rfft, irfft
         factor = self.stats.sampling_rate / float(sampling_rate)
         # check if endtime changes and this is not explicitly allowed

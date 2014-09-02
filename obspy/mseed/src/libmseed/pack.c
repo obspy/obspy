@@ -7,7 +7,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * modified: 2012.090
+ * modified: 2014.197
  ***************************************************************************/
 
 #include <stdio.h>

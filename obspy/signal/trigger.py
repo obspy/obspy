@@ -371,7 +371,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
                 continue
             of.appendleft(on[0] + max_len)
         pick.append([on[0], of[0]])
-    return np.array(pick)
+    return np.array(pick, dtype=np.int64)
 
 
 def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
@@ -408,7 +408,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
     errcode = clibsignal.ppick(reltrc, *args)
     if errcode != 0:
-        raise Exception("Error in function ppick of mk_mbaer.c")
+        raise MemoryError("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
     # pfm has to be decoded from byte to string
     return pptime.value + 1, pfm.value.decode('utf-8')
@@ -448,7 +448,12 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             C.byref(stime), l_p, l_s, s_pick)
     errcode = clibsignal.ar_picker(a, b, c, *args)
     if errcode != 0:
-        raise Exception("Error in function ar_picker of arpicker.c")
+        BUFS = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
+                'f_error', 'b_error', 'ar_f', 'ar_b', 'buf_sta', 'buf_lta',
+                'extra_tr1', 'extra_tr2', 'extra_tr3']
+        if errcode <= len(BUFS):
+            raise MemoryError('Unable to allocate %s!' % (BUFS[errcode - 1]))
+        raise Exception('Error during PAZ calculation!')
     return ptime.value, stime.value
 
 
@@ -625,7 +630,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             continue
         if trigger_type is not None:
             tr.trigger(trigger_type, **options)
-        kwargs['max_len'] = max_trigger_length * tr.stats.sampling_rate
+        kwargs['max_len'] = int(max_trigger_length * tr.stats.sampling_rate
+                                + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
             cft_peak = tr.data[on:off].max()

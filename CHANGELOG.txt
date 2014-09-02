@@ -35,6 +35,58 @@
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
+ - scripts:
+   * All scripts now require argparse instead of optparse.
+   * All scripts now accept -V or --version to print version information.
+   * obspy-dataless2xseed: -v and --version options are renamed to -x and
+     --xml-version to not conflict with above option.
+   * obspy-indexer: Options have been modified or amended slightly:
+     * --data is a new alias to -d.
+     * --db-uri is a new alias to -u.
+     * --log is a new alias to -l.
+     * --poll-interval is a new alias to -i.
+     * --recent is a new alias to -r.
+     * -a is a new alias to --all-files.
+     * -f is a new alias to --force-reindex.
+     * -H is a new alias to --host.
+     * -p is a new alias to --port.
+     * --check_duplicates is renamed to --check-duplicates.
+     * --drop_database is renamed to --drop-database.
+     * --mapping_file is renamed to --mapping-file.
+     * --run_once is renamed to --run-once.
+   * obspy-mopad: Options have been modified or amended slightly:
+     * convert subcommand:
+       * No changes.
+     * decompose subcommand:
+       * --input_system is renamed to --input-system.
+       * --output_system is renamed to --output-system.
+     * gmt subcommand:
+       * --show_1fp is renamed to --show-1fp.
+       * --show_isotropic_part is renamed to --show-isotropic-part.
+     * plot subcommand:
+       * --basis_vectors is renamed to --basis-vectors.
+       * --full_sphere is renamed to --full-sphere.
+       * --input_system is renamed to --input-system.
+       * --lines_only is renamed to --lines-only.
+       * --output_file is renamed to --output-file.
+       * --pa_system is renamed to --pa-system.
+       * --pressure_colour is renamed to --pressure-colour.
+       * --show1fp is renamed to --show-1fp.
+       * --show_isotropic_part is renamed to --show-isotropic-part.
+       * --tension_colour is renamed to --tension-colour.
+   * obspy-plot: --format option is accepted as an alias of -f.
+   * obspy-print: Options have been modified or amended slightly:
+     * --format is a new alias of -f.
+     * --nomerge is renamed to --no-merge.
+   * obspy-runtests: -a option is accepted as an alias of --all.
+   * obspy-scan: Options have been modified or amended slightly:
+     * --endtime is renamed to --end-time.
+     * --event-times is renamed to --event-time. --event-time may be specified
+       multiple times.
+     * --ids is renamed to --id. --id may be specified multiple times.
+     * --nox is renamed to --no-x.
+     * --nogaps is renamed to --no-gaps.
+     * --starttime is renamed to --start-time.
 
 0.9.3:
  - obspy.core:

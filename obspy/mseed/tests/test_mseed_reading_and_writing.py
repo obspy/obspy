@@ -979,8 +979,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         with CatchOutput() as out:
             st = read(filename, verbose=2)
 
-        self.assertTrue("calling msr_parse with" in out.stdout)
-        self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
+        self.assertTrue(b"calling msr_parse with" in out.stdout)
+        self.assertTrue(b"buflen=512, reclen=-1, dataflag=0, verbose=2" in
                         out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 

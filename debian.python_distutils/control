@@ -15,7 +15,8 @@ Package: python-obspy
 Architecture: any
 Section: python
 Priority: extra
-Depends: python (>= 2.6), ${python:Depends}, python-future (>= 0.12.4),
+Depends: python (>= 2.6), python (>= 2.7) | python-argparse,
+ ${python:Depends}, python-future (>= 0.12.4),
  python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
  python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
  python-suds (>= 0.4), ${shlibs:Depends}, python-tornado

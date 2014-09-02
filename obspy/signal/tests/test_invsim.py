@@ -426,7 +426,7 @@ class InvSimTestCase(unittest.TestCase):
         kwargs["channel"] = "BHZ"
         with CatchOutput() as out:
             self.assertRaises(ValueError, evalresp, **kwargs)
-        self.assertTrue("no response found for" in out.stderr.lower())
+        self.assertTrue(b"no response found for" in out.stderr.lower())
 
 
 def suite():

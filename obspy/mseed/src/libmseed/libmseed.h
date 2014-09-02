@@ -30,10 +30,11 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.12"
-#define LIBMSEED_RELEASE "2013.273"
+#define LIBMSEED_VERSION "2.13"
+#define LIBMSEED_RELEASE "2014.234"
 
-#define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
+#define MINRECLEN   128      /* Minimum Mini-SEED record length, 2^7 bytes */
+                             /* Note: the SEED specification minimum is 256 */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
 
 /* SEED data encoding types */
@@ -683,19 +684,19 @@ extern char *   ms_errorstr (int errorcode);
 /* Logging parameters */
 typedef struct MSLogParam_s
 {
-  void (*log_print)(const char*);
+  void (*log_print)(char*);
   const char *logprefix;
-  void (*diag_print)(const char*);
+  void (*diag_print)(char*);
   const char *errprefix;
 } MSLogParam;
 
 extern int    ms_log (int level, ...);
 extern int    ms_log_l (MSLogParam *logp, int level, ...);
-extern void   ms_loginit (void (*log_print)(const char*), const char *logprefix,
-			  void (*diag_print)(const char*), const char *errprefix);
+extern void   ms_loginit (void (*log_print)(char*), const char *logprefix,
+			  void (*diag_print)(char*), const char *errprefix);
 extern MSLogParam *ms_loginit_l (MSLogParam *logp,
-			         void (*log_print)(const char*), const char *logprefix,
-			         void (*diag_print)(const char*), const char *errprefix);
+			         void (*log_print)(char*), const char *logprefix,
+			         void (*diag_print)(char*), const char *errprefix);
 
 /* Selection functions */
 extern Selections *ms_matchselect (Selections *selections, char *srcname,
