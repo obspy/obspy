@@ -1,4 +1,5 @@
 from math import pi
+import math
 from decimal import *
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
@@ -33,7 +34,7 @@ class SlownessModel(object):
     # NB if the following are actually cleared (lists are mutable) every
     # time createSample is called, maybe it would be better to just put these
     # initialisations into the relevant methods? They do have to be persistent across
-    # method calls in createSample though (maybe??).
+    # method calls in createSample though, so don't.
 
     # Stores the layer number for layers in the velocity model with a critical
     # point at their top. These form the "branches" of slowness sampling.
@@ -61,13 +62,18 @@ class SlownessModel(object):
         self.maxInterpError = maxInterpError
         self.allowInnerCoreS = allowInnerCoreS
         self.slowness_tolerance = slowness_tolerance
-        self.createSample()
         ### This may be dodgy! Still not sure how the Java works!
         self.PLayers = pLayers
         self.SLayers = sLayers
         # It seems data is only put in here (and the longer constructor called) by the splitLayer method (and maybe
         # others it calls), so it seems reasonable to have an empty list as default for all instatiations of this class,
         # I suppose and hope it won't do any harm.
+        self.createSample()
+
+    def __str__(self):
+        desc = "This is a dummy SlownessModel so there's nothing here really. Nothing to see. Move on."
+        desc += "This might be interesting: slowness_tolerance ought to be 1e-16. It is:" + str(self.slowness_tolerance)
+        return desc
 
     def createSample(self):
         """ This method takes a velocity model and creates a vector containing
@@ -327,6 +333,20 @@ class SlownessModel(object):
 
         if self.validate() is False:
             raise SlownessModelError("Validation failed after findDepth")
+
+    def getNumLayers(self, isPWave):
+        """This is meant to return the number of pLayers and sLayers.
+        I have not yet been able to find out how these are known in
+        the java code."""
+
+        # Where
+        # self.PLayers = pLayers
+        # and the pLayers have been provided in the constructor, but I
+        # don't understand from where!
+        if isPWave:
+            return len(self.PLayers)
+        else:
+            return len(self.SLayers)
 
     def findDepth_from_depths(self, rayParam, topDepth, botDepth, isPWave):
         """Finds a depth corresponding to a slowness between two given depths in the
@@ -633,10 +653,41 @@ class SlownessModel(object):
                     otherLayers.insert(otherIndex, topLayer)
 
     def rayParamIncCheck(self):
-        pass
+        """Checks to make sure that no slowness layer spans more than maxDeltaP."""
+        for layers in [self.SLayers, self.PLayers]:
+            for sLayer in layers:
+                if abs(sLayer.topP - sLayer.botP) > self.maxDeltaP:
+                    numNewP = math.ceil(abs(sLayer.topP - sLayer.botP) / self.maxDeltaP)
+                    deltaP = (sLayer.topP - sLayer.botP) / numNewP
+                    rayNum = 1
+                    while rayNum < numNewP:
+                        self.addSlowness(sLayer.topP + rayNum * deltaP, self.PWAVE)
+                        self.addSlowness(sLayer.topP + rayNum * deltaP, self.SWAVE)
+                        rayNum += 1
 
     def depthIncCheck(self):
-        pass
+        """Checks to make sure no slowness layer spans more than maxDepthInterval."""
+        for which_codeblock, layers in enumerate([self.SLayers, self.PLayers]):
+            for sLayer in layers:
+                if (sLayer.botDepth - sLayer.topDepth) > self.maxDepthInterval:
+                    newNumDepths = math.ceil((sLayer.botDepth - sLayer.topDepth) / self.maxDepthInterval)
+                    deltaDepth = (sLayer.botDepth - sLayer.topDepth) / newNumDepths
+                    depthNum = 1
+                    while depthNum < newNumDepths:
+                        # Could do if layers == self.SLayers, but that would be a bit heavy.
+                        # In fact, any comparison here might be quite slow, I have a feeling this runs a lot... ?
+                        if which_codeblock == 0:
+                            velocity = self.vMod.evaluateAbove(sLayer.topDepth + depthNum * deltaDepth, 'S')
+                            if velocity == 0 or (self.allowInnerCoreS is False and sLayer.topDepth
+                                                 + depthNum * deltaDepth >= self.vMod.iocbDepth):
+                                velocity = self.vMod.evaluateAbove(sLayer.topDepth + depthNum * deltaDepth, 'P')
+                            p = self.toSlowness(velocity, sLayer.topDepth + depthNum * deltaDepth)
+                        else:
+                            p = self.toSlowness(self.vMod.evaluateAbove(sLayer.topDepth + depthNum * deltaDepth, 'P'),
+                                                sLayer.topDepth + depthNum * deltaDepth)
+                        self.addSlowness(p, self.PWAVE)
+                        self.addSlowness(p, self.SWAVE)
+                        depthNum += 1
 
     def distanceCheck(self):
         pass
@@ -647,28 +698,3 @@ class SlownessModel(object):
     def validate(self):
         return True
 
-    def getNumLayers(self, isPWave):
-        '''This is meant to return the number of pLayers and sLayers.
-        I have not yet been able to find out how these are known in
-        the java code.'''
-        # translated Java code:
-        # def getNumLayers(self, isPWave):
-        # """ generated source for method getNumLayers """
-        # if isPWave:
-        # return len(self.PLayers)
-        # else:
-        # return len(self.SLayers)
-
-        # Where
-        # self.PLayers = pLayers
-        # and the pLayers have been provided in the constructor, but I
-        # don't understand from where!
-        if isPWave:
-            return len(self.PLayers)
-        else:
-            return len(self.SLayers)
-
-    def __str__(self):
-        desc = "This is a dummy SlownessModel so there's nothing here really. Nothing to see. Move on."
-        desc += "This might be interesting: slowness_tolerance ought to be 1e-16. It is:" + str(self.slowness_tolerance)
-        return desc
