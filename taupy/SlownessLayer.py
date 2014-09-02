@@ -25,5 +25,4 @@ class SlownessLayer:
             botP = (radiusOfEarth - botDepth) / vLayer.evaluateAtBottom(waveType)
         else:
             raise NotImplementedError("no flat models yet")
-            
         return SlownessLayer(topP, topDepth, botP, botDepth)

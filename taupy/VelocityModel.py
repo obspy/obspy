@@ -121,26 +121,20 @@ class VelocityModel(object):
                 return i
         raise TauPException("No such layer.")
 
-
     def evaluateAbove(self, depth, materialProperty):
 
-        """
-        returns the value of the given material property, usually P or S
+        """Returns the value of the given material property, usually P or S
         velocity, at the given depth. Note this returns the value at the bottom
         of the upper layer if the depth happens to be at a layer boundary.
-
         :returns: the value of the given material property
         """
         layer = self.layers[self.layerNumberAbove(depth)]
         return layer.evaluateAt(depth, materialProperty)
 
-
     def evaluateBelow(self, depth, materialProperty):
-        """
-        returns the value of the given material property, usually P or S
+        """Returns the value of the given material property, usually P or S
         velocity, at the given depth. Note this returns the value at the top
         of the lower layer if the depth happens to be at a layer boundary.
-
         :returns: the value of the given material property
         """
         layer = self.layers[self.layerNumberBelow(depth)]

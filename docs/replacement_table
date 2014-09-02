@@ -1,5 +1,7 @@
 Try and keep track of the methods I replace, in case they are called somewhere later.
 
+Java list add (e.g. PLayers.add) is same as python append.
+
 in VelocityModel:
 
 self.getBotDepth()	-->	self.botDepth		(and many others)
@@ -19,10 +21,23 @@ cf the special notes file.
 Also removed get/setVelFileType, -ModelFilename, -Directory and DEBUG,
 as these appear to be never called ever, anywhere, either.
 
-in SlownessModel:
-findDepth(int, double, double, bool)   -->   findDepth_from_depths
-as the default is findDepth(int, int, int, bool)
+
+in SlownessLayer:
+containsDepth(depth) can really just be replaced wherever its called with its content: self.topDepth <= depth <= self.botDepth
 
 toSlownessLayer(a_v_layer, ...) --> SlownessLayer.create_from_vlayer(a_v_layer, ...)
 # the former returns: new SlownessLayer(vLayer, true, radiusOfEarth, isPWave)
 # which is a different constructor (overloaded)!
+
+
+in SlownessModel:
+findDepth(int, double, double, bool)   -->   findDepth_from_depths
+as the default is findDepth(int, int, int, bool)
+
+coarseSample 
+the method uses PLayers and SLayers, lists of slowness layers, defined as class attributes (I think attributes of the instantiated class, defined in one constructor). They must be persistent across methods.
+SLayerNum --> sLayerNum
+
+getSlownessLayer(int layerNum, boolean isPWave) --> self.PLayers[layerNum]
+    if isPWave is True (usually called with self.PWAVE); otherwise SLayers
+    - unnecessary method

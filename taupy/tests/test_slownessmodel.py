@@ -11,8 +11,8 @@ class TestSlownessModel(unittest.TestCase):
     """"WARNING: The values I'm testing can't be right. Half of the methods needed by createSample aren't implemented
     yet! However, as that is needed in the constructor of the SlownessModel, the other methods can't be tested
     independently of it. So I can test some (probably) always true boundary, but the intermediate testing values should
-    at some point, as work progresses, start to throw errors. I can't really think of a way to write true unit tests, of
-    small independent units.
+    at some point, as work progresses, start to throw errors. I could true unit tests, but the effort doesn't seem
+    worth it at the moment.
     """
     def test_createSample(self):
         testmod = SlownessModel(VelocityModel.readVelocityFile('./data/iasp91.tvel'))

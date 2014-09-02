@@ -125,12 +125,20 @@ SlownessModel:
           
     coarseSample
         some vlayer, slayer methods and PLayers.clear, where PLayers is simply a 
-        list of SlownessLayers, screwing up the nomenclature
+        list of SlownessLayers (not a class), screwing up the nomenclature
         depthInFluid
+        layerNumberAbove
         addSlowness
     
     depthInFluid
+    layerNumberAbove
+        Is defined in SlownessModel (use this) but also same name in VelocityModel!
+        layerNumForDepth
+        getSlownessLayer
     addSlowness
+        vMod.evaluateAbove/Below
+    layerNumForDepth
+    getSlownessLayer
     rayParamIncCheck
     depthIncCheck
         toSlowness

@@ -1,4 +1,5 @@
 from math import pi
+from decimal import *
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
 
@@ -50,7 +51,7 @@ class SlownessModel(object):
     PWAVE = True
 
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115, maxRangeInterval=2.5 * pi / 180,
-                 maxInterpError=0.05, allowInnerCoreS=True, slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE):
+                 maxInterpError=0.05, allowInnerCoreS=True, slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE, pLayers=[], sLayers=[]):
 
         self.vMod = vMod
         self.minDeltaP = minDeltaP
@@ -61,6 +62,12 @@ class SlownessModel(object):
         self.allowInnerCoreS = allowInnerCoreS
         self.slowness_tolerance = slowness_tolerance
         self.createSample()
+        ### This may be dodgy! Still not sure how the Java works!
+        self.PLayers = pLayers
+        self.SLayers = sLayers
+        # It seems data is only put in here (and the longer constructor called) by the splitLayer method (and maybe
+        # others it calls), so it seems reasonable to have an empty list as default for all instatiations of this class,
+        # I suppose and hope it won't do any harm.
 
     def createSample(self):
         """ This method takes a velocity model and creates a vector containing
@@ -425,7 +432,7 @@ class SlownessModel(object):
             depth = (self.radiusOfEarth + p * (topDepth * slope - topVelocity)) / denominator
             return depth
 
-    def depthInFluid(self, depth, fluidZoneDepth=DepthRange()):
+    def depthInFluid(self, depth):
         """ Determines if the given depth is contained within a fluid zone. The fluid
         zone includes its upper boundary but not its lower boundary. The top and
         bottom of the fluid zone are not returned as a DepthRange, just like in the java code,
@@ -436,10 +443,14 @@ class SlownessModel(object):
         return False
 
     def coarseSample(self):
-        PLayers = []
-        SLayers = []
+        self.PLayers = []
+        self.SLayers = []
         # to initialise prevVLayer
         origVLayer = self.vMod.layers[0]
+        origVLayer = VelocityLayer(0, origVLayer.topDepth, origVLayer.topDepth, origVLayer.topPVelocity,
+                                   origVLayer.topPVelocity, origVLayer.topSVelocity, origVLayer.topSVelocity,
+                                   origVLayer.topDensity, origVLayer.topDensity,
+                                   origVLayer.topQp, origVLayer.topQp, origVLayer.topQs, origVLayer.topQs)
         for layer in self.vMod.layers:
             prevVLayer = origVLayer
             origVLayer = layer
@@ -467,8 +478,159 @@ class SlownessModel(object):
                                            prevVLayer.botPVelocity, origVLayer.topPVelocity,
                                            topSVel, botSVel)
                 currPLayer = SlownessLayer.create_from_vlayer(currVLayer, self.PWAVE)
+                self.PLayers.append(currPLayer)
+                if (prevVLayer.botSVelocity == 0
+                    and origVLayer.topSVelocity == 0) or (self.allowInnerCoreS is False
+                                                          and currVLayer.topDepth >= self.vMod.iocbDepth):
+                    currSLayer = currPLayer
+                else:
+                    currSLayer = SlownessLayer.create_from_vlayer(currVLayer, self.SWAVE)
+                self.SLayers.append(currSLayer)
+            currPLayer = SlownessLayer.create_from_vlayer(origVLayer, self.PWAVE)
+            self.PLayers.append(currPLayer)
+            if self.depthInFluid(origVLayer.topDepth) or (self.allowInnerCoreS is False
+                                                          and origVLayer.topDepth >= self.vMod.iocbDepth):
+                currSLayer = currPLayer
+            else:
+                currSLayer = SlownessLayer.create_from_vlayer(origVLayer, self.SWAVE)
+            self.SLayers.append(currSLayer)
+        # Make sure that all high slowness layers are sampled exactly
+        # at their bottom
+        for highZone in self.highSlownessLayerDepthsS:
+            sLayerNum = self.layerNumberAbove(highZone.botDepth, self.SWAVE)
+            highSLayer = self.SLayers[sLayerNum]
+            while highSLayer.topDepth == highSLayer.botDepth and ((highSLayer.topP - highZone.rayParam)
+                                                                  * (highZone.rayParam - highSLayer.botP) < 0):
+                sLayerNum += 1
+                highSLayer = self.SLayers[sLayerNum]
+            if highZone.rayParam != highSLayer.botP:
+                self.addSlowness(highZone.rayParam, self.SWAVE)
+        for highZone in self.highSlownessLayerDepthsP:
+            sLayerNum = self.layerNumberAbove(highZone.botDepth, self.PWAVE)
+            highSLayer = self.PLayers[sLayerNum]
+            while highSLayer.topDepth == highSLayer.botDepth and ((highSLayer.topP - highZone.rayParam)
+                                                                  * (highZone.rayParam - highSLayer.botP) < 0):
+                sLayerNum += 1
+                highSLayer = self.PLayers[sLayerNum]
+            if highZone.rayParam != highSLayer.botP:
+                self.addSlowness(highZone.rayParam, self.PWAVE)
+        # Make sure P and S are consistent
+        botP = -1
+        for layer in self.PLayers:
+            topP = layer.topP
+            if topP != botP:
+                self.addSlowness(topP, self.SWAVE)
+            botP = layer.botP
+            self.addSlowness(botP, self.SWAVE)
+        botP = -1
+        for layer in self.SLayers:
+            topP = layer.topP
+            if topP != botP:
+                self.addSlowness(topP, self.PWAVE)
+            botP = layer.botP
+            self.addSlowness(botP, self.SWAVE)
 
+    def layerNumberAbove(self, depth, isPWave):
+        """Finds the index of the slowness layer that contains the given depth. Note
+        that if the depth is a layer boundary, it returns the shallower of the
+        two or possibly more (since total reflections are zero thickness layers)
+        layers.
+        Error occurs if no layer in the slowness model contains the given depth."""
+        foundLayerNum = self.layerNumForDepth(depth, isPWave)
+        tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
+        # Check if given depth is on a boundary.
+        while tempLayer.topDepth == depth and foundLayerNum > 0:
+            foundLayerNum -= 1
+            tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
+        return foundLayerNum
 
+    def layerNumForDepth(self, depth, isPWave):
+        if isPWave:
+            layers = self.PLayers
+        else:
+            layers = self.SLayers
+        # check to make sure depth is within the range available
+        if depth < layers[0].topDepth or depth > layers[-1].botDepth:
+            raise SlownessModelError("No layer contains this depth")
+        tooSmallNum = 0
+        tooLargeNum = len(layers) - 1
+        while True:
+            if tooLargeNum - tooSmallNum < 3:
+                #  "end of Newton, just check" (what?)
+                currentNum = tooSmallNum
+                while currentNum <= tooLargeNum:
+                    tempLayer = self.getSlownessLayer(currentNum, isPWave)
+                    if tempLayer.topDepth <= depth <= tempLayer.botDepth:
+                        return currentNum
+                    currentNum += 1
+            else:
+                currentNum = int(Decimal((tooSmallNum + tooLargeNum) / 2.0).to_integral_value(ROUND_HALF_EVEN))
+            tempLayer = self.getSlownessLayer(currentNum, isPWave)
+            if tempLayer.topDepth > depth:
+                tooLargeNum = currentNum - 1
+            elif tempLayer.botDepth < depth:
+                tooSmallNum = currentNum + 1
+            else:
+                return currentNum
+            if tooSmallNum > tooLargeNum:
+                raise ArithmeticError("tooSmallNum: " + str(tooSmallNum) + " >= tooLargeNum: " + str(tooLargeNum))
+
+    def getSlownessLayer(self, layerNum, isPWave):
+        if isPWave:
+            return self.PLayers[layerNum]
+        else:
+            return self.SLayers[layerNum]
+
+    def addSlowness(self, p, isPWave):
+        """Adds the given ray parameter, p, to the slowness sampling for the given
+        waveType. It splits slowness layers as needed and keeps P and S sampling
+        consistent within fluid layers. Note, this makes use of the velocity
+        model, so all interpolation is linear in velocity, not in slowness!"""
+        if isPWave:
+            # NB Just like Java (fortunately) these are shallow copies -- values are modified in place!
+            layers = self.PLayers
+            otherLayers = self.SLayers
+        else:
+            layers = self.SLayers
+            otherLayers = self.PLayers
+        for i, sLayer in enumerate(layers):
+            if sLayer.topDepth != sLayer.botDepth:
+                topVelocity = self.vMod.evaluateBelow(sLayer.topDepth, 'P' if isPWave else 'S')
+                botVelocity = self.vMod.evaluateAbove(sLayer.botDepth, 'P' if isPWave else 'S')
+            else:
+                # If depths are the same only need topVelocity, and just
+                # to verify we are not in a fluid
+                topVelocity = self.vMod.evaluateAbove(sLayer.botDepth, 'P' if isPWave else 'S')
+                botVelocity = self.vMod.evaluateBelow(sLayer.topDepth, 'P' if isPWave else 'S')
+            # Don't need to check for S waves in a fluid or in inner core if
+            # allowInnerCoreS is False.
+            if not isPWave:
+                if self.allowInnerCoreS is False and sLayer.botDepth > self.vMod.iocbDepth:
+                    break
+                elif topVelocity == 0:
+                    continue
+            if (sLayer.topP - p) * (p - sLayer.botP) > 0:
+                botDepth = sLayer.botDepth
+                if sLayer.botDepth != sLayer.topDepth:
+                    # Not a zero thickness layer, so calculate the depth for the ray parameter.
+                    slope = (botVelocity - topVelocity) / (sLayer.botDepth - sLayer.topDepth)
+                    botDepth = self.interpolate(p, topVelocity, sLayer.topDepth, slope)
+                botLayer = SlownessLayer(p, botDepth, sLayer.botP, sLayer.botDepth)
+                topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, botDepth)
+                # The list operations here should really be correct, after painstakingly working through Java
+                # and Python documentations and trying the behaviour of both.
+                layers.pop(i)
+                layers.insert(i, botLayer)
+                layers.insert(i, topLayer)
+                # To mimic the Java behaviour of returning -1 when item not in list.
+                try:
+                    otherIndex = otherLayers.index(sLayer)
+                except ValueError:
+                    otherIndex = -1
+                if otherIndex != -1:
+                    otherLayers.pop(otherIndex)
+                    otherLayers.insert(otherIndex, botLayer)
+                    otherLayers.insert(otherIndex, topLayer)
 
     def rayParamIncCheck(self):
         pass
@@ -501,13 +663,10 @@ class SlownessModel(object):
         # self.PLayers = pLayers
         # and the pLayers have been provided in the constructor, but I
         # don't understand from where!
-
-        # dummy code so TauP_Create won't fail:
-        if isPWave == True:
-            return 'some really dummy number'
-        if isPWave == False:
-            return 'some other number'
-
+        if isPWave:
+            return len(self.PLayers)
+        else:
+            return len(self.SLayers)
 
     def __str__(self):
         desc = "This is a dummy SlownessModel so there's nothing here really. Nothing to see. Move on."
