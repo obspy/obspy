@@ -57,12 +57,12 @@ git clean -fxd
 if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
 then
     # old build style, python2 only
-    cp -a debian.python_distutils/* debian/
+    cp -a debian/python_distutils/* debian/
 else
     # new build style, python2 and python3
     # Ubuntu: trusty and higher
     # Debian: jessie and higher
-    cp -a debian.pybuild/* debian/
+    cp -a debian/pybuild/* debian/
 fi
 # remove dependencies of distribute for obspy.core
 # distribute is not packed for python2.5 in Debian
