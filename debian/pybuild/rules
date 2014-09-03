@@ -19,11 +19,16 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	dh_auto_install #-- release
+	python2 setup.py build_man
 	dh_numpy
 	dh_numpy3
 	set -ex; for python in $(shell py3versions -r); do \
 	    $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
 	done;
+	python3 setup.py build_man
+	ln build/man/* debian/
+	ls -1 build/man/obspy-* | sed 's#.*/#./debian/#' > debian/python-obspy.manpages
+	ls -1 build/man/obspy3-* | sed 's#.*/#./debian/#' > debian/python3-obspy.manpages
 
 override_dh_install:
 	# data files get separated into /usr/share for both python2/3 to use

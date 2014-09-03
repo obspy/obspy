@@ -23,6 +23,12 @@ override_dh_install:
 	# Continue with regular dh_install
 	dh_install
 
+override_dh_installman:
+	python setup.py build_man
+	ln build/man/* debian/
+	ls -1 build/man/* | sed 's#.*/#./debian/#' > debian/python-obspy.manpages
+	dh_installman
+
 override_dh_link:
 	sh -x debian/_dh_link_data_files.sh
 	dh_link
