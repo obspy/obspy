@@ -1516,7 +1516,12 @@ def _adjust_bode_plot_figure(fig, grid=True, show=True):
     # make more room in between subplots for the ylabel of right plot
     fig.subplots_adjust(hspace=0.02, top=0.87, right=0.82)
     ax1, ax2 = fig.axes[:2]
-    ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    # workaround for older matplotlib versions
+    try:
+        ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    except TypeError:
+        leg_ = ax1.legend(loc="lower center", ncol=3)
+        leg_.prop.set_size("small")
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.setp(ax2.get_yticklabels()[-1], visible=False)
     ax1.set_ylabel('Amplitude')

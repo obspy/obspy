@@ -340,6 +340,11 @@ ENTRY_POINTS = {
         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
+# PY3: rename entry points for executable scripts to "obspy3-..."
+if sys.version_info[0] == 3:
+    ENTRY_POINTS['console_scripts'] = [
+        string.replace("obspy", "obspy3", 1)
+        for string in ENTRY_POINTS['console_scripts']]
 
 
 def find_packages():
