@@ -13,7 +13,7 @@ class SlownessModelError(Exception):
 # noinspection PyPep8Naming
 class SlownessModel(object):
     """This class provides storage and methods for generating slowness-depth pairs."""
-    DEBUG = False
+    DEBUG = True
     DEFAULT_SLOWNESS_TOLERANCE = 1e-16
     radiusOfEarth = 6371.0
 
@@ -539,14 +539,29 @@ class SlownessModel(object):
     def layerNumberAbove(self, depth, isPWave):
         """Finds the index of the slowness layer that contains the given depth. Note
         that if the depth is a layer boundary, it returns the shallower of the
-        two or possibly more (since total reflections are zero thickness layers)
-        layers.
+        two or possibly more (since total reflections are zero thickness layers)layers.
         Error occurs if no layer in the slowness model contains the given depth."""
         foundLayerNum = self.layerNumForDepth(depth, isPWave)
         tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
         # Check if given depth is on a boundary.
         while tempLayer.topDepth == depth and foundLayerNum > 0:
             foundLayerNum -= 1
+            tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
+        return foundLayerNum
+
+    def layerNumberBelow(self, depth, isPWave):
+        """Finds the index of the slowness layer that contains the given depth. Note
+        that if the depth is a layer boundary, it returns the deeper of the
+        two or possibly more (since total reflections are zero thickness layers) layers.
+        Error occurs if no layer in the slowness model contains the given depth."""
+        foundLayerNum = self.layerNumForDepth(depth, isPWave)
+        if isPWave:
+            layers = self.PLayers
+        else:
+            layers = self.SLayers
+        tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
+        while tempLayer.botDepth == depth and foundLayerNum < len(layers) - 1:
+            foundLayerNum += 1
             tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
         return foundLayerNum
 
@@ -582,6 +597,9 @@ class SlownessModel(object):
                 raise ArithmeticError("tooSmallNum: " + str(tooSmallNum) + " >= tooLargeNum: " + str(tooLargeNum))
 
     def getSlownessLayer(self, layerNum, isPWave):
+        """Returns the SlownessLayer of the requested waveType. This is not meant to be a clone!"""
+        # TODO Make sure this doesn't clone (pretty sure it does)! Some methods rely on this to modify the SlownessModel!
+        # TODO Or better, find a more elegant solution for those places?
         if isPWave:
             return self.PLayers[layerNum]
         else:
@@ -680,86 +698,93 @@ class SlownessModel(object):
         and that the (estimated) error due to linear interpolation is less than
         maxInterpError.
         """
-        for currWaveType in [self.SWAVE, self.PWAVE]:
-            isCurrOK = False
-            isPrevOK = False
-            prevPrevTD = None
-            prevTD = None
-            currTD = None
-            j = 0
-            sLayer = self.getSlownessLayer(j, currWaveType)
-            while j < self.getNumLayers(currWaveType):
-                if j == 102:
-                    pass  # breakpoint
-                prevSLayer = sLayer
-                sLayer = self.getSlownessLayer(j, currWaveType)
-                if (self.depthInHighSlowness(sLayer.botDepth, sLayer.botP, currWaveType) is False
-                     and self.depthInHighSlowness(sLayer.topDepth, sLayer.topP, currWaveType) is False):
-                    # Don't calculate prevTD if we can avoid it
-                    if isCurrOK:
-                        if isPrevOK:
-                            prevPrevTD = prevTD
-                        else:
-                            prevPrevTD = None
-                        prevTD = currTD
-                        isPrevOK = True
-                    else:
-                        prevTD = self.approxDistance(j - 1, sLayer.topP, currWaveType)
-                        isPrevOK = True
-                    currTD = self.approxDistance(j, sLayer.botP, currWaveType)
-                    isCurrOK = True
-                    # Check for jump of too great distance
-                    if (abs(prevTD.distRadian - currTD.distRadian) > self.maxRangeInterval and
-                        abs(sLayer.topP - sLayer.botP) > 2 * self.minDeltaP):
-                        if self.DEBUG:
-                            print("At "+str(j)+" Distance jump too great (>maxRangeInterval "+str(self.maxRangeInterval)
-                                               + "), adding slowness. ")
-                        self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
-                        self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
-                        currTD = prevTD
-                        prevTD = prevPrevTD
-                    else:
-                        # Make guess as to error estimate due to linear interpolation if it is not ok, then we split
-                        # both the previous and current slowness layers, this has the nice, if unintended, consequence
-                        # of adding extra samples in the neighborhood of poorly sampled caustics.
-                        splitRayParam = (sLayer.topP + sLayer.botP) / 2
-                        allButLayer = self.approxDistance(j-1, splitRayParam, currWaveType)
-                        splitLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, splitRayParam,
-                                                   sLayer.bullenDepthFor(splitRayParam, self.radiusOfEarth))
-                        justLayer = splitLayer.bullenRadialSlowness(splitRayParam, self.radiusOfEarth)
-                        splitTD = TimeDist(splitRayParam, allButLayer.time + 2*justLayer.time,
-                                           allButLayer.distRadian + 2*justLayer.distRadian)
-                        if (abs(currTD.time - ((splitTD.time - prevTD.time) * (currTD.distRadian - prevTD.distRadian)
-                              / (splitTD.distRadian - prevTD.distRadian) + prevTD.time)) > self.maxInterpError):
-                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.PWAVE)
-                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.SWAVE)
-                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
-                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
-                            currTD = prevPrevTD
-                            isPrevOK = False
-                            if j > 0:
-                                # Back up one step unless we are at the beginning, then stay put.
-                                j -= 1
-                                sLayer = self.getSlownessLayer(j-1 if j-1 >= 0 else 0, currWaveType)
-                                # This sLayer will become prevSLayer in the next loop.
-                            else:
-                                isPrevOK = False
-                                isCurrOK = False
-                        else:
-                            j += 1
-                            if self.DEBUG and j % 10 == 0:
-                                print(j)
-                else:
-                    prevPrevTD = None
-                    prevTD = None
-                    currTD = None
-                    isCurrOK = False
-                    isPrevOK = False
-                    j += 1
-                    if self.DEBUG and j % 100 == 0:
-                        print(j)
-            if self.DEBUG:
-                print("Number of " + ("P" if currWaveType else "S") + " slowness layers: " + str(j))
+        # TODO Re-enable when methods called from here implemented and see if it works then.
+        # At the moment it breaks at j = 103, so the process works well for quite a long time, before it falls into a
+        # strange sequence of Nulling first PrevPrevTD, then currTD in line 742, then prevTD in l 708. That can only
+        # happen due to certain results of the if tests which may be different once the methods in SlownessLayer are
+        # implemented.
+        # TODO Also check if the shallow copying of SlownessLayers (P/SLayers) and modifying them in place works at all!
+        pass
+        # for currWaveType in [self.SWAVE, self.PWAVE]:
+        #     isCurrOK = False
+        #     isPrevOK = False
+        #     prevPrevTD = None
+        #     prevTD = None
+        #     currTD = None
+        #     j = 0
+        #     sLayer = self.getSlownessLayer(j, currWaveType)
+        #     while j < self.getNumLayers(currWaveType):
+        #         if j == 105:
+        #             pass  # breakpoint; when j hits 103 (the second time) the error occurs
+        #         prevSLayer = sLayer
+        #         sLayer = self.getSlownessLayer(j, currWaveType)
+        #         if (self.depthInHighSlowness(sLayer.botDepth, sLayer.botP, currWaveType) is False
+        #              and self.depthInHighSlowness(sLayer.topDepth, sLayer.topP, currWaveType) is False):
+        #             # Don't calculate prevTD if we can avoid it
+        #             if isCurrOK:
+        #                 if isPrevOK:
+        #                     prevPrevTD = prevTD
+        #                 else:
+        #                     prevPrevTD = None
+        #                 prevTD = currTD
+        #                 isPrevOK = True
+        #             else:
+        #                 prevTD = self.approxDistance(j - 1, sLayer.topP, currWaveType)
+        #                 isPrevOK = True
+        #             currTD = self.approxDistance(j, sLayer.botP, currWaveType)
+        #             isCurrOK = True
+        #             # Check for jump of too great distance
+        #             if (abs(prevTD.distRadian - currTD.distRadian) > self.maxRangeInterval and
+        #                 abs(sLayer.topP - sLayer.botP) > 2 * self.minDeltaP):
+        #                 if self.DEBUG:
+        #                     print("At "+str(j)+" Distance jump too great (>maxRangeInterval "+str(self.maxRangeInterval)
+        #                                        + "), adding slowness. ")
+        #                 self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
+        #                 self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
+        #                 currTD = prevTD
+        #                 prevTD = prevPrevTD
+        #             else:
+        #                 # Make guess as to error estimate due to linear interpolation if it is not ok, then we split
+        #                 # both the previous and current slowness layers, this has the nice, if unintended, consequence
+        #                 # of adding extra samples in the neighborhood of poorly sampled caustics.
+        #                 splitRayParam = (sLayer.topP + sLayer.botP) / 2
+        #                 allButLayer = self.approxDistance(j-1, splitRayParam, currWaveType)
+        #                 splitLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, splitRayParam,
+        #                                            sLayer.bullenDepthFor(splitRayParam, self.radiusOfEarth))
+        #                 justLayer = splitLayer.bullenRadialSlowness(splitRayParam, self.radiusOfEarth)
+        #                 splitTD = TimeDist(splitRayParam, allButLayer.time + 2*justLayer.time,
+        #                                    allButLayer.distRadian + 2*justLayer.distRadian)
+        #                 if (abs(currTD.time - ((splitTD.time - prevTD.time) * (currTD.distRadian - prevTD.distRadian)
+        #                       / (splitTD.distRadian - prevTD.distRadian) + prevTD.time)) > self.maxInterpError):
+        #                     self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.PWAVE)
+        #                     self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.SWAVE)
+        #                     self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
+        #                     self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
+        #                     currTD = prevPrevTD
+        #                     isPrevOK = False
+        #                     if j > 0:
+        #                         # Back up one step unless we are at the beginning, then stay put.
+        #                         j -= 1
+        #                         sLayer = self.getSlownessLayer(j-1 if j-1 >= 0 else 0, currWaveType)
+        #                         # This sLayer will become prevSLayer in the next loop.
+        #                     else:
+        #                         isPrevOK = False
+        #                         isCurrOK = False
+        #                 else:
+        #                     j += 1
+        #                     if self.DEBUG and j % 10 == 0:
+        #                         print(j)
+        #         else:
+        #             prevPrevTD = None
+        #             prevTD = None
+        #             currTD = None
+        #             isCurrOK = False
+        #             isPrevOK = False
+        #             j += 1
+        #             if self.DEBUG and j % 100 == 0:
+        #                 print(j)
+        #     if self.DEBUG:
+        #         print("Number of " + ("P" if currWaveType else "S") + " slowness layers: " + str(j))
 
     def depthInHighSlowness(self, depth, rayParam, isPWave):
         """Determines if the given depth and corresponding slowness is contained
@@ -886,7 +911,74 @@ class SlownessModel(object):
         return sphericalLayer.bullenRadialSlowness(sphericalRayParam, self.radiusOfEarth)
 
     def fixCriticalPoints(self):
-        pass
+        """Resets the slowness layers that correspond to critical points."""
+        for cd in self.criticalDepths:
+            cd.pLayerNum = self.layerNumberBelow(cd.depth, self.PWAVE)
+            sLayer = self.getSlownessLayer(cd.pLayerNum, self. PWAVE)
+            if cd.pLayerNum == len(self.PLayers) - 1 and sLayer.botDepth == cd.depth:
+                # We want the last critical point to be the bottom of the last layer.
+                cd.pLayerNum += 1
+            cd.sLayerNum = self.layerNumberBelow(cd.depth, self.SWAVE)
+            sLayer = self.getSlownessLayer(cd.sLayerNum, self.SWAVE)
+            if cd.sLayerNum == len(self.SLayers) - 1 and sLayer .botDepth == cd.depth:
+                cd.sLayerNum += 1
 
     def validate(self):
+        """Performs consistency check on the slowness model."""
+        if self.radiusOfEarth <= 0:
+            raise SlownessModelError("Radius of Earth must be positive.")
+        if self.maxDepthInterval <= 0:
+            raise SlownessModelError("maxDepthInterval must be positive and non-zero.")
+        # Check for inconsistencies in high slowness zones.
+        for isPWave in [self.PWAVE, self.SWAVE]:
+            if isPWave:
+                highSlownessLayerDepths = self.highSlownessLayerDepthsP
+            else:
+                highSlownessLayerDepths = self.highSlownessLayerDepthsS
+            prevDepth = -1e300
+            for highSZoneDepth in highSlownessLayerDepths:
+                if highSZoneDepth.topDepth >= highSZoneDepth.botDepth:
+                    raise SlownessModelError("High Slowness zone has zero or negative thickness!")
+                if highSZoneDepth.topDepth <= prevDepth:
+                    raise SlownessModelError("High Slowness zone overlaps previous zone.")
+                prevDepth = highSZoneDepth.botDepth
+        # Check for inconsistencies in fluid zones.
+        prevDepth = -1e300
+        for fluidZone in self.fluidLayerDepths:
+            if fluidZone.topDepth >= fluidZone.botDepth:
+                raise SlownessModelError("Fluid zone has zero or negative thickness!")
+            if fluidZone.topDepth <= prevDepth:
+                    raise SlownessModelError("Fluid zone overlaps previous zone.")
+            prevDepth = fluidZone.botDepth
+        # Check for inconsistencies in slowness layers.
+        for isPWave in [self.PWAVE, self.SWAVE]:
+            prevDepth = 0
+            if self.getNumLayers(isPWave) > 0:
+                sLayer = self.getSlownessLayer(0, isPWave)
+                prevBotP = sLayer.topP
+            else:
+                prevBotP = -1
+        # TODO look at this again, does that really work to replace getSlownessLayer etc.?
+        for sLayer in (self.PLayers if isPWave else self.SLayers):
+            if sLayer.validate() is False:
+                raise SlownessModelError("Validation of SlownessLayer failed!")
+            if sLayer.topDepth > prevDepth:
+                raise SlownessModelError("Gap between slowness layers!")
+            if sLayer.topDepth < prevDepth:
+                raise SlownessModelError("Slowness layer overlaps previous!")
+            if sLayer.topP != prevBotP:
+                raise SlownessModelError("Slowness layer slowness does not agree with previous layer (at same depth)!")
+            if math.isnan(sLayer.topDepth) or math.isnan(sLayer.botDepth):
+                raise SlownessModelError("Slowness layer depth (top or btm) is NaN!")
+            prevBotP = sLayer.botP
+            prevDepth = sLayer.botDepth
+        if self.validate_spherical() is False: raise SlownessModelError
+        # Everything seems OK.
         return True
+
+    def validate_spherical(self):
+        """In Java, this was defined in the SphericalSModel subclass and as such overrides the validate in SlownessModel,
+        but calls the super method (by super.validate(), quite elegantly) itself.
+        See if they can be merged."""
+        return True
+

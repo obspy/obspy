@@ -31,10 +31,13 @@ class SlownessLayer:
             raise NotImplementedError("no flat models yet")
         return SlownessLayer(topP, topDepth, botP, botDepth)
 
+    def validate(self):
+        return True
+
     def bullenDepthFor(self, rayParam, radiusOfEarth):
-        return 99
+        return 5
         # TODO implement the methods here properly
 
     def bullenRadialSlowness(self, p, radiusOfEarth):
-        return TimeDist(p, distRadian=99, time=99)
+        return TimeDist(p, distRadian=5, time=5)
 
