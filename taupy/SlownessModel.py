@@ -3,25 +3,11 @@ import math
 from decimal import *
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
+from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist
 
 
 class SlownessModelError(Exception):
     pass
-
-
-class CriticalDepth:
-    def __init__(self, depth, velLayerNum, pLayerNum, sLayerNum):
-        self.depth = depth
-        self.velLayerNum = velLayerNum
-        self.sLayerNum = pLayerNum
-        self.sLayerNum = pLayerNum
-
-
-class DepthRange:
-    def __init__(self, topDepth=None, botDepth=None, rayParam=-1):
-        self.topDepth = topDepth
-        self.botDepth = botDepth
-        self.rayParam = rayParam
 
 
 # noinspection PyPep8Naming
@@ -690,11 +676,140 @@ class SlownessModel(object):
                         depthNum += 1
 
     def distanceCheck(self):
-        pass
+        """Checks to make sure no slowness layer spans more than maxRangeInterval
+        and that the (estimated) error due to linear interpolation is less than
+        maxInterpError.
+        """
+        for currWaveType in [self.SWAVE, self.PWAVE]:
+            isCurrOK = False
+            isPrevOK = False
+            j = 0
+            sLayer = self.getSlownessLayer(j, currWaveType)
+            while j < self.getNumLayers(currWaveType):
+                prevSLayer = sLayer
+                sLayer = self.getSlownessLayer(j, currWaveType)
+                if (self.depthInHighSlowness(sLayer.botDepth, sLayer.botP, currWaveType) is False
+                     and self.depthInHighSlowness(sLayer.topDepth, sLayer.topP,currWaveType) is False):
+                    # Don't calculate prevTD if we can avoid it
+                    if isCurrOK:
+                        if isPrevOK:
+                            prevPrevTD = prevTD
+                        else:
+                            prevPrevTD = None
+                        prevTD = currTD
+                        isPrevOK = True
+                    else:
+                        prevTD = self.approxDistance(j - 1, sLayer.topP, currWaveType)
+                        isPrevOK = True
+                    currTD = self.approxDistance(j, sLayer.botP, currWaveType)
+                    isCurrOK = True
+                    # Check for jump of too great distance
+                    if (abs(prevTD.distRadian - currTD.distRadian) > self.maxRangeInterval and
+                        abs(sLayer.topP - sLayer.botP) > 2 * self.minDeltaP):
+                        if self.DEBUG:
+                            print("At "+str(j)+" Distance jump too great (>maxRangeInterval "+str(self.maxRangeInterval)
+                                               + "), adding slowness. ")
+                        self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
+                        self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
+                        currTD = prevTD
+                        prevTD = prevPrevTD
+                    else:
+                        # Make guess as to error estimate due to linear interpolation if it is not ok, then we split
+                        # both the previous and current slowness layers, this has the nice, if unintended, consequence
+                        # of adding extra samples in the neighborhood of poorly sampled caustics.
+                        splitRayParam = (sLayer.topP + sLayer.botP) / 2
+                        allButLayer = self.approxDistance(j-1, splitRayParam, currWaveType)
+                        splitLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, splitRayParam,
+                                                   sLayer.bullenDepthFor(splitRayParam, self.radiusOfEarth))
+                        justLayer = splitLayer.bullenRadialSlowness(splitRayParam, self.radiusOfEarth)
+                        splitTD = TimeDist(splitRayParam, allButLayer.time + 2*justLayer.time,
+                                           allButLayer.distRadian + 2*justLayer.distRadian)
+                        if (abs(currTD.time - ((splitTD.time - prevTD.time) * (currTD.distRadian - prevTD.distRadian)
+                              / (splitTD.distRadian - prevTD.distRadian) + prevTD.time)) > self.maxInterpError):
+                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.PWAVE)
+                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.SWAVE)
+                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
+                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
+                            currTD = prevPrevTD
+                            isPrevOK = False
+                            if j > 0:
+                                # Back up one step unless we are at the beginning, then stay put.
+                                j -= 1
+                                sLayer = self.getSlownessLayer(j-1 if j-1 >= 0 else 0, currWaveType)
+                                # This sLayer will become prevSLayer in the next loop.
+                            else:
+                                isPrevOK = False
+                                isCurrOK = False
+                        else:
+                            j += 1
+                            if self.DEBUG and j % 10 == 0:
+                                print(j)
+                else:
+                    prevPrevTD = None
+                    prevTD = None
+                    isCurrOK = False
+                    isPrevOK = False
+                    j += 1
+                    if self.DEBUG and j % 100 == 0:
+                        print(j)
+            if self.DEBUG:
+                print("Number of " + ("P" if currWaveType else "S") + " slowness layers: " + str(j))
+
+    def depthInHighSlowness(self, depth, rayParam, isPWave):
+        """Determines if the given depth and corresponding slowness is contained
+        within a high slowness zone. Whether the high slowness zone includes its
+        upper boundary and its lower boundaries depends upon the ray parameter.
+        The slowness at the depth is needed because if depth happens to
+        correspond to a discontinuity that marks the bottom of the high slowness
+        zone but the ray is actually a total reflection then it is not part of
+        the high slowness zone. The ray parameter that delimits the zone, ie it
+        can turn at the top and the bottom, is in the zone at the top, but out of
+        the zone at the bottom. (?)
+        NOTE: I changed this method a bit by throwing out some seemingly useless copying
+        of the values in tempRange, which I think are not used anywhere else."""
+        if isPWave:
+            highSlownessLayerDepths = self.highSlownessLayerDepthsP
+        else:
+            highSlownessLayerDepths = self.highSlownessLayerDepthsS
+        for tempRange in highSlownessLayerDepths:
+            if tempRange.topDepth <= depth <= tempRange.botDepth:
+                if rayParam > tempRange.rayParam or (rayParam == tempRange.rayParam and depth == tempRange.topDepth):
+                    return True
+        return False
+
+    def approxDistance(self, slownessTurnLayer, p, isPWave):
+        """Generates approximate distance, in radians, for a ray from a surface
+        source that turns at the bottom of the given slowness layer."""
+        # First, if the slowness model contains less than slownessTurnLayer elements
+        # we can't calculate a distance.
+        if slownessTurnLayer >= self.getNumLayers(isPWave):
+            raise SlownessModelError("Can't calculate a distance when getNumLayers() is smaller than"
+                                     "the given slownessTurnLayer!")
+        if p < 0:
+            raise SlownessModelError("Ray parameter must not be negative!")
+        td = TimeDist(p)
+        for layerNum in range(0, slownessTurnLayer + 1):
+            td.add(self.layerTimeDist(p, layerNum, isPWave))
+        # Return 2* distance and time because there is a downgoing as well as an
+        # upgoing leg, which are equal since this is for a surface source.
+        td.distRadian *= 2
+        td.time *= 2
+        return td
+
+    def layerTimeDist(self, sphericalRayParam, layerNum, isPWave):
+        # Calculates the time and distance increments accumulated by a ray of
+        # spherical ray parameter p when passing through layer layerNum.
+        # Note that this gives 1/2 of the true range and time
+        # increments since there will be both an upgoing and a downgoing path.
+        # Only does the calculation for the simple cases of the centre of the Earth, where the ray parameter is zero,
+        # or for constant velocity layers. Else, it calls SlownessLayer.bullenRadialSlowness.
+        # Error occurs if the ray with the given spherical ray parameter
+        # cannot propagate within this layer, or if the ray turns within this layer but not at the bottom.
+        timeDist = TimeDist(sphericalRayParam)
+
 
     def fixCriticalPoints(self):
         pass
 
     def validate(self):
         return True
-

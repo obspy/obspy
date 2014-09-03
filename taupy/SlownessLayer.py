@@ -1,3 +1,6 @@
+from taupy.helper_classes import TimeDist
+
+
 class SlownessLayer:
 
     def __init__(self, topP, topDepth, botP, botDepth):
@@ -16,7 +19,8 @@ class SlownessLayer:
         """ Compute the slowness layer from a velocity layer.
 
         Note first argument is NOT meant to be self, this
-        throws at least my IDE off into flagging wrong class errors."""
+        throws at least my IDE off into flagging wrong class errors.
+        Seriously, it breaks with 'self' for some reason..."""
         topDepth = vLayer.topDepth
         botDepth = vLayer.botDepth
         waveType = ('p' if isPWave else 's')
@@ -26,3 +30,11 @@ class SlownessLayer:
         else:
             raise NotImplementedError("no flat models yet")
         return SlownessLayer(topP, topDepth, botP, botDepth)
+
+    def bullenDepthFor(self, rayParam, radiusOfEarth):
+        return 99
+        # TODO implement the methods here properly
+
+    def bullenRadialSlowness(self, p, radiusOfEarth):
+        return TimeDist(distRadian=99, time=99)
+
