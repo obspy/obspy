@@ -36,5 +36,5 @@ class SlownessLayer:
         # TODO implement the methods here properly
 
     def bullenRadialSlowness(self, p, radiusOfEarth):
-        return TimeDist(distRadian=99, time=99)
+        return TimeDist(p, distRadian=99, time=99)
 

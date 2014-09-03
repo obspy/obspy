@@ -68,6 +68,7 @@ TauModel:
 SlownessLayer:
         calls on VelocityLayer
         remove, add, get top/btm depths etc
+        bullenDepthFor
         
 SlownessModel:
     The first constructor is called from SphericalSModel.
@@ -149,11 +150,14 @@ SlownessModel:
         getSlownessLayer
         depthInHighSlowness
         approxDistance
+        SlownessLayer.bullenDepthFor
     getSlownessLayer
     depthInHighSlowness
         DepthRange.rayParam    
     approxDistance
-        getNumLayers    
+        getNumLayers
+        layerTimeDist
+    layerTimeDist    
     fixCriticalPoints
     getNumLayers
     validate:
