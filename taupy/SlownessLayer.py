@@ -1,11 +1,13 @@
 from taupy.helper_classes import TimeDist
+import math
+from taupy.SlownessModel import SlownessModelError
 
 
 class SlownessLayer:
 
     def __init__(self, topP, topDepth, botP, botDepth):
         self.topP = topP
-        self.botP=botP
+        self.botP = botP
         if topDepth >= 0:
             self.topDepth = topDepth
         else:
@@ -32,6 +34,12 @@ class SlownessLayer:
         return SlownessLayer(topP, topDepth, botP, botDepth)
 
     def validate(self):
+        if math.isnan(self.topDepth) or math.isnan(self.botDepth) or math.isnan(self.topP) or math.isnan(self.botP):
+            raise SlownessModelError("Slowness layer has NaN values.")
+        if self.topP < 0 or self.botP < 0:
+            raise SlownessModelError("Slowness layer has negative slowness.")
+        if self.topDepth > self.botDepth:
+            raise SlownessModelError("Slowness layer has negative thickness.")
         return True
 
     def bullenDepthFor(self, rayParam, radiusOfEarth):
@@ -39,5 +47,30 @@ class SlownessLayer:
         # TODO implement the methods here properly
 
     def bullenRadialSlowness(self, p, radiusOfEarth):
-        return TimeDist(p, distRadian=5, time=5)
+        """Calculates the time and distance (in radians) increments accumulated by a
+        ray of spherical ray parameter p when passing through this layer. Note
+        that this gives 1/2 of the true range and time increments since there
+        will be both an upgoing and a downgoing path. Here we use the
+        Mohorovicic or Bullen law: p=A*r^B"""
+        timedist = TimeDist(p)
+        if (self.botDepth == self.topDepth):
+            timedist.distRadian = 0
+            timedist.time = 0
+            return timedist
+        # Only do Bullen radial slowness if the layer is not too thin (e.g. 1 micron).
+        # In that case also just return 0.
+        if self.botDepth - self.topDepth < 0.000000001:
+            return timedist
+        B = math.log(self.topP / self.botP) / math.log((radiusOfEarth - self.topDepth)
+                                                       / (radiusOfEarth - self.botDepth))
+        sqrtTopTopMpp = math.sqrt(self.topP * self.topP - p * p)
+        sqrtBotBotMpp = math.sqrt(self.botP * self.botP - p * p)
+        timedist.distRadian = (math.atan2(p, sqrtBotBotMpp) - math.atan2(p, sqrtTopTopMpp)) / B
+        timedist.time = (sqrtTopTopMpp - sqrtBotBotMpp) / B
+        if timedist.distRadian < 0 or timedist.time < 0 or math.isnan(timedist.distRadian) or math.isnan(timedist.time):
+            raise SlownessModelError("timedist.time or .distRadian < 0 or Nan")
+        return timedist
+
+
+
 

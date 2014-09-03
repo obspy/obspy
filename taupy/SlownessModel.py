@@ -924,7 +924,11 @@ class SlownessModel(object):
                 cd.sLayerNum += 1
 
     def validate(self):
-        """Performs consistency check on the slowness model."""
+        """Performs consistency check on the slowness model.
+        In Java, there is a separate validate method  defined in the SphericalSModel subclass and as such
+         overrides the validate in SlownessModel, but it itself calls the super method (by super.validate()),
+        i.e. the code above. Both are merged here (in fact, it only contained one test).
+        """
         if self.radiusOfEarth <= 0:
             raise SlownessModelError("Radius of Earth must be positive.")
         if self.maxDepthInterval <= 0:
@@ -958,27 +962,25 @@ class SlownessModel(object):
                 prevBotP = sLayer.topP
             else:
                 prevBotP = -1
-        # TODO look at this again, does that really work to replace getSlownessLayer etc.?
-        for sLayer in (self.PLayers if isPWave else self.SLayers):
-            if sLayer.validate() is False:
-                raise SlownessModelError("Validation of SlownessLayer failed!")
-            if sLayer.topDepth > prevDepth:
-                raise SlownessModelError("Gap between slowness layers!")
-            if sLayer.topDepth < prevDepth:
-                raise SlownessModelError("Slowness layer overlaps previous!")
-            if sLayer.topP != prevBotP:
-                raise SlownessModelError("Slowness layer slowness does not agree with previous layer (at same depth)!")
-            if math.isnan(sLayer.topDepth) or math.isnan(sLayer.botDepth):
-                raise SlownessModelError("Slowness layer depth (top or btm) is NaN!")
-            prevBotP = sLayer.botP
-            prevDepth = sLayer.botDepth
-        if self.validate_spherical() is False: raise SlownessModelError
+            # TODO look at this again, does that really work to replace getSlownessLayer etc.?
+            for sLayer in (self.PLayers if isPWave else self.SLayers):
+                if sLayer.validate() is False:
+                    raise SlownessModelError("Validation of SlownessLayer failed!")
+                if sLayer.topDepth > prevDepth:
+                    raise SlownessModelError("Gap between slowness layers!")
+                if sLayer.topDepth < prevDepth:
+                    raise SlownessModelError("Slowness layer overlaps previous!")
+                if sLayer.topP != prevBotP:
+                    raise SlownessModelError("Slowness layer slowness does not agree with previous layer (at same depth)!")
+                if math.isnan(sLayer.topDepth) or math.isnan(sLayer.botDepth):
+                    raise SlownessModelError("Slowness layer depth (top or btm) is NaN!")
+                if sLayer.botDepth > self.radiusOfEarth:
+                    raise SlownessModelError("Slowness layer has a depth larger than radius of the Earth.")
+                prevBotP = sLayer.botP
+                prevDepth = sLayer.botDepth
         # Everything seems OK.
         return True
 
-    def validate_spherical(self):
-        """In Java, this was defined in the SphericalSModel subclass and as such overrides the validate in SlownessModel,
-        but calls the super method (by super.validate(), quite elegantly) itself.
-        See if they can be merged."""
-        return True
-
+    def splitLayer(self):
+        """This, and two others, is not needed  during TauP_Create, but only later"""
+        pass
