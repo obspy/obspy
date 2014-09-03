@@ -136,6 +136,9 @@ class ImageComparison(NamedTemporaryFile):
     """
     Handles the comparison against a baseline image in an image test.
 
+    .. note::
+        Baseline images are created using matplotlib version `1.3.1`.
+
     :type image_path: str
     :param image_path: Path to directory where the baseline image is located
     :type image_name: str
