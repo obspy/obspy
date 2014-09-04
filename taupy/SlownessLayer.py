@@ -17,6 +17,11 @@ class SlownessLayer:
         else:
             raise ValueError('botDepth must not be negative')
 
+    def __str__(self):
+        desc = ("top p " + str(self.topP) + ", topDepth " + str(self.topDepth)
+                + ", bot p " + str(self.botP) + ", botDepth " + str(self.botDepth))
+        return desc
+
     def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371, isSpherical=True):
         """ Compute the slowness layer from a velocity layer.
 

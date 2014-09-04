@@ -54,8 +54,39 @@ class SlownessModel(object):
         self.createSample()
 
     def __str__(self):
-        desc = "There so much data in here you really don't want to know. Nothing to see. Move on."
-        desc += "Seriously though, this __str__ is not implemented yet."
+        desc = ("radiusOfEarth=" + str(self.radiusOfEarth) + "\n maxDeltaP=" + str(self.maxDeltaP)
+                + "\n minDeltaP=" + str(self.minDeltaP) + "\n maxDepthInterval="
+                + str(self.maxDepthInterval) + "\n maxRangeInterval=" + str(self.maxRangeInterval)
+                + "\n allowInnerCoreS=" + str(self.allowInnerCoreS)
+                + "\n slownessTolerance=" + str(self.slowness_tolerance)
+                + "\n getNumLayers('P')=" + str(self.getNumLayers(self.PWAVE))
+                + "\n getNumLayers('S')=" + str(self.getNumLayers(self.SWAVE))
+                + "\n fluidLayerDepths.size()=" + str(len(self.fluidLayerDepths))
+                + "\n highSlownessLayerDepthsP.size()="
+                + str(len(self.highSlownessLayerDepthsP))
+                + "\n highSlownessLayerDepthsS.size()="
+                + str(len(self.highSlownessLayerDepthsS))
+                + "\n criticalDepths.size()=" + str(len(self.criticalDepths))
+                + "\n")
+        desc += ("**** Critical Depth Layers ************************\n")
+        for cd in self.criticalDepths:
+            desc += str(cd.velLayerNum) + " "
+        desc += "\n"
+        desc += "\n**** Fluid Layer Depths ************************\n"
+        for fl in self.fluidLayerDepths:
+            desc += str(fl.topDepth) + "," + str(fl.botDepth) + " "
+        desc += "\n"
+        desc += "\n**** P High Slowness Layer Depths ****************\n"
+        for fl in self.highSlownessLayerDepthsP:
+            desc += str(fl.topDepth) + "," + str(fl.botDepth) + " "
+        desc += "\n"
+        desc += "\n**** S High Slowness Layer Depths ****************\n"
+        for fl in self.highSlownessLayerDepthsS:
+            desc += str(fl.topDepth) + "," + str(fl.botDepth) + " "
+        desc += "\n"
+        desc += "\n**** P Layers ****************\n"
+        for l in self.PLayers:
+            desc += str(l) + "\n"
         return desc
 
     def createSample(self):

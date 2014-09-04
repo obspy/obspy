@@ -45,12 +45,29 @@ class TestSlownessmodelSlowly(unittest.TestCase):
         self.tm.coarseSample()
         self.assertEqual(len(self.tm.PLayers), 307)
         self.assertEqual(len(self.tm.SLayers), 286)
+        self.assertEqual(self.tm.PLayers[40].botDepth, 410)
+        self.assertEqual(self.tm.PLayers[40].topDepth, 410)  # Zero thickness layer, but p changes.
+        self.assertEqual(self.tm.PLayers[305].botP, 4.511284884393324)  # Same as top of deepest layer.
+        self.assertEqual(self.tm.SLayers[0].topP, 1896.1309523809525)
+        self.assertEqual(self.tm.SLayers[284].botDepth, 6354.919811136119)  # Zero thickness layer, but p changes.
+        self.assertEqual(self.tm.SLayers[284].botP, 4.511284884393324)
 
         self.tm.rayParamIncCheck()
+        self.assertEqual(len(self.tm.PLayers), 343)
+        self.assertEqual(len(self.tm.SLayers), 366)
+        self.assertEqual(self.tm.PLayers[0].topP, 1098.448275862069)
+        self.assertEqual(self.tm.PLayers[40].topDepth, 35)
+        self.assertEqual(self.tm.PLayers[341].botP, 0.9955173285740244)
+        self.assertEqual(self.tm.SLayers[100].topP, 821.5956109380346)
+        self.assertEqual(self.tm.SLayers[200].topDepth, 3697.8839336701108)
+        self.assertEqual(self.tm.SLayers[364].botP, 0.9955173285740244)
 
         self.tm.depthIncCheck()
+        # No change to PLayers, SLayers, apparently.
+        # Not ideal, because hard to check correct execution.
 
-        #testmod.distanceCheck()
+        print(self.tm)
+        #self.tm.distanceCheck()
         #self.tm.fixCriticalPoints()
         #self.tm.criticalDepths
 
