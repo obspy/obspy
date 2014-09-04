@@ -1,5 +1,7 @@
 # Holds various helper classes to keep the file number manageable.
 
+class SlownessModelError(Exception):
+    pass
 
 class TimeDist:
     """Holds the ray parameter, time and distance increments, and optionally a

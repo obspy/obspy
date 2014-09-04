@@ -1,8 +1,8 @@
-from taupy.helper_classes import TimeDist
+from taupy.helper_classes import TimeDist, SlownessModelError
 import math
-from taupy.SlownessModel import SlownessModelError
 
 
+# noinspection PyPep8Naming
 class SlownessLayer:
 
     def __init__(self, topP, topDepth, botP, botDepth):
@@ -42,10 +42,6 @@ class SlownessLayer:
             raise SlownessModelError("Slowness layer has negative thickness.")
         return True
 
-    def bullenDepthFor(self, rayParam, radiusOfEarth):
-        return 5
-        # TODO implement the methods here properly
-
     def bullenRadialSlowness(self, p, radiusOfEarth):
         """Calculates the time and distance (in radians) increments accumulated by a
         ray of spherical ray parameter p when passing through this layer. Note
@@ -53,7 +49,7 @@ class SlownessLayer:
         will be both an upgoing and a downgoing path. Here we use the
         Mohorovicic or Bullen law: p=A*r^B"""
         timedist = TimeDist(p)
-        if (self.botDepth == self.topDepth):
+        if self.botDepth == self.topDepth:
             timedist.distRadian = 0
             timedist.time = 0
             return timedist
@@ -71,6 +67,54 @@ class SlownessLayer:
             raise SlownessModelError("timedist.time or .distRadian < 0 or Nan")
         return timedist
 
-
-
+    def bullenDepthFor(self, rayParam, radiusOfEarth):
+        """Finds the depth for a ray parameter within this layer. Uses a Bullen
+        interpolant, Ar^B. Special case for botP == 0 or botDepth == radiusOfEarth
+        as these cause div by 0, use linear interpolation in this case."""
+        if (self.topP - rayParam) * (rayParam - self.botP) >= 0:
+            # Easy cases for 0 thickness layer, or ray parameter found at top or bottom.
+            if self.topDepth == self.botDepth:
+                return self.botDepth
+            if self.topP == rayParam:
+                return self.topDepth
+            if self.botP == rayParam:
+                return self.botDepth
+            if self.botP != 0 and self.botDepth != radiusOfEarth:
+                B = math.log(self.topP / self.botP) / math.log((radiusOfEarth - self.topDepth)
+                                                               / (radiusOfEarth - self.botDepth))
+                A = self.topP / math.pow((radiusOfEarth - self.topDepth), B)
+                tempDepth = radiusOfEarth - math.exp(1/B * math.log(rayParam/A))
+                # or equivalent (maybe better stability?):
+                # tempDepth = radiusOfEarth - math.pow(rayParam/A, 1/B)
+                # Check if slightly outside layer due to rounding or numerical instability:
+                if self.topDepth > tempDepth > self.topDepth - 0.000001:
+                    tempDepth = self.topDepth
+                if self.botDepth < tempDepth < self.botDepth + 0.000001:
+                    tempDepth = self.botDepth
+                if (tempDepth < 0 or math.isnan(tempDepth) or math.isinf(tempDepth)
+                    or tempDepth < self.topDepth or tempDepth > self.botDepth):
+                    # Numerical instability in power law calculation? Try a linear interpolation if
+                    # the layer is small (<5km).
+                    if self.botDepth - self.topDepth < 5:
+                        linear = ((self.botDepth - self.topDepth) / (self.botP - self.topP)
+                                  * (rayParam - self.topP ) + self.topDepth)
+                        if linear >= 0 and not math.isnan(linear) and not math.isinf(linear):
+                            return linear
+                    raise SlownessModelError("Calculated depth is outside layer, negative, or NaN.")
+                # Check for tempDepth just above topDepth or below bottomDepth.
+                if tempDepth < self.topDepth and self.topDepth - tempDepth < 1e-10:
+                    return self.topDepth
+                if tempDepth > self.botDepth and tempDepth - self.botDepth < 1e-10:
+                    return self.botDepth
+                return tempDepth
+            else:
+                # Special case for the centre of the Earth, since Ar^B might blow up at r = 0.
+                if self.topP !=self.botP:
+                    return (self.botDepth + (rayParam - self.botP)
+                            * (self.topDepth - self.botDepth) / (self.topP - self.botP))
+                else:
+                    # weird case, return botDepth??
+                    return self.botDepth
+        else:
+            raise SlownessModelError("Ray parameter is not contained within this slowness layer.")
 
