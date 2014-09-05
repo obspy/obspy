@@ -211,7 +211,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 streams = []
                 timeout = 120
                 if 'TRAVIS' in os.environ:
-                    timeout = 600
+                    timeout = 570  # 30 seconds under Travis' limit
                 cond = threading.Condition()
 
                 def testFunction(streams, cond):
