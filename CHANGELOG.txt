@@ -28,6 +28,8 @@
      data please use the obspy.fdsn client (use
      `Client(base_url='ORFEUS', ...)`) and for travel times please use
      obspy.taup.
+ - obspy.seedlink.easyseedlink:
+   * New submodule providing an easier way to create SeedLink clients
  - obspy.seishub:
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
      from a seishub server of version 1.4.0 or higher.
