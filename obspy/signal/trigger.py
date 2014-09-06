@@ -221,8 +221,7 @@ def classicSTALTAPy(a, nsta, nlta):
     sta = np.cumsum(a ** 2)
 
     # Convert to float
-    if sta.dtype in ['int32', 'int64']:
-        sta = sta.astype('float')
+    sta = sta.astype(np.float, copy=False)
 
     # Copy for LTA
     lta = sta.copy()
