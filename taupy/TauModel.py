@@ -12,8 +12,6 @@ class TauModel(object):
         print("The debug flag for TauModel is set to:"+str(self.DEBUG), 
               "the default here is false but it should have been modified TauP_Create.")
 
-        
-
     def calcTauIncFrom(self):
         pass
 

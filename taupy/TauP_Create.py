@@ -15,8 +15,6 @@ class TauP_Create(object):
     pp 1271-1302. This creates the SlownessModel and tau branches and
     saves them for later use.
 
-    To do (optional): -proper error handling. I am somewhat confused about it.
-    
     """
 
     overlayModelFilename = None
@@ -105,13 +103,11 @@ class TauP_Create(object):
     def createTauModel(self, vMod):
         """ Takes a v model and makes a SlownessModel out of it,
         then passes that to TauModel """
-        if vMod == None:
+        if vMod is None:
             raise ValueError("vMod cannot be null")
-        if  vMod.isSpherical == False:
+        if vMod.isSpherical is False:
             raise Exception("Flat slowness model not yet implemented.")
         SlownessModel.DEBUG = self.DEBUG
-
-        
         if self.DEBUG:
             print("Using parameters provided in TauP_config.ini (or defaults if not) to call SlownessModel...")
         import configparser
@@ -120,8 +116,8 @@ class TauP_Create(object):
             config.read('TauP_config.ini')
             ssm=config['SlownessModel_created_from_VelocityModel']
         except KeyError:
+            # TODO This is hardly very elegant.
             raise SystemExit('Error reading config file: TauP_config must exist in working dir and have section named SlownessModel_created_from_VelocityModel! It can be empty otherwise.')
-            
         # Read values from the appropriate section if defined, else use default values
         minDeltaP = float(ssm.get('mindeltaP', 0.1)) # (are actually case-insensitive)
         maxDeltaP = float(ssm.get('maxDeltaP', 11))
@@ -129,13 +125,10 @@ class TauP_Create(object):
         maxRangeInterval = float(ssm.get('maxRangeInterval', 2.5))
         maxInterpError = float(ssm.get('maxInterpError', 0.05))
         allowInnerCoreS = ssm.getboolean('allowInnerCoreS', True)
-        
 
         from math import pi
-        # note the separate SlownessModel class has been deemed pointless
         self.sMod = SlownessModel(vMod,
                                     minDeltaP, maxDeltaP, maxDepthInterval, maxRangeInterval * pi / 180, maxInterpError, allowInnerCoreS, SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
-
         if self.DEBUG:
             print("Parameters are:")
             print("taup.create.minDeltaP = " + str(self.sMod.minDeltaP) + " sec / radian")
@@ -150,7 +143,7 @@ class TauP_Create(object):
         # set the debug flags to value given here:
         TauModel.DEBUG = self.DEBUG
         SlownessModel.DEBUG = self.DEBUG
-        # Creates tau model from slownesses
+        # Creates tau model from slownesses.
         return TauModel(self.sMod)
 
     def start(self):

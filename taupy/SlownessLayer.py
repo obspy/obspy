@@ -1,6 +1,6 @@
 from taupy.helper_classes import TimeDist, SlownessModelError
 import math
-
+import numpy as np
 
 # noinspection PyPep8Naming
 class SlownessLayer:
@@ -85,9 +85,9 @@ class SlownessLayer:
             if self.botP == rayParam:
                 return self.botDepth
             if self.botP != 0 and self.botDepth != radiusOfEarth:
-                B = math.log(self.topP / self.botP) / math.log((radiusOfEarth - self.topDepth)
-                                                               / (radiusOfEarth - self.botDepth))
-                A = self.topP / math.pow((radiusOfEarth - self.topDepth), B)
+                B = np.divide(math.log(self.topP / self.botP), math.log((radiusOfEarth - self.topDepth)
+                                                               / (radiusOfEarth - self.botDepth)))
+                A = np.divide(self.topP, math.pow((radiusOfEarth - self.topDepth), B))
                 tempDepth = radiusOfEarth - math.exp(1/B * math.log(rayParam/A))
                 # or equivalent (maybe better stability?):
                 # tempDepth = radiusOfEarth - math.pow(rayParam/A, 1/B)
@@ -114,7 +114,7 @@ class SlownessLayer:
                 return tempDepth
             else:
                 # Special case for the centre of the Earth, since Ar^B might blow up at r = 0.
-                if self.topP !=self.botP:
+                if self.topP != self.botP:
                     return (self.botDepth + (rayParam - self.botP)
                             * (self.topDepth - self.botDepth) / (self.topP - self.botP))
                 else:

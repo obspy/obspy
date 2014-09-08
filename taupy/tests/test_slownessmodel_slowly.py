@@ -4,6 +4,7 @@ from taupy.VelocityModel import VelocityModel
 from taupy.SlownessModel import SlownessModel
 
 
+
 # noinspection PyPep8Naming
 class SlownessmodelSimpleInit(SlownessModel):
     """Copy the definition of slownessModel class attributes and the init,
@@ -66,8 +67,8 @@ class TestSlownessmodelSlowly(unittest.TestCase):
         # No change to PLayers, SLayers, apparently.
         # Not ideal, because hard to check correct execution.
 
-        print(self.tm)
-        #self.tm.distanceCheck()
+        #print(self.tm)
+        self.tm.distanceCheck()
         #self.tm.fixCriticalPoints()
         #self.tm.criticalDepths
 

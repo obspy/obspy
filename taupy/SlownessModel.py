@@ -1,6 +1,7 @@
 from math import pi
 import math
 from decimal import *
+import numpy as np
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
 from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist, SlownessModelError
@@ -28,6 +29,7 @@ class SlownessModel(object):
     # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
     # DepthRange objects, containing the top depth and bottom depth.
     fluidLayerDepths = []
+    # TODO I think these are pretty slow. Maybe use numpy arrays or something like that?
     PLayers = []
     SLayers = []
     # For methods that have an isPWave parameter
@@ -35,7 +37,7 @@ class SlownessModel(object):
     PWAVE = True
 
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115, maxRangeInterval=2.5 * pi / 180,
-                 maxInterpError=0.05, allowInnerCoreS=True, slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE):#, pLayers=[], sLayers=[]):
+                 maxInterpError=0.05, allowInnerCoreS=True, slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE):
 
         self.vMod = vMod
         self.minDeltaP = minDeltaP
@@ -630,8 +632,6 @@ class SlownessModel(object):
 
     def getSlownessLayer(self, layerNum, isPWave):
         """Returns the SlownessLayer of the requested waveType. This is not meant to be a clone!"""
-        # TODO Make sure this doesn't clone (pretty sure it does)! Some methods rely on this to modify the SlownessModel!
-        # TODO Or better, find a more elegant solution for those places?
         if isPWave:
             return self.PLayers[layerNum]
         else:
@@ -734,7 +734,6 @@ class SlownessModel(object):
         # strange sequence of Nulling first PrevPrevTD, then currTD in line 742, then prevTD in l 708. That can only
         # happen due to certain results of the if tests which may be different once the methods in SlownessLayer are
         # implemented.
-        # TODO Also check if the shallow copying of SlownessLayers (P/SLayers) and modifying them in place works at all!
         for currWaveType in [self.SWAVE, self.PWAVE]:
             isCurrOK = False
             isPrevOK = False
@@ -744,8 +743,6 @@ class SlownessModel(object):
             j = 0
             sLayer = self.getSlownessLayer(j, currWaveType)
             while j < self.getNumLayers(currWaveType):
-                #if j == 105:
-                #    pass  # breakpoint; when j hits 103 (the second time) the error occurs
                 prevSLayer = sLayer
                 sLayer = self.getSlownessLayer(j, currWaveType)
                 if (self.depthInHighSlowness(sLayer.botDepth, sLayer.botP, currWaveType) is False
@@ -784,10 +781,11 @@ class SlownessModel(object):
                         justLayer = splitLayer.bullenRadialSlowness(splitRayParam, self.radiusOfEarth)
                         splitTD = TimeDist(splitRayParam, allButLayer.time + 2*justLayer.time,
                                            allButLayer.distRadian + 2*justLayer.distRadian)
-                        if (splitTD.distRadian - prevTD.distRadian) == 0:
-                            pass
-                        if (abs(currTD.time - ((splitTD.time - prevTD.time) * (currTD.distRadian - prevTD.distRadian)
-                              / (splitTD.distRadian - prevTD.distRadian) + prevTD.time)) > self.maxInterpError):
+                        # Python standard division is not IEEE compliant, as “The IEEE 754 standard specifies that every
+                        # floating point arithmetic operation, including division by zero, has a well-defined result”.
+                        # Use np.divide instead:
+                        if (abs(currTD.time - ((splitTD.time - prevTD.time) * np.divide((currTD.distRadian - prevTD.distRadian),
+                                (splitTD.distRadian - prevTD.distRadian)) + prevTD.time)) > self.maxInterpError):
                             self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.PWAVE)
                             self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.SWAVE)
                             self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
@@ -804,7 +802,7 @@ class SlownessModel(object):
                                 isCurrOK = False
                         else:
                             j += 1
-                            if self.DEBUG and j % 10 == 0:
+                            if self.DEBUG and j % 10 == 0 or j < 10:
                                 print(j)
                 else:
                     prevPrevTD = None
@@ -994,7 +992,6 @@ class SlownessModel(object):
                 prevBotP = sLayer.topP
             else:
                 prevBotP = -1
-            # TODO look at this again, does that really work to replace getSlownessLayer etc.?
             for sLayer in (self.PLayers if isPWave else self.SLayers):
                 if sLayer.validate() is False:
                     raise SlownessModelError("Validation of SlownessLayer failed!")
