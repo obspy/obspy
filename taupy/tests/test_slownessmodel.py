@@ -15,6 +15,7 @@ class TestSlownessModel(unittest.TestCase):
     worth it at the moment.
     """
 
+    # TODO Write a better integration test?
     # def test_createSample(self):
     #     testmod = SlownessModel(VelocityModel.readVelocityFile('./data/iasp91.tvel'))
     #     testmod.DEBUG = True
@@ -34,13 +35,13 @@ class TestSlownessModel(unittest.TestCase):
     #     self.assertEqual(testmod.radiusOfEarth, 6371)
     #     self.assertTrue(testmod.validate())
 
-    # def test_slownesslayer(self):
-    #     vLayer=VelocityLayer(1, 10, 31, 3, 5, 2, 4)
-    #     a = SlownessLayer.create_from_vlayer(vLayer, True)
-    #     self.assertEqual(a.botP, 1268.0)
-    #     self.assertEqual(a.botDepth, 31.0)
-    #     b = SlownessLayer.create_from_vlayer(vLayer, False)
-    #     self.assertEqual(b.topP, 3180.5)
+    def test_slownesslayer(self):
+        vLayer=VelocityLayer(1, 10, 31, 3, 5, 2, 4)
+        a = SlownessLayer.create_from_vlayer(vLayer, True)
+        self.assertEqual(a.botP, 1268.0)
+        self.assertEqual(a.botDepth, 31.0)
+        b = SlownessLayer.create_from_vlayer(vLayer, False)
+        self.assertEqual(b.topP, 3180.5)
     #
     # def test_findDepth(self):
     #     testmod = SlownessModel(VelocityModel.readVelocityFile('./data/iasp91.tvel'))

@@ -177,7 +177,7 @@ class TauP_Create(object):
         except IOError as e:
             print("Tried to write!\n Caught IOError. Do you have write permission in this directory?", e)
         except KeyError as e:
-            print('file not found or worng key?', e)
+            print('file not found or wrong key?', e)
         # except VelocityModelException as e:
         #     print("Caught VelocityModelException.", e)
         finally:

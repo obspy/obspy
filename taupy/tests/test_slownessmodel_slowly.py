@@ -33,7 +33,7 @@ class TestSlownessmodelSlowly(unittest.TestCase):
     vMod = VelocityModel.readVelocityFile('./data/iasp91.tvel')
     tm = SlownessmodelSimpleInit(vMod)
 
-    def test_it(self):
+    def testSlownessModelSlowly(self):
         # Now do what createSample does, but step by step:
         # Check values in between by comparing with variable states from Java debugger.
         self.tm.findCriticalPoints()
@@ -69,8 +69,8 @@ class TestSlownessmodelSlowly(unittest.TestCase):
 
         #print(self.tm)
         self.tm.distanceCheck()
-        #self.tm.fixCriticalPoints()
-        #self.tm.criticalDepths
+        self.tm.fixCriticalPoints()
+        self.tm.criticalDepths
 
         self.assertTrue(self.tm.validate())
 

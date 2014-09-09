@@ -74,9 +74,7 @@ class VelocityModel(object):
         """
         Returns the depths of discontinuities within the velocity model.
         """
-        discontinuities = []
-
-        discontinuities.append(self.layers[0].topDepth)
+        discontinuities = [self.layers[0].topDepth]
         for above_layer, below_layer in zip(self.layers[:-1],
                                             self.layers[1:]):
             if above_layer.botPVelocity != below_layer.topPVelocity or \
@@ -86,12 +84,6 @@ class VelocityModel(object):
         discontinuities.append(self.layers[-1].botDepth)
 
         return discontinuities
-
-    # No idea what this is meant to do. The self.layer.get(layerNum)
-    #	has been replaced by self.layers[i] in a similar method.
-    #    def getVelocityLayerClone(self, layerNum):
-    #        """ generated source for method getVelocityLayerClone """
-    #        return (self.layer.get(layerNum)).clone()
 
     def getNumLayers(self):
         """ Returns the number of layers in this velocity model. """
