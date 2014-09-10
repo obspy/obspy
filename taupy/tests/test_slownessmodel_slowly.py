@@ -70,7 +70,7 @@ class TestSlownessmodelSlowly(unittest.TestCase):
         #print(self.tm)
         self.tm.distanceCheck()
         self.tm.fixCriticalPoints()
-        self.tm.criticalDepths
+        #self.tm.criticalDepths
 
         self.assertTrue(self.tm.validate())
 

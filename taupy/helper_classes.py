@@ -1,13 +1,18 @@
 # Holds various helper classes to keep the file number manageable.
 
+
 class SlownessModelError(Exception):
     pass
+
+
+class TauModelError(Exception):
+    pass
+
 
 class TimeDist:
     """Holds the ray parameter, time and distance increments, and optionally a
     depth, for a ray passing through some layer.
     Note it is 'cloneable' in Java, that just means you're allowed to make a deep copy."""
-
     def __init__(self, p=0, time=0, distRadian=0, depth=0):
         # Careful: p must remain first element because of how class is called
         # e.g. in SlownessModel.approxDistance!
@@ -27,8 +32,8 @@ class CriticalDepth:
     def __init__(self, depth, velLayerNum, pLayerNum, sLayerNum):
         self.depth = depth
         self.velLayerNum = velLayerNum
-        self.sLayerNum = pLayerNum
-        self.sLayerNum = pLayerNum
+        self.pLayerNum = pLayerNum
+        self.sLayerNum = sLayerNum
 
 
 class DepthRange:

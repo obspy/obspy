@@ -12,7 +12,7 @@ print(test2)
 #for i, layer in enumerate(test2.layers):
 #    print(layer)
 
-print(test2.validate())
+print(validate())
 
 print(len(test2))
 print(test2.getNumLayers()) # probably ought to throw out that method...

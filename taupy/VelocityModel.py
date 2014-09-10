@@ -77,12 +77,11 @@ class VelocityModel(object):
         discontinuities = [self.layers[0].topDepth]
         for above_layer, below_layer in zip(self.layers[:-1],
                                             self.layers[1:]):
-            if above_layer.botPVelocity != below_layer.topPVelocity or \
-                            above_layer.botSVelocity != below_layer.topSVelocity:
+            if above_layer.botPVelocity != below_layer.topPVelocity or (
+                    above_layer.botSVelocity != below_layer.topSVelocity):
                 # Discontinuity found.
                 discontinuities.append(above_layer.botDepth)
         discontinuities.append(self.layers[-1].botDepth)
-
         return discontinuities
 
     def getNumLayers(self):

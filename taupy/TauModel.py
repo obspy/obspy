@@ -1,5 +1,6 @@
-from taupy.helper_classes import SlownessModelError
-
+from taupy.helper_classes import SlownessModelError, TauModelError
+from .TauBranch import TauBranch
+from itertools import count
 
 # noinspection PyPep8Naming
 class TauModel(object):
@@ -50,7 +51,6 @@ class TauModel(object):
     # in rayParams for the layer. Rays that turn above the branch layer get 0 for time, distance, and tau increments.
     tauBranches = [[], []]
 
-    #TODO: In the java there is a second constructor with more values, maybe refer to how I did that in SlownessModel.
     def __init__(self, sMod):
         
         self.sMod = sMod
@@ -75,7 +75,7 @@ class TauModel(object):
         # parameters that are not in a high slowness zone, i.e. they are smaller than the minimum ray parameter
         # encountered so far.
         numBranches = len(self.sMod.criticalDepths) - 1
-        # Use list comprehension to get array to correct size:
+        # Use list comprehension to get array to correct size (could initialise with TauBranches, but probably slower):
         self.tauBranches = [[0 for j in range(numBranches)] for i in range(2)]
         # Here we find the list of ray parameters to be used for the tau model. We only need to find ray parameters for
         # S waves since P waves have been constructed to be a subset of the S samples.
@@ -101,7 +101,51 @@ class TauModel(object):
         # Copy tempRayParams to rayParams while chopping off trailing zeros (from the initialisation),
         # so the size is exactly right. NB slicing means deep copy
         self.rayParams = tempRayParams[:rayNum]
-        # line 393
+        if self.DEBUG:
+            print("Number of slowness samples for tau:" + str(rayNum))
+        for waveNum, isPWave in enumerate([True, False]):
+            # The minimum slowness seen so far.
+            minPSoFar = self.sMod.getSlownessLayer(0, isPWave).topP
+            # for critNum, (topCritDepth, botCritDepth) in enumerate(zip(self.sMod.criticalDepths[:-1],
+            #                                                            self.sMod.criticalDepths[1:])):
+            # Faster:
+            for critNum, topCritDepth, botCritDepth in zip(count(), self.sMod.criticalDepths[:-1],
+                                                           self.sMod.criticalDepths[1:]):
+                topCritLayerNum = topCritDepth.pLayerNum if isPWave else topCritDepth.sLayerNum
+                botCritLayerNum = botCritDepth.pLayerNum if isPWave else botCritDepth.sLayerNum
+                self.tauBranches[waveNum][critNum] = TauBranch(topCritDepth.depth, botCritDepth.depth, isPWave)
+                self.tauBranches[waveNum][critNum].DEBUG = self.DEBUG
+                self.tauBranches[waveNum][critNum].createBranch(self.sMod, minPSoFar, self.rayParams)
+                # Update minPSoFar. Note that the new minPSoFar could be at the start of a discontinuity over a high
+                # slowness zone, so we need to check the top, bottom and the layer just above the discontinuity.
+                topSLayer = self.sMod.getSlownessLayer(topCritLayerNum, isPWave)
+                botSLayer = self.sMod.getSlownessLayer(botCritLayerNum, isPWave)
+                minPSoFar = min(minPSoFar, min(topSLayer.topP, botSLayer.botP))
+                botSLayer = self.sMod.getSlownessLayer(self.sMod.layerNumberAbove(botCritDepth.depth,
+                                                                                  isPWave), isPWave)
+                minPSoFar = min(minPSoFar, botSLayer.botP)
+        # Here we decide which branches are the closest to the Moho, CMB, and IOCB by comparing the depth of the
+        # top of the branch with the depths in the Velocity Model.
+        bestMoho = 1e300
+        bestCmb = 1e300
+        bestIocb = 1e300
+        for branchNum, tBranch in enumerate(self.tauBranches[0]):
+            if abs(tBranch.topDepth - self.sMod.vMod.mohoDepth) <= bestMoho:
+                # Branch with Moho at its top.
+                self.mohoBranch = branchNum
+                bestMoho = abs(tBranch.topDepth - self.sMod.vMod.mohoDepth)
+            if abs(tBranch.topDepth - self.sMod.vMod.cmbDepth) < bestCmb:
+                self.cmbBranch = branchNum
+                bestCmb = abs(tBranch.topDepth - self.sMod.vMod.cmbDepth)
+            if abs(tBranch.topDepth - self.sMod.vMod.iocbDepth) < bestIocb:
+                self.iocbBranch = branchNum
+                bestIocb = abs(tBranch.topDepth - self.sMod.vMod.iocbDepth)
+        # Now set mohoDepth etc. to the top of the branches we have decided on.
+        self.mohoDepth = self.tauBranches[0][self.mohoBranch].topDepth
+        self.cmbDepth = self.tauBranches[0][self.cmbBranch].topDepth
+        self.iocbDepth = self.tauBranches[0][self.iocbBranch].topDepth
+        if not self.validate():
+            raise TauModelError("TauModel.calcTauIncFrom: Validation failed!")
 
     def writeModel(self, outfile):
         with open(outfile, 'w') as f:
@@ -110,3 +154,6 @@ class TauModel(object):
     def __str__(self):
         desc = 'This is the TauModel __str__ method.'
         return desc
+
+    def validate(self):
+        return True

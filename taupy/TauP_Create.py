@@ -58,14 +58,19 @@ class TauP_Create(object):
         print("TauP_Create starting...")
         tauPCreate = TauP_Create()
     
-        try:
-            print("Loading velocity model.")
-            tauPCreate.loadVMod()
-            print("Running tauPCreate.start.")
-            tauPCreate.start()
-            print("Done!")
-        except Exception as e:
-            print("Something went fundamentally wrong:", e)
+        # try:
+        #     print("Loading velocity model.")
+        #     tauPCreate.loadVMod()
+        #     print("Running tauPCreate.start.")
+        #     tauPCreate.start()
+        #     print("Done!")
+        # except Exception as e:
+        #     print("Something went fundamentally wrong:", e)
+        # I need a stack trace:
+        print("Loading velocity model.")
+        tauPCreate.loadVMod()
+        print("Running tauPCreate.start.")
+        tauPCreate.start()
 
         # could catch different exceptions here dep on what went wrong
         #except IOError as?
@@ -128,7 +133,8 @@ class TauP_Create(object):
 
         from math import pi
         self.sMod = SlownessModel(vMod,
-                                    minDeltaP, maxDeltaP, maxDepthInterval, maxRangeInterval * pi / 180, maxInterpError, allowInnerCoreS, SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
+                                  minDeltaP, maxDeltaP, maxDepthInterval, maxRangeInterval * pi / 180, maxInterpError,
+                                  allowInnerCoreS, SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
         if self.DEBUG:
             print("Parameters are:")
             print("taup.create.minDeltaP = " + str(self.sMod.minDeltaP) + " sec / radian")
