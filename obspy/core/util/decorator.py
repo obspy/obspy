@@ -304,7 +304,8 @@ def taper_API_change():
                 if 'max_percentage' in kwargs:
                     # normal new usage, so do nothing
                     pass
-                elif isinstance(args[0], basestring):
+                elif (args and isinstance(args[0], basestring)) \
+                        or "type" in kwargs:
                     # emulate old behavior with corresponding taper and
                     # tapering over the full trace
                     msg = ("The call 'Trace.taper(type='mytype')' is "
@@ -313,7 +314,7 @@ def taper_API_change():
                            "instead to taper over the full trace with the "
                            "given type.")
                     warnings.warn(msg, DeprecationWarning)
-                    type_ = args[0]
+                    type_ = kwargs.pop("type", None) or args[0]
                     return func(self, type=type_, max_percentage=None,
                                 **kwargs)
             # normal new usage, so do nothing
