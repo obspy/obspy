@@ -9,6 +9,8 @@
        :toctree: autogen
        :nosignatures:
 
+       ~isZmap
+       ~readZmap
        ~writeZmap
 
     .. comment to end block

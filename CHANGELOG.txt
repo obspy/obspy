@@ -7,6 +7,7 @@
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
+   * ZMAP read/write support
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
  - obspy.fdsn:

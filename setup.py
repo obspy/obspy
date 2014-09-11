@@ -262,6 +262,8 @@ ENTRY_POINTS = {
         'writeFormat = obspy.core.json.core:writeJSON',
     ],
     'obspy.plugin.event.ZMAP': [
+        'isFormat = obspy.core.zmap:isZmap',
+        'readFormat = obspy.core.zmap:readZmap',
         'writeFormat = obspy.core.zmap:writeZmap',
     ],
     'obspy.plugin.event.NDK': [

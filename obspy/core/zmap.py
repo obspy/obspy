@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ZMAP write support.
+ZMAP read/write support.
 
 ZMAP is a simple 10 column csv file format for basic catalog data
 [Wiemer2001]_. Since ZMAP files are purely numerical they are easily
@@ -202,6 +202,111 @@ class Pickler(object):
         return zmap
 
 
+class Unpickler(object):
+
+    def load(self, filename):
+        """
+        Returns an ObsPy Catalog object from a ZMAP file.
+
+        :type filename: str or file
+        :param filename: Source file name or open file-like object.
+        :rtype: :class:`~obspy.core.event.Catalog`
+        :returns: ObsPy catalog
+        """
+        # Open filehandler or use an existing file like object.
+        if not hasattr(filename, "read"):
+            file_opened = True
+            fh = open(filename, 'rb')
+        else:
+            file_opened = False
+            fh = filename
+        try:
+            zmap_str = fh.read().decode('utf-8')
+            catalog = self._deserialize(zmap_str)
+            return catalog
+        finally:
+            if file_opened:
+                fh.close()
+
+    def loads(self, zmap_str):
+        """
+        Returns an ObsPy Catalog object from a ZMAP string.
+
+        :type zmap_str: str
+        :param zmap_str: ObsPy Catalog object.
+        :rtype: :class:`~obspy.core.event.Catalog`
+        :returns: ObsPy catalog
+        """
+        return self._deserialize(zmap_str)
+
+    def _deserialize(self, zmap_str):
+        catalog = Catalog()
+        for row in zmap_str.split('\n'):
+            if len(row) == 0:
+                continue
+            origin = Origin()
+            event = Event(origins=[origin])
+            event.preferred_origin_id = origin.resource_id.id
+            # Begin value extraction
+            columns = row.split('\t', 13)[:13]  # ignore extra columns
+            values = dict(zip(_STD_ZMAP_COLUMNS + _EXT_ZMAP_COLUMNS, columns))
+            # Extract origin
+            origin.longitude = self._str2num(values.get('lon'))
+            origin.latitude = self._str2num(values.get('lat'))
+            depth = self._str2num(values.get('depth'))
+            if depth is not None:
+                origin.depth = depth * 1000.0
+            z_err = self._str2num(values.get('z_err'))
+            if z_err is not None:
+                origin.depth_errors.uncertainty = z_err * 1000.0
+            h_err = self._str2num(values.get('h_err'))
+            if h_err is not None:
+                ou = OriginUncertainty()
+                ou.horizontal_uncertainty = h_err
+                ou.preferred_description = 'horizontal uncertainty'
+                origin.origin_uncertainty = ou
+            year = self._str2num(values.get('year'))
+            if year is not None:
+                t_fields = ['year', 'month', 'day', 'hour', 'minute', 'second']
+                comps = [self._str2num(values.get(f)) for f in t_fields]
+                if year % 1 != 0:
+                    origin.time = self._decyear2utc(year)
+                elif any(v > 0 for v in comps[1:]):
+                    utc_args = [int(v) for v in comps if v is not None]
+                    origin.time = UTCDateTime(*utc_args)
+            mag = self._str2num(values.get('mag'))
+            # Extract magnitude
+            if mag is not None:
+                magnitude = Magnitude(mag=mag)
+                m_err = self._str2num(values.get('m_err'))
+                magnitude.mag_errors.uncertainty = m_err
+                event.magnitudes.append(magnitude)
+                event.preferred_magnitude_id = magnitude.resource_id.id
+            catalog.append(event)
+        return catalog
+
+    @staticmethod
+    def _str2num(num_str):
+        try:
+            if num_str is not None and num_str.lower() != 'nan':
+                num = float(num_str)
+            else:
+                return None
+        except ValueError:
+            return None
+        return num
+
+    @staticmethod
+    def _decyear2utc(decimal_year):
+        """
+        Return UTCDateTime from decimal year
+        """
+        start_of_year = UTCDateTime(int(decimal_year), 1, 1)
+        end_of_year = UTCDateTime(int(decimal_year) + 1, 1, 1)
+        t = start_of_year + (decimal_year % 1) * (end_of_year - start_of_year)
+        return t
+
+
 def writeZmap(catalog, filename, with_uncertainties=False,
               **kwargs):  # @UnusedVariable
     """
@@ -225,6 +330,91 @@ def writeZmap(catalog, filename, with_uncertainties=False,
         magnitude and depth uncertainty (see :mod:`~obspy.core.zmap`).
     """
     Pickler(with_uncertainties).dump(catalog, filename)
+
+
+def readZmap(filename, **kwargs):
+    """
+    Reads a ZMAP file and returns an ObsPy Catalog object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+
+    Unlike :func:`~obspy.core.zmap.isZmap` *readZmap* is lenient, i.e. it will
+    try to import a file even if it does not strictly conform to 10 or 13
+    column ZMAP. Namely the following deviations from standard ZMAP format are
+    acceptable:
+
+    * Less or more than 10 or 13 columns. Extra columns will be ignored.
+      Missing values will be set to *None*.
+    * Integer years without a fractional part. If the fractional part is
+      present, the date/time is computed from the year column. All other
+      date/time fields are ignored.
+      If the year column is an integer number, date and time will be computed
+      from all date/time related fields.
+
+    :type filename: str or file
+    :param filename: Name of ZMAP file to be read or open file-like object.
+    :rtype: :class:`~obspy.core.event.Catalog`
+    :return: An ObsPy Catalog object.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.event import readEvents
+    >>> cat = readEvents('/path/to/zmap_events.txt', format='ZMAP')
+    >>> print(cat)
+    2 Event(s) in Catalog:
+    2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
+    2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
+    """
+    return Unpickler().load(filename)
+
+
+def isZmap(filename):
+    """
+    Checks whether a file is ZMAP format.
+
+    Unlike :func:`~obspy.core.zmap.readZmap` *isZmap* is strict, i.e. it will
+    not detect a ZMAP file unless it consists of exactly 10 or 13 numerical
+    columns.
+
+    :type filename: str or file
+    :param filename: Name of the file to be checked or open file-like object.
+    :rtype: bool
+    :return: ``True`` if ZMAP file.
+
+    .. rubric:: Example
+
+    >>> isZmap('/path/to/zmap_events.txt')  # doctest: +SKIP
+    True
+    """
+    # Open filehandler or use an existing file like object.
+    if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):
+        file_opened = False
+        pos = filename.tell()
+        fh = filename
+    else:
+        file_opened = True
+        fh = open(filename, 'rb')
+
+    try:
+        fh.seek(0)
+        # sample the first line only
+        first_line = fh.readline().decode('utf-8')
+        # we expect 10 (standard) or 13 columns (extended)
+        columns = first_line.split('\t')
+        if len(columns) not in [10, 13]:
+            return False
+        # only numerical values are allowed (including NaN)
+        [float(col) for col in columns]
+        return True
+    except ValueError:
+        return False
+    finally:
+        if file_opened:
+            fh.close()
+        else:
+            fh.seek(pos)
 
 
 if __name__ == '__main__':
