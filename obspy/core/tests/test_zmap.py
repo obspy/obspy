@@ -11,6 +11,9 @@ import unittest
 import os
 
 
+_STD_ZMAP_FIELDS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
+                    'hour', 'minute', 'second')
+_EXT_ZMAP_FIELDS = ('h_err', 'z_err', 'm_err')
 class ZMAPTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.zmap
@@ -19,8 +22,7 @@ class ZMAPTestCase(unittest.TestCase):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')
         path_to_catalog = os.path.join(data_dir, 'neries_events.xml')
         self.catalog = readEvents(path_to_catalog)
-        self.zmap_fields = ['lon', 'lat', 'year', 'month', 'day', 'mag',
-                            'depth', 'hour', 'minute', 'second']
+        self.zmap_fields = _STD_ZMAP_FIELDS
         # Extract our favorite test event from the catalog
         test_event_id = 'quakeml:eu.emsc/event/20120404_0000041'
         self.test_event = next(e for e in self.catalog.events
@@ -94,7 +96,7 @@ class ZMAPTestCase(unittest.TestCase):
         """
         Test export of non-standard (CSEP) uncertainty fields
         """
-        self.zmap_fields += ['h_err', 'z_err', 'm_err']
+        self.zmap_fields += _EXT_ZMAP_FIELDS
         self.test_data.update({'h_err': 'NaN', 'z_err': '0.000000',
                                'm_err': '0.000000'})
         pickler = zmap.Pickler(with_uncertainties=True)
@@ -105,7 +107,7 @@ class ZMAPTestCase(unittest.TestCase):
         """
         Test hz error extraction from origin_uncertainty
         """
-        self.zmap_fields += ['h_err', 'z_err', 'm_err']
+        self.zmap_fields += _EXT_ZMAP_FIELDS
         self.test_data.update({'h_err': '1.000000', 'z_err': '0.000000',
                                'm_err': '0.000000'})
         pickler = zmap.Pickler(with_uncertainties=True)
@@ -125,7 +127,7 @@ class ZMAPTestCase(unittest.TestCase):
         """
         Test hz error extraction from lat/lon
         """
-        self.zmap_fields += ['h_err', 'z_err', 'm_err']
+        self.zmap_fields += _EXT_ZMAP_FIELDS
         self.test_data.update({'h_err': '0.138679', 'z_err': '0.000000',
                                'm_err': '0.000000'})
         pickler = zmap.Pickler(with_uncertainties=True)
@@ -137,10 +139,10 @@ class ZMAPTestCase(unittest.TestCase):
 
     def _expected_string(self, zmap_dict):
         """
-        Returns a string as expeced from a zmap dump.
+        Returns the expected string from a ZMAP dump.
 
-        zmap_dict contains (string) values for all the fields that are expeced
-        to have specific values. All other fields are expected to be 'NaN'.
+        zmap_dict contains (string) values for all the fields that are expected
+        to have specific values. All other fields default to 'NaN'.
         """
         full_zmap = dict.fromkeys(self.zmap_fields, 'NaN')
         full_zmap.update(zmap_dict)

@@ -58,16 +58,22 @@ from future.builtins import *  # NOQA
 
 import math
 from obspy.core import UTCDateTime
+from obspy.core.event import Catalog, Origin, Event, Magnitude, \
+    OriginUncertainty
+
+
+_STD_ZMAP_COLUMNS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
+                     'hour', 'minute', 'second')
+_EXT_ZMAP_COLUMNS = ('h_err', 'z_err', 'm_err')
 
 
 class Pickler(object):
 
     def __init__(self, with_uncertainties=False):
         # This is ZMAP column order, don't change it
-        zmap_columns = ['lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
-                        'hour', 'minute', 'second']
+        zmap_columns = _STD_ZMAP_COLUMNS
         if with_uncertainties:
-            zmap_columns += ['h_err', 'z_err', 'mag_err']
+            zmap_columns += _EXT_ZMAP_COLUMNS
         self.zmap_columns = zmap_columns
 
     def dump(self, catalog, filename):
@@ -188,7 +194,7 @@ class Pickler(object):
             if magnitude:
                 strings.update({
                     'mag':     self._num2str(magnitude.mag),
-                    'mag_err': self._num2str(magnitude.mag_errors.uncertainty)
+                    'm_err':   self._num2str(magnitude.mag_errors.uncertainty)
                 })
             # create tab separated row
             rows.append('\t'.join([strings[c] for c in self.zmap_columns]))
