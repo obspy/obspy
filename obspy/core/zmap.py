@@ -385,7 +385,7 @@ def isZmap(filename):
 
     .. rubric:: Example
 
-    >>> isZmap('/path/to/zmap_events.txt')  # doctest: +SKIP
+    >>> isZmap('/path/to/zmap_events.txt')
     True
     """
     # Open filehandler or use an existing file like object.
@@ -415,8 +415,3 @@ def isZmap(filename):
             fh.close()
         else:
             fh.seek(pos)
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(exclude_empty=True)
