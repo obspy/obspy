@@ -232,8 +232,8 @@ class ZMAPTestCase(unittest.TestCase):
             magnitude = event.preferred_magnitude()
             if any(k in test_dict for k in _MAGNITUDE_FIELDS):
                 self.assertIsNotNone(magnitude)
-            d = {k: float(v) if v != 'NaN' else None
-                 for (k, v) in test_dict.items()}
+            d = dict((k, float(v) if v != 'NaN' else None)
+                     for (k, v) in test_dict.items())
             if 'lon' in d:
                 self.assertEqual(d['lon'], origin.longitude)
             if 'lat' in d:
