@@ -2,49 +2,8 @@
 """
 ZMAP read/write support.
 
-ZMAP is a simple 10 column csv file format for basic catalog data
-[Wiemer2001]_. Since ZMAP files are purely numerical they are easily
-imported into Matlab® using the ``dlmread`` function.
-
-=================   ==============================================
-Column #            Value
-=================   ==============================================
- 1                  Longitude [deg]
- 2                  Latitude [deg]
- 3                  Decimal year (e.g., 2005.5 for July 2nd, 2005)
- 4                  Month
- 5                  Day
- 6                  Magnitude
- 7                  Depth [km]
- 8                  Hour
- 9                  Minute
-10                  Second
-=================   ==============================================
-
-When writing to ZMAP, the preferred origin and magnitude are used to fill the
-origin and magnitude columns. Any missing values will be exported as 'NaN'
-
-.. rubric:: Extended ZMAP
-
-Extended ZMAP format as used in CSEP (http://www.cseptesting.org) is supported
-by using the keyword argument ``withUncertainties``. The resulting non
-standard columns will be added at the end as follows:
-
-=================   ==============================================
-Column #            Value
-=================   ==============================================
-11                  Horizontal error
-12                  Depth error
-13                  Magnitude error
-=================   ==============================================
-
-If :class:`~obspy.core.event.OriginUncertainty` specifies a
-*horizontal uncertainty* the value for column 11 is extracted from there.
-*Uncertainty ellipse* and *confidence ellipsoid* are not currently supported.
-If no horizontal uncertainty is given, :class:`~obspy.core.event.Origin`'s
-``latitude_errors`` and ``longitude_errors`` are used instead. Depth and
-magnitude errors are always taken from the respective ``_errors`` attribute in
-:class:`~obspy.core.event.Origin`.
+ZMAP is a simple 10 column CSV file (technically TSV) format for basic catalog
+data (see [Wiemer2001]_).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -321,13 +280,13 @@ def writeZmap(catalog, filename, with_uncertainties=False,
         the :meth:`~obspy.core.event.Catalog.write` method of an
         ObsPy :class:`~obspy.core.event.Catalog` object, call this instead.
 
-    :type catalog: :class:`~obspy.core.stream.Catalog`
+    :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str or file
     :param filename: Filename to write or open file-like object.
     :type with_uncertainties: bool
     :param with_uncertainties: appends non-standard columns for horizontal,
-        magnitude and depth uncertainty (see :mod:`~obspy.core.zmap`).
+        magnitude and depth uncertainty (see :mod:`~obspy.zmap.zmap`).
     """
     Pickler(with_uncertainties).dump(catalog, filename)
 
@@ -340,32 +299,10 @@ def readZmap(filename, **kwargs):
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
 
-    Unlike :func:`~obspy.core.zmap.isZmap` *readZmap* is lenient, i.e. it will
-    try to import a file even if it does not strictly conform to 10 or 13
-    column ZMAP. Namely the following deviations from standard ZMAP format are
-    acceptable:
-
-    * Less or more than 10 or 13 columns. Extra columns will be ignored.
-      Missing values will be set to *None*.
-    * Integer years without a fractional part. If the fractional part is
-      present, the date/time is computed from the year column. All other
-      date/time fields are ignored.
-      If the year column is an integer number, date and time will be computed
-      from all date/time related fields.
-
     :type filename: str or file
     :param filename: Name of ZMAP file to be read or open file-like object.
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
-
-    .. rubric:: Example
-
-    >>> from obspy.core.event import readEvents
-    >>> cat = readEvents('/path/to/zmap_events.txt', format='ZMAP')
-    >>> print(cat)
-    2 Event(s) in Catalog:
-    2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
-    2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
     """
     return Unpickler().load(filename)
 
@@ -374,7 +311,7 @@ def isZmap(filename):
     """
     Checks whether a file is ZMAP format.
 
-    Unlike :func:`~obspy.core.zmap.readZmap` *isZmap* is strict, i.e. it will
+    Unlike :func:`~obspy.zmap.zmap.readZmap` *isZmap* is strict, i.e. it will
     not detect a ZMAP file unless it consists of exactly 10 or 13 numerical
     columns.
 
@@ -415,3 +352,7 @@ def isZmap(filename):
             fh.close()
         else:
             fh.seek(pos)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

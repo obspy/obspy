@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.core.zmap
-.. automodule:: obspy.core.zmap
+.. currentmodule:: obspy.zmap
+.. automodule:: obspy.zmap
 
     .. comment to end block
 
@@ -9,8 +9,8 @@
        :toctree: autogen
        :nosignatures:
 
-       ~isZmap
-       ~readZmap
-       ~writeZmap
+       ~zmap.isZmap
+       ~zmap.readZmap
+       ~zmap.writeZmap
 
     .. comment to end block

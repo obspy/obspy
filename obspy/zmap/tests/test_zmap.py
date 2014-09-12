@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core import zmap
+from obspy.zmap import zmap
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.utcdatetime import UTCDateTime
@@ -22,7 +22,7 @@ _MAGNITUDE_FIELDS = ('mag', 'm_err')
 
 class ZMAPTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.zmap
+    Test suite for obspy.zmap.zmap
     """
     def setUp(self):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')

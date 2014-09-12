@@ -28,7 +28,7 @@ import tempfile
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk', 'ah']
+                   'ndk', 'ah', 'zmap']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -404,7 +404,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
         ======= ================= =======================================
         JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
         QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
-        ZMAP    :mod:`obspy.core` :func:`obspy.core.zmap.writeZmap`
+        ZMAP    :mod:`obspy.zmap` :func:`obspy.zmap.zmap.writeZmap`
         ======= ================= =======================================
 
     :type group: str
