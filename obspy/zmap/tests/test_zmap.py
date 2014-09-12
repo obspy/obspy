@@ -228,10 +228,10 @@ class ZMAPTestCase(unittest.TestCase):
         for event, test_dict in zip(catalog, dicts):
             origin = event.preferred_origin()
             if any(k in test_dict for k in _ORIGIN_FIELDS):
-                self.assertIsNotNone(origin)
+                self.assertNotEqual(None, origin)
             magnitude = event.preferred_magnitude()
             if any(k in test_dict for k in _MAGNITUDE_FIELDS):
-                self.assertIsNotNone(magnitude)
+                self.assertNotEqual(None, magnitude)
             d = dict((k, float(v) if v != 'NaN' else None)
                      for (k, v) in test_dict.items())
             if 'lon' in d:
