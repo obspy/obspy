@@ -1276,6 +1276,48 @@ class Response(ComparingObject):
 
         return fig
 
+    def get_paz(self):
+        """
+        Get Poles and Zeros stage.
+
+        Prints a warning if more than one poles and zeros stage is found.
+        Raises if no poles and zeros stage is found.
+
+        :rtype: :class:`PolesZerosResponseStage`
+        :returns: Poles and Zeros response stage.
+        """
+        paz = [stage for stage in self.response_stages
+               if isinstance(stage, PolesZerosResponseStage)]
+        if len(paz) == 0:
+            msg = "No PolesZerosResponseStage found."
+            raise Exception(msg)
+        elif len(paz) > 1:
+            msg = ("More than one PolesZerosResponseStage encountered."
+                   "Returning first one found.")
+            warnings.warn(msg)
+        return paz[0]
+
+    def get_sacpz(self):
+        """
+        Returns SACPZ ASCII text representation of Response.
+
+        :rtype: str
+        :returns: Textual SACPZ representation of response.
+        """
+        # extract paz
+        paz = self.get_paz()
+        # assemble output string
+        out = []
+        out.append("ZEROS %i" % len(paz.zeros))
+        for c in paz.zeros:
+            out.append(" %+.6e %+.6e" % (c.real, c.imag))
+        out.append("POLES %i" % len(paz.poles))
+        for c in paz.poles:
+            out.append(" %+.6e %+.6e" % (c.real, c.imag))
+        constant = paz.normalization_factor * self.instrument_sensitivity.value
+        out.append("CONSTANT %.6e" % constant)
+        return "\n".join(out)
+
 
 class InstrumentSensitivity(ComparingObject):
     """
