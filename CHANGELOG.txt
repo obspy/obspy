@@ -7,7 +7,6 @@
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
-   * ZMAP read/write support
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
  - obspy.fdsn:
@@ -41,6 +40,8 @@
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
+ - obspy.zmap:
+   * New module which adds ZMAP read/write support
  - scripts:
    * All scripts now require argparse instead of optparse.
    * All scripts now accept -V or --version to print version information.

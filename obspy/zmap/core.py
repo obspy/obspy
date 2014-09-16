@@ -19,6 +19,7 @@ import math
 from obspy.core import UTCDateTime
 from obspy.core.event import Catalog, Origin, Event, Magnitude, \
     OriginUncertainty
+from obspy.core.util.decorator import map_example_filename
 
 
 _STD_ZMAP_COLUMNS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',
@@ -286,7 +287,7 @@ def writeZmap(catalog, filename, with_uncertainties=False,
     :param filename: Filename to write or open file-like object.
     :type with_uncertainties: bool
     :param with_uncertainties: appends non-standard columns for horizontal,
-        magnitude and depth uncertainty (see :mod:`~obspy.zmap.zmap`).
+        magnitude and depth uncertainty (see :mod:`~obspy.zmap.core`).
     """
     Pickler(with_uncertainties).dump(catalog, filename)
 
@@ -307,11 +308,12 @@ def readZmap(filename, **kwargs):
     return Unpickler().load(filename)
 
 
+@map_example_filename("filename")
 def isZmap(filename):
     """
     Checks whether a file is ZMAP format.
 
-    Unlike :func:`~obspy.zmap.zmap.readZmap` *isZmap* is strict, i.e. it will
+    Unlike :func:`~obspy.zmap.core.readZmap` *isZmap* is strict, i.e. it will
     not detect a ZMAP file unless it consists of exactly 10 or 13 numerical
     columns.
 

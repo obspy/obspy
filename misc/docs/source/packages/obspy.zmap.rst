@@ -3,14 +3,12 @@
 
     .. comment to end block
 
-    Classes & Functions
-    -------------------
+    Modules
+    -------
     .. autosummary::
        :toctree: autogen
        :nosignatures:
 
-       ~zmap.isZmap
-       ~zmap.readZmap
-       ~zmap.writeZmap
+       core
 
     .. comment to end block
