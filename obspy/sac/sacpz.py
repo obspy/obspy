@@ -9,6 +9,10 @@ def write_SACPZ(inventory, file_or_file_object):
     """
     Writes an inventory object to a SACPZ file.
 
+    .. note::
+        The channel DIP in the SACPZ comment fields is specified like defined
+        by SEED (positive down from horizontal).
+
     .. warning::
         This function should NOT be called directly, it registers via the
         the :meth:`~obspy.station.inventory.Inventory.write` method of an
@@ -52,10 +56,11 @@ def write_SACPZ(inventory, file_or_file_object):
                 out.append("* ELEVATION   : %s" % (cha.elevation or
                                                    sta.elevation))
                 out.append("* DEPTH       : %s" % cha.depth)
-                # TODO: DIP in SACPZ served by IRIS SACPZ web service is
-                # systematically different from the StationXML entries. Maybe
-                # it is defined differently in SAC??
-                out.append("* DIP         : %s" % cha.dip)
+                # DIP in SACPZ served by IRIS SACPZ web service is
+                # systematically different from the StationXML entries.
+                # It is defined as an incidence angle (like done in SAC for
+                # sensor orientation), rather than an actual dip.
+                out.append("* DIP (SEED)  : %s" % cha.dip)
                 out.append("* AZIMUTH     : %s" % cha.azimuth)
                 out.append("* SAMPLE RATE : %s" % cha.sample_rate)
                 out.append("* INPUT UNIT  : M")
