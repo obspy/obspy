@@ -1,6 +1,9 @@
 from taupy.helper_classes import SlownessModelError, TauModelError
 from .TauBranch import TauBranch
 from itertools import count
+from math import pi
+import pickle
+
 
 # noinspection PyPep8Naming
 class TauModel(object):
@@ -56,9 +59,7 @@ class TauModel(object):
         self.sMod = sMod
         self.calcTauIncFrom()
 
-        print("This is the init method of TauModel clocking in. Hello!")
-        print("The debug flag for TauModel is set to:"+str(self.DEBUG), 
-              "the default here is false but it should have been modified TauP_Create.")
+        print("This is the init method of TauModel. Hello!")
 
     def calcTauIncFrom(self):
         """Calculates tau for each branch within a slowness model."""
@@ -112,7 +113,7 @@ class TauModel(object):
             for critNum, topCritDepth, botCritDepth in zip(count(), self.sMod.criticalDepths[:-1],
                                                            self.sMod.criticalDepths[1:]):
                 topCritLayerNum = topCritDepth.pLayerNum if isPWave else topCritDepth.sLayerNum
-                botCritLayerNum = botCritDepth.pLayerNum if isPWave else botCritDepth.sLayerNum
+                botCritLayerNum = (botCritDepth.pLayerNum if isPWave else botCritDepth.sLayerNum) - 1
                 self.tauBranches[waveNum][critNum] = TauBranch(topCritDepth.depth, botCritDepth.depth, isPWave)
                 self.tauBranches[waveNum][critNum].DEBUG = self.DEBUG
                 self.tauBranches[waveNum][critNum].createBranch(self.sMod, minPSoFar, self.rayParams)
@@ -148,12 +149,21 @@ class TauModel(object):
             raise TauModelError("TauModel.calcTauIncFrom: Validation failed!")
 
     def writeModel(self, outfile):
-        with open(outfile, 'w') as f:
-            f.write("A tau model should be here")
+        with open(outfile, 'w+b') as f:
+            pickle.dump(self, f, -1)
 
     def __str__(self):
-        desc = 'This is the TauModel __str__ method.'
+        desc = "Delta tau for each slowness sample and layer.\n"
+        for j, rayParam in enumerate(self.rayParams):
+            for i, tb in enumerate(self.tauBranches[0]):
+                desc += (" i " + str(i) + " j " + str(j) + " rayParam " + str(rayParam)
+                         + " tau " + str(tb.tau[j]) + " time "
+                         + str(tb.time[j]) + " dist "
+                         + str(tb.dist[j]) + " degrees "
+                         + str(tb.dist[j] * 180 / pi) + "\n")
+            desc += "\n"
         return desc
 
     def validate(self):
+        # TODO: implement the model validation; not critical right now
         return True

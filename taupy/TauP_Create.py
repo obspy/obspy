@@ -72,10 +72,6 @@ class TauP_Create(object):
         print("Running tauPCreate.start.")
         tauPCreate.start()
 
-        # could catch different exceptions here dep on what went wrong
-        #except IOError as?
-        #   print('IOError')?
-
     def loadVMod(self):
         """ Tries to load a velocity model first via readVelocityFile,
         or if unsuccessful load internally from a previously stored
@@ -144,8 +140,8 @@ class TauP_Create(object):
             print("taup.create.maxInterpError = " + str(self.sMod.maxInterpError) + " seconds")
             print("taup.create.allowInnerCoreS = " + str(self.sMod.isAllowInnerCoreS))
             print("Slow model " + " " + str(self.sMod.getNumLayers(True)) + " P layers," + str(self.sMod.getNumLayers(False)) + " S layers")
-        if self.DEBUG:
-            print(self.sMod)
+        #if self.DEBUG:
+        #    print(self.sMod)
         # set the debug flags to value given here:
         TauModel.DEBUG = self.DEBUG
         SlownessModel.DEBUG = self.DEBUG
@@ -165,19 +161,18 @@ class TauP_Create(object):
                 # now it's an instance of it.
                 if self.DEBUG:
                     print("Done calculating Tau branches.")
-                if self.DEBUG:
-                    print(self.tMod)
+                #if self.DEBUG:
+                #    print(self.tMod)
 
                 # The java behaviour for finding where to store the
                 # file was pretty silly. It stored the out file to the
                 # working dir, but in two different ways. Here, just store to current dir:
                 outModelFileName = self.vMod.modelName + ".taup"
-                if self.outdir == None:
+                if self.outdir is None:
                     outFile = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), outModelFileName)
-                    self.tMod.writeModel(outFile)
                 else:
                     outFile = os.path.join(self.outdir, outModelFileName)
-                    self.tMod.writeModel(outFile)
+                self.tMod.writeModel(outFile)
                 if self.DEBUG:
                     print("Done Saving " + outFile)
         except IOError as e:

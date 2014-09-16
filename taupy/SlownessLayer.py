@@ -2,6 +2,7 @@ from taupy.helper_classes import TimeDist, SlownessModelError
 import math
 import numpy as np
 
+
 # noinspection PyPep8Naming
 class SlownessLayer:
 
@@ -123,3 +124,40 @@ class SlownessLayer:
         else:
             raise SlownessModelError("Ray parameter is not contained within this slowness layer.")
 
+    def evaluateAtBullen(self, depth, radiusOfEarth):
+        """Finds the slowness at the given depth. Note that this method assumes a Bullen type of slowness
+        interpolation, ie p(r) = a*r^b. This will produce results consistent with a tau model that uses this
+        interpolant, but it may differ slightly from going directly to the velocity model. Also, if the tau model
+        is generated using another interpolant, linear for instance, then the result may not be consistent
+        with the tau model."""
+        topP = self.topP
+        botP = self.botP
+        topDepth = self.topDepth
+        botDepth = self.botDepth
+        # Could do some safeguard asserts...
+        assert not botDepth > radiusOfEarth
+        assert not (topDepth - depth) * (depth - botDepth) < 0
+        if depth == topDepth:
+            return topP
+        elif depth == botDepth:
+            return botP
+        else:
+            B = np.divide(math.log(np.divide(topP, botP)),
+                          math.log(np.divide((radiusOfEarth - topDepth),
+                                             (radiusOfEarth - botDepth))))
+            ADenominator = pow((radiusOfEarth - topDepth), B)
+            A = topP / ADenominator
+            answer = A * pow((radiusOfEarth - depth), B)
+            if answer < 0 or math.isnan(answer) or math.isinf(answer):
+                # numerical instability in power law calculation???
+                # try a linear interpolation if the layer is small ( <2 km)
+                # or if denominator of A is infinity as we probably overflowed
+                # the double in that case.
+                if botDepth - topDepth < 2 or math.isinf(ADenominator) or botP == 0:
+                    linear = (botP - topP) / (botDepth - topDepth) * (depth - topDepth) + topP
+                    if linear < 0 or math.isinf(linear) or math.isnan(linear):
+                        pass
+                    else:
+                        return linear
+                raise SlownessModelError("Calculated Slowness is NaN or negative!")
+        return answer

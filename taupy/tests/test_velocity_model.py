@@ -37,7 +37,7 @@ class TestVelocityModel(unittest.TestCase):
             #self.assertEqual(test2.spherical,True)
             #self.assertEqual(test2.modelName, "iasp91")
             
-            self.assertEqual(validate(), True)
+            self.assertEqual(test2.validate(), True)
 
             self.assertEqual(
                 test2.getDisconDepths(),

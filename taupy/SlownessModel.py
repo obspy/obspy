@@ -802,7 +802,7 @@ class SlownessModel(object):
                                 isCurrOK = False
                         else:
                             j += 1
-                            if self.DEBUG and j % 10 == 0 or j < 10:
+                            if self.DEBUG and j % 10 == 0: #or j < 10:
                                 print(j)
                 else:
                     prevPrevTD = None
@@ -1010,6 +1010,43 @@ class SlownessModel(object):
         # Everything seems OK.
         return True
 
+    def getMinTurnRayParam(self, depth, isPWave):
+        """ Returns the minimum ray parameter that turns, but is not reflected, at
+        or above the given depth. Normally this is the slowness sample
+        at the given depth, but if the depth is within a high slowness
+        zone, then it may be smaller."""
+        minPSoFar = 1e300
+        if self.depthInHighSlowness(depth, 1e300, isPWave):
+            for sLayer in (self.PLayers if isPWave else self.SLayers):
+                if sLayer.botDepth == depth:
+                    minPSoFar = min(minPSoFar, sLayer.botP)
+                    return minPSoFar
+                elif sLayer.botDepth > depth:
+                    minPSoFar = min(minPSoFar, sLayer.evaluateAtBullen(depth, self.radiusOfEarth))
+                    return minPSoFar
+                else:
+                    minPSoFar = min(minPSoFar, sLayer.botP)
+        else:
+            sLayer = self.getSlownessLayer(self.layerNumberAbove(depth, isPWave), isPWave)
+            if depth == sLayer.botDepth:
+                minPSoFar = sLayer.botP
+            else:
+                minPSoFar = sLayer.evaluateAtBullen(depth, self.radiusOfEarth)
+        return minPSoFar
+
+    def getMinRayParam(self, depth, isPWave):
+        """ Returns the minimum ray parameter that turns or is reflected at or above
+        the given depth. Normally this is the slowness sample at the
+        given depth, but if the depth is within a high slowness zone,
+        then it may be smaller. Also, at first order discontinuities,
+        there may be many slowness samples at the same depth."""
+        minPSoFar = self.getMinTurnRayParam(depth, isPWave)
+        sLayerAbove = self.getSlownessLayer(self.layerNumberAbove(depth, isPWave), isPWave)
+        sLayerBelow = self.getSlownessLayer(self.layerNumberBelow(depth, isPWave), isPWave)
+        if sLayerAbove.botDepth == depth:
+            minPSoFar = min(min(minPSoFar, sLayerAbove.botP), sLayerBelow.topP)
+        return minPSoFar
+
     def splitLayer(self):
-        """This, and two others, is not needed  during TauP_Create, but only later"""
+        """This is not needed  during TauP_Create, but only later"""
         pass
