@@ -114,7 +114,7 @@ class Gallery(Directive):
             result = directive_instance.run()
         except DirectiveError as error:
             msg_node = self.reporter.system_message(error.level, error.msg,
-                                                    line=lineno)
+                                                    line=self.lineno)
             msg_node += nodes.literal_block(block_text, block_text)
             result = [msg_node]
 
