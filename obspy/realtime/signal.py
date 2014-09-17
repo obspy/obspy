@@ -121,13 +121,13 @@ def integrate(trace, rtmemory_list=None):
         rtmemory.initialize(sample.dtype, memory_size_input,
                             memory_size_output, 0, 0)
 
-    sum = rtmemory.output[0]
+    sum_ = rtmemory.output[0]
 
     for i in range(np.size(sample)):
-        sum += sample[i] * delta_time
-        sample[i] = sum
+        sum_ += sample[i] * delta_time
+        sample[i] = sum_
 
-    rtmemory.output[0] = sum
+    rtmemory.output[0] = sum_
 
     return sample
 
@@ -226,7 +226,7 @@ def boxcar(trace, width, rtmemory_list=None):
     i = 0
     i1 = i - width
     i2 = i  # causal boxcar of width width
-    sum = 0.0
+    sum_ = 0.0
     icount = 0
     for i in range(np.size(sample)):
         value = 0.0
@@ -236,21 +236,21 @@ def boxcar(trace, width, rtmemory_list=None):
                     value = rtmemory.input[width + n]
                 else:
                     value = sample[n]
-                sum += value
+                sum_ += value
                 icount = icount + 1
         else:  # later passes, update sum
             if ((i1 - 1) < 0):
                 value = rtmemory.input[width + (i1 - 1)]
             else:
                 value = sample[(i1 - 1)]
-            sum -= value
+            sum_ -= value
             if (i2 < 0):
                 value = rtmemory.input[width + i2]
             else:
                 value = sample[i2]
-            sum += value
+            sum_ += value
         if (icount > 0):
-            new_sample[i] = (float)(sum / float(icount))
+            new_sample[i] = (float)(sum_ / float(icount))
         else:
             new_sample[i] = 0.0
         i1 = i1 + 1
