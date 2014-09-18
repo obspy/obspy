@@ -115,17 +115,23 @@ class TauP_Create(object):
         config = configparser.ConfigParser()
         try:
             config.read('TauP_config.ini')
-            ssm=config['SlownessModel_created_from_VelocityModel']
+            ssm = config['SlownessModel_created_from_VelocityModel']
+            # Read values from the appropriate section if defined, else use default values.
+            minDeltaP = float(ssm.get('mindeltaP', 0.1))  # (are actually case-insensitive)
+            maxDeltaP = float(ssm.get('maxDeltaP', 11))
+            maxDepthInterval = float(ssm.get('maxDepthInterval', 115))
+            maxRangeInterval = float(ssm.get('maxRangeInterval', 2.5))
+            maxInterpError = float(ssm.get('maxInterpError', 0.05))
+            allowInnerCoreS = ssm.getboolean('allowInnerCoreS', True)
         except KeyError:
-            # TODO This is hardly very elegant.
-            raise SystemExit('Error reading config file: TauP_config must exist in working dir and have section named SlownessModel_created_from_VelocityModel! It can be empty otherwise.')
-        # Read values from the appropriate section if defined, else use default values
-        minDeltaP = float(ssm.get('mindeltaP', 0.1)) # (are actually case-insensitive)
-        maxDeltaP = float(ssm.get('maxDeltaP', 11))
-        maxDepthInterval = float(ssm.get('maxDepthInterval', 115))
-        maxRangeInterval = float(ssm.get('maxRangeInterval', 2.5))
-        maxInterpError = float(ssm.get('maxInterpError', 0.05))
-        allowInnerCoreS = ssm.getboolean('allowInnerCoreS', True)
+            print("Couldn't read config file, using defaults. Config file must be a file named TauP_config (in working "
+                  "dir) with a section named SlownessModel_created_from_VelocityModel.")
+            minDeltaP = 0.1
+            maxDeltaP = 11
+            maxDepthInterval = 115
+            maxRangeInterval = 2.5
+            maxInterpError = 0.05
+            allowInnerCoreS = True
 
         from math import pi
         self.sMod = SlownessModel(vMod,
@@ -138,7 +144,7 @@ class TauP_Create(object):
             print("taup.create.maxDepthInterval = " + str(self.sMod.maxDepthInterval) + " kilometers")
             print("taup.create.maxRangeInterval = " + str(self.sMod.maxRangeInterval) + " degrees")
             print("taup.create.maxInterpError = " + str(self.sMod.maxInterpError) + " seconds")
-            print("taup.create.allowInnerCoreS = " + str(self.sMod.isAllowInnerCoreS))
+            print("taup.create.allowInnerCoreS = " + str(self.sMod.allowInnerCoreS))
             print("Slow model " + " " + str(self.sMod.getNumLayers(True)) + " P layers," + str(self.sMod.getNumLayers(False)) + " S layers")
         #if self.DEBUG:
         #    print(self.sMod)
