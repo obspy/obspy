@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import inspect
 import argparse
 from taupy.VelocityModel import VelocityModel
 from taupy.SlownessModel import SlownessModel
 from taupy.TauModel import TauModel
+
 
 class TauP_Create(object):
     """TauP_Create - Re-implementation of the seismic travel time
@@ -14,7 +14,6 @@ class TauP_Create(object):
     Times" by Buland and Chapman, BSSA vol. 73, No. 5, October 1983,
     pp 1271-1302. This creates the SlownessModel and tau branches and
     saves them for later use.
-
     """
 
     overlayModelFilename = None
