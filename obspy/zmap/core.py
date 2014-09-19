@@ -181,7 +181,9 @@ class Unpickler(object):
             file_opened = False
             fh = filename
         try:
-            zmap_str = fh.read().decode('utf-8')
+            zmap_str = fh.read()
+            if hasattr(zmap_str, 'decode'):
+                zmap_str = zmap_str.decode('utf-8')
             catalog = self._deserialize(zmap_str)
             return catalog
         finally:
@@ -339,7 +341,9 @@ def isZmap(filename):
     try:
         fh.seek(0)
         # sample the first line only
-        first_line = fh.readline().decode('utf-8')
+        first_line = fh.readline()
+        if hasattr(first_line, 'decode'):
+            first_line = first_line.decode('utf-8')
         # we expect 10 (standard) or 13 columns (extended)
         columns = first_line.split('\t')
         if len(columns) not in [10, 13]:
