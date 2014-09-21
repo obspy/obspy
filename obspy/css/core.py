@@ -11,6 +11,7 @@ import os
 import numpy as np
 
 from obspy import UTCDateTime, Trace, Stream
+from obspy.core.compatibility import frombuffer
 
 
 DTYPE = {
@@ -97,13 +98,17 @@ def readCSS(filename, **kwargs):
         filename = os.path.join(basedir, dirname, filename)
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
+        if isinstance(dtype, tuple):
+            read_fmt = np.dtype(dtype[0])
+            fmt = dtype[1]
+        else:
+            read_fmt = np.dtype(dtype)
+            fmt = read_fmt
         with open(filename, "rb") as fh:
             fh.seek(offset)
-            if isinstance(dtype, tuple):
-                data = np.fromfile(fh, dtype=dtype[0], count=npts)
-                data = data.astype(dtype[1])
-            else:
-                data = np.fromfile(fh, dtype=dtype, count=npts)
+            data = fh.read(read_fmt.itemsize * npts)
+            data = frombuffer(data, dtype=read_fmt)
+            data = data.astype(fmt, copy=False)
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()
