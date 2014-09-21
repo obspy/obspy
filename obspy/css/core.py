@@ -13,7 +13,20 @@ import numpy as np
 from obspy import UTCDateTime, Trace, Stream
 
 
-DTYPE = {b's4': b"i", b't4': b"f", b's2': b"h"}
+DTYPE = {
+    # Big-endian integers
+    b's4': b'>i',
+    b's2': b'>h',
+    # Little-endian integers
+    b'i4': b'<i',
+    b'i2': b'<h',
+    # Big-endian floating point
+    b't4': b'>f',
+    b't8': b'>d',
+    # Little-endian floating point
+    b'f4': b'<f',
+    b'f8': b'<d',
+}
 
 
 def isCSS(filename):
@@ -76,10 +89,9 @@ def readCSS(filename, **kwargs):
         filename = os.path.join(basedir, dirname, filename)
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
-        fmt = b">" + dtype
         with open(filename, "rb") as fh:
             fh.seek(offset)
-            data = np.fromfile(fh, dtype=fmt, count=npts)
+            data = np.fromfile(fh, dtype=dtype, count=npts)
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()
