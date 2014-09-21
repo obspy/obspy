@@ -7,8 +7,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import os
-import struct
+
 import numpy as np
+
 from obspy import UTCDateTime, Trace, Stream
 
 
@@ -75,13 +76,10 @@ def readCSS(filename, **kwargs):
         filename = os.path.join(basedir, dirname, filename)
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
-        fmt = b">" + dtype * npts
+        fmt = b">" + dtype
         with open(filename, "rb") as fh:
             fh.seek(offset)
-            size = struct.calcsize(fmt)
-            data = fh.read(size)
-            data = struct.unpack(fmt, data)
-            data = np.array(data)
+            data = np.fromfile(fh, dtype=fmt, count=npts)
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()
