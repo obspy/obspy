@@ -20,12 +20,20 @@ DTYPE = {
     # Little-endian integers
     b'i4': b'<i',
     b'i2': b'<h',
+    # ASCII integers
+    b'c0': (b'S12', np.int),
+    b'c#': (b'S12', np.int),
     # Big-endian floating point
     b't4': b'>f',
     b't8': b'>d',
     # Little-endian floating point
     b'f4': b'<f',
     b'f8': b'<d',
+    # ASCII floating point
+    b'a0': (b'S15', np.float32),
+    b'a#': (b'S15', np.float32),
+    b'b0': (b'S24', np.float64),
+    b'b#': (b'S24', np.float64),
 }
 
 
@@ -91,7 +99,11 @@ def readCSS(filename, **kwargs):
         dtype = DTYPE[line[143:145]]
         with open(filename, "rb") as fh:
             fh.seek(offset)
-            data = np.fromfile(fh, dtype=dtype, count=npts)
+            if isinstance(dtype, tuple):
+                data = np.fromfile(fh, dtype=dtype[0], count=npts)
+                data = data.astype(dtype[1])
+            else:
+                data = np.fromfile(fh, dtype=dtype, count=npts)
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()
