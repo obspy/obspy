@@ -26,6 +26,9 @@
      data please use the obspy.fdsn client (use
      `Client(base_url='ORFEUS', ...)`) and for travel times please use
      obspy.taup.
+ - obspy.seishub:
+   * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
+     from a seishub server of version 1.4.0 or higher.
  - obspy.signal:
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
