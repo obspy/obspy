@@ -147,10 +147,12 @@ class TauModel(object):
         self.iocbDepth = self.tauBranches[0][self.iocbBranch].topDepth
         if not self.validate():
             raise TauModelError("TauModel.calcTauIncFrom: Validation failed!")
-
+asdf
     def writeModel(self, outfile):
         with open(outfile, 'w+b') as f:
-            pickle.dump(self, f, -1)
+            pickle.d k
+
+            ump(self, f, -1)
 
     def __str__(self):
         desc = "Delta tau for each slowness sample and layer.\n"

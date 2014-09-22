@@ -83,11 +83,15 @@ class TauP_Create(object):
             print("filename =", filename)
         
         self.vMod = VelocityModel.readVelocityFile(filename)
-        if self.vMod == None:
-            pass
+        if self.vMod is None:
             # try and load internally
             # self.vMod = TauModelLoader.loadVelocityModel(self.modelFilename)
-        if self.vMod == None:
+            # Frankly, I don't think it's a good idea to somehow load the model from a non-obvious path.
+            # Better to just raise the exception and force user to be clear about what VelocityModel to read from where.
+            # Todo: Maybe this could be done sensibly, as in if a model is specified but no path, some standard models
+            # can be used? But given that they have to be in the package somewhere anyway, that's cosmetic.
+            pass
+        if self.vMod is None:
             raise IOError("Velocity model file not found: " + self.modelFilename + ", tried internally (not really) and from file: " + filename)
         # if model was read:
         if self.DEBUG:

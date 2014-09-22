@@ -3,6 +3,8 @@
 import os
 import inspect
 import argparse
+import taupy.TauModelLoader as TauModelLoader
+from taupy.helper_classes import TauModelError
 
 
 class TauP_Time(object):
@@ -16,6 +18,8 @@ class TauP_Time(object):
     modelName = "iasp91"
     # This is needed to check later if assignment has happened on cmd line, or if reading conf is needed.
     tMod = None
+    # TauModel derived from tMod by correcting it for a non-surface source.
+    tModDepth = None
 
     # List to hold the SeismicPhases for the phases named in phaseNames.
     #phases = []
@@ -37,12 +41,28 @@ class TauP_Time(object):
         # Also depth, but surely not if it's set in the cmd line??
         if self.tMod is None or self.tMod.vMod.modelName != "name in the properties":
             self.modelName = "name in the properties"
+            # default:
+            self.modelName = "iasp91"
         self.readTauModel()
         # TODO make sure you get 100% what Java is doing:
         # Are these properties, like, mutable within the program?
         # Do the cmd line args overwrite them? When? How? Where? What?
 
-
+    def readTauModel(self):
+        """Do the reading simply for now."""
+        # Todo: Give this the full capabilities.
+        # This should be the same model path that was used by TauP_Create for writing!
+        # Maybe that should write to the config file?
+        modelPath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # current dir
+        tModLoaded = TauModelLoader.load(self.modelName, modelPath, self.verbose)
+        if tModLoaded is not None:
+            self.tMod = tModLoaded
+            # Note the java comments claim this is depth-corrected if the current depth is not 0.
+            # That's not the case, at least not in this method. Should this be done?
+            self.tModDepth = self.tMod
+            self.modelName = self.tMod.modelName
+        else:
+            raise TauModelError("Unable to load " + str(self.modelName))
 
     def start(self):
         pass
@@ -51,8 +71,12 @@ class TauP_Time(object):
         pass
 
 
+
+
+
 if __name__ == '__main__':
     tauPTime = TauP_Time()
+    # read cmd line args?
     tauPTime.init()
     tauPTime.start()
     tauPTime.destroy()
