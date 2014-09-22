@@ -825,6 +825,8 @@ master/seishub/plugins/seismology/event.py
         root = self.client._objectify(url, **kwargs)
         results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                    for node in root.getchildren()]
+        for res in results:
+            res['resource_name'] = str(res['resource_name'])
         if limit == len(results) or \
            limit is None and len(results) == 50 or \
            len(results) == 2500:
