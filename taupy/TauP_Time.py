@@ -46,13 +46,13 @@ class TauP_Time(object):
     def init(self):
         """Performs initialisation of the tool. Config file is queried for the default
         model to load, which source depth and phases to use etc."""
-        if len(self.phaseNames):
+        if len(self.phaseNames) == 0:
             # Read phaseNames from config file or, failing that, use defaults
             pass
         # Also depth, but surely not if it's set in the cmd line??
         if self.tMod is None or self.tMod.vMod.modelName != "name in the properties":
             self.modelName = "name in the properties"
-            # default:
+            # Which ought to be
             self.modelName = "iasp91"
         self.readTauModel()
         # TODO make sure you get 100% what Java is doing:
@@ -70,7 +70,7 @@ class TauP_Time(object):
             self.tMod = tModLoaded
             # tModDepth will be depth-corrected if source depth is not 0.
             self.tModDepth = self.tMod
-            self.modelName = self.tMod.modelName
+            self.modelName = self.tMod.sMod.vMod.modelName
         else:
             raise TauModelError("Unable to load " + str(self.modelName))
 
@@ -93,8 +93,8 @@ class TauP_Time(object):
 
     def depthCorrect(self, depth):
         """Corrects the TauModel for the given source depth (if not already corrected)."""
-        if self.tModDepth is None or self.tModDepth.sourceDepth:
-            self.tModDepth = self.tMod.depthCorrect(depth)
+        if self.tModDepth is None or self.tModDepth.sourceDepth != depth:
+            self.tModDepth = self.tMod.depthCorrect(depth)  # This is not recursion!
             self.arrivals = []
             self.recalcPhases()
         self.depth = depth  # but that's the same already...
@@ -150,8 +150,10 @@ if __name__ == '__main__':
     # program, that is TauP_Time, is executed.
     tauPTime = TauP_Time()
     # read cmd line args:
-    #tauPTime.degrees = ... etc
     tauPTime.phaseNames = ["S", "P"]
+    tauPTime.modelName = "iasp91"
+    tauPTime.degrees = 57.4
+    tauPTime.depth = 200
     # An alternative here would be to write these to the config file, then the individual methods read it from there.
     # That's what the java does with its 'properties'.
 

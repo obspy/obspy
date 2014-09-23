@@ -167,3 +167,39 @@ class TauModel(object):
     def validate(self):
         # TODO: implement the model validation; not critical right now
         return True
+
+    def depthCorrect(self, depth):
+        """Called in TauP_Time. Computes a new tau model for a source at depth using the previously computed branches
+        for a surface source. No change is needed to the branches above and below the branch containing the depth,
+        except for the addition of a slowness sample. The branch containing the source depth is split into 2 branches,
+        and up going branch and a downgoing branch. Additionally, the slowness at the source depth must be sampled
+        exactly as it is an extremal point for each of these branches. Cf. Buland and Chapman p 1290.
+        """
+        if self.sourceDepth != 0:
+            raise TauModelError("Can't depth correct a TauModel that is not originally for a surface source.")
+        if depth > self.radiusOfEarth:
+            raise TauModelError("Can't depth correct to a source deeper than the radius of the Earth.")
+        depthCorrected = self.loadFromDepthCache(depth)
+        if depthCorrected is None:
+            depthCorrected = self.splitBranch(depth)
+            depthCorrected.sourceDepth = depth
+            depthCorrected.sourceBranch = depthCorrected.findBranch(depth)
+            depthCorrected.validate()
+            # Put in cache somehow: self.depthCache.put(depthCorrected)
+        return depthCorrected
+
+    def loadFromDepthCache(self, depth):
+        # Todo: speed up by implementing cache.
+        # Must return None if loading fails.
+        return None
+
+    def splitBranch(self, depth):
+        """Returns a new TauModel with the branches containing depth split at depth.
+         Used for putting a source at depth since a source can only be located on a branch boundary.
+         """
+        # First check to see if depth happens to already be a branch boundary, then just return original tMod.
+        for tb in self.tauBranches[0]:
+            if tb.topDepth == depth or tb.botDepth == depth:
+                return self
+        # Depth is not a branch boundary, so must modify the tau model.
+
