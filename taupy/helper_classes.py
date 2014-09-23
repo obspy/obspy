@@ -43,3 +43,11 @@ class DepthRange:
         self.topDepth = topDepth
         self.botDepth = botDepth
         self.rayParam = rayParam
+
+
+class SplitLayerInfo:
+    def __init__(self, sMod, neededSplit, movedSample, rayParam):
+        self.sMod = sMod
+        self.neededSplit = neededSplit
+        self.movedSample = movedSample
+        self.rayParam = rayParam

@@ -4,7 +4,7 @@ from decimal import *
 import numpy as np
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
-from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist, SlownessModelError
+from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist, SlownessModelError, SplitLayerInfo
 
 
 # noinspection PyPep8Naming
@@ -1047,6 +1047,92 @@ class SlownessModel(object):
             minPSoFar = min(min(minPSoFar, sLayerAbove.botP), sLayerBelow.topP)
         return minPSoFar
 
-    def splitLayer(self):
-        """This is not needed  during TauP_Create, but only later"""
-        pass
+    def splitLayer(self, depth, isPWave):
+        """Splits a slowness layer into two slowness layers. returns a
+        SplitLayerInfo object with neededSplit=true if a layer was actually
+        split, false otherwise, movedSample=true if a layer was very close, and
+        so moving the layers depth is better than making a very thin layer,
+        rayParam= the new ray parameter, if the layer was split. The
+        interpolation for splitting a layer is a Bullen p=Ar^B and so does not
+        directly use information from the VelocityModel."""
+        layerNum = self.layerNumberAbove(depth, isPWave)
+        sLayer = self.getSlownessLayer(layerNum, isPWave)
+        if sLayer.topDepth == depth or sLayer.botDepth == depth:
+            # Depth is already on a slowness layer boundary so no need to split any slowness layers.
+            return SplitLayerInfo(self, False, False, 0)
+        elif abs(sLayer.topDepth - depth) < 0.000001:
+            # Check for very thin layers, just move the layer to hit the boundary.
+            outLayers = self.PLayers[:] if isPWave else self.SLayers[:]
+            outLayers[layerNum] = SlownessLayer(sLayer.topP, depth, sLayer.botP, sLayer.botDepth)
+            sLayer = self.getSlownessLayer(layerNum - 1, isPWave)
+            outLayers[layerNum - 1] = SlownessLayer(sLayer.topP, sLayer.topDepth, sLayer.botP, depth)
+            out = self
+            out.PLayers = outLayers if isPWave else self.PLayers
+            out.SLayers = outLayers if isPWave else self.SLayers
+            return SplitLayerInfo(out, False, True, sLayer.botP)
+        elif abs(depth - sLayer.botDepth < 0.000001):
+            # As above.
+            outLayers = self.PLayers[:] if isPWave else self.SLayers[:]
+            outLayers[layerNum] = SlownessLayer(sLayer.topP, sLayer.topDepth, sLayer.botP, depth)
+            sLayer = self.getSlownessLayer(layerNum + 1, isPWave)
+            outLayers[layerNum + 1] = SlownessLayer(sLayer.topP, depth, sLayer.botP, sLayer.botDepth)
+            out = self
+            out.PLayers = outLayers if isPWave else self.PLayers
+            out.SLayers = outLayers if isPWave else self.SLayers
+            return SplitLayerInfo(out, False, True, sLayer.botP)
+        else:
+            # Must split properly.
+            p = sLayer.evaluateAtBullen(depth, self.radiusOfEarth)
+            topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, depth)
+            botLayer = SlownessLayer(p, depth, sLayer.botP, sLayer.botDepth)
+            outLayers = self.PLayers[:] if isPWave else self.SLayers[:]
+            outLayers.pop(layerNum)  # or del outLayers[layerNum] - which is faster?
+            outLayers.insert(layerNum, botLayer)
+            outLayers.insert(layerNum, topLayer)
+            # Fix critical layers since we added a slowness layer.
+            outCriticalDepths = self.criticalDepths[:]
+            self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
+            if isPWave:
+                outPLayers = outLayers
+                outSLayers = self.fixOtherLayers(self.SLayers, p, sLayer, topLayer, botLayer, outCriticalDepths, False)
+            else:
+                outPLayers = self.fixOtherLayers(self.PLayers, p, sLayer, topLayer, botLayer, outCriticalDepths, True)
+                outSLayers = outLayers
+            out = self
+            out.criticalDepths = outCriticalDepths
+            out.PLayers = outPLayers
+            out.SLayers = outSLayers
+            return SplitLayerInfo(out, True, False, p)
+
+    @staticmethod
+    def fixCriticalDepths(criticalDepths, layerNum, isPWave):
+        for i, cd in enumerate(criticalDepths):
+            if (cd.pLayerNum if isPWave else cd.sLayerNum) > layerNum:
+                if isPWave:
+                    criticalDepths[i] = CriticalDepth(cd.depth, cd.velLayerNum, cd.pLayerNum + 1, cd.sLayerNum)
+                else:
+                    criticalDepths[i] = CriticalDepth(cd.depth, cd.velLayerNum, cd.pLayerNum, cd.sLayerNum + 1)
+
+    def fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer, newBotLayer, criticalDepths, isPWave):
+        out = otherLayers[:]
+        # Make sure to keep sampling consistent. If in a fluid, both wave types will share a single slowness layer.
+        try:
+            otherIndex = otherLayers.index(changedLayer)
+            del out[otherIndex]
+            out.insert(otherIndex, newBotLayer)
+            out.insert(otherIndex, newTopLayer)
+        except ValueError:
+            # This will be raised by index if changedLayer can't be found, but must not break program flow.
+            pass
+        for otherLayerNum, sLayer in enumerate(out):
+            if (sLayer.topP - p) * (p - sLayer.botP) > 0:
+                # Found a slowness layer with the other wave type that contains the new slowness sample.
+                topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, sLayer.bullenDepthFor(p, self.radiusOfEarth))
+                botLayer = SlownessLayer(p, topLayer.botDepth, sLayer.botP, sLayer.botDepth)
+                del out[otherLayerNum]
+                out.insert(otherLayerNum, botLayer)
+                out.insert(otherLayerNum, topLayer)
+                # Fix critical layers since we have added a slowness layer.
+                self.fixCriticalDepths(criticalDepths, otherLayerNum, not isPWave)
+                # Skip next layer as it was just added.
+                continue
