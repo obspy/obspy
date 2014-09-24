@@ -5,6 +5,7 @@ import numpy as np
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
 from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist, SlownessModelError, SplitLayerInfo
+from copy import deepcopy
 
 
 # noinspection PyPep8Naming
@@ -1062,7 +1063,7 @@ class SlownessModel(object):
             return SplitLayerInfo(self, False, False, 0)
         elif abs(sLayer.topDepth - depth) < 0.000001:
             # Check for very thin layers, just move the layer to hit the boundary.
-            outLayers = self.PLayers[:] if isPWave else self.SLayers[:]
+            outLayers = deepcopy(self.PLayers) if isPWave else deepcopy(self.SLayers)
             outLayers[layerNum] = SlownessLayer(sLayer.topP, depth, sLayer.botP, sLayer.botDepth)
             sLayer = self.getSlownessLayer(layerNum - 1, isPWave)
             outLayers[layerNum - 1] = SlownessLayer(sLayer.topP, sLayer.topDepth, sLayer.botP, depth)
@@ -1070,9 +1071,9 @@ class SlownessModel(object):
             out.PLayers = outLayers if isPWave else self.PLayers
             out.SLayers = outLayers if isPWave else self.SLayers
             return SplitLayerInfo(out, False, True, sLayer.botP)
-        elif abs(depth - sLayer.botDepth < 0.000001):
+        elif abs(depth - sLayer.botDepth) < 0.000001:
             # As above.
-            outLayers = self.PLayers[:] if isPWave else self.SLayers[:]
+            outLayers = deepcopy(self.PLayers) if isPWave else deepcopy(self.SLayers)
             outLayers[layerNum] = SlownessLayer(sLayer.topP, sLayer.topDepth, sLayer.botP, depth)
             sLayer = self.getSlownessLayer(layerNum + 1, isPWave)
             outLayers[layerNum + 1] = SlownessLayer(sLayer.topP, depth, sLayer.botP, sLayer.botDepth)
@@ -1085,12 +1086,12 @@ class SlownessModel(object):
             p = sLayer.evaluateAtBullen(depth, self.radiusOfEarth)
             topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, depth)
             botLayer = SlownessLayer(p, depth, sLayer.botP, sLayer.botDepth)
-            outLayers = self.PLayers[:] if isPWave else self.SLayers[:]
+            outLayers = deepcopy(self.PLayers) if isPWave else deepcopy(self.SLayers)
             outLayers.pop(layerNum)  # or del outLayers[layerNum] - which is faster?
             outLayers.insert(layerNum, botLayer)
             outLayers.insert(layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
-            outCriticalDepths = self.criticalDepths[:]
+            outCriticalDepths = deepcopy(self.criticalDepths)
             self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
             if isPWave:
                 outPLayers = outLayers
@@ -1098,7 +1099,7 @@ class SlownessModel(object):
             else:
                 outPLayers = self.fixOtherLayers(self.PLayers, p, sLayer, topLayer, botLayer, outCriticalDepths, True)
                 outSLayers = outLayers
-            out = self
+            out = deepcopy(self)
             out.criticalDepths = outCriticalDepths
             out.PLayers = outPLayers
             out.SLayers = outSLayers
@@ -1114,7 +1115,7 @@ class SlownessModel(object):
                     criticalDepths[i] = CriticalDepth(cd.depth, cd.velLayerNum, cd.pLayerNum, cd.sLayerNum + 1)
 
     def fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer, newBotLayer, criticalDepths, isPWave):
-        out = otherLayers[:]
+        out = deepcopy(otherLayers)
         # Make sure to keep sampling consistent. If in a fluid, both wave types will share a single slowness layer.
         try:
             otherIndex = otherLayers.index(changedLayer)
@@ -1123,8 +1124,9 @@ class SlownessModel(object):
             out.insert(otherIndex, newTopLayer)
         except ValueError:
             # This will be raised by index if changedLayer can't be found, but must not break program flow.
+            # I.e. that's ok, no error should be raised, the try clause can be seen like an if.
             pass
-        for otherLayerNum, sLayer in enumerate(out):
+        for otherLayerNum, sLayer in enumerate(out[:]):
             if (sLayer.topP - p) * (p - sLayer.botP) > 0:
                 # Found a slowness layer with the other wave type that contains the new slowness sample.
                 topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, sLayer.bullenDepthFor(p, self.radiusOfEarth))
@@ -1134,5 +1136,6 @@ class SlownessModel(object):
                 out.insert(otherLayerNum, topLayer)
                 # Fix critical layers since we have added a slowness layer.
                 self.fixCriticalDepths(criticalDepths, otherLayerNum, not isPWave)
-                # Skip next layer as it was just added.
-                continue
+                # Skip next layer as it was just added: achieved by slicing the list iterator.
+
+        return out

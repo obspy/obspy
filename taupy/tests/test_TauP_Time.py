@@ -29,7 +29,18 @@ class TestTauPTime(unittest.TestCase):
         self.assertEqual(tt.tModDepth.sourceDepth, 200)
         # Checking the corected tModDepth will be difficult again...
         # Also calls recalcPhases, so check phases here...
+        self.assertEqual(tt.tMod.tauBranches[0][7], tt.tModDepth.tauBranches[0][8])
+        self.assertEqual(tt.tModDepth.tauBranches[0][8].maxRayParam, 109.7336675261915)
+        self.assertEqual(tt.tMod.rayParams, tt.tModDepth.rayParams)
+        self.assertEqual(tt.tModDepth.noDisconDepths[0], 200)
+        self.assertEqual(len(tt.tModDepth.sMod.PLayers), 562)
+        self.assertEqual(tt.tModDepth.sMod.PLayers[105].topP, 745.9964237713114)
+        self.assertEqual(tt.tModDepth, tt.phases[0].tMod)
+        self.assertEqual(len(tt.tModDepth.sMod.criticalDepths), 9)
 
+
+        # recalcPhases
+        #self.assertTrue(all(len(x) == 234 for x in (tt.phases[0].dist, tt.phases[0].time, tt.phases[0].tau)))
 
 if __name__ == '__main__':
     unittest.main(buffer=True)

@@ -12,6 +12,17 @@ class TauBranch(object):
         self.botDepth = botDepth
         self.isPWave = isPWave
 
+    def __str__(self):
+        desc = "Tau Branch\n"
+        desc += " topDepth = " + str(self.topDepth) + "\n"
+        desc += " botDepth = " + str(self.botDepth) + "\n"
+        desc += " maxRayParam=" + str(self.maxRayParam) + " minTurnRayParam=" + str(self.minTurnRayParam)
+        desc += " minRayParam=" + str(self.minRayParam) + "\n"
+        return desc
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     def createBranch(self, sMod, minPSoFar, rayParams):
         """Calculates tau for this branch, between slowness layers topLayerNum and
         botLayerNum, inclusive."""

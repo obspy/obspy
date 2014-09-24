@@ -201,7 +201,7 @@ class TauModel(object):
         # First check to see if depth happens to already be a branch boundary, then just return original tMod.
         for tb in self.tauBranches[0]:
             if tb.topDepth == depth or tb.botDepth == depth:
-                return self
+                return deepcopy(self)
         # Depth is not a branch boundary, so must modify the tau model.
         indexP = -1
         PWaveRayParam = -1
@@ -251,9 +251,9 @@ class TauModel(object):
             newTauBranches[pOrS][branchToSplit].createBranch(outSMod, self.tauBranches[pOrS][branchToSplit].maxRayParam,
                                                              outRayParams)
             newTauBranches[pOrS][branchToSplit + 1] = self.tauBranches[pOrS][branchToSplit].difference(newTauBranches[pOrS][branchToSplit],
-                                                                                                      indexP, indexS, outSMod,
-                                                                                                      newTauBranches[pOrS][branchToSplit].minRayParam,
-                                                                                                      outRayParams)
+                                                                                                       indexP, indexS, outSMod,
+                                                                                                       newTauBranches[pOrS][branchToSplit].minRayParam,
+                                                                                                       outRayParams)
         for i in range(branchToSplit + 1, len(self.tauBranches[0])):
             for pOrS in range(2):
                 newTauBranches[pOrS][i + 1] = self.tauBranches[pOrS][i]
@@ -280,7 +280,8 @@ class TauModel(object):
         outiocbBranch = self.iocbBranch
         if self.iocbDepth > depth:
             outiocbBranch += 1
-        tMod = self  # No overloaded constructors - so do this to bypass the calcTauIncFrom in the __init__
+        # No overloaded constructors - so do it this way to bypass the calcTauIncFrom in the __init__.
+        tMod = deepcopy(self)  # Objects apparently are shallowly copied...
         tMod.sourceBranch = outSourceBranch
         tMod.mohoBranch = outmohoBranch
         tMod.cmbBranch = outcmbBranch
