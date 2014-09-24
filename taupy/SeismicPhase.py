@@ -9,22 +9,68 @@ class SeismicPhase(object):
     """
 
     def __init__(self, name, tMod):
+        #The phase name, e.g. PKiKP.
         self.name = name
         self.sourceDepth = tMod.sourceDepth
         self.tMod = tMod
         self.legs = legPuller(name)
-        self.createPuristName(tMod)
+        # Name with depths corrected to be actual discontinuities in the model.
+        self.puristName = self.createPuristName(tMod)
         self.parseName(tMod)
         self.sumBranches(tMod)
 
     def createPuristName(self, tMod):
-        pass
+        currLeg = self.legs[0]
+        # Deal with surface wave veocities first, since they are a special case.
+        if len(self.legs) == 2 and currLeg.endswith("kmps"):
+            puristName = self.name
+            return puristName
+        puristName = ""
+        # Only loop to penultimate element as last leg is always "END".
+        for currLeg in self.legs[:-1]:
+            # Find out if the next leg represents a phase conversion or reflection depth.
+            if currLeg.startswith("v") or currLeg.startswith("^"):
+                disconBranch = closestBranchToDepth(tMod, currLeg[1])
+                legDepth = tMod.tauBranches[0][disconBranch].topDepth
+                puristName += currLeg[0]
+                puristName += str(legDepth)
+            else:
+                try:
+                    float(currLeg)
+                    # If it is indeed a number:
+                    disconBranch = closestBranchToDepth(tMod, currLeg)
+                    legDepth = tMod.tauBranches[0][disconBranch].topDepth
+                    puristName += str(legDepth)
+                except ValueError:
+                    # If currLeg is just a string:
+                    puristName += currLeg
+        return puristName
 
     def parseName(self, tMod):
         pass
 
     def sumBranches(self, tMod):
         pass
+
+
+def closestBranchToDepth(tMod, depthString):
+    """Finds the closest discontinuity to the given depth that can hae reflections and phase transformations."""
+    if depthString == "m":
+        return tMod.mohoBranch
+    elif depthString == "c":
+        return tMod.cmbBranch
+    elif depthString == "i":
+        return tMod.iocbBranch
+    # Non-standard boundary, given by a number: must look for it.
+    disconBranch = -1
+    disconMax = 1e300
+    disconDepth = float(depthString)
+    for i, tBranch in enumerate(tMod.tauBranches[0]):
+        if (abs(disconDepth - tBranch.topDepth) < disconMax and not
+             any(ndc == tBranch.topDepth for ndc in tMod.noDisconDepths)):
+            disconBranch = i
+            disconMax = abs(disconDepth - tBranch.topDepth)
+    return disconBranch
 
 
 def legPuller(name):
@@ -97,4 +143,5 @@ def legPuller(name):
 
 def phaseValidate(legs):
     # Raise an exception here if validation fails.
+    # Todo: implement phase names validation (maybe not so necessary...)
     pass
