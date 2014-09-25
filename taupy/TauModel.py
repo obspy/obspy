@@ -307,3 +307,9 @@ class TauModel(object):
             return len(self.tauBranches) - 1
         else:
             raise TauModelError("No TauBranch contains this depth.")
+
+    def getTauBranch(self, branchNum, isPWave):
+        if isPWave:
+            return self.tauBranches[0][branchNum]
+        else:
+            return self.tauBranches[1][branchNum]

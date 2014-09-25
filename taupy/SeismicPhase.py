@@ -8,11 +8,74 @@ class SeismicPhase(object):
      "k" - upgoing wave from source in core.
     """
 
+    DEBUG = False
+    # Enables phases originating in core.
+    expert = False
+    #  Used by addToBranch when the path turns within a segment. We assume that no ray will turn
+    # downward so turning implies turning from downward to upward, ie U.
+    TURN = 0
+    # Used by addToBranch when the path reflects off the top of the end of a segment, ie ^.
+    REFLECTTOP = 1
+    # Used by addToBranch when the path reflects off the bottom of the end of a segment, ie v.
+    REFLECTBOT = 2
+    # Used by addToBranch when the path transmits up through the end of a segment.
+    TRANSUP = 3
+    # Used by addToBranch when the path transmits down through the end of a segment.
+    TRANSDOWN = 4
+    # The maximum degrees that a Pn or Sn can refract along the moho. Note this is not
+    # the total distance, only the segment along the moho. The default is 20 degrees.
+    maxRefraction = 20
+    # The maximum degrees that a Pdiff or Sdiff can diffract along the CMB. Note this is
+    # not the total distance, only the segment along the CMB. The default is 60 degrees.
+    maxDiffraction = 60
+    # Array of distances corresponding to the ray parameters stored in rayParams.
+    dist = []
+    # Array of times corresponding to the ray parameters stored in rayParams.
+    time = []
+    # Array of possible ray parameters for this phase.
+    rayParams = []
+    # The minimum distance that this phase can be theoretically observed.
+    minDistance = 0.0
+    # The maximum distance that this phase can be theoretically observed.
+    maxDistance = 1e300
+    # List (could make array!) of branch numbers for the given phase. Note that this
+    # depends upon both the earth model and the source depth.
+    branchSeq = []
+    # Temporary end action so we know what we did at the end of the last section of the branch sequence.
+    # Used in addToBranch() and parseName().
+    # endAction
+    # Records the end action for the current leg. Will be one of SeismicPhase.TURN,
+    # SeismicPhase.TRANSDOWN, SeismicPhase.TRANSUP, SeismicPhase.REFLECTBOT, or SeismicPhase.REFLECTTOP.
+    # This allows a check to make sure the path is correct. Used in addToBranch() and parseName().
+    legAction = []
+    # True if the current leg of the phase is down going. This allows a check to make sure the path is correct.
+    #  Used in addToBranch() and parseName().
+    downGoing = []
+    # ArrayList of wave types corresponding to each leg of the phase.
+    waveType = []
+
     def __init__(self, name, tMod):
-        #The phase name, e.g. PKiKP.
+        # Minimum/maximum ray parameters that exist for this phase.
+        self.minRayParam = None
+        self.maxRayParam = None
+        # Index within TauModel.rayParams that corresponds to maxRayParam. Note that
+        # maxRayParamIndex < minRayParamIndex as ray parameter decreases with increasing index.
+        self.maxRayParamIndex = -1
+        # Index within TauModel.rayParams that corresponds to minRayParam. Note that
+        # maxRayParamIndex < minRayParamIndex as ray parameter decreases with increasing index.
+        self.minRayParamIndex = -1
+        # Temporary branch numbers determining where to start adding to the branch sequence.
+        self.currBranch = None
+        # Temporary end action so we know what we did at the end of the last section of the branch sequence.
+        # Used in addToBranch() and parseName().
+        self.endAction = None
+        # The phase name, e.g. PKiKP.
         self.name = name
+        # The source depth within the TauModel that was used to generate this phase.
         self.sourceDepth = tMod.sourceDepth
+        # TauModel to generate phase for.
         self.tMod = tMod
+        # List containing strings for each leg.
         self.legs = legPuller(name)
         # Name with depths corrected to be actual discontinuities in the model.
         self.puristName = self.createPuristName(tMod)
@@ -47,7 +110,305 @@ class SeismicPhase(object):
         return puristName
 
     def parseName(self, tMod):
-        pass
+        """Constructs a branch sequence from the given phase name and tau model."""
+        currLeg = self.legs[0]
+        nextLeg = currLeg
+        isPWave = True
+        # Deal with surface wave velocities first, since they are a special case.
+        if len(self.legs) == 2 and currLeg.endswith("kmps"):
+            return
+        # Make a check for J legs if the model doesn't allow J:
+        if "J" in self.name and not tMod.sMod.allowInnerCoreS:
+            raise TauModelError("J phases are not created for this model: {}".format(self.name))
+        # Set currWave to be the wave type for this leg, P or S
+        if currLeg == "p" or currLeg.startswith("P") or currLeg == "K" or currLeg == "k":
+            isPWave = True
+        elif currLeg == "s" or currLeg.startswith("S") or currLeg == "J":
+            isPWave = False
+        # First,  decide whether the ray is upgoing or downgoing from the source. If it is
+        # up going then the first branch number would be tMod.sourceBranch-1 and downgoing
+        # would be tMod.sourceBranch.
+        if currLeg.startswith("s") or currLeg.startswith("S"):
+            # Exclude S sources in fluids.
+            sdep = tMod.sourceDepth
+            if tMod.cmbDepth < sdep < tMod.iocbDepth:
+                self.maxRayParam, self.minRayParam = -1, -1
+                return
+        if currLeg.startswith("P") or currLeg.startswith("S") or (self.expert and
+                                                                  any(currLeg.startswith(a) for a in ("K", "I"))):
+            # Downgoing from source.
+            self.currBranch = tMod.sourceBranch
+            # Treat initial downgoing as if it were an underside reflection.
+            self.endAction = self.REFLECTBOT
+        elif currLeg == "p" or currLeg == "s" or (self.expert and currLeg.startswith("k")):
+            # Upgoing from source: treat initial downgoing as if it were a topside reflection.
+            self.endAction = self.REFLECTTOP
+            if tMod.sourceBranch != 0:
+                self.currBranch = tMod.sourceBranch - 1
+            else:
+                # p and s for zero source depth are only at zero distance and then can be called P or S.
+                self.maxRayParam = -1
+                self.minRayParam = -1
+                return
+        else:
+            raise TauModelError("First phase not recognised {}: ".format(currLeg) +
+                                "Must be one of P, Pg, Pn, Pdiff, p or the S equivalents.")
+        # Set maxRayParam to be a horizontal ray leaving the source and set minRayParam to be a vertical (p=0) ray.
+        if tMod.sourceBranch != 0:
+            self.maxRayParam = max(tMod.getTauBranch(tMod.sourceBranch - 1, isPWave).minTurnRayParam,
+                                   tMod.getTauBranch(tMod.sourceBranch, isPWave).maxRayParam)
+        else:
+            self.maxRayParam = tMod.getTauBranch(tMod.sourceBranch, isPWave).maxRayParam
+        self.minRayParam = 0
+        isLegDepth, isNextLegDepth = False, False
+        self.endAction = self.TRANSDOWN
+        # Now loop over all the phase legs and construct the proper branch sequence.
+        currLeg = "START"  # So the prevLeg isn't wrong on the first pass.
+        for legNum in range(len(self.legs) - 1):
+            prevLeg = currLeg
+            currLeg = nextLeg
+            nextLeg = self.legs[legNum + 1]
+            isLegDepth = isNextLegDepth
+            # Find out if the next leg represents a phase conversion depth.
+            try:
+                nextLegDepth = float(nextLeg)
+                isNextLegDepth = True
+            except ValueError:
+                nextLegDepth = -1
+                isNextLegDepth = False
+            # Set currWave to be the wave type for this leg, "P" or "S".
+            isPWavePrev = isPWave
+            if currLeg == "p" or currLeg.startswith("P") or currLeg == "k" or currLeg == "I":
+                isPWave = True
+            elif currLeg == "s" or currLeg.startswith("S") or currLeg == "J":
+                isPWave = False
+            elif currLeg == "K":
+                # Here we want to use whatever isPWave was on the last leg so do nothing. This makes sure we us the
+                # correct maxRayParam from the correct TauBranch within the outer core. In other words K has a high
+                # slowness zone if it entered the outer core as a mantle P wave, but doesn't if it entered as a mantle
+                # S wave. It shouldn't matter for inner core to outer core type legs.
+                pass
+            # Check to see if there has been a phase conversion.
+            if len(self.branchSeq) > 0 and isPWavePrev != isPWave:
+                self.phaseConversion(tMod, int(self.branchSeq[-1]), self.endAction, isPWavePrev)
+            # Deal with p and s case first.
+            if currLeg == "p" or currLeg == "s" or currLeg == "k":
+                if nextLeg.startswith("v"):
+                    raise TauModelError("p and s must always be upgoing and cannot come immediately before"
+                                        "a top-sided reflection.")
+                elif nextLeg.startswith("^"):
+                    disconBranch = closestBranchToDepth(tMod, nextLeg[1])
+                    if self.currBranch >= disconBranch:
+                        self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.REFLECTTOP)
+                    else:
+                        raise TauModelError("Phase not recognised: "
+                                            "{currLeg} followed by {nextLeg} when currBranch > disconBranch".format(**locals()))
+                elif nextLeg == "m" and self.currBranch >= tMod.mohoBranch:
+                    self.addToBranch(tMod, self.currBranch, tMod.mohoBranch, isPWave, self.TRANSUP)
+                elif nextLeg.startswith("P") or nextLeg.startswith("S") or nextLeg == "K" or nextLeg == "END":
+                    disconBranch = tMod.cmbBranch if nextLeg == "K" else 0
+                    self.addToBranch(tMod, self.currBranch, disconBranch, isPWave,
+                                     (self.TRANSUP if currLeg == "k" and not nextLeg == "K" else self.REFLECTTOP))
+                elif isNextLegDepth:
+                    disconBranch = closestBranchToDepth(tMod, nextLeg)
+                    self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.TRANSUP)
+                else:
+                    raise TauModelError("Phase not recognized: {} followed by {}".format(currLeg, nextLeg))
+            # Now deal with P and S case.
+            elif currLeg == "P" or currLeg == "S":
+                if any(nextLeg == c for c in ("P", "S", "Pn", "Sn", "END")):
+                    if self.endAction == self.TRANSDOWN or self.endAction == self.REFLECTTOP:
+                        # Downgoing, so must first turn in mantle.
+                        self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1, isPWave, self.TURN)
+                    self.addToBranch(tMod, self.currBranch, 0, isPWave, self.REFLECTTOP)
+                elif nextLeg.startswith("v"):
+                    disconBranch = closestBranchToDepth(tMod, nextLeg[1])
+                    if self.currBranch <= disconBranch - 1:
+                        self.addToBranch(tMod, self.currBranch, disconBranch - 1, isPWave, self.REFLECTBOT)
+                    else:
+                        raise TauModelError("Phase not recognised: "
+                                            "{currLeg} followed by {nextLeg} when currBranch > disconBranch".format(**locals()))
+                elif nextLeg.startswith("^"):
+                    disconBranch = closestBranchToDepth(tMod, nextLeg[1])
+                    if prevLeg == "K":
+                        self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.REFLECTTOP)
+                    elif prevLeg.startswith("^") or any(prevLeg == c for c in ("P", "S", "p", "s", "START")):
+                        self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1, isPWave, self.TURN)
+                        self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.REFLECTTOP)
+                    elif ((prevLeg.startswith("v") and disconBranch < closestBranchToDepth(tMod, prevLeg[1])
+                          or (prevLeg == "m" and disconBranch < tMod.mohoBranch)
+                          or (prevLeg == "c" and disconBranch < tMod.cmbBranch))):
+                        self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.REFLECTTOP)
+                    else:
+                        raise TauModelError("Phase not recognised: "
+                                            "{currLeg} followed by {nextLeg} when currBranch > disconBranch".format(**locals()))
+                elif nextLeg == "c":
+                    self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1, isPWave, self.REFLECTBOT)
+                elif nextLeg == "K":
+                    self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1, isPWave, self.TRANSDOWN)
+                elif nextLeg == "m" or (isNextLegDepth and nextLegDepth < tMod.cmbDepth):
+                    # Treat the Moho in the same way as 410 type discontinuities.
+                    disconBranch = closestBranchToDepth(tMod, nextLeg)
+                    if self.endAction == self.TURN or self.endAction == self.REFLECTBOT or self.endAction == self.TRANSUP:
+                        # Upgoing section
+                        if disconBranch > self.currBranch:
+                            # Check the discontinuity below the current branch when the ray should be upgoing
+                            raise TauModelError("Phase not recognised: "
+                                                "{currLeg} followed by {nextLeg} when currBranch > disconBranch".format(**locals()))
+                        self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.TRANSUP)
+                    else:
+                        # Downgoing section, must look at leg after next to determine whether to convert
+                        # on the downgoing or upgoing part of the path.
+                        nextnextLeg = self.legs[legNum+2]
+                        if nextnextLeg == "p" or nextnextLeg == "s":
+                            # Convert on upgoing section
+                            self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1, isPWave, self.TURN)
+                            self.addToBranch(tMod, self.currBranch, disconBranch, isPWave, self.TRANSUP)
+                        elif nextnextLeg == "P" or nextnextLeg == "S":
+                            if disconBranch > self.currBranch:
+                                # discon is below current loc
+                                self.addToBranch(tMod, self.currBranch, disconBranch - 1, isPWave, self.TRANSDOWN)
+                            else:
+                                # Discontinuity is above current location, but we have a downgoing ray, so this is
+                                # an illegal ray for this source depth.
+                                self.maxRayParam = -1
+                                return
+                        else:
+                            raise TauModelError("Phase not recognized: {} followed by {} followed by {}".format(currLeg, nextLeg, nextnextLeg))
+                else:
+                    raise TauModelError("Phase not recognized: {} followed by {}".format(currLeg, nextLeg))
+            elif currLeg.startswith("P") or currLeg.startswith("S"):
+                if currLeg == "Pdiff" or currLeg == "Sdiff":
+                    # In the diffracted case we trick addtoBranch into thinking we are turning, but then make maxRayParam
+                    # equal to minRayParam, which is the deepest turning ray.
+                    if (self.maxRayParam >= tMod.getTauBranch(tMod.cmbBranch - 1, isPWave).minTurnRayParam
+                            >= self.minRayParam):
+                        self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1, isPWave, self.TURN)
+                        self.maxRayParam = self.minRayParam
+                        if nextLeg == "END" or nextLeg.startswith("P") or nextLeg.startswith("S"):
+                            self.addToBranch(tMod, self.currBranch, 0, isPWave, self.REFLECTTOP)
+                    else:
+                        # Can't have head wave as ray param is not within range.
+                        self.maxRayParam = -1
+                        return
+                elif any(currLeg == p for p in ("Pg", "Sg", "Pn", "Sn")):
+                    if self.currBranch >= tMod.mohoBranch:
+                        # Pg, Pn, Sg and Sn must be above the moho and so is not valid for rays coming upwards
+                        # from below, possibly due to the source depth. Setting maxRayParam = -1 effectively
+                        # disallows this phase.
+                        self.maxRayParam = -1
+                        return
+                    if currLeg == "Pg" or currLeg == "Sg":
+                        self.addToBranch(tMod, self.currBranch, tMod.mohoBranch - 1, isPWave, self.TURN)
+                        self.addToBranch(tMod, self.currBranch, 0, isPWave, self.REFLECTTOP)
+                    elif currLeg == "Pn" or currLeg == "Sn":
+                        # In the diffracted case we trick addtoBranch into thinking we are turning below the Moho,
+                        # but then make the minRayParam equal to maxRayParam, which is the head wave ray.
+                        if (self.maxRayParam >= tMod.getTauBranch(tMod.mohoBranch, isPWave).maxRayParam
+                                >= self.minRayParam):
+                            self.addToBranch(tMod, self.currBranch, tMod.mohoBranch, isPWave, self.TURN)
+                            self.addToBranch(tMod, self.currBranch, tMod.mohoBranch, isPWave, self.TRANSUP)
+                            self.minRayParam = self.maxRayParam
+                            if nextLeg == "END" or nextLeg.startswith("P") or nextLeg.startswith("S"):
+                                self.addToBranch(tMod, self.currBranch, 0, isPWave, self.REFLECTTOP)
+                        else:
+                            # Can't have head wave as ray param is not within range.
+                            self.maxRayParam = -1
+                            return
+                else:
+                    raise TauModelError("Phase not recognized: {} followed by {}".format(currLeg, nextLeg))
+            elif currLeg == "K":
+                if nextLeg == "P" or nextLeg == "S":
+                    if any(prevLeg == p for p in ("P", "S", "K", "k", "START")):
+                        self.addToBranch(tMod, self.currBranch, tMod.iocbBranch - 1, isPWave, self.TURN)
+                    self.addToBranch(tMod, self.currBranch, tMod.cmbBranch, isPWave, self.TRANSUP)
+                elif nextLeg == "K":
+                    if any(prevLeg == p for p in ("P", "S", "K")):
+                        self.addToBranch(tMod, self.currBranch, tMod.iocbBranch -1, isPWave, self.TURN)
+                    self.addToBranch(tMod, self.currBranch, tMod.cmbBranch, isPWave, self.REFLECTTOP)
+                elif nextLeg == "I" or nextLeg == "J":
+                    self.addToBranch(tMod, self.currBranch, tMod.iocbBranch -1, isPWave, self.TRANSDOWN)
+                elif nextLeg == "i":
+                    self.addToBranch(tMod, self.currBranch, tMod.iocbBranch - 1, isPWave, self.REFLECTBOT)
+                else:
+                    raise TauModelError("Phase not recognized: {} followed by {}".format(currLeg, nextLeg))
+            elif currLeg == "I" or currLeg == "J":
+                self.addToBranch(tMod, self.currBranch, len(tMod.tauBranches[0]), isPWave, self.TURN)
+                if nextLeg == "I" or nextLeg == "J":
+                    self.addToBranch(tMod, self.currBranch, tMod.iocbBranch, isPWave, self.REFLECTTOP)
+                elif nextLeg == "K":
+                    self.addToBranch(tMod, self.currBranch, tMod.iocbBranch, isPWave, self.TRANSUP)
+            elif (any(currLeg == p for p in ("m", "c", "i"))
+                  or currLeg.startswith == "^" or currLeg.startswith == "v" or isLegDepth):
+                pass
+            else:
+                raise TauModelError("Phase not recognized: {} followed by {}".format(currLeg, nextLeg))
+
+    def phaseConversion(self, tMod, fromBranch, endAction, isPtoS):
+        """ Changes maxRayParam and minRayParam whenever there is a phase conversion.
+        For instance, SKP needs to change the maxRayParam because there are SKS
+        ray parameters that cannot propagate from the cmb into the mantle as a p wave.
+        """
+        if endAction == self.TURN:
+            # Can't phase convert for just a turn point
+            raise TauModelError("Bad endAction: phase conversion is not allowed at turn points.")
+        elif endAction == self.REFLECTTOP:
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(fromBranch, isPtoS).maxRayParam,
+                                   tMod.getTauBranch(fromBranch, not isPtoS).maxRayParam)
+        elif endAction == self.REFLECTBOT:
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(fromBranch, isPtoS).minTurnRayParam,
+                                   tMod.getTauBranch(fromBranch, not isPtoS).minTurnRayParam)
+        elif endAction == self.TRANSUP:
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(fromBranch, isPtoS).maxRayParam,
+                                   tMod.getTauBranch(fromBranch - 1, not isPtoS).minTurnRayParam)
+        elif endAction == self.TRANSDOWN:
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(fromBranch, isPtoS).minRayParam,
+                                   tMod.getTauBranch(fromBranch + 1, not isPtoS).maxRayParam)
+        else:
+            raise TauModelError("Illegal endAction = {}".format(endAction))
+
+    def addToBranch(self, tMod, startBranch, endBranch, isPWave, endAction):
+        """Adds the branch numbers from startBranch to endBranch, inclusive, to branchSeq, in order. Also, currBranch
+        is set correctly based on the value of endAction. endAction can be one of TRANSUP, TRANSDOWN, REFLECTTOP,
+        REFLECTBOT, or TURN."""
+        self.endAction = endAction
+        if endAction == self.TURN:
+            endOffset = 0
+            isDownGoing = True
+            self.minRayParam = max(self.minRayParam, tMod.getTauBranch(endBranch, isPWave).minTurnRayParam)
+        elif endAction == self.REFLECTTOP:
+            endOffset = 0
+            isDownGoing = False
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(endBranch, isPWave).maxRayParam)
+        elif endAction == self.REFLECTBOT:
+            endOffset = 0
+            isDownGoing = True
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(endBranch, isPWave).minTurnRayParam)
+        elif endAction == self.TRANSUP:
+            endOffset = -1
+            isDownGoing = False
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(endBranch, isPWave).maxRayParam)
+        elif endAction == self.TRANSDOWN:
+            endOffset = 1
+            isDownGoing = True
+            self.maxRayParam = min(self.maxRayParam, tMod.getTauBranch(endBranch, isPWave).minRayParam)
+        else:
+            raise TauModelError("Illegal endAction: {}".format(endAction))
+        if isDownGoing:
+            # Must be downgoing, so increment i.
+            for i in range(startBranch, endBranch + 1):
+                self.branchSeq.append(i)
+                self.downGoing.append(isDownGoing)
+                self.waveType.append(isPWave)
+                self.legAction.append(endAction)
+        else:
+            # Upgoing, so decrement i.
+            for i in range(startBranch, endBranch - 1, -1):
+                self.branchSeq.append(i)
+                self.downGoing.append(isDownGoing)
+                self.waveType.append(isPWave)
+                self.legAction.append(endAction)
+        self.currBranch = endBranch + endOffset
 
     def sumBranches(self, tMod):
         pass
