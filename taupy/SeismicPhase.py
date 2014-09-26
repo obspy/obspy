@@ -1,4 +1,6 @@
 from .helper_classes import TauModelError
+import math
+from copy import deepcopy
 
 
 class SeismicPhase(object):
@@ -411,7 +413,132 @@ class SeismicPhase(object):
         self.currBranch = endBranch + endOffset
 
     def sumBranches(self, tMod):
-        pass
+        """Sum the appropriate branches for this phase."""
+        if self.maxRayParam < 0 or self.minRayParam > self.maxRayParam:
+            # Phase has no arrivals, possibly due to source depth.
+            self.rayParams = []
+            self.minRayParam = -1
+            self.maxRayParam = -1
+            self.dist = []
+            self.time = []
+            self.maxDistance = -1
+            return
+        # Special case for surface waves.
+        if self.name.endswith("kmps"):
+            self.dist = [0, 0]
+            self.time = [0, 0]
+            self.rayParams = [0, 0]
+            self.rayParams[0] = tMod.radiusOfEarth / float(self.name[:-4])
+            self.dist[1] = 2 * math.pi
+            self.time[1] = 2 * math.pi * tMod.radiusOfEarth / float(self.name[:-4])
+            self.rayParams[1] = self.rayParams[0]
+            self.minDistance = 0
+            self.maxDistance = 2 * math.pi
+            self.downGoing.append(True)
+            return
+        # Find the ray parameter index that corresponds to the minRayParam and maxRayParam.
+        for i, rp in enumerate(tMod.rayParams):
+            if rp >= self.minRayParam:
+                self.minRayParamIndex = i
+            if rp >= self.maxRayParam:
+                self.maxRayParamIndex = i
+        if self.maxRayParamIndex == 0 and self.minRayParamIndex == len(tMod.rayParams) -1:
+            # All ray parameters are valid so just copy:
+            self.rayParams = deepcopy(tMod.rayParams)
+        elif self.maxRayParamIndex == self.minRayParamIndex:
+            #if "Sdiff" in self.name or "Pdiff" in self.name:
+            #    self.rayParams = [self.minRayParam, self.minRayParam]
+            #elif "Pn" in self.name or "Sn" in self.name:
+            #    self.rayParams = [self.minRayParam, self.minRayParam]
+            if self.name.endswith("kmps"):
+                self.rayParams = [0, self.maxRayParam]
+            else:
+                self.rayParams = [self.minRayParam, self.minRayParam]
+        else:
+            # Only a subset of the ray parameters is valid so use these.
+            self.rayParams = deepcopy(tMod.rayParams[self.maxRayParamIndex:self.minRayParamIndex - self.maxRayParamIndex + 1])
+        self.dist = [0 for i in range(len(self.rayParams))]
+        self.time = [0 for i in range(len(self.rayParams))]
+        # Initialise the counter for each branch to 0. 0 is P and 1 is S.
+        timesBranches = [[0 for i in range(len(tMod.tauBranches[0]))] for j in range(2)]
+        # Conut how many times each branch appears in the path.
+        for wt, bs in zip(self.waveType, self.branchSeq):  # waveType is at least as long as branchSeq
+            if wt:
+                timesBranches[0][bs] += 1
+            else:
+                timesBranches[1][bs] += 1
+        # Sum the branches with the appropriate multiplier.
+        for tb, tbs, taub, taubs in zip(timesBranches[0], timesBranches[1], tMod.tauBranches[0], tMod.tauBranches[1]):
+            if tb != 0:
+                for i in range(self.maxRayParamIndex, self.minRayParamIndex + 1):
+                    self.dist[i - self.maxRayParamIndex] += tb * taub.dist[i]
+                    self.time[i - self.maxRayParamIndex] += tb * taub.time[i]
+            if tbs != 0:
+                for i in range(self.maxRayParamIndex, self.minRayParamIndex + 1):
+                    self.dist[i - self.maxRayParamIndex] += tbs * taubs.dist[i]
+                    self.time[i - self.maxRayParamIndex] += tbs * taubs.time[i]
+        if "Sdiff" in self.name or "Pdiff" in self.name:
+            if tMod.sMod.depthInHighSlowness(tMod.cmbDepth - 1e-10, self.minRayParam, self.name[0] == "P"):
+                # No diffraction if there is a high slowness zone at the CMB.
+                self.minRayParam = -1
+                self.maxRayParam = -1
+                self.maxDistance = -1
+                self.time = []
+                self.dist = []
+                self.rayParams = []
+                return
+            else:
+                self.dist[1] = self.dist[0] + self.maxDiffraction * math.pi / 180
+                self.time[1] = self.time[0] + self.maxDiffraction * math.pi / 180 * self.minRayParam
+        elif "Pn" in self.name or "Sn" in self.name:
+            self.dist[1] = self.dist[0] + self.maxRefraction * math.pi / 180
+            self.time[1] = self.time[0] + self.maxRefraction * math.pi / 180
+        elif self.maxRayParamIndex == self.minRayParamIndex:
+            self.dist[1] = self.dist[0]
+            self.time[1] = self.time[0]
+        self.minDistance = min(self.dist)
+        self.maxDistance = max(self.dist)
+        # Now check to see if our ray parameter range inclides any ray parameters that are associated with high
+        # slowness zones. If so, then we will need to insert a "shadow zone" into our time and distance arrays.
+        # It is represented by a repeated ray parameter.
+        for isPwave in [True, False]:
+            hsz = tMod.sMod.highSlownessLayerDepthsP if isPwave else tMod.sMod.highSlownessLayerDepthsS
+            indexOffset = 0
+            for hszi in hsz:
+                if self.maxRayParam > hszi.rayParam > self.minRayParam:
+                    # There is a high slowness zone within our ray parameter range so might need to add a shadow zone.
+                    # Need to check if the current wave type is part of the phase at this depth/ray parameter.
+                    branchNum = tMod.findBranch(hszi.topDepth)
+                    foundOverlap = False
+                    for legNum in range(len(self.branchSeq)):
+                        # Check for downgoing legs that cross the high slowness zone with the same wave type.
+                        if (self.branchSeq[legNum] == branchNum and self.waveType[legNum] == isPwave
+                            and self.downGoing[legNum] == True and self.branchSeq[legNum - 1] == branchNum -1
+                            and self.waveType[legNum - 1] == isPwave and self.downGoing[legNum - 1] == True):
+                            foundOverlap = True
+                            break
+                    if foundOverlap:
+                        hszIndex = self.rayParams.index(hszi.rayParam)
+                        newdist = deepcopy(self.dist[:hszIndex])
+                        newtime = deepcopy(self.time[:hszIndex])
+                        newrayParams = deepcopy(self.rayParams[:hszIndex])
+                        newrayParams.append = hszi.rayParam
+                        # Sum the branches with an appropriate multiplier.
+                        newdist.append(0)
+                        newtime.append(0)
+                        for tb, tbs, taub, taubs in zip(timesBranches[0], timesBranches[1], tMod.tauBranches[0], tMod.tauBranches[1]):
+                            if tb != 0 and taub.topDepth < hszi.topDepth:
+                                newdist[hszIndex] += tb * taub.dist[self.maxRayParamIndex + hszIndex - indexOffset]
+                                newtime[hszIndex] += tb * taub.time[self.maxRayParamIndex + hszIndex - indexOffset]
+                            if tbs != 0 and taub.topDepth < hszi.topDepth:
+                                newdist[hszIndex] += tbs * taubs.dist[self.maxRayParamIndex + hszIndex - indexOffset]
+                                newtime[hszIndex] += tbs * taubs.time[self.maxRayParamIndex + hszIndex - indexOffset]
+
+
+
+
+
+
 
 
 def closestBranchToDepth(tMod, depthString):
@@ -428,7 +555,7 @@ def closestBranchToDepth(tMod, depthString):
     disconDepth = float(depthString)
     for i, tBranch in enumerate(tMod.tauBranches[0]):
         if (abs(disconDepth - tBranch.topDepth) < disconMax and not
-             any(ndc == tBranch.topDepth for ndc in tMod.noDisconDepths)):
+                any(ndc == tBranch.topDepth for ndc in tMod.noDisconDepths)):
             disconBranch = i
             disconMax = abs(disconDepth - tBranch.topDepth)
     return disconBranch
