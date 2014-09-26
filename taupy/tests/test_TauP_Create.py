@@ -8,12 +8,10 @@ from taupy.TauP_Create import TauP_Create
 data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
+
 class TestTauPCreate(unittest.TestCase):
     def test_taupcreate(self):
         TauP_Create.main()
-
-
-
 
 
 if __name__ == '__main__':

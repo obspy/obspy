@@ -5,7 +5,7 @@ test = VelocityModel()
 
 print(test)
 
-test2 = VelocityModel.readVelocityFile('iasp91.tvel') # test_file.tvel is shorter
+test2 = VelocityModel.readVelocityFile('iasp91.tvel')  # test_file.tvel is shorter
 
 print(test2)
 

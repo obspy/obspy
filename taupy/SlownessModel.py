@@ -71,7 +71,7 @@ class SlownessModel(object):
                 + str(len(self.highSlownessLayerDepthsS))
                 + "\n criticalDepths.size()=" + str(len(self.criticalDepths))
                 + "\n")
-        desc += ("**** Critical Depth Layers ************************\n")
+        desc += "**** Critical Depth Layers ************************\n"
         for cd in self.criticalDepths:
             desc += str(cd.velLayerNum) + " "
         desc += "\n"
@@ -479,6 +479,7 @@ class SlownessModel(object):
                 return True
         return False
 
+    # noinspection PyCallByClass
     def coarseSample(self):
         """Creates a coarse slowness sampling of the velocity model (vMod). The
         resultant slowness layers will satisfy the maximum depth increments as

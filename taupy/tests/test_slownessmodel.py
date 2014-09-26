@@ -35,6 +35,7 @@ class TestSlownessModel(unittest.TestCase):
     #     self.assertEqual(testmod.radiusOfEarth, 6371)
     #     self.assertTrue(testmod.validate())
 
+    # noinspection PyCallByClass
     def test_slownesslayer(self):
         vLayer=VelocityLayer(1, 10, 31, 3, 5, 2, 4)
         a = SlownessLayer.create_from_vlayer(vLayer, True)

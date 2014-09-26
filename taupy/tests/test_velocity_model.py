@@ -14,8 +14,8 @@ class TestVelocityModel(unittest.TestCase):
     def test_read_velocity_model(self):
         print("reading and checking the read iasp91.tvel")        
 
-        for i in range(0,2):
-            if i==0:
+        for i in range(0, 2):
+            if i == 0:
                 # read ./data/iasp91.tvel
                 velocity_model = os.path.join(data_dir, "iasp91.tvel")
             else:

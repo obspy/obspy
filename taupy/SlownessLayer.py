@@ -28,7 +28,9 @@ class SlownessLayer:
 
         Note first argument is NOT meant to be self, this
         throws at least my IDE off into flagging wrong class errors.
-        Seriously, it breaks with 'self' for some reason..."""
+        Seriously, it breaks with 'self' for some reason...
+        Probably would be best to turn this into a function
+        """
         topDepth = vLayer.topDepth
         botDepth = vLayer.botDepth
         waveType = ('p' if isPWave else 's')

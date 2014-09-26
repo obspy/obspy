@@ -28,14 +28,14 @@ class TauP_Create(object):
         # Parse command line arguments. Very clever module, e.g. it
         # can print usage automatically.
         parser = argparse.ArgumentParser()
-        parser.add_argument('-v', '--verbose', '-d','--debug', action='store_true',
+        parser.add_argument('-v', '--verbose', '-d', '--debug', action='store_true',
                             help='increase output verbosity')
         parser.add_argument('-i', '--input_dir',
-                            help = 'set directory of input velocity models (default: ./data/)')
+                            help='set directory of input velocity models (default: ./data/)')
         parser.add_argument('-o', '--output_dir',
-                            help = 'set where to write the .taup model - be careful, this will overwrite any previous models of the same name (default: current dir)')
+                            help='set where to write the .taup model - be careful, this will overwrite any previous models of the same name (default: current dir)')
         parser.add_argument('-f', '--filename',
-                            help = 'the velocity model name (default: iasp91.tvel)')
+                            help='the velocity model name (default: iasp91.tvel)')
         args = parser.parse_args()
                 
         self.DEBUG = args.verbose
@@ -43,11 +43,11 @@ class TauP_Create(object):
         self.outdir = args.output_dir
         self.modelFilename = args.filename
 
-        if self.directory == None:
+        if self.directory is None:
             # if no directory given, assume data is in ./data:
             self.directory = os.path.join(os.path.dirname(os.path.abspath(
                 inspect.getfile(inspect.currentframe()))), "data")
-        if self.modelFilename == None:
+        if self.modelFilename is None:
             self.modelFilename = "iasp91.tvel"
 
     @classmethod

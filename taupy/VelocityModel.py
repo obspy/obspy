@@ -191,7 +191,7 @@ class VelocityModel(object):
         #/* is cmbDepth positive? */
         if self.cmbDepth <= 0.0:
             print("cmbDepth is not positive. cmbDepth = " +
-                  (self.cmbDepth), file=sys.stderr)
+                  str(self.cmbDepth), file=sys.stderr)
             return False
         #/* is iocbDepth >= cmbDepth? */
         if self.iocbDepth < self.cmbDepth:
@@ -249,7 +249,7 @@ class VelocityModel(object):
                 print("There is a negative P velocity layer in the velocity model at layer ", layerNum, file=sys.stderr)
                 return False
             if currVelocityLayer.topSVelocity < 0.0 or currVelocityLayer.botSVelocity < 0.0:
-                print("There is a negative S velocity layer in the velocity model at layer " + (layerNum),
+                print("There is a negative S velocity layer in the velocity model at layer " + str(layerNum),
                       file=sys.stderr)
                 return False
             if (currVelocityLayer.topPVelocity != 0.0 and currVelocityLayer.botPVelocity == 0.0) or (

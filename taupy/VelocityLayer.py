@@ -6,6 +6,7 @@ Package for storage and manipulation of seismic earth models.
 from .header import TauPException
 # TauPException does nothing yet
 
+
 class VelocityLayer(object):
     """
     The VelocityLayer class stores and manipulates a singly layer. An

@@ -456,7 +456,7 @@ class SeismicPhase(object):
                 self.rayParams = [self.minRayParam, self.minRayParam]
         else:
             # Only a subset of the ray parameters is valid so use these.
-            self.rayParams = deepcopy(tMod.rayParams[self.maxRayParamIndex:self.minRayParamIndex - self.maxRayParamIndex + 1])
+            self.rayParams = deepcopy(tMod.rayParams[self.maxRayParamIndex:self.minRayParamIndex + 1])
         self.dist = [0 for i in range(len(self.rayParams))]
         self.time = [0 for i in range(len(self.rayParams))]
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
@@ -533,12 +533,13 @@ class SeismicPhase(object):
                             if tbs != 0 and taub.topDepth < hszi.topDepth:
                                 newdist[hszIndex] += tbs * taubs.dist[self.maxRayParamIndex + hszIndex - indexOffset]
                                 newtime[hszIndex] += tbs * taubs.time[self.maxRayParamIndex + hszIndex - indexOffset]
-
-
-
-
-
-
+                        newdist.append(self.dist[hszIndex:])
+                        newtime.append(self.time[hszIndex:])
+                        newrayParams.append(self.rayParams[hszIndex:])
+                        indexOffset += 1
+                        self.dist = newdist
+                        self.time = newtime
+                        self.rayParams = newrayParams
 
 
 def closestBranchToDepth(tMod, depthString):

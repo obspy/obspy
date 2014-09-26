@@ -4,7 +4,6 @@ from taupy.VelocityModel import VelocityModel
 from taupy.SlownessModel import SlownessModel
 
 
-
 # noinspection PyPep8Naming
 class SlownessmodelSimpleInit(SlownessModel):
     """Copy the definition of slownessModel class attributes and the init,

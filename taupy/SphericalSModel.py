@@ -1,5 +1,6 @@
 from taupy.SlownessModel import SlownessModel
 
+
 class SphericalSModel(SlownessModel):
     """ Dummy class, not needed atm. This class is meant to provide methods specific to spherical slowness
     models, as opposed to the methods in SlownessModel which apply to spherical and flat models. However, flat
