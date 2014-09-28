@@ -31,6 +31,7 @@ from __future__ import print_function
 from docutils.parsers.rst import directives, Directive, DirectiveError
 from docutils import nodes
 
+
 class Gallery(Directive):
     name = 'gallery-plot'
     has_content = True
@@ -45,7 +46,7 @@ class Gallery(Directive):
     def run(self):
         language = self.state_machine.language
         document = self.state.document
-        directive,messages = directives.directive('plot', language, document)
+        directive, messages = directives.directive('plot', language, document)
         self.state.parent += messages
 
         # Temporarily override template
@@ -124,6 +125,7 @@ class Gallery(Directive):
 
         return result
 
+
 def fix_thumbnail_class(app, doctree):
     """
     Move thumbnail class from figure to reference.
@@ -143,6 +145,7 @@ def fix_thumbnail_class(app, doctree):
             continue
         for ref in fig.traverse(condition=nodes.reference):
             ref['classes'].append('thumbnail')
+
 
 def setup(app):
     app.setup_extension('matplotlib.sphinxext.plot_directive')
