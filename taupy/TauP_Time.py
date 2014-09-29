@@ -126,6 +126,7 @@ class TauP_Time(object):
     def calculate(self, degrees):
         """Calls the actual calculations of the arrival times."""
         sourceDepth = 200  # Todo: get the real value from properties or some other way
+        # Could just pass this as argument, no?
         self.depthCorrect(sourceDepth)
         self.recalcPhases()  # Called before, but maybe depthCorrect to sourceDepth has changed the phases??
         self.calcTime(degrees)
@@ -137,13 +138,21 @@ class TauP_Time(object):
             self.relativeArrival = SeismicPhase.getEarliestArrival(relPhases, degrees)
 
     def calcTime(self, degrees):
-        pass
+        self.degrees = degrees
+        self.arrivals = []
+        for phase in self.phases:
+            phaseArrivals = phase.calcTime(degrees)
+            self.arrivals.append(phaseArrivals)
+        self.sortArrivals()
 
+    def sortArrivals(self):
+        pass
     def printResult(self):
         pass
 
     def destroy(self):
         pass
+
 
 if __name__ == '__main__':
     # Replace the Java main method, which is a static (i.e. class) method called whenever the

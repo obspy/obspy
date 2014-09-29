@@ -1,3 +1,4 @@
+from .Arrival import Arrival
 from .helper_classes import TauModelError
 import math
 from copy import deepcopy
@@ -540,6 +541,80 @@ class SeismicPhase(object):
                         self.dist = newdist
                         self.time = newtime
                         self.rayParams = newrayParams
+
+    def calcTime(self, degrees):
+        """ Calculates arrival times for this phase, sorted by time.
+        :param degrees:
+        :return arrivals:
+        """
+        # Degrees must be positive and between 0 and 180
+        tempDeg = abs(degrees)
+        # Don't just use modulo, as 180 would be equal to 0.
+        while tempDeg > 360:
+            tempDeg -= 360
+        if tempDeg > 180:
+            tempDeg = 360 - tempDeg
+        radDist = tempDeg * math.pi / 180
+        arrivals = []
+        # Search all distances 2n*PI+radDist and 2(n+1)*PI-radDist that are less than the
+        #  maximum distance for this phase. This ensures that we get the time for phases
+        # that accumulate more than 180 degrees of distance, for instance PKKKKP might
+        # wrap all of the way around. A special case exists at 180, so we skip the second case if tempDeg==180.
+        n = 0
+        while n*2*math.pi + radDist <= self.maxDistance:
+            # Look for arrivals that are radDist + 2nPi, i.e. rays that have done more than n laps.
+            searchDist = n*2*math.pi + radDist
+            for rayNum in range(len(self.dist) - 1):
+                if searchDist == self.dist[rayNum + 1] and rayNum + 1 != len(self.dist) - 1:
+                    # So we don't get 2 arrivals for the same ray.
+                    continue
+                elif (self.dist[rayNum] - searchDist) * (searchDist - self.dist[rayNum + 1]) >= 0:
+                    # Look for distances that bracket the search distance
+                    if self.rayParams[rayNum] == self.rayParams[rayNum + 1] and len(self.rayParams) > 2:
+                        # Here we have a shadow zone, so itis not really an arrival.
+                        continue
+                    arrivals.append(self.linearInterpArrival(searchDist, rayNum,
+                                                             self.name, self.puristName, self.sourceDepth))
+            # Look for arrivals that are 2(n+1)Pi-radDist, i.e. rays that have done more than
+            # one half lap plus some number of whole laps.
+            searchDist = (n+1)*2*math.pi - radDist
+            if tempDeg != 180:
+                for rayNum in range(len(self.dist) - 1):
+                    if searchDist == self.dist[rayNum + 1] and rayNum + 1 != len(self.dist) - 1:
+                        # So we don't get 2 arrivals for the same ray.
+                        continue
+                    elif (self.dist[rayNum] - searchDist) * (searchDist - self.dist[rayNum + 1]) >= 0:
+                        if self.rayParams[rayNum] == self.rayParams[rayNum + 1] and len(self.rayParams) > 2:
+                            # Here we have a shadow zone, so itis not really an arrival.
+                            continue
+                        arrivals.append(self.linearInterpArrival(searchDist, rayNum,
+                                                                 self.name, self.puristName, self.sourceDepth))
+            n += 1
+        # Perhaps these are sorted by time in the java code?
+        return arrivals
+
+    def linearInterpArrival(self, searchDist, rayNum, name, puristName, sourceDepth):
+        arrivalTime = ((searchDist - self.dist[rayNum]) / (self.dist[rayNum + 1] - self.dist[rayNum])
+                       * (self.time[rayNum + 1] - self.time[rayNum]) + self.time[rayNum])
+        arrivalRayParam = ((searchDist - self.dist[rayNum + 1]) * (self.rayParams[rayNum] - self.rayParams[rayNum + 1])
+                           / (self.dist[rayNum] - self.dist[rayNum + 1]) + self.rayParams[rayNum + 1])
+        if name.endswith("kmps"):
+            takeoffAngle = 0
+            incidentAngle = 0
+        else:
+            vMod = self.tMod.sMod.vMod
+            if self.downGoing[0]:
+                takeoffVelocity = vMod.evaluateBelow(sourceDepth, name[0])
+            else:
+                # Fake negative velocity so angle is negative in case of upgoing ray.
+                takeoffVelocity = -1 * vMod.evaluateAbove(sourceDepth, name[0])
+            takeoffAngle = (180 / math.pi) * math.asin(takeoffVelocity * arrivalRayParam
+                                                       / (self.tMod.radiusOfEarth - self.sourceDepth))
+            lastLeg = self.legs[-2][0]  # very last item is "END"
+            incidentAngle = (180 / math.pi) * math.asin(vMod.evaluateBelow(0, lastLeg)
+                                                        * arrivalRayParam / self.tMod.radiusOfEarth)
+        return Arrival(self, arrivalTime, searchDist, arrivalRayParam, rayNum, name,
+                       puristName, sourceDepth, takeoffAngle, incidentAngle)
 
 
 def closestBranchToDepth(tMod, depthString):
