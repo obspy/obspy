@@ -1,3 +1,6 @@
+from math import pi
+
+
 class Arrival:
     """
     Convenience class for storing the parameters associated with a phase arrival.
@@ -39,3 +42,13 @@ class Arrival:
         if not self.path:
             self.path == self.phase.calcPath(self).getPath()
         return self.path
+
+    def getModuloDistDeg(self):
+        """
+        Returns distance in degrees from 0 - 180. Note this may not be the actual distance travelled.
+        :return:
+        """
+        moduloDist = ((180/pi) * self.dist)%360
+        if moduloDist > 180:
+            moduloDist = 360 - moduloDist
+        return moduloDist

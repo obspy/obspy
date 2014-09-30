@@ -6,6 +6,7 @@ import argparse
 import taupy.TauModelLoader as TauModelLoader
 from taupy.helper_classes import TauModelError
 from taupy.SeismicPhase import SeismicPhase
+from math import pi
 
 
 class TauP_Time(object):
@@ -154,7 +155,24 @@ class TauP_Time(object):
         pass
 
     def printResult(self):
-        pass
+        # Do  only a simple way for now.
+        print("\nModel:", self.modelName)
+        lineOne = "Distance   Depth   Phase   Travel    Ray Param   Takeoff  Incident  Purist     Purist"
+        lineTwo = "   (deg)    (km)   Name    Time (s)  p  (s/deg)    (deg)     (deg)  Distance   Name "
+        print(lineOne)
+        print(lineTwo)
+        print("-"*len(lineOne))
+        for arrival in self.arrivals:
+            out = "{:>8.2f}".format(arrival.getModuloDistDeg()) + "   "
+            out += "{:>5.1f}".format(self.depth) + "   "
+            out += "{:<5s}".format(arrival.name) + "   "
+            out += "{:>8.2f}".format(arrival.time) + "   "
+            out += "{:>9.3f}".format(arrival.rayParam * pi/180) + "   "
+            out += "{:>6.2f}".format(arrival.takeoffAngle) + "   "
+            out += "{:>7.2f}".format(arrival.incidentAngle) + "   "
+            out += "{:>7.2f}".format(arrival.dist*180/pi) + ("  = " if arrival.puristName == arrival.name else "  * ")
+            out += "{:<5s}".format(arrival.puristName) + "   "
+            print(out)
 
     def destroy(self):
         pass
