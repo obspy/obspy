@@ -31,31 +31,6 @@ class SeismicPhase(object):
     # The maximum degrees that a Pdiff or Sdiff can diffract along the CMB. Note this is
     # not the total distance, only the segment along the CMB. The default is 60 degrees.
     maxDiffraction = 60
-    # Array of distances corresponding to the ray parameters stored in rayParams.
-    dist = []
-    # Array of times corresponding to the ray parameters stored in rayParams.
-    time = []
-    # Array of possible ray parameters for this phase.
-    rayParams = []
-    # The minimum distance that this phase can be theoretically observed.
-    minDistance = 0.0
-    # The maximum distance that this phase can be theoretically observed.
-    maxDistance = 1e300
-    # List (could make array!) of branch numbers for the given phase. Note that this
-    # depends upon both the earth model and the source depth.
-    branchSeq = []
-    # Temporary end action so we know what we did at the end of the last section of the branch sequence.
-    # Used in addToBranch() and parseName().
-    # endAction
-    # Records the end action for the current leg. Will be one of SeismicPhase.TURN,
-    # SeismicPhase.TRANSDOWN, SeismicPhase.TRANSUP, SeismicPhase.REFLECTBOT, or SeismicPhase.REFLECTTOP.
-    # This allows a check to make sure the path is correct. Used in addToBranch() and parseName().
-    legAction = []
-    # True if the current leg of the phase is down going. This allows a check to make sure the path is correct.
-    #  Used in addToBranch() and parseName().
-    downGoing = []
-    # ArrayList of wave types corresponding to each leg of the phase.
-    waveType = []
 
     def __init__(self, name, tMod):
         # Minimum/maximum ray parameters that exist for this phase.
@@ -78,6 +53,31 @@ class SeismicPhase(object):
         self.sourceDepth = tMod.sourceDepth
         # TauModel to generate phase for.
         self.tMod = tMod
+        # Array of distances corresponding to the ray parameters stored in rayParams.
+        self.dist = []
+        # Array of times corresponding to the ray parameters stored in rayParams.
+        self.time = []
+        # Array of possible ray parameters for this phase.
+        self.rayParams = []
+        # The minimum distance that this phase can be theoretically observed.
+        self.minDistance = 0.0
+        # The maximum distance that this phase can be theoretically observed.
+        self.maxDistance = 1e300
+        # List (could make array!) of branch numbers for the given phase. Note that this
+        # depends upon both the earth model and the source depth.
+        self.branchSeq = []
+        # Temporary end action so we know what we did at the end of the last section of the branch sequence.
+        # Used in addToBranch() and parseName().
+        # endAction
+        # Records the end action for the current leg. Will be one of SeismicPhase.TURN,
+        # SeismicPhase.TRANSDOWN, SeismicPhase.TRANSUP, SeismicPhase.REFLECTBOT, or SeismicPhase.REFLECTTOP.
+        # This allows a check to make sure the path is correct. Used in addToBranch() and parseName().
+        self.legAction = []
+        # True if the current leg of the phase is down going. This allows a check to make sure the path is correct.
+        #  Used in addToBranch() and parseName().
+        self.downGoing = []
+        # ArrayList of wave types corresponding to each leg of the phase.
+        self.waveType = []
         # List containing strings for each leg.
         self.legs = legPuller(name)
         # Name with depths corrected to be actual discontinuities in the model.
@@ -462,7 +462,7 @@ class SeismicPhase(object):
         self.time = [0 for i in range(len(self.rayParams))]
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
         timesBranches = [[0 for i in range(len(tMod.tauBranches[0]))] for j in range(2)]
-        # Conut how many times each branch appears in the path.
+        # Count how many times each branch appears in the path.
         for wt, bs in zip(self.waveType, self.branchSeq):  # waveType is at least as long as branchSeq
             if wt:
                 timesBranches[0][bs] += 1
@@ -514,8 +514,8 @@ class SeismicPhase(object):
                     for legNum in range(len(self.branchSeq)):
                         # Check for downgoing legs that cross the high slowness zone with the same wave type.
                         if (self.branchSeq[legNum] == branchNum and self.waveType[legNum] == isPwave
-                            and self.downGoing[legNum] == True and self.branchSeq[legNum - 1] == branchNum -1
-                            and self.waveType[legNum - 1] == isPwave and self.downGoing[legNum - 1] == True):
+                            and self.downGoing[legNum] is True and self.branchSeq[legNum - 1] == branchNum - 1
+                            and self.waveType[legNum - 1] == isPwave and self.downGoing[legNum - 1] is True):
                             foundOverlap = True
                             break
                     if foundOverlap:
@@ -615,6 +615,10 @@ class SeismicPhase(object):
                                                         * arrivalRayParam / self.tMod.radiusOfEarth)
         return Arrival(self, arrivalTime, searchDist, arrivalRayParam, rayNum, name,
                        puristName, sourceDepth, takeoffAngle, incidentAngle)
+
+    @classmethod
+    def getEarliestArrival(cls, relPhases, degrees):
+        raise NotImplementedError("baaa")
 
 
 def closestBranchToDepth(tMod, depthString):

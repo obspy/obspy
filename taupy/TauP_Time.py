@@ -138,15 +138,21 @@ class TauP_Time(object):
             self.relativeArrival = SeismicPhase.getEarliestArrival(relPhases, degrees)
 
     def calcTime(self, degrees):
+        """
+        :param degrees:
+        :return self.arrivals:
+        """
         self.degrees = degrees
         self.arrivals = []
         for phase in self.phases:
             phaseArrivals = phase.calcTime(degrees)
-            self.arrivals.append(phaseArrivals)
+            self.arrivals += phaseArrivals
         self.sortArrivals()
 
     def sortArrivals(self):
+        self.arrivals = sorted(self.arrivals, key=lambda arrivals: arrivals.time)
         pass
+
     def printResult(self):
         pass
 

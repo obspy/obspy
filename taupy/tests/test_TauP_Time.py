@@ -37,10 +37,14 @@ class TestTauPTime(unittest.TestCase):
         self.assertEqual(tt.tModDepth.sMod.PLayers[105].topP, 745.9964237713114)
         self.assertEqual(tt.tModDepth, tt.phases[0].tMod)
         self.assertEqual(len(tt.tModDepth.sMod.criticalDepths), 9)
+        self.assertTrue(all(len(x) == 234 for x in (tt.phases[0].dist, tt.phases[0].time, tt.phases[0].rayParams)))
+        self.assertTrue(all(len(x) == 179 for x in (tt.phases[1].dist, tt.phases[1].time, tt.phases[1].rayParams)))
+        self.assertEqual(tt.phases[1].puristName, "P")
+        self.assertEqual(tt.phases[0].dist[232], 1.7004304436716804)  # ought to be ...02 but close enough
+        self.assertEqual(tt.phases[1].dist[121], 0.9912173304550589)
+        tt.calculate(tt.degrees)
+        self.assertEqual(tt.arrivals[1].time, 1028.9304953527787)
 
-
-        # recalcPhases
-        #self.assertTrue(all(len(x) == 234 for x in (tt.phases[0].dist, tt.phases[0].time, tt.phases[0].tau)))
 
 if __name__ == '__main__':
     unittest.main(buffer=True)
