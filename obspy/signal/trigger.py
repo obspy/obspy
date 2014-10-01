@@ -216,34 +216,30 @@ def classicSTALTAPy(a, nsta, nlta):
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
-    # XXX From NumPy 1.3 use numpy.lib.stride_tricks.as_strided
-    #    This should be faster then the for loops in this fct
-    #    Currently debian lenny ships 1.1.1
-    m = len(a)
-    # indexes start at 0, length must be subtracted by one
-    nsta_1 = nsta - 1
-    nlta_1 = nlta - 1
-    # compute the short time average (STA)
-    sta = np.zeros(len(a), dtype=np.float64)
-    pad_sta = np.zeros(nsta_1)
-    # Tricky: Construct a big window of length len(a)-nsta. Now move this
-    # window nsta points, i.e. the window "sees" every point in a at least
-    # once.
-    for i in range(nsta):  # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - nsta_1 + i] ** 2))
-    sta = sta / nsta
-    #
-    # compute the long time average (LTA)
-    lta = np.zeros(len(a), dtype=np.float64)
-    pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
-    for i in range(nlta):  # window size to smooth over
-        lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
-    lta = lta / nlta
-    #
-    # pad zeros of length nlta to avoid overfit and
-    # return STA/LTA ratio
-    sta[0:nlta_1] = 0
-    lta[0:nlta_1] = 1  # avoid devision by zero
+    # The cumulative sum can be exploited to calculate a moving average (the
+    # cumsum function is quite efficient)
+    sta = np.cumsum(a ** 2)
+
+    # Convert to float
+    sta = sta.astype(np.float, copy=False)
+
+    # Copy for LTA
+    lta = sta.copy()
+
+    # Compute the STA and the LTA
+    sta[nsta:] = sta[nsta:] - sta[:-nsta]
+    sta /= nsta
+    lta[nlta:] = lta[nlta:] - lta[:-nlta]
+    lta /= nlta
+
+    # Pad zeros
+    sta[:nlta - 1] = 0
+
+    # Avoid division by zero by setting zero values to tiny float
+    dtiny = np.finfo(0.0).tiny
+    idx = lta < dtiny
+    lta[idx] = dtiny
+
     return sta / lta
 
 
