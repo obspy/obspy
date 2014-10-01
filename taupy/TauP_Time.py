@@ -47,18 +47,9 @@ class TauP_Time(object):
     def init(self):
         """Performs initialisation of the tool. Config file is queried for the default
         model to load, which source depth and phases to use etc."""
-        if len(self.phaseNames) == 0:
-            # Read phaseNames from config file or, failing that, use defaults
-            pass
-        # Also depth, but surely not if it's set in the cmd line??
-        if self.tMod is None or self.tMod.vMod.modelName != "name in the properties":
-            self.modelName = "name in the properties"
-            # Which ought to be
-            self.modelName = "iasp91"
+        self.readConfig()
+        self.readcmdLineArgs()
         self.readTauModel()
-        # TODO make sure you get 100% what Java is doing:
-        # Are these properties, like, mutable within the program?
-        # Do the cmd line args overwrite them? When? How? Where? What?
 
     def readTauModel(self):
         """Do the reading simply for now."""
@@ -98,7 +89,7 @@ class TauP_Time(object):
             self.tModDepth = self.tMod.depthCorrect(depth)  # This is not recursion!
             self.arrivals = []
             self.recalcPhases()
-        self.depth = depth  # but that's the same already...
+        self.sourceDepth = depth
 
     def recalcPhases(self):
         """Recalculates the given phases using a possibly new or changed tau model.
@@ -122,13 +113,14 @@ class TauP_Time(object):
                     newPhases.append(seismicPhase)
                 except TauModelError:
                     print("Error with this phase, skipping it: " + str(tempPhaseName))
-        self.phases = newPhases
+                # Uncomment if stacktrace is needed.
+                #seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
+                #newPhases.append(seismicPhase)
+            self.phases = newPhases
 
     def calculate(self, degrees):
         """Calls the actual calculations of the arrival times."""
-        sourceDepth = 200  # Todo: get the real value from properties or some other way
-        # Could just pass this as argument, no?
-        self.depthCorrect(sourceDepth)
+        self.depthCorrect(self.sourceDepth)
         self.recalcPhases()  # Called before, but maybe depthCorrect to sourceDepth has changed the phases??
         self.calcTime(degrees)
         if self.relativePhaseName is not None:
@@ -174,8 +166,41 @@ class TauP_Time(object):
             out += "{:<5s}".format(arrival.puristName) + "   "
             print(out)
 
-    def destroy(self):
+    def readConfig(self):
         pass
+
+    def readcmdLineArgs(self):
+        """
+        Reads the command line arguments, if present.
+        :return:
+        """
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-v', '--verbose', '-d', '--debug', action='store_true',
+                            help='increase output verbosity')
+        parser.add_argument('-ph', '--phase_list',
+                            help='comma separated phase list, no white space!')
+        parser.add_argument('-pf', '--phase_file',
+                            help='file containing phases')
+        parser.add_argument('-mod', '--modelname',
+                            help='Use this velocity model for calculations. Default is iasp91.')
+        parser.add_argument('--depth',
+                            help='source depth in km')
+        parser.add_argument('-deg', '--degrees',
+                            help='distance in degrees')
+        parser.add_argument('-km', '--kilometres',
+                            help='distance in kilometres')
+        # Can add station/event lat long instead
+        parser.add_argument('-o', '--outfile',
+                            help='output is redirected to "outfile"')
+        args = parser.parse_args()
+        self.DEBUG = args.verbose
+        self.phaseNames = args.phase_list.split(',')
+        self.phaseFile = args.phase_file
+        self.mod = args.modelname
+        self.depth = float(args.depth)
+        self.degrees = float(args.degrees)
+        self.kilometres = float(args.kilometres) if args.kilometres else None
+        self.outFile = args.outfile
 
 
 if __name__ == '__main__':
@@ -183,16 +208,12 @@ if __name__ == '__main__':
     # program, that is TauP_Time, is executed.
     tauPTime = TauP_Time()
     # read cmd line args:
-    tauPTime.phaseNames = ["S", "P"]
+    #tauPTime.phaseNames = ["S", "P"]  #must be with no whitespace around!
     tauPTime.modelName = "iasp91"
-    tauPTime.degrees = 57.4
+    tauPTime.degrees = 89
     tauPTime.depth = 200
-    # An alternative here would be to write these to the config file, then the individual methods read it from there.
-    # That's what the java does with its 'properties'.
-
     tauPTime.init()
     tauPTime.start()
-    tauPTime.destroy()
 
 
 def getPhaseNames(phaseName):

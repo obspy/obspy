@@ -520,15 +520,14 @@ class VelocityModel(object):
         modelName = modelName[:-3]  #strip .nd
         return VelocityModel(modelName, radiusOfEarth, mohoDepth, cmbDepth, iocbDepth, 0, maxRadius, True, layers)
 
-
     def fixDisconDepths(self):
         """ Resets depths of major discontinuities to match those existing in the
-     	 input velocity model. The initial values are set such that if there is no
-     	 discontinuity within the top 100 km then the moho is set to 0.0.
-     	 Similarly, if there are no discontinuities at all then the cmb is set to
-     	 the radius of the earth. Similarly for the iocb, except it must be a
-     	 fluid to solid boundary and deeper than 100km to avoid problems with
-     	 shallower fluid layers, eg oceans. """
+        input velocity model. The initial values are set such that if there is no
+        discontinuity within the top 100 km then the moho is set to 0.0.
+        Similarly, if there are no discontinuities at all then the cmb is set to
+        the radius of the earth. Similarly for the iocb, except it must be a
+        fluid to solid boundary and deeper than 100km to avoid problems with
+        shallower fluid layers, eg oceans. """
         changeMade = False
         mohoMin = 65.0
         cmbMin = self.radiusOfEarth
