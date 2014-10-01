@@ -2,6 +2,7 @@
 import re
 from docutils import nodes
 
+
 def post_process_html(app, pagename, templatename, context, doctree):
     try:
         context['body'] = \
@@ -28,6 +29,7 @@ def post_process_html(app, pagename, templatename, context, doctree):
         context['body'])
     context['body'] = body
 
+
 def make_images_responsive(app, doctree):
     """
     Add Bootstrap img-responsive class to images.
@@ -39,6 +41,7 @@ def make_images_responsive(app, doctree):
 
         for img in fig.traverse(condition=nodes.image):
             img['classes'].append('img-responsive')
+
 
 def setup(app):
     app.connect('html-page-context', post_process_html)

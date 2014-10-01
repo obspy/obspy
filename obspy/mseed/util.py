@@ -464,14 +464,14 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     return info
 
 
-def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
+def _ctypesArray2NumpyArray(buffer_, buffer_elements, sampletype):
     """
     Takes a Ctypes array and its length and type and returns it as a
     NumPy array.
 
     This works by reference and no data is copied.
 
-    :param buffer: Ctypes c_void_p pointer to buffer.
+    :param buffer_: Ctypes c_void_p pointer to buffer.
     :param buffer_elements: length of the whole buffer
     :param sampletype: type of sample, on of "a", "i", "f", "d"
     """
@@ -480,7 +480,7 @@ def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
     datptr = numpy_array.ctypes.get_data()
     # Manually copy the contents of the C allocated memory area to
     # the address of the previously created NumPy array
-    C.memmove(datptr, buffer, buffer_elements * SAMPLESIZES[sampletype])
+    C.memmove(datptr, buffer_, buffer_elements * SAMPLESIZES[sampletype])
     return numpy_array
 
 

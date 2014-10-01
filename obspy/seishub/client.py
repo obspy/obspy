@@ -174,7 +174,7 @@ class Client(object):
             urllib.request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except:
-            None
+            pass
 
     def testAuth(self):
         """
