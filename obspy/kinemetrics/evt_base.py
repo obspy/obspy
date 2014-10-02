@@ -44,7 +44,7 @@ class EVTEOFError(EVTBaseError):
     pass
 
 
-class EVT_Virtual(object):
+class EvtVirtual(object):
     """
     class for parameters reading.
     The dictionary has this structure :
@@ -138,7 +138,7 @@ class EVT_Virtual(object):
         time.precison = 3
         return time
 
-    def _strnull(self, strn, param, val, offset):
+    def _strnull(self, strn, unused_param, unused_val, unused_offset):
         """
         Change a C string (null terminated to Python string)
 
@@ -154,28 +154,31 @@ class EVT_Virtual(object):
         except AttributeError:
             return strn
 
-    def _array(self, firstval, param, val, offset):
+    def _array(self, unused_firstval, param, val, offset):
         """
-        extract a list of values from val
+        extract a list of 'size_array' values from val
+           each value is separate in val by a distance of 'size_structure',
         :param firstval: first value to extract (unused)
-        :param param: a list with the size of the list, the dimension of the
-                 structure, and the first value to read
+        :param param: a list with the size of the list ('size_array'),
+                      the dimension of the structure ('size_structure'),
+                      and the first value to read ('index0')
         :param val: list of values
-        :param offset: not used
+        :param offset: used
         :rtype: list
         :return: a list of values
         """
         ret = []
-        sizearray = param[0]
-        sizestru = param[1]
+        size_array = param[0]
+        size_structure = param[1]
         index0 = param[2]
-        for i in range(sizearray):
-            ret.append(val[index0-offset+(i*sizestru)])
+        for i in range(size_array):
+            ret.append(val[index0-offset+(i*size_structure)])
         return ret
 
-    def _arraynull(self, firstval, param, val, offset):
+    def _arraynull(self, unused_firstval, param, val, offset):
         """
-        extract a list of values from val and change C string to python
+        extract a list of 'size_array' values from val
+            and change C string to python str
         :param firstval: first value to extract (unused)
         :param param: a list with the size of the list, the dimension of the
                  structure, and the first value to read
@@ -186,15 +189,16 @@ class EVT_Virtual(object):
         """
 
         ret = []
-        sizearray = param[0]
-        sizestru = param[1]
+        size_array = param[0]
+        size_structure = param[1]
         index0 = param[2]
-        for i in range(sizearray):
-            mystr = self._strnull(val[index0-offset+(i*sizestru)], '', '', '')
+        for i in range(size_array):
+            mystr = self._strnull(val[index0-offset+(i*size_structure)],
+                                  '', '', '')
             ret.append(mystr)
         return ret
 
-    def _instrument(self, code, param, val, offset):
+    def _instrument(self, code, unused_param, unused_val, unused_offset):
         """
         change instrument type code to name
         :param code: code to convert

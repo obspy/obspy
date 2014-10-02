@@ -17,7 +17,7 @@ import numpy as np
 
 from obspy import Trace, Stream
 from obspy.kinemetrics.evt_base import EVTBadHeaderError, EVTEOFError, \
-    EVTBadDataError, EVT_Virtual
+    EVTBadDataError, EvtVirtual
 
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
@@ -180,7 +180,7 @@ class EVT_DATA(object):
         return data
 
 
-class EVT_HEADER(EVT_Virtual):
+class EVT_HEADER(EvtVirtual):
     HEADER = {'instrument': [1, ['_instrument', '']],
               'a2dbits': [4, ''],
               'samplebytes': [5, ''],
@@ -216,7 +216,7 @@ class EVT_HEADER(EVT_Virtual):
               'chan_sensorgain': [166, ['_array', [12, 27, 166]]]}
 
     def __init__(self):
-        EVT_Virtual.__init__(self)
+        EvtVirtual.__init__(self)
 
     def read(self, file_p, length, endian):
         """
@@ -277,7 +277,7 @@ class EVT_HEADER(EVT_Virtual):
         return retval
 
 
-class EVT_FRAME_HEADER(EVT_Virtual):
+class EVT_FRAME_HEADER(EvtVirtual):
     HEADER = {'frametype': [0, ''],
               'instrumentcode': [1, ['_instrument', '']],
               'recorderid': [2, ''],
@@ -292,7 +292,7 @@ class EVT_FRAME_HEADER(EVT_Virtual):
               'timecode': [11, '']}
 
     def __init__(self):
-        EVT_Virtual.__init__(self)
+        EvtVirtual.__init__(self)
         self.numframe = 0
         self.endian = 0
 
@@ -347,7 +347,7 @@ class EVT_FRAME_HEADER(EVT_Virtual):
         return chan
 
 
-class EVT_TAG(EVT_Virtual):
+class EVT_TAG(EvtVirtual):
     """
     Class to read the TAGs of EVT Files
     """
@@ -362,7 +362,7 @@ class EVT_TAG(EVT_Virtual):
               'endian': [9, '']}
 
     def __init__(self):
-        EVT_Virtual.__init__(self)
+        EvtVirtual.__init__(self)
         self.endian = 0
 
     def read(self, file_p):
