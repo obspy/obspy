@@ -303,9 +303,11 @@ class CoreTestCase(unittest.TestCase):
         lendata = len(data)
         self.assertEqual(lendata, 5750)
         for i in range(len(valuesdeb)):
-            self.assertAlmostEquals(valuesdeb[i], data[i], 8)
-        for i in range(len(valuesend)):
-            self.assertAlmostEquals(valuesend[i], data[5750-5+i], 8)
+            self.assertAlmostEqual(valuesdeb[i], data[i], 8)
+        len_test_end = len(valuesend)
+        pos_test = lendata - len_test_end
+        for i in range(len_test_end):
+            self.assertAlmostEqual(valuesend[i], data[pos_test + i], 8)
 
     def verify_data_evt2(self, data):
         valuesdeb = np.array([-4.4351171702e-002, -4.4479820877e-002,
@@ -328,9 +330,11 @@ class CoreTestCase(unittest.TestCase):
         lendata = len(data)
         self.assertEqual(lendata, 5750)
         for i in range(len(valuesdeb)):
-            self.assertAlmostEquals(valuesdeb[i], data[i], 8)
-        for i in range(len(valuesend)):
-            self.assertAlmostEquals(valuesend[i], data[5750-5+i], 8)
+            self.assertAlmostEqual(valuesdeb[i], data[i], 8)
+        len_test_end = len(valuesend)
+        pos_test = lendata - len_test_end
+        for i in range(len_test_end):
+            self.assertAlmostEqual(valuesend[i], data[pos_test + i], 8)
 
 
 def suite():
