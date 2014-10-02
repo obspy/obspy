@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 obspy.kinemetrics - EVT format support for ObsPy
@@ -8,7 +7,7 @@ Evt read support for ObsPy.
 
 This module provides read support for the EVT Kinemetrics data format.
 It is based on the Kinemetrics description of the format and the provided
-C code (Kw2asc.c).
+C code (Kw2asc.c (see "KW2ASC.SRC" File in /doc section)).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Henri Martin, Thomas Lecocq,
@@ -35,8 +34,8 @@ Similar to reading any other waveform data format using obspy.core:
  5750 samples
 
 Each trace will have a ``stats`` attribute containing the usual information and 
-a kinemetrics_evt dictionnary with specific attributes.
-Nota : All the Header's attributes are not readed (must be implemented)  
+a ``kinemetrics_evt`` dictionary with specific attributes.
+Note : All the Header's attributes are not read (can be implemented if necessary for someone)  
 
 >>> stats_evt = st[0].stats.pop('kinemetrics_evt')
 >>> print(st[0].stats)
@@ -52,7 +51,7 @@ Nota : All the Header's attributes are not readed (must be implemented)
            calib: 1.0
 
 >>> for k, v in stats_evt.items():
-        print k,v
+        print(k, v)
 comment MEMBACH PARAMETERS FAC+EEP/v3.02
 chan_azimuth 0
 chan_north 0

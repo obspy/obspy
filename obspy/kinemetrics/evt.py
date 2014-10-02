@@ -21,7 +21,7 @@ from obspy.kinemetrics.evt_base import EVTBadHeaderError, EVTEOFError, \
 
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
-    " - New ETna and old Etna" + \
+    " - New Etna and old Etna" + \
     " - ByteOrder : MSB first (Motorola) " + \
     " - File Header of 2040 bytes (12 Channels)" + \
     " - .........." + \
@@ -52,28 +52,36 @@ class EVT(object):
     def __init__(self):
         self.ETag = EVT_TAG()
         self.EHeader = EVT_HEADER()
-        self.EFrame = EVT_FRAME()
+        self.EFrame = EVT_FRAME_HEADER()
         self.EData = EVT_DATA()
         self.samplingrate = 0
 
     def calibration(self):
         """
         Apply calibrations on data matrix
+		
+		Note about calibration:
+			fullscale of instrument = +/- 2.5V & +/-20V 
+			data : 4 bytes - 24 bits
+			calibration in volts = data * fullscale / 2**23
+			
+			sensitivity = volts/g
+			calibration in MKS units = (data_in_volts / sensitivity) * g
+			
         """
         for i in range(self.EHeader.nchannels):
-            # grange = 8.0/(2 ** self.EHeader.chan_range[i])
-            calibV = 8388608.0 / self.EHeader.chan_fullscale[i]
-            calibMKS = (calibV * self.EHeader.chan_sensitivity[i]) / (9.81)
+            calibV = 8388608.0 / self.EHeader.chan_fullscale[i]				# 8388608 = 2**23
+            calibMKS = (calibV * self.EHeader.chan_sensitivity[i]) / (9.81) # 9.81 = mean value of g on earth 
             self.data[i] /= calibMKS
 
     def readFile(self, filename_or_object, Raw=False):
         """
-        Reads an EVT file to the internal data structure.
+        Reads an EVT file to the internal data structure
 
-        :type filename_or_object: string or file-like object.
-        :param filename_or_object: EVT file to be read.
-        :type raw : boolean
-        :param raw : True if Raw data (no corrections, int32)
+        :type filename_or_object: str or file-like object
+        :param filename_or_object: EVT file to be read
+        :type Raw : bool
+        :param Raw : True if Raw data (no corrections, int32)
                      False if data in m/s2 (default)
         :rtype: obspy.core.stream.Stream
         :return: Obspy Stream with data
@@ -100,9 +108,9 @@ class EVT(object):
                 self.ETag.read(file_pointer)
                 retparam = self.EFrame.read(file_pointer,
                                             self.ETag.length, endian)
-                if (self.samplingrate == 0):
+                if self.samplingrate == 0:
                     self.samplingrate = retparam[0]
-                elif (self.samplingrate != retparam[0]):
+                elif self.samplingrate != retparam[0]:
                     raise EVTBadHeaderError("Sampling rate not constant")
                 datal = self.EData.read(file_pointer,
                                         self.ETag.datalength, endian, retparam)
@@ -124,7 +132,7 @@ class EVT(object):
             t.stats.channel = str(i)
             t.stats.station = self.EHeader.stnid.replace(b"\x00", b"").decode()
             t.stats.sampling_rate = float(self.samplingrate)
-            t.stats.starttime = self.EHeader.startime
+            t.stats.starttime = self.EHeader.starttime
             t.stats.kinemetrics_evt = self.EHeader.makeobspydico(i)
             traces.append(t)
 
@@ -137,7 +145,7 @@ class EVT_DATA(object):
         read data from fp
 
         :param fp: file pointer
-        :param length: length to be readed
+        :param length: length to be read
         :param endian: endian type in datafile
         :type param: list
         :param param: sampling rate,sample size, block time, channels
@@ -145,14 +153,14 @@ class EVT_DATA(object):
         :return: list of data
         """
         buff = fp.read(length)
-        samplrate = param[0]
+        samplerate = param[0]
         numbyte = param[1]
-        numchan = param[3].count(1)
-        num = (samplrate / 10) * numbyte * numchan
+        numchan = param[3]
+        num = (samplerate / 10) * numbyte * numchan
         data = [[] for _ in range(numchan)]
         if (length != num):
             raise EVTBadDataError("Bad data length")
-        for j in range(samplrate // 10):
+        for j in range(samplerate // 10):
             for k in range(numchan):
                 i = (j * numchan) + k
                 if numbyte == 2:
@@ -163,33 +171,31 @@ class EVT_DATA(object):
                         >> 8
                 elif numbyte == 4:
                     val = unpack(b">i", buff[i * 4:(i * 4) + 4])[0]
-                else:
-                    raise EVTBadDataError("Bad data format")
                 data[k].append(val)
         return data
 
 
 class EVT_HEADER(EVT_Virtual):
     HEADER = {'instrument': [1, ['_instrument', '']],
-              'a2dbits': [4, ""],
-              'samplebytes': [5, ""],
-              'installedchan': [7, ""],
-              'maxchannels': [8, ""],
-              'batteryvoltage': [13, ""],
-              'temperature': [16, ""],
+              'a2dbits': [4, ''],
+              'samplebytes': [5, ''],
+              'installedchan': [7, ''],
+              'maxchannels': [8, ''],
+              'batteryvoltage': [13, ''],
+              'temperature': [16, ''],
               'gpsstatus': [18, ['_gpsstatus', '']],
               'gpslastlock': [33, ['_time', -1]],
-              'startime': [107, ['_time', 112]],
+              'starttime': [107, ['_time', 112]],
               'triggertime': [108, ['_time', 113]],
-              'duration': [109, ""],
-              'nscans': [115, ""],
-              'serialnumber': [116, ""],
-              'nchannels': [117, ""],
+              'duration': [109, ''],
+              'nscans': [115, ''],
+              'serialnumber': [116, ''],
+              'nchannels': [117, ''],
               'stnid': [118, ['_strnull', '']],
               'comment': [119, ['_strnull', '']],
-              'elevation': [120, ""],
-              'latitude': [121, ""],
-              'longitude': [122, ""],
+              'elevation': [120, ''],
+              'latitude': [121, ''],
+              'longitude': [122, ''],
               'chan_id': [140, ['_arraynull', [12, 27, 140]]],
               'chan_north': [143, ['_arraynull', [12, 27, 143]]],
               'chan_east': [144, ['_arraynull', [12, 27, 144]]],
@@ -202,7 +208,7 @@ class EVT_HEADER(EVT_Virtual):
               'chan_natfreq': [160, ['_array', [12, 27, 160]]],
               'chan_calcoil': [164, ['_array', [12, 27, 164]]],
               'chan_range': [165, ['_array', [12, 27, 165]]],
-              'chan_sensogain': [166, ['_array', [12, 27, 166]]]}
+              'chan_sensorgain': [166, ['_array', [12, 27, 166]]]}
 
     def __init__(self):
         EVT_Virtual.__init__(self)
@@ -266,7 +272,7 @@ class EVT_HEADER(EVT_Virtual):
         return retval
 
 
-class EVT_FRAME(EVT_Virtual):
+class EVT_FRAME_HEADER(EVT_Virtual):
     HEADER = {'frametype': [0, ''],
               'instrumentcode': [1, ['_instrument', '']],
               'recorderid': [2, ''],
@@ -280,15 +286,14 @@ class EVT_FRAME(EVT_Virtual):
               'channelbitmap1': [10, ''],
               'timecode': [11, '']}
 
-    endian = 0
-
     def __init__(self):
         EVT_Virtual.__init__(self)
         self.numframe = 0
+		self.endian = 0
 
     def count(self):
         """
-        return the number of frames readed
+        return the number of frames read
         """
         return self.numframe
 
@@ -307,6 +312,8 @@ class EVT_FRAME(EVT_Virtual):
             raise EVTBadHeaderError("Bad Header length " + length)
         samplingrate = self.streampar & 4095
         samplesize = (self.framestatus >> 6) + 1
+		if samplesize not in [2, 3, 4]:
+			samplesize = 3 # default value = 3        
         return (samplingrate, samplesize, self.blocktime, self.channels())
 
     def analyse_frame32(self, head_buff):
@@ -327,13 +334,11 @@ class EVT_FRAME(EVT_Virtual):
         numchan = 12
         if (self.frametype == 4):
             raise NotImplementedError("16 Channels not implemented")
-        chan = []
+        chan = 0
         for i in range(numchan):
             p2 = 2 ** i
             if (self.channelbitmap & p2):
-                chan.append(1)
-            else:
-                chan.append(0)
+                chan += 1
         return chan
 
 
@@ -341,23 +346,22 @@ class EVT_TAG(EVT_Virtual):
     """
     Class to read the TAGs of EVT Files
     """
-    HEADER = {'order': [1, ""],
-              'version': [2, ""],
+    HEADER = {'order': [1, ''],
+              'version': [2, ''],
               'instrument': [3, ['_instrument', '']],
-              'type': [4, ""],
-              'length': [5, ""],
-              'datalength': [6, ""],
-              'id': [7, ""],
-              'checksum': [8, ""],
-              'endian': [9, ""]}
-    INST_COUNT = 0
+              'type': [4, ''],
+              'length': [5, ''],
+              'datalength': [6, ''],
+              'id': [7, ''],
+              'checksum': [8, ''],
+              'endian': [9, '']}
 
     def __init__(self):
         EVT_Virtual.__init__(self)
 
     def read(self, fp):
         """
-        :type fp: string
+        :type fp: str
         :param fp: file descriptor of EVT file.
         """
         mystr = fp.read(16)
@@ -379,7 +383,6 @@ class EVT_TAG(EVT_Virtual):
         self.endian = endian
         if not self.verify(verbose=False):
             raise EVTBadHeaderError("Bad Tag values")
-        return 1
 
     def verify(self, verbose=False):
         if self.type not in [1, 2]:

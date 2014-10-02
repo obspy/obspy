@@ -47,21 +47,21 @@ class EVTEOFError(EVTBaseError):
 class EVT_Virtual(object):
     """
     class for parameters reading.
-    The dictionary have this structure :
+    The dictionary has this structure :
        {"name":[header_place,["function","param"],value], ...}
             name is the attribute (key) (in lower cases)
             header_place : offset to find value in file
             function : function to call to set value (option)
             param : parameters to send to function
-            value : value of name (can be omited)
+            value : value of name (can be omitted)
     """
     def __init__(self):
-        self.diconame = ""  # set the dictionary name to be used
+        self.diconame = ""  
 
     def __getattr__(self, item):
         """
         __getattr__ is called only if no class attribute is found
-        :type item: string
+        :type item: str
         :param item: name of the attribute (key)
         :rtype: any
         :return: the value in the dictionary
@@ -72,7 +72,7 @@ class EVT_Virtual(object):
 
     def unsetdico(self):
         """
-        remove value from dictionary
+        remove all values from dictionary
         """
         for key in self.HEADER:
             try:
@@ -82,16 +82,19 @@ class EVT_Virtual(object):
 
     def setdico(self, val, offset=0):
         """
-        fill dico with values found in val
+        fill the dictionary with values found in the input 'val' list
+			the nth value in val is placed in the dictionary if a key 
+			    of type 'name':[nth, ''] exist
+			the offset is used to include the 'val' list further in the dictionary
         :type val: list
         :param val : a list of values
-        :type offset: integer
-        :param offset : offset in the dictonary (header place)
+        :type offset: int
+        :param offset : offset in the dictionary 
         """
         if not isinstance(val, list):
             raise TypeError("setdico() expects a list")
         for key in self.HEADER:
-            index = self.HEADER[key][0]-offset
+            index = self.HEADER[key][0] - offset
             if index < len(val) and index >= 0:
                 if self.HEADER[key][1] != "":
                     fct = self.HEADER[key][1][0]
@@ -107,8 +110,8 @@ class EVT_Virtual(object):
     def __str__(self):
         """
         create a string with all dictionary values
-        :rtype:  string
-        :return: string to be printed
+        :rtype:  str
+        :return: string representation of dictionary
         """
         chaine = ""
         for vname in sorted(self.HEADER):
@@ -117,7 +120,7 @@ class EVT_Virtual(object):
 
     def _time(self, blocktime, param, val, offset):
         """
-        change a EVT time format to Obspy UTCDateTime format
+        change a EVT time format to ObsPy UTCDateTime format
         :param blocktime : time in sec after 1980/1/1
         :param param: parameter with milliseconds values (in val)
         :param val: list of value
@@ -135,14 +138,14 @@ class EVT_Virtual(object):
 
     def _strnull(self, strn, param, val, offset):
         """
-        Change a C string (null teminated to Python string)
+        Change a C string (null terminated to Python string)
 
-        :type str: string
-        :param str: string to convert
+        :type strn: str
+        :param strn: string to convert
         :param param: not used
         :param val: not used
         :param offset: not used
-        :rtype: string
+        :rtype: str
         """
         try:
             return strn.rstrip("\0")
@@ -153,9 +156,9 @@ class EVT_Virtual(object):
         """
         extract a list of values from val
         :param firstval: first value to extract (unused)
-        :param param: a list with the size of the list, the dimesnion of the
+        :param param: a list with the size of the list, the dimension of the
                  structure, and the first value to read
-        :param val: list of value
+        :param val: list of values
         :param offset: not used
         :rtype: list
         :return: a list of values
@@ -172,7 +175,7 @@ class EVT_Virtual(object):
         """
         extract a list of values from val and change C string to python
         :param firstval: first value to extract (unused)
-        :param param: a list with the size of the list, the dimesnion of the
+        :param param: a list with the size of the list, the dimension of the
                  structure, and the first value to read
         :param val: list of value
         :param offset:
@@ -196,7 +199,7 @@ class EVT_Virtual(object):
         :param param: not used
         :param val: not used
         :param offset: not used
-        :rtype: string
+        :rtype: str
         """
         dico = {0: 'QDR', 9: 'K2', 10: 'Makalu', 20: 'New Etna',
                 30: 'Rock', 40: 'SSA2EVT'}

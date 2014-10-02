@@ -46,7 +46,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_is_evt_from_bytesio(self):
         """
-        Test for the the is_evt() function from BytesIO objects.
+        Test for the is_evt() function from BytesIO objects.
         """
         valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
                        os.path.join(self.path, "BX456_MOLA-02351.evt")]
@@ -298,13 +298,13 @@ class CoreTestCase(unittest.TestCase):
         valuesend = np.array([-2.4488139898e-002, -2.4530241266e-002,
                               -2.4525562301e-002, -2.4506852031e-002,
                               -2.4424990639e-002])
-# Data values from Tsoft Program
+		# Data values from Tsoft Program
 
         lendata = len(data)
         self.assertEqual(lendata, 5750)
-        for i in range(20):
+        for i in range(len(valuesdeb)):
             self.assertAlmostEquals(valuesdeb[i], data[i], 8)
-        for i in range(5):
+        for i in range(len(valuesend)):
             self.assertAlmostEquals(valuesend[i], data[5750-5+i], 8)
 
     def verify_data_evt2(self, data):
@@ -322,13 +322,14 @@ class CoreTestCase(unittest.TestCase):
                               -4.4493857771e-002, -4.4451754540e-002,
                               -4.4409647584e-002])
 
-# Data values from Tsoft Program
+		# Data values from Tsoft Program
+		# length is 5750
 
         lendata = len(data)
         self.assertEqual(lendata, 5750)
-        for i in range(20):
+        for i in range(len(valuesdeb)):
             self.assertAlmostEquals(valuesdeb[i], data[i], 8)
-        for i in range(5):
+        for i in range(len(valuesend)):
             self.assertAlmostEquals(valuesend[i], data[5750-5+i], 8)
 
 

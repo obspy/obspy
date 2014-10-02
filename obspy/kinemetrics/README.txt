@@ -18,8 +18,8 @@ Overview
 Evt read support for ObsPy.
 
 This module provides read support for Evt Kinemetrics data format.
-This module is based on the Kinemetrics description of his format and on
-the C code provied (Kw2asc.c)
+This module is based on the Kinemetrics description of this format and on
+the C code provided (Kw2asc.c - include in 'KW2ASC.SRC' file in doc section)
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and
