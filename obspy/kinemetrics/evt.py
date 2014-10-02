@@ -50,10 +50,10 @@ class EVT(object):
     Class to read EVT (Kinemetrics) formatted files.
     """
     def __init__(self):
-        self.ETag = EVT_TAG()
-        self.EHeader = EVT_HEADER()
-        self.EFrame = EVT_FRAME_HEADER()
-        self.EData = EVT_DATA()
+        self.e_tag = EVT_TAG()
+        self.e_header = EVT_HEADER()
+        self.e_frame = EVT_FRAME_HEADER()
+        self.e_data = EVT_DATA()
         self.samplingrate = 0
 
     def calibration(self):
@@ -69,14 +69,15 @@ class EVT(object):
             calibration in MKS units = (data_in_volts / sensitivity) * g
 
         """
-        for i in range(self.EHeader.nchannels):
-            calibV = 8388608.0 / self.EHeader.chan_fullscale[i]
+        for i in range(self.e_header.nchannels):
+            calib_volts = 8388608.0 / self.e_header.chan_fullscale[i]
             # 8388608 = 2**23
-            calibMKS = (calibV * self.EHeader.chan_sensitivity[i]) / (9.81)
+            calib_mks = (calib_volts *
+                         self.e_header.chan_sensitivity[i]) / (9.81)
             # 9.81 = mean value of g on earth
-            self.data[i] /= calibMKS
+            self.data[i] /= calib_mks
 
-    def readFile(self, filename_or_object, raw=False):
+    def read_file(self, filename_or_object, raw=False):
         """
         Reads an EVT file to the internal data structure
 
@@ -98,29 +99,30 @@ class EVT(object):
             is_fileobject = False
             file_pointer = open(filename_or_object, "rb")
 
-        self.ETag.read(file_pointer)
-        endian = self.ETag.endian
-        self.EHeader.unsetdico()
-        self.EHeader.read(file_pointer, self.ETag.length, endian)
+        self.e_tag.read(file_pointer)
+        endian = self.e_tag.endian
+        self.e_header.unsetdico()
+        self.e_header.read(file_pointer, self.e_tag.length, endian)
 
-        self.data = np.ndarray([self.EHeader.nchannels, 0])
+        self.data = np.ndarray([self.e_header.nchannels, 0])
 
         while True:
             try:
-                self.ETag.read(file_pointer)
-                retparam = self.EFrame.read(file_pointer,
-                                            self.ETag.length, endian)
+                self.e_tag.read(file_pointer)
+                retparam = self.e_frame.read(file_pointer,
+                                             self.e_tag.length, endian)
                 if self.samplingrate == 0:
                     self.samplingrate = retparam[0]
                 elif self.samplingrate != retparam[0]:
                     raise EVTBadHeaderError("Sampling rate not constant")
-                datal = self.EData.read(file_pointer,
-                                        self.ETag.datalength, endian, retparam)
+                datal = self.e_data.read(file_pointer,
+                                         self.e_tag.datalength,
+                                         endian, retparam)
                 npdata = np.array(datal)
                 self.data = np.hstack((self.data, npdata))  # append data
             except EVTEOFError:
                 break
-        if self.EFrame.count() != self.EHeader.duration:
+        if self.e_frame.count() != self.e_header.duration:
             raise EVTBadDataError("Bad number of blocks")
 
         if not raw:
@@ -129,24 +131,25 @@ class EVT(object):
             file_pointer.close()
 
         traces = []
-        for i in range(self.EHeader.nchannels):
-            t = Trace(data=self.data[i])
-            t.stats.channel = str(i)
-            t.stats.station = self.EHeader.stnid.replace(b"\x00", b"").decode()
-            t.stats.sampling_rate = float(self.samplingrate)
-            t.stats.starttime = self.EHeader.starttime
-            t.stats.kinemetrics_evt = self.EHeader.makeobspydico(i)
-            traces.append(t)
+        for i in range(self.e_header.nchannels):
+            cur_trace = Trace(data=self.data[i])
+            cur_trace.stats.channel = str(i)
+            cur_trace.stats.station = self.e_header.stnid.replace(b"\x00",
+                                                                  b"").decode()
+            cur_trace.stats.sampling_rate = float(self.samplingrate)
+            cur_trace.stats.starttime = self.e_header.starttime
+            cur_trace.stats.kinemetrics_evt = self.e_header.makeobspydico(i)
+            traces.append(cur_trace)
 
         return Stream(traces=traces)
 
 
 class EVT_DATA(object):
-    def read(self, fp, length, endian, param):
+    def read(self, file_p, length, endian, param):
         """
-        read data from fp
+        read data from file_p
 
-        :param fp: file pointer
+        :param file_p: file pointer
         :param length: length to be read
         :param endian: endian type in datafile
         :type param: list
@@ -154,7 +157,7 @@ class EVT_DATA(object):
         :rtype: list of list
         :return: list of data
         """
-        buff = fp.read(length)
+        buff = file_p.read(length)
         samplerate = param[0]
         numbyte = param[1]
         numchan = param[3]
@@ -215,11 +218,11 @@ class EVT_HEADER(EVT_Virtual):
     def __init__(self):
         EVT_Virtual.__init__(self)
 
-    def read(self, fp, length, endian):
+    def read(self, file_p, length, endian):
         """
         read the Header of Evt file
         """
-        buff = fp.read(length)
+        buff = file_p.read(length)
         self.endian = endian.encode()
         if length == 2040:  # File Header 12 channel
             self.analyse_header12(buff)
@@ -258,7 +261,7 @@ class EVT_HEADER(EVT_Virtual):
                 dico[key] = value
         return dico
 
-    def _gpsstatus(self, value, a, b, c):
+    def _gpsstatus(self, value, unused_a, unused_b, unused_c):
         """
         Transform bitarray for gpsstatus in human readable string
 
@@ -299,14 +302,14 @@ class EVT_FRAME_HEADER(EVT_Virtual):
         """
         return self.numframe
 
-    def read(self, fp, length, endian):
+    def read(self, file_p, length, endian):
         """
         read a frame
 
         :rtype: list
         :return: samplingrate, samplesize, blocktime, channels
         """
-        buff = fp.read(length)
+        buff = file_p.read(length)
         self.endian = endian
         if length == 32:  # Frame Header
             self.analyse_frame32(buff)
@@ -338,8 +341,8 @@ class EVT_FRAME_HEADER(EVT_Virtual):
             raise NotImplementedError("16 Channels not implemented")
         chan = 0
         for i in range(numchan):
-            p2 = 2 ** i
-            if self.channelbitmap & p2:
+            pow_of_2 = 2 ** i
+            if self.channelbitmap & pow_of_2:
                 chan += 1
         return chan
 
@@ -362,22 +365,22 @@ class EVT_TAG(EVT_Virtual):
         EVT_Virtual.__init__(self)
         self.endian = 0
 
-    def read(self, fp):
+    def read(self, file_p):
         """
-        :type fp: str
-        :param fp: file descriptor of EVT file.
+        :type file_p: str
+        :param file_p: file descriptor of EVT file.
         """
-        mystr = fp.read(16)
+        mystr = file_p.read(16)
         if len(mystr) < 16:
             raise EVTEOFError
-        sync, byteOrder = unpack(b"cB", mystr[0:2])
+        sync, byte_order = unpack(b"cB", mystr[0:2])
         if sync == b'\x00':
             raise EVTEOFError
         if sync != b'K':
             raise EVTBadHeaderError('Sync error')
-        if byteOrder == 1:
+        if byte_order == 1:
             endian = b">"
-        elif byteOrder == 0:
+        elif byte_order == 0:
             endian = b"<"
         else:
             raise EVTBadHeaderError
