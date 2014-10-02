@@ -33,12 +33,12 @@ def is_evt(filename_or_object):
     else:
         is_fileobject = False
 
-    Tag = evt.EVT_TAG()
+    tag = evt.EVT_TAG()
 
     if is_fileobject:
         try:
-            Tag.read(filename_or_object)
-            if Tag.verify(verbose=False) is False:
+            tag.read(filename_or_object)
+            if tag.verify(verbose=False) is False:
                 return False
             return True
         except EVTBaseError:
@@ -46,10 +46,10 @@ def is_evt(filename_or_object):
         finally:
             filename_or_object.seek(pos, 0)
     else:
-        with open(filename_or_object, "rb") as fh:
+        with open(filename_or_object, "rb") as file_obj:
             try:
-                Tag.read(fh)
-                if Tag.verify(verbose=False) is False:
+                tag.read(file_obj)
+                if tag.verify(verbose=False) is False:
                     return False
                 return True
             except (EVTBaseError, IOError):
@@ -61,14 +61,14 @@ def read_evt(filename_or_object, **kwargs):
     Reads a EVT file and returns a Stream object.
 
     .. warning::
-		This function should NOT be called directly, it registers via the
-		ObsPy :func:`~obspy.core.stream.read` function, call this instead
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead
 
     :type filename_or_object: str or file-like object
     :param filename_or_object: EVT file to be read
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: Stream object containing header and data
     """
-    Evt_Obj = evt.EVT()
-    stream = Evt_Obj.readFile(filename_or_object)
+    evt_obj = evt.EVT()
+    stream = evt_obj.readFile(filename_or_object)
     return stream
