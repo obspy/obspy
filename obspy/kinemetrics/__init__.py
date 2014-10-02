@@ -15,14 +15,14 @@ C code (Kw2asc.c (see "KW2ASC.SRC" File in /doc section)).
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
-    
+
 Reading
 -------
 Similar to reading any other waveform data format using obspy.core:
 
 >>> from obspy import read
 >>> st = read("/path/to/test.evt")
->>> st 
+>>> st
 <obspy.core.stream.Stream at 0x....>
 >>> print (st)
 3 Trace(s) in Stream:
@@ -33,9 +33,9 @@ Similar to reading any other waveform data format using obspy.core:
 .MEMA..2 | 2013-08-15T09:20:28.000000Z - 2013-08-15T09:20:50.996000Z | 250.0 Hz,
  5750 samples
 
-Each trace will have a ``stats`` attribute containing the usual information and 
+Each trace will have a ``stats`` attribute containing the usual information and
 a ``kinemetrics_evt`` dictionary with specific attributes.
-Note : All the Header's attributes are not read (can be implemented if necessary for someone)  
+Note : All the Header's attributes are not read (can be implemented if necessary for someone)
 
 >>> stats_evt = st[0].stats.pop('kinemetrics_evt')
 >>> print(st[0].stats)
@@ -97,8 +97,8 @@ numpy.ndarray
 Writing
 -------
 Not implemented
-   
-    
+
+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
