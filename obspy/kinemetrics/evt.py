@@ -59,29 +59,31 @@ class EVT(object):
     def calibration(self):
         """
         Apply calibrations on data matrix
-		
-		Note about calibration:
-			fullscale of instrument = +/- 2.5V & +/-20V 
-			data : 4 bytes - 24 bits
-			calibration in volts = data * fullscale / 2**23
-			
-			sensitivity = volts/g
-			calibration in MKS units = (data_in_volts / sensitivity) * g
-			
+
+        Note about calibration:
+            fullscale of instrument = +/- 2.5V & +/-20V
+            data : 4 bytes - 24 bits
+            calibration in volts = data * fullscale / 2**23
+
+            sensitivity = volts/g
+            calibration in MKS units = (data_in_volts / sensitivity) * g
+
         """
         for i in range(self.EHeader.nchannels):
-            calibV = 8388608.0 / self.EHeader.chan_fullscale[i]				# 8388608 = 2**23
-            calibMKS = (calibV * self.EHeader.chan_sensitivity[i]) / (9.81) # 9.81 = mean value of g on earth 
+            calibV = 8388608.0 / self.EHeader.chan_fullscale[i]
+            # 8388608 = 2**23
+            calibMKS = (calibV * self.EHeader.chan_sensitivity[i]) / (9.81)
+            # 9.81 = mean value of g on earth
             self.data[i] /= calibMKS
 
-    def readFile(self, filename_or_object, Raw=False):
+    def readFile(self, filename_or_object, raw=False):
         """
         Reads an EVT file to the internal data structure
 
         :type filename_or_object: str or file-like object
         :param filename_or_object: EVT file to be read
-        :type Raw : bool
-        :param Raw : True if Raw data (no corrections, int32)
+        :type raw : bool
+        :param raw : True if raw data (no corrections, int32)
                      False if data in m/s2 (default)
         :rtype: obspy.core.stream.Stream
         :return: Obspy Stream with data
@@ -118,10 +120,10 @@ class EVT(object):
                 self.data = np.hstack((self.data, npdata))  # append data
             except EVTEOFError:
                 break
-        if (self.EFrame.count() != self.EHeader.duration):
+        if self.EFrame.count() != self.EHeader.duration:
             raise EVTBadDataError("Bad number of blocks")
 
-        if not Raw:
+        if not raw:
             self.calibration()
         if is_fileobject is False:
             file_pointer.close()
@@ -158,7 +160,7 @@ class EVT_DATA(object):
         numchan = param[3]
         num = (samplerate / 10) * numbyte * numchan
         data = [[] for _ in range(numchan)]
-        if (length != num):
+        if length != num:
             raise EVTBadDataError("Bad data length")
         for j in range(samplerate // 10):
             for k in range(numchan):
@@ -219,9 +221,9 @@ class EVT_HEADER(EVT_Virtual):
         """
         buff = fp.read(length)
         self.endian = endian.encode()
-        if (length == 2040):  # File Header 12 channel
+        if length == 2040:  # File Header 12 channel
             self.analyse_header12(buff)
-        elif (length == 2736):  # File Header 18 channel
+        elif length == 2736:  # File Header 18 channel
             raise NotImplementedError("16 Channel not implemented")
         else:
             raise EVTBadHeaderError("Bad Header length " + length)
@@ -235,7 +237,7 @@ class EVT_HEADER(EVT_Virtual):
         self.setdico(list(val), 107)
         val = unpack(self.endian+HEADER_STRUCT4, head_buff[0x2c8:0x658])
         self.setdico(list(val), 140)
-        # XXX: Those three do not do anything...
+        # Those three do not do anything... (For futur extensions)
         # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
         # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
         # val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
@@ -289,7 +291,7 @@ class EVT_FRAME_HEADER(EVT_Virtual):
     def __init__(self):
         EVT_Virtual.__init__(self)
         self.numframe = 0
-		self.endian = 0
+        self.endian = 0
 
     def count(self):
         """
@@ -306,14 +308,14 @@ class EVT_FRAME_HEADER(EVT_Virtual):
         """
         buff = fp.read(length)
         self.endian = endian
-        if (length == 32):  # Frame Header
+        if length == 32:  # Frame Header
             self.analyse_frame32(buff)
         else:
             raise EVTBadHeaderError("Bad Header length " + length)
         samplingrate = self.streampar & 4095
         samplesize = (self.framestatus >> 6) + 1
-		if samplesize not in [2, 3, 4]:
-			samplesize = 3 # default value = 3        
+        if samplesize not in [2, 3, 4]:
+            samplesize = 3  # default value = 3
         return (samplingrate, samplesize, self.blocktime, self.channels())
 
     def analyse_frame32(self, head_buff):
@@ -332,12 +334,12 @@ class EVT_FRAME_HEADER(EVT_Virtual):
 
     def channels(self):
         numchan = 12
-        if (self.frametype == 4):
+        if self.frametype == 4:
             raise NotImplementedError("16 Channels not implemented")
         chan = 0
         for i in range(numchan):
             p2 = 2 ** i
-            if (self.channelbitmap & p2):
+            if self.channelbitmap & p2:
                 chan += 1
         return chan
 
@@ -358,6 +360,7 @@ class EVT_TAG(EVT_Virtual):
 
     def __init__(self):
         EVT_Virtual.__init__(self)
+        self.endian = 0
 
     def read(self, fp):
         """
