@@ -298,7 +298,7 @@ class CoreTestCase(unittest.TestCase):
         valuesend = np.array([-2.4488139898e-002, -2.4530241266e-002,
                               -2.4525562301e-002, -2.4506852031e-002,
                               -2.4424990639e-002])
-		# Data values from Tsoft Program
+        # Data values from Tsoft Program
 
         lendata = len(data)
         self.assertEqual(lendata, 5750)
@@ -322,8 +322,8 @@ class CoreTestCase(unittest.TestCase):
                               -4.4493857771e-002, -4.4451754540e-002,
                               -4.4409647584e-002])
 
-		# Data values from Tsoft Program
-		# length is 5750
+        # Data values from Tsoft Program
+        # length is 5750
 
         lendata = len(data)
         self.assertEqual(lendata, 5750)
