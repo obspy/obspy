@@ -56,7 +56,7 @@ class EVT_Virtual(object):
             value : value of name (can be omitted)
     """
     def __init__(self):
-        self.diconame = ""  
+        self.diconame = ""
 
     def __getattr__(self, item):
         """
@@ -83,13 +83,14 @@ class EVT_Virtual(object):
     def setdico(self, val, offset=0):
         """
         fill the dictionary with values found in the input 'val' list
-			the nth value in val is placed in the dictionary if a key 
-			    of type 'name':[nth, ''] exist
-			the offset is used to include the 'val' list further in the dictionary
+            the nth value in val is placed in the dictionary if a key
+            of type 'name':[nth, ''] exist
+            the offset is used to include the 'val' list further
+            in the dictionary
         :type val: list
         :param val : a list of values
         :type offset: int
-        :param offset : offset in the dictionary 
+        :param offset : offset in the dictionary
         """
         if not isinstance(val, list):
             raise TypeError("setdico() expects a list")
@@ -120,7 +121,8 @@ class EVT_Virtual(object):
 
     def _time(self, blocktime, param, val, offset):
         """
-        change a EVT time format to ObsPy UTCDateTime format
+        change a EVT time format to
+                :class:`~obspy.core.utcdatetime.UTCDateTime` format
         :param blocktime : time in sec after 1980/1/1
         :param param: parameter with milliseconds values (in val)
         :param val: list of value
