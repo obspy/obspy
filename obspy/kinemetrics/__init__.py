@@ -35,7 +35,8 @@ Similar to reading any other waveform data format using obspy.core:
 
 Each trace will have a ``stats`` attribute containing the usual information and
 a ``kinemetrics_evt`` dictionary with specific attributes.
-Note : All the Header's attributes are not read (can be implemented if necessary for someone)
+Note : All the Header's attributes are not read
+       (can be implemented if necessary for someone)
 
 >>> stats_evt = st[0].stats.pop('kinemetrics_evt')
 >>> print(st[0].stats)
