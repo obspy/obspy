@@ -271,7 +271,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.station, 'MOLA')
 
     def verify_stats_evt(self, evt_stats):
-        dico = {'chan_fullscale': 2.5, 'chan_sensogain': 1,
+        dico = {'chan_fullscale': 2.5, 'chan_sensorgain': 1,
                 'chan_calcoil': 0.0500, 'chan_damping': 0.7070,
                 'chan_natfreq': 196.00,
                 'latitude': 50.609795, 'longitude': 6.009250,
@@ -282,7 +282,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertAlmostEqual(dico[key], evt_stats[key], 6)
 
         self.assertEqual(UTCDateTime(2013, 8, 15, 9, 20, 28),
-                         evt_stats['startime'])
+                         evt_stats['starttime'])
 
     def verify_data_evt0(self, data):
         valuesdeb = np.array([-2.4464752525e-002, -2.4534918368e-002,
