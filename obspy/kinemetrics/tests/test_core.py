@@ -121,7 +121,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_reading_via_obspy_and_bytesio(self):
         """
-        Test the reading of EVT files from BytesIO objects.
+        Test the reading of Evt files from BytesIO objects.
         """
         # 1
         filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')

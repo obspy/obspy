@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-EVT (Kinemetrics) format support for ObsPy.
+Evt (Kinemetrics) format support for ObsPy.
 
 :copyright:
     Royal Observatory of Belgium, 2013
@@ -16,8 +16,8 @@ from struct import unpack
 import numpy as np
 
 from obspy import Trace, Stream
-from obspy.kinemetrics.evt_base import EVTBadHeaderError, EVTEOFError, \
-    EVTBadDataError, EvtVirtual
+from obspy.kinemetrics.evt_base import EvtBadHeaderError, EvtEOFError, \
+    EvtBadDataError, EvtVirtual
 
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
@@ -45,15 +45,15 @@ HEADER_STRUCT6 = b"cBh"*15
 HEADER_STRUCT7 = b"64s16s16s16s16s16s24s24s24s24s3B3b5h4xH46s"
 
 
-class EVT(object):
+class Evt(object):
     """
-    Class to read EVT (Kinemetrics) formatted files.
+    Class to read Evt (Kinemetrics) formatted files.
     """
     def __init__(self):
-        self.e_tag = EVT_TAG()
-        self.e_header = EVT_HEADER()
-        self.e_frame = EVT_FRAME_HEADER()
-        self.e_data = EVT_DATA()
+        self.e_tag = Evt_TAG()
+        self.e_header = Evt_HEADER()
+        self.e_frame = Evt_FRAME_HEADER()
+        self.e_data = Evt_DATA()
         self.samplingrate = 0
 
     def calibration(self):
@@ -79,10 +79,10 @@ class EVT(object):
 
     def read_file(self, filename_or_object, raw=False):
         """
-        Reads an EVT file to the internal data structure
+        Reads an Evt file to the internal data structure
 
         :type filename_or_object: str or file-like object
-        :param filename_or_object: EVT file to be read
+        :param filename_or_object: Evt file to be read
         :type raw : bool
         :param raw : True if raw data (no corrections, int32)
                      False if data in m/s2 (default)
@@ -114,16 +114,16 @@ class EVT(object):
                 if self.samplingrate == 0:
                     self.samplingrate = retparam[0]
                 elif self.samplingrate != retparam[0]:
-                    raise EVTBadHeaderError("Sampling rate not constant")
+                    raise EvtBadHeaderError("Sampling rate not constant")
                 datal = self.e_data.read(file_pointer,
                                          self.e_tag.datalength,
                                          endian, retparam)
                 npdata = np.array(datal)
                 self.data = np.hstack((self.data, npdata))  # append data
-            except EVTEOFError:
+            except EvtEOFError:
                 break
         if self.e_frame.count() != self.e_header.duration:
-            raise EVTBadDataError("Bad number of blocks")
+            raise EvtBadDataError("Bad number of blocks")
 
         if not raw:
             self.calibration()
@@ -144,7 +144,7 @@ class EVT(object):
         return Stream(traces=traces)
 
 
-class EVT_DATA(object):
+class Evt_DATA(object):
     def read(self, file_p, length, endian, param):
         """
         read data from file_p
@@ -164,7 +164,7 @@ class EVT_DATA(object):
         num = (samplerate / 10) * numbyte * numchan
         data = [[] for _ in range(numchan)]
         if length != num:
-            raise EVTBadDataError("Bad data length")
+            raise EvtBadDataError("Bad data length")
         for j in range(samplerate // 10):
             for k in range(numchan):
                 i = (j * numchan) + k
@@ -180,7 +180,7 @@ class EVT_DATA(object):
         return data
 
 
-class EVT_HEADER(EvtVirtual):
+class Evt_HEADER(EvtVirtual):
     HEADER = {'instrument': [1, ['_instrument', '']],
               'a2dbits': [4, ''],
               'samplebytes': [5, ''],
@@ -229,7 +229,7 @@ class EVT_HEADER(EvtVirtual):
         elif length == 2736:  # File Header 18 channel
             raise NotImplementedError("16 Channel not implemented")
         else:
-            raise EVTBadHeaderError("Bad Header length " + length)
+            raise EvtBadHeaderError("Bad Header length " + length)
 
     def analyse_header12(self, head_buff):
         val = unpack(self.endian+HEADER_STRUCT1, head_buff[0:0x7c])
@@ -277,7 +277,7 @@ class EVT_HEADER(EvtVirtual):
         return retval
 
 
-class EVT_FRAME_HEADER(EvtVirtual):
+class Evt_FRAME_HEADER(EvtVirtual):
     HEADER = {'frametype': [0, ''],
               'instrumentcode': [1, ['_instrument', '']],
               'recorderid': [2, ''],
@@ -314,7 +314,7 @@ class EVT_FRAME_HEADER(EvtVirtual):
         if length == 32:  # Frame Header
             self.analyse_frame32(buff)
         else:
-            raise EVTBadHeaderError("Bad Header length " + length)
+            raise EvtBadHeaderError("Bad Header length " + length)
         samplingrate = self.streampar & 4095
         samplesize = (self.framestatus >> 6) + 1
         if samplesize not in [2, 3, 4]:
@@ -326,7 +326,7 @@ class EVT_FRAME_HEADER(EvtVirtual):
         val = unpack(self.endian+FRAME_STRUCT, head_buff)
         self.setdico(list(val), 0)
         if not self.verify(verbose=False):
-            raise EVTBadHeaderError("Bad Frame values")
+            raise EvtBadHeaderError("Bad Frame values")
 
     def verify(self, verbose=False):
         if self.frametype not in [3, 4, 5]:
@@ -347,9 +347,9 @@ class EVT_FRAME_HEADER(EvtVirtual):
         return chan
 
 
-class EVT_TAG(EvtVirtual):
+class Evt_TAG(EvtVirtual):
     """
-    Class to read the TAGs of EVT Files
+    Class to read the TAGs of Evt Files
     """
     HEADER = {'order': [1, ''],
               'version': [2, ''],
@@ -368,27 +368,27 @@ class EVT_TAG(EvtVirtual):
     def read(self, file_p):
         """
         :type file_p: str
-        :param file_p: file descriptor of EVT file.
+        :param file_p: file descriptor of Evt file.
         """
         mystr = file_p.read(16)
         if len(mystr) < 16:
-            raise EVTEOFError
+            raise EvtEOFError
         sync, byte_order = unpack(b"cB", mystr[0:2])
         if sync == b'\x00':
-            raise EVTEOFError
+            raise EvtEOFError
         if sync != b'K':
-            raise EVTBadHeaderError('Sync error')
+            raise EvtBadHeaderError('Sync error')
         if byte_order == 1:
             endian = b">"
         elif byte_order == 0:
             endian = b"<"
         else:
-            raise EVTBadHeaderError
+            raise EvtBadHeaderError
         val = list(unpack(endian + b"cBBBLHHHH", mystr))
         self.setdico(val)
         self.endian = endian
         if not self.verify(verbose=False):
-            raise EVTBadHeaderError("Bad Tag values")
+            raise EvtBadHeaderError("Bad Tag values")
 
     def verify(self, verbose=False):
         if self.type not in [1, 2]:

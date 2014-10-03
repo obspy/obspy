@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-EVT (Kinemetrics) support for ObsPy.
+Evt (Kinemetrics) support for ObsPy.
 Base classes (cannot be directly called)
 
 :copyright:
@@ -16,28 +16,28 @@ from future.builtins import *  # NOQA
 from obspy import UTCDateTime
 
 
-class EVTBaseError(Exception):
+class EvtBaseError(Exception):
     """
-    Base Class for all EVT specific errors.
-    """
-    pass
-
-
-class EVTBadDataError(EVTBaseError):
-    """
-    Raised if bad data is encountered while reading an EVT file.
+    Base Class for all Evt specific errors.
     """
     pass
 
 
-class EVTBadHeaderError(EVTBaseError):
+class EvtBadDataError(EvtBaseError):
     """
-    Raised if an error occured while parsing an EVT header.
+    Raised if bad data is encountered while reading an Evt file.
     """
     pass
 
 
-class EVTEOFError(EVTBaseError):
+class EvtBadHeaderError(EvtBaseError):
+    """
+    Raised if an error occured while parsing an Evt header.
+    """
+    pass
+
+
+class EvtEOFError(EvtBaseError):
     """
     Raised if an unexpected EOF is encountered.
     """
@@ -121,7 +121,7 @@ class EvtVirtual(object):
 
     def _time(self, blocktime, param, val, offset):
         """
-        change a EVT time format to
+        change a Evt time format to
                 :class:`~obspy.core.utcdatetime.UTCDateTime` format
         :param blocktime : time in sec after 1980/1/1
         :param param: parameter with milliseconds values (in val)
@@ -212,4 +212,4 @@ class EvtVirtual(object):
         if code in dico:
             return dico[code]
         else:
-            raise EVTBadHeaderError("Bad Instrument Code")
+            raise EvtBadHeaderError("Bad Instrument Code")
