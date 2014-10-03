@@ -33,7 +33,7 @@ def is_evt(filename_or_object):
     else:
         is_fileobject = False
 
-    tag = evt.Evt_TAG()
+    tag = evt.EvtTag()
 
     if is_fileobject:
         try:

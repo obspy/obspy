@@ -50,10 +50,10 @@ class Evt(object):
     Class to read Evt (Kinemetrics) formatted files.
     """
     def __init__(self):
-        self.e_tag = Evt_TAG()
-        self.e_header = Evt_HEADER()
-        self.e_frame = Evt_FRAME_HEADER()
-        self.e_data = Evt_DATA()
+        self.e_tag = EvtTag()
+        self.e_header = EvtHeader()
+        self.e_frame = EvtFrameHeader()
+        self.e_data = EvtData()
         self.samplingrate = 0
 
     def calibration(self):
@@ -144,7 +144,10 @@ class Evt(object):
         return Stream(traces=traces)
 
 
-class Evt_DATA(object):
+class EvtData(object):
+    """
+    Class to manage data in Evt file
+    """
     def read(self, file_p, length, endian, param):
         """
         read data from file_p
@@ -180,7 +183,10 @@ class Evt_DATA(object):
         return data
 
 
-class Evt_HEADER(EvtVirtual):
+class EvtHeader(EvtVirtual):
+    """
+    Class to manage header of Evt file
+    """
     HEADER = {'instrument': [1, ['_instrument', '']],
               'a2dbits': [4, ''],
               'samplebytes': [5, ''],
@@ -277,7 +283,10 @@ class Evt_HEADER(EvtVirtual):
         return retval
 
 
-class Evt_FRAME_HEADER(EvtVirtual):
+class EvtFrameHeader(EvtVirtual):
+    """
+    Class to manage frame header in Evt file
+    """
     HEADER = {'frametype': [0, ''],
               'instrumentcode': [1, ['_instrument', '']],
               'recorderid': [2, ''],
@@ -347,7 +356,7 @@ class Evt_FRAME_HEADER(EvtVirtual):
         return chan
 
 
-class Evt_TAG(EvtVirtual):
+class EvtTag(EvtVirtual):
     """
     Class to read the TAGs of Evt Files
     """
