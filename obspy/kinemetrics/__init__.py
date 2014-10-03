@@ -58,7 +58,7 @@ chan_azimuth 0
 chan_north 0
 serialnumber 4823
 chan_fullscale 2.5
-chan_sensogain 1
+chan_sensorgain 1
 installedchan 4
 chan_id
 duration 230
@@ -69,7 +69,7 @@ chan_sensitivity 2.5
 temperature 76
 instrument New Etna
 latitude 50.6097946167
-startime 2013-08-15T09:20:28.000000Z
+starttime 2013-08-15T09:20:28.000000Z
 chan_natfreq 196.0
 chan_gain 1
 elevation 298
