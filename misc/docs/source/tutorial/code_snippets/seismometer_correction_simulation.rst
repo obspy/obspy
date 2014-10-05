@@ -111,4 +111,4 @@ parameter can be omitted (each trace's start time is used internally).
 
 .. _matplotlib: http://matplotlib.org/
 
-.. _evalresp: http://www.iris.edu/software/downloads/seed_tools/
+.. _evalresp: http://www.iris.edu/ds/nodes/dmc/software/downloads/evalresp/

@@ -32,7 +32,7 @@ DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
 DEPR_WARN = ("This service was shut down on the server side in December "
              "2013, please use %s instead. Further information: "
-             "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
+             "http://www.iris.edu/ds/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
 DEPR_WARNS = dict([(new, DEPR_WARN % "obspy.fdsn.client.Client.%s" % new)
                    for new in ["get_waveform", "get_events", "get_stations",
@@ -184,7 +184,7 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
@@ -198,7 +198,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
@@ -212,7 +212,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
@@ -225,7 +225,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
@@ -421,7 +421,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
-        `RESP <http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F>`_
+        `RESP <http://www.iris.edu/ds/nodes/dmc/kb/questions/60/>`_
         format (as used by evalresp). Users can query for channel response by
         network, station, channel, location and time.
 
@@ -517,7 +517,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
@@ -531,7 +531,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
@@ -545,7 +545,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/
         new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform_bulk'])
@@ -564,7 +564,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
@@ -1134,7 +1134,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
