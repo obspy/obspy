@@ -82,7 +82,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    allow fast array manipulation (functions in C). NumPy and SciPy provide
    access to FFTW, LAPACK, ATLAS or BLAS. That is svd, eigenvalues...
    ObsPy uses the numpy.ndarrays for storing the data (e.g. tr.data).
-* http://matplotlib.sourceforge.net/gallery.html
+* http://matplotlib.org/gallery.html
    matplotlib is the 2-D plotting package for Python. The gallery is the market
    place which allows you to go shopping for all kind of figures. The source
    code for each figure is linked. Note matplotlib has even its own latex
