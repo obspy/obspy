@@ -65,4 +65,4 @@ factor and written using NumPy_'s :func:`~numpy.savetxt` function.
 
 
 .. _`Seismic Handler`: http://www.seismic-handler.org
-.. _NumPy: http://numpy.scipy.org/
+.. _NumPy: http://www.numpy.org/
