@@ -12,7 +12,7 @@ predefined colormap from :mod:`matplotlib.cm`, nice overviews of available
 matplotlib colormaps are given at:
 
 * http://www.astro.lsa.umich.edu/~msshin/science/code/matplotlib_cm/
-* http://www.scipy.org/Cookbook/Matplotlib/Show_colormaps
+* http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
 
 .. plot:: tutorial/code_snippets/plotting_spectrograms.py
    :include-source:

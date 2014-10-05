@@ -75,9 +75,9 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 * http://software-carpentry.org/4_0/
     Very instructive video lectures on various computer related topics. A good
     starting point for learning Python and Version Control with Subversion.
-* http://ipython.scipy.org/moin
+* http://ipython.org/
     An enhanced interactive Python shell.
-* http://docs.scipy.org
+* http://docs.scipy.org/doc/
    NumPy and SciPy are the matrix based computation modules of Python. The
    allow fast array manipulation (functions in C). NumPy and SciPy provide
    access to FFTW, LAPACK, ATLAS or BLAS. That is svd, eigenvalues...
