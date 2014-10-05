@@ -42,7 +42,7 @@ our SRTM data file (from CGIAR_) look like this::
 .. _NumPy: http://www.numpy.org/
 .. _GDAL: http://trac.osgeo.org/gdal/wiki/GdalOgrInPython
 .. _ASTER: http://gdem.ersdac.jspacesystems.or.jp/search.jsp
-.. _plotmap_shaded.py: http://matplotlib.svn.sourceforge.net/viewvc/matplotlib/trunk/toolkits/basemap/examples/plotmap_shaded.py
+.. _plotmap_shaded.py: https://github.com/matplotlib/basemap/blob/master/examples/plotmap_shaded.py?raw=true
 
 
 Basemap Plot of the Globe
