@@ -72,7 +72,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
     Official Python tutorial.
 * https://docs.python.org/2/library/index.html
     Python library reference
-* http://software-carpentry.org/4_0/
+* http://software-carpentry.org/v4/
     Very instructive video lectures on various computer related topics. A good
     starting point for learning Python and Version Control with Subversion.
 * http://ipython.org/
