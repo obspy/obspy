@@ -68,9 +68,9 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 
 .. rubric:: Further Resources
 
-* http://docs.python.org/tutorial/
+* https://docs.python.org/2/tutorial/
     Official Python tutorial.
-* http://docs.python.org/library/index.html
+* https://docs.python.org/2/library/index.html
     Python library reference
 * http://software-carpentry.org/4_0/
     Very instructive video lectures on various computer related topics. A good
@@ -100,5 +100,5 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    Multitaper spectrum bindings for Python
 
 
-.. _Python: http://www.python.org
+.. _Python: https://www.python.org
 .. _IPython: http://ipython.org
