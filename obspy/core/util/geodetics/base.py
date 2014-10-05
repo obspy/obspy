@@ -260,7 +260,7 @@ def locations2degrees(lat1, long1, lat2, long2):
 
     This method uses the Vincenty formula in the special case of a spherical
     Earth. For more accurate values use the geodesic distance calculations of
-    geopy (http://code.google.com/p/geopy/).
+    geopy (https://github.com/geopy/geopy).
 
     :type lat1: float
     :param lat1: Latitude of point 1 in degrees
