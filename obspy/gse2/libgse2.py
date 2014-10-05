@@ -15,7 +15,7 @@ Currently CM6 compressed GSE2 files are supported, this should be
 sufficient for most cases. Gse_functions is written in C and
 interfaced via python-ctypes.
 
-See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
+See: http://www.orfeus-eu.org/software/seismo_softwarelibrary.html#gse
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

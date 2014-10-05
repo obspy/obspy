@@ -197,7 +197,7 @@ def welch_window(N):
 
     .. note::
         See e.g.:
-        http://www.cg.tuwien.ac.at/hostings/cescg/CESCG99/TTheussl/node7.html
+        http://www.cescg.org/CESCG99/TTheussl/node7.html
 
     :type N: int
     :param N: Length of window function.
