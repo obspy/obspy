@@ -1,31 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#from VelocityLayer import *
-from taupy.VelocityModel import *
+# from VelocityLayer import *
+from taupy.VelocityModel import VelocityModel
 
 test = VelocityModel()
 
 print(test)
 
-test2 = VelocityModel.readVelocityFile('iasp91.tvel')  # test_file.tvel is shorter
+# test_file.tvel is shorter
+test2 = VelocityModel.readVelocityFile('iasp91.tvel')
 
 print(test2)
 
-#for i, layer in enumerate(test2.layers):
+# for i, layer in enumerate(test2.layers):
 #    print(layer)
 
-print(validate())
+# print(validate())
 
 print(len(test2))
-print(test2.getNumLayers()) # probably ought to throw out that method...
+print(test2.getNumLayers())  # probably ought to throw out that method...
 
 print(test2.getDisconDepths())
 
 print(test2.layerNumberAbove(30))
 print(test2.layerNumberBelow(0))
 
-#eval at cmb
+# eval at cmb
 print(test2.evaluateAbove(2889.0, 'p'))
 print(test2.evaluateBelow(2889.0, 'D'))
 

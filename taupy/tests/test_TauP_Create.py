@@ -9,7 +9,7 @@ from taupy.TauP_Create import TauP_Create
 
 # to get ./data:
 data_dir = os.path.join(os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe()))), "data")
+    inspect.getfile(inspect.currentframe()))), "data")
 
 
 class TestTauPCreate(unittest.TestCase):
@@ -19,4 +19,3 @@ class TestTauPCreate(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(buffer=True)
-

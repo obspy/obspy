@@ -11,8 +11,10 @@ from math import pi
 
 
 class TauP_Time(object):
-    """Calculate travel times for different branches using linear interpolation
-    between known slowness samples."""
+    """
+    Calculate travel times for different branches using linear interpolation
+    between known slowness samples.
+    """
     DEBUG = False
     verbose = False
     # Allow phases originating in the core
@@ -20,13 +22,15 @@ class TauP_Time(object):
     # Names of phases to be used, e.g. PKIKP
     phaseNames = []
     modelName = "iasp91"
-    # This is needed to check later if assignment has happened on cmd line, or if reading conf is needed.
+    # This is needed to check later if assignment has happened on cmd line,
+    # or if reading conf is needed.
     tMod = None
     # TauModel derived from tMod by correcting it for a non-surface source.
     tModDepth = None
     # List to hold the SeismicPhases for the phases named in phaseNames.
     phases = []
-    # The following are 'initialised' for the purpose of checking later whether their value has been given in
+    # The following are 'initialised' for the purpose of checking later
+    # whether their value has been given in
     depth = 0
     degrees = None
     azimuth = None
@@ -37,17 +41,21 @@ class TauP_Time(object):
     eventLon = None
     arrivals = []
     relativePhaseName = None
-    relativeArrival = None  # That's not even necessary, but otherwise attribute is added outside of constructor - is that so bad? Who knows.
+    # That's not even necessary, but otherwise attribute is added outside of
+    # constructor - is that so bad? Who knows.
+    relativeArrival = None
 
     def __init__(self):
         # Could have the command line args read here...
-        # No, better do it in  if name == main  because if it's not the main script that
-        # shouldn't happen!
+        # No, better do it in  if name == main  because if it's not the main
+        # script that shouldn't happen!
         pass
 
     def init(self):
-        """Performs initialisation of the tool. Config file is queried for the default
-        model to load, which source depth and phases to use etc."""
+        """
+        Performs initialisation of the tool. Config file is queried for the
+        default model to load, which source depth and phases to use etc.
+        """
         self.readConfig()
         self.readcmdLineArgs()
         self.readTauModel()
@@ -55,10 +63,12 @@ class TauP_Time(object):
     def readTauModel(self):
         """Do the reading simply for now."""
         # Todo: Give this the full capabilities.
-        # This should be the same model path that was used by TauP_Create for writing!
-        # Maybe that should write to the config file?
-        modelPath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # current dir
-        tModLoaded = TauModelLoader.load(self.modelName, modelPath, self.verbose)
+        # This should be the same model path that was used by TauP_Create
+        # for writing! Maybe that should write to the config file?
+        modelPath = os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe())))  # current dir
+        tModLoaded = TauModelLoader.load(self.modelName, modelPath,
+                                         self.verbose)
         if tModLoaded is not None:
             self.tMod = tModLoaded
             # tModDepth will be depth-corrected if source depth is not 0.
@@ -69,32 +79,42 @@ class TauP_Time(object):
 
     def start(self):
         """Called after init. Merge the two?"""
-        if self.degrees is not None or all(x is not None for x in (self.stationLat, self.stationLon,
-                                                                   self.eventLat, self.eventLon)):
-            # Enough information has been given on the command line, just do simple calculation.
+        if self.degrees is not None or all(x is not None for x in (
+                self.stationLat, self.stationLon, self.eventLat,
+                self.eventLon)):
+            # Enough information has been given on the command line, just do
+            #  simple calculation.
             if self.degrees is None:
                 # Calculate the degrees from station and event locations.
                 # self.degrees = SphericalCoords.distance
-                # Check for maybe numpy libraries that handle this kind of calculations!
+                # Check for maybe numpy libraries that handle this kind of
+                # calculations!
                 pass
             self.depthCorrect(self.depth)
             self.calculate(self.degrees)
             self.printResult()
         else:
-            # Get the info from interactive mode. Not necessary to implement just now.
+            # Get the info from interactive mode. Not necessary to implement
+            #  just now.
             raise TypeError("Not enough info given on cmd line.")
 
     def depthCorrect(self, depth):
-        """Corrects the TauModel for the given source depth (if not already corrected)."""
+        """
+        Corrects the TauModel for the given source depth (if not already
+        corrected).
+        """
         if self.tModDepth is None or self.tModDepth.sourceDepth != depth:
-            self.tModDepth = self.tMod.depthCorrect(depth)  # This is not recursion!
+            # This is not recursion!
+            self.tModDepth = self.tMod.depthCorrect(depth)
             self.arrivals = []
             self.recalcPhases()
         self.sourceDepth = depth
 
     def recalcPhases(self):
-        """Recalculates the given phases using a possibly new or changed tau model.
-        This should not need to be called by outside classes as it is called by depthCorrect and calculate.
+        """
+        Recalculates the given phases using a possibly new or changed tau
+        model. This should not need to be called by outside classes as it is
+        called by depthCorrect and calculate.
         """
         newPhases = []
         for tempPhaseName in self.phaseNames:
@@ -102,7 +122,8 @@ class TauP_Time(object):
             for phaseNum, seismicPhase in enumerate(self.phases):
                 if seismicPhase.name == tempPhaseName:
                     self.phases.pop(phaseNum)
-                    if seismicPhase.sourceDepth == self.depth and seismicPhase.tMod == self.tModDepth:
+                    if seismicPhase.sourceDepth == self.depth \
+                            and seismicPhase.tMod == self.tModDepth:
                         # OK so copy to newPhases:
                         newPhases.append(seismicPhase)
                         alreadyAdded = True
@@ -113,23 +134,27 @@ class TauP_Time(object):
                     seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
                     newPhases.append(seismicPhase)
                 except TauModelError:
-                    print("Error with this phase, skipping it: " + str(tempPhaseName))
+                    print("Error with this phase, skipping it: " +
+                          str(tempPhaseName))
                 # Uncomment if stacktrace is needed.
-                #seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
-                #newPhases.append(seismicPhase)
+                # seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
+                # newPhases.append(seismicPhase)
             self.phases = newPhases
 
     def calculate(self, degrees):
         """Calls the actual calculations of the arrival times."""
         self.depthCorrect(self.sourceDepth)
-        self.recalcPhases()  # Called before, but maybe depthCorrect to sourceDepth has changed the phases??
+        # Called before, but maybe depthCorrect to sourceDepth has changed
+        # the phases??
+        self.recalcPhases()
         self.calcTime(degrees)
         if self.relativePhaseName is not None:
             relPhases = []
             splitNames = getPhaseNames(self.relativePhaseName)  # Static!
             for sName in splitNames:
                 relPhases.append(SeismicPhase(sName, self.tModDepth))
-            self.relativeArrival = SeismicPhase.getEarliestArrival(relPhases, degrees)
+            self.relativeArrival = SeismicPhase.getEarliestArrival(relPhases,
+                                                                   degrees)
 
     def calcTime(self, degrees):
         """
@@ -144,14 +169,17 @@ class TauP_Time(object):
         self.sortArrivals()
 
     def sortArrivals(self):
-        self.arrivals = sorted(self.arrivals, key=lambda arrivals: arrivals.time)
+        self.arrivals = sorted(self.arrivals,
+                               key=lambda arrivals: arrivals.time)
         pass
 
     def printResult(self):
         # Do  only a simple way for now.
         print("\nModel:", self.modelName)
-        lineOne = "Distance   Depth   Phase   Travel    Ray Param   Takeoff  Incident  Purist     Purist"
-        lineTwo = "   (deg)    (km)   Name    Time (s)  p  (s/deg)    (deg)     (deg)  Distance   Name "
+        lineOne = "Distance   Depth   Phase   Travel    Ray Param   Takeoff" \
+                  "  Incident  Purist     Purist"
+        lineTwo = "   (deg)    (km)   Name    Time (s)  p  (s/deg)    (deg)" \
+                  "     (deg)  Distance   Name "
         print(lineOne)
         print(lineTwo)
         print("-"*len(lineOne))
@@ -163,7 +191,8 @@ class TauP_Time(object):
             out += "{:>9.3f}".format(arrival.rayParam * pi/180) + "   "
             out += "{:>6.2f}".format(arrival.takeoffAngle) + "   "
             out += "{:>7.2f}".format(arrival.incidentAngle) + "   "
-            out += "{:>7.2f}".format(arrival.dist*180/pi) + ("  = " if arrival.puristName == arrival.name else "  * ")
+            out += "{:>7.2f}".format(arrival.dist*180/pi) + \
+                   ("  = " if arrival.puristName == arrival.name else "  * ")
             out += "{:<5s}".format(arrival.puristName) + "   "
             print(out)
 
@@ -176,14 +205,16 @@ class TauP_Time(object):
         :return:
         """
         parser = argparse.ArgumentParser()
-        parser.add_argument('-v', '--verbose', '-d', '--debug', action='store_true',
+        parser.add_argument('-v', '--verbose', '-d', '--debug',
+                            action='store_true',
                             help='increase output verbosity')
         parser.add_argument('-ph', '--phase_list',
                             help='comma separated phase list, no white space!')
         parser.add_argument('-pf', '--phase_file',
                             help='file containing phases')
         parser.add_argument('-mod', '--modelname',
-                            help='Use this velocity model for calculations. Default is iasp91.')
+                            help='Use this velocity model for calculations. '
+                                 'Default is iasp91.')
         parser.add_argument('--depth',
                             help='source depth in km')
         parser.add_argument('-deg', '--degrees',
@@ -205,11 +236,11 @@ class TauP_Time(object):
 
 
 if __name__ == '__main__':
-    # Replace the Java main method, which is a static (i.e. class) method called whenever the
-    # program, that is TauP_Time, is executed.
+    # Replace the Java main method, which is a static (i.e. class) method
+    # called whenever the program, that is TauP_Time, is executed.
     tauPTime = TauP_Time()
     # read cmd line args:
-    #tauPTime.phaseNames = ["S", "P"]  #must be with no whitespace around!
+    # tauPTime.phaseNames = ["S", "P"]  #must be with no whitespace around!
     tauPTime.modelName = "iasp91"
     tauPTime.degrees = 89
     tauPTime.depth = 200

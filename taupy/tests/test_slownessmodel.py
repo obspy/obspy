@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from taupy.SlownessModel import SlownessModel
-from taupy.SlownessModel import SlownessModelError
-from taupy.VelocityModel import VelocityModel
 from taupy.SlownessLayer import SlownessLayer
 from taupy.VelocityLayer import VelocityLayer
 
 
 class TestSlownessModel(unittest.TestCase):
-    """"WARNING: The values I'm testing can't be right. Half of the methods needed by createSample aren't implemented
-    yet! However, as that is needed in the constructor of the SlownessModel, the other methods can't be tested
-    independently of it. So I can test some (probably) always true boundary, but the intermediate testing values should
-    at some point, as work progresses, start to throw errors. I could true unit tests, but the effort doesn't seem
-    worth it at the moment.
+    """"
+    WARNING: The values I'm testing can't be right. Half of the methods
+    needed by createSample aren't implemented yet! However, as that is
+    needed in the constructor of the SlownessModel, the other methods can't
+    be tested independently of it. So I can test some (probably) always true
+    boundary, but the intermediate testing values should at some point,
+    as work progresses, start to throw errors. I could true unit tests,
+    but the effort doesn't seem worth it at the moment.
     """
 
     # noinspection PyCallByClass
     def test_slownesslayer(self):
-        vLayer=VelocityLayer(1, 10, 31, 3, 5, 2, 4)
+        vLayer = VelocityLayer(1, 10, 31, 3, 5, 2, 4)
         a = SlownessLayer.create_from_vlayer(vLayer, True)
         self.assertEqual(a.botP, 1268.0)
         self.assertEqual(a.botDepth, 31.0)

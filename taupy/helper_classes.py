@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Holds various helper classes to keep the file number manageable.
+"""
+Holds various helper classes to keep the file number manageable.
+"""
 
 
 class SlownessModelError(Exception):
@@ -12,9 +14,12 @@ class TauModelError(Exception):
 
 
 class TimeDist:
-    """Holds the ray parameter, time and distance increments, and optionally a
+    """
+    Holds the ray parameter, time and distance increments, and optionally a
     depth, for a ray passing through some layer.
-    Note it is 'cloneable' in Java, that just means you're allowed to make a deep copy."""
+    Note it is 'cloneable' in Java, that just means you're allowed to make a
+    deep copy.
+    """
     def __init__(self, p=0, time=0, distRadian=0, depth=0):
         # Careful: p must remain first element because of how class is called
         # e.g. in SlownessModel.approxDistance!
@@ -29,8 +34,10 @@ class TimeDist:
 
 
 class CriticalDepth:
-    """Utility class to keep track of critical points (discontinuities or reversals
-    in slowness gradient) within slowness and velocity models."""
+    """
+    Utility class to keep track of critical points (discontinuities or
+    reversals in slowness gradient) within slowness and velocity models.
+    """
     def __init__(self, depth, velLayerNum, pLayerNum, sLayerNum):
         self.depth = depth
         self.velLayerNum = velLayerNum
@@ -39,8 +46,10 @@ class CriticalDepth:
 
 
 class DepthRange:
-    """Convenience class for storing a depth range. It has a top and a bottom and
-    can have an associated ray parameter."""
+    """
+    Convenience class for storing a depth range. It has a top and a bottom and
+    can have an associated ray parameter.
+    """
     def __init__(self, topDepth=None, botDepth=None, rayParam=-1):
         self.topDepth = topDepth
         self.botDepth = botDepth

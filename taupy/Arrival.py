@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from math import pi
 
 
 class Arrival:
     """
-    Convenience class for storing the parameters associated with a phase arrival.
+    Convenience class for storing the parameters associated with a phase
+    arrival.
     """
     def __init__(self, phase, time, dist, rayParam, rayParamIndex,
                  name, puristName, sourceDepth, takeoffAngle, incidentAngle):
@@ -48,10 +48,10 @@ class Arrival:
 
     def getModuloDistDeg(self):
         """
-        Returns distance in degrees from 0 - 180. Note this may not be the actual distance travelled.
-        :return:
+        Returns distance in degrees from 0 - 180. Note this may not be the
+        actual distance travelled.
         """
-        moduloDist = ((180/pi) * self.dist)%360
+        moduloDist = ((180.0 / pi) * self.dist) % 360.0
         if moduloDist > 180:
             moduloDist = 360 - moduloDist
         return moduloDist
