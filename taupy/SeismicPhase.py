@@ -711,5 +711,5 @@ def legPuller(name):
 
 def phaseValidate(legs):
     # Raise an exception here if validation fails.
-    # Todo: implement phase names validation (maybe not so necessary...)
+    # Validating the phase names is IMO not necessary now, wrong names raise an exception anyway.
     pass

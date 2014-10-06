@@ -14,48 +14,46 @@ class TauP_Time(object):
     between known slowness samples."""
     DEBUG = False
     verbose = False
-    # Allow phases originating in the core
-    expert = False
-    # Names of phases to be used, e.g. PKIKP
-    phaseNames = []
-    modelName = "iasp91"
-    # This is needed to check later if assignment has happened on cmd line, or if reading conf is needed.
-    tMod = None
-    # TauModel derived from tMod by correcting it for a non-surface source.
-    tModDepth = None
-    # List to hold the SeismicPhases for the phases named in phaseNames.
-    phases = []
-    # The following are 'initialised' for the purpose of checking later whether their value has been given in
-    depth = 0
-    degrees = None
-    azimuth = None
-    backAzimuth = None
-    stationLat = None
-    stationLon = None
-    eventLat = None
-    eventLon = None
-    arrivals = []
-    relativePhaseName = None
-    relativeArrival = None  # That's not even necessary, but otherwise attribute is added outside of constructor - is that so bad? Who knows.
 
     def __init__(self):
         # Could have the command line args read here...
         # No, better do it in  if name == main  because if it's not the main script that
         # shouldn't happen!
-        pass
+        # Allow phases originating in the core
+        self.expert = False
+        # Names of phases to be used, e.g. PKIKP
+        self.phaseNames = []
+        self.modelName = "iasp91"
+        # This is needed to check later if assignment has happened on cmd line, or if reading conf is needed.
+        self.tMod = None
+        # TauModel derived from tMod by correcting it for a non-surface source.
+        self.tModDepth = None
+        # List to hold the SeismicPhases for the phases named in phaseNames.
+        self.phases = []
+        # The following are 'initialised' for the purpose of checking later whether their value has been given in
+        self.depth = 0
+        self.degrees = None
+        self.azimuth = None
+        self.backAzimuth = None
+        self.stationLat = None
+        self.stationLon = None
+        self.eventLat = None
+        self.eventLon = None
+        self.arrivals = []
+        self.relativePhaseName = None
+        self.relativeArrival = None  # That's not even necessary, but otherwise attribute is added outside of constructor - is that so bad? Who knows.
 
     def init(self):
         """Performs initialisation of the tool. Config file is queried for the default
         model to load, which source depth and phases to use etc."""
         self.readConfig()
+        # Todo: change this to allow use in a library. Options would then be provided as arguments.
         self.readcmdLineArgs()
         self.readTauModel()
 
     def readTauModel(self):
         """Do the reading simply for now."""
-        # Todo: Give this the full capabilities.
         # This should be the same model path that was used by TauP_Create for writing!
-        # Maybe that should write to the config file?
         modelPath = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))  # current dir
         tModLoaded = TauModelLoader.load(self.modelName, modelPath, self.verbose)
         if tModLoaded is not None:
@@ -72,7 +70,7 @@ class TauP_Time(object):
                                                                    self.eventLat, self.eventLon)):
             # Enough information has been given on the command line, just do simple calculation.
             if self.degrees is None:
-                # Calculate the degrees from station and event locations.
+                # Todo: Calculate the degrees from station and event locations.
                 # self.degrees = SphericalCoords.distance
                 # Check for maybe numpy libraries that handle this kind of calculations!
                 pass
@@ -207,11 +205,6 @@ if __name__ == '__main__':
     # Replace the Java main method, which is a static (i.e. class) method called whenever the
     # program, that is TauP_Time, is executed.
     tauPTime = TauP_Time()
-    # read cmd line args:
-    #tauPTime.phaseNames = ["S", "P"]  #must be with no whitespace around!
-    tauPTime.modelName = "iasp91"
-    tauPTime.degrees = 89
-    tauPTime.depth = 200
     tauPTime.init()
     tauPTime.start()
 

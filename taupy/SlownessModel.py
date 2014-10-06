@@ -30,7 +30,6 @@ class SlownessModel(object):
     # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
     # DepthRange objects, containing the top depth and bottom depth.
     fluidLayerDepths = []
-    # TODO I think these are pretty slow. Maybe use numpy arrays or something like that?
     PLayers = []
     SLayers = []
     # For methods that have an isPWave parameter

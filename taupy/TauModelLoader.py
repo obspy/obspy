@@ -30,5 +30,4 @@ def load(modelName, searchPath, verbose):
 
 def loadFromCache(modelName):
     """Caching could be useful for many reruns..."""
-    # Todo: think about caching    
     return None

@@ -88,7 +88,7 @@ class TauP_Create(object):
             # self.vMod = TauModelLoader.loadVelocityModel(self.modelFilename)
             # Frankly, I don't think it's a good idea to somehow load the model from a non-obvious path.
             # Better to just raise the exception and force user to be clear about what VelocityModel to read from where.
-            # Todo: Maybe this could be done sensibly, as in if a model is specified but no path, some standard models
+            # Maybe this could be done sensibly, as in if a model is specified but no path, some standard models
             # can be used? But given that they have to be in the package somewhere anyway, that's cosmetic.
             pass
         if self.vMod is None:

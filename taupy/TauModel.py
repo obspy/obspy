@@ -190,7 +190,7 @@ class TauModel(object):
         return depthCorrected
 
     def loadFromDepthCache(self, depth):
-        # Todo: speed up by implementing cache.
+        # Could speed up by implementing cache.
         # Must return None if loading fails.
         return None
 
