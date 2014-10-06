@@ -56,6 +56,7 @@ class TestTauPTime(unittest.TestCase):
         tt.calculate(tt.degrees)
         self.assertEqual(tt.arrivals[1].time, 1028.9304953527787)
 
+        # Todo: Check output for a range of inputs against the Java output.
 
 if __name__ == '__main__':
     unittest.main(buffer=True)
