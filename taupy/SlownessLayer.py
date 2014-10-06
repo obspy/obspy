@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from taupy.helper_classes import TimeDist, SlownessModelError
 import math
 import numpy as np

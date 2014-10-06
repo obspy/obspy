@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 def internalLoad(modelName, searchPath, verbose):
     if modelName.endswith(".taup"):
         filename = modelName
@@ -30,5 +33,5 @@ def load(modelName, searchPath, verbose):
 
 def loadFromCache(modelName):
     """Caching could be useful for many reruns..."""
-    # Todo: think about caching    
+    # Todo: think about caching
     return None

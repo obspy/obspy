@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from taupy.SlownessModel import SlownessModel
 
 
@@ -8,9 +11,9 @@ class SphericalSModel(SlownessModel):
     in SlownessModel."""
 
 
-    
 
-   
-              
-    
-    
+
+
+
+
+

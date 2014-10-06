@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from taupy.helper_classes import SlownessModelError, TauModelError
 from .TauBranch import TauBranch
 from itertools import count
@@ -9,7 +12,7 @@ from copy import deepcopy
 # noinspection PyPep8Naming
 class TauModel(object):
     """Provides storage of all the TauBranches comprising a model."""
-    
+
     DEBUG = False
     # True if this is a spherical slowness model. False if flat.
     spherical = True
@@ -56,7 +59,7 @@ class TauModel(object):
     tauBranches = [[], []]
 
     def __init__(self, sMod):
-        
+
         self.sMod = sMod
         self.calcTauIncFrom()
 

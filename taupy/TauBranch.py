@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from .helper_classes import TauModelError, TimeDist, SlownessModelError
 
 

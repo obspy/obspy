@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from .Arrival import Arrival
 from .helper_classes import TauModelError
 import math

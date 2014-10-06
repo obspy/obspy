@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 #from VelocityLayer import *
 from taupy.VelocityModel import *
 

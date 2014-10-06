@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import unittest
 from math import pi
 from taupy.VelocityModel import VelocityModel

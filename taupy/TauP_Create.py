@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import inspect
@@ -24,7 +25,7 @@ class TauP_Create(object):
     #  "constructor"
     def __init__(self):
         """ generated source for method __init__ """
-        
+
         # Parse command line arguments. Very clever module, e.g. it
         # can print usage automatically.
         parser = argparse.ArgumentParser()
@@ -37,7 +38,7 @@ class TauP_Create(object):
         parser.add_argument('-f', '--filename',
                             help='the velocity model name (default: iasp91.tvel)')
         args = parser.parse_args()
-                
+
         self.DEBUG = args.verbose
         self.directory = args.input_dir
         self.outdir = args.output_dir
@@ -56,7 +57,7 @@ class TauP_Create(object):
 
         print("TauP_Create starting...")
         tauPCreate = TauP_Create()
-    
+
         # try:
         #     print("Loading velocity model.")
         #     tauPCreate.loadVMod()
@@ -81,7 +82,7 @@ class TauP_Create(object):
         filename = os.path.join(self.directory, self.modelFilename)
         if self.DEBUG:
             print("filename =", filename)
-        
+
         self.vMod = VelocityModel.readVelocityFile(filename)
         if self.vMod is None:
             # try and load internally
