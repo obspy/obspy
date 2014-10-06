@@ -221,16 +221,20 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         cond.notify()
                 # Read the ten files at one and save the output in the just
                 # created class.
+                our_threads = []
                 for _i in range(n_threads):
                     thread = threading.Thread(target=testFunction,
                                               args=(streams, cond))
                     thread.start()
+                    our_threads.append(thread)
+                our_threads = set(our_threads)
                 # Loop until all threads are finished.
                 start = time.time()
                 while True:
                     with cond:
                         cond.wait(1)
-                    if threading.active_count() == 1:
+                    remaining_threads = set(threading.enumerate())
+                    if len(remaining_threads & our_threads) == 0:
                         break
                     # Avoid infinite loop and leave after some time; such a
                     # long time is needed for debugging with valgrind or Travis
