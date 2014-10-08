@@ -239,12 +239,10 @@ class SeismicArray(object):
 
         return geometry
 
-    def find_closest_station(self, latitude, longitude, elevation_in_m=0.0,
-                             local_depth_in_m=0.0):
+    def find_closest_station(self, latitude, longitude, absolute_height_in_km=0.0):
         min_distance = None
         min_distance_station = None
 
-        true_elevation = elevation_in_m - local_depth_in_m
 
         for key, value in self.geometry.items():
             # output in [km]
@@ -253,9 +251,7 @@ class SeismicArray(object):
             x *= 1000.0
             y *= 1000.0
 
-            true_sta_elevation = value["elevation_in_m"] - \
-                value["local_depth_in_m"]
-            z = true_elevation - true_sta_elevation
+            z = absolute_height_in_km 
 
             distance = np.sqrt(x ** 2 + y ** 2 + z ** 2)
             if min_distance is None or distance < min_distance:
@@ -367,8 +363,8 @@ class SeismicArray(object):
                            endtime=endtime, method=method, nthroot=nthroot)
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
-                                   longitude, elevation_in_m=0.0,
-                                   local_depth_in_m=0.0):
+                                   longitude, absolute_height_in_km =0.0            
+                                   ):
         geo = self.geometry
 
         components = collections.defaultdict(list)
@@ -413,12 +409,10 @@ class SeismicArray(object):
             x, y = utlGeoKm(longitude, latitude,
                             geo[station]["longitude"],
                             geo[station]["latitude"])
-            z = (elevation_in_m - local_depth_in_m) - \
-                (geo[station]["elevation_in_m"] -
-                 geo[station]["local_depth_in_m"])
+            z = absolute_height_in_km
             array_coords[_i][0] = x * 1000.0
             array_coords[_i][1] = y * 1000.0
-            array_coords[_i][2] = z
+            array_coords[_i][2] = z *1000.0
 
         subarray = np.arange(len(geo))
 
@@ -989,7 +983,7 @@ class SeismicArray(object):
             station_code = "{n}.{s}".format(n=tr.stats.network,
                                             s=tr.stats.station)
             coords = geo[station_code]
-            z = coords["elevation_in_m"] - coords["local_depth_in_m"]
+            z = coords["absolute_height_in_km"]
             tr.stats.coordinates = \
                 AttribDict(dict(latitude=coords["latitude"],
                                 longitude=coords["longitude"],
