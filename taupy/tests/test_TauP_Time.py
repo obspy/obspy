@@ -1,23 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import unittest
 from taupy.TauP_Time import TauP_Time
 
 
 class TestTauPTime(unittest.TestCase):
-    # def setUp(self):
-        # Runs before the tests!
-    #    self.tauPTime = TauP_Time()
 
     def test_main(self):
-        tt = TauP_Time()
-        # Pseudo cmd line args:
-        tt.phaseNames = ["S", "P"]
-        tt.modelName = "iasp91"
-        tt.degrees = 57.4
-        tt.depth = 200
-
+        tt = TauP_Time(["S", "P"], "iasp91", 200, 57.4)
         tt.init()
         self.assertEqual(tt.tMod, tt.tModDepth)
         self.assertEqual(tt.tMod.tauBranches[0][3].maxRayParam,
@@ -57,6 +45,11 @@ class TestTauPTime(unittest.TestCase):
         self.assertEqual(tt.arrivals[1].time, 1028.9304953527787)
 
         # Todo: Check output for a range of inputs against the Java output.
+    def test_range(self):
+        for degree in [0, 45, 90, 180, 270, 360, 560]:
+            for depth in [0, 100, 1000, 2889]:
+                TauP_Time(degrees=degree, depth=depth, modelName="iasp91",
+                          phaseNames="P,S,PcP,ScS,SKS,sS,SS,PKKP,PKiKP".split(','))
 
 if __name__ == '__main__':
     unittest.main(buffer=True)

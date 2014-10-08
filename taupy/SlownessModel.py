@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from math import pi
 import math
-from decimal import Decimal, ROUND_HALF_EVEN
+from decimal import *
 import numpy as np
 from taupy.VelocityLayer import VelocityLayer
 from taupy.SlownessLayer import SlownessLayer
@@ -56,13 +53,6 @@ class SlownessModel(object):
         self.maxInterpError = maxInterpError
         self.allowInnerCoreS = allowInnerCoreS
         self.slowness_tolerance = slowness_tolerance
-        # This may be dodgy! Still not sure how the Java works!
-        # self.PLayers = pLayers
-        # self.SLayers = sLayers
-        # It seems data is only put in here (and the longer constructor
-        # called) by the splitLayer method (and maybe others it calls),
-        # so it seems reasonable to have an empty list as default for all
-        # instatiations of this class, I suppose and hope it won't do any harm.
         self.createSample()
 
     def __str__(self):
@@ -388,9 +378,6 @@ class SlownessModel(object):
             fluidZone.botDepth = currVLayer.botDepth
             self.fluidLayerDepths.append(fluidZone)
 
-        # optionally implement later: print all critical vel layers in debug
-        #  mode
-
         if self.validate() is False:
             raise SlownessModelError("Validation failed after findDepth")
 
@@ -453,7 +440,7 @@ class SlownessModel(object):
             botVelocity = velLayer.evaluateAtBottom(waveType)
             topP = self.toSlowness(topVelocity, velLayer.topDepth)
             botP = self.toSlowness(botVelocity, velLayer.botDepth)
-            # check to see if we are within 'chatter level' (numerical
+            # Check to see if we are within 'chatter level' (numerical
             # error) of the top or bottom and if so then return that depth.
             if abs(topP - p) < self.slowness_tolerance:
                 return velLayer.topDepth
@@ -464,7 +451,7 @@ class SlownessModel(object):
                 # Found layer containing p.
                 # We interpolate assuming that velocity is linear within
                 # this interval. So slope is the slope for velocity versus
-                # depth
+                # depth.
                 slope = (botVelocity - topVelocity) / (
                     velLayer.botDepth - velLayer.topDepth)
                 depth = self.interpolate(p, topVelocity, velLayer.topDepth,
@@ -855,12 +842,6 @@ class SlownessModel(object):
         and that the (estimated) error due to linear interpolation is less
         than maxInterpError.
         """
-        # At the moment it breaks at j = 103, so the process works well for
-        # quite a long time, before it falls into a strange sequence of
-        # Nulling first PrevPrevTD, then currTD in line 742, then prevTD in
-        # l 708. That can only happen due to certain results of the if tests
-        # which may be different once the methods in SlownessLayer are
-        # implemented.
         for currWaveType in [self.SWAVE, self.PWAVE]:
             isCurrOK = False
             isPrevOK = False
@@ -931,21 +912,13 @@ class SlownessModel(object):
                         # floating point arithmetic operation, including
                         # division by zero, has a well-defined result”.
                         # Use np.divide instead:
-                        if (abs(currTD.time - (
-                                (splitTD.time - prevTD.time) *
-                                np.divide((currTD.distRadian -
-                                           prevTD.distRadian),
-                                          (splitTD.distRadian -
-                                           prevTD.distRadian)) + prevTD.time))
-                                > self.maxInterpError):
-                            self.addSlowness((prevSLayer.topP +
-                                              prevSLayer.botP) / 2, self.PWAVE)
-                            self.addSlowness((prevSLayer.topP +
-                                              prevSLayer.botP) / 2, self.SWAVE)
-                            self.addSlowness((sLayer.topP +
-                                              sLayer.botP) / 2, self.PWAVE)
-                            self.addSlowness((sLayer.topP +
-                                              sLayer.botP) / 2, self.SWAVE)
+                        np.seterr(divide=None)
+                        if (abs(currTD.time - ((splitTD.time - prevTD.time) * np.divide((currTD.distRadian - prevTD.distRadian),
+                                (splitTD.distRadian - prevTD.distRadian)) + prevTD.time)) > self.maxInterpError):
+                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.PWAVE)
+                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.SWAVE)
+                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
+                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
                             currTD = prevPrevTD
                             isPrevOK = False
                             if j > 0:
@@ -961,7 +934,7 @@ class SlownessModel(object):
                                 isCurrOK = False
                         else:
                             j += 1
-                            if self.DEBUG and j % 10 == 0:  # or j < 10:
+                            if self.DEBUG and j % 10 == 0:
                                 print(j)
                 else:
                     prevPrevTD = None

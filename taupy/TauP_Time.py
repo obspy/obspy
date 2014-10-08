@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os
 import inspect
@@ -18,16 +17,16 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self):
+    def __init__(self, phaseNames=[], modelName="iasp91", depth=0, degrees=None):
         # Could have the command line args read here...
         # No, better do it in  if name == main  because if it's not the main
         # script that shouldn't happen!
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP
-        self.phaseNames = []
-        self.modelName = "iasp91"
-        # This is needed to check later if assignment has happened on cmd
+        self.phaseNames = phaseNames
+        self.modelName = modelName
+        # This is needed to check later if assignment has happened on cmd 
         # line, or if reading conf is needed.
         self.tMod = None
         # TauModel derived from tMod by correcting it for a non-surface source.
@@ -36,8 +35,8 @@ class TauP_Time(object):
         self.phases = []
         # The following are 'initialised' for the purpose of checking later
         # whether their value has been given in
-        self.depth = 0
-        self.degrees = None
+        self.depth = depth
+        self.degrees = degrees
         self.azimuth = None
         self.backAzimuth = None
         self.stationLat = None
@@ -67,7 +66,7 @@ class TauP_Time(object):
         """
         # This should be the same model path that was used by TauP_Create
         # for writing!
-        # current dir
+        # Current directory:
         modelPath = os.path.dirname(os.path.abspath(inspect.getfile(
             inspect.currentframe())))
         tModLoaded = TauModelLoader.load(self.modelName, modelPath,
@@ -147,8 +146,7 @@ class TauP_Time(object):
     def calculate(self, degrees):
         """Calls the actual calculations of the arrival times."""
         self.depthCorrect(self.sourceDepth)
-        # Called before, but maybe depthCorrect to sourceDepth has changed
-        # the phases??
+        # Called before, but depthCorrect might have changed the phases.
         self.recalcPhases()
         self.calcTime(degrees)
         if self.relativePhaseName is not None:
@@ -181,7 +179,7 @@ class TauP_Time(object):
         print("\nModel:", self.modelName)
         lineOne = "Distance   Depth   Phase   Travel    Ray Param   Takeoff" \
                   "  Incident  Purist     Purist"
-        lineTwo = "   (deg)    (km)   Name    Time (s)  p  (s/deg)    (deg)" \
+        lineTwo = "   (deg)    (km)   Name    Time (s)  p (s/deg)     (deg)" \
                   "     (deg)  Distance   Name "
         print(lineOne)
         print(lineTwo)
@@ -228,12 +226,13 @@ class TauP_Time(object):
         parser.add_argument('-o', '--outfile',
                             help='output is redirected to "outfile"')
         args = parser.parse_args()
-        self.DEBUG = args.verbose
-        self.phaseNames = args.phase_list.split(',')
-        self.phaseFile = args.phase_file
-        self.mod = args.modelname
-        self.depth = float(args.depth)
-        self.degrees = float(args.degrees)
+        # Avoid overwriting already set variables with None:
+        self.DEBUG = args.verbose if args.verbose else self.DEBUG
+        self.phaseNames = args.phase_list.split(',') if args.phase_list else self.phaseNames
+        self.phaseFile = args.phase_file if args.phase_file else None
+        self.modelName = args.modelname if args.modelname else self.modelName
+        self.depth = float(args.depth) if args.depth else self.depth
+        self.degrees = float(args.degrees) if args.degrees else self.degrees
         self.kilometres = float(args.kilometres) if args.kilometres else None
         self.outFile = args.outfile
 
@@ -243,6 +242,7 @@ if __name__ == '__main__':
     # called whenever the program, that is TauP_Time, is executed.
     tauPTime = TauP_Time()
     tauPTime.init()
+    #Todo: is this the only way start is called???
     tauPTime.start()
 
 
