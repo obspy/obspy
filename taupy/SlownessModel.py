@@ -912,13 +912,23 @@ class SlownessModel(object):
                         # floating point arithmetic operation, including
                         # division by zero, has a well-defined result”.
                         # Use np.divide instead:
-                        np.seterr(divide=None)
-                        if (abs(currTD.time - ((splitTD.time - prevTD.time) * np.divide((currTD.distRadian - prevTD.distRadian),
-                                (splitTD.distRadian - prevTD.distRadian)) + prevTD.time)) > self.maxInterpError):
-                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.PWAVE)
-                            self.addSlowness((prevSLayer.topP + prevSLayer. botP) / 2, self.SWAVE)
-                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.PWAVE)
-                            self.addSlowness((sLayer.topP + sLayer.botP) / 2, self.SWAVE)
+                        np.seterr(divide='ignore')
+                        if (abs(currTD.time -
+                                ((splitTD.time - prevTD.time)
+                                 * np.divide((currTD.distRadian
+                                             - prevTD.distRadian),
+                                (splitTD.distRadian - prevTD.distRadian))
+                                + prevTD.time)) > self.maxInterpError):
+                            self.addSlowness((prevSLayer.topP
+                                              + prevSLayer. botP) / 2,
+                                             self.PWAVE)
+                            self.addSlowness((prevSLayer.topP
+                                              + prevSLayer. botP) / 2,
+                                             self.SWAVE)
+                            self.addSlowness((sLayer.topP + sLayer.botP) / 2,
+                                             self.PWAVE)
+                            self.addSlowness((sLayer.topP + sLayer.botP) / 2,
+                                             self.SWAVE)
                             currTD = prevPrevTD
                             isPrevOK = False
                             if j > 0:

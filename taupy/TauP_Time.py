@@ -49,16 +49,7 @@ class TauP_Time(object):
         # outside of constructor - is that so bad? Who knows.
         self.relativeArrival = None
 
-    def init(self):
-        """
-        Performs initialisation of the tool. Config file is queried for the
-        default model to load, which source depth and phases to use etc.
-        """
         self.readConfig()
-        # Todo: change this to allow use in a library. Options would then be
-        #  provided as arguments.
-        self.readcmdLineArgs()
-        self.readTauModel()
 
     def readTauModel(self):
         """
@@ -80,18 +71,21 @@ class TauP_Time(object):
             raise TauModelError("Unable to load " + str(self.modelName))
 
     def start(self):
-        """Called after init. Merge the two?"""
+        """Called after init."""
+        # Todo: fix this mess
+        #self.phaseNames = getPhaseNames(self.phaseNames)
+        self.readTauModel()
         if self.degrees is not None or all(x is not None for x in (
                 self.stationLat, self.stationLon, self.eventLat,
                 self.eventLon)):
             # Enough information has been given on the command line, just do
             #  simple calculation.
             if self.degrees is None:
-                # Todo: Calculate the degrees from station and event locations.
                 # self.degrees = SphericalCoords.distance
                 # Check for maybe numpy libraries that handle this kind of
                 # calculations!
-                pass
+                raise NotImplementedError("Distance must be provided in "
+                                          "degrees for now.")
             self.depthCorrect(self.depth)
             self.calculate(self.degrees)
             self.printResult()
@@ -124,23 +118,23 @@ class TauP_Time(object):
             for phaseNum, seismicPhase in enumerate(self.phases):
                 if seismicPhase.name == tempPhaseName:
                     self.phases.pop(phaseNum)
-                    if seismicPhase.sourceDepth == self.depth \
-                            and seismicPhase.tMod == self.tModDepth:
+                    if (seismicPhase.sourceDepth == self.depth
+                            and seismicPhase.tMod == self.tModDepth):
                         # OK so copy to newPhases:
                         newPhases.append(seismicPhase)
                         alreadyAdded = True
                         break
             if not alreadyAdded:
                 # Didn't find it precomputed, so recalculate:
-                try:
-                    seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
-                    newPhases.append(seismicPhase)
-                except TauModelError:
-                    print("Error with this phase, skipping it: " +
-                          str(tempPhaseName))
+                # try:
+                #     seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
+                #     newPhases.append(seismicPhase)
+                # except TauModelError:
+                #     print("Error with this phase, skipping it: " +
+                #           str(tempPhaseName))
                 # Uncomment if stacktrace is needed.
-                # seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
-                # newPhases.append(seismicPhase)
+                 seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
+                 newPhases.append(seismicPhase)
             self.phases = newPhases
 
     def calculate(self, degrees):
@@ -183,13 +177,15 @@ class TauP_Time(object):
                   "     (deg)  Distance   Name "
         print(lineOne)
         print(lineTwo)
-        print("-"*len(lineOne))
+        print("-"*(len(lineOne)-2))  # for output comparison to Java
         for arrival in self.arrivals:
             out = "{:>8.2f}".format(arrival.getModuloDistDeg()) + "   "
             out += "{:>5.1f}".format(self.depth) + "   "
             out += "{:<5s}".format(arrival.name) + "   "
             out += "{:>8.2f}".format(arrival.time) + "   "
-            out += "{:>9.3f}".format(arrival.rayParam * pi/180) + "   "
+            out += "{:>8.3f}".format(arrival.rayParam * pi/180) + "   "
+            if arrival.takeoffAngle == -0.0:
+                arrival.takeoffAngle = 0  # for output comparability
             out += "{:>6.2f}".format(arrival.takeoffAngle) + "   "
             out += "{:>7.2f}".format(arrival.incidentAngle) + "   "
             out += "{:>7.2f}".format(arrival.dist*180/pi) + \
@@ -198,6 +194,7 @@ class TauP_Time(object):
             print(out)
 
     def readConfig(self):
+        # If you implement this, make sure given args aren't overwritten.
         pass
 
     def readcmdLineArgs(self):
@@ -235,15 +232,6 @@ class TauP_Time(object):
         self.degrees = float(args.degrees) if args.degrees else self.degrees
         self.kilometres = float(args.kilometres) if args.kilometres else None
         self.outFile = args.outfile
-
-
-if __name__ == '__main__':
-    # Replace the Java main method, which is a static (i.e. class) method
-    # called whenever the program, that is TauP_Time, is executed.
-    tauPTime = TauP_Time()
-    tauPTime.init()
-    #Todo: is this the only way start is called???
-    tauPTime.start()
 
 
 def getPhaseNames(phaseName):
@@ -332,3 +320,11 @@ def getPhaseNames(phaseName):
     else:
         names.append(phaseName)
     return names
+
+if __name__ == '__main__':
+    # Replace the Java main method, which is a static (i.e. class) method
+    # called whenever the program, that is TauP_Time, is executed.
+    tauPTime = TauP_Time()
+    tauPTime.readcmdLineArgs()
+    tauPTime.start()
+

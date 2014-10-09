@@ -1,4 +1,4 @@
-import unittest
+import unittest, sys, subprocess, os
 from taupy.TauP_Time import TauP_Time
 
 
@@ -6,19 +6,14 @@ class TestTauPTime(unittest.TestCase):
 
     def test_main(self):
         tt = TauP_Time(["S", "P"], "iasp91", 200, 57.4)
-        tt.init()
-        self.assertEqual(tt.tMod, tt.tModDepth)
+        tt.start()
         self.assertEqual(tt.tMod.tauBranches[0][3].maxRayParam,
                          742.2891566265059)
         # Of course tMod should be correct, if TauP_Create works as it should.
         # As far as I could tell, it does, even though it's a bit difficult
         # to compare to the java all at once and there may be some rounding
         # differences some 10 digits behind the comma.
-        self.assertEqual(len(tt.phases), 0)
 
-        # tt.start()
-        # Calls, given that tt.degrees isn't None:
-        tt.depthCorrect(tt.depth)
         self.assertEqual(tt.tModDepth.sourceDepth, 200)
         # Checking the corected tModDepth will be difficult again...
         # Also calls recalcPhases, so check phases here...
@@ -44,12 +39,26 @@ class TestTauPTime(unittest.TestCase):
         tt.calculate(tt.degrees)
         self.assertEqual(tt.arrivals[1].time, 1028.9304953527787)
 
-        # Todo: Check output for a range of inputs against the Java output.
     def test_range(self):
-        for degree in [0, 45, 90, 180, 270, 360, 560]:
-            for depth in [0, 100, 1000, 2889]:
-                TauP_Time(degrees=degree, depth=depth, modelName="iasp91",
-                          phaseNames="P,S,PcP,ScS,SKS,sS,SS,PKKP,PKiKP".split(','))
+        """
+        Check taup_time output for a range of inputs against the Java output.
+        """
+        if not os.path.isfile("data/java_tauptime_testoutput"):
+            subprocess.call("./generate_tauptime_output.sh", shell=True)
+        stdout = sys.stdout
+        with open('taup_time_test_output', 'wt') as sys.stdout:
+            for degree in [0, 45, 90, 180, 360, 560]:
+                for depth in [0, 100, 1000, 2889]:
+                    tauptime = TauP_Time(degrees=degree, depth=depth,
+                                         modelName="iasp91",
+                                         phaseNames="P,S,PcP,ScS,SKS,sS,SS,"
+                                         "PKKP,PKiKP".split(','))
+                                         #phaseNames="ttall")
+                    tauptime.start()
+        sys.stdout = stdout
+        subprocess.check_call("diff -wB data/java_tauptime_testoutput "
+                              "taup_time_test_output", shell=True)
+        # delete file
 
 if __name__ == '__main__':
     unittest.main(buffer=True)
