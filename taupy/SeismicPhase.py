@@ -473,7 +473,7 @@ class SeismicPhase(object):
                             currLeg, nextLeg))
             elif currLeg == "I" or currLeg == "J":
                 self.addToBranch(tMod, self.currBranch,
-                                 len(tMod.tauBranches[0]), isPWave, self.TURN)
+                                 len(tMod.tauBranches[0]) - 1, isPWave, self.TURN)
                 if nextLeg == "I" or nextLeg == "J":
                     self.addToBranch(tMod, self.currBranch, tMod.iocbBranch,
                                      isPWave, self.REFLECTTOP)

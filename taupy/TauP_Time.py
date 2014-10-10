@@ -17,14 +17,15 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self, phaseNames=[], modelName="iasp91", depth=0, degrees=None):
+    def __init__(self, phaseList=[], modelName="iasp91", depth=0, degrees=None):
         # Could have the command line args read here...
         # No, better do it in  if name == main  because if it's not the main
         # script that shouldn't happen!
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP
-        self.phaseNames = phaseNames
+        self.phaseList = phaseList
+        self.phaseNames = []
         self.modelName = modelName
         # This is needed to check later if assignment has happened on cmd 
         # line, or if reading conf is needed.
@@ -49,31 +50,10 @@ class TauP_Time(object):
         # outside of constructor - is that so bad? Who knows.
         self.relativeArrival = None
 
-        self.readConfig()
-
-    def readTauModel(self):
-        """
-        Do the reading simply for now.
-        """
-        # This should be the same model path that was used by TauP_Create
-        # for writing!
-        # Current directory:
-        modelPath = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        tModLoaded = TauModelLoader.load(self.modelName, modelPath,
-                                         self.verbose)
-        if tModLoaded is not None:
-            self.tMod = tModLoaded
-            # tModDepth will be depth-corrected if source depth is not 0.
-            self.tModDepth = self.tMod
-            self.modelName = self.tMod.sMod.vMod.modelName
-        else:
-            raise TauModelError("Unable to load " + str(self.modelName))
-
     def start(self):
         """Called after init."""
-        # Todo: fix this mess
-        #self.phaseNames = getPhaseNames(self.phaseNames)
+        self.readConfig()
+        self.phaseNames = parsePhaseList(self.phaseList)
         self.readTauModel()
         if self.degrees is not None or all(x is not None for x in (
                 self.stationLat, self.stationLon, self.eventLat,
@@ -93,6 +73,25 @@ class TauP_Time(object):
             # Get the info from interactive mode. Not necessary to implement
             #  just now.
             raise TypeError("Not enough info given on cmd line.")
+
+    def readTauModel(self):
+        """
+        Do the reading simply for now.
+        """
+        # This should be the same model path that was used by TauP_Create
+        # for writing!
+        # Current directory:
+        modelPath = os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe())))
+        tModLoaded = TauModelLoader.load(self.modelName, modelPath,
+                                         self.verbose)
+        if tModLoaded is not None:
+            self.tMod = tModLoaded
+            # tModDepth will be depth-corrected if source depth is not 0.
+            self.tModDepth = self.tMod
+            self.modelName = self.tMod.sMod.vMod.modelName
+        else:
+            raise TauModelError("Unable to load " + str(self.modelName))
 
     def depthCorrect(self, depth):
         """
@@ -171,17 +170,20 @@ class TauP_Time(object):
     def printResult(self):
         # Do  only a simple way for now.
         print("\nModel:", self.modelName)
-        lineOne = "Distance   Depth   Phase   Travel    Ray Param   Takeoff" \
-                  "  Incident  Purist     Purist"
-        lineTwo = "   (deg)    (km)   Name    Time (s)  p (s/deg)     (deg)" \
-                  "     (deg)  Distance   Name "
+        namespacewidth = len(max([arrival.name for arrival in self.arrivals],
+                            key=len)) - 2
+
+        lineOne = "Distance   Depth   Phase" + " "*namespacewidth +  \
+                  "Travel    Ray Param   Takeoff  Incident  Purist     Purist"
+        lineTwo = "   (deg)    (km)   Name " + " "*namespacewidth + \
+                  "Time (s)  p (s/deg)     (deg)     (deg)  Distance   Name "
         print(lineOne)
         print(lineTwo)
         print("-"*(len(lineOne)-2))  # for output comparison to Java
         for arrival in self.arrivals:
             out = "{:>8.2f}".format(arrival.getModuloDistDeg()) + "   "
             out += "{:>5.1f}".format(self.depth) + "   "
-            out += "{:<5s}".format(arrival.name) + "   "
+            out += "{0:<{1}s}".format(arrival.name, namespacewidth + 2) + "   "
             out += "{:>8.2f}".format(arrival.time) + "   "
             out += "{:>8.3f}".format(arrival.rayParam * pi/180) + "   "
             if arrival.takeoffAngle == -0.0:
@@ -225,13 +227,28 @@ class TauP_Time(object):
         args = parser.parse_args()
         # Avoid overwriting already set variables with None:
         self.DEBUG = args.verbose if args.verbose else self.DEBUG
-        self.phaseNames = args.phase_list.split(',') if args.phase_list else self.phaseNames
+        self.phaseList = args.phase_list.split(',') if args.phase_list else self.phaseList
         self.phaseFile = args.phase_file if args.phase_file else None
         self.modelName = args.modelname if args.modelname else self.modelName
         self.depth = float(args.depth) if args.depth else self.depth
         self.degrees = float(args.degrees) if args.degrees else self.degrees
         self.kilometres = float(args.kilometres) if args.kilometres else None
         self.outFile = args.outfile
+
+
+def parsePhaseList(phaseList):
+    """
+    Takes a list of phases, returns a list of individual phases. Performs e.g.
+    replacing e.g. ttall with the relevant phases.
+    :param phaseList:
+    :return phaseNames:
+    """
+    phaseNames = []
+    for phaseName in phaseList:
+        phaseNames += getPhaseNames(phaseName)
+    # Remove duplicates:
+    phaseNames = list(set(phaseNames))
+    return phaseNames
 
 
 def getPhaseNames(phaseName):
