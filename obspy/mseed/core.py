@@ -524,7 +524,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         encoding = util._convert_and_check_encoding_for_writing(encoding)
 
     trace_attributes = []
-    use_blkt_1001 = 0
+    use_blkt_1001 = False
 
     # The data might need to be modified. To not modify the input data keep
     # references of which data to finally write.
@@ -544,7 +544,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         starttime = util._convertDatetimeToMSTime(trace.stats.starttime)
         if starttime % 100 != 0 or \
            (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0:
-            use_blkt_1001 += 1
+            use_blkt_1001 = True
 
         if hasattr(trace.stats, 'mseed') and \
            hasattr(trace.stats['mseed'], 'blkt1001') and \
@@ -564,7 +564,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 raise ValueError(msg)
 
             trace_attr['timing_quality'] = timing_quality
-            use_blkt_1001 += 1
+            use_blkt_1001 = True
         else:
             trace_attr['timing_quality'] = timing_quality = 0
 

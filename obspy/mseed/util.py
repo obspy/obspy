@@ -628,17 +628,17 @@ def set_flags_in_fixed_headers(filename, flags):
 
     # Nested dictionaries to allow empty strings as wildcards
     class NestedDict(dict):
-            def __missing__(self, key):
-                value = self[key] = type(self)()
-                return value
+        def __missing__(self, key):
+            value = self[key] = type(self)()
+            return value
     # Define wildcard character
     wildcard = ""
 
     # Check channel identifier value
     flags_bytes = NestedDict()
     for (key, value) in flags.items():
-        splitted_key = key.split(".")
-        if len(splitted_key) != 4:
+        split_key = key.split(".")
+        if len(split_key) != 4:
             msg = "Invalid channel identifier. " +\
                   "Expected 'Network.Station.Location.Channel' " +\
                   "(empty fields allowed), got '%s'."
@@ -668,10 +668,10 @@ def set_flags_in_fixed_headers(filename, flags):
         flagsbytes = pack("BBB", act_flag, io_clock_flag, data_qual_flag)
 
         # Remove padding spaces and store in new dict
-        net = splitted_key[0].strip()
-        sta = splitted_key[1].strip()
-        loc = splitted_key[2].strip()
-        chan = splitted_key[3].strip()
+        net = split_key[0].strip()
+        sta = split_key[1].strip()
+        loc = split_key[2].strip()
+        chan = split_key[3].strip()
         flags_bytes[net][sta][loc][chan] = flagsbytes
 
     # Open file
@@ -757,7 +757,7 @@ def _convertFlagsToRawByte(expected_flags, user_flags):
     Converts a flag dictionary to a byte, ready to be encoded in a MiniSEED
     header.
 
-    This is a utility function for set_flags_in_fixed_headers and was not
+    This is a utility function for set_flags_in_fixed_headers and is not
     designed to be called by someone else.
 
     expected_signals describes all the possible bit names for the user flags
@@ -766,13 +766,13 @@ def _convertFlagsToRawByte(expected_flags, user_flags):
     FIXED_HEADER_ACTIVITY_FLAGS, FIXED_HEADER_DATA_QUAL_FLAGS and
     FIXED_HEADER_IO_CLOCK_FLAGS.
 
-    It expected a user_flags as a dictionary { bit_name : value }. bit_name is
+    This expects a user_flags as a dictionary { bit_name : value }. bit_name is
     compared to the expected_signals, and its value is converted to bool.
     Missing values are considered false.
 
-    :type expected_flags: dict {int: string}
+    :type expected_flags: dict {int: str}
     :param expected_flags: every possible flag in this field, with its offset
-    :type user_flags: dict {string: bool}
+    :type user_flags: dict {str: bool}
     :param user_flags: user defined flags and its value
     :return:
 

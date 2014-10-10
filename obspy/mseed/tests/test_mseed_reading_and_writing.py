@@ -19,7 +19,7 @@ import os
 import unittest
 import warnings
 from datetime import datetime
-from _struct import unpack
+from struct import unpack
 
 
 class MSEEDReadingAndWritingTestCase(unittest.TestCase):
@@ -1148,5 +1148,4 @@ def suite():
 
 
 if __name__ == '__main__':
-
     unittest.main(defaultTest='suite')

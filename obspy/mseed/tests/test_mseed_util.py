@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 from datetime import datetime
-from _struct import pack
+from struct import pack
 
 from obspy import UTCDateTime
 from obspy.mseed import util
@@ -426,9 +426,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         :type file_bfr: File or NamedTemporaryFile
         :param file_bfr: the file to test.
-        :type trace_id: string
+        :type trace_id: str
         :param trace_id: trace identification: Network.Station.Location.Channel
-        :type expected_bytes: binary string
+        :type expected_bytes: bytes
         :param expected_bytes: the values of the expected flags
         :type reclen: int
         :param reclen: record length across the file
