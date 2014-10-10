@@ -81,7 +81,8 @@ class AttribDict(collections.MutableMapping):
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
 
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, collections.Mapping) and \
+           not isinstance(value, AttribDict):
             self.__dict__[key] = AttribDict(value)
         else:
             self.__dict__[key] = value
