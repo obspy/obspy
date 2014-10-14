@@ -104,8 +104,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     shift = C.c_int()
     coe_p = C.c_double()
 
-    clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
-                      C.byref(shift), C.byref(coe_p))
+    res = clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
+                            C.byref(shift), C.byref(coe_p))
+    if res:
+        raise MemoryError
 
     if full_xcorr:
         return shift.value, coe_p.value, corp
@@ -286,6 +288,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
         warnings.warn(msg)
     samp_rate = trace1.stats.sampling_rate
+    # don't modify existing traces with filters
+    if filter:
+        trace1 = trace1.copy()
+        trace2 = trace2.copy()
     # check data, apply filter and take correct slice of traces
     slices = []
     for _i, (t, tr) in enumerate(((pick1, trace1), (pick2, trace2))):

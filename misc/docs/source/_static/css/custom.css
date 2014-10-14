@@ -187,3 +187,13 @@ dd p {
   color: #843534;
   font-weight: 700;
 }
+
+/* force the anchor links below the nav bar */
+div.section h1:before, div.section h2:before, div.section h3:before,
+div.section h4:before, div.section h5:before, div.section h6:before {
+  display: block;
+  content: " ";
+  margin-top: -60px;
+  height: 60px;
+  visibility: hidden;
+}*/

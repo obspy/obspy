@@ -126,10 +126,9 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
 
       /* prepare integer version of float input trace */
 
-      trace = (int *)calloc((size_t)(npts+1),sizeof(int));
+      trace = (int *)calloc(npts+1,sizeof(int));
       if (trace == NULL) {
-          fprintf(stderr,"\nMemory allocation error!\n");
-          exit(EXIT_FAILURE);
+          return -1;
       }
 
       max = min = reltrc[1];
@@ -138,8 +137,8 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
          if (reltrc[ii] < min ) min = reltrc[ii];
       }
 
-      scale = (float) fabs(max);
-      if (fabs(max) < fabs(min)) scale = (float) fabs(min);
+      scale = fabsf(max);
+      if (fabsf(max) < fabsf(min)) scale = fabsf(min);
 
       /* scale trace maximum to 10000 */
 
@@ -232,8 +231,8 @@ label160:
         /* pass ptime back to calling routine */
 
         *pptime = ptime;
-        free((char *)trace);
-        return(0);
+        free(trace);
+        return 0;
 
       }
 
@@ -376,8 +375,8 @@ label160:
                         /* pass ptime back to calling routine */
 
                         *pptime = ptime;
-                        free((char *)trace);
-                        return(0);
+                        free(trace);
+                        return 0;
 
                      }
                      /* don't overwrite  already existing phases */
@@ -413,7 +412,7 @@ label160:
           ssx2= ssx2+edat*edat;
           sum= (float)(num+1);
           if(((sum*ssx2-ssx*ssx)/(sum*sum)) >= 0)
-              sdev = (float) sqrt((sum*ssx2-ssx*ssx)/(sum*sum));
+              sdev = sqrtf((sum*ssx2-ssx*ssx)/(sum*sum));
           else
               sdev = 1.;
           mean= ssx/sum;

@@ -1057,12 +1057,34 @@ class Response(ComparingObject):
         output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
-        clibevresp.check_channel(C.pointer(chan))
-        clibevresp.norm_resp(C.pointer(chan), -1, 0)
-        clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
-                             out_units, -1, 0, 0)
-        # XXX: Check if this is really not needed.
-        # output *= scale_factor[0]
+        # Set global variables
+        if self.resource_id:
+            clibevresp.curr_file.value = self.resource_id.encode('utf-8')
+        else:
+            clibevresp.curr_file.value = None
+
+        try:
+            rc = clibevresp._obspy_check_channel(C.byref(chan))
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('check_channel: ' + m)
+
+            rc = clibevresp._obspy_norm_resp(C.byref(chan), -1, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('norm_resp: ' + m)
+
+            rc = clibevresp._obspy_calc_resp(C.byref(chan), freqs, len(freqs),
+                                             output, out_units, -1, 0, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('calc_resp: ' + m)
+
+            # XXX: Check if this is really not needed.
+            # output *= scale_factor[0]
+
+        finally:
+            clibevresp.curr_file.value = None
 
         return output, freqs
 
@@ -1494,7 +1516,12 @@ def _adjust_bode_plot_figure(fig, grid=True, show=True):
     # make more room in between subplots for the ylabel of right plot
     fig.subplots_adjust(hspace=0.02, top=0.87, right=0.82)
     ax1, ax2 = fig.axes[:2]
-    ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    # workaround for older matplotlib versions
+    try:
+        ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    except TypeError:
+        leg_ = ax1.legend(loc="lower center", ncol=3)
+        leg_.prop.set_size("small")
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.setp(ax2.get_yticklabels()[-1], visible=False)
     ax1.set_ylabel('Amplitude')

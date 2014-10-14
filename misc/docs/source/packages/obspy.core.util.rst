@@ -42,7 +42,6 @@
        misc
        obspy_types
        testing
-       xmlwrapper
        version
 
     .. comment to end block

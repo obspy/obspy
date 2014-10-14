@@ -72,12 +72,13 @@ class UtilTestCase(unittest.TestCase):
         #
         shift = C.c_int()
         coe_p = C.c_double()
-        lib.X_corr(data1.ctypes.data_as(C.c_void_p),
-                   data2.ctypes.data_as(C.c_void_p),
-                   corp.ctypes.data_as(C.c_void_p),
-                   window_len, len(data1), len(data2),
-                   C.byref(shift), C.byref(coe_p))
+        res = lib.X_corr(data1.ctypes.data_as(C.c_void_p),
+                         data2.ctypes.data_as(C.c_void_p),
+                         corp.ctypes.data_as(C.c_void_p),
+                         window_len, len(data1), len(data2),
+                         C.byref(shift), C.byref(coe_p))
 
+        self.assertEqual(0, res)
         self.assertAlmostEqual(0.0, shift.value)
         self.assertAlmostEqual(1.0, coe_p.value)
 

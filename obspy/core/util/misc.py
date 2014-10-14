@@ -20,6 +20,7 @@ from subprocess import Popen, PIPE
 import warnings
 import itertools
 import tempfile
+import shutil
 import numpy as np
 import math
 
@@ -369,7 +370,7 @@ def wrap_long_string(string, line_length=79, prefix="",
 @contextmanager
 def CatchOutput():
     """
-    A context manager that catches stdout/stderr for its scope.
+    A context manager that catches stdout/stderr/exit() for its scope.
 
     Always use with "with" statement. Does nothing otherwise.
 
@@ -399,8 +400,8 @@ def CatchOutput():
         out.stdout = ""
         out.stderr = ""
 
-        with os.fdopen(os.dup(sys.stdout.fileno()), "w") as old_stdout:
-            with os.fdopen(os.dup(sys.stderr.fileno()), "w") as old_stderr:
+        with os.fdopen(os.dup(sys.stdout.fileno()), "wb") as old_stdout:
+            with os.fdopen(os.dup(sys.stderr.fileno()), "wb") as old_stderr:
                 sys.stdout.flush()
                 sys.stderr.flush()
 
@@ -411,7 +412,10 @@ def CatchOutput():
                 os.close(stderr_file)
 
                 try:
+                    raised = False
                     yield out
+                except SystemExit:
+                    raised = True
                 finally:
                     sys.stdout.flush()
                     sys.stderr.flush()
@@ -424,10 +428,13 @@ def CatchOutput():
                     os.dup2(old_stdout.fileno(), sys.stdout.fileno())
                     os.dup2(old_stderr.fileno(), sys.stderr.fileno())
 
-                    with open(stdout_filename, "r") as fh:
+                    with open(stdout_filename, "rb") as fh:
                         out.stdout = fh.read()
-                    with open(stderr_filename, "r") as fh:
+                    with open(stderr_filename, "rb") as fh:
                         out.stderr = fh.read()
+
+                    if raised:
+                        raise SystemExit(out.stderr)
 
     finally:
         # Make sure to always close and remove the temporary files.
@@ -447,6 +454,26 @@ def CatchOutput():
             os.remove(stderr_filename)
         except OSError:
             pass
+
+
+@contextmanager
+def TemporaryWorkingDirectory():
+    """
+    A context manager that changes to a temporary working directory.
+
+    Always use with "with" statement. Does nothing useful otherwise.
+
+    >>> with TemporaryWorkingDirectory():  # doctest: +SKIP
+    ...    os.system('echo "$PWD"')
+    """
+    tempdir = tempfile.mkdtemp(prefix='obspy-')
+    old_dir = os.getcwd()
+    os.chdir(tempdir)
+    try:
+        yield
+    finally:
+        os.chdir(old_dir)
+        shutil.rmtree(tempdir)
 
 
 def factorize_int(x):

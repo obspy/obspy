@@ -1,7 +1,8 @@
 LIBRARY libevresp.dll
 EXPORTS
     evresp
-    calc_resp
     free_response
-    check_channel
-    norm_resp
+    _obspy_calc_resp
+    _obspy_check_channel
+    _obspy_norm_resp
+    curr_file

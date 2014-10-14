@@ -21,7 +21,7 @@ from datetime import datetime
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
-from obspy import UTCDateTime
+from obspy import UTCDateTime, Catalog, readEvents
 from obspy.core.util import guessDelta
 from obspy.xseed import Parser
 import os
@@ -174,7 +174,7 @@ class Client(object):
             urllib.request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except:
-            None
+            pass
 
     def testAuth(self):
         """
@@ -795,7 +795,7 @@ master/seishub/plugins/seismology/event.py
     resourcetype = 'event'
 
     def getList(self, limit=50, offset=None, localisation_method=None,
-                account=None, user=None, min_datetime=None, max_datetime=None,
+                author=None, min_datetime=None, max_datetime=None,
                 first_pick=None, last_pick=None, min_latitude=None,
                 max_latitude=None, min_longitude=None, max_longitude=None,
                 min_magnitude=None, max_magnitude=None, min_depth=None,
@@ -804,6 +804,10 @@ master/seishub/plugins/seismology/event.py
                 document_id=None, **kwargs):
         """
         Gets a list of event information.
+
+        ..note:
+            For seishub versions < 1.4 available keys include "user" and
+            "account". In newer seishub versions they are replaced by "author".
 
         :rtype: list
         :return: List of dictionaries containing event information.
@@ -825,12 +829,38 @@ master/seishub/plugins/seismology/event.py
         root = self.client._objectify(url, **kwargs)
         results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                    for node in root.getchildren()]
+        for res in results:
+            res['resource_name'] = str(res['resource_name'])
         if limit == len(results) or \
            limit is None and len(results) == 50 or \
            len(results) == 2500:
             msg = "List of results might be incomplete due to option 'limit'."
             warnings.warn(msg)
         return results
+
+    def getEvents(self, **kwargs):
+        """
+        Fetches a catalog with event information. Parameters to narrow down
+        the request are the same as for :meth:`getList`.
+
+        ..warning::
+            Only works when connecting to a seishub server of version 1.4.0
+            or higher (serving event data as QuakeML).
+
+        :rtype: :class:`~obspy.core.event.Catalog`
+        :returns: Catalog containing event information matching the request.
+
+        The number of resulting events is by default limited to 50 entries from
+        a SeisHub server. You may raise this by setting the ``limit`` option to
+        a maximal value of 2500. Numbers above 2500 will result into an
+        exception.
+        """
+        resource_names = [item["resource_name"]
+                          for item in self.getList(**kwargs)]
+        cat = Catalog()
+        for resource_name in resource_names:
+            cat.extend(readEvents(self.getResource(resource_name)))
+        return cat
 
     def getKML(self, nolabels=False, **kwargs):
         """

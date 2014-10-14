@@ -25,3 +25,4 @@ misc/docker_tests/logs/
 obspy/lib/*.pyd
 /obspy.pstats
 __pycache__
+debian

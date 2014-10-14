@@ -588,7 +588,7 @@ class Parser(object):
                 file.close()
         else:
             # Create a ZIP archive.
-            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "wb")
+            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "w")
             for response in new_resp_list:
                 response[1].seek(0, 0)
                 zip_file.writestr(response[0], response[1].read())

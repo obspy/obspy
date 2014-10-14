@@ -50,7 +50,7 @@ clibsignal.X_corr.argtypes = [
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int, C.c_int,
     C.POINTER(C.c_int), C.POINTER(C.c_double)]
-clibsignal.X_corr.restype = C.c_void_p
+clibsignal.X_corr.restype = C.c_int
 
 clibsignal.recstalta.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
