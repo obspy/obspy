@@ -303,10 +303,18 @@ def readZmap(filename, **kwargs):
         ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
 
     :type filename: str or file
-    :param filename: Name of ZMAP file to be read or open file-like object.
+    :param filename: ZMAP string, name of ZMAP file to be read or open
+        file-like object.
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
     """
+    if not hasattr(filename, 'read'):
+        try:
+            with open(filename):
+                pass
+        except:
+            # we assume it's a string now
+            return Unpickler().loads(filename)
     return Unpickler().load(filename)
 
 
@@ -320,7 +328,8 @@ def isZmap(filename):
     columns.
 
     :type filename: str or file
-    :param filename: Name of the file to be checked or open file-like object.
+    :param filename: ZMAP string, name of the file to be checked or open
+        file-like object.
     :rtype: bool
     :return: ``True`` if ZMAP file.
 
@@ -329,35 +338,41 @@ def isZmap(filename):
     >>> isZmap('/path/to/zmap_events.txt')
     True
     """
-    # Open filehandler or use an existing file like object.
     if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):
-        file_opened = False
+        # we got an open file
         pos = filename.tell()
-        fh = filename
+        filename.seek(0)
+        first_line = filename.readline()
+        filename.seek(pos)
     else:
-        file_opened = True
-        fh = open(filename, 'rb')
+        try:
+            with open(filename, 'rb') as f:
+                first_line = f.readline()
+        except:
+            try:
+                first_line = filename.decode()
+            except:
+                first_line = str(filename)
+            line_ending = first_line.find("\n")
+            if line_ending == -1:
+                return False
+            first_line = first_line[:line_ending]
 
+    if hasattr(first_line, 'decode'):
+        first_line = first_line.decode('utf-8')
+
+    # we expect 10 (standard) or 13 columns (extended)
+    columns = first_line.split('\t')
+    if len(columns) not in [10, 13]:
+        return False
+
+    # only numerical values are allowed (including NaN)
     try:
-        fh.seek(0)
-        # sample the first line only
-        first_line = fh.readline()
-        if hasattr(first_line, 'decode'):
-            first_line = first_line.decode('utf-8')
-        # we expect 10 (standard) or 13 columns (extended)
-        columns = first_line.split('\t')
-        if len(columns) not in [10, 13]:
-            return False
-        # only numerical values are allowed (including NaN)
         [float(col) for col in columns]
         return True
     except ValueError:
         return False
-    finally:
-        if file_opened:
-            fh.close()
-        else:
-            fh.seek(pos)
+
 
 if __name__ == '__main__':
     import doctest

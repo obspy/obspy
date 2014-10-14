@@ -163,6 +163,12 @@ class ZMAPTestCase(unittest.TestCase):
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
             self.assertTrue(zmap.isZmap(f.name))
+        # ZMAP string
+        test_string = self._serialize(test_events)
+        self.assertTrue(zmap.isZmap(test_string))
+        # Non-ZMAP string
+        test_string = '0.000000\t' + test_string
+        self.assertFalse(zmap.isZmap(test_string + '\n'))
         # Non-ZMAP file (14 columns)
         self.zmap_fields += ('dummy',)
         self.test_data.update({'dummy': '0'})
@@ -219,6 +225,10 @@ class ZMAPTestCase(unittest.TestCase):
             self._assert_zmap_equal(catalog, test_events)
             catalog = readEvents(f.name)
             self._assert_zmap_equal(catalog, test_events)
+        # direct ZMAP string
+        catalog = zmap.readZmap(zmap_str)
+        self._assert_zmap_equal(catalog, test_events)
+
 
     def _assert_zmap_equal(self, catalog, dicts):
         """
