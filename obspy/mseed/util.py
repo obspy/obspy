@@ -22,6 +22,7 @@ import os
 from datetime import datetime
 import collections
 
+
 def getStartAndEndTime(file_or_file_object):
     """
     Returns the start and end time of a Mini-SEED file or file-like object.
@@ -600,11 +601,11 @@ def set_flags_in_fixed_headers(filename, flags):
       apply to every single trace in the file. Padding spaces are ignored.
     * ``flag_group``: which flag group is to be changed. One of
       ``'activity_flags'``, ``'io_clock_flags'``, ``'data_qual_flags'`` is
-      expected. Invalid flag groups will be ignored.
+      expected. Invalid flag groups raise a ValueError.
     * ``flag_name``: the name of the flag. Possible values are matched with
       ``obspy.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS``,
       ``FIXED_HEADER_IO_CLOCK_FLAGS`` or ``FIXED_HEADER_DATA_QUAL_FLAGS``
-      depending on the flag_group. Invalid flags are ignored.
+      depending on the flag_group. Invalid flags raise a ValueError.
     * ``flag_value``: the value you want for this flag. Expected value is a
       bool (always True/False) or a dict to store the moments and durations
       when this flag is True. Expected syntax for this dict is accurately
@@ -709,7 +710,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 flag_value = value[flag_group][flag_name]
                 corrected_flag = _checkFlagValue(flag_value)
                 flags_bytes[net][sta][loc][cha][flag_group][flag_name] = \
-                                                                corrected_flag
+                    corrected_flag
 
     # Open file
     with open(filename, 'r+b') as mseed_file:
@@ -778,7 +779,7 @@ def set_flags_in_fixed_headers(filename, flags):
                     # Time correction is in units of 0.0001 seconds.
                     recstart += time_correction * 0.0001
 
-                #Manage blockette's datation informations
+                # Manage blockette's datation informations
                 # Search for blockette 100's "Actual sample rate" field
                 samp_rate = _searchFlagInBlockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
@@ -841,7 +842,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
                 flagsbytes = pack("BBB", act_flag,
                                   io_clock_flag, data_qual_flag)
-                #Go back right before the fixed header flags
+                # Go back right before the fixed header flags
                 mseed_file.seek(-8, os.SEEK_CUR)
                 # Update flags*
                 mseed_file.write(flagsbytes)
@@ -905,7 +906,8 @@ def _checkFlagValue(flag_value):
         corrected_flag = flag_value
 
     elif isinstance(flag_value, datetime) or \
-         isinstance(flag_value, UTCDateTime):
+            isinstance(flag_value, UTCDateTime):
+        # A single instant value is allowed
         utc_val = UTCDateTime(flag_value)
         corrected_flag = [(utc_val, utc_val)]
 
@@ -982,7 +984,7 @@ def _checkFlagValue(flag_value):
                                     msg = "Flag datation: expected end of " +\
                                           "duration after its start"
                                     raise ValueError(msg)
-                                duration_iter.next()
+                                next(duration_iter)
 
                         elif isinstance(dur_values[0], collections.Sequence):
                             # List of tuples (start, end)
@@ -1002,7 +1004,7 @@ def _checkFlagValue(flag_value):
                                        not isinstance(start, UTCDateTime):
                                         msg = "Incorrect type for duration " +\
                                               "start %s"
-                                        raise ValueError(msg % \
+                                        raise ValueError(msg %
                                                          str(type(start)))
 
                                     # Check end type
@@ -1018,7 +1020,6 @@ def _checkFlagValue(flag_value):
                                               "of duration after its start"
                                         raise ValueError(msg)
 
-
                     # Else: len(dur_values) == 0, empty duration list:
                     # do nothing
                 else:
@@ -1032,7 +1033,7 @@ def _checkFlagValue(flag_value):
                 raise ValueError(msg % flag_key)
     else:
         msg = "Invalid type %s for flag value. Allowed values " +\
-        "are bool or dict"
+              "are bool or dict"
         raise ValueError(msg % str(type(flag_value)))
 
     return corrected_flag
@@ -1085,7 +1086,7 @@ def _searchFlagInBlockette(mseed_file_desc, first_blockette_offset,
                                                      read_data)
 
         while cur_blkt_number != blockette_number \
-              and next_blkt_offset != 0:
+                and next_blkt_offset != 0:
             # Nothing here, read next blockette
             mseed_file_desc.seek(mseed_record_start + next_blkt_offset,
                                  os.SEEK_SET)
