@@ -16,7 +16,9 @@ from future.builtins import *  # NOQA
 import inspect
 import io
 from lxml import etree
+import math
 import os
+import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
@@ -189,7 +191,24 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
     elem = parent.find(tag)
     if elem is None:
         return None
-    obj = cls(float(elem.text))
+
+    # Catch non convertible numbers.
+    try:
+        convert = float(elem.text)
+    except:
+        warnings.warn(
+            "'%s' could not be converted to a float. Will be skipped. Please "
+            "contact to report this issue." % etree.tostring(elem),
+            UserWarning)
+        return None
+
+    # Catch NaNs.
+    if math.isnan(convert):
+        warnings.warn("Tag '%s' has a value of NaN. It will be skipped." %
+                      tag, UserWarning)
+        return None
+
+    obj = cls(convert)
     if unit:
         obj.unit = elem.attrib.get("unit")
     if datum:
