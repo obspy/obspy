@@ -906,7 +906,7 @@ def _checkFlagValue(flag_value):
         corrected_flag = flag_value
 
     elif isinstance(flag_value, datetime) or \
-            isinstance(flag_value, UTCDateTime):
+         isinstance(flag_value, UTCDateTime):
         # A single instant value is allowed
         utc_val = UTCDateTime(flag_value)
         corrected_flag = [(utc_val, utc_val)]
