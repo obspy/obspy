@@ -863,7 +863,9 @@ def get_stationxml_filename(str_or_fct, network, station, channels):
         path = os.path.join(str_or_fct, "{network}.{station}.xml".format(
             network=network, station=station))
 
-    if not isinstance(path, (str, bytes)):
+    if path is None:
+        return None
+    elif not isinstance(path, (str, bytes)):
         raise TypeError("'%s' is not a filepath." % str(path))
     return path
 
