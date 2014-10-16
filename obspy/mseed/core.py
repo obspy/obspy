@@ -577,6 +577,24 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         else:
             use_blkt_100 = False
 
+        if hasattr(trace.stats, 'mseed') and \
+            hasattr(trace.stats['mseed'], 'sequence_number'):
+            sequence_number = trace.stats['mseed']['sequence_number']
+            # Check sequence number type
+            try:
+                sequence_number = int(sequence_number)
+                if sequence_number < 1 or sequence_number > 999999:
+                    raise ValueError("Sequence number out of range. It must" +\
+                                     " be between 1 and 999999.")
+            except ValueError:
+                msg = "Invalid sequence number in Stream[%i].stats." % _i + \
+                      "mseed.sequence_number. It must be an integer ranging" + \
+                      " from 1 to 999999"
+                raise ValueError(msg)
+            trace_attr['sequence_number'] = sequence_number
+        else:
+            trace_attr['sequence_number'] = sequence_number = 1
+
         # Set data quality to indeterminate (= D) if it is not already set.
         try:
             trace_attr['dataquality'] = \
@@ -752,6 +770,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         msr.contents.channel = trace.stats.channel.encode('ascii', 'strict')
         msr.contents.dataquality = trace_attr['dataquality'].\
             encode('ascii', 'strict')
+
+        # Set starting sequence number
+        msr.contents.sequence_number = trace_attr['sequence_number']
 
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:

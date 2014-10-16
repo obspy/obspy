@@ -411,6 +411,82 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Should just result in an empty stream.
         self.assertEqual(len(st), 0)
 
+    def test_writeSequenceNumber(self):
+        """
+        Tests Mini-SEED writing with an sequence number starting at something
+        different than 1.
+        """
+        
+        npts = 2200 # At least 3 records of 512 bytes
+        np.random.seed(815)  # make test reproducable
+        numPyData = np.random.randint(-1000, 1000, npts).astype(np.int32)
+        starttime = UTCDateTime(2008, 1, 1, 0, 0, 10)
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": "str"}}
+
+        # Invalid seq num
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            self.assertRaises(ValueError, dataStream.write, tempfile, 
+                              format="MSEED", encoding=11, reclen=512)
+
+        # Seq num out of range
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": -1}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            self.assertRaises(ValueError, dataStream.write, tempfile, 
+                              format="MSEED", encoding=11, reclen=512)
+        # Seq num out of range #2
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": 1000001}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            self.assertRaises(ValueError, dataStream.write, tempfile, 
+                              format="MSEED", encoding=11, reclen=512)
+
+        # Seq num missing, defaults to 1
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D"}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
+            tf.seek(0, os.SEEK_SET)
+            self.assertEqual(tf.read(6), native_str("000001"))
+
+        # Seq num changed to 999998, expecting rollover
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": 999998}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
+            tf.seek(0, os.SEEK_SET)
+            seq_counts = [native_str("999998"), native_str("999999"), 
+                          native_str("000001")]
+            for _i in range(0, 3):
+                self.assertEqual(tf.read(6), seq_counts[_i])
+                tf.seek(506, os.SEEK_CUR)
+
     def test_writeAndReadDifferentRecordLengths(self):
         """
         Tests Mini-SEED writing and record lengths.
