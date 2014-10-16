@@ -3,8 +3,8 @@
  * of evalresp, as this implementation is based GNU plotutils which itself is GPL.
  * See also gh issue #827.
  *
- * Therefore ObsPy, which is licensed under the terms of the LGPL, ships an obspy_splince.c
- * which is a wrapper around the LGPL licensed SPLINE library
+ * Therefore ObsPy, which is licensed under the terms of the LGPL, ships an obspy_spline.c
+ * which is a wrapper around the LGPL licensed SPLINE library of John Burkardt
  * (http://people.sc.fsu.edu/~jburkardt/c_src/spline/spline.html).
  *
  * Copyright (C) ObsPy Development Team, 2014.
@@ -79,7 +79,7 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
 
     if (*p_num_retvals != num_xvals)
     {
-        return "Some interpolation points where out of range";
+        return "Some interpolation points were out of range";
     }
     return NULL;
 }

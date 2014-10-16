@@ -470,7 +470,7 @@ class InvSimTestCase(unittest.TestCase):
                                     C.byref(p_num_retvals))
         self.assertEqual(res, None)
         self.assertEqual(Ni, p_num_retvals.value)
-        yi = np.array([p_retvals_arr[i] for i in xrange(Ni)])
+        yi = np.array([p_retvals_arr[i] for i in range(Ni)])
 
         if False:  # visually verify
             import matplotlib.pyplot as plt
