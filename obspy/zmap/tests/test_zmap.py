@@ -229,7 +229,6 @@ class ZMAPTestCase(unittest.TestCase):
         catalog = zmap.readZmap(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
 
-
     def _assert_zmap_equal(self, catalog, dicts):
         """
         Compares a zmap imported catalog with test event dictionaries
