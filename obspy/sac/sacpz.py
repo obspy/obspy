@@ -1,8 +1,18 @@
+"""
+Module for SAC poles and zero (SACPZ) file I/O.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
+from obspy.station.response import paz_to_sacpz_string
 
 
 def write_SACPZ(inventory, file_or_file_object):
@@ -24,6 +34,7 @@ def write_SACPZ(inventory, file_or_file_object):
     :param file_or_file_object: The file or file-like object to be written to.
     """
     out = []
+    now = UTCDateTime()
     for net in inventory:
         for sta in net:
             for cha in sta:
@@ -45,7 +56,7 @@ def write_SACPZ(inventory, file_or_file_object):
                 out.append("* STATION     : %s" % sta.code)
                 out.append("* LOCATION    : %s" % cha.location_code)
                 out.append("* CHANNEL     : %s" % cha.code)
-                out.append("* CREATED     : %s" % UTCDateTime())
+                out.append("* CREATED     : %s" % now)
                 out.append("* START       : %s" % cha.start_date)
                 out.append("* END         : %s" % cha.end_date)
                 out.append("* DESCRIPTION : %s" % sta.site.name)
@@ -60,6 +71,7 @@ def write_SACPZ(inventory, file_or_file_object):
                 # systematically different from the StationXML entries.
                 # It is defined as an incidence angle (like done in SAC for
                 # sensor orientation), rather than an actual dip.
+                # Add '(SEED)' to clarify that we adhere to SEED convention
                 out.append("* DIP (SEED)  : %s" % cha.dip)
                 out.append("* AZIMUTH     : %s" % cha.azimuth)
                 out.append("* SAMPLE RATE : %s" % cha.sample_rate)
@@ -72,7 +84,7 @@ def write_SACPZ(inventory, file_or_file_object):
                                                         sens.input_units))
                 out.append("* A0          : %s" % paz.normalization_factor)
                 out.append("* " + "*" * 50)
-                out.append(cha.response.get_sacpz())
+                out.append(paz_to_sacpz_string(paz, sens))
                 out.extend(["", ""])
     out = "\n".join(out) + "\n\n"
     try:

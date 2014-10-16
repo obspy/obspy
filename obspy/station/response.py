@@ -17,6 +17,7 @@ import warnings
 import ctypes as C
 import numpy as np
 from math import pi
+from copy import deepcopy
 from collections import defaultdict
 
 from obspy.core.util.base import ComparingObject
@@ -1286,13 +1287,13 @@ class Response(ComparingObject):
         :rtype: :class:`PolesZerosResponseStage`
         :returns: Poles and Zeros response stage.
         """
-        paz = [stage for stage in self.response_stages
+        paz = [deepcopy(stage) for stage in self.response_stages
                if isinstance(stage, PolesZerosResponseStage)]
         if len(paz) == 0:
             msg = "No PolesZerosResponseStage found."
             raise Exception(msg)
         elif len(paz) > 1:
-            msg = ("More than one PolesZerosResponseStage encountered."
+            msg = ("More than one PolesZerosResponseStage encountered. "
                    "Returning first one found.")
             warnings.warn(msg)
         return paz[0]
@@ -1306,17 +1307,32 @@ class Response(ComparingObject):
         """
         # extract paz
         paz = self.get_paz()
-        # assemble output string
-        out = []
-        out.append("ZEROS %i" % len(paz.zeros))
-        for c in paz.zeros:
-            out.append(" %+.6e %+.6e" % (c.real, c.imag))
-        out.append("POLES %i" % len(paz.poles))
-        for c in paz.poles:
-            out.append(" %+.6e %+.6e" % (c.real, c.imag))
-        constant = paz.normalization_factor * self.instrument_sensitivity.value
-        out.append("CONSTANT %.6e" % constant)
-        return "\n".join(out)
+        sensitivity = self.instrument_sensitivity.value
+        return paz_to_sacpz_string(paz, sensitivity)
+
+
+def paz_to_sacpz_string(paz, instrument_sensitivity):
+    """
+    Returns SACPZ ASCII text representation of Response.
+
+    :type paz: :class:`PolesZerosResponseStage`
+    :param paz: Poles and Zeros response information
+    :type instrument_sensitivity: :class:`InstrumentSensitivity`
+    :param paz: Overall instrument sensitivity of response
+    :rtype: str
+    :returns: Textual SACPZ representation of poles and zeros response stage.
+    """
+    # assemble output string
+    out = []
+    out.append("ZEROS %i" % len(paz.zeros))
+    for c in paz.zeros:
+        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+    out.append("POLES %i" % len(paz.poles))
+    for c in paz.poles:
+        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+    constant = paz.normalization_factor * instrument_sensitivity.value
+    out.append("CONSTANT %.6e" % constant)
+    return "\n".join(out)
 
 
 class InstrumentSensitivity(ComparingObject):
