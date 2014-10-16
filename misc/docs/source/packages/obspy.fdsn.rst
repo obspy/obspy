@@ -20,5 +20,6 @@
        :nosignatures:
 
        client
+       download_helpers
 
     .. comment to end block
