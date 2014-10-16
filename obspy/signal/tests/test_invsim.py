@@ -436,9 +436,10 @@ class InvSimTestCase(unittest.TestCase):
         evr_spline was based on GPL plotutils, now replaced by LGPL spline
         library. Unittest for this function.
         """
-        #char *evr_spline(int num_points, double *t, double *y, double tension,
-        #                 double k, double *xvals_arr, int num_xvals,
-        #                 double **p_retvals_arr, int *p_num_retvals)
+        # char *evr_spline(int num_points, double *t, double *y,
+        #                  double tension, double k,
+        #                  double *xvals_arr, int num_xvals,
+        #                  double **p_retvals_arr, int *p_num_retvals)
         clibevresp.evr_spline.argtypes = [
             C.c_int,  # num_points
             np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
