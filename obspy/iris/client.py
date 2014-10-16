@@ -130,7 +130,7 @@ class Client(object):
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
-            print(('\nRequesting %s' % (remoteaddr)))
+            print('\nRequesting %s' % (remoteaddr))
         req = urllib.request.Request(url=remoteaddr, data=data,
                                      headers=headers)
         response = urllib.request.urlopen(req, timeout=self.timeout)

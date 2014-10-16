@@ -929,21 +929,21 @@ class SacIO(object):
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
-            print((label, value))
+            print(label, value)
 
     def PrintFValue(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
         if value != -12345.0:
-            print(('%s %.8g' % (label, value)))
+            print('%s %.8g' % (label, value))
 
     def PrintSValue(self, label='=', value='-12345'):
         """
         Convenience function for printing undefined string header values.
         """
         if value.find('-12345') == -1:
-            print((label, value))
+            print(label, value)
 
     def ListStdValues(self):  # h is a header list, s is a float list
         """
@@ -983,13 +983,13 @@ class SacIO(object):
             date = time.strptime(repr(nzyear) + " " + repr(nzjday),
                                  "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
-            print((pattern % (month, date,
-                              self.GetHvalue('nzyear'),
-                              self.GetHvalue('nzjday'),
-                              self.GetHvalue('nzhour'),
-                              self.GetHvalue('nzmin'),
-                              self.GetHvalue('nzsec'),
-                              self.GetHvalue('nzmsec'))))
+            print(pattern % (month, date,
+                             self.GetHvalue('nzyear'),
+                             self.GetHvalue('nzjday'),
+                             self.GetHvalue('nzhour'),
+                             self.GetHvalue('nzmin'),
+                             self.GetHvalue('nzsec'),
+                             self.GetHvalue('nzmsec')))
         except ValueError:
             pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))

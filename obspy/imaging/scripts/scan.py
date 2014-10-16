@@ -76,12 +76,12 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, ignore_links=False):
     from matplotlib.dates import date2num
     if ignore_links and os.path.islink(file):
-        print(("Ignoring symlink: %s" % (file)))
+        print("Ignoring symlink: %s" % (file))
         return counter
     try:
         stream = read(file, format=format, headonly=True)
     except:
-        print(("Can not read %s" % (file)))
+        print("Can not read %s" % (file))
         return counter
     s = "%s %s" % (counter, file)
     if verbose:
@@ -101,7 +101,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
             samp_int_dict[_id].\
                 append(1. / (24 * 3600 * tr.stats.sampling_rate))
         except ZeroDivisionError:
-            print(("Skipping file with zero samlingrate: %s" % (file)))
+            print("Skipping file with zero samlingrate: %s" % (file))
             return counter
     return (counter + 1)
 
@@ -109,7 +109,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
                     verbose=False, ignore_links=False):
     if ignore_links and os.path.islink(path):
-        print(("Ignoring symlink: %s" % (path)))
+        print("Ignoring symlink: %s" % (path))
         return counter
     if os.path.isfile(path):
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
@@ -119,7 +119,7 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
             counter = recursive_parse(data_dict, samp_int_dict, file, counter,
                                       format, verbose, ignore_links)
     else:
-        print(("Problem with filename/dirname: %s" % (path)))
+        print("Problem with filename/dirname: %s" % (path))
     return counter
 
 

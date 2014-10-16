@@ -629,7 +629,7 @@ class Parser(object):
             raise SEEDParserException(msg)
         self.record_length = length
         if self.debug:
-            print(("RECORD LENGTH: %d" % (self.record_length)))
+            print("RECORD LENGTH: %d" % (self.record_length))
         # Set all temporary attributes.
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Jump back to beginning.

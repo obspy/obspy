@@ -167,7 +167,7 @@ def _getSuites(verbosity=1, names=[]):
             status = False
             if verbosity:
                 print(e)
-                print(("Cannot import test suite for module obspy.%s" % name))
+                print("Cannot import test suite for module obspy.%s" % name)
         else:
             suites[name] = ut.suiteClass(suite)
     return suites, status
@@ -192,7 +192,7 @@ def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
             data = codecs.open(log, 'r', encoding='UTF-8').read()
             result['install_log'] = escape(data)
         except:
-            print(("Cannot open log file %s" % log))
+            print("Cannot open log file %s" % log)
     # get ObsPy module versions
     result['obspy'] = {}
     tests = 0
@@ -325,10 +325,10 @@ def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
         response = conn.getresponse()
     # handle errors
     if response.status == 200:
-        print(("Test report has been sent to %s. Thank you!" % (server)))
+        print("Test report has been sent to %s. Thank you!" % (server))
     else:
-        print(("Error: Could not sent a test report to %s." % (server)))
-        print((response.reason))
+        print("Error: Could not sent a test report to %s." % (server))
+        print(response.reason)
 
 
 class _TextTestResult(unittest._TextTestResult):

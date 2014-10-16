@@ -216,7 +216,7 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + \
             urllib.parse.urlencode(params)
         if self.debug:
-            print(('\nRequesting %s' % (remoteaddr)))
+            print('\nRequesting %s' % (remoteaddr))
         # certain requests randomly fail on rare occasions, retry
         for _i in range(self.retries):
             try:

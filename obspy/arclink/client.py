@@ -185,7 +185,7 @@ class Client(object):
         b_buffer = (buffer + '\r\n').encode()
         self._client.write(b_buffer)
         if self.debug:
-            print((b'>>> ' + b_buffer))
+            print(b'>>> ' + b_buffer)
 
     def _readln(self, value=b''):
         line = self._client.read_until(value + b'\r\n', self.timeout)
@@ -194,7 +194,7 @@ class Client(object):
             msg = "Timeout waiting for expected %s, got %s"
             raise ArcLinkException(msg % (value, line.decode()))
         if self.debug:
-            print((b'... ' + line))
+            print(b'... ' + line)
         return line
 
     def _hello(self):
@@ -358,7 +358,7 @@ class Client(object):
                 if data.startswith(b'<?xml'):
                     print(data)
                 else:
-                    print(("%d bytes of data read" % len(data)))
+                    print("%d bytes of data read" % len(data))
         finally:
             self._writeln('PURGE %d' % req_id)
             self._bye()

@@ -644,7 +644,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         raise TypeError('only Stream or numpy.ndarray allowed')
 
     if verbose:
-        print(("coordys = " + coordsys))
+        print("coordsys = " + coordsys)
 
     if coordsys == 'lonlat':
         center_lon = geometry[:, 0].mean()
@@ -919,7 +919,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(geometry)
         print("stream contains following traces:")
         print(stream)
-        print(("stime = " + str(stime) + ", etime = " + str(etime)))
+        print("stime = " + str(stime) + ", etime = " + str(etime))
 
     time_shift_table = get_timeshift(geometry, sll_x, sll_y,
                                      sl_s, grdpts_x, grdpts_y)
@@ -1004,7 +1004,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
             if verbose:
-                print((newstart, (newstart + (nsamp / fs)), res[-1][1:]))
+                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
         if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep

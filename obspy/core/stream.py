@@ -1224,9 +1224,9 @@ class Stream(object):
         Total: 0 gap(s) and 1 overlap(s)
         """
         result = self.getGaps(min_gap, max_gap)
-        print(("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
-                                                 'Next Sample', 'Delta',
-                                                 'Samples')))
+        print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
+                                                'Next Sample', 'Delta',
+                                                'Samples'))
         gaps = 0
         overlaps = 0
         for r in result:
