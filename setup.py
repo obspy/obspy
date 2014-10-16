@@ -106,6 +106,7 @@ EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
               'pyimgur'],
+    'arclink': ['m2crypto'],
     'neries': ['suds-jurko']}
 # PY2
 if sys.version_info[0] == 2:
