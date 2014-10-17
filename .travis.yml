@@ -36,8 +36,10 @@ before_install:
   - git config --local user.name "travis-ci"
   - git pull
   ### wheel upload start
+  - rm -f *-py${TRAVIS_PYTHON_VERSION//.}-*.whl *-py${TRAVIS_PYTHON_VERSION:0:1}-*.whl
+  - rm -f *-cp${TRAVIS_PYTHON_VERSION//.}-*.whl
   - mv -n /tmp/wheelhouse-build/* /tmp/wheelhouse/
-  - git add *
+  - git add --all -v .
   - git diff --exit-code --staged && exit 0 || echo  # exit if no staged changes otherwise continue
   - git commit -m "Uploading new wheels"
   - git push --quiet origin master
