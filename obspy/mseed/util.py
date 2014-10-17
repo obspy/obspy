@@ -742,7 +742,7 @@ def set_flags_in_fixed_headers(filename, flags):
                     reclen = 2**reclen_pow
                     break
                 else:
-                    next_blockette = unpack(native_str(">H"), 
+                    next_blockette = unpack(native_str(">H"),
                                             mseed_file.read(2))[0]
 
             if reclen == -1:

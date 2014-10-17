@@ -1119,7 +1119,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                         self.assertEqual(timing_qual, 63, "timing_qual")
                         break
                     else:
-                        next_blockette = unpack(native_str(">H"), tf.read(2))[0]
+                        next_blockette = unpack(native_str(">H"),
+                                                tf.read(2))[0]
 
         # Test invalid data: string
         stat_header['mseed']['blkt1001']['timing_quality'] = "obviouslyinvalid"
