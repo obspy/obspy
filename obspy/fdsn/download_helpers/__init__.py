@@ -115,10 +115,11 @@ values will be interpolated to acquire the final filename.
 The most complex but also most powerful possibility is to use a function which
 will be evaluated to determine the filename. If the function returns ``True``,
 the MiniSEED file is assumed to already be available and will not be downloaded
-again. If it returns a string, the MiniSEED file will be saved to that path.
-Utilize closures to use any other paramters in the function. This hypothetical
-function checks if the file is already in a database and otherwise returns a
-atring.
+again; keep in mind that in that case no station data will be downloaded for
+that channel. If it returns a string, the MiniSEED file will be saved to that
+path. Utilize closures to use any other paramters in the function. This
+hypothetical function checks if the file is already in a database and otherwise
+returns a string.
 
 >>> def get_mseed_storage(network, station, location, channel):
 ...     if is_in_db(network, station, location, channel):
@@ -130,7 +131,8 @@ atring.
 .. note::
 
     No matter which approach is chosen, if a file already exists, it will not
-    be overwritten, regardless of the actual contents of the file.
+    be overwritten; it will be parsed and the download helper class will
+    attempt to download matching StationXML files.
 
 
 Storing StationXML files

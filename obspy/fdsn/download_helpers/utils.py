@@ -230,6 +230,7 @@ def attach_miniseed_filenames(stations, mseed_path):
     """
     stations_to_download = []
     existing_miniseed_filenames = []
+    ignored_channel_count = 0
 
     stations = copy.deepcopy(stations)
 
@@ -239,16 +240,15 @@ def attach_miniseed_filenames(stations, mseed_path):
             filename = get_mseed_filename(
                 mseed_path, station.network, station.station,
                 channel.location, channel.channel)
-            # If True, it will not be downloaded again.
+            # If True, the channel will essentially be ignored.
             if filename is True:
-                existing_miniseed_filenames.append((
-                    station.network, station.station, channel.location,
-                    channel.channel))
+                ignored_channel_count += 1
                 continue
             # If the path exists, it will not be downloaded again.
             elif os.path.exists(filename):
                 existing_miniseed_filenames.append(filename)
                 continue
+            # Make sure the directories exist.
             dirname = os.path.dirname(filename)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
@@ -261,7 +261,8 @@ def attach_miniseed_filenames(stations, mseed_path):
 
     return {
         "stations_to_download": stations_to_download,
-        "existing_miniseed_filenames": existing_miniseed_filenames
+        "existing_miniseed_filenames": existing_miniseed_filenames,
+        "ignored_channel_count": ignored_channel_count
     }
 
 

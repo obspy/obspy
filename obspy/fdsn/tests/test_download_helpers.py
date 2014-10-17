@@ -13,13 +13,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import mock
 import os
 import unittest
 
 from obspy.fdsn.download_helpers import domain
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     filter_stations, filter_based_on_interstation_distance, Station, Channel, \
-    get_stationxml_filename, get_mseed_filename
+    get_stationxml_filename, get_mseed_filename, attach_miniseed_filenames
 
 
 class DomainTestCase(unittest.TestCase):
@@ -433,6 +434,54 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         # proper type.
         self.assertRaises(TypeError, get_mseed_filename, lambda x: 1,
                           "BW", "FURT", "", "BHE")
+
+    @mock.patch("os.makedirs")
+    def test_attach_miniseed_filenames(self, patch):
+        """
+        Tests the attach_miniseed_filenames function. Also serves as an
+        integration test for the get_mseed_filename() function.
+        """
+        channels = [Channel("", "BHE"), Channel("", "BHN"), Channel("", "BHZ")]
+        stations = [Station("BW", "ALTM", 0, 0, 0, channels=channels),
+                    Station("BW", "FURT", 0, 0, 0, channels=channels)]
+
+        # Simple folder setting.
+        new_stations = attach_miniseed_filenames(stations, "waveforms")
+        self.assertEqual(len(new_stations["stations_to_download"]), 2)
+        self.assertEqual(new_stations["existing_miniseed_filenames"], [])
+        self.assertEqual(new_stations["ignored_channel_count"], 0)
+        for stat in new_stations["stations_to_download"]:
+            self.assertEqual(
+                [_i.mseed_filename for _i in stat.channels],
+                ["waveforms/BW.FURT..BH%s.mseed" %
+                 _i for _i in ["E", "N", "Z"]])
+        # 6 channels thus 6 directories should have been created.
+        self.assertEqual(patch.call_count, 6)
+        patch.reset_mock()
+
+        # String template.
+        new_stations = attach_miniseed_filenames(
+            stations,  "A/{network}/{station}/{location}{channel}.mseed")
+        self.assertEqual(len(new_stations["stations_to_download"]), 2)
+        self.assertEqual(new_stations["existing_miniseed_filenames"], [])
+        self.assertEqual(new_stations["ignored_channel_count"], 0)
+        for stat in new_stations["stations_to_download"]:
+            self.assertEqual(
+                [_i.mseed_filename for _i in stat.channels],
+                ["A/BW/FURT/BH%s.mseed" %
+                 _i for _i in ["E", "N", "Z"]])
+        # Once again 6 channels.
+        self.assertEqual(patch.call_count, 6)
+        patch.reset_mock()
+
+        # A function returning just returning True should result in all
+        # channels being ignored.
+        def get_name(*args):
+            return True
+        new_stations = attach_miniseed_filenames(stations, get_name)
+        self.assertEqual(new_stations["stations_to_download"], [])
+        self.assertEqual(new_stations["existing_miniseed_filenames"], [])
+        self.assertEqual(new_stations["ignored_channel_count"], 6)
 
 
 def suite():
