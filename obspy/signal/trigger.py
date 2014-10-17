@@ -630,10 +630,10 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
                                 + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
-            if off > on:
+            try:
                 cft_peak = tr.data[on:off].max()
                 cft_std = tr.data[on:off].std()
-            else:
+            except ValueError:
                 cft_peak = tr.data[on]
                 cft_std = tr.data[on].std()
             on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
