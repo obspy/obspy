@@ -1317,10 +1317,11 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     displacement and vice versa is still under construction. It works
     but I cannot guarantee that the values are correct. For more
     information on the SAC-pole-zero format see:
-    http://www.iris.edu/software/sac/commands/transfer.html. For a
+    http://www.iris.edu/files/sac-manual/commands/transfer.html. For a
     useful discussion on polezero files and transfer functions in
     general see:
-    http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf.
+    http://seis-uk.le.ac.uk/equipment/downloads/data_management/\
+seisuk_instrument_resp_removal.pdf
     Also bear in mind that according to the SAC convention for
     pole-zero files CONSTANT is defined as:
     digitizer_gain*seismometer_gain*A0. This means that it does not

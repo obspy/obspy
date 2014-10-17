@@ -4,7 +4,7 @@ NEIC PDE mchedr (machine-readable Earthquake Data Report) read support.
 
 Only supports file format revision of February 24, 2004.
 
-.. seealso:: http://earthquake.usgs.gov/research/data/pde.php
+.. seealso:: http://earthquake.usgs.gov/data/pde.php
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Claudio Satriano

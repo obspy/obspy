@@ -96,7 +96,7 @@ more detailed usage examples.
 
 .. figure:: /_images/Event.png
 
-.. _NumPy: http://docs.scipy.org
+.. _NumPy: http://www.numpy.org
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

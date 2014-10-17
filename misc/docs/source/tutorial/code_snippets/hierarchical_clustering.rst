@@ -49,5 +49,5 @@ right-hand subplot:
 .. plot:: tutorial/code_snippets/hierarchical_clustering.py
 
 
-.. _`hcluster`: http://pypi.python.org/pypi/hcluster
+.. _`hcluster`: https://pypi.python.org/pypi/hcluster
 .. _`examples webserver`: http://examples.obspy.org

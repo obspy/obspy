@@ -109,6 +109,6 @@ parameter can be omitted (each trace's start time is used internally).
 .. include:: seismometer_correction_simulation_4.py
    :literal:
 
-.. _matplotlib: http://matplotlib.sourceforge.net/
+.. _matplotlib: http://matplotlib.org/
 
-.. _evalresp: http://www.iris.edu/software/downloads/seed_tools/
+.. _evalresp: http://www.iris.edu/ds/nodes/dmc/software/downloads/evalresp/

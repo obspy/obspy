@@ -109,13 +109,12 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     :func:`matplotlib.mlab.psd` default behavior which changes with
     matplotlib version 0.98.4:
 
-    * http://matplotlib.sourceforge.net/users/whats_new.html\
-#psd-amplitude-scaling
-    * http://matplotlib.sourceforge.net/_static/CHANGELOG
+    * http://matplotlib.org/users/whats_new.html#psd-amplitude-scaling
+    * http://matplotlib.org/_static/CHANGELOG
       (entries on 2009-05-18 and 2008-11-11)
     * http://matplotlib.svn.sourceforge.net/viewvc/matplotlib\
 ?view=revision&revision=6518
-    * http://matplotlib.sourceforge.net/api/api_changes.html#changes-for-0-98-x
+    * http://matplotlib.org/api/api_changes.html#changes-for-0-98-x
 
     .. note::
         For details on all arguments see :func:`matplotlib.mlab.psd`.
@@ -198,7 +197,7 @@ def welch_window(N):
 
     .. note::
         See e.g.:
-        http://www.cg.tuwien.ac.at/hostings/cescg/CESCG99/TTheussl/node7.html
+        http://www.cescg.org/CESCG99/TTheussl/node7.html
 
     :type N: int
     :param N: Length of window function.
