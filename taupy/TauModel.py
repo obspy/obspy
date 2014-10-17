@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from taupy.helper_classes import SlownessModelError, TauModelError
-from .TauBranch import TauBranch
+from taupy.TauBranch import TauBranch
 from itertools import count
 from math import pi
 import pickle
@@ -196,7 +196,7 @@ class TauModel(object):
         return desc
 
     def validate(self):
-        # TODO: implement the model validation; not critical right now
+        # Could implement the model validation; not critical right now
         return True
 
     def depthCorrect(self, depth):

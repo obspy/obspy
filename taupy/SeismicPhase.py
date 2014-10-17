@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .Arrival import Arrival
-from .helper_classes import TauModelError
+from taupy.Arrival import Arrival
+from taupy.helper_classes import TauModelError
 import math
 from copy import deepcopy
 

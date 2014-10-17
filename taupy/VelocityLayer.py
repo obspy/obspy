@@ -4,7 +4,7 @@
 Package for storage and manipulation of seismic earth models.
 """
 
-from .header import TauPException
+from taupy.header import TauPException
 # TauPException does nothing yet
 
 

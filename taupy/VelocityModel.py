@@ -6,8 +6,8 @@ Package for storage and manipulation of seismic earth models.
 import os
 import sys
 
-from .header import TauPException
-from .VelocityLayer import VelocityLayer
+from taupy.header import TauPException
+from taupy.VelocityLayer import VelocityLayer
 
 
 class VelocityModel(object):
