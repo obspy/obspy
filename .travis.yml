@@ -17,13 +17,11 @@ before_install:
   - cd /tmp
   - mkdir wheelhouse-build
   - sudo apt-get build-dep --ignore-missing -qq -y python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto
-  - pip wheel ${WHEEL_BUILD_ARGS} numpy==$NUMPY_VERSION
+  - pip wheel ${WHEEL_BUILD_ARGS} numpy==$NUMPY_VERSION scipy==$SCIPY_VERSION matplotlib==$MATPLOTLIB_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build numpy==$NUMPY_VERSION
-  - pip wheel ${WHEEL_BUILD_ARGS} scipy==$SCIPY_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build scipy==$SCIPY_VERSION
-  - pip wheel ${WHEEL_BUILD_ARGS} lxml sqlalchemy m2crypto six PyYAML
-  - pip wheel ${WHEEL_BUILD_ARGS} matplotlib==$MATPLOTLIB_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build matplotlib==$MATPLOTLIB_VERSION
+  - pip wheel ${WHEEL_BUILD_ARGS} lxml sqlalchemy m2crypto PyYAML
   # build modified basemap package with the large data files stripped (which we dont use in testing anyway)
   # geos link fix is included in basemap master now
   - pip wheel ${WHEEL_BUILD_ARGS} https://github.com/megies/basemap/archive/v1.0.7_geos_link_fix__no_high_res.zip
