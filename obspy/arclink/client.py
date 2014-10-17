@@ -399,7 +399,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :type compressed: bool, optional
@@ -512,7 +512,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
 
@@ -620,9 +620,9 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _ROUTING_NS_1_0 in list(xml_doc.nsmap.values()):
+        if _ROUTING_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _ROUTING_NS_1_0
-        elif _ROUTING_NS_0_1 in list(xml_doc.nsmap.values()):
+        elif _ROUTING_NS_0_1 in xml_doc.nsmap.values():
             xml_ns = _ROUTING_NS_0_1
         else:
             msg = "Unknown routing namespace %s"
@@ -978,7 +978,7 @@ class Client(object):
         """
         Writes response information into a file.
 
-        :type filename: str or file like object
+        :type filename: str or file
         :param filename: Name of the output file or open file like object.
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -992,9 +992,9 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'SEED'``, optional
-        :param format: Output format. Currently only Dataless SEED is
-            supported.
+        :type format: str, optional
+        :param format: Output format. Currently only Dataless SEED (``'SEED'``)
+            is supported.
         :return: None
 
         .. rubric:: Example
@@ -1126,14 +1126,14 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _INVENTORY_NS_1_0 in list(xml_doc.nsmap.values()):
+        if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'
             component_ns = 'stream'
             seismometer_ns = 'sensor'
             name_ns = 'publicID'
             resp_paz_ns = 'responsePAZ'
-        elif _INVENTORY_NS_0_2 in list(xml_doc.nsmap.values()):
+        elif _INVENTORY_NS_0_2 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_0_2
             stream_ns = 'seis_stream'
             component_ns = 'component'
@@ -1359,7 +1359,7 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in list(data.items())
+        stations = [value for key, value in data.items()
                     if key.startswith(network + '.')
                     and "code" in value]
         return stations

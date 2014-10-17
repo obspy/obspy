@@ -31,22 +31,22 @@ using the :func:`~obspy.core.stream.read()` function.
 The data format is automatically detected. Important in this tutorial are the
 :class:`~obspy.core.trace.Trace` attributes:
     
-    ``tr.data``
-        contains the data as :class:`numpy.ndarray`
-        
-    ``tr.stats``
-        contains a dict-like class of header entries
+``tr.data``
+    contains the data as :class:`numpy.ndarray`
     
-    ``tr.stats.sampling_rate``
-        the sampling rate
-    
-    ``tr.stats.npts``
-        sample count of data
+``tr.stats``
+    contains a dict-like class of header entries
+
+``tr.stats.sampling_rate``
+    the sampling rate
+
+``tr.stats.npts``
+    sample count of data
 
 As an example, the header of the data file is printed and the data are plotted
 like this:
 
-    >>> print tr.stats
+    >>> print(tr.stats)
              network: 
              station: EV0_6
             location: 
@@ -65,7 +65,7 @@ Using the :meth:`~obspy.core.trace.Trace.plot` method of the
 
     >>> tr.plot(type="relative")
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial.py
+.. plot:: tutorial/code_snippets/trigger_tutorial.py
 
 -----------------
 Available Methods
@@ -74,16 +74,16 @@ Available Methods
 After loading the data, we are able to pass the waveform data to the following
 trigger routines defined in :mod:`obspy.signal.trigger`:
 
-    .. autosummary::
-       :toctree: ../../packages/autogen
+.. autosummary::
+    :toctree: ../../packages/autogen
 
-       ~obspy.signal.trigger.recSTALTA
-       ~obspy.signal.trigger.carlSTATrig
-       ~obspy.signal.trigger.classicSTALTA
-       ~obspy.signal.trigger.delayedSTALTA
-       ~obspy.signal.trigger.zDetect
-       ~obspy.signal.trigger.pkBaer
-       ~obspy.signal.trigger.arPick
+    ~obspy.signal.trigger.recSTALTA
+    ~obspy.signal.trigger.carlSTATrig
+    ~obspy.signal.trigger.classicSTALTA
+    ~obspy.signal.trigger.delayedSTALTA
+    ~obspy.signal.trigger.zDetect
+    ~obspy.signal.trigger.pkBaer
+    ~obspy.signal.trigger.arPick
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
@@ -115,7 +115,7 @@ Classic Sta Lta
     >>> cft = classicSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plotTrigger(trace, cft, 1.5, 0.5)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
 
 Z-Detect
 ========
@@ -124,7 +124,7 @@ Z-Detect
     >>> cft = zDetect(trace.data, int(10 * df))
     >>> plotTrigger(trace, cft, -0.4, -0.3)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_z_detect.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_z_detect.py
 
 Recursive Sta Lta
 =================
@@ -133,7 +133,7 @@ Recursive Sta Lta
     >>> cft = recSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plotTrigger(trace, cft, 1.2, 0.5)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
 
 Carl-Sta-Trig
 =============
@@ -142,7 +142,7 @@ Carl-Sta-Trig
     >>> cft = carlSTATrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plotTrigger(trace, cft, 20.0, -20.0)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_carl_sta_trig.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_carl_sta_trig.py
 
 Delayed Sta Lta
 ===============
@@ -151,7 +151,7 @@ Delayed Sta Lta
     >>> cft = delayedSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plotTrigger(trace, cft, 5, 10)
 
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
 
 .. _trigger-tutorial-coincidence:
 
@@ -403,7 +403,5 @@ Advanced Example
 A more complicated example, where the data are retrieved via ArcLink and
 results are plotted step by step, is shown here:
 
-.. include:: trigger_tutorial_advanced.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/trigger_tutorial_advanced.py
+.. plot:: tutorial/code_snippets/trigger_tutorial_advanced.py
+   :include-source:

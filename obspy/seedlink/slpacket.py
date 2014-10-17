@@ -36,7 +36,7 @@ class SLPacket(object):
         the termination sequence completed.
     :type SLTERMINATE: str
     :var SLNOPACKET: No packet flag - indicates no data available.
-    :type SLNOPACKET: chr
+    :type SLNOPACKET: bytes
     :var SLERROR: Error flag - indicates server reported an error.
     :type SLERROR: str
     :var SLHEADSIZE: SeedLink packet header size.
@@ -160,6 +160,18 @@ class SLPacket(object):
                                        sampletype)
         self.trace = Trace(data, header)
         return self.trace
+
+    def getStringPayload(self):
+        """
+        Get the MiniSEED payload, parsed as string.
+        """
+        msrecord_py = self.getMSRecord()
+
+        # This is the same data buffer that is accessed by
+        # _ctypesArray2NumpyArray in getTrace above.
+        payload = C.string_at(msrecord_py.datasamples, msrecord_py.samplecnt)
+
+        return payload
 
     def getType(self):
         # print "DEBUG: self.slhead:", repr(self.slhead)

@@ -1,6 +1,7 @@
 """
 USAGE: export_seismograms_to_ascii.py in_file out_file calibration
 """
+from __future__ import print_function
 from obspy.core import read
 import numpy as np
 import sys
@@ -10,7 +11,7 @@ try:
     out_file = sys.argv[2]
     calibration = float(sys.argv[3])
 except:
-    print __doc__
+    print(__doc__)
     raise
 
 st = read(in_file)

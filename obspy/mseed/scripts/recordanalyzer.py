@@ -10,8 +10,6 @@
 # Copyright (C) 2010-2012 Lion Krischer
 # --------------------------------------------------------------------
 """
-USAGE: obspy-mseed-recordanalyzer filename.mseed
-
 A command-line tool to analyze Mini-SEED records.
 
 :copyright:
@@ -23,12 +21,13 @@ A command-line tool to analyze Mini-SEED records.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from copy import deepcopy
 from obspy import UTCDateTime
 from obspy.core.util import OrderedDict
 from obspy import __version__
-from optparse import OptionParser
+from argparse import ArgumentParser
 from struct import unpack
 
 
@@ -114,7 +113,7 @@ class RecordAnalyser(object):
         # Seek the year.
         self.file.seek(self.record_offset + 20, 0)
         # Get the year.
-        year = unpack('>H', self.file.read(2))[0]
+        year = unpack(native_str('>H'), self.file.read(2))[0]
         if year >= 1900 and year <= 2050:
             self.endian = '>'
         else:
@@ -133,19 +132,21 @@ class RecordAnalyser(object):
         # Read and unpack.
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
-        encoding = ('%s20c2H3Bx4H4Bl2H' % self.endian)
+        encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
         header_item = unpack(encoding, fixed_header)
         # Write values to dictionary.
-        self.fixed_header['Sequence number'] = int(''.join(header_item[:6]))
-        self.fixed_header['Data header/quality indicator'] = header_item[6]
+        self.fixed_header['Sequence number'] = \
+            int(''.join(x.decode('ascii') for x in header_item[:6]))
+        self.fixed_header['Data header/quality indicator'] = \
+            header_item[6].decode('ascii')
         self.fixed_header['Station identifier code'] = \
-            ''.join(header_item[8:13]).strip()
+            ''.join(x.decode('ascii') for x in header_item[8:13]).strip()
         self.fixed_header['Location identifier'] = \
-            ''.join(header_item[13:15]).strip()
+            ''.join(x.decode('ascii') for x in header_item[13:15]).strip()
         self.fixed_header['Channel identifier'] = \
-            ''.join(header_item[15:18]).strip()
+            ''.join(x.decode('ascii') for x in header_item[15:18]).strip()
         self.fixed_header['Network code'] = \
-            ''.join(header_item[18:20]).strip()
+            ''.join(x.decode('ascii') for x in header_item[18:20]).strip()
         # Construct the starttime. This is only the starttime in the fixed
         # header without any offset. See page 31 of the SEED manual for the
         # time definition.
@@ -180,8 +181,8 @@ class RecordAnalyser(object):
             self.file.seek(cur_blkt_offset, 0)
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
-            blkt_type, next_blockette = unpack('%s2H' % self.endian,
-                                               self.file.read(4))
+            encoding = native_str('%s2H' % self.endian)
+            blkt_type, next_blockette = unpack(encoding, self.file.read(4))
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
             cur_blkt_offset = next_blockette
@@ -198,17 +199,17 @@ class RecordAnalyser(object):
         blkt_dict = OrderedDict()
         # Check the blockette number.
         if blkt_type == 100:
-            unpack_values = unpack('%sfxxxx' % self.endian,
+            unpack_values = unpack(native_str('%sfxxxx' % self.endian),
                                    self.file.read(8))
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
         elif blkt_type == 1000:
-            unpack_values = unpack('%sBBBx' % self.endian,
+            unpack_values = unpack(native_str('%sBBBx' % self.endian),
                                    self.file.read(4))
             blkt_dict['Encoding Format'] = int(unpack_values[0])
             blkt_dict['Word Order'] = int(unpack_values[1])
             blkt_dict['Data Record Length'] = int(unpack_values[2])
         elif blkt_type == 1001:
-            unpack_values = unpack('%sBBxB' % self.endian,
+            unpack_values = unpack(native_str('%sBBxB' % self.endian),
                                    self.file.read(4))
             blkt_dict['Timing quality'] = int(unpack_values[0])
             blkt_dict['mu_sec'] = int(unpack_values[1])
@@ -260,14 +261,14 @@ class RecordAnalyser(object):
                        'Header Endianness: %s\n\n') % \
                       (filename, self.record_offset, endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
-        for key in list(self.fixed_header.keys()):
+        for key in self.fixed_header.keys():
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
         ret_val += '\nBLOCKETTES\n'
-        for key in list(self.blockettes.keys()):
+        for key in self.blockettes.keys():
             ret_val += '\t%i:' % key
             if not len(self.blockettes[key]):
                 ret_val += '\tNOT YET IMPLEMENTED\n'
-            for _i, blkt_key in enumerate(list(self.blockettes[key].keys())):
+            for _i, blkt_key in enumerate(self.blockettes[key].keys()):
                 if _i == 0:
                     tabs = '\t'
                 else:
@@ -279,26 +280,28 @@ class RecordAnalyser(object):
         return ret_val
 
 
-def main():
+def main(argv=None):
     """
     Entry point for setup.py.
     """
-    usage = "USAGE: %prog /path/to/file.mseed\n\n"
-    parser = OptionParser(usage.strip(), version="%prog " + __version__)
-    parser.add_option("-n", default=0, type='int', dest="n",
-                      help="show info about N-th record")
-    (options, args) = parser.parse_args()
-    if len(args) > 0:
-        filename = args[0]
-        rec = RecordAnalyser(filename)
-        i = 0
-        try:
-            while i < options.n:
-                i += 1
-                next(rec)
-        except:
-            pass
-        print(rec)
+    parser = ArgumentParser(prog='obspy-mseed-recordanalyzer',
+                            description=__doc__.split('\n')[0])
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-n', default=0, type=int,
+                        help='show info about N-th record (default: 0)')
+    parser.add_argument('filename', help='file to analyze')
+    args = parser.parse_args(argv)
+
+    rec = RecordAnalyser(args.filename)
+    i = 0
+    try:
+        while i < args.n:
+            i += 1
+            next(rec)
+    except:
+        pass
+    print(rec)
 
 
 if __name__ == "__main__":

@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import copy
+import datetime
+import unittest
+
+import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
-import copy
-import datetime
-import numpy as np
-import unittest
 
 
 # some Python version don't support negative timestamps
@@ -868,9 +870,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
             def utcoffset(self, dt):  # @UnusedVariable
                 return datetime.timedelta(hours=8)
 
-            def tzname(self, dt):  # @UnusedVariable
-                return "Manila"
-
         dt = datetime.datetime(2006, 11, 21, 16, 30, tzinfo=ManilaTime())
         self.assertEqual(dt.isoformat(), '2006-11-21T16:30:00+08:00')
         self.assertEqual(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
@@ -934,6 +933,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
              "2013-09-01T12:34:56-0000"]
         for time_string in time_strings:
             self.assertEqual(t, UTCDateTime(time_string))
+
+    def test_year_2038_problem(self):
+        """
+        See issue #805
+        """
+        dt = UTCDateTime(2004, 1, 10, 13, 37, 4)
+        self.assertEqual(dt.__str__(), '2004-01-10T13:37:04.000000Z')
+        dt = UTCDateTime(2038, 1, 19, 3, 14, 8)
+        self.assertEqual(dt.__str__(), '2038-01-19T03:14:08.000000Z')
+        dt = UTCDateTime(2106, 2, 7, 6, 28, 16)
+        self.assertEqual(dt.__str__(), '2106-02-07T06:28:16.000000Z')
 
 
 def suite():

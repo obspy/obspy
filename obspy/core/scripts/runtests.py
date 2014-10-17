@@ -83,12 +83,14 @@ and report everything, you would run::
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
-from optparse import OptionParser, OptionGroup
+from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
+from argparse import ArgumentParser
+import types
 import copy
 import doctest
 import glob
@@ -103,7 +105,8 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future']
+                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future',
+                "flake8", "pyflakes", "pyimgur"]
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -170,7 +173,7 @@ def _getSuites(verbosity=1, names=[]):
     return suites, status
 
 
-def _createReport(ttrs, timetaken, log, server, hostname):
+def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -181,6 +184,8 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     from xml.etree import ElementTree as etree
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
+    result['slowest_tests'] = [("%0.3fs" % dt, "%s" % desc)
+                               for (desc, dt) in sorted_tests[:20]]
     result['timetaken'] = timetaken
     if log:
         try:
@@ -342,6 +347,45 @@ class _TextTestResult(unittest._TextTestResult):
         self.timer.append((test, time.time() - self.start))
 
 
+def _skip_test(test_case, msg):
+    """
+    Helper method intended to be bound to a `unittest.TestCase`
+    instance overwriting the `setUp()` method to immediately and
+    unconditionally skip the test when executed.
+
+    :type test_case: unittest.TestCase
+    :type msg: str
+    :param msg: Reason for unconditionally skipping the test.
+    """
+    # python 2.6 does not provide `skipTest`
+    try:
+        test_case.skipTest(msg)
+    except AttributeError:
+        raise Exception(msg)
+
+
+def _recursive_skip(test_suite, msg):
+    """
+    Helper method to recursively skip all tests aggregated in `test_suite`
+    with the the specified message.
+
+    :type test_suite: unittest.TestSuite
+    :type msg: str
+    :param msg: Reason for unconditionally skipping the tests.
+    """
+    def _custom_skip_test(testcase):
+        _skip_test(testcase, msg)
+
+    if isinstance(test_suite, unittest.TestSuite):
+        for obj in test_suite:
+            _recursive_skip(obj, msg)
+    elif isinstance(test_suite, unittest.TestCase):
+        # overwrite setUp method
+        test_suite.setUp = types.MethodType(_custom_skip_test, test_suite)
+    else:
+        raise NotImplementedError()
+
+
 class _TextTestRunner:
     def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
                  timeit=False):
@@ -362,6 +406,24 @@ class _TextTestRunner:
         keys = sorted(suites.keys())
         for id in keys:
             test = suites[id]
+            # run checker routine if any,
+            # to see if module's tests can be executed
+            msg = None
+            if id in MODULE_TEST_SKIP_CHECKS:
+                # acquire function specified by string
+                mod, func = MODULE_TEST_SKIP_CHECKS[id].rsplit(".", 1)
+                try:
+                    import importlib
+                    mod = importlib.import_module(mod)
+                # Py 2.6 workaround
+                except:
+                    mod = __import__(mod, fromlist=["obspy"])
+                func = getattr(mod, func)
+                msg = func()
+            # we encountered an error message, so skip all tests with given
+            # message
+            if msg:
+                _recursive_skip(test, msg)
             result = self._makeResult()
             start = time.time()
             test(result)
@@ -387,8 +449,8 @@ class _TextTestRunner:
         wasSuccessful = True
         if self.verbosity:
             self.stream.writeln()
-        for result in list(results.values()):
-            failed, errored = list(map(len, (result.failures, result.errors)))
+        for result in results.values():
+            failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
@@ -424,15 +486,15 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :type verbosity: int, optional
     :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
         ``2``=verbose, default is ``1``).
-    :type tests: list of strings, optional
+    :type tests: list of str, optional
     :param tests: Test suites to run. If no suite is given all installed tests
         suites will be started (default is a empty list).
         Example ``['obspy.core.tests.suite']``.
-    :type report: boolean, optional
+    :type report: bool, optional
     :param report: Submits a test report if enabled (default is ``False``).
-    :type log: string, optional
+    :type log: str, optional
     :param log: Filename of install log file to append to report.
-    :type server: string, optional
+    :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     if all:
@@ -466,19 +528,21 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     # run test suites
     ttr, total_time, errors = _TextTestRunner(verbosity=verbosity,
                                               timeit=timeit).run(suites)
+    # sort tests by time taken
+    mydict = {}
+    # loop over modules
+    for mod in ttr.values():
+        mydict.update(dict(mod.timer))
+    sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
+    sorted_tests = sorted_tests[::-1]
+
     if slowest:
-        mydict = {}
-        # loop over modules
-        for mod in list(ttr.values()):
-            mydict.update(dict(mod.timer))
-        sorted_tests = sorted(iter(mydict.items()), key=operator.itemgetter(1))
-        sorted_tests = sorted_tests[::-1][:slowest]
-        sorted_tests = ["%0.3fs: %s" % (dt, desc)
-                        for (desc, dt) in sorted_tests]
+        slowest_tests = ["%0.3fs: %s" % (dt, desc)
+                         for (desc, dt) in sorted_tests[:slowest]]
         print()
         print("Slowest Tests")
         print("-------------")
-        print(os.linesep.join(sorted_tests))
+        print(os.linesep.join(slowest_tests))
         print()
         print()
     if interactive and not report:
@@ -487,7 +551,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server, hostname)
+        _createReport(ttr, total_time, log, server, hostname, sorted_tests)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
@@ -496,7 +560,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         return errors
 
 
-def run(interactive=True):
+def run(argv=None, interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
@@ -505,91 +569,83 @@ def run(interactive=True):
     except:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
-    usage = "USAGE: %prog [options] module1 module2 ...\n\n"
-    parser = OptionParser(usage.strip())
-    parser.add_option("-v", "--verbose", default=False,
-                      action="store_true", dest="verbose",
-                      help="verbose mode")
-    parser.add_option("-q", "--quiet", default=False,
-                      action="store_true", dest="quiet",
-                      help="quiet mode")
+
+    parser = ArgumentParser(prog='obspy-runtests',
+                            description='A command-line program that runs all '
+                                        'ObsPy tests.')
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + get_git_version())
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbose mode')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='quiet mode')
+
     # filter options
-    filter = OptionGroup(
-        parser, "Module Filter", "Providing no modules " +
-        "will test all ObsPy modules which don't require a " +
-        "active network connection.")
-    filter.add_option("--all", default=False,
-                      action="store_true", dest="all",
-                      help="test all modules (including network modules)")
-    filter.add_option("-x", "--exclude",
-                      action="append", type="str", dest="module",
-                      help="exclude given module from test")
-    parser.add_option_group(filter)
+    filter = parser.add_argument_group('Module Filter',
+                                       'Providing no modules will test all '
+                                       'ObsPy modules which do not require an '
+                                       'active network connection.')
+    filter.add_argument('-a', '--all', action='store_true',
+                        help='test all modules (including network modules)')
+    filter.add_argument('-x', '--exclude', action='append',
+                        help='exclude given module from test')
+    filter.add_argument('tests', nargs='*',
+                        help='test modules to run')
+
     # timing / profile options
-    timing = OptionGroup(parser, "Timing/Profile Options")
-    timing.add_option("-t", "--timeit", default=False,
-                      action="store_true", dest="timeit",
-                      help="shows accumulated run times of each module")
-    timing.add_option("-s", "--slowest", default=0,
-                      type='int', dest="n",
-                      help="lists n slowest test cases")
-    timing.add_option("-p", "--profile", default=False,
-                      action="store_true", dest="profile",
-                      help="uses cProfile, saves the results to file " +
-                           "obspy.pstats and prints some profiling numbers")
-    parser.add_option_group(timing)
+    timing = parser.add_argument_group('Timing/Profile Options')
+    timing.add_argument('-t', '--timeit', action='store_true',
+                        help='shows accumulated run times of each module')
+    timing.add_argument('-s', '--slowest', default=0, type=int, dest='n',
+                        help='lists n slowest test cases')
+    timing.add_argument('-p', '--profile', action='store_true',
+                        help='uses cProfile, saves the results to file ' +
+                             'obspy.pstats and prints some profiling numbers')
+
     # reporting options
-    report = OptionGroup(parser, "Reporting Options")
-    report.add_option("-r", "--report", default=False,
-                      action="store_true", dest="report",
-                      help="automatically submit a test report")
-    report.add_option("-d", "--dontask", default=False,
-                      action="store_true", dest="dontask",
-                      help="don't explicitly ask for submitting a test report")
-    report.add_option("-u", "--server", default="tests.obspy.org",
-                      type="string", dest="server",
-                      help="report server (default is tests.obspy.org)")
-    report.add_option("-n", "--node", default=HOSTNAME,
-                      type="string", dest="hostname",
-                      help="nodename visible at the report server")
-    report.add_option("-l", "--log", default=None,
-                      type="string", dest="log",
-                      help="append log file to test report")
-    parser.add_option_group(report)
+    report = parser.add_argument_group('Reporting Options')
+    report.add_argument('-r', '--report', action='store_true',
+                        help='automatically submit a test report')
+    report.add_argument('-d', '--dontask', action='store_true',
+                        help="don't explicitly ask for submitting a test "
+                             "report")
+    report.add_argument('-u', '--server', default='tests.obspy.org',
+                        help='report server (default is tests.obspy.org)')
+    report.add_argument('-n', '--node', dest='hostname', default=HOSTNAME,
+                        help='nodename visible at the report server')
+    report.add_argument('-l', '--log', default=None,
+                        help='append log file to test report')
+
     # other options
-    others = OptionGroup(parser, "Additional Options")
-    others.add_option("--tutorial", default=False,
-                      action="store_true", dest="tutorial",
-                      help="add doctests in tutorial")
-    others.add_option("--no-flake8", default=False,
-                      dest="no_flake8", action="store_true",
-                      help="skip code formatting test")
-    others.add_option("--keep-images", default=False,
-                      dest="keep_images", action="store_true",
-                      help="store images created during image comparison "
-                           "tests in subfolders of baseline images")
-    others.add_option("--keep-only-failed-images", default=False,
-                      dest="keep_only_failed_images", action="store_true",
-                      help="when storing images created during testing, only "
-                           "store failed images and the corresponding diff "
-                           "images (but not images that passed the "
-                           "corresponding test).")
-    parser.add_option_group(others)
-    (options, _) = parser.parse_args()
+    others = parser.add_argument_group('Additional Options')
+    others.add_argument('--tutorial', action='store_true',
+                        help='add doctests in tutorial')
+    others.add_argument('--no-flake8', action='store_true',
+                        help='skip code formatting test')
+    others.add_argument('--keep-images', action='store_true',
+                        help='store images created during image comparison '
+                             'tests in subfolders of baseline images')
+    others.add_argument('--keep-only-failed-images', action='store_true',
+                        help='when storing images created during testing, '
+                             'only store failed images and the corresponding '
+                             'diff images (but not images that passed the '
+                             'corresponding test).')
+
+    args = parser.parse_args(argv)
     # set correct verbosity level
-    if options.verbose:
+    if args.verbose:
         verbosity = 2
-        # raise all numpy warnings
+        # raise all NumPy warnings
         np.seterr(all='raise')
         # raise user and deprecation warnings
         warnings.simplefilter("error", UserWarning)
-    elif options.quiet:
+    elif args.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
         warnings.simplefilter("ignore", DeprecationWarning)
         warnings.simplefilter("ignore", UserWarning)
         # don't ask to send a report
-        options.dontask = True
+        args.dontask = True
     else:
         verbosity = 1
         # show all NumPy warnings
@@ -597,29 +653,28 @@ def run(interactive=True):
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
-    if options.report or 'OBSPY_REPORT' in list(os.environ.keys()):
+    if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
     else:
         report = False
-    if 'OBSPY_REPORT_SERVER' in list(os.environ.keys()):
-        options.server = os.environ['OBSPY_REPORT_SERVER']
+    if 'OBSPY_REPORT_SERVER' in os.environ.keys():
+        args.server = os.environ['OBSPY_REPORT_SERVER']
     # check interactivity settings
-    if interactive and options.dontask:
+    if interactive and args.dontask:
         interactive = False
-    if options.keep_images:
+    if args.keep_images:
         os.environ['OBSPY_KEEP_IMAGES'] = ""
-    if options.keep_only_failed_images:
+    if args.keep_only_failed_images:
         os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
-    if options.no_flake8:
+    if args.no_flake8:
         os.environ['OBSPY_NO_FLAKE8'] = ""
-    return runTests(
-        verbosity, parser.largs, report, options.log,
-        options.server, options.all, options.timeit, interactive, options.n,
-        exclude=options.module, tutorial=options.tutorial,
-        hostname=options.hostname)
+    return runTests(verbosity, args.tests, report, args.log, args.server,
+                    args.all, args.timeit, interactive, args.n,
+                    exclude=args.exclude, tutorial=args.tutorial,
+                    hostname=args.hostname)
 
 
-def main(interactive=True):
+def main(argv=None, interactive=True):
     """
     Entry point for setup.py.
 
@@ -627,7 +682,7 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
-    # catch and ignore a numpy deprecation warning
+    # catch and ignore a NumPy deprecation warning
     with warnings.catch_warnings(record=True):
         warnings.filterwarnings(
             "ignore", 'The compiler package is deprecated and removed in '
@@ -648,7 +703,7 @@ def main(interactive=True):
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
         print(PSTATS_HELP)
     else:
-        errors = run(interactive)
+        errors = run(argv, interactive)
         if errors:
             sys.exit(1)
 

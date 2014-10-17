@@ -11,6 +11,7 @@ SH bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -108,10 +109,11 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     :param skip: Number of lines to be skipped from top of file. If defined
         only one trace is read from file.
     :type delta: float, optional
-    :param delta: If "skip" is used, "delta" defines sample offset in seconds.
+    :param delta: If ``skip`` is used, ``delta`` defines sample offset in
+        seconds.
     :type length: int, optional
-    :param length: If "skip" is used, "length" defines the number of values to
-        be read.
+    :param length: If ``skip`` is used, ``length`` defines the number of values
+        to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -208,7 +210,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = loadtxt(data, dtype='float32', ndlim=1)
+            data = loadtxt(data, dtype=np.float32, ndmin=1)
 
             # cut data if requested
             if skip and length:
@@ -242,7 +244,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
     :param included_headers: If set to a list, only these header entries will
         be written to file. DELTA and LENGTH are written in any case. If it's
         set to None, a basic set will be included.
-    :type custom_format: string, optional
+    :type custom_format: str, optional
     :param custom_format: Parameter for number formatting of samples, defaults
         to "%-.6e".
     :type append: bool, optional
@@ -337,18 +339,19 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     :type data_directory: str, optional
     :param data_directory: Data directory where the corresponding QBN file can
         be found.
-    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
+    :type byteorder: str, optional
     :param byteorder: Enforce byte order for data file. This is important for
         Q files written in older versions of Seismic Handler, which don't
-        explicit state the `BYTEORDER` flag within the header file. Defaults
-        to ``'='`` (local byte order).
+        explicit state the `BYTEORDER` flag within the header file. Can be
+        little endian (``'<'``), big endian (``'>'``), or native byte order
+        (``'='``). Defaults to ``'='``.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
     Q files consists of two files per data set:
 
-     * a ASCII header file with file extension `QHD` and the
-     * binary data file with file extension `QBN`.
+    * a ASCII header file with file extension `QHD` and the
+    * binary data file with file extension `QBN`.
 
     The read method only accepts header files for the ``filename`` parameter.
     ObsPy assumes that the corresponding data file is within the same directory
@@ -462,10 +465,10 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
                 continue
             # read data
             data = fh_data.read(npts * 4)
-            dtype = byteorder + 'f4'
+            dtype = native_str(byteorder + 'f4')
             data = np.fromstring(data, dtype=dtype)
             # convert to system byte order
-            data = np.require(data, '=f4')
+            data = np.require(data, native_str('=f4'))
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
@@ -490,9 +493,10 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     :type data_directory: str, optional
     :param data_directory: Data directory where the corresponding QBN will be
         written.
-    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
-    :param byteorder: Enforce byte order for data file. Defaults to ``'='``
-        (local byte order).
+    :type byteorder: str, optional
+    :param byteorder: Enforce byte order for data file. Can be little endian
+        (``'<'``), big endian (``'>'``), or native byte order (``'='``).
+        Defaults to ``'='``.
     :type append: bool, optional
     :param append: If filename exists append all data to file, default False.
     """
@@ -545,7 +549,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
         temp += "S021:%s~ " % fromUTCDateTime(dt)
         for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
-            if not key or key not in list(SH_IDX.keys()):
+            if not key or key not in SH_IDX.keys():
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
@@ -573,7 +577,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
                 line = "%02d|\n" % ((i + 1 + count_offset) % 100)
                 fh.write(line.encode('ascii', 'strict'))
         # write data in given byte order
-        dtype = byteorder + 'f4'
+        dtype = native_str(byteorder + 'f4')
         data = np.require(trace.data, dtype=dtype)
         fh_data.write(data.data)
     fh.close()
@@ -586,7 +590,7 @@ def toUTCDateTime(value):
 
     :type value: str
     :param value: A Date time string.
-    :return: Converted :class:`~obspy.core.UTCDateTime` object.
+    :return: Converted :class:`~obspy.core.utcdatetime.UTCDateTime` object.
 
     .. rubric:: Example
 
@@ -636,7 +640,7 @@ def fromUTCDateTime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
-    :type dt: :class:`~obspy.core.UTCDateTime`
+    :type dt: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param dt: A UTCDateTime object.
     :return: Converted date time string usable by Seismic Handler.
 

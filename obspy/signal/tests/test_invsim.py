@@ -382,6 +382,22 @@ class InvSimTestCase(unittest.TestCase):
 
         self.assertEqual(tr1, tr2)
 
+    def test_segfaulting_RESP_file(self):
+        """
+        Test case for a file that segfaults when compiled with clang and
+        active optimization.
+
+        As long as the test does not segfault it is ok.
+        """
+        filename = os.path.join(self.path, "segfaulting_RESPs",
+                                "RESP.IE.LLRI..EHZ")
+        date = UTCDateTime(2003, 11, 1, 0, 0, 0)
+        with CatchOutput():
+            self.assertRaises(ValueError, evalresp, t_samp=10.0, nfft=256,
+                              filename=filename, date=date, station="LLRI",
+                              channel="EHZ", network="IE", locid="*",
+                              units="VEL")
+
     def test_evalresp_seed_identifiers_work(self):
         """
         Asserts that the network, station, location and channel identifiers can
@@ -410,7 +426,7 @@ class InvSimTestCase(unittest.TestCase):
         kwargs["channel"] = "BHZ"
         with CatchOutput() as out:
             self.assertRaises(ValueError, evalresp, **kwargs)
-        self.assertTrue("no response found for" in out.stderr.lower())
+        self.assertTrue(b"no response found for" in out.stderr.lower())
 
 
 def suite():

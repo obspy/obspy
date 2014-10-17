@@ -1,7 +1,24 @@
+2014.234: 2.13
+	- Clean up Makefile and example/Makefile, remove all GCC-specific and
+	debug targets.  Makefiles are compatible with both GNU and BSD make. 
+	As before, the shared target works only for GCC-compatible compilers.
+	Thanks to Elliott Sales de Andrade for pointing out that shared library
+	targets did not work with parallel builds, prompting this clean up.
+
+2014.197: 2.13rc
+	- Support 128-byte record length by changing MINRECLEN to 128 (was 256).
+	The current SEED specification is a minimum record length of 256-bytes,
+	but there are cases (e.g. low latency data flow) using 128-byte records.
+	- Add declarations, casting and string truncation to clear warnings
+	uncovered in ObsPy testing (thanks to Elliott Sales de Andrade).
+
+2014.074:
+	- Add __CYGWIN__ defined test to Linux section of lmplatform.h.
+
 2013.273: 2.12
 	- Add mst_convertsamples() and mstl_convertsamples() to convert sample
 	types.  When converting from float & double types to integer type
-	a simple rounding is employed compensate for machine representation
+	a simple rounding is employed to compensate for machine representation
 	of floating point numbers.
 
 2013.267:

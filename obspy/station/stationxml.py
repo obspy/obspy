@@ -17,7 +17,6 @@ import inspect
 import io
 from lxml import etree
 import os
-import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
@@ -43,7 +42,7 @@ def is_StationXML(path_or_file_object):
 
     This is simply done by validating against the StationXML schema.
 
-    :param path_of_file_object: Filename or file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     return validate_StationXML(path_or_file_object)[0]
 
@@ -54,9 +53,9 @@ def validate_StationXML(path_or_object):
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
-    errors, if existant.
+    errors, if existent.
 
-    :path_or_object: Filename of file like object. Can also be an etree
+    :param path_or_object: Filename or file like object. Can also be an etree
         element.
     """
     # Get the schema location.
@@ -86,7 +85,7 @@ def read_StationXML(path_or_file_object):
     """
     Function reading a StationXML file.
 
-    :path_or_file_object: Filename of file like object.
+    :param path_or_file_object: Filename or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
@@ -280,6 +279,11 @@ def _read_channel(cha_element, _ns):
     equipment = cha_element.find(_ns("Equipment"))
     if equipment is not None:
         channel.equipment = _read_equipment(equipment, _ns)
+    # Availability.
+    data_availability = cha_element.find(_ns("DataAvailability"))
+    if data_availability is not None:
+        channel.data_availability = _read_data_availability(
+            data_availability, _ns)
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
     if response is not None:
@@ -571,6 +575,13 @@ def _read_operator(operator_element, _ns):
                                   website=website)
 
 
+def _read_data_availability(avail_element, _ns):
+    extent = avail_element.find(_ns("Extent"))
+    start = obspy.UTCDateTime(extent.get("start"))
+    end = obspy.UTCDateTime(extent.get("end"))
+    return obspy.station.util.DataAvailability(start=start, end=end)
+
+
 def _read_equipment(equip_element, _ns):
     resource_id = equip_element.get("resourceId")
     type = _tag2obj(equip_element, _ns("Type"), str)
@@ -647,17 +658,47 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     :type inventory: :class:`~obspy.station.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
-    :type validate: Boolean
-    :type validate: If True, the created document will be validated with the
+    :type validate: bool
+    :param validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
     """
-    root = etree.Element(
-        "FDSNStationXML",
-        attrib={
-            "xmlns": "http://www.fdsn.org/xml/station/1",
-            "schemaVersion": SCHEMA_VERSION}
-    )
+    # Check if any of the channels has a data availability element. In that
+    # case the namespaces need to be adjusted.
+    data_availability = False
+    for net in inventory:
+        for sta in net:
+            for cha in sta:
+                if cha.data_availability is not None:
+                    data_availability = True
+                    break
+            else:
+                continue
+            break
+        else:
+            continue
+        break
+
+    if data_availability:
+        root = etree.Element(
+            "FDSNStationXML",
+            attrib={
+                ("{http://www.w3.org/2001/XMLSchema-instance}"
+                 "schemaLocation"): "http://www.fdsn.org/xml/station/1 "
+                "http://www.fdsn.org/xml/station/fdsn-station_"
+                "availability-1.0.xsd",
+                "schemaVersion": SCHEMA_VERSION},
+            nsmap={None: "http://www.fdsn.org/xml/station/1",
+                   "xsi": "http://www.w3.org/2001/XMLSchema-instance"}
+        )
+    else:
+        root = etree.Element(
+            "FDSNStationXML",
+            attrib={
+                "xmlns": "http://www.fdsn.org/xml/station/1",
+                "schemaVersion": SCHEMA_VERSION}
+        )
+
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
         etree.SubElement(root, "Sender").text = inventory.sender
@@ -861,6 +902,13 @@ def _write_channel(parent, channel):
     attribs['locationCode'] = channel.location_code
     channel_elem = etree.SubElement(parent, "Channel", attribs)
     _write_base_node(channel_elem, channel)
+
+    if channel.data_availability is not None:
+        da = etree.SubElement(channel_elem, "DataAvailability")
+        etree.SubElement(da, "Extent", {
+            "start": _format_time(channel.data_availability.start),
+            "end": _format_time(channel.data_availability.end)
+        })
 
     for ref in channel.external_references:
         _write_external_reference(channel_elem, ref)
@@ -1159,11 +1207,6 @@ def _tag2obj(element, tag, convert):
 
 def _tags2obj(element, tag, convert):
     values = []
-    # make sure, only unicode
-    if convert is str:
-        # XXX: this warning if raised with python3
-        warnings.warn("overriding 'str' with 'unicode'.")
-        convert = str
     for elem in element.findall(tag):
         values.append(convert(elem.text))
     return values

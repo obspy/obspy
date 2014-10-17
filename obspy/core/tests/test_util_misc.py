@@ -68,22 +68,22 @@ class UtilMiscTestCase(unittest.TestCase):
 
         if PY2:
             if platform.system() == "Windows":
-                self.assertEqual(out.stdout, '"abc"\ndef\nghi\njkl\n')
-                self.assertEqual(out.stderr, '"123" \n456\n')
+                self.assertEqual(out.stdout, b'"abc"\ndef\nghi\njkl\n')
+                self.assertEqual(out.stderr, b'"123" \n456\n')
             else:
-                self.assertEqual(out.stdout, "abc\ndef\nghi\njkl\n")
-                self.assertEqual(out.stderr, "123\n456\n")
+                self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
+                self.assertEqual(out.stderr, b"123\n456\n")
         else:
             # XXX: cannot catch the printf call to def in Py3k
             # XXX: Introduces special characters on MAC OSX which
             #      avoid test report to be sent (see #743). Therefore
             #      test is skipped
             if platform.system() == "Windows":
-                self.assertEqual(out.stdout, '"abc"\nghi\njkl\n')
-                self.assertEqual(out.stderr, '"123" \n456\n')
+                self.assertEqual(out.stdout, b'"abc"\nghi\njkl\n')
+                self.assertEqual(out.stderr, b'"123" \n456\n')
             else:
-                self.assertEqual(out.stdout, "abc\nghi\njkl\n")
-                self.assertEqual(out.stderr, "123\n456\n")
+                self.assertEqual(out.stdout, b"abc\nghi\njkl\n")
+                self.assertEqual(out.stderr, b"123\n456\n")
 
     def test_no_obspy_imports(self):
         """

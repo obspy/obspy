@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: polarization.py
@@ -56,12 +55,12 @@ def eigval(datax, datay, dataz, fk, normf=1):
         time derivative of rectilinearity, Time derivative of planarity.
     """
     covmat = np.zeros([3, 3])
-    leigenv1 = np.zeros(datax.shape[0], dtype='float64')
-    leigenv2 = np.zeros(datax.shape[0], dtype='float64')
-    leigenv3 = np.zeros(datax.shape[0], dtype='float64')
-    dleigenv = np.zeros([datax.shape[0], 3], dtype='float64')
-    rect = np.zeros(datax.shape[0], dtype='float64')
-    plan = np.zeros(datax.shape[0], dtype='float64')
+    leigenv1 = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv2 = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv3 = np.zeros(datax.shape[0], dtype=np.float64)
+    dleigenv = np.zeros([datax.shape[0], 3], dtype=np.float64)
+    rect = np.zeros(datax.shape[0], dtype=np.float64)
+    plan = np.zeros(datax.shape[0], dtype=np.float64)
     i = 0
     for i in range(datax.shape[0]):
         covmat[0][0] = np.cov(datax[i, :], rowvar=False)

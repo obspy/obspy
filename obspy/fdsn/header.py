@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Header files for the FDSN webservice.
@@ -22,6 +21,8 @@ class FDSNException(Exception):
     pass
 
 
+# A curated list collecting some implementations:
+# http://www.fdsn.org/webservices/datacenters/
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "ORFEUS": "http://www.orfeus-eu.org",
                 "USGS": "http://comcat.cr.usgs.gov",
@@ -30,6 +31,9 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USP": "http://sismo.iag.usp.br",
                 "GFZ": "http://geofon.gfz-potsdam.de",
                 "NERIES": "http://www.seismicportal.eu",
+                "SCEC": "http://www.data.scec.org",
+                "GEONET": "http://service.geonet.org.nz",
+                "INGV": "http://webservices.rm.ingv.it"
                 }
 
 FDSNWS = ("dataselect", "event", "station")
@@ -52,7 +56,7 @@ DEFAULT_STATION_PARAMETERS = [
     "endafter", "network", "station", "location", "channel", "minlatitude",
     "maxlatitude", "minlongitude", "maxlongitude", "latitude", "longitude",
     "minradius", "maxradius", "level", "includerestricted",
-    "includeavailability", "updatedafter"]
+    "includeavailability", "updatedafter", "matchtimeseries"]
 
 DEFAULT_EVENT_PARAMETERS = [
     "starttime", "endtime", "minlatitude", "maxlatitude", "minlongitude",
@@ -83,7 +87,7 @@ PARAMETER_ALIASES = {
     "minmag": "minmagnitude",
     "maxmag": "maxmagnitude",
     "magtype": "magnitudetype",
-    }
+}
 
 
 # The default types if none are given. If the parameter can not be found in
@@ -121,7 +125,8 @@ DEFAULT_TYPES = {
     "includeallorigins": bool,
     "includeallmagnitudes": bool,
     "includearrivals": bool,
-    "eventid": int,
+    "matchtimeseries": bool,
+    "eventid": str,
     "limit": int,
     "offset": int,
     "orderby": str,

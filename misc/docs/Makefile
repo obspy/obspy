@@ -14,13 +14,17 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latex-png-images latexpdf-png-images latexpdf text man changes linkcheck doctest gettext coverage coverager pep8
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp \
+        epub latex latex-png-images latexpdf-png-images latexpdf text man \
+        changes linkcheck doctest gettext coverage coverager pep8 citations \
+        credits assets
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html       to make standalone HTML files"
 	@echo "  dirhtml    to make HTML files named index.html in directories"
 	@echo "  singlehtml to make a single large HTML file"
+	@echo "  serverhtml to make HTML files for serving online"
 	@echo "  pickle     to make pickle files"
 	@echo "  json       to make JSON files"
 	@echo "  htmlhelp   to make HTML files and a HTML help project"
@@ -41,11 +45,14 @@ help:
 	@echo "  coverager  to make create coverage HTML files and report test"
 	@echo "  pep8       to check PEP8 of tutorial"
 	@echo "  citations  to generate citations page"
+	@echo "  credits    to generate credits page"
+	@echo "  assets     to generate static assets for local browsing"
 
 clean:
 	@rm -rf $(BUILDDIR)/*
 	@rm -rf source/packages/autogen/obspy.*
 	@rm -rf source/pep8/*
+	@python make_assets.py -c -f
 
 coverage:
 	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -q --all
@@ -67,10 +74,23 @@ pep8:
 citations:
 	@python make_citations.py
 
-html:
+credits:
+	@python make_credits.py
+
+assets:
+	@python make_assets.py
+
+html: assets
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
 	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+serverhtml:
+	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
+	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
+	$(SPHINXBUILD) -b html -A use_local_assets=0 $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

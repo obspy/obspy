@@ -21,7 +21,7 @@ from datetime import datetime
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
-from obspy import UTCDateTime
+from obspy import UTCDateTime, Catalog, readEvents
 from obspy.core.util import guessDelta
 from obspy.xseed import Parser
 import os
@@ -143,7 +143,7 @@ class Client(object):
         :type timeout: int, optional
         :param timeout: Seconds before a connection timeout is raised (default
             is 10 seconds). Available only for Python >= 2.6.x.
-        :type debug: boolean, optional
+        :type debug: bool, optional
         :param debug: Enables verbose output.
         :type retries: int
         :param retries: Number of retries for failing requests.
@@ -171,10 +171,10 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            urllib.request.urlopen(self.base_url).read()
+            urllib.request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except:
-            None
+            pass
 
     def testAuth(self):
         """
@@ -197,7 +197,7 @@ class Client(object):
         params = {}
         # map keywords
         for key, value in KEYWORDS.items():
-            if key in list(kwargs.keys()):
+            if key in kwargs.keys():
                 kwargs[value] = kwargs[key]
                 del kwargs[key]
         # check for ranges and empty values
@@ -237,14 +237,14 @@ class Client(object):
         """
         Send a HTTP request via urllib2.
 
-        :type url: String
+        :type url: str
         :param url: Complete URL of resource
-        :type method: String
+        :type method: str
         :param method: HTTP method of request, e.g. "PUT"
         :type headers: dict
         :param headers: Header information for request, e.g.
                 {'User-Agent': "obspyck"}
-        :type xml_string: String
+        :type xml_string: str
         :param xml_string: XML for a send request (PUT/POST)
         """
         if method not in HTTP_ACCEPTED_METHODS:
@@ -260,7 +260,7 @@ class Client(object):
         # it seems the following always ends in a HTTPError even with
         # nice status codes...?!?
         try:
-            response = urllib.request.urlopen(req)
+            response = urllib.request.urlopen(req, timeout=self.timeout)
             return response.code, response.msg
         except urllib.request.HTTPError as e:
             return e.code, e.msg
@@ -597,7 +597,7 @@ master/seishub/plugins/seismology/waveform.py
         Gets a preview of a ObsPy Stream object.
 
         :type trace_ids: list
-        :type trace_ids: List of trace IDs, e.g. ``['BW.MANZ..EHE']``.
+        :param trace_ids: List of trace IDs, e.g. ``['BW.MANZ..EHE']``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -795,7 +795,7 @@ master/seishub/plugins/seismology/event.py
     resourcetype = 'event'
 
     def getList(self, limit=50, offset=None, localisation_method=None,
-                account=None, user=None, min_datetime=None, max_datetime=None,
+                author=None, min_datetime=None, max_datetime=None,
                 first_pick=None, last_pick=None, min_latitude=None,
                 max_latitude=None, min_longitude=None, max_longitude=None,
                 min_magnitude=None, max_magnitude=None, min_depth=None,
@@ -804,6 +804,10 @@ master/seishub/plugins/seismology/event.py
                 document_id=None, **kwargs):
         """
         Gets a list of event information.
+
+        ..note:
+            For seishub versions < 1.4 available keys include "user" and
+            "account". In newer seishub versions they are replaced by "author".
 
         :rtype: list
         :return: List of dictionaries containing event information.
@@ -825,12 +829,38 @@ master/seishub/plugins/seismology/event.py
         root = self.client._objectify(url, **kwargs)
         results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                    for node in root.getchildren()]
+        for res in results:
+            res['resource_name'] = str(res['resource_name'])
         if limit == len(results) or \
            limit is None and len(results) == 50 or \
            len(results) == 2500:
             msg = "List of results might be incomplete due to option 'limit'."
             warnings.warn(msg)
         return results
+
+    def getEvents(self, **kwargs):
+        """
+        Fetches a catalog with event information. Parameters to narrow down
+        the request are the same as for :meth:`getList`.
+
+        ..warning::
+            Only works when connecting to a seishub server of version 1.4.0
+            or higher (serving event data as QuakeML).
+
+        :rtype: :class:`~obspy.core.event.Catalog`
+        :returns: Catalog containing event information matching the request.
+
+        The number of resulting events is by default limited to 50 entries from
+        a SeisHub server. You may raise this by setting the ``limit`` option to
+        a maximal value of 2500. Numbers above 2500 will result into an
+        exception.
+        """
+        resource_names = [item["resource_name"]
+                          for item in self.getList(**kwargs)]
+        cat = Catalog()
+        for resource_name in resource_names:
+            cat.extend(readEvents(self.getResource(resource_name)))
+        return cat
 
     def getKML(self, nolabels=False, **kwargs):
         """
@@ -884,7 +914,7 @@ master/seishub/plugins/seismology/event.py
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
         descrip_str += "\n".join(["=".join((str(k), str(v)))
-                                  for k, v in list(kwargs.items())])
+                                  for k, v in kwargs.items()])
         SubElement(folder, "description").text = descrip_str
 
         style = SubElement(folder, "Style")

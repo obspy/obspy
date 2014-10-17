@@ -34,7 +34,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             open(tmpfile, 'wb').close()
             formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
             # using format keyword
-            for ep in list(formats_ep.values()):
+            for ep in formats_ep.values():
                 isFormat = load_entry_point(ep.dist.key,
                                             'obspy.plugin.waveform.' + ep.name,
                                             'isFormat')
@@ -55,10 +55,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
                     # new trace object in native byte order
-                    dt = np.dtype("int").newbyteorder(native_byteorder)
+                    dt = np.dtype(np.int_).newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
                         # MiniSEED and GSE2 cannot write int64, enforce type
-                        dt = "int32"
+                        dt = np.int32
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
                     tr.stats.station = "MANZ1"
@@ -190,9 +190,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
 
-            dt = np.dtype("int")
+            dt = np.int_
             if format in ('MSEED', 'GSE2'):
-                dt = "int32"
+                dt = np.int32
             tr = Trace(data=data.astype(dt))
             tr.stats.network = "BW"
             tr.stats.station = "MANZ1"
@@ -209,30 +209,43 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     outfile += '.QHD'
                 n_threads = 30
                 streams = []
+                timeout = 120
+                if 'TRAVIS' in os.environ:
+                    timeout = 570  # 30 seconds under Travis' limit
+                cond = threading.Condition()
 
-                def testFunction(streams):
+                def testFunction(streams, cond):
                     st = read(outfile, format=format)
                     streams.append(st)
+                    with cond:
+                        cond.notify()
                 # Read the ten files at one and save the output in the just
                 # created class.
+                our_threads = []
                 for _i in range(n_threads):
                     thread = threading.Thread(target=testFunction,
-                                              args=(streams,))
+                                              args=(streams, cond))
                     thread.start()
+                    our_threads.append(thread)
+                our_threads = set(our_threads)
                 # Loop until all threads are finished.
                 start = time.time()
                 while True:
-                    if threading.activeCount() == 1:
+                    with cond:
+                        cond.wait(1)
+                    remaining_threads = set(threading.enumerate())
+                    if len(remaining_threads & our_threads) == 0:
                         break
-                    # Avoid infinite loop and leave after 120 seconds
-                    # such a long time is needed for debugging with valgrind
-                    elif time.time() - start >= 120:  # pragma: no cover
-                        msg = 'Not all threads finished!'
+                    # Avoid infinite loop and leave after some time; such a
+                    # long time is needed for debugging with valgrind or Travis
+                    elif time.time() - start >= timeout:  # pragma: no cover
+                        msg = 'Not all threads finished after %d seconds!' % (
+                            timeout)
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
-                # for data in :
-                #    np.testing.assert_array_equal(values, original)
+                for st in streams:
+                    np.testing.assert_array_equal(st[0].data, tr.data)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
@@ -249,7 +262,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
-        data = np.arange(10, dtype='int32')
+        data = np.arange(10, dtype=np.int32)
         # make array non-contiguous
         data = data[::2]
         tr = Trace(data=data)
@@ -351,9 +364,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             stream = deepcopy(stream_orig)
             # set some data
-            dt = 'f4'
+            dt = np.float32
             if format in ('GSE2', 'MSEED'):
-                dt = 'i4'
+                dt = np.int32
             for tr in stream:
                 tr.data = np.arange(tr.stats.npts).astype(dt)
             with NamedTemporaryFile() as tf:

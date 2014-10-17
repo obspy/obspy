@@ -233,7 +233,7 @@ class Client(object):
             suggested to be the preferred magnitude only.
         :type includearrivals: bool, optional
         :param includearrivals: Specify if phase arrivals should be included.
-        :type eventid: str or int (dependent on data center), optional
+        :type eventid: str (or int, dependent on data center), optional
         :param eventid: Select a specific event by ID; event identifiers are
             data center specific.
         :type limit: int, optional
@@ -244,10 +244,12 @@ class Client(object):
         :type orderby: str, optional
         :param orderby: Order the result by time or magnitude with the
             following possibilities:
-                * time: order by origin descending time
-                * time-asc: order by origin ascending time
-                * magnitude: order by descending magnitude
-                * magnitude-asc: order by ascending magnitude
+
+            * time: order by origin descending time
+            * time-asc: order by origin ascending time
+            * magnitude: order by descending magnitude
+            * magnitude-asc: order by ascending magnitude
+
         :type catalog: str, optional
         :param catalog: Limit to events from a specified catalog
         :type contributor: str, optional
@@ -256,7 +258,7 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param updatedafter: Limit to events updated after the specified time.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -295,7 +297,8 @@ class Client(object):
                      maxlongitude=None, latitude=None, longitude=None,
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
-                     updatedafter=None, filename=None, **kwargs):
+                     updatedafter=None, matchtimeseries=None, filename=None,
+                     **kwargs):
         """
         Query the station service of the FDSN client.
 
@@ -400,7 +403,7 @@ class Client(object):
             are comma-separated.
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. As a special case “--“ (two
+            identifiers are comma-separated. As a special case ``“--“`` (two
             dashes) will be translated to a string of two space characters to
             match blank location IDs.
         :type channel: str
@@ -426,7 +429,7 @@ class Client(object):
         :type minradius: float
         :param minradius: Limit results to stations within the specified
             minimum number of degrees from the geographic point defined by the
-                    latitude and longitude parameters.
+            latitude and longitude parameters.
         :type maxradius: float
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
@@ -444,7 +447,10 @@ class Client(object):
         :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param updatedafter: Limit to metadata updated after specified date;
             updates are data center specific.
-        :type filename: str or open file-like object
+        :type matchtimeseries: bool
+        :param matchtimeseries: Only include data for which matching time
+            series data is available.
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -551,7 +557,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -642,9 +648,9 @@ class Client(object):
             `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
-              - a string containing the request information
-              - a string with the path to a local file with the request
-              - an open file handle (or file-like object) with the request
+            - a string containing the request information
+            - a string with the path to a local file with the request
+            - an open file handle (or file-like object) with the request
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
@@ -715,7 +721,7 @@ class Client(object):
             information to each trace. This can be used to remove response
             using :meth:`~obspy.core.stream.Stream.remove_response`.
 
-        :type bulk: str, file-like object or list of lists
+        :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
@@ -729,7 +735,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel. Ignored when `bulk` is provided as a request string/file.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -793,9 +799,9 @@ class Client(object):
             `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
-              - a string containing the request information
-              - a string with the path to a local file with the request
-              - an open file handle (or file-like object) with the request
+            - a string containing the request information
+            - a string with the path to a local file with the request
+            - an open file handle (or file-like object) with the request
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
@@ -869,7 +875,7 @@ class Client(object):
                     GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
 
-        :type bulk: str, file-like object or list of lists
+        :type bulk: str, file or list of lists
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
@@ -883,7 +889,7 @@ class Client(object):
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
             channel. Ignored when `bulk` is provided as a request string/file.
-        :type filename: str or open file-like object
+        :type filename: str or file
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
@@ -1440,7 +1446,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
     The first one is the returned HTTP code and the second the data as
     string.
 
-    Will return a touple of Nones if the service could not be found.
+    Will return a tuple of Nones if the service could not be found.
     All encountered exceptions will get raised unless `debug=True` is
     specified.
 
@@ -1492,7 +1498,7 @@ def setup_query_dict(service, locs, kwargs):
                 raise FDSNException(msg)
     # short aliases are not mentioned in the downloaded WADLs, so we have
     # to map it here according to the official FDSN WS documentation
-    for key in list(kwargs.keys()):
+    for key in kwargs.keys():
         if key in PARAMETER_ALIASES:
             value = kwargs.pop(key)
             if value is not None:
@@ -1510,19 +1516,19 @@ def parse_simple_xml(xml_string):
     Simple helper function for parsing the Catalog and Contributor availability
     files.
 
-    Parses XMLs of the form
+    Parses XMLs of the form::
 
-    <Bs>
-        <total>4</total>
-        <B>1</B>
-        <B>2</B>
-        <B>3</B>
-        <B>4</B>
-    <Bs>
+        <Bs>
+            <total>4</total>
+            <B>1</B>
+            <B>2</B>
+            <B>3</B>
+            <B>4</B>
+        </Bs>
 
-    and return a dictionary with a single item:
+    and return a dictionary with a single item::
 
-    {"Bs": set(("1", "2", "3", "4"))}
+        {"Bs": set(("1", "2", "3", "4"))}
     """
     root = etree.fromstring(xml_string.strip())
 

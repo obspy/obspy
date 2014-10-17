@@ -10,7 +10,7 @@ AttribDict class for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import collections
 import copy
@@ -116,7 +116,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in list(adict.items()):
+        for (key, value) in adict.items():
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)
@@ -125,8 +125,8 @@ class AttribDict(collections.MutableMapping):
         """
         Return better readable string representation of AttribDict object.
 
-        :type priorized_keys: List of str, optional
-        :param priorized_keys: Keywords of current AttribtDict which will be
+        :type priorized_keys: list of str, optional
+        :param priorized_keys: Keywords of current AttribDict which will be
             shown before all other keywords. Those keywords must exists
             otherwise an exception will be raised. Defaults to empty list.
         :type min_label_length: int, optional

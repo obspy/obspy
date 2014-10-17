@@ -252,11 +252,12 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
   struct scn *scn;
   struct string_array *sta_list, *chan_list;
   struct string_array *locid_list;
-  int i, j, k, count = 0, which_matched, test = 1, mode, new_file;
-  int  locid_pos;
+  int i, j, k, count = 0, which_matched, mode, new_file;
+  volatile int test = 1;
   int  err_type;
   char  out_name[MAXLINELEN], locid[LOCIDLEN+1];
   char *locid_ptr, *end_locid_ptr;
+  size_t locid_len;
   struct matched_files *flst_head = (struct matched_files *)NULL;
   struct matched_files *flst_ptr = NULL, *output_files = NULL;
   struct file_list *lst_ptr = NULL, *tmp_ptr = NULL, *out_file = NULL, *tmp_file = NULL;
@@ -324,12 +325,16 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
 
   /* remove any blank spaces from the beginning and end of the string */
 
-  locid_ptr = locidlst; locid_pos = 0;
+  locid_ptr = locidlst;
   strncpy(locid, "", LOCIDLEN);
   while(*locid_ptr && *locid_ptr == ' ') locid_ptr++;
   end_locid_ptr = locid_ptr + strlen(locid_ptr) - 1;
   while(end_locid_ptr > locid_ptr && *end_locid_ptr == ' ') end_locid_ptr--;
-  strncpy(locid, locid_ptr, (end_locid_ptr - locid_ptr + 1));
+  locid_len = end_locid_ptr - locid_ptr + 1;
+  if (locid_len > LOCIDLEN)
+    locid_len = LOCIDLEN;
+  strncpy(locid, locid_ptr, locid_len);
+  locid[LOCIDLEN] = '\0';
 
   /* parse the "locidlst" string to form a list of channels  */
 
@@ -410,8 +415,8 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
     if(!mode) {
       which_matched = 0;
       while(test && which_matched >= 0) {
+        new_file = 0;
         if(!(err_type = setjmp(jump_buffer))) {
-          new_file = 0;
           which_matched = find_resp(fptr, scns, date_time, &this_channel);
 #ifdef LIB_MODE /* IGD 25-Sep-2007 Looks like we do not need this: function returns anyway */
 //        if(which_matched < 0) {
@@ -607,8 +612,8 @@ struct response *evresp_itp(char *stalst, char *chalst, char *net_code,
         if(fptr != (FILE *)NULL) {
           curr_file = lst_ptr->name;
     look_again:
+          new_file = 0;
           if(!(err_type = setjmp(jump_buffer))) {
-            new_file = 0;
             which_matched = get_resp(fptr, scn, date_time, &this_channel);
 #ifdef LIB_MODE /* IGD 25-Sep-2007 Looks like we do not need this: function returns anyway */
 //           if(which_matched < 1) {

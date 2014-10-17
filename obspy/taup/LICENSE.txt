@@ -14,3 +14,20 @@ mentioned.
 I hope this helps.
 
 Arthur
+
+
+
+------------------------------------------------------------------------------
+Reply from Brian Kennett if we can re-license libtau under LGPLv3:
+
+
+Robert
+
+I am happy to consent to open use of the libtau libraries.
+
+Brian Kennett
+
+======================================
+Professor Brian L.N. Kennett FAA FRS
+Professor of Seismology
+Research School of Earth Sciences

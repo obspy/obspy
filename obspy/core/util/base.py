@@ -10,7 +10,7 @@ Base utilities and constants for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 from obspy.core.util.misc import toIntOrZero
@@ -28,7 +28,7 @@ import tempfile
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk']
+                   'ndk', 'ah']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -36,7 +36,8 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
-                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS']
+                            'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
+                            'AH']
 EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
@@ -47,7 +48,7 @@ class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacement for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str
@@ -110,7 +111,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> createEmptyDataChunk(6, np.dtype('complex128'), 0)
+    >>> createEmptyDataChunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
     >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -118,6 +119,9 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
+    # For compatibility with NumPy 1.4
+    if isinstance(dtype, str):
+        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
@@ -224,6 +228,7 @@ ENTRY_POINTS = {
     'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
     'integrate': _getEntryPoints('obspy.plugin.integrate'),
+    'interpolate': _getEntryPoints('obspy.plugin.interpolate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
@@ -261,7 +266,7 @@ def _getFunctionFromEntryPoint(group, type):
             entry_point = ep_dict[type]
         else:
             # search using lower cases only
-            entry_point = [v for k, v in list(ep_dict.items())
+            entry_point = [v for k, v in ep_dict.items()
                            if k.lower() == type.lower()][0]
     except (KeyError, IndexError):
         # check if any entry points are available at all
@@ -303,6 +308,28 @@ def getMatplotlibVersion():
     return version
 
 
+def getSciPyVersion():
+    """
+    Get SciPy version information.
+
+    :returns: SciPy version as a list of three integers or ``None`` if scipy
+        import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        import scipy
+        version = scipy.__version__
+        version = version.split("~rc")[0]
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
 def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
@@ -312,7 +339,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in list(EPS.values()):
+        for format_ep in EPS.values():
             # search isFormat for given entry point
             isFormat = load_entry_point(
                 format_ep.dist.key,
@@ -437,6 +464,32 @@ class ComparingObject(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+def _DeprecatedArgumentAction(old_name, new_name, real_action='store'):
+    """
+    Specifies deprecated command-line arguments to scripts
+    """
+    message = '%s has been deprecated. Please use %s in the future.' % (
+        old_name, new_name
+    )
+
+    from argparse import Action
+
+    class _Action(Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            import warnings
+            warnings.warn(message)
+
+            # I wish there were an easier way...
+            if real_action == 'store':
+                setattr(namespace, self.dest, values)
+            elif real_action == 'store_true':
+                setattr(namespace, self.dest, True)
+            elif real_action == 'store_false':
+                setattr(namespace, self.dest, False)
+
+    return _Action
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import codecs
+import fnmatch
 import inspect
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import check_flake8
@@ -33,7 +34,7 @@ class FutureUsageTestCase(unittest.TestCase):
     def test_future_imports_in_every_file(self):
         """
         Tests that every single Python file includes the appropriate future
-        headers to enforce consistent behaviour.
+        headers to enforce consistent behavior.
         """
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
@@ -45,9 +46,16 @@ class FutureUsageTestCase(unittest.TestCase):
         exceptions = [
             os.path.join('core', 'util', 'libnames.py'),
             os.path.join('core', 'util', 'version.py'),
-            os.path.join('core', 'compatibility.py')
+            os.path.join('core', 'compatibility.py'),
+            os.path.join('lib', '*'),
         ]
         exceptions = [os.path.join(obspy_dir, i) for i in exceptions]
+
+        def _match_exceptions(filename):
+            for pattern in exceptions:
+                if fnmatch.fnmatch(filename, pattern):
+                    return True
+            return False
 
         future_import_line = (
             "from __future__ import (absolute_import, division, "
@@ -70,7 +78,7 @@ class FutureUsageTestCase(unittest.TestCase):
             filenames = [os.path.abspath(os.path.join(dirpath, i)) for i in
                          filenames if i.endswith(".py")]
             for filename in filenames:
-                if filename in exceptions:
+                if _match_exceptions(filename):
                     continue
                 with codecs.open(filename, "r", encoding="utf-8") as fh:
                     content = fh.read()

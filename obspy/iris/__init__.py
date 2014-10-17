@@ -48,11 +48,12 @@ examples to retrieve various data from the IRIS DMC.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from .client import Client  # NOQA
 
 
-__all__ = ["Client"]
+__all__ = [native_str("Client")]
 
 
 if __name__ == '__main__':

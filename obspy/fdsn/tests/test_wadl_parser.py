@@ -155,9 +155,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of a station wadl.
         """
         filename = os.path.join(self.data_path, "station.wadl")
-        with open(filename, "rb") as fh:
-            wadl_string = fh.read()
-        parser = WADLParser(wadl_string)
+        parser, w = self._parse_wadl_file(filename)
         params = parser.parameters
 
         self.assertTrue("starttime" in params)
@@ -202,9 +200,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the reading of WADL files that have no type.
         """
         filename = os.path.join(self.data_path, "station_no_types.wadl")
-        with open(filename, "rb") as fh:
-            wadl_string = fh.read()
-        parser = WADLParser(wadl_string)
+        parser, w = self._parse_wadl_file(filename)
         params = parser.parameters
 
         # Assert that types have been assigned.
@@ -312,7 +308,7 @@ class WADLParserTestCase(unittest.TestCase):
             self.assertTrue("minimumlength" in msg)
             self.assertTrue("longestonly" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
@@ -342,7 +338,7 @@ class WADLParserTestCase(unittest.TestCase):
             self.assertTrue("includeallorigins" in msg)
             self.assertTrue("updatedafter" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
@@ -447,7 +443,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'minradius', 'network', 'startafter', 'startbefore',
                     'starttime', 'station', 'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 0)
+        self.assertEqual(len(w), 1)
+        self.assertTrue("matchtimeseries" in str(w[0].message))
 
         parser, w = self._parse_wadl_file("2014-01-07_resif_dataselect.wadl")
         params = parser.parameters
@@ -488,7 +485,8 @@ class WADLParserTestCase(unittest.TestCase):
                     'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
         self.assertEqual(len(w), 1)
-        self.assertTrue(": includerestricted\n" in str(w[0].message))
+        self.assertTrue("includerestricted" in str(w[0].message))
+        self.assertTrue("matchtimeseries" in str(w[0].message))
 
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_dataselect.wadl")
         params = parser.parameters
@@ -530,8 +528,9 @@ class WADLParserTestCase(unittest.TestCase):
                     'station']
         self.assertEqual(sorted(params.keys()), expected)
         self.assertEqual(len(w), 1)
-        self.assertTrue(": includeavailability, updatedafter\n"
-                        in str(w[0].message))
+        self.assertTrue("includeavailability" in str(w[0].message))
+        self.assertTrue("updatedafter" in str(w[0].message))
+        self.assertTrue("matchtimeseries" in str(w[0].message))
 
         parser, w = self._parse_wadl_file("2014-01-07_ethz_dataselect.wadl")
         params = parser.parameters

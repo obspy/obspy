@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------
 # Filename: calibration.py
@@ -37,17 +36,17 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
 
     :param st1: Stream or Trace object, (known)
     :param st2: Stream or Trace object, (unknown)
-    :type calib_file: String
+    :type calib_file: str
     :param calib_file: file name of calibration file containing the PAZ of the
         known instrument in GSE2 standard.
-    :type window_len: Float
+    :type window_len: float
     :param window_len: length of sliding window in seconds
     :type overlap_frac: float
     :param overlap_frac: fraction of overlap, defaults to fifty percent (0.5)
-    :type smooth: Float
+    :type smooth: float
     :param smooth: variable that defines if the Konno-Ohmachi taper is used or
         not. default = 0 -> no taper generally used in geopsy: smooth = 40
-    :type save_data: Boolean
+    :type save_data: bool
     :param save_data: Whether or not to save the result to a file. If True, two
         output files will be created:
         * The new response in station_name.window_length.resp
@@ -140,7 +139,7 @@ def _calcresp(calfile, nfft, sampfreq):
     """
     Calculate transfer function of known system.
 
-    :type calfile: String
+    :type calfile: str
     :param calfile: file containing poles, zeros and scale factor for known
         system
     :returns: complex transfer function, array of frequencies
@@ -167,7 +166,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
     # extra calculations.  We return the unaveraged Pxy, freqs, and t.
     same_data = y is x
 
-    # Make sure we're dealing with a numpy array. If y and x were the same
+    # Make sure we're dealing with a NumPy array. If y and x were the same
     # object to start with, keep them that way
 
     x = np.asarray(x)

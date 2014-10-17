@@ -24,11 +24,17 @@ else:
     maketrans = bytes.maketrans
 
 
-# Numpy does not offer the frombuffer method under Python 3 and instead
+# NumPy does not offer the frombuffer method under Python 3 and instead
 # relies on the built-in memoryview object.
 if PY2:
     def frombuffer(data, dtype):
-        return np.frombuffer(data, dtype=dtype).copy()
+        # For compatibility with NumPy 1.4
+        if isinstance(dtype, unicode):  # noqa
+            dtype = str(dtype)
+        if data:
+            return np.frombuffer(data, dtype=dtype).copy()
+        else:
+            return np.array([], dtype=dtype)
 else:
     def frombuffer(data, dtype):
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
@@ -41,7 +47,7 @@ def round_away(number):
     only works up machine precision. This should hopefully behave like the
     round() function in Python 2.
 
-    This is potentially desired behaviour in the trim functions but some more
+    This is potentially desired behavior in the trim functions but some more
     thought should be poured into it.
 
     The np.round() function rounds towards the even nearest even number in case

@@ -36,7 +36,12 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
-from numpy.distutils.core import setup
+from distutils.util import change_root
+
+from numpy.distutils.core import setup, DistutilsSetupError
+from numpy.distutils.command.build import build
+from numpy.distutils.command.install import install
+from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
 
@@ -71,6 +76,9 @@ if platform.system() == "Windows" and (
 else:
     IS_MSVC = False
 
+# Use system libraries? Set later...
+EXTERNAL_LIBS = False
+
 # package specific settings
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
@@ -86,22 +94,29 @@ KEYWORDS = [
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
+
 INSTALL_REQUIRES = [
-    'future>=0.12.1',
+    'future>=0.12.4',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy',
-    'suds-jurko']
+    'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose']}
+              'nose',
+              'pyimgur'],
+    'neries': ['suds-jurko']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
+# Add argparse for Python 2.6. stdlib package for Python >= 2.7
+if sys.version_info[:2] == (2, 6):
+    INSTALL_REQUIRES.append('argparse')
+
 ENTRY_POINTS = {
     'console_scripts': [
+        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.core.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
         'obspy-print = obspy.core.scripts.print:main',
@@ -113,6 +128,9 @@ ENTRY_POINTS = {
         'obspy-dataless2xseed = obspy.xseed.scripts.dataless2xseed:main',
         'obspy-xseed2dataless = obspy.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.xseed.scripts.dataless2resp:main',
+    ],
+    'distutils.commands': [
+        'build_man = Help2Man'
     ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.core.ascii',
@@ -133,6 +151,7 @@ ENTRY_POINTS = {
         'Q = obspy.sh.core',
         'SH_ASC = obspy.sh.core',
         'WAV = obspy.wav.core',
+        'AH = obspy.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.core.ascii:isTSPAIR',
@@ -218,6 +237,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.y.core:isY',
         'readFormat = obspy.y.core:readY',
     ],
+    'obspy.plugin.waveform.AH': [
+        'isFormat = obspy.ah.core:is_AH',
+        'readFormat = obspy.ah.core:read_AH',
+    ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
         'MCHEDR = obspy.pde.mchedr',
@@ -272,6 +295,11 @@ ENTRY_POINTS = {
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
     ],
+    'obspy.plugin.interpolate': [
+        'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
+        'weighted_average_slopes = '
+        'obspy.signal.interpolation:weighted_average_slopes',
+    ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
         'rotate_RT_NE = obspy.signal:rotate_RT_NE',
@@ -312,6 +340,11 @@ ENTRY_POINTS = {
         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
+# PY3: rename entry points for executable scripts to "obspy3-..."
+if sys.version_info[0] == 3:
+    ENTRY_POINTS['console_scripts'] = [
+        string.replace("obspy", "obspy3", 1)
+        for string in ENTRY_POINTS['console_scripts']]
 
 
 def find_packages():
@@ -372,6 +405,29 @@ def export_symbols(*path):
     return [s.strip() for s in lines if s.strip() != '']
 
 
+# adds --with-system-libs command-line option if possible
+def add_features():
+    if 'setuptools' not in sys.modules:
+        return {}
+
+    class ExternalLibFeature(setuptools.Feature):
+        def include_in(self, dist):
+            global EXTERNAL_LIBS
+            EXTERNAL_LIBS = True
+
+        def exclude_from(self, dist):
+            global EXTERNAL_LIBS
+            EXTERNAL_LIBS = False
+
+    return {
+        'system-libs': ExternalLibFeature(
+            'use of system C libraries',
+            standard=False,
+            EXTERNAL_LIBS=True
+        )
+    }
+
+
 def configuration(parent_package="", top_path=None):
     """
     Config function mainly used to compile C and Fortran code.
@@ -391,8 +447,9 @@ def configuration(parent_package="", top_path=None):
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
-    files = glob.glob(os.path.join(path, "libmseed", "*.c"))
-    files.append(os.path.join(path, "obspy-readbuffer.c"))
+    files = [os.path.join(path, "obspy-readbuffer.c")]
+    if not EXTERNAL_LIBS:
+        files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -406,6 +463,8 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
+    if EXTERNAL_LIBS:
+        kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
                          files, **kwargs)
 
@@ -433,7 +492,10 @@ def configuration(parent_package="", top_path=None):
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
-    files = glob.glob(os.path.join(path, "evalresp", "*.c"))
+    if EXTERNAL_LIBS:
+        files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
+    else:
+        files = glob.glob(os.path.join(path, "evalresp", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -441,6 +503,8 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    if EXTERNAL_LIBS:
+        kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
@@ -480,7 +544,7 @@ def add_data_files(config):
     """
     # python files are included per default, we only include data files
     # here
-    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf']
+    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf', '.git*']
     EXCLUDE_DIRS = ['src', '__pycache__']
     common_prefix = SETUP_DIRECTORY + os.path.sep
     for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
@@ -492,6 +556,61 @@ def add_data_files(config):
         for folder in EXCLUDE_DIRS:
             if folder in dirs:
                 dirs.remove(folder)
+
+
+# Auto-generate man pages from --help output
+class Help2ManBuild(build):
+    description = "Run help2man on scripts to produce man pages"
+
+    def finalize_options(self):
+        build.finalize_options(self)
+        self.help2man = find_executable('help2man')
+        if not self.help2man:
+            raise DistutilsSetupError('Building man pages requires help2man.')
+
+    def run(self):
+        mandir = os.path.join(self.build_base, 'man')
+        self.mkpath(mandir)
+
+        from pkg_resources import iter_entry_points
+        for entrypoint in iter_entry_points(group='console_scripts'):
+            if not entrypoint.module_name.startswith('obspy'):
+                continue
+
+            output = os.path.join(mandir, entrypoint.name + '.1')
+            print('Generating %s ...' % (output))
+            exec_command([self.help2man,
+                          '--no-info', '--no-discard-stderr',
+                          '--output', output,
+                          '"%s -m %s"' % (sys.executable,
+                                          entrypoint.module_name)])
+
+
+class Help2ManInstall(install):
+    description = 'Install man pages generated by help2man'
+    user_options = install.user_options + [
+        ('manprefix=', None, 'MAN Prefix Path')
+    ]
+
+    def initialize_options(self):
+        self.manprefix = None
+        install.initialize_options(self)
+
+    def finalize_options(self):
+        if self.manprefix is None:
+            self.manprefix = os.path.join('share', 'man')
+        install.finalize_options(self)
+
+    def run(self):
+        if not self.skip_build:
+            self.run_command('build_man')
+
+        srcdir = os.path.join(self.build_base, 'man')
+        mandir = os.path.join(self.install_base, self.manprefix, 'man1')
+        if self.root is not None:
+            mandir = change_root(self.root, mandir)
+        self.mkpath(mandir)
+        self.copy_tree(srcdir, mandir)
 
 
 def setupPackage():
@@ -515,6 +634,12 @@ def setupPackage():
                 'Lesser General Public License (LGPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 2.6',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.3',
+            'Programming Language :: Python :: 3.4',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
@@ -523,12 +648,14 @@ def setupPackage():
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
+        features=add_features(),
         # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"
                       "#egg=obspy=dev"),
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
+        cmdclass={'build_man': Help2ManBuild, 'install_man': Help2ManInstall},
         configuration=configuration)
 
 

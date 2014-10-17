@@ -52,14 +52,31 @@ VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 
 # allowed encodings:
-# SEED id: SEED name, SEED sampletype a, i, f or d, default numpy type)}
-ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
-             1: ("INT16", "i", np.dtype("int16")),
-             3: ("INT32", "i", np.dtype("int32")),
-             4: ("FLOAT32", "f", np.dtype("float32")),
-             5: ("FLOAT64", "d", np.dtype("float64")),
-             10: ("STEIM1", "i", np.dtype("int32")),
-             11: ("STEIM2", "i", np.dtype("int32"))}
+# id: (name, sampletype a/i/f/d, default NumPy type, write support)
+ENCODINGS = {0: ("ASCII", "a", np.dtype(native_str("|S1")).type, True),
+             1: ("INT16", "i", np.dtype(np.int16), True),
+             3: ("INT32", "i", np.dtype(np.int32), True),
+             4: ("FLOAT32", "f", np.dtype(np.float32), True),
+             5: ("FLOAT64", "d", np.dtype(np.float64), True),
+             10: ("STEIM1", "i", np.dtype(np.int32), True),
+             11: ("STEIM2", "i", np.dtype(np.int32), True),
+             12: ("GEOSCOPE24", "f", np.dtype(np.float32), False),
+             13: ("GEOSCOPE16_3", "f", np.dtype(np.float32), False),
+             14: ("GEOSCOPE16_4", "f", np.dtype(np.float32), False),
+             16: ("CDSN", "i", np.dtype(np.int32), False),
+             30: ("SRO", "i", np.dtype(np.int32), False),
+             32: ("DWWSSN", "i", np.dtype(np.int32), False)}
+
+# Encodings not supported by libmseed and consequently ObsPy.
+UNSUPPORTED_ENCODINGS = {
+    2: "INT24",
+    15: "US National Network compression",
+    17: "Graefenberg 16 bit gain ranged",
+    18: "IPG - Strasbourg 16 bit gain ranged",
+    19: "STEIM (3) Comprssion",
+    31: "HGLP Format",
+    33: "RSTN 16 bit gain ranged"
+}
 
 # Map the dtype to the samplecode. Redundant information but it is hard coded
 # for performance reasons.
@@ -68,11 +85,11 @@ SAMPLETYPE = {"|S1": "a",
               "int32": "i",
               "float32": "f",
               "float64": "d",
-              np.dtype("|S1").type: "a",
-              np.dtype("int16").type: "i",
-              np.dtype("int32").type: "i",
-              np.dtype("float32").type: "f",
-              np.dtype("float64").type: "d"}
+              np.dtype(native_str("|S1")).type: "a",
+              np.dtype(np.int16).type: "i",
+              np.dtype(np.int32).type: "i",
+              np.dtype(np.float32).type: "f",
+              np.dtype(np.float64).type: "d"}
 # as defined in libmseed.h
 MS_ENDOFFILE = 1
 MS_NOERROR = 0
@@ -481,18 +498,18 @@ clibmseed.ms_detect.restype = C.c_int
 
 clibmseed.msr_unpack_steim2.argtypes = [
     C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
 clibmseed.msr_unpack_steim1.argtypes = [
     C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
@@ -650,7 +667,7 @@ LinkedIDList._fields_ = [
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='b', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.POINTER(Selections),

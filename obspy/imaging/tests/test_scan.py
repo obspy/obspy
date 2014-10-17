@@ -7,11 +7,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
 from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir
-import sys
+import shutil
 import os
 import unittest
 
@@ -27,6 +28,19 @@ class ScanTestCase(unittest.TestCase):
         # directory where the test files are located
         self.root = abspath(join(dirname(__file__), pardir, pardir))
         self.path = join(self.root, 'imaging', 'tests', 'images')
+        sac_files = ['LMOW.BHE.SAC', 'seism.sac', 'dis.G.SCZ.__.BHE_short',
+                     'null_terminated.sac', 'test.sac', 'seism-longer.sac',
+                     'test.sac.swap', 'seism-shorter.sac', 'testxy.sac']
+        gse2_files = ['STA2.testlines', 'STA2.testlines_out', 'acc.gse',
+                      'loc_RJOB20050831023349.z',
+                      'loc_RJOB20050831023349_first100_dos.z',
+                      'loc_RNON20040609200559.z', 'loc_STAU20031119011659.z',
+                      'sta2.gse2', 'twiceCHK2.gse2', 'y2000.gse']
+        all_files = [join(self.root, 'sac', 'tests', 'data', i)
+                     for i in sac_files]
+        all_files.extend([join(self.root, 'gse2', 'tests', 'data', i)
+                          for i in gse2_files])
+        self.all_files = all_files
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_scan(self):
@@ -36,17 +50,38 @@ class ScanTestCase(unittest.TestCase):
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 3, 0]:
             reltol = 60
-        # using mseed increases test time by factor 2
-        waveform_dirs = [join(self.root, n, 'tests', 'data')
-                         for n in ('sac', 'gse2')]
-        with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
-            try:
-                tmp_stdout = sys.stdout
-                sys.stdout = open(os.devnull, 'wt')
-                obspy_scan(waveform_dirs + ['--output', ic.name])
-            finally:
-                sys.stdout.close()
-                sys.stdout = tmp_stdout
+
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
+                with CatchOutput():
+                    obspy_scan([os.curdir] + ['--output', ic.name])
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_scanTimes(self):
+        """
+        Checks for timing related options
+        """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            reltol = 60
+
+        # Copy files to a temp folder to avoid wildcard scans.
+        with TemporaryWorkingDirectory():
+            for filename in self.all_files:
+                shutil.copy(filename, os.curdir)
+
+            with ImageComparison(self.path, 'scan_times.png',
+                                 reltol=reltol) as ic:
+                with CatchOutput():
+                    obspy_scan([os.curdir] + ['--output', ic.name] +
+                               ['--start-time', '2004-01-01'] +
+                               ['--end-time', '2004-12-31'] +
+                               ['--event-time', '2004-03-14T15:09:26'] +
+                               ['--event-time', '2004-02-07T18:28:18'])
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_multipleSamplingrates(self):
@@ -76,13 +111,8 @@ class ScanTestCase(unittest.TestCase):
                         files.append(fp.name)
                     with ImageComparison(self.path, 'scan_mult_sampl.png',
                                          reltol=reltol) as ic:
-                        try:
-                            tmp_stdout = sys.stdout
-                            sys.stdout = open(os.devnull, 'wt')
+                        with CatchOutput():
                             obspy_scan(files + ['--output', ic.name])
-                        finally:
-                            sys.stdout.close()
-                            sys.stdout = tmp_stdout
 
 
 def suite():

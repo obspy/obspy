@@ -10,19 +10,15 @@ Module containing a UTC-based datetime class.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str, PY2
+from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
 
 import datetime
 import time
 import math
 
 
-TIMESTAMP0 = datetime.datetime(1970, 1, 1)
-
-# Py3k compat, avoid circular import
-if not PY2:
-    unicode = str
+TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
 
 class UTCDateTime(object):
@@ -37,11 +33,11 @@ class UTCDateTime(object):
     specification and some additional string patterns during object
     initialization.
 
-    :type args: int, float, string, :class:`datetime.datetime`, optional
+    :type args: int, float, str, :class:`datetime.datetime`, optional
     :param args: The creation of a new `UTCDateTime` object depends from the
         given input parameters. All possible options are summarized in the
         `Examples`_ section below.
-    :type iso8601: boolean, optional
+    :type iso8601: bool, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
     :type precision: int, optional
@@ -152,7 +148,7 @@ class UTCDateTime(object):
 
     (5) Using the following keyword arguments: `year, month, day, julday, hour,
         minute, second, microsecond`. Either the combination of year, month and
-        day, or year and julday are required.
+        day, or year and Julian day are required.
 
         >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
         UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
@@ -181,7 +177,7 @@ class UTCDateTime(object):
     >>> dt == dt3  # 7th digit will be neglected
     True
 
-    You may change that behaviour either by,
+    You may change that behavior either by,
 
     (1) using the ``precision`` keyword during object initialization:
 
@@ -498,12 +494,9 @@ class UTCDateTime(object):
         >>> dt.datetime
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        # we are exact at the border of floating point precision
         # datetime.utcfromtimestamp will cut off but not round
-        # avoid through adding extra timedelta
-        _fsec, _isec = math.modf(self.timestamp)
-        return datetime.datetime.utcfromtimestamp(_isec) + \
-            datetime.timedelta(seconds=_fsec)
+        # avoid through adding timedelta - also avoids the year 2038 problem
+        return TIMESTAMP0 + datetime.timedelta(seconds=self.timestamp)
 
     datetime = property(_getDateTime)
 
@@ -913,12 +906,12 @@ class UTCDateTime(object):
         """
         Returns ISO8601 unicode representation from current UTCDateTime object.
 
-        :return: unicode
+        :return: string
 
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> unicode(dt)
+        >>> dt.__unicode__()
         '2008-10-01T12:30:35.045020Z'
         """
         return str(self.__str__())
@@ -942,7 +935,7 @@ class UTCDateTime(object):
         >>> t1.timestamp == t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 == t2
@@ -972,7 +965,7 @@ class UTCDateTime(object):
         >>> t1.timestamp != t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 != t2
@@ -999,7 +992,7 @@ class UTCDateTime(object):
         >>> t1.timestamp < t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 < t2
@@ -1029,7 +1022,7 @@ class UTCDateTime(object):
         >>> t1.timestamp <= t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 <= t2
@@ -1059,7 +1052,7 @@ class UTCDateTime(object):
         >>> t1.timestamp > t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 > t2
@@ -1089,7 +1082,7 @@ class UTCDateTime(object):
         >>> t1.timestamp >= t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 >= t2
@@ -1131,7 +1124,7 @@ class UTCDateTime(object):
 
         :type format: str
         :param format: Format string.
-        :return: Formated string representing the date and time.
+        :return: Formatted string representing the date and time.
 
         Format codes referring to hours, minutes or seconds will see 0 values.
         See methods :meth:`~datetime.datetime.strftime()` and
@@ -1318,7 +1311,7 @@ class UTCDateTime(object):
         """
         Returns string representation for a SEED volume.
 
-        :type compact: boolean, optional
+        :type compact: bool, optional
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
         :rtype: string

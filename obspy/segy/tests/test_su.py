@@ -49,8 +49,8 @@ class SUTestCase(unittest.TestCase):
 
     def test_enforcingByteordersWhileReading(self):
         """
-        Tests whether or not enforcing the byteorder while reading and writing
-        does something and works at all. Using the wrong byteorder will most
+        Tests whether or not enforcing the byte order while reading and writing
+        does something and works at all. Using the wrong byte order will most
         likely raise an Exception.
         """
         # This file is little endian.
@@ -67,7 +67,7 @@ class SUTestCase(unittest.TestCase):
 
     def test_readingAndWritingDifferentByteorders(self):
         """
-        Writing different byteorders should not change
+        Writing different byte orders should not change
         """
         # This file is little endian.
         file = os.path.join(self.path, '1.su_first_trace')
@@ -107,7 +107,7 @@ class SUTestCase(unittest.TestCase):
         su = readSU(file)
         data = su.traces[0].data
         # The data is written as integer so it is also converted to float32.
-        correct_data = np.require(np.load(data_file).ravel(), 'float32')
+        correct_data = np.require(np.load(data_file).ravel(), np.float32)
         # Compare both.
         np.testing.assert_array_equal(correct_data, data)
 

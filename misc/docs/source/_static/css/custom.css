@@ -1,0 +1,199 @@
+/* responsive logo */
+#logo img {
+  width: 100%;
+  padding: 0 2em;
+  margin-bottom: -3em;
+}
+
+@media (max-width: 768px) {
+  #logo img {
+    margin-top: 1em;
+    margin-bottom: 0;
+  }
+}
+
+/* external links */
+a.external[href^="http:"] {
+  background : transparent url(../extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+a.external[href^="https:"] {
+  background : transparent url(../extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+a.external[href^="ftp:"] {
+  background : transparent url(../extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+
+/* code sections */
+pre {
+  overflow-x : auto;
+  overflow-y : hidden;
+}
+
+tt {
+  background-color : #ECF0F3;
+  font-family : Consolas, Menlo, Monaco, LucidaConsole, LiberationMono, DejaVuSansMono, BitstreamVeraSansMono, CourierNew, monospace, serif;
+  font-size : 0.95em;
+  padding : 2px;
+}
+
+code {
+  color: #333;
+}
+
+dt {
+  font-weight: normal;
+}
+
+dd {
+  margin-left: 30px;
+}
+
+tt.descname {
+  font-size : 1.1em;
+}
+
+div.highlight {
+  background-color : transparent;
+}
+
+div.highlight-python {
+  margin : 1em;
+}
+
+div.highlight pre {
+  background : none repeat scroll 0 0 #EEFFCC;
+}
+
+div.genindex-jumpbox, div.modindex-jumpbox {
+  border: none;
+}
+
+.viewcode-link, #sourcelink {
+  font-size: 80%;
+}
+
+/* breadcrumb */
+
+.breadcrumb {
+  margin-bottom: 0;
+}
+
+.breadcrumb > li.pull-right {
+  color: #ccc;
+}
+
+.breadcrumb > li.pull-right:last-child:before {
+  content: "" !important;
+  padding: 0 !important;
+}
+
+/* table stuff */
+table.table td {
+  min-width: 11em;
+}
+
+table.table tr.row-even {
+  background-color: #f9f9f9;
+}
+
+table.field-list th {
+  background-color: #eeddee;
+  border: 1px solid #aaaaaa;
+  border-collapse: collapse;
+}
+
+
+table.field-list td {
+  background-color: #eeeeff;
+  border: 1px solid #aaaaaa;
+  min-width: 10em;
+}
+
+table.field-list ul li {
+  list-style-position: inside;
+  list-style-type: none;
+  padding-bottom: 0.5em;
+}
+
+table.field-list ul {
+  padding-left: 0;
+}
+
+table.field-list td.field-body span.dash {
+  display: block;
+  padding: 0.5em 1em 0.5em 2em;
+}
+
+table.highlighttable td {
+  padding : 0 0.2em;
+}
+
+table.highlighttable {
+  margin-left : 0;
+}
+
+table.citation, table.citation td {
+  border: none !important;
+  background-color: transparent !important;
+  margin-bottom: 5px;
+}
+
+table.hlist td {
+  min-width: 250px;
+  vertical-align: top;
+}
+
+
+p.rubric {
+  font-size : 1.1em;
+}
+
+dd p {
+  margin-top: 16px;
+}
+
+.epigraph div::first-letter {
+  float: left;
+  color: #C7254E;
+  font-size: 300%;
+  padding-top: 0.125ex;
+  padding-right: 0.25ex;
+  font-family: serif;
+}
+
+/* disable selection of doctest prefixes, e.g. >>> or ...*/
+.highlight .gp {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+/* warnings */
+.warning {
+  background-color: #f2dede;
+  border-color: #ebccd1;
+  color: #a94442;
+}
+
+.warning a {
+  color: #843534;
+  font-weight: 700;
+}
+
+/* force the anchor links below the nav bar */
+div.section h1:before, div.section h2:before, div.section h3:before,
+div.section h4:before, div.section h5:before, div.section h6:before {
+  display: block;
+  content: " ";
+  margin-top: -60px;
+  height: 60px;
+  visibility: hidden;
+}*/

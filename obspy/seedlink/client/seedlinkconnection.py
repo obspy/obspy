@@ -41,7 +41,7 @@ class SeedLinkConnection(object):
     or by creating a new class and invoking the methods of SeedLinkConnection.
 
     :var SEEDLINK_PROTOCOL_PREFIX: URI/URL prefix for seedlink
-        servers ("seedlnk://").
+        servers ("seedlink://").
     :type SEEDLINK_PROTOCOL_PREFIX: str
     :var UNISTATION: The station code used for uni-station mode.
     :type UNISTATION: str
@@ -65,14 +65,14 @@ class SeedLinkConnection(object):
     :type netto: int
     :var netdly: Network reconnect delay (seconds)  (default is 30 sec).
     :type netdly: int
-    :var info_string: String containing concatination of contents of last
+    :var info_string: String containing concatenation of contents of last
         terminated set of INFO packets.
     :type info_string: str
     :var statefile: File name for storing state information.
     :type statefile: str
     :var lastpkttime: Flag to control last packet time usage,
         if true, begin_time is appended to DATA command (Default is False).
-    :type lastpkttime: boolean
+    :type lastpkttime: bool
 
     Protected parameters
 
@@ -83,13 +83,13 @@ class SeedLinkConnection(object):
     :var end_time: End of time window.
     :type end_time: str
     :var resume: Flag to control resuming with sequence numbers.
-    :type resume: boolean
+    :type resume: bool
     :var multistation: Flag to indicate multistation mode.
-    :type multistation: boolean
+    :type multistation: bool
     :var dialup: Flag to indicate dial-up mode.
-    :type dialup: boolean
+    :type dialup: bool
     :var terminate_flag: Flag to control connection termination.
-    :type terminate_flag: boolean
+    :type terminate_flag: bool
     :var server_id: ID of the remote SeedLink server.
     :type server_id: str
     :var server_version: Version of the remote SeedLink server.
@@ -267,7 +267,7 @@ class SeedLinkConnection(object):
             self.end_time = None
 
     def terminate(self):
-        """"
+        """
         Sets terminate flag, closes connection and clears state.
         """
         self.terminate_flag = True
@@ -327,24 +327,23 @@ class SeedLinkConnection(object):
         If 'defselect' is not null it will be used as the default selectors
         for entries will no specific selectors indicated.
 
-        The file is expected to be repeating lines of the form:
-        <PRE>
-          <NET> <STA> [selectors]
-        </PRE>
-        For example:
-        <PRE>
-        # Comment lines begin with a '#' or '*'
-        GE ISP  BH?.D
-        NL HGN
-        MN AQU  BH?  HH?
-        </PRE>
+        The file is expected to be repeating lines of the form::
+
+            <NET> <STA> [selectors]
+
+        For example::
+
+            # Comment lines begin with a '#' or '*'
+            GE ISP  BH?.D
+            NL HGN
+            MN AQU  BH?  HH?
 
         :param streamfile: name of file containing list of streams and
             selectors.
         :param defselect: default selectors.
         :return: the number of streams configured.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         # Open the stream list file
         streamfile_file = None
@@ -414,20 +413,20 @@ class SeedLinkConnection(object):
         Parse a string of streams and selectors and add them to the stream
         chain for configuring a multi-station connection.
 
-        The string should be of the following form:
-        "stream1[:selectors1],stream2[:selectors2],..."
+        The string should be of the following form::
 
-        For example:
-        <PRE>
-        "IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D"
-        </PRE>
+            "stream1[:selectors1],stream2[:selectors2],..."
+
+        For example::
+
+            "IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D"
 
         :param streamlist: list of streams and selectors.
         :param defselect: default selectors.
 
         :return: the number of streams configured.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         # Parse the streams and selectors
 
@@ -497,7 +496,7 @@ class SeedLinkConnection(object):
         :return: 0 if successfully added, 1 if an entry for network and station
             already exists.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         # Sanity, check for a uni-station mode entry
         # print "DEBUG: selectors_str:", selectors_str
@@ -538,7 +537,7 @@ class SeedLinkConnection(object):
         :param timestamp: SeedLink time stamp in a UTCDateTime format
             for last packet received, null for none.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         # Sanity, check for a multi-station mode entry
         if len(self.streams) > 0:
@@ -566,7 +565,7 @@ class SeedLinkConnection(object):
         :param statefile: path and name of statefile.
         :return: the number of stream chains recovered.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         self.statefile = statefile
         return self.recoverState(self.statefile)
@@ -579,7 +578,7 @@ class SeedLinkConnection(object):
         :param statefile: path and name of statefile.
         :return: the number of stream chains recovered.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         # open the state file
         statefile_file = None
@@ -671,7 +670,7 @@ class SeedLinkConnection(object):
         :param statefile: path and name of statefile.
         :return: the number of stream chains saved.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         # open the state file
         statefile_file = None
@@ -728,9 +727,9 @@ class SeedLinkConnection(object):
 
         :return: an SLPacket when something is received.
         :return: null when the connection was closed by
-        the server or the termination sequence completed.
+            the server or the termination sequence completed.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         self.terminate_flag = False
 
@@ -895,18 +894,17 @@ class SeedLinkConnection(object):
                             else:
                                 slpacket = self.state.getPacket()
                                 # construct info String
-                                type = slpacket.getType()
+                                packet_type = slpacket.getType()
                                 # print "DEBUG: slpacket.getType():",
                                 # print slpacket.getType()
                                 # print "DEBUG: SLPacket.TYPE_SLINF:",
                                 # print SLPacket.TYPE_SLINF
                                 # print "DEBUG: SLPacket.TYPE_SLINFT:",
                                 # print SLPacket.TYPE_SLINFT
-                                lenmsr = len(slpacket.msrecord)
-                                data = slpacket.msrecord[64:lenmsr]
+                                data = slpacket.getStringPayload()
                                 self.info_response_buffer.write(data)
 
-                                if (type == SLPacket.TYPE_SLINFT):
+                                if (packet_type == SLPacket.TYPE_SLINFT):
                                     # Terminated INFO response packet
                                     # -> build complete INFO response string,
                                     #    strip NULL bytes from the end
@@ -1033,9 +1031,9 @@ class SeedLinkConnection(object):
         Open a network socket connection to a SeedLink server. Expects sladdr
         to be in 'host:port' format.
 
-        :raise: SeedLinkException on error or no response or bad response from
+        :raise SeedLinkException: on error or no response or bad response from
             server.
-        :raise: IOException if an I/O error occurs.
+        :raise IOException: if an I/O error occurs.
         """
         timeout = 4.0
 
@@ -1157,8 +1155,8 @@ class SeedLinkConnection(object):
             sending.
         :return: the response bytes or null if no response requested.
 
-        :raise: SeedLinkException on error or no or bad response from server.
-        :raise: IOException if an I/O error occurs.
+        :raise SeedLinkException: on error or no or bad response from server.
+        :raise IOException: if an I/O error occurs.
 
         """
         # print "DEBUG: sendbytes:", repr(sendbytes)
@@ -1198,7 +1196,7 @@ class SeedLinkConnection(object):
         :return: the response bytes (zero length if no available data), or null
             if EOF.
 
-        :raise: IOException if an I/O error occurs.
+        :raise IOException: if an I/O error occurs.
         """
         # read up to maxbytes
         try:
@@ -1229,8 +1227,8 @@ class SeedLinkConnection(object):
         number from the returned string.  The server version is set to 0.0
         if it can not be parsed from the returned string.
 
-        :raise: SeedLinkException on error.
-        :raise: IOException if an I/O error occurs.
+        :raise SeedLinkException: on error.
+        :raise IOException: if an I/O error occurs.
         """
         sendStr = b"HELLO"
         logger.debug("sending: %s" % (sendStr.decode()))
@@ -1269,10 +1267,10 @@ class SeedLinkConnection(object):
         """
         Add an INFO request to the SeedLink Connection Description.
 
-        :param: infoLevel the INFO level (one of: ID, STATIONS, STREAMS, GAPS,
+        :param infoLevel: the INFO level (one of: ID, STATIONS, STREAMS, GAPS,
             CONNECTIONS, ALL)
 
-        :raise: SeedLinkException if an INFO request is already pending.
+        :raise SeedLinkException: if an INFO request is already pending.
         """
         if self.info_request_string is not None or self.state.expect_info:
             msg = "cannot make INFO request, one is already pending"
@@ -1286,11 +1284,11 @@ class SeedLinkConnection(object):
         can be specified, allowing control of when the request should be
         logged.
 
-        :param: infoLevel the INFO level (one of: ID, STATIONS, STREAMS, GAPS,
+        :param infoLevel: the INFO level (one of: ID, STATIONS, STREAMS, GAPS,
             CONNECTIONS, ALL).
 
-        :raise: SeedLinkException on error.
-        :raise: IOException if an I/O error occurs.
+        :raise SeedLinkException: on error.
+        :raise IOException: if an I/O error occurs.
         """
         if self.checkVersion(2.92) >= 0:
             bytes = b"INFO " + infoLevel.encode('ascii', 'strict') + b"\r"
@@ -1327,8 +1325,8 @@ class SeedLinkConnection(object):
         server.  Negotiation will be either uni- or multi-station
         depending on the value of 'multistation' in this SeedLinkConnection.
 
-        :raise: SeedLinkException on error.
-        :raise: SeedLinkException if multi-station and SeedLink version does
+        :raise SeedLinkException: on error.
+        :raise SeedLinkException: if multi-station and SeedLink version does
             not support multi-station protocol.
         """
         if self.multistation:
@@ -1350,10 +1348,10 @@ class SeedLinkConnection(object):
         If 'seqnum' != -1 and the SLCD 'resume' flag is true then data is
         requested starting at seqnum.
 
-        :param: curstream the description of the station to negotiate.
+        :param curstream: the description of the station to negotiate.
 
-        :raise: SeedLinkException on error.
-        :raise: IOException if an I/O error occurs.
+        :raise SeedLinkException: on error.
+        :raise IOException: if an I/O error occurs.
 
         """
 
@@ -1473,8 +1471,8 @@ class SeedLinkConnection(object):
         If 'seqnum' != -1 and the SLCD 'resume' flag is true then data is
         requested starting at seqnum.
 
-        :raise: SeedLinkException on error.
-        :raise: IOException if an I/O error occurs.
+        :raise SeedLinkException: on error.
+        :raise IOException: if an I/O error occurs.
         """
         # get stream (should be only stream present)
         curstream = None
@@ -1501,8 +1499,8 @@ class SeedLinkConnection(object):
         If 'seqnum' != -1 and the SLCD 'resume' flag is true then data is
         requested starting at seqnum.
 
-        :raise: SeedLinkException on error.
-        :raise: IOException if an I/O error occurs.
+        :raise SeedLinkException: on error.
+        :raise IOException: if an I/O error occurs.
         """
         acceptsta = 0
         if len(self.streams) < 1:
@@ -1562,9 +1560,9 @@ class SeedLinkConnection(object):
         """
         Update the appropriate stream chain entry given a Mini-SEED record.
 
-        :param: slpacket the packet conaining a Mini-SEED record.
+        :param slpacket: the packet containing a Mini-SEED record.
 
-        :raise: SeedLinkException on error.
+        :raise SeedLinkException: on error.
         """
         seqnum = slpacket.getSequenceNumber()
         if (seqnum == -1):

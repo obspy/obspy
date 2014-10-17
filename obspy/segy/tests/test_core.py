@@ -39,7 +39,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSEGY method.
         """
         # Test all files in the test directory.
-        for file in list(self.files.keys()):
+        for file in self.files.keys():
             file = os.path.join(self.path, file)
             self.assertEqual(isSEGY(file), True)
         # Also check all the other files in the test directory and they should
@@ -54,7 +54,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSU method.
         """
         # Test all SEG Y files in the test directory.
-        for file in list(self.files.keys()):
+        for file in self.files.keys():
             file = os.path.join(self.path, file)
             self.assertEqual(isSU(file), False)
         # Also check all the other files in the test directory and they should
@@ -168,10 +168,10 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = readSEGY(file)
         data = st[0].data
         # All working encodings with corresponding dtypes.
-        encodings = {1: 'float32',
-                     2: 'int32',
-                     3: 'int16',
-                     5: 'float32'}
+        encodings = {1: np.float32,
+                     2: np.int32,
+                     3: np.int16,
+                     5: np.float32}
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
@@ -196,7 +196,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         st = readSEGY(file)
         # Use float64 as the wrong encoding in every case.
-        st[0].data = np.require(st[0].data, 'float64')
+        st[0].data = np.require(st[0].data, np.float64)
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
@@ -442,7 +442,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         st = read()
         del st[1:]
-        st[0].data = np.require(st[0].data, 'float32')
+        st[0].data = np.require(st[0].data, np.float32)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             st.write(outfile, format='SU')

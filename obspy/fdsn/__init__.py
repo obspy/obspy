@@ -127,7 +127,7 @@ examples.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
+from future.utils import PY2, native_str
 
 from .client import Client  # NOQA
 from .header import URL_MAPPINGS  # NOQA
@@ -144,7 +144,7 @@ if r"%s" in Client.__init__.__doc__:
             Client.__init__.__doc__ % \
             str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
-__all__ = ["Client"]
+__all__ = [native_str("Client")]
 
 
 if __name__ == '__main__':
