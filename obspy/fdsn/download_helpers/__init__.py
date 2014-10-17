@@ -176,13 +176,19 @@ must be downloaded and ``"filename"`` determines where to save these. Please
 note that in this particular case the StationXML file will be overwritten if it
 already exists.
 
+Alternatively the function can also return a string and the behaviour is the
+same as two first options for the ``stationxml_storage`` argument.
 
->>> def get_stationxml_storage(network, station, channels, time_of_interest):
+The next example illustrates a complex use case where the availability of each
+channel's station information is queried in some database and only those
+channels that do not exist yet will be downloaded. Use closures to pass more
+arguments like the temporal constraints of the station information.
+
+>>> def get_stationxml_storage(network, station, channels):
 ...     available_channels = []
 ...     missing_channels = []
 ...     for chan in channels:
-...         if is_in_db(network, station, chan.location, chan.channel,
-...                     time_of_interest):
+...         if is_in_db(network, station, chan.location, chan.channel):
 ...             available_channels.append(chan)
 ...         else:
 ...             missing_channels.append(chan)
