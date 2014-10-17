@@ -18,7 +18,7 @@ before_install:
   - mkdir wheelhouse-build
   - sudo apt-get build-dep --ignore-missing -qq -y python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto
   - pip wheel ${WHEEL_BUILD_ARGS} numpy==$NUMPY_VERSION
-  - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build numpy==$SCIPY_VERSION
+  - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build numpy==$NUMPY_VERSION
   - pip wheel ${WHEEL_BUILD_ARGS} scipy==$SCIPY_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build scipy==$SCIPY_VERSION
   - pip wheel ${WHEEL_BUILD_ARGS} lxml sqlalchemy m2crypto six PyYAML
