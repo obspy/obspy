@@ -42,6 +42,13 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
         return "Error k != 1.0 or tension != 0.0, spline_cubic_set needs adaption";
     }
 
+    /* input t values must be strictly increasing. Note that the GNU
+     * plotutil version also allowed strictly decreasing inputs */
+    if (t[0] > t[num_points - 1u])
+    {
+        return "Input values must be strictly increasing";
+    }
+
     ypp = spline_cubic_set(num_points, t, y, ibcbeg, ybcbeg, ibcend, ybcend);
     if (ypp == NULL)
     {
@@ -60,9 +67,8 @@ char *evr_spline(int num_points, double *t, double *y, double tension,
     for (i = 0u; i < num_xvals; ++i)
     {
         tval = xvals_arr[i];
-        /* check that we are in range */
-        if (((tval >= t[0]) && (tval <= t[num_points - 1u])) ||
-            ((tval >= t[num_points - 1u]) && (tval <= t[0])))
+        /* input must be strictly increasing */
+        if ((tval >= t[0]) && (tval <= t[num_points - 1u]))
         {
             yval = spline_cubic_val(num_points, t, y, ypp, tval, &ypval, &yppval );
 #if 0
