@@ -75,7 +75,7 @@ class RectangularDomain(Domain):
 class CircularDomain(Domain):
     """
     A circular domain defined by a center point and minimum and maximum
-    radius from that point.
+    radius from that point in degrees.
     """
     def __init__(self, latitude, longitude, minradius, maxradius):
         self.latitude = latitude

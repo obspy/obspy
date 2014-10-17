@@ -38,6 +38,7 @@ class DomainTestCase(unittest.TestCase):
             "minlongitude": -20,
             "maxlongitude": 20})
 
+        # The rectangular domain is completely defined by the query parameters.
         self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
 
     def test_circular_domain(self):
@@ -52,6 +53,7 @@ class DomainTestCase(unittest.TestCase):
             "minradius": 30,
             "maxradius": 40})
 
+        # The circular domain is completely defined by the query parameters.
         self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
 
     def test_global_domain(self):
@@ -62,6 +64,7 @@ class DomainTestCase(unittest.TestCase):
         query_params = dom.get_query_parameters()
         self.assertEqual(query_params, {})
 
+        # Obviously every point is in the domain.
         self.assertRaises(NotImplementedError, dom.is_in_domain, 0, 0)
 
     def test_subclassing_without_abstract_method(self):
@@ -311,28 +314,75 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         self.assertEqual(new_list, list_one + [
             Station("11", "11", 0, 0, 10, [], None)])
 
-
     def test_stationxml_filename_helper(self):
         """
         Tests the get_stationxml_filename() function.
         """
-        # Passing a format string causes it to be used.
-        self.assertEqual(
-            get_stationxml_filename("{network}_{station}.xml",
-                                    network="BW", station="FURT"),
-            "BW_FURT.xml")
+        c1 = Channel("", "BHE")
+        c2 = Channel("10", "SHE")
+        channels = [c1, c2]
 
         # A normal string is considered a path.
-        self.assertEqual(
-            get_stationxml_filename("FOLDER", network="BW", station="FURT"),
+        self.assertEqual(get_stationxml_filename(
+            "FOLDER", network="BW", station="FURT", channels=channels),
             os.path.join("FOLDER", "BW.FURT.xml"))
+        self.assertEqual(get_stationxml_filename(
+            "stations", network="BW", station="FURT", channels=channels),
+            os.path.join("stations", "BW.FURT.xml"))
 
-        # A passed function will be executed.
-        def get_name(network, station):
+        # Passing a format string causes it to be used.
+        self.assertEqual(get_stationxml_filename(
+            "{network}_{station}.xml", network="BW", station="FURT",
+            channels=channels), "BW_FURT.xml")
+        self.assertEqual(get_stationxml_filename(
+            "TEMP/{network}/{station}.xml", network="BW", station="FURT",
+            channels=channels), "TEMP/BW/FURT.xml")
+
+        # A passed function will be executed. A string should just be returned.
+        def get_name(network, station, channels):
             return "network" + "__" + station
-        self.assertEqual(
-            get_stationxml_filename(get_name, network="BW", station="FURT"),
+        self.assertEqual(get_stationxml_filename(
+            get_name, network="BW", station="FURT", channels=channels),
             "network__FURT")
+
+        # A dictionary with certain keys are also acceptable.
+        def get_name(network, station, channels):
+            return {"missing_channels": [c1],
+                    "available_channels": [c2],
+                    "filename": "test.xml"}
+        self.assertEqual(get_stationxml_filename(
+            get_name, network="BW", station="FURT", channels=channels),
+            {"missing_channels": [c1], "available_channels": [c2],
+             "filename": "test.xml"})
+
+        # Missing keys raise.
+        def get_name(network, station, channels):
+            return {"missing_channels": [c1],
+                    "available_channels": [c2]}
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels)
+
+        # Wrong value types should also raise.
+        def get_name(network, station, channels):
+            return {"missing_channels": [c1],
+                    "available_channels": [c2],
+                    "filename": True}
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels)
+
+        def get_name(network, station, channels):
+            return {"missing_channels": True,
+                    "available_channels": [c2],
+                    "filename": "test.xml"}
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels)
+
+        def get_name(network, station, channels):
+            return {"missing_channels": [c1],
+                    "available_channels": True,
+                    "filename": "test.xml"}
+        self.assertRaises(ValueError, get_stationxml_filename, get_name,
+                          "BW", "FURT", channels)
 
         # It will raise a type error, if the function does not return the
         # proper type.
@@ -343,25 +393,41 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Tests the get_mseed_filename() function.
         """
-        # Passing a format string causes it to be used.
-        self.assertEqual(
-            get_mseed_filename("{network}_{station}_{location}_{channel}.ms",
-                               network="BW", station="FURT", location="",
-                               channel="BHE"), "BW_FURT__BHE.ms")
-
         # A normal string is considered a path.
         self.assertEqual(
             get_mseed_filename("FOLDER", network="BW", station="FURT",
                                location="", channel="BHE"),
             os.path.join("FOLDER", "BW.FURT..BHE.mseed"))
+        self.assertEqual(
+            get_mseed_filename("waveforms", network="BW", station="FURT",
+                               location="00", channel="BHE"),
+            os.path.join("waveforms", "BW.FURT.00.BHE.mseed"))
+
+        # Passing a format string causes it to be used.
+        self.assertEqual(
+            get_mseed_filename("{network}_{station}_{location}_{channel}.ms",
+                               network="BW", station="FURT", location="",
+                               channel="BHE"), "BW_FURT__BHE.ms")
+        self.assertEqual(
+            get_mseed_filename("{network}_{station}_{location}_{channel}.ms",
+                               network="BW", station="FURT", location="00",
+                               channel="BHE"), "BW_FURT_00_BHE.ms")
 
         # A passed function will be executed.
         def get_name(network, station, location, channel):
+            if network == "AH":
+                return True
             return "network" + "__" + station + location + channel
+
+        # Returning a filename is possible.
         self.assertEqual(
             get_mseed_filename(get_name, network="BW", station="FURT",
-                               location="", channel="BHE"),
-            "network__FURTBHE")
+                               location="", channel="BHE"), "network__FURTBHE")
+        # 'True' can also be returned. This indicates that the file already
+        # exists.
+        self.assertEqual(
+            get_mseed_filename(get_name, network="AH", station="FURT",
+                               location="", channel="BHE"), True)
 
         # It will raise a type error, if the function does not return the
         # proper type.

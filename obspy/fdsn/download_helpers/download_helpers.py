@@ -129,9 +129,9 @@ class DownloadHelper(object):
         self._initialized_clients = OrderedDict()
         self.__initialize_clients()
 
-    def download(self, domain, restrictions, chunk_size_in_mb=50,
-                 threads_per_client=5, mseed_path=None,
-                 stationxml_path=None):
+    def download(self, domain, restrictions, mseed_storage,
+                 stationxml_storage, chunk_size_in_mb=50,
+                 threads_per_client=5):
         # Collect all the downloaded stations.
         existing_stations = set()
         report = []
@@ -190,7 +190,7 @@ class DownloadHelper(object):
 
             # Now attach filenames to the channel objects, and split into a
             # set of existing and non-existing data files.
-            f = utils.attach_miniseed_filenames(availability, mseed_path)
+            f = utils.attach_miniseed_filenames(availability, mseed_storage)
             mseed_availability = f["stations_to_download"]
             existing_miniseed_filenames = f["existing_miniseed_filenames"]
 
@@ -242,7 +242,7 @@ class DownloadHelper(object):
                 availability, available_miniseed_data)
             f = utils.attach_stationxml_filenames(
                 stations=station_availability,
-                restrictions=restrictions, stationxml_path=stationxml_path,
+                restrictions=restrictions, stationxml_path=stationxml_storage,
                 logger=logger)
             existing_stationxml_channels = f["existing_stationxml_contents"]
             stations_availability = f["stations_to_download"]

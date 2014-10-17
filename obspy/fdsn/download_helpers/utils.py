@@ -181,8 +181,9 @@ def attach_stationxml_filenames(stations, restrictions, stationxml_path,
     for stat in copy.deepcopy(stations):
         filename = get_stationxml_filename(
             stationxml_path, stat.network, stat.station, stat.channels)
-        if not filename:
-            continue
+        # If it returns a dictionary like objects
+        if isinstance(filename, collections.Container):
+            pass
         # If the StationXML file already exists, make sure it
         # contains all the necessary information. Otherwise
         # delete it and it will be downloaded again in the
@@ -238,9 +239,14 @@ def attach_miniseed_filenames(stations, mseed_path):
             filename = get_mseed_filename(
                 mseed_path, station.network, station.station,
                 channel.location, channel.channel)
-            if not filename:
+            # If True, it will not be downloaded again.
+            if filename is True:
+                existing_miniseed_filenames.append((
+                    station.network, station.station, channel.location,
+                    channel.channel))
                 continue
-            if os.path.exists(filename):
+            # If the path exists, it will not be downloaded again.
+            elif os.path.exists(filename):
                 existing_miniseed_filenames.append(filename)
                 continue
             dirname = os.path.dirname(filename)
@@ -633,7 +639,7 @@ def filter_channel_priority(channels, key, priorities=None):
 
 def safe_delete(filename):
     """
-    Safely delete a file.
+    "Safely" delete a file. It really just checks if it exists and is a file.
 
     :param filename: The filename to delete.
     :return:
@@ -855,19 +861,36 @@ def get_stationxml_filename(str_or_fct, network, station, channels):
     Otherwise it is considered to be a folder name and the resulting
     filename will be ``"FOLDER_NAME/NET.STA.xml"``
     """
+    # Call if possible.
     if callable(str_or_fct):
         path = str_or_fct(network, station, channels)
+    # Check if its a format template.
     elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct):
         path = str_or_fct.format(network=network, station=station)
+    # Otherwise assume its a path.
     else:
         path = os.path.join(str_or_fct, "{network}.{station}.xml".format(
             network=network, station=station))
+    if isinstance(path, (str, bytes)):
+        return path
+    elif isinstance(path, collections.Container):
+        if "available_channels" not in path or \
+                "missing_channels" not in path or \
+                "filename" not in path:
+            raise ValueError(
+                "The dictionary returned by the stationxml filename function "
+                "must contain the following keys: 'available_channels', "
+                "'missing_channels', and 'filename'.")
+        if not isinstance(path["available_channels"], collections.Iterable) or\
+                not isinstance(path["missing_channels"],
+                               collections.Iterable) or \
+                not isinstance(path["filename"], (str, bytes)):
+            raise ValueError("Return types must be two lists of channels and "
+                             "a string for the filename.")
+        return path
 
-    if path is None:
-        return None
-    elif not isinstance(path, (str, bytes)):
+    else:
         raise TypeError("'%s' is not a filepath." % str(path))
-    return path
 
 
 def get_mseed_filename(str_or_fct, network, station, location, channel):
@@ -897,6 +920,8 @@ def get_mseed_filename(str_or_fct, network, station, location, channel):
                 network=network, station=station, location=location,
                 channel=channel))
 
-    if not isinstance(path, (str, bytes)):
+    if path is True:
+        return path
+    elif not isinstance(path, (str, bytes)):
         raise TypeError("'%s' is not a filepath." % str(path))
     return path

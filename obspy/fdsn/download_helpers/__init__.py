@@ -38,8 +38,8 @@ Using the download helpers requires three distinct steps:
    launch the downloading process.
 
 
-Data Selection
-~~~~~~~~~~~~~~
+Step 1: Data Selection
+~~~~~~~~~~~~~~~~~~~~~~
 
 Data set selection serves the purpose to limit the data to be downloaded to
 data useful for the purpose at hand. It handled by two objects: subclasses of
@@ -80,8 +80,8 @@ parameters.
 ...     location_priorities=["", "00", "01"]
 
 
-Storage Options
-~~~~~~~~~~~~~~~
+Step 2: Storage Options
+~~~~~~~~~~~~~~~~~~~~~~~
 
 After determining what to download, the helpers must know where to store the to
 be downloaded data. This requires some flexibility in case this is integrated
@@ -199,8 +199,8 @@ arguments like the temporal constraints of the station information.
 ...         "filename": filename}
 >>> stationxml_storage = get_stationxml_storage
 
-Starting the Download
-~~~~~~~~~~~~~~~~~~~~~
+Step 3: Starting the Download
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 >>> dlh = DownloadHelper()
 
