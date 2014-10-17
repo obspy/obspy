@@ -21,5 +21,8 @@
 
        client
        download_helpers
+       download_helpers.domain
+       download_helpers.download_helpers.DownloadHelper
+       download_helpers.download_helpers.Restrictions
 
     .. comment to end block
