@@ -725,8 +725,8 @@ class PPSD():
         :returns: (periods, psd mode values)
         """
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
-        mode_ = db_bin_centers[self.hist_stack.argmax(axis=1)]
-        return (self.period_bin_centers, mode_)
+        mode = db_bin_centers[self.hist_stack.argmax(axis=1)]
+        return (self.period_bin_centers, mode)
 
     def get_mean(self):
         """
@@ -736,9 +736,9 @@ class PPSD():
         :returns: (periods, psd mean values)
         """
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
-        mean_ = (self.hist_stack * db_bin_centers /
-                 len(self.times_used)).sum(axis=1)
-        return (self.period_bin_centers, mean_)
+        mean = (self.hist_stack * db_bin_centers /
+                len(self.times_used)).sum(axis=1)
+        return (self.period_bin_centers, mean)
 
     def __get_normalized_cumulative_histogram(self):
         """
@@ -849,9 +849,9 @@ class PPSD():
         :param max_percentage: Maximum percentage to adjust the colormap.
         :type period_lim: tuple of 2 floats, optional
         :param period_lim: Period limits to show in histogram.
-        :type show_mode: bool (optional)
+        :type show_mode: bool, optional
         :param show_mode: Enable/disable plotting of mode psd values.
-        :type show_mean: bool (optional)
+        :type show_mean: bool, optional
         :param show_mean: Enable/disable plotting of mean psd values.
         """
         # check if any data has been added yet
