@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from taupy.Arrival import Arrival
-from taupy.helper_classes import TauModelError
+from taupy.helper_classes import TauModelError, TimeDist
 import math
 from copy import deepcopy
 
@@ -222,7 +222,7 @@ class SeismicPhase(object):
             # Set currWave to be the wave type for this leg, "P" or "S".
             isPWavePrev = isPWave
             if currLeg == "p" or currLeg.startswith("P") or \
-                    currLeg == "k" or currLeg == "I":
+                            currLeg == "k" or currLeg == "I":
                 isPWave = True
             elif currLeg == "s" or currLeg.startswith("S") or currLeg == "J":
                 isPWave = False
@@ -259,12 +259,12 @@ class SeismicPhase(object):
                     self.addToBranch(tMod, self.currBranch, tMod.mohoBranch,
                                      isPWave, self.TRANSUP)
                 elif nextLeg.startswith("P") or nextLeg.startswith("S") or \
-                        nextLeg == "K" or nextLeg == "END":
+                                nextLeg == "K" or nextLeg == "END":
                     disconBranch = tMod.cmbBranch if nextLeg == "K" else 0
                     self.addToBranch(
                         tMod, self.currBranch, disconBranch, isPWave,
                         (self.TRANSUP if currLeg == "k"
-                         and not nextLeg == "K" else self.REFLECTTOP))
+                                         and not nextLeg == "K" else self.REFLECTTOP))
                 elif isNextLegDepth:
                     disconBranch = closestBranchToDepth(tMod, nextLeg)
                     self.addToBranch(tMod, self.currBranch, disconBranch,
@@ -277,7 +277,7 @@ class SeismicPhase(object):
             elif currLeg == "P" or currLeg == "S":
                 if any(nextLeg == c for c in ("P", "S", "Pn", "Sn", "END")):
                     if self.endAction == self.TRANSDOWN or \
-                            self.endAction == self.REFLECTTOP:
+                                    self.endAction == self.REFLECTTOP:
                         # Downgoing, so must first turn in mantle.
                         self.addToBranch(tMod, self.currBranch,
                                          tMod.cmbBranch - 1, isPWave,
@@ -301,20 +301,21 @@ class SeismicPhase(object):
                         self.addToBranch(tMod, self.currBranch, disconBranch,
                                          isPWave, self.REFLECTTOP)
                     elif prevLeg.startswith("^") or any(
-                            prevLeg == c
-                            for c in ("P", "S", "p", "s", "START")):
+                                    prevLeg == c
+                                    for c in ("P", "S", "p", "s", "START")):
                         self.addToBranch(
                             tMod, self.currBranch, tMod.cmbBranch - 1, isPWave,
                             self.TURN)
                         self.addToBranch(tMod, self.currBranch, disconBranch,
                                          isPWave, self.REFLECTTOP)
                     elif ((prevLeg.startswith("v") and
-                            disconBranch < closestBranchToDepth(tMod,
-                                                                prevLeg[1])
-                            or (prevLeg == "m" and
-                                disconBranch < tMod.mohoBranch)
-                            or (prevLeg == "c" and
-                                disconBranch < tMod.cmbBranch))):
+                                   disconBranch < closestBranchToDepth(tMod,
+                                                                       prevLeg[
+                                                                           1])
+                           or (prevLeg == "m" and
+                                       disconBranch < tMod.mohoBranch)
+                           or (prevLeg == "c" and
+                                       disconBranch < tMod.cmbBranch))):
                         self.addToBranch(tMod, self.currBranch, disconBranch,
                                          isPWave, self.REFLECTTOP)
                     else:
@@ -329,7 +330,7 @@ class SeismicPhase(object):
                     self.addToBranch(tMod, self.currBranch, tMod.cmbBranch - 1,
                                      isPWave, self.TRANSDOWN)
                 elif nextLeg == "m" or (isNextLegDepth and
-                                        nextLegDepth < tMod.cmbDepth):
+                                                nextLegDepth < tMod.cmbDepth):
                     # Treat the Moho in the same way as 410 type
                     # discontinuities.
                     disconBranch = closestBranchToDepth(tMod, nextLeg)
@@ -350,7 +351,7 @@ class SeismicPhase(object):
                         # Downgoing section, must look at leg after next to
                         # determine whether to convert on the downgoing or
                         # upgoing part of the path.
-                        nextnextLeg = self.legs[legNum+2]
+                        nextnextLeg = self.legs[legNum + 2]
                         if nextnextLeg == "p" or nextnextLeg == "s":
                             # Convert on upgoing section
                             self.addToBranch(tMod, self.currBranch,
@@ -368,7 +369,7 @@ class SeismicPhase(object):
                             else:
                                 # Discontinuity is above current location,
                                 # but we have a downgoing ray, so this is an
-                                #  illegal ray for this source depth.
+                                # illegal ray for this source depth.
                                 self.maxRayParam = -1
                                 return
                         else:
@@ -386,7 +387,7 @@ class SeismicPhase(object):
                     # thinking we are turning, but then make maxRayParam
                     # equal to minRayParam, which is the deepest turning ray.
                     if (self.maxRayParam >= tMod.getTauBranch(
-                            tMod.cmbBranch - 1, isPWave).minTurnRayParam
+                                tMod.cmbBranch - 1, isPWave).minTurnRayParam
                             >= self.minRayParam):
                         self.addToBranch(tMod, self.currBranch,
                                          tMod.cmbBranch - 1, isPWave,
@@ -473,7 +474,8 @@ class SeismicPhase(object):
                             currLeg, nextLeg))
             elif currLeg == "I" or currLeg == "J":
                 self.addToBranch(tMod, self.currBranch,
-                                 len(tMod.tauBranches[0]) - 1, isPWave, self.TURN)
+                                 len(tMod.tauBranches[0]) - 1, isPWave,
+                                 self.TURN)
                 if nextLeg == "I" or nextLeg == "J":
                     self.addToBranch(tMod, self.currBranch, tMod.iocbBranch,
                                      isPWave, self.REFLECTTOP)
@@ -617,9 +619,9 @@ class SeismicPhase(object):
             self.rayParams = deepcopy(tMod.rayParams)
         elif self.maxRayParamIndex == self.minRayParamIndex:
             # if "Sdiff" in self.name or "Pdiff" in self.name:
-            #    self.rayParams = [self.minRayParam, self.minRayParam]
+            # self.rayParams = [self.minRayParam, self.minRayParam]
             # elif "Pn" in self.name or "Sn" in self.name:
-            #    self.rayParams = [self.minRayParam, self.minRayParam]
+            # self.rayParams = [self.minRayParam, self.minRayParam]
             if self.name.endswith("kmps"):
                 self.rayParams = [0, self.maxRayParam]
             else:
@@ -628,7 +630,7 @@ class SeismicPhase(object):
             # Only a subset of the ray parameters is valid so use these.
             self.rayParams = deepcopy(
                 tMod.rayParams[self.maxRayParamIndex:
-                               self.minRayParamIndex + 1])
+                self.minRayParamIndex + 1])
         self.dist = [0 for i in range(len(self.rayParams))]
         self.time = [0 for i in range(len(self.rayParams))]
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
@@ -671,7 +673,7 @@ class SeismicPhase(object):
                 self.dist[1] = \
                     self.dist[0] + self.maxDiffraction * math.pi / 180
                 self.time[1] = self.time[0] + \
-                    self.maxDiffraction * math.pi / 180 * self.minRayParam
+                               self.maxDiffraction * math.pi / 180 * self.minRayParam
         elif "Pn" in self.name or "Sn" in self.name:
             self.dist[1] = self.dist[0] + self.maxRefraction * math.pi / 180
             self.time[1] = self.time[0] + self.maxRefraction * math.pi / 180
@@ -701,11 +703,11 @@ class SeismicPhase(object):
                         # Check for downgoing legs that cross the high
                         # slowness zone with the same wave type.
                         if (self.branchSeq[legNum] == branchNum
-                                and self.waveType[legNum] == isPwave
-                                and self.downGoing[legNum] is True
-                                and self.branchSeq[legNum - 1] == branchNum - 1
-                                and self.waveType[legNum - 1] == isPwave
-                                and self.downGoing[legNum - 1] is True):
+                            and self.waveType[legNum] == isPwave
+                            and self.downGoing[legNum] is True
+                            and self.branchSeq[legNum - 1] == branchNum - 1
+                            and self.waveType[legNum - 1] == isPwave
+                            and self.downGoing[legNum - 1] is True):
                             foundOverlap = True
                             break
                     if foundOverlap:
@@ -766,17 +768,17 @@ class SeismicPhase(object):
         # A special case exists at 180, so we skip the second case if
         # tempDeg==180.
         n = 0
-        while n*2*math.pi + radDist <= self.maxDistance:
+        while n * 2 * math.pi + radDist <= self.maxDistance:
             # Look for arrivals that are radDist + 2nPi, i.e. rays that have
-            #  done more than n laps.
-            searchDist = n*2*math.pi + radDist
+            # done more than n laps.
+            searchDist = n * 2 * math.pi + radDist
             for rayNum in range(len(self.dist) - 1):
                 if searchDist == self.dist[rayNum + 1] and \
-                        rayNum + 1 != len(self.dist) - 1:
+                                        rayNum + 1 != len(self.dist) - 1:
                     # So we don't get 2 arrivals for the same ray.
                     continue
                 elif (self.dist[rayNum] - searchDist) * (
-                        searchDist - self.dist[rayNum + 1]) >= 0:
+                            searchDist - self.dist[rayNum + 1]) >= 0:
                     # Look for distances that bracket the search distance
                     if self.rayParams[rayNum] == self.rayParams[rayNum + 1] \
                             and len(self.rayParams) > 2:
@@ -796,7 +798,7 @@ class SeismicPhase(object):
                         # So we don't get 2 arrivals for the same ray.
                         continue
                     elif (self.dist[rayNum] - searchDist) * (
-                            searchDist - self.dist[rayNum + 1]) >= 0:
+                                searchDist - self.dist[rayNum + 1]) >= 0:
                         if self.rayParams[rayNum] == \
                                 self.rayParams[rayNum + 1] \
                                 and len(self.rayParams) > 2:
@@ -809,6 +811,106 @@ class SeismicPhase(object):
             n += 1
         # Perhaps these are sorted by time in the java code?
         return arrivals
+
+    def calcPierce(self, degrees):
+        """
+        Calculates the "pierce points" for the arrivals stored in arrivals. The
+        pierce points are stored within each arrival object.
+        """
+        arrivals = self.calcTime(degrees)
+        for arrival in arrivals:
+            self.calcPiercefromArrival(arrival)
+        return arrivals
+
+    def calcPierceFromArrival(self, currArrival):
+        """
+        Calculates the pierce points for a particular arrival. The returned arrival is the same
+        as the input arguement but now has the pierce points filled in.
+        """
+        # Choose between silly long name and overloading.
+
+        # Find the ray parameter index that corresponds to the arrival ray
+        # parameter in the TauModel, ie it is between rayNum and rayNum+1,
+        # We know that it must be <tMod.rayParams.length-1 since the last
+        # ray parameter sample is 0 in a spherical model.
+        rayNum = 0
+        for rp, i in enumerate(self.tMod.rayParams[:-1]):
+            if rp >= currArrival.rayParam:
+                rayNum = i
+            else:
+                break
+        # Here we use ray parameter and dist info stored within the
+        # SeismicPhase so we can use currArrival.rayParamIndex, which
+        # may not correspond to rayNum (for tMod.rayParams).
+        rayParamA = self.rayParams[currArrival.rayParamIndex]
+        rayParamB = self.rayParams[currArrival.rayParamIndex + 1]
+        distA = self.dist[currArrival.rayParamIndex]
+        distB = self.dist[currArrival.rayParamIndex + 1]
+        distRatio = (currArrival.dist - distA) / (distB - distA)
+        distRayParam = distRatio * (rayParamB - rayParamA) + rayParamA
+        # First pierce point is always 0 distance at the source depth.
+        pierce = [TimeDist(distRayParam, 0, 0, self.tMod.sourceDepth)]
+        branchDist = 0
+        branchTime = 0
+        # Loop from 0 but already done 0 [I just copy the comments, sorry!],
+        # so the pierce point when the ray leaves branch i is stored in i + 1.
+        # Use linear interpolation between rays that we know.
+        # Todo: wrap this assertion up a bit nicer after initial testing.
+        assert len(self.branchSeq) == len(self.waveType) == len(self.downGoing)
+        for branchNum, isPWave, isDownGoing in zip(self.branchSeq,
+                                                   self.waveType,
+                                                   self.downGoing):
+            # Save the turning depths for the ray parameter for both P and
+            # S waves. This way we get the depth correct for any rays that
+            # turn within a layer. We have to do this on a per branch basis
+            # because of converted phases, e.g. SKS.
+            tauBranch = self.tMod.getTauBranch(branchNum, isPWave)
+            if distRayParam > tauBranch.maxrayParam:
+                turnDepth = tauBranch.topDepth
+            elif distRayParam <= tauBranch.minRayParam:
+                turnDepth = tauBranch.botDepth
+            else:
+                if (isPWave or self.tMod.sMod.depthInFluid((
+                            tauBranch.topDepth + tauBranch.botDepth) / 2)):
+                    turnDepth = self.tMod.sMod.findDepth(distRayParam,
+                                                         tauBranch.topDepth,
+                                                         tauBranch.botDepth,
+                                                         True)
+                else:
+                    turnDepth = self.tMod.sMod.findDepth(distRayParam,
+                                                         tauBranch.topDepth,
+                                                         tauBranch.botDepth,
+                                                         isPWave)
+            if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
+                # Head waves and diffracted waves are a special case.
+                # Todo: in that case, add them to the TauP_Time test!
+                distA = tauBranch.dist[rayNum]
+                timeA = tauBranch.time[rayNum]
+                distB, timeB = distA, timeA
+            else:
+                distA = tauBranch.dist[rayNum]
+                timeA = tauBranch.time[rayNum]
+                distB = tauBranch.dist[rayNum + 1]
+                timeB = tauBranch.time[rayNum + 1]
+            branchDist += distRatio * (distB - distA) + distA
+            prevBranchTime = branchTime
+            branchTime += distRatio * (timeB - timeA) + timeA
+            if isDownGoing:
+                branchDepth = min(tauBranch.botDepth, turnDepth)
+            else:
+                branchDepth = min(tauBranch.topDepth, turnDepth)
+            # Make sure ray actually propagates in this branch; leave a little
+            # room for numerical chatter.
+            if abs(prevBranchTime - branchTime) > 1e-10:
+                pierce.append(TimeDist(distRayParam, branchTime, branchDist,
+                                       branchDepth))
+        if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
+            pierce = handleHeadOrDiffractedWave(currArrival, pierce)
+        elif "kmps" in self.name:
+            pierce.append(TimeDist(distRayParam, currArrival.time,
+                                   currArrival.dist, 0))
+        currArrival.pierce = pierce
+        return currArrival
 
     def linearInterpArrival(self, searchDist, rayNum, name, puristName,
                             sourceDepth):
@@ -865,7 +967,7 @@ def closestBranchToDepth(tMod, depthString):
     disconDepth = float(depthString)
     for i, tBranch in enumerate(tMod.tauBranches[0]):
         if (abs(disconDepth - tBranch.topDepth) < disconMax and not
-                any(ndc == tBranch.topDepth for ndc in tMod.noDisconDepths)):
+        any(ndc == tBranch.topDepth for ndc in tMod.noDisconDepths)):
             disconBranch = i
             disconMax = abs(disconDepth - tBranch.topDepth)
     return disconBranch
@@ -901,21 +1003,21 @@ def legPuller(name):
                 if (offset + 1 == len(name) or
                         any(name[offset + 1] == c for c in
                             ("P", "S", "K", "m", "c", "^", "v"))
-                        or name[offset + 1].isdigit()):
+                    or name[offset + 1].isdigit()):
                     legs.append(nchar)
                     offset += 1
                 elif name[offset + 1] == "p" or name[offset + 1] == "s":
                     raise TauModelError(
                         "Invalid phase name: \n {} cannot be followed by {} "
-                        "in {}.".format(nchar, name[offset+1], name))
-                elif any(name[offset+1] == c for c in ("g", "b", "n")):
+                        "in {}.".format(nchar, name[offset + 1], name))
+                elif any(name[offset + 1] == c for c in ("g", "b", "n")):
                     # The leg is not described by one letter, check for two:
-                    legs.append(name[offset:offset+2])
+                    legs.append(name[offset:offset + 2])
                     offset += 2
                 elif len(name) >= offset + 5 \
-                        and any(name[offset:offset+5] == c
+                        and any(name[offset:offset + 5] == c
                                 for c in ("Sdiff", "Pdiff")):
-                    legs.append(name[offset:offset+5])
+                    legs.append(name[offset:offset + 5])
                     offset += 5
                 else:
                     raise TauModelError("Invalid phase name: \n "
@@ -923,13 +1025,14 @@ def legPuller(name):
             elif nchar == "^" or nchar == "v":
                 # Top side or bottom side reflections, check for standard
                 # boundaries and then check for numerical ones.
-                if any(name[offset+1] == c for c in ("m", "c", "i")):
-                    legs.append(name[offset:offset+2])
+                if any(name[offset + 1] == c for c in ("m", "c", "i")):
+                    legs.append(name[offset:offset + 2])
                     offset += 2
-                elif name[offset+1].isdigit() or name[offset+1] == ".":
+                elif name[offset + 1].isdigit() or name[offset + 1] == ".":
                     numString = name[offset]
                     offset += 1
-                    while name[offset+1].isdigit() or name[offset+1] == ".":
+                    while name[offset + 1].isdigit() or name[
+                                offset + 1] == ".":
                         numString += name[offset]
                         offset += 1
                     legs.append(numString)
@@ -939,7 +1042,7 @@ def legPuller(name):
             elif nchar.isdigit() or nchar == ".":
                 numString = name[offset]
                 offset += 1
-                while name[offset+1].isdigit() or name[offset+1] == ".":
+                while name[offset + 1].isdigit() or name[offset + 1] == ".":
                     numString += name[offset]
                     offset += 1
                 legs.append(numString)
