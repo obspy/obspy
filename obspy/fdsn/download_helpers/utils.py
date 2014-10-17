@@ -757,26 +757,6 @@ def download_waveforms_and_stations(client, client_name, station_list,
       for c in s.channels) for s in station_list)
 
 
-def default_get_stationxml_filename(root_folder, network, station):
-    """
-    The default implementation of getting the filename of a StationXML file.
-    """
-    return os.path.join(root_folder, "StationXML",
-                        "%s.%s.xml" % (network, station))
-
-
-def get_default_miniseed_filename(root_folder, network, station, location,
-                                  channel, starttime, endtime):
-    """
-    The default implementation of getting the filename of a MiniSEED file.
-    """
-    # time format that works in a filename
-    tformat = "%Y-%m-%d-%H-%M-%S"
-    return os.path.join(root_folder, "MiniSEED", "%s.%s.%s.%s_%s_%s" % (
-        network, station, location, channel,
-        starttime.strftime(tformat), endtime.strftime(tformat)))
-
-
 def does_file_contain_all_channels(filename, station, logger=None):
     """
     Test whether the StationXML file located at filename contains
@@ -801,7 +781,9 @@ def does_file_contain_all_channels(filename, station, logger=None):
 
 def get_stationxml_contents(filename):
     """
-    Really fast way to get all channels with a response in a StationXML file.
+    Really fast way to get all channels with a response in a StationXML
+    file. Sometimes it is too expensive to parse the full file with ObsPy.
+    This is usually orders of magnitudes faster.
 
     :param filename: The path to the file.
     :returns: list of ChannelAvailability objects.

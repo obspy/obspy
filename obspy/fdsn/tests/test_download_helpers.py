@@ -14,13 +14,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import mock
+import obspy
 import os
 import unittest
 
 from obspy.fdsn.download_helpers import domain
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     filter_stations, filter_based_on_interstation_distance, Station, Channel, \
-    get_stationxml_filename, get_mseed_filename, attach_miniseed_filenames
+    get_stationxml_filename, get_mseed_filename, attach_miniseed_filenames, \
+    get_stationxml_contents, ChannelAvailability
 
 
 class DomainTestCase(unittest.TestCase):
@@ -89,6 +91,11 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
     """
     Test cases for utility functionality for the download helpers.
     """
+    def __init__(self, *args, **kwargs):
+        super(DownloadHelpersUtilTestCase, self).__init__(*args, **kwargs)
+        self.path = os.path.dirname(__file__)
+        self.data = os.path.join(self.path, "data")
+
     def test_channel_priority_filtering(self):
         """
         Tests the channel priority filtering.
@@ -482,6 +489,27 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         self.assertEqual(new_stations["stations_to_download"], [])
         self.assertEqual(new_stations["existing_miniseed_filenames"], [])
         self.assertEqual(new_stations["ignored_channel_count"], 6)
+
+    def test_get_stationxml_contents(self):
+        """
+        Tests the fast get_stationxml_contents() function.
+        """
+        filename = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(self.data))), "station", "tests", "data",
+            "AU.MEEK.xml")
+        # Read with ObsPy and the fast variant.
+        inv = obspy.read_inventory(filename)
+        # Consistency test.
+        self.assertEqual(len(inv.networks), 1)
+        contents = get_stationxml_contents(filename)
+        net = inv[0]
+        sta = net[0]
+        cha = sta[0]
+        self.assertEqual(
+            contents,
+            [ChannelAvailability(net.code, sta.code, cha.location_code,
+                                 cha.code, cha.start_date, cha.end_date,
+                                 filename)])
 
 
 def suite():
