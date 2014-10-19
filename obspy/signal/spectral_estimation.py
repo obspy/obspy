@@ -26,6 +26,7 @@ import warnings
 import pickle
 import math
 import bisect
+import copy
 import bz2
 import numpy as np
 from obspy import Trace, Stream
@@ -946,6 +947,58 @@ class PPSD():
             ax.axvspan(start, end, 0.7, 1, facecolor="r", lw=0)
 
         ax.autoscale_view()
+
+    def __iadd__(self, other):
+        """
+        Add the contents of another PPSD object to this one.
+
+        :type other: :class:`~obspy.signal.spectral_estimation.PPSD`
+        :param other: Another PPSD object.
+        """
+        if not isinstance(other, PPSD):
+            msg = "unsupported operand type for +=: '%s'" % type(other)
+            raise TypeError(msg)
+
+        if other.id != self.id:
+            msg = 'ID does not match: %s' % other.id
+            raise ValueError(msg)
+
+        if other.sampling_rate != self.sampling_rate:
+            msg = 'Sampling rate does not match: %s' % str(other.sampling_rate)
+            raise ValueError(msg)
+
+        if not np.array_equal(other.spec_bins, self.spec_bins) or \
+                not np.array_equal(other.period_bins, self.period_bins):
+            msg = 'Bins do not match'
+            raise ValueError(msg)
+
+        # Check the times for overlap
+        for time_ in other.times_used:
+            if self.__check_time_present(time_):
+                msg = 'PPSDs overlap at: %s' % time_
+                raise ValueError(msg)
+
+        if self.hist_stack is None:
+            # XXX This should maybe be removed, since it changes the identity
+            #     of the object being added to, which is most likely unexpected
+            msg = 'Adding to empty PPSD. Discarding empty PPSD in favor of ' \
+                  'added PPSD.'
+            warnings.warn(msg)
+            return other
+
+        # Add the histogram
+        self.hist_stack += other.hist_stack
+
+        # Copy the time data of the other PPSD
+        for time_ in other.times_used:
+            bisect.insort(self.times_used, copy.deepcopy(time_))
+        # XXX Should times_data be cleaned up?
+        for tuple_ in other.times_data:
+            bisect.insort(self.times_data, copy.deepcopy(tuple_))
+        for tuple_ in other.times_gaps:
+            bisect.insort(self.times_gaps, copy.deepcopy(tuple_))
+
+        return self
 
 
 def get_NLNM():
