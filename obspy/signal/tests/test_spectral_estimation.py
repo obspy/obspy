@@ -83,20 +83,16 @@ class PsdTestCase(unittest.TestCase):
             window_obspy = welch_window(N)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
-    def test_PPSD(self):
+    def __get_sample_data(self):
         """
-        Test PPSD routine with some real data. Data was downsampled to 100Hz
-        so the ppsd is a bit distorted which does not matter for the purpose
-        of testing.
+        Returns some real data (trace and poles and zeroes) for PPSD testing.
+
+        Data was downsampled to 100Hz so the PPSD is a bit distorted which does
+        not matter for the purpose of testing.
         """
         # load test file
         file_data = os.path.join(
             self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
-        file_histogram = os.path.join(
-            self.path,
-            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
-        file_binning = os.path.join(
-            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
         # no with due to py 2.6
         f = gzip.open(file_data)
@@ -116,13 +112,28 @@ class PsdTestCase(unittest.TestCase):
                  'starttime': UTCDateTime(2011, 3, 31, 0, 0, 0, 180000),
                  'station': 'KW1'}
         tr = Trace(data, stats)
-        st = Stream([tr])
+
         paz = {'gain': 60077000.0,
                'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
                          (-251.33 + 0j), (-131.04 - 467.29j),
                          (-131.04 + 467.29j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
+
+        return tr, paz
+
+    def test_PPSD(self):
+        """
+        Test PPSD routine with some real data.
+        """
+        # paths of the expected result data
+        file_histogram = os.path.join(
+            self.path,
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
+        file_binning = os.path.join(
+            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
+        tr, paz = self.__get_sample_data()
+        st = Stream([tr])
         ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
         ppsd.add(st)
         # read results and compare
@@ -167,6 +178,63 @@ class PsdTestCase(unittest.TestCase):
                                           binning['spec_bins'])
             np.testing.assert_array_equal(ppsd_loaded.period_bins,
                                           binning['period_bins'])
+
+    def test_PPSD_check_time_present(self):
+        """
+        Check that all valid data is inserted independet of insert order.
+
+        The ppsd.times_used for the sample data above (with PPSD length 3600
+        and 0.5 overlap) should always be:
+         - UTCDateTime(2011, 3, 31, 0, 0, 0, 180000)
+         - UTCDateTime(2011, 3, 31, 0, 30, 0, 180000)
+         - UTCDateTime(2011, 3, 31, 1, 0, 0, 180000)
+         - UTCDateTime(2011, 3, 31, 1, 30, 0, 180000)
+        """
+        expected_times = [
+            UTCDateTime(2011, 3, 31, 0, 0, 0, 180000),
+            UTCDateTime(2011, 3, 31, 0, 30, 0, 180000),
+            UTCDateTime(2011, 3, 31, 1, 0, 0, 180000),
+            UTCDateTime(2011, 3, 31, 1, 30, 0, 180000),
+        ]
+
+        tr, paz = self.__get_sample_data()
+
+        # add the first hour only, then add the whole trace
+        tr1 = tr.copy().trim(endtime=expected_times[2])
+        ppsd = PPSD(tr1.stats, paz, db_bins=(-200, -50, 0.5))
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            ppsd.add(Stream([tr1]))
+            ppsd.add(Stream([tr]))
+        self.assertEqual(sorted(ppsd.times_used), expected_times)
+
+        # add everything except the first hour, then add the whole trace
+        tr2 = tr.copy().trim(starttime=expected_times[2])
+        ppsd = PPSD(tr2.stats, paz, db_bins=(-200, -50, 0.5))
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            ppsd.add(Stream([tr2]))
+            ppsd.add(Stream([tr]))
+        self.assertEqual(sorted(ppsd.times_used), expected_times)
+
+        # similar test for non-symmetrical overlap
+        expected_times = [
+            UTCDateTime(2011, 3, 31, 0, 0, 0, 180000),
+            UTCDateTime(2011, 3, 31, 0, 18, 0, 180000),
+            UTCDateTime(2011, 3, 31, 0, 36, 0, 180000),
+            UTCDateTime(2011, 3, 31, 0, 54, 0, 180000),
+            UTCDateTime(2011, 3, 31, 1, 12, 0, 180000),
+            UTCDateTime(2011, 3, 31, 1, 30, 0, 180000),
+        ]
+
+        tr3 = tr.copy().trim(starttime=expected_times[2],
+                             endtime=expected_times[2] + 3600)
+        ppsd = PPSD(tr3.stats, paz, db_bins=(-200, -50, 0.5))
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            ppsd.add(Stream([tr3]))
+            ppsd.add(Stream([tr]))
+        self.assertEqual(sorted(ppsd.times_used), expected_times)
 
 
 def suite():
