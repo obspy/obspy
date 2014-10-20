@@ -635,7 +635,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
                 cft_std = tr.data[on:off].std()
             except ValueError:
                 cft_peak = tr.data[on]
-                cft_std = tr.data[on].std()
+                cft_std = 0
             on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
             off = tr.stats.starttime + float(off) / tr.stats.sampling_rate
             triggers.append((on.timestamp, off.timestamp, tr.id, cft_peak,
