@@ -261,6 +261,10 @@ class PPSD():
 
     ... but the example stream is too short and does not contain enough data.
 
+    .. note::
+
+        For a real world example see the `ObsPy Tutorial`_.
+
     .. rubric:: Saving and Loading
 
     The PPSD object supports saving to a pickled file with optional
@@ -281,8 +285,6 @@ class PPSD():
 
         While saving the PPSD with compression enabled takes significantly
         longer, it can reduce the resulting file size by more than 80%.
-
-    For a real world example see the `ObsPy Tutorial`_.
 
     .. note::
 
