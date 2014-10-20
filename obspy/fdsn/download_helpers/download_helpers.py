@@ -130,12 +130,27 @@ class DownloadHelper(object):
         self.__initialize_clients()
 
     def download(self, domain, restrictions, mseed_storage,
-                 stationxml_storage, chunk_size_in_mb=50,
+                 stationxml_storage, download_chunk_size_in_mb=50,
                  threads_per_client=5):
+        """
+        Download data.
+
+        :param domain:
+        :param restrictions:
+        :param mseed_storage:
+        :param stationxml_storage:
+        :param download_chunk_size_in_mb:
+        :param threads_per_client:
+        """
         # Collect all the downloaded stations.
         existing_stations = set()
+        # Set of network and station tuples, e.g. {(“NET1”, “STA1”),
+        # (“NET2”, “STA2”), …}. Will be used to not attempt to download
+        # stations that have been rejected during a previous loop iteration.
+        # Station can be rejected if they are too close to an already existing
+        # station.
+        discarded_station_ids = set()
         report = []
-        discarded_stationids = set()
 
         # Do it sequentially for each client. Doing it in parallel is not
         # really feasible as long as the availability queries are not reliable.
@@ -146,17 +161,17 @@ class DownloadHelper(object):
             info = utils.get_availability_from_client(
                 client, client_name, restrictions, domain, logger)
 
-            availability = info["availability"]
             if not info["availability"]:
-                availability = []
-            else:
-                availability = availability.values()
+                report.append({"client": client_name, "data": []})
+                continue
+
+            availability = availability.values()
 
             # First filter stage. Remove stations based on the station id,
             # e.g. NETWORK.STATION. Remove all that already exist and all
             # the are in the discarded station ids set.
-            availability = utils.filter_stations_based_on_duplicate_id(
-                existing_stations, discarded_stationids, availability)
+            availability = utils.filter_duplicate_and_discarded_stations(
+                existing_stations, discarded_station_ids, availability)
             logger.info("Client '%s' - After discarding duplicates based on "
                         "the station id, %i stations remain." % (
                         client_name, len(availability)))
@@ -178,7 +193,7 @@ class DownloadHelper(object):
             # Add the rejected stations to the set of discarded station ids
             # so they will not be attempted to be downloaded again.
             for station in f["rejected_stations"]:
-                discarded_stationids.add((station.network, station.station))
+                discarded_station_ids.add((station.network, station.station))
             availability = f["accepted_stations"]
 
             logger.info("Client '%s' - %i station(s) satisfying the "
@@ -214,7 +229,7 @@ class DownloadHelper(object):
                 a = time.time()
                 downloaded_miniseed_filenames = self.download_mseed(
                     client, client_name, mseed_availability, restrictions,
-                    chunk_size_in_mb=chunk_size_in_mb,
+                    chunk_size_in_mb=download_chunk_size_in_mb,
                     threads_per_client=threads_per_client)
                 b = time.time()
                 f = sum(os.path.getsize(_i) for _i in
@@ -360,7 +375,7 @@ class DownloadHelper(object):
                                 len(f["rejected_stations"]))
 
                 for station in f["rejected_stations"]:
-                    discarded_stationids.add((station.network,
+                    discarded_station_ids.add((station.network,
                                               station.station))
 
                     logger.info("Deleting '%s'." %

@@ -103,14 +103,16 @@ name:
 >>> mseed_storage = "waveforms"
 
 will cause all MiniSEED files to be stored as
-``"waveforms/NETWORK.STATION.LOCATION.CHANNEL.mseed"``.
+``"waveforms/NETWORK.STATION.LOCATION.CHANNEL.STARTTIME.ENDTIME.mseed"``.
 
 
 The second possibility is to provide a string containing ``"{network}"``,
-``"{station}"``, ``"{location}"``, and ``"{channel}"`` format specifiers.  The
-values will be interpolated to acquire the final filename.
+``"{station}"``, ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and
+``"{endtime}"`` format specifiers. The values will be interpolated to acquire
+the final filename.
 
->>> mseed_storage = "some_folder/{network}/{station}/{location}.{channel}.mseed"
+>>> mseed_storage = ("some_folder/{network}/{station}/"
+...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
 
 The most complex but also most powerful possibility is to use a function which
 will be evaluated to determine the filename. If the function returns ``True``,
@@ -121,8 +123,9 @@ path. Utilize closures to use any other paramters in the function. This
 hypothetical function checks if the file is already in a database and otherwise
 returns a string.
 
->>> def get_mseed_storage(network, station, location, channel):
-...     if is_in_db(network, station, location, channel):
+>>> def get_mseed_storage(network, station, location, channel, starttime,
+...                       endtime):
+...     if is_in_db(network, station, location, channel, starttime, endtime):
 ...         return True
 ...     return os.path.join(ROOT, "%s.%s.%s.%s.mseed." % (network, station,
 ...                                                       location, channel))
@@ -213,6 +216,111 @@ Step 3: Starting the Download
 
 Logging
 ~~~~~~~
+
+*to be written*
+
+
+Examples
+--------
+
+This section illustrates the usage of the download helpers for a few typical
+examples which can serve as templates for your own needs.
+
+
+Earthquake Data
+~~~~~~~~~~~~~~~
+
+One of the most often used type of data set in seismology is a classical
+earthquake data set consisting of waveform recordings for a certain earthquake.
+The following example downloads all data it can find for the Tohoku-Oki
+Earthquake from 5 minutes before the earthquake centroid time to 1 hour after.
+It will furthermore only download data with a distance between 70.0 and 90.0
+degrees from the data and some additional restrictions.
+
+.. code:: python
+
+    import obspy
+    from obspy.fdsn.download_helpers import CircularDomain, Restrictions, \\
+        DownloadHelper
+
+    origin_time = obspy.UTCDateTime(2011, 3, 11, 5, 47, 32)
+
+    # Circular domain around the epicenter. This will download all data between
+    # 70 and 90 degrees distance from the epicenter.
+    domain = CircularDomain(latitude=37.52, longitude=143.04,
+                            minradius=70.0, maxradius=90.0)
+
+    restrictions = Restrictions(
+        # Get data from 5 minutes before the event to one hours after the
+        # event.
+        starttime=origin_time - 5 * 60,
+        endtime=origin_time + 3600,
+        # You might not want to deal with gaps in the data.
+        reject_channels_with_gaps=True,
+        # And you might only want waveform that have data for at least 95 % of
+        # the requested time span.
+        minimum_length=0.95,
+        # No two stations should be closer than 10 km to each other.
+        minimum_interstation_distance_in_m=10E3,
+        # Only HH or BH channels. If a station has HH channels, those will be
+        # downloaded, otherwise the BH. Nothing will be downloaded if it has
+        # neither.
+        channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]"),
+        # Locations codes are arbitrary and there is no rule which location is
+        # best.
+        location_priorities=("", "00", "10"))
+
+    # No specified providers will result in all known ones being queried.
+    dlh = DownloadHelper()
+    dlh.download(domain, restrictions, mseed_storage="waveforms",
+                 stationxml_storage="stations")
+
+
+Continuous Request
+~~~~~~~~~~~~~~~~~~
+
+Ambient seismic noise correlations require continuous recordings from stations
+over a large time span. This example downloads data, from within a certain
+geographical domain, for a whole year. Individual MiniSEED files will be split
+per day.
+
+.. code:: python
+
+    import obspy
+    from obspy.fdsn.download_helpers import RectangularDomain, Restrictions, \\
+        DownloadHelper
+
+    # Rectangular domain containing parts of southern Germany.
+    domain = RectangularDomain(minlatitude=30, maxlatitude=50,
+                               minlongitude=5, maxlongitude=25)
+
+    restrictions = Restrictions(
+        # Get data for a whole year.
+        starttime=obspy.UTCDateTime(2012, 1, 1),
+        endtime=obspy.UTCDateTime(2013, 1, 1),
+        # Chunk it to have one file per day.
+        chunklength=86400,
+        # Considering the enormous amount of data associated with continuous
+        # requests, you might want to limit the data based on SEED identifiers.
+        # If the location code is specified, the location priority list is not
+        # used; the same is true for the channel argument and priority list.
+        network="BW", station="A*", location="", channel="BH*",
+        # The typical use case for such a data set are noise correlations where
+        # gaps are dealt with at a later stage.
+        reject_channels_with_gaps=False,
+        # Same is true with the minimum length. Any data during a day might be
+        # useful.
+        minimum_length=0.0,
+        # Guard against the same station having different names.
+        minimum_interstation_distance_in_m=100.0)
+
+    # Restrict the number of providers if you know which serve the desired
+    # data. If in doubt just don't specify - then all providers will be
+    # queried.
+    dlh = DownloadHelper(providers=["ORFEUS", "GFZ"])
+    dlh.download(domain, restrictions, mseed_storage="waveforms",
+                 stationxml_storage="stations")
+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

@@ -511,6 +511,14 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
                                  cha.code, cha.start_date, cha.end_date,
                                  filename)])
 
+    def test_attach_stationxml_filenames(self):
+        """
+        Test the attaching of filenames to the stations objects.
+        """
+        channels = [Channel("", "BHE"), Channel("", "BHN"), Channel("", "BHZ")]
+        stations = [Station("BW", "ALTM", 0, 0, 0, channels=channels),
+                    Station("BW", "FURT", 0, 0, 0, channels=channels)]
+
 
 def suite():
     testsuite = unittest.TestSuite()
