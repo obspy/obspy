@@ -6,7 +6,7 @@ ZMAP is a simple 10 column CSV file (technically TSV) format for basic catalog
 data (see [Wiemer2001]_).
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org), Lukas Heiniger
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
