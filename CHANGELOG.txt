@@ -35,6 +35,8 @@
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
      `weighted average slopes` method from Wiggins 1976.
+   * PPSD has new methods to extract mean and mode of the histogram by
+     frequency (see #804)
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
