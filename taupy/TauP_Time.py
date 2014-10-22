@@ -51,7 +51,7 @@ class TauP_Time(object):
         self.relativeArrival = None
 
     def start(self):
-        """Called after init."""
+        """Does the calculations and prints the result."""
         self.readConfig()
         self.phaseNames = parsePhaseList(self.phaseList)
         self.readTauModel()

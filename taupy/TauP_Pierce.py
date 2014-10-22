@@ -1,7 +1,10 @@
 from taupy.TauP_Time import TauP_Time
+from math import pi
 
 
 class TauP_Pierce(TauP_Time):
+    # In effect, the methods here allow using TauP_Time to calculate the
+    # pierce points.
 
     def __init__(self):
         super().__init__()
@@ -25,6 +28,24 @@ class TauP_Pierce(TauP_Time):
         for phase in self.phases:
             phaseArrivals = phase.calcPierce(degrees)
             self.arrivals += phaseArrivals
+
+    def printResult(self):
+        for currArrival in self.arrivals:
+            print(self.getCommentLine(currArrival))
+            longWayRound = False
+            if (currArrival.dist * 180 / pi) % 360 > 180:
+                longWayRound = True
+            prevDepth = currArrival.pierce[0].depth
+            for j, calcDist in enumerate(
+                    [p.getDistDeg() for p in currArrival.pierce]):
+                if longWayRound is True and calcDist != 0:
+                    calcDist *= -1
+                if j < len(currArrival.pierce) - 1:
+                    nextDepth = currArrival.pierce[j + 1].depth
+                else:
+                    nextDepth = currArrival.pierce[j].depth
+                #if (not(self.onlyTurnPoints or self.onlyRevPoints or
+                #            self.onlyUnderPoints or self.onlyAddPoints) or ((self.onlyAddPoints and self.isAddDepth)))
 
 
 

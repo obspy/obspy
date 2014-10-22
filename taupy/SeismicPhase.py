@@ -819,13 +819,14 @@ class SeismicPhase(object):
         """
         arrivals = self.calcTime(degrees)
         for arrival in arrivals:
-            self.calcPiercefromArrival(arrival)
+            self.calcPierceFromArrival(arrival)
         return arrivals
 
     def calcPierceFromArrival(self, currArrival):
         """
-        Calculates the pierce points for a particular arrival. The returned arrival is the same
-        as the input arguement but now has the pierce points filled in.
+        Calculates the pierce points for a particular arrival. The returned
+        arrival is the same as the input arguement but now has the pierce
+        points filled in.
         """
         # Choose between silly long name and overloading.
 
@@ -834,7 +835,7 @@ class SeismicPhase(object):
         # We know that it must be <tMod.rayParams.length-1 since the last
         # ray parameter sample is 0 in a spherical model.
         rayNum = 0
-        for rp, i in enumerate(self.tMod.rayParams[:-1]):
+        for i, rp in enumerate(self.tMod.rayParams[:-1]):
             if rp >= currArrival.rayParam:
                 rayNum = i
             else:
@@ -905,12 +906,31 @@ class SeismicPhase(object):
                 pierce.append(TimeDist(distRayParam, branchTime, branchDist,
                                        branchDepth))
         if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
-            pierce = handleHeadOrDiffractedWave(currArrival, pierce)
+            pierce = self.handleHeadOrDiffractedWave(currArrival, pierce)
         elif "kmps" in self.name:
             pierce.append(TimeDist(distRayParam, currArrival.time,
                                    currArrival.dist, 0))
         currArrival.pierce = pierce
         return currArrival
+
+    def handleHeadOrDiffractedWave(self, currArrival, orig):
+        """
+        Here we worry about the special case for head and diffracted
+        waves. It is assumed that a phase can be a diffracted wave or a
+        head wave, but not both. Nor can it be a head wave or diffracted
+        wave for both P and S.
+        """
+        if self.name in ["Pn", "Sn", "Pdiff", "Sdiff"]:
+            phaseSeg = self.name
+        else:
+            raise TauModelError("No head/diff segment in" + str(self.name))
+        if phaseSeg in ["Pn", "Sn"]:
+            headDepth = self.tMod.mohoDepth
+        else:
+            headDepth = self.tMod.cmbDepth
+        # I can't figure out how this method would be called in the Java code.
+        # Something's fishy.
+        raise NotImplementedError("Now it's needed.")
 
     def linearInterpArrival(self, searchDist, rayNum, name, puristName,
                             sourceDepth):

@@ -47,6 +47,7 @@ class TestTauPTime(unittest.TestCase):
         """
         Check taup_time output for a range of inputs against the Java output.
         """
+        # todo: add checks of Pdiff, Pn, kmps?
         if not os.path.isfile("data/java_tauptime_testoutput"):
             subprocess.call("./generate_tauptime_output.sh", shell=True)
         stdout = sys.stdout
