@@ -19,11 +19,14 @@ from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 import fnmatch
 import inspect
 import os
+import io
+import difflib
 import glob
 import unittest
 import doctest
 import shutil
 import warnings
+from lxml import etree
 
 
 def add_unittests(testsuite, module_name):
@@ -452,6 +455,41 @@ def check_flake8():
 MODULE_TEST_SKIP_CHECKS = {
     'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
     }
+
+
+def compare_xml_strings(doc1, doc2):
+    """
+    Simple helper function to compare two XML strings.
+
+    :type doc1: str
+    :type doc2: str
+    """
+    # Compat py2k and py3k
+    try:
+        doc1 = doc1.encode()
+        doc2 = doc2.encode()
+    except:
+        pass
+    obj1 = etree.fromstring(doc1).getroottree()
+    obj2 = etree.fromstring(doc2).getroottree()
+
+    buf = io.BytesIO()
+    obj1.write_c14n(buf)
+    buf.seek(0, 0)
+    str1 = buf.read()
+    str1 = [_i.strip() for _i in str1.splitlines()]
+
+    buf = io.BytesIO()
+    obj2.write_c14n(buf)
+    buf.seek(0, 0)
+    str2 = buf.read()
+    str2 = [_i.strip() for _i in str2.splitlines()]
+
+    unified_diff = difflib.unified_diff(str1, str2)
+
+    err_msg = "\n".join(unified_diff)
+    if err_msg:  # pragma: no cover
+        raise AssertionError("Strings are not equal.\n" + err_msg)
 
 
 if __name__ == '__main__':
