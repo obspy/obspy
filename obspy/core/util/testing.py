@@ -20,6 +20,7 @@ import fnmatch
 import inspect
 import os
 import io
+import re
 import difflib
 import glob
 import unittest
@@ -490,6 +491,34 @@ def compare_xml_strings(doc1, doc2):
     err_msg = "\n".join(unified_diff)
     if err_msg:  # pragma: no cover
         raise AssertionError("Strings are not equal.\n" + err_msg)
+
+
+def remove_unique_IDs(xml_string, remove_creation_time=False):
+    """
+    Removes unique ID parts of e.g. 'publicID="..."' attributes from xml
+    strings.
+
+    :type xml_string: str
+    :param xml_string: xml string to process
+    :type remove_creation_time: bool
+    :param xml_string: controls whether to remove 'creationTime' tags or not.
+    :rtype: str
+    """
+    prefixes = ["id", "publicID", "pickID", "originID", "preferredOriginID",
+                "preferredMagnitudeID", "preferredFocalMechanismID",
+                "referenceSystemID", "methodID", "earthModelID",
+                "triggeringOriginID", "derivedOriginID", "momentMagnitudeID",
+                "greensFunctionID", "filterID", "amplitudeID",
+                "stationMagnitudeID", "earthModelID", "slownessMethodID",
+                "pickReference", "amplitudeReference"]
+    if remove_creation_time:
+        prefixes.append("creationTime")
+    for prefix in prefixes:
+        xml_string = re.sub("%s='.*?'" % prefix, '%s=""' % prefix, xml_string)
+        xml_string = re.sub('%s=".*?"' % prefix, '%s=""' % prefix, xml_string)
+        xml_string = re.sub("<%s>.*?</%s>" % (prefix, prefix),
+                            '<%s/>' % prefix, xml_string)
+    return xml_string
 
 
 if __name__ == '__main__':

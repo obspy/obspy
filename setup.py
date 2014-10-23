@@ -87,13 +87,14 @@ KEYWORDS = [
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
-    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
+    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
+    'observatory', 'ORFEUS', 'picker', 'processing', 'PQLX', 'Q', 'real time',
+    'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED', 'SeedLink',
+    'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
+    'seismogram', 'seismograms', 'signal', 'slink', 'spectrogram',
+    'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
+    'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
+    'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
@@ -247,7 +248,9 @@ ENTRY_POINTS = {
         'ZMAP = obspy.zmap.core',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
-        'NDK = obspy.ndk.core'
+        'NDK = obspy.ndk.core',
+        'NLLOC_HYP = obspy.nlloc.core',
+        'NLLOC_OBS = obspy.nlloc.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -269,6 +272,13 @@ ENTRY_POINTS = {
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.ndk.core:is_ndk',
         'readFormat = obspy.ndk.core:read_ndk',
+        ],
+    'obspy.plugin.event.NLLOC_HYP': [
+        'isFormat = obspy.nlloc.core:is_nlloc_hyp',
+        'readFormat = obspy.nlloc.core:read_nlloc_hyp',
+        ],
+    'obspy.plugin.event.NLLOC_OBS': [
+        'writeFormat = obspy.nlloc.core:write_nlloc_obs',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',

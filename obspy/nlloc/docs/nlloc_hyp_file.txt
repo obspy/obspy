@@ -1,0 +1,497 @@
+NLLoc Hypocenter-Phase file (ASCII, FileExtension=*.hyp)
+
+The NLLoc Hypocenter-Phase file is an easy to read ASCII file output by the program NLLoc. This file contains a description of the search results and the optimal/maximum-likelihood hypocenter, it may also include phase information for this hypocenter. The summary NLLoc Hypocenter-Phase file contains hypocenter information for all events from a single run of the program NLLoc but does not contain phase information. The event NLLoc Hypocenter-Phase files contain hypocenter and phase information for a single events. The NLLoc Hypocenter-Phase file output by program LocSum also include a Scatter block (SCATTER . . . END_SCATTER) containing samples of the location PDF.
+
+
+NLLOC Line: (required) Specifies the beginning of a NLLoc Hypocenter-Phase description block and gives the event file name. The end of the block is denoted by an END_NLLOC line (see below).
+
+NLLOC "eventFileName"
+Fields:
+eventFileName (string)
+
+    path and root name of individual event files corresponding to this hypocenter 
+
+
+SIGNATURE Line: (required) Signature text and program run stamp.
+
+SIGNATURE "signature verRunTime"
+Fields:
+signature (string)
+    is the signature text specified in the LOCSIG statement of the NLLoc control file 
+verRunTime (string)
+
+    is an automatically generated text giving the NLLoc program version and the date/time of the run 
+
+
+COMMENT Line: (required) Comment text.
+
+COMMENT "commentText"
+Fields:
+commentText (string)
+
+    is the comment text specified in the LOCCOM statement of the NLLoc control file 
+
+
+GRID Line: (required) 3D Grid description.
+
+GRID gridDescription
+Fields:
+gridDescription (string)
+
+    is a standard grid description - see Line 1 of 3D Grid Header file above. 
+
+
+SEARCH Line: (required) Search type description.
+
+SEARCH GRID numSamplesDraw
+or
+SEARCH METROPOLIS nSamp numSamples nAcc numAccepted nSave numSaved nClip numClipped Dstep0 stepInit Dstep stepFinal
+or
+SEARCH OCTREE nInitial nInitial nEvaluated nEvaluated smallestNodeSide sideX/sideY/sideZ
+Fields: (GRID)
+numSamplesDraw (integer)
+
+    specifies the number of samples drawn from a PDF grid 
+Fields: (METROPOLIS)
+numSamples (integer)
+    total number of accepted samples obtained 
+numSaved (integer)
+    number of accepted samples saved 
+numClipped (integer)
+    number of samples rejected because they were outside of the search grid (a high value indicates that event maximum likelihood location may be outside search grid) 
+stepInit (integer)
+    initial step size in km used for the learning stage 
+stepFinal (integer)
+    step size in km used for the saving stage 
+
+Fields: (OCTREE)
+nInitial (integer)
+    total initial number of octtree cells 
+nEvaluated (integer)
+    total number of octtree cells evaluated 
+sideX/sideY/sideZ (integers)
+
+    smallest octtree node side length (km) evaluated in x/y/z directions 
+
+
+HYPOCENTER Line: (required) Maximum likelihood hypocenter - xyz coordinates.
+
+HYPOCENTER x xLoc y yLoc z zLoc OT originSec ix iX iy iY iz iZ
+Fields:
+xLoc yLoc (float)
+    Non-GLOBAL: x and y positions of hypocenter relative to geographic origin in kilometers 
+    GLOBAL: longitude and latitude coordinates of hypocenter in degrees 
+zLoc (float)
+    z position (depth) of hypocenter in kilometers 
+originSec (float)
+    seconds of origin time of hypocenter 
+iX iY iZ (integer)
+
+    x, y and z index of grid node location of hypocenter 
+
+
+GEOGRAPHIC Line: (required) Maximum likelihood hypocenter - Geographic coordinates.
+
+GEOGRAPHIC OT year month day hour minute second Lat latitude Long longitude Depth depth
+Fields:
+year month day (integer)
+    date of origin time 
+hour minute (float)
+    hour and minute of origin time 
+second (float)
+    seconds of origin time 
+latitude longitude depth (float)
+
+    latitude and longitude in decimal degrees and depth in kilometers of hypocenter 
+
+
+STAT_GEOG Line: (optional) Gaussian Expectation (Statistical) hypocenter - Geographic coordinates.
+
+STAT_GEOG ExpectLat latitude Long longitude Depth depth
+Fields:
+latitude longitude depth (float)
+
+    latitude and longitude in decimal degrees and depth in kilometers of expectation hypocenter 
+
+
+QUALITY Line: (required) Maximum likelihood hypocenter - Geographic coordinates.
+
+QUALITY Pmax probMax MFmin misfitMin MFmax misfitMax RMS rms Nphs nPhases Gap maxGap Dist minStaDist Mamp magAmp nMagAmp Mdur magDur nMagDur
+Fields:
+probMax (float)
+    maximum probability on grid 
+misfitMin misfitMax (float)
+    maximum and minimum weighted misfit on grid 
+rms (float)
+    root-mean-square of residuals at maximum likelihood hypocenter 
+nPhases (integer)
+    number of readings used for location 
+maxGap (integer)
+    maximum azimuth gap in degrees between stations used for location 
+minStaDist (float)
+    distance of closest station to maxium likelihood hypocnter (Non-GLOBAL: kilometers, GLOBAL: degrees) 
+magAmp (float)
+    amplitude (i.e. ML) magnitude for maximum likelihood hypocenter 
+nMagAmp (integer)
+    number of readings used for amplitude magnitude 
+magDur (float)
+    duration magnitude for maximum likelihood hypocenter 
+nMagDur (integer)
+
+    number of readings used for duration magnitude 
+
+
+VPVSRATIO Line: (required) Estimated Vp/Vs ratio. (ver 2.0)
+
+VPVSRATIO VpVsRatio ratio Npair numPair
+Fields:
+ratio (float)
+    Vp/Vs ratio estimated following the iterative minimization technique of Lahr (1989; ch. 5) 
+Npair (integer)
+
+    number of P-S pairs used to calculate Vp/Vs ratio 
+
+
+STATISTICS Line: (required) "Traditional" Gaussian (normal) statistics of PDF (evaluated for PROB_DENSITY grids only).
+
+STATISTICS ExpectX expX Y expY Z expZ CovXX covXX XY covXY XZ covXZ YY covYY YZ covYZ ZZ covZZ EllAz1 Azimuth1 Dip1 Dip1 Len1 StdErr1 Az2 Azimuth2 Dip2 Dip2 Len2 StdErr2 Len3 StdErr3
+Fields:
+expX expY expZ (expFloat)
+    Non-GLOBAL: expectation values of PDF for x, y and z relative to geographic origin in kilometers 
+    GLOBAL: expectation values of PDF for longitude and latitude in degrees and depth in kilometers 
+covXX covXY ... (expFloat)
+    covariance values of PDF 
+Azimuth1 (float)
+    azimuth of semi-minor-axis of 68% confidence ellipsoid 
+Dip1 (float)
+    dip of semi-minor-axis of 68% confidence ellipsoid 
+StdErr1 (expFloat)
+    length of semi-minor-axis of 68% confidence ellipsoid 
+Azimuth2 (float)
+    azimuth of semi-intermediate-axis of 68% confidence ellipsoid 
+Dip2 (float)
+    dip of semi-intermediate-axis of 68% confidence ellipsoid 
+StdErr2 (expFloat)
+    length of semi-intermediate-axis of 68% confidence ellipsoid 
+StdErr3 (expFloat)
+    length of semi-major-axis of 68% confidence ellipsoid 
+Notes:
+
+    See NLLoc Program Inversion Approach for more information on the calculation of the expectation, covariance and confidence ellipsoid "traditional" Gaussian statistics.
+    The confidence ellipsoid represents the 68% confidence region for 3 degrees of freedom (x, y and z). 
+
+
+TRANS Line: (required) Geographic to rectangular transformation parameters.
+
+TRANS SIMPLE latOrig latOrig longOrig longOrig rotAngle rotAngle
+or TRANS LAMBERT refEllipsoid refEllipsoid latOrig latOrig longOrig longOrig firstStdParal firstStdParal secondStdParal secondStdParal
+or TRANS GLOBAL
+Specifies geographic to rectangular transformation parameters.
+Fields: (SIMPLE)
+latOrig (float)
+    latitude in decimal degrees of the rectangular coordinates origin 
+longOrig (float)
+    longitude in decimal degrees of the rectangular coordinates origin 
+rotAngle (float)
+    rotation angle of the rectangular coordinates system Y-axis in degrees counter-clockwise (?) from geographic north (not implemented) 
+
+Fields: (LAMBERT)
+refEllipsoid (chars)
+    reference ellipsoid (one of: WGS-84, GRS-80, WGS-72, Australian, Krasovsky, International, Hayford-1909, Clarke-1880, Clarke-1866, Airy, Bessel, Hayford-1830, Sphere) 
+latOrig (float)
+    latitude in decimal degrees of the rectangular coordinates origin 
+longOrig (float)
+    longitude in decimal degrees of the rectangular coordinates origin 
+firstStdParal secondStdParal (float)
+
+    first and second standard parallels (meridians) in decimal degrees 
+
+
+FOCALMECH Line: (optional) Focal mechanism description line. Specifies the hypocenter, focal mechanism, and mechanism statistics
+
+FOCALMECH dlat dlong depth Mech dipDir dipAng rake mf misfit nObs nObs
+Fields:
+dlat dlong (floats)
+    latitude and logitude in decimal degrees of the hypocenter 
+depth (float)
+    depth in kilometers of the hypocenter 
+dipDir dipAng rake (floats)
+    dip strike and rake of double couple mechanism 
+mf (float)
+    misfit of mechanism determination 
+nObs (float)
+
+    number of first motion observations used in mechanism determination 
+
+
+QML_OriginQuality Line: (optional) Specifies QuakeML OriginQuality measures.
+
+QML_OriginQuality assocPhCt assocPhCt usedPhCt usedPhCt assocStaCt assocStaCt usedStaCt usedStaCt depthPhCt depthPhCt stdErr stdErr azGap azGap secAzGap secAzGap gtLevel gtLevel minDist minDist maxDist maxDist medDist medDist
+Fields:
+assocPhCt (integer)
+    associatedPhaseCount - Number of associated phases, regardless of their use for origin computation. 
+usedPhCt (integer)
+    usedPhaseCount - Number of defining phases, i. e., phase observations that were actually used for computingthe origin. Note that there may be more than one defining phase per station. 
+assocStaCt (integer)
+    associatedStationCount - Number of stations at which the event was observed. 
+usedStaCt (integer)
+    usedStationCount - Number of stations from which data was used for origin computation. 
+depthPhCt (integer)
+    depthPhaseCount - Number of depth phases (typically pP, sometimes sP) used in depth computation. 
+stdErr (float)
+    standardError - RMS of the travel time residuals of the arrivals used for the origin computation. Unit: s
+azGap (float)
+    azimuthalGap - Largest azimuthal gap in station distribution as seen from epicenter. Unit: deg
+secAzGap (float)
+    secondaryAzimuthalGap - Secondary azimuthal gap in station distribution, i. e., the largest azimuthal gap a station closes. Unit: deg
+gtLevel (chars)
+    groundTruthLevel - String describing ground-truth level, e. g. GT0, GT5, etc.
+minDist (float)
+    minimumDistance - Epicentral distance of station closest to the epicenter. Unit: km
+maxDist (float)
+    maximumDistance - Epicentral distance of station farthest from the epicenter. Unit: km
+medDist (float)
+
+    medianDistance - Median epicentral distance of used stations. Unit: km
+
+
+QML_OriginUncertainty Line: (optional) Specifies QuakeML OriginUncertainty measures.
+
+QML_OriginUncertainty horUnc horUnc minHorUnc minHorUnc maxHorUnc maxHorUnc azMaxHorUnc azMaxHorUnc
+Fields:
+horUnc (integer)
+    horizontalUncertainty - Circular confidence region, given by single value of horizontal uncertainty. Unit: km
+minHorUnc (float)
+    minHorizontalUncertainty - Semi-major axis of 68% confidence ellipse. Unit: km
+maxHorUnc (float)
+    maxHorizontalUncertainty - Semi-minor axis of 68% confidence ellipse. Unit: km
+azMaxHorUnc (float)
+
+    azimuthMaxHorizontalUncertainty - Azimuth of major axis of 68% confidence ellipse. Unit: km
+
+PHASE Line: (optional) Phase format description line. Specifies the beginning of a block with a list of phase records. The end of the block is denoted by an END_PHASE line (see below)
+
+PHASE ID Ins Cmp On Pha FM Date HrMn Sec Err ErrMag Coda Amp Per > TTpred Res Weight StaLoc(X Y Z) SDist SAzim RAz RDip RQual Tcorr
+Fields:
+None
+
+
+next N Lines: (optional) Phase data for N phases.
+
+ID Ins Cmp On Pha FM Q Date HrMn Sec Coda Amp Per > Err ErrMag TTpred Res Weight StaLoc(X Y Z) SDist SAzim RAz RDip RQual TcorrTcorr
+Fields:
+ID (char*6)
+    station name or code 
+Ins (char*4)
+    instrument identification for the trace for which the time pick corresponds (i.e. SP, BRB, VBB) 
+Cmp (char*4)
+    component identification for the trace for which the time pick corresponds (i.e. Z, N, E, H) 
+On (char*1)
+    description of P phase arrival onset; i, e 
+Pha (char*6)
+    Phase identification (i.e. P, S, PmP) 
+FM (char*1)
+    first motion direction of P arrival; c, C, u, U = compression; d, D = dilatation; +, -, Z, N; . or ? = not readable. 
+Date (yyyymmdd) (int*6)
+    year (with century), month, day 
+HrMn (hhmm) (int*4)
+    Hour, min 
+Sec (float*7.4)
+    seconds of phase arrival 
+Err (char*3)
+    Error/uncertainty type; GAU 
+ErrMag (expFloat*9.2)
+    Error/uncertainty magnitude in seconds 
+Coda (expFloat*9.2)
+    coda duration reading 
+Amp (expFloat*9.2)
+    Maxumim peak-to-peak amplitude 
+Per (expFloat*9.2)
+    Period of amplitude reading 
+> (char*1)
+    Required separator between first part (observations) and second part (calculated values) of phase record. 
+TTpred (float*9.4)
+    Predicted travel time 
+Res (float*9.4)
+    Residual (observed - predicted arrival time) 
+Weight (float*9.4)
+    Phase weight 
+StaLoc(X Y Z) (3 * float*9.4)
+    Non-GLOBAL: x, y, z location of station in transformed, rectangular coordinates 
+    GLOBAL: longitude, latitude, z location of station 
+SDist (float*9.4)
+    Maximum likelihood hypocenter to station epicentral distance in kilometers 
+SAzim (float*6.2)
+    Maximum likelihood hypocenter to station epicentral azimuth in degrees CW from North 
+RAz (float*5.1)
+    Ray take-off azimuth at maximum likelihood hypocenter in degrees CW from North 
+RDip (float*5.1)
+    Ray take-off dip at maximum likelihood hypocenter in degrees upwards from vertical down (0 = down, 180 = up) 
+RQual (float*5.1)
+    Quality of take-off angle estimation (0 = unreliable, 10 = best) 
+Tcorr (float*9.4)
+
+Time correction (station delay) used for location
+
+PHASE Line (NLL_FORMAT_VER_2 - WARNING: under development): (optional) Phase format description line. Specifies the beginning of a block with a list of phase records. The end of the block is denoted by an END_PHASE line (see below)
+
+PHASE ID Ins Cmp On Pha FM Date HrMn Sec Err ErrMag Coda Amp Per PriorWt > TTpred Res Weight StaLoc(X Y Z) SDist SAzim RAz RDip RQual Tcorr TTerr
+Fields:
+None
+
+next N Lines: (optional) Phase data for N phases.
+
+ID Ins Cmp On Pha FM Q Date HrMn Sec Coda Amp Per PriorWt > Err ErrMag TTpred Res Weight StaLoc(X Y Z) SDist SAzim RAz RDip RQual Tcorr TTerrTcorr
+Fields:
+ID (char*6)
+    station name or code 
+Ins (char*4)
+    instrument identification for the trace for which the time pick corresponds (i.e. SP, BRB, VBB) 
+Cmp (char*4)
+    component identification for the trace for which the time pick corresponds (i.e. Z, N, E, H) 
+On (char*1)
+    description of P phase arrival onset; i, e 
+Pha (char*6)
+    Phase identification (i.e. P, S, PmP) 
+FM (char*1)
+    first motion direction of P arrival; c, C, u, U = compression; d, D = dilatation; +, -, Z, N; . or ? = not readable. 
+Date (yyyymmdd) (int*6)
+    year (with century), month, day 
+HrMn (hhmm) (int*4)
+    Hour, min 
+Sec (float*7.4)
+    seconds of phase arrival 
+Err (char*3)
+    Error/uncertainty type; GAU 
+ErrMag (expFloat*9.2)
+    Error/uncertainty magnitude in seconds 
+Coda (expFloat*9.2)
+    coda duration reading 
+Amp (expFloat*9.2)
+    Maxumim peak-to-peak amplitude 
+Per (expFloat*9.2)
+    Period of amplitude reading 
+PriorWt (expFloat*9.2)
+    A-priori phase weight 
+> (char*1)
+    Required separator between first part (observations) and second part (calculated values) of phase record. 
+TTpred (float*9.4)
+    Predicted travel time 
+Res (float*9.4)
+    Residual (observed - predicted arrival time) 
+Weight (float*9.4)
+    Phase weight (covariance matrix weight for LOCMETH GAU_ANALYTIC, posterior weight for LOCMETH EDT EDT_OT_WT) 
+StaLoc(X Y Z) (3 * float*9.4)
+    Non-GLOBAL: x, y, z location of station in transformed, rectangular coordinates 
+    GLOBAL: longitude, latitude, z location of station 
+SDist (float*9.4)
+    Maximum likelihood hypocenter to station epicentral distance in kilometers 
+SAzim (float*6.2)
+    Maximum likelihood hypocenter to station epicentral azimuth in degrees CW from North 
+RAz (float*5.1)
+    Ray take-off azimuth at maximum likelihood hypocenter in degrees CW from North 
+RDip (float*5.1)
+    Ray take-off dip at maximum likelihood hypocenter in degrees upwards from vertical down (0 = down, 180 = up) 
+RQual (float*5.1)
+    Quality of take-off angle estimation (0 = unreliable, 10 = best) 
+Tcorr (float*9.4)
+    Time correction (station delay) used for location
+TTerr (expFloat*9.2)
+
+Traveltime error used for location
+
+END_PHASE Line: (required if Phase format description line is present) Specifies the end of a block with a list of phase records.
+
+END_PHASE
+Fields:
+None
+
+END_NLLOC Line: (required) Specifies the end of a NLLoc Hypocenter-Phase description block.
+
+END_NLLOC
+Fields:
+None
+
+SCATTER Line: (optional) Specifies the begining of a NLLoc Scatter block containing samples of the location PDF.
+
+SCATTER Nsamples nSamples
+Fields:
+Nsamples (integer)
+
+number of scatter samples
+
+next Nsamples Lines: (optional) PDF samples.
+
+x y z prob
+Fields:
+x y z (float)
+    Non-GLOBAL: x, y and z location of the sample in kilometers relative to the geographic origin. 
+    GLOBAL: longitude and latitude in degrees, and z location in kilometers of the sample. 
+prob (float)
+
+relative probability density value at sample (for Grid Search, the probability density values are normalized so that the volume integral over the corresponding search grid of the PDF = 1.0)
+
+END_SCATTER Line: (required if SCATTER line is present) Specifies the end of a NLLoc Scatter block.
+
+END_SCATTER
+Fields:
+None 
+
+ Examples:
+
+Non-GLOBAL
+
+NLLOC "/temp/nlloc_tmp/durance/loc_test/dur_OCT.19990103.212657.22.grid0" "LOCATED" "Location completed."
+SIGNATURE "  IRSN - Fontenay-aux-Roses   NLLoc:v3.10.5 02May2005 10h46m48"
+COMMENT "       IRSN Reseau Durance (Oct-tree search / vox 3D Model)"
+GRID  256 332 88  0.000000 0.000000 -2.100000  0.250000 0.250000 0.250000 PROB_DENSITY
+SEARCH OCTREE nInitial 1600 nEvaluated 50000 smallestNodeSide 0.062256/0.064648/0.067969
+HYPOCENTER  x 24.497681 y 32.291895 z 2.827734  OT 56.341531  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 1999 01 03  21 26 56.341531  Lat 43.711240 Long 5.665205 Depth 2.827734
+QUALITY  Pmax 6.929e-01 MFmin 0.349723 MFmax 94617.715955 RMS 0.070806 Nphs 6 Gap 167 Dist 2.498662 Mamp  0.57 3 Mdur -9.90 0
+VPVSRATIO  VpVsRatio 5.000e-01  Npair 2  Diff 1.027e+00
+STATISTICS  ExpectX 2.4282e+01 Y 3.2226e+01 Z 2.6602e+00  CovXX 6.90e-01 XY 1.05e-01 XZ 2.66e-01 YY 2.43e-01 YZ 3.10e-01 ZZ 1.81e+00 EllAz1  353.4 Dip1  -9.6 Len1  7.92e-01 Az2  85.8 Dip2  -13.8 Len2  1.49e+00 Len3  2.61e+00
+STAT_GEOG  ExpectLat 43.710727 Long 5.662503 Depth 2.660174
+TRANSFORM  LAMBERT RefEllipsoid Clarke-1880  LatOrig 43.430100  LongOrig 5.346580  FirstStdParal 45.898900  SecondStdParal 47.696000  RotCW -2.190000
+FOCALMECH  Hyp  43.711240 5.665205 2.827734 Mech  0.0 0.0 0.0 mf  0.00 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per      >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz   RDip  RQual    Tcorr
+ESC4   ?    ?    ? P      ? 19990103 2126   57.2160 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    0.8397    0.0348    1.0146   25.0170   34.7360   -0.4050    2.4987  14.19  17.0 139.2  7     0.0000
+ESC4   ?    ?    ? S      ? 19990103 2126   57.8090 GAU  4.00e-02 -1.00e+00  4.61e-08  2.47e-01 >    1.4947   -0.0272    0.9854   25.0170   34.7360   -0.4050    2.4987  14.19  17.0 139.2  7     0.0000
+JOU1   ?    ?    ? P      ? 19990103 2126   57.9910 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    1.7869   -0.1374    1.0146   24.3315   23.6050   -0.3000    8.6884 183.29 183.2  99.7  7     0.0000
+JOU1   ?    ?    ? S      ? 19990103 2126   59.6110 GAU  4.00e-02 -1.00e+00  6.27e-09  4.77e-01 >    3.1807    0.0888    0.9854   24.3315   23.6050   -0.3000    8.6884 183.29 183.2  99.7  7     0.0000
+CAD1   ?    ?    ? S      ? 19990103 2126   59.7670 GAU  4.00e-02 -1.00e+00  1.80e-08  3.26e-01 >    3.4149    0.0105    0.9854   32.9072   28.7836   -0.3700    9.1120 114.83 112.2  97.2  9     0.0000
+BST2   ?    ?    ? P      ? 19990103 2126   58.6070 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00 >    2.2328    0.0327    1.0146   22.4312   42.3289   -0.5000   10.2476 350.56 341.4 101.9  9     0.0000
+END_PHASE
+END_NLLOC
+
+GLOBAL
+
+NLLOC "/temp/nlloc_tmp/20041226/loc/AUTO_90_all_RMS.20041226.011057.grid0" "LOCATED" "Location completed."
+SIGNATURE "Anthony Lomax (www.alomax.net)   NLLoc:v3.10.5 18Mar2005 08h16m37"
+COMMENT "Coda location"
+GRID  361 181 601  -180.000000 -90.000000 0.000000  1.000000 1.000000 1.000000 PROB_DENSITY
+SEARCH OCTREE nInitial 3888 nEvaluated 50016 smallestNodeSide 8.680556/8.680556/0.781250
+HYPOCENTER  x 92.695312 y 11.679688 z 0.390625  OT 6.530129  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 2004 12 26  01 07  6.530129  Lat 11.679688 Long 92.695312 Depth 0.390625
+QUALITY  Pmax 1.323e-79 MFmin 1.851182 MFmax 3.439646 RMS 49.635872 Nphs 106 Gap 35 Dist 12.629659 Mamp -9.90 0 Mdur -9.90 0
+VPVSRATIO  VpVsRatio -1.000e+00  Npair 0  Diff -2.000e+30
+STATISTICS  ExpectX 9.2724e+01 Y 1.1697e+01 Z 1.2764e+02  CovXX 5.24e+03 XY -3.11e+02 XZ 5.37e+02 YY 3.53e+03 YZ 1.97e+02 ZZ 1.07e+04 EllAz1  10.6 Dip1  -2.3 Len1  1.11e+02 Az2  100.8 Dip2  -5.2 Len2  1.36e+02 Len3  1.95e+02
+STAT_GEOG  ExpectLat 11.696777 Long 92.723993 Depth 127.640604
+TRANSFORM  GLOBAL
+FOCALMECH  Hyp  11.679688 92.695312 0.390625 Mech  0.0 0.0 0.0 mf  0.00 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per      >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz   RDip  RQual    Tcorr
+PALK   (cou Z    ? P      ? 20041226 0110   57.9600 GAU  3.44e+01 -1.00e+00  1.15e+12 -1.00e+00 >  180.8273   50.6026    0.6321   80.7022    7.2728   -0.4600   12.6297 250.63   0.0   0.0  0     0.0000
+LSA    (cou Z    ? P      ? 20041226 0113    7.2350 GAU  4.15e+01 -1.00e+00  8.07e+10 -1.00e+00 >  252.6406  108.0643    0.2560   91.1500   29.7000   -3.7890   18.0912 355.67   0.0   0.0  0     0.0000
+COCO   (cou Z    ? P      ? 20041226 0111   19.3200 GAU  2.41e+01 -1.00e+00  2.09e+11 -1.00e+00 >  318.4248  -65.6349    3.2995   96.8349  -12.1901    0.0690   24.2392 170.10   0.0   0.0  0     0.0000
+ENH    (cou Z    ? P      ? 20041226 0112   32.2600 GAU  2.33e+01 -1.00e+00  1.69e+11 -1.00e+00 >  318.7041    7.0258    1.0282  109.4868   30.2718   -0.4870   24.2698  37.40   0.0   0.0  0     0.0000
+TPUB   (cou Z    ? P      ? 20041226 0113   56.6700 GAU  3.65e+01 -1.00e+00  2.59e+09 -1.00e+00 >  361.4501   48.6898    0.5882  120.6300   23.3000    0.0000   29.0119  62.59   0.0   0.0  0     0.0000
+TWGB   (cou Z    ? P      ? 20041226 0113   18.8000 GAU  1.96e+01 -1.00e+00  5.21e+09 -1.00e+00 >  363.6115    8.6584    2.0749  121.0800   22.8200   -0.1270   29.2555  63.80   0.0   0.0  0     0.0000
+SSLB   (cou Z    ? P      ? 20041226 0113   26.1300 GAU  1.22e+01 -1.00e+00  4.06e+09 -1.00e+00 >  365.3290   14.2709    5.1465  120.9500   23.7900    0.0000   29.4496  61.84   0.0   0.0  0     0.0000
+NACB   (cou Z    ? P      ? 20041226 0113   22.9200 GAU  4.14e+01 -1.00e+00  2.57e+09 -1.00e+00 >  371.3581    5.0318    0.4544  121.5900   24.1800    0.0000   30.1311  61.49   0.0   0.0  0     0.0000
+TATO   (cou Z    ? P      ? 20041226 0112   45.7700 GAU  6.18e+01 -1.00e+00  3.78e+09 -1.00e+00 >  373.0050  -33.7651    0.2000  121.4881   24.9754   -0.0530   30.3172  59.94   0.0   0.0  0     0.0000
+...
+LAST   (cou Z    ? P      ? 20041226 0117   25.0300 GAU  4.31e+01 -1.00e+00  1.71e+09 -1.00e+00 >    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000   0.00   0.0   0.0  0     0.0000
+ATTU   (cou Y    ? P      ? 20041226 0118   30.3000 GAU  1.20e+01 -1.00e+00  3.04e+12 -1.00e+00 >    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000   0.00   0.0   0.0  0     0.0000
+IL31   (cou Y    ? P      ? 20041226 0122   18.4500 GAU  4.50e+01 -1.00e+00  1.88e+11 -1.00e+00 >    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000   0.00   0.0   0.0  0     0.0000
+END_PHASE
+END_NLLOC

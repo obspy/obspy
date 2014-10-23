@@ -12,6 +12,8 @@
      AttribDict.
    * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
      provided by the future package.
+   * new plugins for NonLinLoc formats for readEvents() and
+     Catalog/Event.write() (see obspy.nlloc and #900)
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
    * Support exporting Inventory objects to CSS relations.
@@ -48,6 +50,10 @@
      obspy.taup.
  - obspy.seedlink.easyseedlink:
    * New submodule providing an easier way to create SeedLink clients
+ - obspy.nlloc:
+   * new plugins to write NonLinLoc Phase observations files from
+     Catalog/Event objects and to read NonLinLoc Hypocenter-Phase file into
+     Catalog/Event objects. (see #900)
  - obspy.seishub:
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
      from a seishub server of version 1.4.0 or higher.
