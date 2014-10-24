@@ -14,6 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 from math import sqrt
+import warnings
 from obspy import UTCDateTime, Catalog, __version__
 from obspy.core.event import Event, Origin, OriginQuality, OriginUncertainty, \
     Pick, Arrival, WaveformStreamID, CreationInfo, Comment
@@ -30,7 +31,14 @@ def is_nlloc_hyp(filename):
     """
     Checks that a file is actually a NonLinLoc Hypocenter-Phase file.
     """
-    return False
+    try:
+        with open(filename, 'rb') as fh:
+            temp = fh.read(6)
+    except:
+        return False
+    if temp != b'NLLOC ':
+        return False
+    return True
 
 
 def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
@@ -289,8 +297,12 @@ def write_nlloc_obs(catalog, filename, **kwargs):
                        date, hourminute, seconds, time_error, -1, -1, -1)
         info.append(info_)
 
-    info = "\n".join(sorted(info) + [""])
-    fh.write(info)
+    if info:
+        info = "\n".join(sorted(info) + [""])
+    else:
+        msg = "No pick information, writing empty NLLOC OBS file."
+        warnings.warn(msg)
+    fh.write(info.encode())
 
     # Close if a file has been opened by this function.
     if file_opened is True:

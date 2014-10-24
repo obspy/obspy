@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import os
+import re
 import inspect
 import unittest
 from obspy import readEvents, UTCDateTime
@@ -57,14 +58,14 @@ class NLLOCTestCase(unittest.TestCase):
 
         # read expected OBS file output
         filename = getExampleFile("nlloc.obs")
-        with open(filename) as fh:
-            expected = fh.read()
+        with open(filename, "rb") as fh:
+            expected = fh.read().decode()
 
         # write via plugin
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="NLLOC_OBS")
             tf.seek(0)
-            got = tf.read()
+            got = tf.read().decode()
 
         self.assertEqual(expected, got)
 
@@ -72,7 +73,7 @@ class NLLOCTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             write_nlloc_obs(cat, tf)
             tf.seek(0)
-            got = tf.read()
+            got = tf.read().decode()
 
         self.assertEqual(expected, got)
 
@@ -83,12 +84,12 @@ class NLLOCTestCase(unittest.TestCase):
         filename = getExampleFile("nlloc.hyp")
         cat = read_nlloc_hyp(filename,
                              coordinate_converter=_mock_coordinate_converter)
-        with open(getExampleFile("nlloc.qml")) as tf:
-            quakeml_expected = tf.read()
+        with open(getExampleFile("nlloc.qml"), 'rb') as tf:
+            quakeml_expected = tf.read().decode()
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="QUAKEML")
             tf.seek(0)
-            quakeml_got = tf.read()
+            quakeml_got = tf.read().decode()
 
         # test creation times manually as they get omitted in the overall test
         creation_time = UTCDateTime("2014-10-17T16:30:08.000000Z")
@@ -99,6 +100,19 @@ class NLLOCTestCase(unittest.TestCase):
         quakeml_expected = remove_unique_IDs(quakeml_expected,
                                              remove_creation_time=True)
         quakeml_got = remove_unique_IDs(quakeml_got, remove_creation_time=True)
+        # In python 3 float.__str__ outputs 5 decimals of precision more.
+        # We use it in writing QuakeML, so files look different on Py2/3.
+        # We use regex to cut off floats in the xml such that we only compare
+        # 7 digits.
+        pattern = r'(<.*?>[0-9]*?\.[0-9]{7})[0-9]*?(</.*?>)'
+        quakeml_expected = re.sub(pattern, r'\1\2', quakeml_expected)
+        quakeml_got = re.sub(pattern, r'\1\2', quakeml_got)
+
+        # remove (changing) obspy version number from output
+        re_pattern = '<version>ObsPy .*?</version>'
+        quakeml_expected = re.sub(re_pattern, '', quakeml_expected, 1)
+        quakeml_got = re.sub(re_pattern, '', quakeml_got, 1)
+
         compare_xml_strings(quakeml_expected, quakeml_got)
 
     def test_read_nlloc_hyp_via_plugin(self):
