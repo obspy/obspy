@@ -661,7 +661,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
         def testFunction(filename):
             try:
-                st = read(filename)
+                st = read(filename)  # noqa
             except ValueError:
                 # Should occur with broken files
                 pass

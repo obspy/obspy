@@ -2910,7 +2910,7 @@ class Catalog(object):
             out += "\n...\n"
             out += "\n".join([ev.short_str() for ev in self[-2:]])
             out += "\nTo see all events call " + \
-                   "'print CatalogObject.__str__(print_all=True)'"
+                   "'print(CatalogObject.__str__(print_all=True))'"
         return out
 
     def append(self, event):
