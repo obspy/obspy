@@ -185,11 +185,12 @@ class RecordAnalyser(object):
             blkt_type, next_blockette = unpack(encoding, self.file.read(4))
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
-            cur_blkt_offset = next_blockette
             self.blockettes[blkt_type] = self._parseBlockette(blkt_type)
             # Also break the loop if next_blockette is zero.
-            if next_blockette == 0:
+            if next_blockette == 0 or next_blockette < 4 or \
+                    next_blockette - 4 < cur_blkt_offset:
                 break
+            cur_blkt_offset = next_blockette
 
     def _parseBlockette(self, blkt_type):
         """

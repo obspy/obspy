@@ -407,8 +407,14 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     # if any of those is found.
     while blkt_offset:
         file_object.seek(record_start + blkt_offset, 0)
-        blkt_type, blkt_offset = unpack(native_str('%sHH' % endian),
-                                        file_object.read(4))
+        blkt_type, next_blkt = unpack(native_str('%sHH' % endian),
+                                      file_object.read(4))
+        if next_blkt != 0 and (next_blkt < 4 or next_blkt - 4 <= blkt_offset):
+            msg = ('Invalid blockette offset (%d) less than or equal to '
+                   'current offset (%d)') % (next_blkt, blkt_offset)
+            raise ValueError(msg)
+        blkt_offset = next_blkt
+
         # Parse in order of likeliness.
         if blkt_type == 1000:
             encoding, word_order, record_length = \
