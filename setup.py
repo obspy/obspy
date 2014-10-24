@@ -272,11 +272,15 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
+        'SACPZ = obspy.sac.sacpz',
     ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.station.stationxml:is_StationXML',
         'readFormat = obspy.station.stationxml:read_StationXML',
         'writeFormat = obspy.station.stationxml:write_StationXML',
+    ],
+    'obspy.plugin.inventory.SACPZ': [
+        'writeFormat = obspy.sac.sacpz:write_SACPZ',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',

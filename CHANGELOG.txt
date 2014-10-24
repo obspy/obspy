@@ -42,6 +42,7 @@
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
+   * write support for SACPZ ASCII representation of channel responses.
  - obspy.zmap:
    * New module which adds ZMAP read/write support
  - scripts:
