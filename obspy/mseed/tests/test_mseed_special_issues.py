@@ -16,6 +16,7 @@ from obspy.mseed.msstruct import _MSStruct
 
 import ctypes as C
 import io
+import multiprocessing
 import numpy as np
 import os
 import random
@@ -651,6 +652,28 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # Assert that the data is the same.
         np.testing.assert_array_equal(data_m, data_r)
         np.testing.assert_array_equal(data_m, data_q)
+
+    def test_infinite_loop(self):
+        """
+        Tests that libmseed doesn't enter an infinite loop on buggy files.
+        """
+        filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
+
+        def testFunction(filename):
+            try:
+                st = read(filename)
+            except ValueError:
+                # Should occur with broken files
+                pass
+
+        process = multiprocessing.Process(target=testFunction,
+                                          args=(filename, ))
+        process.start()
+        process.join(5)
+
+        fail = process.is_alive()
+        process.terminate()
+        self.assertFalse(fail)
 
 
 def suite():
