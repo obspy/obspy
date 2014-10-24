@@ -258,9 +258,9 @@ class RecordAnalyser(object):
             endian = 'Little Endian'
         else:
             endian = 'Big Endian'
-            ret_val = ('FILE: %s\nRecord Offset: %i byte\n' +
-                       'Header Endianness: %s\n\n') % \
-                      (filename, self.record_offset, endian)
+        ret_val = ('FILE: %s\nRecord Offset: %i byte\n' +
+                   'Header Endianness: %s\n\n') % \
+                  (filename, self.record_offset, endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
