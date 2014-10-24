@@ -2698,6 +2698,26 @@ class Event(__Event):
         except AttributeError:
             return None
 
+    def write(self, filename, format, **kwargs):
+        """
+        Saves event information into a file.
+
+        :type filename: str
+        :param filename: The name of the file to write.
+        :type format: str
+        :param format: The file format to use (e.g. ``"QUAKEML"``). See
+            :meth:`Catalog.write()` for a list of supported formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            plugin's writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy import readEvents
+        >>> event = readEvents()[0]  # doctest: +SKIP
+        >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
+        """
+        Catalog(events=[self]).write(filename, format, **kwargs)
+
 
 class Catalog(object):
     """
@@ -3122,8 +3142,9 @@ class Catalog(object):
         Writing single events into files with meaningful filenames can be done
         e.g. using event.id
 
-        >>> for ev in catalog: #doctest: +SKIP
-        ...     ev.write(ev.id + ".xml", format="QUAKEML") #doctest: +SKIP
+        >>> for ev in catalog:  # doctest: +SKIP
+        ...     filename = str(ev.resource_id) + ".xml"
+        ...     ev.write(filename, format="QUAKEML") # doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
