@@ -1316,13 +1316,12 @@ class Client(object):
 
                         # convert from Hz (Analog) to rad/s (Laplace)
                         if paz['response_type'] == "B":
-                            warnings.warn("Converting from Hz to Laplace.", UserWarning)
                             x2pi = lambda x: (x * 2 * pi)
                             paz['poles'] = list(map(x2pi, paz['poles']))
                             paz['zeros'] = list(map(x2pi, paz['zeros']))
-                            paz['normalization_factor'] = paz['normalization_factor'] * \
-                                            (2 * pi) ** \
-                                            (len(paz['poles']) - len(paz['zeros']))
+                            paz['normalization_factor'] = \
+                                paz['normalization_factor'] * (2 * pi) ** \
+                                (len(paz['poles']) - len(paz['zeros']))
                             paz['gain'] = paz['normalization_factor']
                             paz['response_type'] = "A"
 

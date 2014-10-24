@@ -540,12 +540,12 @@ class Parser(object):
                     data['zeros'].append(z)
                 # force conversion from Hz to Laplace
                 if getattr(resp, label) == "B":
-                    warnings.warn("Converting from Hz to Laplace.", UserWarning)
                     x2pi = lambda x: (x * 2 * np.pi)
                     data['poles'] = list(map(x2pi, data['poles']))
                     data['zeros'] = list(map(x2pi, data['zeros']))
-                    data['gain'] =  resp.A0_normalization_factor * \
-                                    (2 * np.pi) ** (len(data['poles']) - len(data['zeros']))
+                    data['gain'] = resp.A0_normalization_factor * \
+                        (2 * np.pi) ** \
+                        (len(data['poles']) - len(data['zeros']))
         return data
 
     def getCoordinates(self, seed_id, datetime=None):
