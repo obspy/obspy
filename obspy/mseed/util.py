@@ -616,14 +616,14 @@ def set_flags_in_fixed_headers(filename, flags):
 
         { "..." : { "activity_flags" : { "calib_signal" : True }}}
 
-    Raises an exception if the file is not a MiniSEED file.
+    Raises an IOError if the file is not a MiniSEED file.
     """
 
     # import has to be here to break import loop
     from obspy.mseed.core import isMSEED
     # Basic check
     if not os.path.isfile(filename) or not isMSEED(filename):
-        raise Exception("File %s is not a valid MiniSEED file" % filename)
+        raise IOError("File %s is not a valid MiniSEED file" % filename)
     filesize = os.path.getsize(filename)
 
     # Nested dictionaries to allow empty strings as wildcards
@@ -747,7 +747,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
             if reclen == -1:
                 msg = "Invalid MiniSEED file. No blockette 1000 was found."
-                raise Exception(msg)
+                raise IOError(msg)
             else:
                 mseed_file.seek(record_start + reclen, os.SEEK_SET)
 

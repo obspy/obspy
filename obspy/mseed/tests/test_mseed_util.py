@@ -304,7 +304,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Write mseed file with several traces
 
         npts = 1000
-        np.random.seed(42)  # make test reproducable
+        np.random.seed(42)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
 
         # Test valid data
@@ -446,7 +446,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             cha = file_bfr.read(3)
             net = file_bfr.read(2)
 
-            # Check wether we want to check this trace
+            # Check whether we want to check this trace
             expectedtrace = trace_id.split(".")
             exp_net = expectedtrace[0]
             exp_sta = expectedtrace[1]

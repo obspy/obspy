@@ -360,7 +360,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         npts = 1000
         # data array of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         with NamedTemporaryFile() as tf:
@@ -417,7 +417,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         # libmseed instance.
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
@@ -464,7 +464,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         Tests whether the header is correctly written and read.
         """
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         stats = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -492,7 +492,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         trace.stats.mseed.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         # Test all possible combinations of record length, encoding and
         # byte order.
@@ -750,7 +750,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         corresponding test in test_libmseed.py as it is just more convenient to
         write it in here.
         """
-        np.random.seed(800)  # make test reproducable
+        np.random.seed(800)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
@@ -863,7 +863,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         methods.
         """
         npts = 1000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randn(npts).astype(np.float64) * 1e3 + .5
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
@@ -1086,7 +1086,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Test setting blockette 1001's timing quality
         """
         npts = 1000
-        np.random.seed(42)  # make test reproducable
+        np.random.seed(42)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
 
         # Test valid data
