@@ -200,14 +200,14 @@ class InvSimTestCase(unittest.TestCase):
         #    import subprocess as sp
         #    p = sp.Popen('sac',shell=True,stdin=sp.PIPE)
         #    cd1 = p.stdin
-        #    print >>cd1, "r %s"%sacf
-        #    print >>cd1, "rmean"
-        #    print >>cd1, "rtrend"
-        #    print >>cd1, "taper type cosine width 0.03"
-        #    print >>cd1, "transfer from polezero subtype %s to none \
-        #    freqlimits %f %f %f %f" % (pzf, fl1, fl2, fl3, fl4)
-        #    print >>cd1, "w over ./data/KARC_corrected.sac"
-        #    print >>cd1, "quit"
+        #    print("r %s"%sacf, file=cd1)
+        #    print("rmean", file=cd1)
+        #    print("rtrend", file=cd1)
+        #    print("taper type cosine width 0.03", file=cd1)
+        #    print("transfer from polezero subtype %s to none \
+        #    freqlimits %f %f %f %f" % (pzf, fl1, fl2, fl3, fl4), file=cd1)
+        #    print("w over ./data/KARC_corrected.sac", file=cd1)
+        #    print("quit", file=cd1)
         #    cd1.close()
         #    p.wait()
 
@@ -257,13 +257,13 @@ class InvSimTestCase(unittest.TestCase):
 #            import subprocess as sp
 #            p = sp.Popen('sac', stdin=sp.PIPE)
 #            cd1 = p.stdin
-#            print >>cd1, "r %s" % rawf
-#            print >>cd1, "rmean"
-#            print >>cd1, "taper type cosine width 0.05"
-#            print >>cd1, "transfer from evalresp fname %s to vel freqlimits\
-#            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4)
-#            print >>cd1, "w over %s" % evalrespf
-#            print >>cd1, "quit"
+#            print("r %s" % rawf, file=cd1)
+#            print("rmean", file=cd1)
+#            print("taper type cosine width 0.05", file=cd1)
+#            print("transfer from evalresp fname %s to vel freqlimits\
+#            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4), file=cd1)
+#            print("w over %s" % evalrespf, file=cd1)
+#            print("quit", file=cd1)
 #            cd1.close()
 #            p.wait()
 

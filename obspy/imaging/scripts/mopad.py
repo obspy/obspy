@@ -564,7 +564,7 @@ class MomentTensor:
         EW_devi, EV_devi = np.linalg.eigh(M_devi)
         EW_order = np.argsort(EW_devi)
 
-        # print 'order',EW_order
+        # print('order', EW_order)
 
         if 1:  # self._plot_isotropic_part:
             trace_M = np.trace(M)
@@ -783,7 +783,7 @@ class MomentTensor:
         pnt_sorted_EV_matrix = self._rotation_matrix.copy()
 
         # resort only necessary, if abs(p) <= abs(t)
-        # print self._plot_clr_order
+        # print(self._plot_clr_order)
         if self._plot_clr_order < 0:
             pnt_sorted_EV_matrix[:, 0] = self._rotation_matrix[:, 2]
             pnt_sorted_EV_matrix[:, 2] = self._rotation_matrix[:, 0]

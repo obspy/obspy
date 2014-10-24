@@ -38,10 +38,10 @@ class RecordAnalyser(object):
     Basic usage:
         >> rec = RecordAnalyser(filename)
         # Pretty print the information contained in the first record.
-        >> print rec
+        >> print(rec)
         # Jump to the next record.
         >> rex.next()
-        >> print rec
+        >> print(rec)
     """
     def __init__(self, file_object):
         """
