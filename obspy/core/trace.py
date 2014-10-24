@@ -870,10 +870,8 @@ class Trace(object):
         :type filename: str
         :param filename: The name of the file to write.
         :type format: str
-        :param format: The format to write must be specified. One of
-            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
-            :meth:`obspy.core.stream.Stream.write` method for all possible
+        :param format: The format to write must be specified. See
+            :meth:`obspy.core.stream.Stream.write` method for possible
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.

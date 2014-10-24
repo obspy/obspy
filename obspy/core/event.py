@@ -2680,7 +2680,7 @@ class Event(__Event):
 
     def preferred_magnitude(self):
         """
-        Returns the preferred origin
+        Returns the preferred magnitude
         """
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
@@ -2690,7 +2690,7 @@ class Event(__Event):
 
     def preferred_focal_mechanism(self):
         """
-        Returns the preferred origin
+        Returns the preferred focal mechanism
         """
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
@@ -3111,7 +3111,7 @@ class Catalog(object):
         :param format: The file format to use (e.g. ``"QUAKEML"``). See the
             `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
-            waveform writer method.
+            plugin's writer method.
 
         .. rubric:: Example
 
