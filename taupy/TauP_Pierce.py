@@ -8,6 +8,11 @@ class TauP_Pierce(TauP_Time):
 
     def __init__(self):
         super().__init__()
+        self.onlyTurnPoints = False
+        self.onlyRevPoints = False
+        self.onlyUnderPoints = False
+        self.onlyAddPoints = False
+        self.addDepth = []
 
     def depthCorrect(self, depth):
         pass
@@ -44,16 +49,21 @@ class TauP_Pierce(TauP_Time):
                     nextDepth = currArrival.pierce[j + 1].depth
                 else:
                     nextDepth = currArrival.pierce[j].depth
-                #if (not(self.onlyTurnPoints or self.onlyRevPoints or
-                #            self.onlyUnderPoints or self.onlyAddPoints) or ((self.onlyAddPoints and self.isAddDepth)))
-
-
-
-
-
-
-
-
+                capd = currArrival.pierce[j].depth
+                # Beautifully hand-formatted code:
+                if ((not any((self.onlyTurnPoints, self.onlyRevPoints,
+                              self.onlyUnderPoints, self.onlyAddPoints))) or (
+                    self.onlyAddPoints and capd in self.addDepth) or (
+                    self.onlyRevPoints
+                        and ((prevDepth - capd) * (capd - nextDepth) < 0)) or (
+                    self.onlyTurnPoints and j != 0
+                        and ((prevDepth-capd) <= 0 <= (capd-nextDepth))) or (
+                    self.onlyUnderPoints
+                        and ((prevDepth - capd) >= 0 >= (capd - nextDepth)))):
+                    print(calcDist,
+                          currArrival.pierce[j].depth,
+                          currArrival.pierce[j].time)
+                    # Optional (only if used in calc?) coords output here.
 
 if __name__ == '__main__':
     # Permits running as executable.
