@@ -227,7 +227,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
         raise ValueError(msg)
 
     # draw coast lines, country boundaries, fill continents.
-    plt.gca().set_axis_bgcolor(water_fill_color)
+    map_ax.set_axis_bgcolor(water_fill_color)
     bmap.drawcoastlines(color="0.4")
     bmap.drawcountries(color="0.75")
     bmap.fillcontinents(color=continent_fill_color,

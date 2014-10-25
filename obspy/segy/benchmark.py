@@ -281,7 +281,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
         plt.legend(loc=4, bbox_to_anchor=(0, 0.1, 0.9, 1),
                    bbox_transform=plt.gcf().transFigure)
         try:
-            leg = plt.gca().get_legend()
+            leg = ax.get_legend()
             ltext = leg.get_texts()
             plt.setp(ltext, fontsize='x-small')
         except:

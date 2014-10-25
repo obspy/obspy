@@ -1114,8 +1114,7 @@ class WaveformPlotting(object):
         """
         # Initialise data and plot
         self.__sectInitTraces()
-        self.__sectInitPlot()
-        ax = self.fig.gca()
+        ax = self.__sectInitPlot()
         # Setting up line properties
         for line in ax.lines:
             line.set_alpha(self.alpha)
@@ -1304,6 +1303,7 @@ class WaveformPlotting(object):
                     + self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
         self._sect_plot_init = True
+        return ax
 
     def __sectNormalizeTraces(self):
         """
