@@ -21,7 +21,7 @@ before_install:
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build numpy==$NUMPY_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build scipy==$SCIPY_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build matplotlib==$MATPLOTLIB_VERSION
-  - pip wheel ${WHEEL_BUILD_ARGS} lxml sqlalchemy m2crypto PyYAML
+  - pip wheel ${WHEEL_BUILD_ARGS} lxml sqlalchemy m2crypto PyYAML pyproj
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build lxml sqlalchemy m2crypto PyYAML
   # build modified basemap package with the large data files stripped (which we dont use in testing anyway)
   # geos link fix is included in basemap master now
