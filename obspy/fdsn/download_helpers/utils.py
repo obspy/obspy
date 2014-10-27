@@ -876,32 +876,44 @@ def get_stationxml_filename(str_or_fct, network, station, channels):
         raise TypeError("'%s' is not a filepath." % str(path))
 
 
-def get_mseed_filename(str_or_fct, network, station, location, channel):
+def get_mseed_filename(str_or_fct, network, station, location, channel,
+                       starttime, endtime):
     """
     Helper function getting the filename of a MiniSEED file.
 
     The rule are simple, if it is a function, network, station, location,
-    and channel are passed as arguments and the resulting string is returned.
+    channel, starttime, and endtime are passed as arguments and the resulting
+    string is returned.
 
     If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
-    ``"{location}"``, and ``"{channel}"`` formatting specifiers,
-    ``str.format()`` is called.
+    ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and ``"{endtime}"``
+    formatting specifiers, ``str.format()`` is called.
 
     Otherwise it is considered to be a folder name and the resulting
-    filename will be ``"FOLDER_NAME/NET.STA.LOC.CHAN.mseed"``
+    filename will be
+    ``"FOLDER_NAME/NET.STA.LOC.CHAN__STARTTIME__ENDTIME.mseed"``
+
+    In the last two cases, the times will be formatted with
+    ``"%Y-%m-%dT%H-%M-%SZ"``.
     """
+    strftime = "%Y-%m-%dT%H-%M-%SZ"
     if callable(str_or_fct):
-        path = str_or_fct(network, station, location, channel)
+        path = str_or_fct(network, station, location, channel, starttime,
+                          endtime)
     elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct) and \
-            ("{location}" in str_or_fct) and ("{channel}" in str_or_fct):
-        path = str_or_fct.format(network=network, station=station,
-                                 location=location, channel=channel)
+            ("{location}" in str_or_fct) and ("{channel}" in str_or_fct) and \
+            ("{starttime}" in str_or_fct) and ("{endtime}" in str_or_fct):
+        path = str_or_fct.format(
+            network=network, station=station, location=location,
+            channel=channel, starttime=starttime.strftime(strftime),
+            endtime=endtime.strftime(strftime))
     else:
         path = os.path.join(
             str_or_fct,
-            "{network}.{station}.{location}.{channel}.mseed".format(
+            "{network}.{station}.{location}.{channel}__{s}__{e}.mseed".format(
                 network=network, station=station, location=location,
-                channel=channel))
+                channel=channel, s=starttime.strftime(strftime),
+                e=endtime.stftime(strftime)))
 
     if path is True:
         return path
