@@ -97,31 +97,51 @@ Storing MiniSEED waveforms
 
 The MiniSEED storage rules are set by the ``mseed_storage`` argument of the
 :func:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper.download`
-method of the DownloadHelper class. In the simplest case it is just a folder
-name:
+method of the DownloadHelper class.
+
+**Option 1: Folder Name**
+
+In the simplest case it is just a folder name:
 
 >>> mseed_storage = "waveforms"
 
 will cause all MiniSEED files to be stored as
-``"waveforms/NETWORK.STATION.LOCATION.CHANNEL.STARTTIME.ENDTIME.mseed"``.
 
+``waveforms/NETWORK.STATION.LOCATION.CHANNEL__STARTTIME__ENDTIME.mseed``.
 
-The second possibility is to provide a string containing ``"{network}"``,
-``"{station}"``, ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and
-``"{endtime}"`` format specifiers. The values will be interpolated to acquire
-the final filename.
+An example of this is
+
+``waveforms/BW.FURT..BHZ__2014-10-27T16-37-23Z__2014-10-27T16-37-33Z.mseed``
+
+which is rather general but also quite long.
+
+**Option 2: String Template**
+
+For more control use the second possibility and provide a string containing
+``{network}``, ``{station}``, ``{location}``, ``{channel}``, ``{starttime}``,
+and ``{endtime}`` format specifiers. The values will be interpolated to acquire
+the final filename. The start and end times will be formatted with
+``strftime()`` with the specifier ``'%Y-%m-%dT%H-%M-%SZ'`` in an effort to
+avoid colons which are troublesome in filenames on many systems.
 
 >>> mseed_storage = ("some_folder/{network}/{station}/"
 ...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
 
+results in
+
+``some_folder/BW/FURT/.BHZ.2014-10-27T16-37-23Z.2014-10-27T16-37-33Z.mseed``.
+
+
+**Option 3: Custom Function**
+
 The most complex but also most powerful possibility is to use a function which
-will be evaluated to determine the filename. If the function returns ``True``,
-the MiniSEED file is assumed to already be available and will not be downloaded
-again; keep in mind that in that case no station data will be downloaded for
-that channel. If it returns a string, the MiniSEED file will be saved to that
-path. Utilize closures to use any other paramters in the function. This
-hypothetical function checks if the file is already in a database and otherwise
-returns a string.
+will be evaluated to determine the filename. **If the function returns
+``True``, the MiniSEED file is assumed to already be available and will not be
+downloaded again; keep in mind that in that case no station data will be
+downloaded for that channel.** If it returns a string, the MiniSEED file will
+be saved to that path. Utilize closures to use any other paramters in the
+function. This hypothetical function checks if the file is already in a
+database and otherwise returns a string.
 
 >>> def get_mseed_storage(network, station, location, channel, starttime,
 ...                       endtime):
@@ -272,6 +292,8 @@ degrees from the data and some additional restrictions.
 
     # No specified providers will result in all known ones being queried.
     dlh = DownloadHelper()
+    # The data will be downloaded to ``./waveforms/`` ans ``./stations`` with
+    # autmatically chosen names.
     dlh.download(domain, restrictions, mseed_storage="waveforms",
                  stationxml_storage="stations")
 
