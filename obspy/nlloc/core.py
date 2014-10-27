@@ -52,6 +52,11 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
         location run to WGS84 has to be specified explicitly by the user if
         necessary.
 
+    .. note::
+
+        An example can be found on the :mod:`~obspy.nlloc` submodule front
+        page in the documentation pages.
+
     :param filename: File or file-like object in text mode.
     :type coordinate_converter: func
     :param coordinate_converter: Function to convert (x, y, z)
@@ -135,7 +140,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
     # distribution statistics line
     line = lines["STATISTICS"]
     covariance_ZZ = float(line.split()[17])
-    stats_info_string = (
+    stats_info_string = str(
         "Note: Depth error is calculated from covariance matrix as 1D "
         "marginal while OriginUncertainty min/max horizontal errors "
         "are calculated from 2D error ellipsoid and are therefore seemingly "
@@ -183,7 +188,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
     o.depth = z * 1e3  # meters!
     o.depth_errors.uncertainty = sqrt(covariance_ZZ) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
-    o.depth_type = "from location"
+    o.depth_type = str("from location")
     o.time = time
 
     ou.horizontal_uncertainty = hor_unc
@@ -197,7 +202,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
         else:
             ou[field] *= 1e3  # meters!
     ou.azimuth_max_horizontal_uncertainty = hor_unc_azim
-    ou.preferred_description = "uncertainty ellipse"
+    ou.preferred_description = str("uncertainty ellipse")
     ou.confidence_level = 68  # NonLinLoc in general uses 1-sigma (68%) level
 
     oq.standard_error = stderr

@@ -106,7 +106,8 @@ INSTALL_REQUIRES = [
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
-              'pyimgur'],
+              'pyimgur',
+              'pyproj'],
     'arclink': ['m2crypto'],
     'neries': ['suds-jurko']}
 # PY2
