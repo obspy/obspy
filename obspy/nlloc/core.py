@@ -41,7 +41,7 @@ def is_nlloc_hyp(filename):
     return True
 
 
-def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
+def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     """
     Reads a NonLinLoc Hypocenter-Phase file to a
     :class:`~obspy.core.event.Catalog` object.
@@ -67,6 +67,14 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
         global mode).
         The function should accept three arguments x, y, z and return a
         tuple of three values (lon, lat, depth in kilometers).
+    :type picks: list of :class:`~obspy.core.event.Pick`
+    :param picks: Original picks used to generate the NonLinLoc location.
+        If provided, the output event will include the original picks and the
+        arrivals in the output origin will link to them correctly (with their
+        `pick_id` attribute). If not provided, the output event will include
+        (the rather basic) pick information that can be reconstructed from the
+        NonLinLoc hypocenter-phase file.
+    :rtype: :class:`~obspy.core.event.Catalog`
     """
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
@@ -85,6 +93,11 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
             data = data.decode()
 
     lines = data.splitlines()
+
+    # remember picks originally used in location, if provided
+    original_picks = picks
+    if original_picks is None:
+        original_picks = []
 
     # determine indices of block start/end of the NLLOC output file
     indices_hyp = [None, None]
@@ -221,27 +234,43 @@ def read_nlloc_hyp(filename, coordinate_converter=None, **kwargs):
     # go through all phase info lines
     for line in phases_lines:
         line = line.split()
-        pick = Pick()
-        event.picks.append(pick)
-        arrival = Arrival(pick_id=pick.resource_id)
+        arrival = Arrival()
         o.arrivals.append(arrival)
         station = str(line[0])
-        wid = WaveformStreamID(station_code=station)
-        pick.waveform_id = wid
         phase = str(line[4])
-        date, hourmin, sec = map(str, line[6:9])
-        t = UTCDateTime().strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
-        pick.time = t
-        pick.time_errors.uncertainty = float(line[10])
-        pick.phase_hint = phase
         arrival.phase = phase
         arrival.distance = kilometer2degrees(float(line[21]))
         arrival.azimuth = float(line[23])
         arrival.takeoff_angle = float(line[24])
-        pick.onset = ONSETS.get(line[3].upper(), None)
-        pick.polarity = POLARITIES.get(line[5].upper(), None)
         arrival.time_residual = float(line[16])
         arrival.time_weight = float(line[17])
+        pick = Pick()
+        wid = WaveformStreamID(station_code=station)
+        date, hourmin, sec = map(str, line[6:9])
+        t = UTCDateTime().strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
+        pick.waveform_id = wid
+        pick.time = t
+        pick.time_errors.uncertainty = float(line[10])
+        pick.phase_hint = phase
+        pick.onset = ONSETS.get(line[3].upper(), None)
+        pick.polarity = POLARITIES.get(line[5].upper(), None)
+        # try to determine original pick for each arrival
+        for pick_ in original_picks:
+            wid = pick_.waveform_id
+            if station == wid.station_code and phase == pick_.phase_hint:
+                pick = pick_
+                break
+        else:
+            # warn if original picks were specified and we could not associate
+            # the arrival correctly
+            if original_picks:
+                msg = ("Could not determine corresponding original pick for "
+                       "arrival. "
+                       "Falling back to pick information in NonLinLoc "
+                       "hypocenter-phase file.")
+                warnings.warn(msg)
+        event.picks.append(pick)
+        arrival.pick_id = pick.resource_id
 
     return cat
 

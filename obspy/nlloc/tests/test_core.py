@@ -132,6 +132,18 @@ class NLLOCTestCase(unittest.TestCase):
             filename = getExampleFile("nlloc.qml")
             self.assertEqual(is_nlloc_hyp(filename), False)
 
+    def test_read_nlloc_with_picks(self):
+        """
+        Test correct resource ID linking when reading NLLOC_HYP file with
+        providing original picks.
+        """
+        picks = readEvents(getExampleFile("nlloc.qml"))[0].picks
+        arrivals = readEvents(getExampleFile("nlloc.hyp"), format="NLLOC_HYP",
+                              picks=picks)[0].origins[0].arrivals
+        expected = [p.resource_id for p in picks]
+        got = [a.pick_id for a in arrivals]
+        self.assertEqual(expected, got)
+
 
 def suite():
     return unittest.makeSuite(NLLOCTestCase, "test")
