@@ -913,7 +913,7 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
             "{network}.{station}.{location}.{channel}__{s}__{e}.mseed".format(
                 network=network, station=station, location=location,
                 channel=channel, s=starttime.strftime(strftime),
-                e=endtime.stftime(strftime)))
+                e=endtime.strftime(strftime)))
 
     if path is True:
         return path

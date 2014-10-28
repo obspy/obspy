@@ -145,6 +145,8 @@ database and otherwise returns a string.
 
 >>> def get_mseed_storage(network, station, location, channel, starttime,
 ...                       endtime):
+...     # Returning True means that neither the data nor the StationXML file
+...     # will be downloaded.
 ...     if is_in_db(network, station, location, channel, starttime, endtime):
 ...         return True
 ...     return os.path.join(ROOT, "%s.%s.%s.%s.mseed." % (network, station,

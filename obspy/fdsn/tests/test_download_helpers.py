@@ -401,28 +401,39 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Tests the get_mseed_filename() function.
         """
+        starttime = obspy.UTCDateTime(2014, 1, 2, 3, 4, 5)
+        endtime = obspy.UTCDateTime(2014, 2, 3, 4, 5, 6)
+
         # A normal string is considered a path.
         self.assertEqual(
             get_mseed_filename("FOLDER", network="BW", station="FURT",
-                               location="", channel="BHE"),
-            os.path.join("FOLDER", "BW.FURT..BHE.mseed"))
+                               location="", channel="BHE",
+                               starttime=starttime, endtime=endtime),
+            os.path.join(
+                "FOLDER", "BW.FURT..BHE__2014-01-02T03-04-05Z__"
+                "2014-02-03T04-05-06Z.mseed"))
         self.assertEqual(
             get_mseed_filename("waveforms", network="BW", station="FURT",
-                               location="00", channel="BHE"),
-            os.path.join("waveforms", "BW.FURT.00.BHE.mseed"))
+                               location="00", channel="BHE",
+                               starttime=starttime, endtime=endtime),
+            os.path.join("waveforms", "BW.FURT.00.BHE__2014-01-02T03-04-05Z__"
+                         "2014-02-03T04-05-06Z.mseed"))
 
         # Passing a format string causes it to be used.
-        self.assertEqual(
-            get_mseed_filename("{network}_{station}_{location}_{channel}.ms",
-                               network="BW", station="FURT", location="",
-                               channel="BHE"), "BW_FURT__BHE.ms")
-        self.assertEqual(
-            get_mseed_filename("{network}_{station}_{location}_{channel}.ms",
-                               network="BW", station="FURT", location="00",
-                               channel="BHE"), "BW_FURT_00_BHE.ms")
+        self.assertEqual(get_mseed_filename(
+            "{network}_{station}_{location}_{channel}_"
+            "{starttime}_{endtime}.ms", network="BW", station="FURT",
+            location="", channel="BHE", starttime=starttime, endtime=endtime),
+            "BW_FURT__BHE_2014-01-02T03-04-05Z_2014-02-03T04-05-06Z.ms")
+        self.assertEqual(get_mseed_filename(
+            "{network}_{station}_{location}_{channel}_"
+            "{starttime}_{endtime}.ms", network="BW", station="FURT",
+            location="00", channel="BHE", starttime=starttime,
+            endtime=endtime),
+            "BW_FURT_00_BHE_2014-01-02T03-04-05Z_2014-02-03T04-05-06Z.ms")
 
         # A passed function will be executed.
-        def get_name(network, station, location, channel):
+        def get_name(network, station, location, channel, starttime, endtime):
             if network == "AH":
                 return True
             return "network" + "__" + station + location + channel
@@ -430,12 +441,15 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         # Returning a filename is possible.
         self.assertEqual(
             get_mseed_filename(get_name, network="BW", station="FURT",
-                               location="", channel="BHE"), "network__FURTBHE")
+                               location="", channel="BHE",
+                               starttime=starttime, endtime=endtime),
+            "network__FURTBHE")
         # 'True' can also be returned. This indicates that the file already
         # exists.
         self.assertEqual(
             get_mseed_filename(get_name, network="AH", station="FURT",
-                               location="", channel="BHE"), True)
+                               location="", channel="BHE",
+                               starttime=starttime, endtime=endtime), True)
 
         # It will raise a type error, if the function does not return the
         # proper type.
