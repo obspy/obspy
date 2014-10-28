@@ -266,8 +266,8 @@ def attach_miniseed_filenames(stations, mseed_path):
     }
 
 
-def filter_duplicate_and_discarded_stations(existing_stations,
-                                          discarded_station_ids, new_stations):
+def filter_duplicate_and_discarded_stations(
+        existing_stations, discarded_station_ids, new_stations):
     """
     :param existing_stations: A set of :class:`~.Station` object. detailing
         already existing stations.

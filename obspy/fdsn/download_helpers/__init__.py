@@ -170,16 +170,22 @@ method of the DownloadHelper class. StationXML files will be downloaded on a
 per-station basis thus all channels and locations from one station will end up
 in the same StationXML file.
 
+**Option 1: Folder Name**
+
 A simple string will be interpreted as a folder name. This example will save
-the files to ``"stations/NETWORK.STATION.xml"``.
+the files to ``"stations/NETWORK.STATION.xml"``, e.g. to
+``"stations/BW.FURT.xml"``.
 
 >>> stationxml_storage = "stations"
+
+**Option 2: String Template**
 
 Another option is to provide a string formatting template, e.g.
 
 >>> stationxml_storage = "some_folder/{network}/{station}.xml"
 
-will write to ``"some_folder/NETWORK/STATION.xml"``.
+will write to ``"some_folder/NETWORK/STATION.xml"``, in this case for example
+to ``"some_folder/BW/FURT.xml"``.
 
 .. note::
 
@@ -189,6 +195,7 @@ will write to ``"some_folder/NETWORK/STATION.xml"``.
     downloaded again. Pass a custom function to the ``stationxml_path``
     argument if you require different behavior.
 
+**Option 3: Custom Function**
 
 As with the waveform data, the StationXML paths can also be set with the help
 of a function. The function in this case is a bit more complex then for the
@@ -201,7 +208,8 @@ MiniSEED files that have no corresponding station information.
 ``"missing_channels"`` is a list of channels for that particular station that
 must be downloaded and ``"filename"`` determines where to save these. Please
 note that in this particular case the StationXML file will be overwritten if it
-already exists.
+already exists and the ``"missing_channels"`` will be downloaded to it,
+independent of what already exists in the file.
 
 Alternatively the function can also return a string and the behaviour is the
 same as two first options for the ``stationxml_storage`` argument.

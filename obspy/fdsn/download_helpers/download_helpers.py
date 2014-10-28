@@ -54,31 +54,103 @@ class FDSNDownloadHelperException(FDSNException):
 
 class Restrictions(object):
     """
-    Class storing non-domain restrictions of a query.
+    Class storing non-domain restrictions of a query. This is best explained
+    with two examples. See the list below for a more detailed explanation
+    of the parameters. The first set of restrictions is useful for event
+    based earthquake set queries.
 
-    :param starttime: The starttime of the data.
+    >>> import obspy
+    >>> restrictions = Restrictions(
+    ...     # Get data from 5 minutes before the event to one hours after the
+    ...     # event.
+    ...     starttime=obspy.UTCDateTime(2012, 1, 1)
+    ...     endtime=obspy.UTCDateTime(2012, 1, 2)
+    ...     # You might not want to deal with gaps in the data.
+    ...     reject_channels_with_gaps=True,
+    ...     # And you might only want waveform that have data for at least
+    ...     # 95 % of the requested time span.
+    ...     minimum_length=0.95,
+    ...     # No two stations should be closer than 10 km to each other.
+    ...     minimum_interstation_distance_in_m=10E3,
+    ...     # Only HH or BH channels. If a station has HH channels,
+    ...     # those will be downloaded, otherwise the BH. Nothing will be
+    ...     # downloaded if it has neither.
+    ...     channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]"),
+    ...     # Locations codes are arbitrary and there is no rule which
+    ...     # location is best.
+    ...     location_priorities=("", "00", "10"))
+
+
+    And the restrictions for downloading a noise data set might look similar to
+    the following:
+
+    >>> import obspy
+    >>> restrictions = Restrictions(
+    ...     # Get data for a whole year.
+    ...     starttime=obspy.UTCDateTime(2012, 1, 1),
+    ...     endtime=obspy.UTCDateTime(2013, 1, 1),
+    ...     # Chunk it to have one file per day.
+    ...     chunklength=86400,
+    ...     # Considering the enormous amount of data associated with
+    ...     # continuous requests, you might want to limit the data based on
+    ...     # SEED identifiers. If the location code is specified, the
+    ...     # location priority list is not used; the same is true for the
+    ...     # channel argument and priority list.
+    ...     network="BW", station="A*", location="", channel="BH*",
+    ...     # The typical use case for such a data set are noise correlations
+    ...     # where gaps are dealt with at a later stage.
+    ...     reject_channels_with_gaps=False,
+    ...     # Same is true with the minimum length. Any data during a day
+    ...     # might be useful.
+    ...     minimum_length=0.0,
+    ...     # Guard against the same station having different names.
+    ...     minimum_interstation_distance_in_m=100.0)
+
+
+    :param starttime: The starttime of the data to be downloaded.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: The endtime of the data.
-    :param network: The network code.
-    :param station: The station code.
-    :param location: The location code.
-    :param channel: The channel code.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param chunklength: The length of one chunk in seconds. If set,
+        the time between ``starttime`` and ``endtime`` will be divided into
+        segments of ``chunklength`` seconds. Useful for continuous data
+        requests. Set to ``None`` if one piece of data is desired between
+        ``starttime`` and ``endtime`` (the default).
+    :type chunklength: float, optional
+    :param network: The network code. Can contain wildcards.
+    :type network: str, optional
+    :param station: The station code. Can contain wildcards.
+    :type station: str, optional
+    :param location: The location code. Can contain wildcards.
+    :type location: str, optional
+    :param channel: The channel code. Can contain wildcards.
+    :type channel: str, optional
     :param reject_channels_with_gaps: If True (default), MiniSEED files with
-        gaps and/or overlaps will be deleted.
+        gaps and/or overlaps will be rejected.
+    :type reject_channels_with_gaps: boolean, optional
     :param minimum_length: The minimum length of the data as a fraction of
         the requested time frame. After a channel has been downloaded it
         will be checked that its total length is at least that fraction of
-        the requested time span. Will be deleted otherwise.
+        the requested time span. Will be rejected otherwise. Must be between
+        ``0.0`` and ``1.0``, defaults to ``0.9``.
+    :type minimum_length: float, optional
     :param minimum_interstation_distance_in_m: The minimum inter-station
         distance. Data from any new station closer to any existing station
         will not be downloaded. Also used for duplicate station detection as
         sometimes stations have different names for different webservice
-        providers.
-    :param channel_priorities: Priority list for the channels.
-    :param location_priorities: Priority list for the locations.
+        providers. Defaults to `1000 m`.
+    :type minimum_interstation_distance_in_m: float, optional
+    :param channel_priorities: Priority list for the channels. Will not be
+        used if the ``channel`` argument is used.
+    :type channel_priorities: list of str
+    :param location_priorities: Priority list for the locations. Will not be
+        used if the ``location`` argument is used.
+    :type location_priorities: list of str
     """
-    def __init__(self, starttime, endtime, network=None, station=None,
-                 location=None, channel=None, reject_channels_with_gaps=True,
-                 minimum_length=0.9, minimum_interstation_distance_in_m=1000,
+    def __init__(self, starttime, endtime, chunklength=None, network=None,
+                 station=None, location=None, channel=None,
+                 reject_channels_with_gaps=True, minimum_length=0.9,
+                 minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
                                      "MH[Z,N,E]", "EH[Z,N,E]",
                                      "LH[Z,N,E]"),
