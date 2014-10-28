@@ -301,6 +301,7 @@ def instBwith(data, fs, fk):
         dsigma = dsigma[size(fk) - 1:size(dsigma)]
         return sigma, dsigma
     else:
+        row = x[1]
         sigma = np.zeros(size(x[0]), dtype=np.float64)
         # faster alternative to calculate A_win_add
         A_win_add = np.hstack(
