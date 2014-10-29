@@ -198,10 +198,31 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     o.creation_info = CreationInfo(creation_time=creation_time,
                                    version=version)
 
+    # negative values can appear on diagonal of covariance matrix due to a
+    # precision problem in NLLoc implementation when location coordinates are
+    # large compared to the covariances.
     o.longitude = x
-    o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_XX))
+    try:
+        o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_XX))
+    except ValueError:
+        if covariance_XX < 0:
+            msg = ("Negative value in XX value of covariance matrix, not "
+                   "setting longitude error (epicentral uncertainties will "
+                   "still be set in origin uncertainty).")
+            warnings.warn(msg)
+        else:
+            raise
     o.latitude = y
-    o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_YY))
+    try:
+        o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_YY))
+    except ValueError:
+        if covariance_YY < 0:
+            msg = ("Negative value in YY value of covariance matrix, not "
+                   "setting longitude error (epicentral uncertainties will "
+                   "still be set in origin uncertainty).")
+            warnings.warn(msg)
+        else:
+            raise
     o.depth = z * 1e3  # meters!
     o.depth_errors.uncertainty = sqrt(covariance_ZZ) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
