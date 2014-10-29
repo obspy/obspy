@@ -157,6 +157,8 @@ class Restrictions(object):
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
+        self.chunklength = float(chunklength) if chunklength is not None \
+            else None
         self.network = network
         self.station = station
         self.location = location
@@ -167,6 +169,36 @@ class Restrictions(object):
         self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \
             float(minimum_interstation_distance_in_m)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq___(other)
+
+    def __iter__(self):
+        """
+        Iterator yielding
+        :class:`~obspy.fdsn.download_helpers.download_helpers.Restrictions`
+        instances chunked in ``chunklength``.
+        """
+        if not self.chunklength:
+            return iter([copy.deepcopy(self)])
+
+        def it():
+            starttime = self.starttime
+            endtime = self.endtime
+            chunklength = self.chunklength
+
+            while starttime < endtime:
+                res = copy.deepcopy(self)
+                res.starttime = starttime
+                res.endtime = starttime + chunklength
+                res.chunklength = None
+                starttime += chunklength
+                yield res
+            raise StopIteration
+        return it()
 
 
 class DownloadHelper(object):
@@ -184,7 +216,8 @@ class DownloadHelper(object):
         if providers is None:
             providers = dict(URL_MAPPINGS.items())
             # In that case make sure IRIS is first, and ORFEUS second! The
-            # remaining items will be sorted alphabetically.
+            # remaining items will be sorted alphabetically to make it
+            # deterministic at least to a certain extent.
             _p = []
             if "IRIS" in providers:
                 _p.append("IRIS")
@@ -230,6 +263,8 @@ class DownloadHelper(object):
             logger.info("Stations already acquired during this run: %i" %
                         len(existing_stations))
 
+            # Get the availability for the given client honoring the
+            # restrictions and the domain.
             info = utils.get_availability_from_client(
                 client, client_name, restrictions, domain, logger)
 

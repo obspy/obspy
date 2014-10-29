@@ -450,7 +450,8 @@ def get_availability_from_client(client, client_name, restrictions, domain,
     arguments.update(domain.get_query_parameters())
 
     # Check the capabilities of the service and see what is the most
-    # appropriate way of acquiring availability information.
+    # appropriate way of acquiring availability information. Some services
+    # right now require manual overwriting of what they claim to be capable of.
     if client_name.lower() in OVERWRITE_CAPABILITIES:
         cap = OVERWRITE_CAPABILITIES[client_name.lower()]
         if cap is None:

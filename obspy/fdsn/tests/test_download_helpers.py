@@ -18,7 +18,7 @@ import obspy
 import os
 import unittest
 
-from obspy.fdsn.download_helpers import domain
+from obspy.fdsn.download_helpers import domain, Restrictions
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     filter_stations, filter_based_on_interstation_distance, Station, Channel, \
     get_stationxml_filename, get_mseed_filename, attach_miniseed_filenames, \
@@ -532,6 +532,34 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         channels = [Channel("", "BHE"), Channel("", "BHN"), Channel("", "BHZ")]
         stations = [Station("BW", "ALTM", 0, 0, 0, channels=channels),
                     Station("BW", "FURT", 0, 0, 0, channels=channels)]
+
+    def test_restrictions_object(self):
+        """
+        Tests the restrictions object.
+        """
+        start = obspy.UTCDateTime(2014, 1, 1)
+        res = Restrictions(starttime=start, endtime=start + 10)
+
+        # No chunklength means it should just return itsself.
+        chunks = list(res)
+        self.assertEqual(len(chunks), 1)
+        self.assertEqual(chunks[0], res)
+
+        # One with chunklength should return the chunked pieces.
+        res = Restrictions(starttime=start, endtime=start + 10,
+                           chunklength=1)
+        chunks = list(res)
+        self.assertEqual(len(chunks), 10)
+        # All chunklengths should be set to None.
+        self.assertEqual(set([_i.chunklength for _i in chunks]), {None})
+        self.assertEqual(
+            [_i.starttime for _i in chunks],
+            [start + _i * 1 for _i in range(10)])
+        self.assertEqual(
+            [_i.endtime for _i in chunks],
+            [start + _i * 1 for _i in range(1, 11)])
+        self.assertEqual(chunks[0].starttime, start)
+        self.assertEqual(chunks[-1].endtime, start + 10)
 
 
 def suite():
