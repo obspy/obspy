@@ -33,7 +33,7 @@ from obspy.core.util.decorator import deprecated, deprecated_keywords, \
     skip, skipIf, uncompressFile
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
-    kilometer2degrees, locations2degrees
+    kilometer2degrees, locations2degrees, degrees2kilometers
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     scoreatpercentile, toIntOrZero, loadtxt, CatchOutput
 from obspy.core.util.obspy_types import OrderedDict, Enum, \

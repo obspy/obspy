@@ -253,6 +253,27 @@ def kilometer2degrees(kilometer, radius=6371):
     return kilometer / (2.0 * radius * math.pi / 360.0)
 
 
+def degrees2kilometers(degrees, radius=6371):
+    """
+    Convenience function to convert (great circle) degrees to kilometers
+    assuming a perfectly spherical Earth.
+
+    :type degrees: float
+    :param degrees: Distance in (great circle) degrees
+    :type radius: int, optional
+    :param radius: Radius of the Earth used for the calculation.
+    :rtype: float
+    :return: Distance in kilometers as a floating point number.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import degrees2kilometers
+    >>> degrees2kilometers(1)
+    111.19492664455873
+    """
+    return degrees * (2.0 * radius * math.pi / 360.0)
+
+
 def locations2degrees(lat1, long1, lat2, long2):
     """
     Convenience function to calculate the great circle distance between two

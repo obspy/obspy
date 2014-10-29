@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.geodetics import kilometer2degrees, locations2degrees, \
-    calcVincentyInverse, gps2DistAzimuth
+    calcVincentyInverse, gps2DistAzimuth, degrees2kilometers
 import math
 import unittest
 import warnings
@@ -131,6 +131,17 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         # some precision problems on different machines.
         self.assertEqual(round(kilometer2degrees(111.19492664455873,
                          radius=6381), 5), round(0.99843284751606332, 5))
+
+    def test_degrees2kilometers(self):
+        """
+        """
+        # Test if it works.
+        self.assertEqual(degrees2kilometers(1.0, radius=6371),
+                         111.19492664455873)
+        # Test if setting the radius actually does something. Round to avoid
+        # some precision problems on different machines.
+        self.assertEqual(round(degrees2kilometers(1.0, radius=6381), 5),
+                         round(111.36945956975816, 5))
 
     def test_locations2degrees(self):
         """
