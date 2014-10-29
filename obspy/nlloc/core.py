@@ -152,14 +152,16 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
 
     # distribution statistics line
     line = lines["STATISTICS"]
+    covariance_XX = float(line.split()[7])
+    covariance_YY = float(line.split()[13])
     covariance_ZZ = float(line.split()[17])
     stats_info_string = str(
-        "Note: Depth error is calculated from covariance matrix as 1D "
-        "marginal while OriginUncertainty min/max horizontal errors "
-        "are calculated from 2D error ellipsoid and are therefore seemingly "
-        "higher compared to depth errors. Error estimates can be "
-        "reconstructed from the following original NonLinLoc error "
-        "statistics line:\nSTATISTICS " +
+        "Note: Depth/Latitude/Longitude errors are calculated from covariance "
+        "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
+        "while OriginUncertainty min/max horizontal errors are calculated "
+        "from 2D error ellipsoid and are therefore seemingly higher compared "
+        "to 1D error estimates. Error estimates can be reconstructed from the "
+        "following original NonLinLoc error statistics line:\nSTATISTICS " +
         lines["STATISTICS"])
 
     # goto location quality info line
@@ -197,7 +199,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
                                    version=version)
 
     o.longitude = x
+    o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_XX))
     o.latitude = y
+    o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_YY))
     o.depth = z * 1e3  # meters!
     o.depth_errors.uncertainty = sqrt(covariance_ZZ) * 1e3  # meters!
     o.depth_errors.confidence_level = 68

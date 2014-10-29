@@ -16,9 +16,11 @@
         </time>
         <latitude>
           <value>48.0470705175</value>
+          <uncertainty>0.0012429</uncertainty>
         </latitude>
         <longitude>
           <value>11.6455375456</value>
+          <uncertainty>0.0015118</uncertainty>
         </longitude>
         <depth>
           <value>4579.49</value>
@@ -41,7 +43,7 @@
           <medianDistance>0.030874699985</medianDistance>
         </quality>
         <comment id="smi:local/93aa18a6-1ac9-4a65-b4cd-b8349ab1bc91">
-          <text>Note: Depth error is calculated from covariance matrix as 1D marginal while OriginUncertainty min/max horizontal errors are calculated from 2D error ellipsoid and are therefore seemingly higher compared to depth errors. Error estimates can be reconstructed from the following original NonLinLoc error statistics line:
+            <text>Note: Depth/Latitude/Longitude errors are calculated from covariance matrix as 1D marginal (Lon/Lat errors as great circle degrees) while OriginUncertainty min/max horizontal errors are calculated from 2D error ellipsoid and are therefore seemingly higher compared to 1D errors. Error estimates can be reconstructed from the following original NonLinLoc error statistics line:
 STATISTICS ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ 0.0043871 YY 0.0191034 YZ 0.00503624 ZZ 0.036713 EllAz1  206.782 Dip1  16.4026 Len1  0.227982 Az2  300.149 Dip2  11.2855 Len2  0.327468 Len3  3.709256e-01</text>
         </comment>
         <creationInfo>
