@@ -21,9 +21,9 @@ from obspy.core.event import Event, Origin, OriginQuality, OriginUncertainty, \
 from obspy.core.util.geodetics import kilometer2degrees
 
 
-ONSETS = {"I": "impulsive", "E": "emergent"}
+ONSETS = {"i": "impulsive", "e": "emergent"}
 ONSETS_REVERSE = {"impulsive": "i", "emergent": "e"}
-POLARITIES = {"C": "positive", "U": "positive", "D": "negative"}
+POLARITIES = {"c": "positive", "u": "positive", "d": "negative"}
 POLARITIES_REVERSE = {"positive": "u", "negative": "d"}
 
 
@@ -160,7 +160,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
         "while OriginUncertainty min/max horizontal errors are calculated "
         "from 2D error ellipsoid and are therefore seemingly higher compared "
-        "to 1D error estimates. Error estimates can be reconstructed from the "
+        "to 1D errors. Error estimates can be reconstructed from the "
         "following original NonLinLoc error statistics line:\nSTATISTICS " +
         lines["STATISTICS"])
 
@@ -277,8 +277,8 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         pick.time = t
         pick.time_errors.uncertainty = float(line[10])
         pick.phase_hint = phase
-        pick.onset = ONSETS.get(line[3].upper(), None)
-        pick.polarity = POLARITIES.get(line[5].upper(), None)
+        pick.onset = ONSETS.get(line[3].lower(), None)
+        pick.polarity = POLARITIES.get(line[5].lower(), None)
         # try to determine original pick for each arrival
         for pick_ in original_picks:
             wid = pick_.waveform_id
