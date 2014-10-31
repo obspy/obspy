@@ -147,7 +147,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 1000
         # data cloud of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         stats = {'network': 'BW', 'station': 'TEST', 'location': '',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}

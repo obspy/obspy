@@ -22,7 +22,7 @@ class UtilTestCase(unittest.TestCase):
         """
         """
         # example 1 - all samples are equal
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         tr1 = np.random.randn(10000).astype(np.float32)
         tr2 = tr1.copy()
         shift, corr = xcorr(tr1, tr2, 100)
