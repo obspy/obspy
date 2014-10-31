@@ -129,13 +129,17 @@ Utilities
 This module also contains a couple of utility functions which are useful for
 some purposes. Refer to the documentation of each for details.
 
-+---------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.mseed.util.getStartAndEndTime`      | Fast way of getting the temporal bounds of a well-behaved MiniSEED file. |
-+---------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.mseed.util.getTimingAndDataQuality` |  Returns information about the data and timing quality flags in a file.  |
-+---------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.mseed.util.shiftTimeOfFile`         |      Shifts the time of a file preserving all blockettes and flags.      |
-+---------------------------------------------------+--------------------------------------------------------------------------+
++------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.getStartAndEndTime`         | Fast way of getting the temporal bounds of a well-behaved MiniSEED file. |
++------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.getTimingAndDataQuality`    |  Returns information about the data and timing quality flags in a file.  |
++------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.shiftTimeOfFile`            |      Shifts the time of a file preserving all blockettes and flags.      |
++------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.getRecordInformation`       |   Returns record information about given files and file-like object.     |
++------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.mseed.util.set_flags_in_fixed_headers` |   Updates a given miniSEED file with some fixed header flags.            |
++------------------------------------------------------+--------------------------------------------------------------------------+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
