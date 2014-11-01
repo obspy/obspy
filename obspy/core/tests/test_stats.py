@@ -167,7 +167,7 @@ class StatsTestCase(unittest.TestCase):
         st = st + st
         st[3].stats.station = 'BBB'
         # changed in rev. 1625: adding streams doesn't deepcopy
-        # therefore all traces in the test stream are idential
+        # therefore all traces in the test stream are identical
         # (python list behavior)
         for tr in st:
             self.assertTrue(tr == st[0])

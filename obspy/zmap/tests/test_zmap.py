@@ -204,7 +204,7 @@ class ZMAPTestCase(unittest.TestCase):
             zmap_str = self._serialize(test_events, fill_nans=False)
             catalog = zmap.Unpickler().loads(zmap_str)
             self._assert_zmap_equal(catalog, test_events)
-        # Deserialize accepts a year without the wierd fractional part that
+        # Deserialize accepts a year without the weird fractional part that
         # redundantly defines the point in time within the year.
         test_events = [dict(e, year=int(float(e['year'])))
                        for e in test_events]
@@ -213,7 +213,7 @@ class ZMAPTestCase(unittest.TestCase):
         self._assert_zmap_equal(catalog, test_events)
 
     def test_read(self):
-        # via file, filename, plugin interface
+        # via file, file name, plugin interface
         test_events = [self.test_data, dict(self.test_data, lon='5.1')]
         zmap_str = self._serialize((test_events))
         with NamedTemporaryFile() as f:

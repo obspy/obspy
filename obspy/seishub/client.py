@@ -225,7 +225,7 @@ class Client(object):
                 doc = response.read()
                 return doc
             # XXX currently there are random problems with SeisHub's internal
-            # XXX sql database access ("cannot operate on a closed database").
+            # XXX SQL database access ("cannot operate on a closed database").
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
@@ -507,7 +507,7 @@ master/seishub/plugins/seismology/waveform.py
 
         trim_start = kwargs['starttime']
         trim_end = kwargs['endtime']
-        # we expand the requested timespan on both ends by two samples in
+        # we expand the requested time span on both ends by two samples in
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
         # only possible if a channel is specified otherwise delta = 0
@@ -689,7 +689,7 @@ master/seishub/plugins/seismology/waveform.py
                 pass
             elif datetime < UTCDateTime(data['start_datetime']):
                 continue
-            # check if endtime is present and fitting
+            # check if end time is present and fitting
             if data['end_datetime'] == "":
                 pass
             elif datetime > UTCDateTime(data['end_datetime']):
@@ -806,8 +806,8 @@ master/seishub/plugins/seismology/event.py
         Gets a list of event information.
 
         ..note:
-            For seishub versions < 1.4 available keys include "user" and
-            "account". In newer seishub versions they are replaced by "author".
+            For SeisHub versions < 1.4 available keys include "user" and
+            "account". In newer SeisHub versions they are replaced by "author".
 
         :rtype: list
         :return: List of dictionaries containing event information.
@@ -844,7 +844,7 @@ master/seishub/plugins/seismology/event.py
         the request are the same as for :meth:`getList`.
 
         ..warning::
-            Only works when connecting to a seishub server of version 1.4.0
+            Only works when connecting to a SeisHub server of version 1.4.0
             or higher (serving event data as QuakeML).
 
         :rtype: :class:`~obspy.core.event.Catalog`
@@ -883,7 +883,7 @@ master/seishub/plugins/seismology/event.py
         kml.set("xmlns", "http://www.opengis.net/kml/2.2")
 
         document = SubElement(kml, "Document")
-        SubElement(document, "name").text = "Seishub Event Locations"
+        SubElement(document, "name").text = "SeisHub Event Locations"
 
         # style definitions for earthquakes
         style = SubElement(document, "Style")

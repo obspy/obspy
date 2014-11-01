@@ -733,7 +733,7 @@ class QuakeMLTestCase(unittest.TestCase):
                            depth=depth, resource_id=ResourceIdentifier())
         ev.origins.append(ev_origin)
 
-        # populte event moment tensor
+        # populate event moment tensor
         ev_tensor = Tensor(m_rr=mrr, m_tt=mtt, m_pp=mpp, m_rt=mtr, m_rp=mpr,
                            m_tp=mtp)
 

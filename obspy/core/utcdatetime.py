@@ -1103,7 +1103,7 @@ class UTCDateTime(object):
         """
         Returns absolute timestamp value of the current UTCDateTime object.
         """
-        # needed for unittest.assertAlmostEqual tests on linux
+        # needed for unittest.assertAlmostEqual tests on Linux
         return abs(self.timestamp)
 
     def __hash__(self):

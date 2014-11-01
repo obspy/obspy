@@ -337,7 +337,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.sampling_rate, 200.0)
         self.assertEqual(trace.stats.starttime, start + 0.5)
         self.assertEqual(trace.stats.endtime, end - 0.5)
-        # starttime should be before endtime
+        # start time should be before end time
         self.assertRaises(ValueError, trace.trim, end, start)
 
     def test_trimAllDoesNotChangeDtype(self):
@@ -596,7 +596,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_slice_noStarttimeOrEndtime(self):
         """
-        Tests the slicing of trace objects with no starttime or endtime
+        Tests the slicing of trace objects with no start time or end time
         provided. Compares results against the equivalent trim() operation
         """
         tr_orig = Trace(data=np.arange(10, dtype=np.int32))
@@ -702,7 +702,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.endtime, UTCDateTime(10))
         # Create temp trace object used for testing.
         st = tr.stats.starttime
-        # This is supposed to include the start- and endtimes and should
+        # This is supposed to include the start and end times and should
         # therefore cut right at 2 and 8.
         temp = deepcopy(tr)
         temp.trim(st + 2.1, st + 7.1)
@@ -723,7 +723,7 @@ class TraceTestCase(unittest.TestCase):
         # a copy of the stats.
         temp = deepcopy(tr)
         temp.trim(st - 2.5, st + 200)
-        # The start- and endtimes should not change.
+        # The start and end times should not change.
         self.assertEqual(temp.stats.starttime, UTCDateTime(0))
         self.assertEqual(temp.stats.endtime, UTCDateTime(10))
         self.assertEqual(temp.stats.npts, 11)
@@ -1261,7 +1261,7 @@ class TraceTestCase(unittest.TestCase):
                                    org_trace.stats.sampling_rate)
             self.assertAlmostEqual(sum_trace.stats.sampling_rate,
                                    org_trace.stats.sampling_rate)
-            # check endtimes
+            # check end times
             self.assertEqual(traces[i].stats.endtime, sum_trace.stats.endtime)
 
     def test_verify(self):
@@ -1714,7 +1714,7 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(20))
         self.assertFalse("processing" in tr.stats)
         # This decimation by a factor of 7 in this case would change the
-        # endtime of the time series. Therefore it fails.
+        # end time of the time series. Therefore it fails.
         self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
         # No processing should be applied yet.
         self.assertFalse("processing" in tr.stats)
@@ -1759,7 +1759,7 @@ class TraceTestCase(unittest.TestCase):
                                            method="weighted_average_slopes")
         # Assert that the sampling rate has been set correctly.
         self.assertEqual(int_tr.stats.delta, 0.003)
-        # Assert that the new endtime is smaller than the old one. SAC at
+        # Assert that the new end time is smaller than the old one. SAC at
         # times performs some extrapolation which we do not want to do here.
         self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
         # SAC extrapolates a bit which we don't want here. The deviations
@@ -1774,7 +1774,7 @@ class TraceTestCase(unittest.TestCase):
                                            method="weighted_average_slopes")
         # Assert that the sampling rate has been set correctly.
         self.assertEqual(int_tr.stats.delta, 0.077)
-        # Assert that the new endtime is smaller than the old one. SAC
+        # Assert that the new end time is smaller than the old one. SAC
         # calculates one sample less in this case.
         self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
         self.assertTrue(np.allclose(
@@ -1829,8 +1829,8 @@ class TraceTestCase(unittest.TestCase):
         for inter_type in ["linear", "nearest", "zero", "slinear",
                            "quadratic", "cubic", 1, 2, 3,
                            "weighted_average_slopes"]:
-            # If only the sampling rate is specified, the endtime will be very
-            # close to the original endtime but never bigger.
+            # If only the sampling rate is specified, the end time will be very
+            # close to the original end time but never bigger.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
                                               method=inter_type)
             self.assertEqual(tr.stats.starttime, interp_tr.stats.starttime)
@@ -1838,7 +1838,7 @@ class TraceTestCase(unittest.TestCase):
                             tr.stats.endtime - (1.0 / 0.3))
 
             # If the starttime is modified the new starttime will be used but
-            # the endtime will again be modified as little as possible.
+            # the end time will again be modified as little as possible.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
                                               method=inter_type,
                                               starttime=tr.stats.starttime +
@@ -1848,7 +1848,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
                             tr.stats.endtime - (1.0 / 0.3))
 
-            # If npts is given it will be used to modify the endtime.
+            # If npts is given it will be used to modify the end time.
             interp_tr = tr.copy().interpolate(sampling_rate=0.3,
                                               method=inter_type, npts=10)
             self.assertEqual(tr.stats.starttime,
@@ -1869,7 +1869,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertRaises(ValueError, tr.copy().interpolate,
                               sampling_rate=1.0,
                               starttime=tr.stats.starttime - 10.0)
-            # As will too many samples that would overstep the endtime bound.
+            # As will too many samples that would overstep the end time bound.
             self.assertRaises(ValueError, tr.copy().interpolate,
                               sampling_rate=1.0,
                               npts=tr.stats.npts * 1E6)

@@ -26,7 +26,7 @@ class NDKTestCase(unittest.TestCase):
 
     def test_read_single_ndk(self):
         """
-        Test reading a single event from and NDK file and comparing it to a
+        Test reading a single event from an NDK file and comparing it to a
         QuakeML file that has been manually checked to contain all the
         information in the NDK file.
         """
@@ -204,7 +204,7 @@ class NDKTestCase(unittest.TestCase):
 
     def test_is_ndk_for_file_with_infeasible_latitude(self):
         """
-        Tests the is_ndk function a file with an infeasible latitude.
+        Tests the is_ndk function a file with an unfeasible latitude.
         """
         self.assertFalse(is_ndk(os.path.join(
             self.datapath, "faulty_infeasible_latitude.ndk")))
@@ -266,7 +266,7 @@ class NDKTestCase(unittest.TestCase):
 
     def test_missing_lines(self):
         """
-        Tests the raised warning if one an event has less then 5 lines.
+        Tests the raised warning if an event has less then 5 lines.
         """
         with open(os.path.join(self.datapath, "multiple_events.ndk"), "rt") \
                 as fh:

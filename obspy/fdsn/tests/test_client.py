@@ -572,7 +572,7 @@ class ClientTestCase(unittest.TestCase):
                 client.get_waveforms_bulk(bulk, filename=tf.name)
                 got = read(tf.name)
             self.assertEqual(got, expected, failmsg(got, expected))
-        # test cases for providing a filename
+        # test cases for providing a file name
         for client in clients:
             with NamedTemporaryFile() as tf:
                 with open(tf.name, "wt") as fh:

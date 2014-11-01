@@ -45,11 +45,11 @@ c      ptime                 must be 0
 c      num                   must be 0
 c
 c subroutine parameters:
-c reltrc      : timeseries as floating data, possibly filtered
-c trace       : timeseries as integer data, unfiltered, used to
+c reltrc      : time series as floating data, possibly filtered
+c trace       : time series as integer data, unfiltered, used to
 c               determine the amplitudes
-c npts        : number of datapoints in the timeseries
-c rawold      : last datapoint of timeseries when leaving the subroutine
+c npts        : number of datapoints in the time series
+c rawold      : last datapoint of time series when leaving the subroutine
 c ssx         : sum of characteristic function (CF)
 c ssx2        : sum of squares of CF
 c mean        : mean of CF

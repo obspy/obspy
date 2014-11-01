@@ -2470,7 +2470,7 @@ class BeachBall:
 
         self._plot_total_alpha = 1.
 
-        # possibility to add external data (e.g. measured polariations)
+        # possibility to add external data (e.g. measured polarizations)
         self._plot_external_data = False
         self._external_data = None
 
@@ -2579,7 +2579,7 @@ class BeachBall:
                 R_start = start_r
 
                 # add one point on the edge every fraction of degree given by
-                # input parameter, increase the radius linearily
+                # input parameter, increase the radius linearly
                 phi_end_larger = np.sign(phi_end - phi_start)
                 angle_smaller_pi = np.sign(pi - np.abs(phi_end - phi_start))
 
@@ -2642,7 +2642,7 @@ class BeachBall:
         - array with 6 points, describing positive and negative part of 3
           principal axes
         - array with partition of full circle (angle values in degrees)
-          fraction is given by parametre n_curve_points
+          fraction is given by parameter n_curve_points
         """
         # build the nodallines of positive/negative areas in the principal axes
         # system
@@ -2651,7 +2651,7 @@ class BeachBall:
         # phi is the angle between neutral axis and horizontal projection
         # of the curve point to the surface, spanned by H- and
         # N-axis. Running mathematically negative (clockwise) around the
-        # SIGMA-axis. Stepsize is given by the parametre for number of
+        # SIGMA-axis. Stepsize is given by the parameter for number of
         # curve points
         phi = (np.arange(n_curve_points) / float(n_curve_points) +
                1. / n_curve_points) * 2 * pi
@@ -2662,7 +2662,7 @@ class BeachBall:
         # is 0, if curve lies directly on the SIGMA axis)
 
         # CASE: including isotropic part
-        # sigma axis flippes, if EWn flippes sign
+        # sigma axis flips, if EWn flips sign
 
         EWh_devi = self.MT.get_eigvals()[0] - 1. / 3 * np.trace(self._M)
         EWn_devi = self.MT.get_eigvals()[1] - 1. / 3 * np.trace(self._M)
@@ -3874,7 +3874,7 @@ class BeachBall:
                                s=symsize ** 2, c='k', facecolor='k',
                                zorder=300)
 
-        # plot 4 fake points, guaranteeing full visibilty of the sphere
+        # plot 4 fake points, guaranteeing full visibility of the sphere
         ax.plot([0, 1.05, 0, -1.05], [1.05, 0, -1.05, 0], ',', alpha=0.)
         # scaling behavior
         ax.autoscale_view(tight=True, scalex=True, scaley=True)

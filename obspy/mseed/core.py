@@ -247,7 +247,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             'byteorder': info['byteorder'],
             'number_of_records': info['number_of_records']}
 
-    # If its a filename just read it.
+    # If it's a file name just read it.
     if isinstance(mseed_object, (str, native_str)):
         # Read to NumPy array which is used as a buffer.
         bfrNp = np.fromfile(mseed_object, dtype=np.int8)

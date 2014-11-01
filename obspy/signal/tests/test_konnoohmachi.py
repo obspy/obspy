@@ -29,7 +29,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         """
         Tests the creation of the smoothing window.
         """
-        # Disable div by zero erros.
+        # Disable div by zero errors.
         temp = np.geterr()
         np.seterr(all='ignore')
         # Frequency of zero results in a delta peak at zero (there usually
@@ -71,7 +71,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         """
         Tests some aspects of the matrix.
         """
-        # Disable div by zero erros.
+        # Disable div by zero errors.
         temp = np.geterr()
         np.seterr(all='ignore')
         frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],

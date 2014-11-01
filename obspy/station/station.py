@@ -50,7 +50,7 @@ class Station(BaseNode):
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
             etc
         :param geology: Type of rock and/or geologic formation.
-        :param equiment: Equipment used by all channels at a station.
+        :param equipments: Equipment used by all channels at a station.
         :type operators: list of :class:`~obspy.station.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
@@ -193,10 +193,10 @@ class Station(BaseNode):
     @equipments.setter
     def equipments(self, value):
         if not hasattr(value, "__iter__"):
-            msg = "Equipments needs to be an iterable, e.g. a list."
+            msg = "equipments needs to be an iterable, e.g. a list."
             raise ValueError(msg)
         if any([not isinstance(x, Equipment) for x in value]):
-            msg = "Equipments can only contain Equipment objects."
+            msg = "equipments can only contain Equipment objects."
             raise ValueError(msg)
         self._equipments = value
         # if value is None or isinstance(value, Equipment):
@@ -399,7 +399,7 @@ class Station(BaseNode):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

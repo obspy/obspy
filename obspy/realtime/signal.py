@@ -571,7 +571,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     npts = len(sample)
     dt = trace.stats.delta
 
-    # set some constants for the kurtosis calulation
+    # set some constants for the kurtosis calculation
     C1 = dt / float(win)
     a1 = 1.0 - C1
     C2 = (1.0 - a1 * a1) / 2.0

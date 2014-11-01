@@ -86,7 +86,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(datalist[i], trace.data[0:9].tolist())
             i += 1
         del stream
-        # Also test unicode filenames.
+        # Also test unicode file names.
         mseed_filenames = [str('BW.BGLD.__.EHE.D.2008.001.first_record'),
                            str('qualityflags.mseed'),
                            str('test.mseed'),
@@ -223,11 +223,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         The filenames are hard coded so the test will not fail with future
         changes in the structure of the package.
         """
-        # Mini-SEED filenames.
+        # Mini-SEED file names.
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
                            'timingquality.mseed']
-        # Non Mini-SEED filenames.
+        # Non Mini-SEED file names.
         non_mseed_filenames = ['test_mseed_reading_and_writing.py',
                                '__init__.py']
         # Loop over Mini-SEED files
@@ -243,15 +243,15 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readSingleRecordToMSR(self):
         """
-        Tests readSingleRecordtoMSR against start and endtimes.
+        Tests readSingleRecordtoMSR against start and end times.
 
-        Reference start and endtimes are obtained from the tracegroup.
+        Reference start and end times are obtained from the tracegroup.
         Both cases, with and without ms_p argument are tested.
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         start, end = [1199145599915000, 1199145620510000]
-        # start and endtime
+        # start and end time
         ms = _MSStruct(filename, init_msrmsf=False)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
@@ -375,7 +375,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
     def test_readMSTracesViaRecords_MultipleIds(self):
         """
         Tests a critical issue when the LibMSEED.readMSTracesViaRecords method
-        is used (e.g. on Windows systems) and a start/endtime is set and the
+        is used (e.g. on Windows systems) and a start/end time is set and the
         file has multiple ids.
 
         This is due to the fact that the readMSTraceViaRecords method uses the
@@ -662,7 +662,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         This test also checks the files created by libmseed to some extend.
         """
         path = os.path.join(self.path, "data", "encoding")
-        # Dictionary. The key is the filename, the value a tuple: dtype,
+        # Dictionary. The key is the file name, the value a tuple: dtype,
         # sampletype, encoding, content
         def_content = np.arange(1, 51, dtype=np.int32)
         files = {
@@ -719,7 +719,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 0)
                 else:
                     self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 1)
-                # Deallocate for debugging with valrgind
+                # Deallocate for debugging with valgrind
                 del ms
 
     def test_writingMicroseconds(self):

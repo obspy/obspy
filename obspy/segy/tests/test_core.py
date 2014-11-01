@@ -103,8 +103,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                          == b'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
-        # Autodection should also write the textual file header encoding to the
-        # stats dictionary.
+        # Autodetection should also write the textual file header encoding to
+        # the stats dictionary.
         st3 = readSEGY(file)
         self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')
@@ -182,7 +182,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 # Read again and compare data.
                 this_stream = readSEGY(out_file)
                 # Both should now be equal. Usually converting from IBM to IEEE
-                # floating point numbers might result in small rouning errors
+                # floating point numbers might result in small rounding errors
                 # but in this case it seems to work. Might be different on
                 # different computers.
                 np.testing.assert_array_equal(this_data, this_stream[0].data)

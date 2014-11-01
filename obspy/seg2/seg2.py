@@ -31,7 +31,7 @@ WARNING_HEADER = "Many companies use custom defined SEG2 header variables." + \
     "number, station code names, ..). Please check the complete list of " + \
     "additional unmapped header fields that gets stored in " + \
     "Trace.stats.seg2 and/or the manual of the source of the SEG2 files " + \
-    "for fields that might influence e.g. trace starttimes."
+    "for fields that might influence e.g. trace start times."
 
 
 class SEG2BaseError(Exception):
@@ -63,14 +63,14 @@ class SEG2(object):
     def readFile(self, file_object):
         """
         Reads the following file and will return a Stream object. If
-        file_object is a string it will be treated as a filename, otherwise it
+        file_object is a string it will be treated as a file name, otherwise it
         will be expected to be a file like object with read(), seek() and
         tell() methods.
 
         If it is a file_like object, file.seek(0, 0) is expected to be the
         beginning of the SEG-2 file.
         """
-        # Read the file if it is a filename.
+        # Read the file if it is a file name.
         if not hasattr(file_object, 'write'):
             self.file_pointer = open(file_object, 'rb')
         else:
@@ -185,10 +185,10 @@ class SEG2(object):
         object.
         """
         trace_descriptor_block = self.file_pointer.read(32)
-        # Check if the trace descripter block id is valid.
+        # Check if the trace descriptor block id is valid.
         if unpack(self.endian + b'H', trace_descriptor_block[0:2])[0] != \
            0x4422:
-            msg = 'Invalid trace descripter block id.'
+            msg = 'Invalid trace descriptor block id.'
             raise SEG2InvalidFileError(msg)
         size_of_this_block = unpack(self.endian + b'H',
                                     trace_descriptor_block[2:4])[0]
@@ -224,7 +224,7 @@ class SEG2(object):
         self.parseFreeForm(self.file_pointer.read(size_of_this_block - 32),
                            header['seg2'])
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
-        # Set to the file's starttime.
+        # Set to the file's start time.
         header['starttime'] = deepcopy(self.starttime)
         if 'DELAY' in header['seg2']:
             if float(header['seg2']['DELAY']) != 0:

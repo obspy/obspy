@@ -384,7 +384,7 @@ class PPSD():
             self.merge_method = -1
         else:
             self.merge_method = 0
-        # nfft is determined mimicing the fft setup in McNamara&Buland paper:
+        # nfft is determined mimicking the fft setup in McNamara&Buland paper:
         # (they take 13 segments overlapping 75% and truncate to next lower
         #  power of 2)
         #  - take number of points of whole ppsd segment (default 1 hour)
@@ -423,7 +423,7 @@ class PPSD():
         per = 1.0 / freq[::-1]
         self.freq = freq
         self.per = per
-        # calculate left/rigth edge of first period bin,
+        # calculate left/right edge of first period bin,
         # width of bin is one octave
         per_left = per[0] / 2
         per_right = 2 * per_left
@@ -567,7 +567,7 @@ class PPSD():
                     warnings.warn(msg)
                 else:
                     # throw warnings if trace length is different
-                    # than ppsd_lenth..!?!
+                    # than ppsd_length..!?!
                     slice = tr.slice(t1, t1 + self.ppsd_length)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?

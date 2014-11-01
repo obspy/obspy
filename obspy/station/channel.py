@@ -332,7 +332,7 @@ class Channel(BaseNode):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option; image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

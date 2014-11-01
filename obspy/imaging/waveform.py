@@ -721,7 +721,7 @@ class WaveformPlotting(object):
         endtime = self.endtime.timestamp
         # The same trace will always have the same sampling_rate.
         sampling_rate = trace[0].stats.sampling_rate
-        # The samples per resulting pixel. The endtime is defined as the time
+        # The samples per resulting pixel. The end time is defined as the time
         # of the last sample.
         pixel_length = int(
             np.ceil(((endtime - starttime) * sampling_rate + 1) / self.width))

@@ -2990,7 +2990,7 @@ class Catalog(object):
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
-        # unorderable types by checking first shortcut on positiv is None
+        # unorderable types by checking first shortcut on positive is None
         # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:

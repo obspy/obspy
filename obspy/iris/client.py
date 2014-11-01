@@ -158,7 +158,7 @@ class Client(object):
         else:
             method = 'wt'
         file_opened = False
-        # filename is given, create fh, write to file and return nothing
+        # file name is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
         elif isinstance(filename, (str, native_str)):
@@ -262,7 +262,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         **Filter Options**
 
-        The following parameters act as filters upon the timeseries.
+        The following parameters act as filters upon the time series.
 
         :type filter: list of str, optional
         :param filter: Filter list.  List order matters because each filter
@@ -273,7 +273,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
             ``"taper=WIDTH,TYPE"``
                 Apply a time domain symmetric tapering function to the
-                timeseries data. The width is specified as a fraction of the
+                time series data. The width is specified as a fraction of the
                 trace length from 0 to 0.5. The window types HANNING (default),
                 HAMMING, or COSINE may be optionally followed, e.g.
                 ``"taper=0.25"`` or ``"taper=0.5,COSINE"``.
@@ -353,7 +353,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             ``'miniseed'``
                 IRIS MiniSEED format
             ``'plot'``
-                A simple plot of the timeseries
+                A simple plot of the time series
             ``'saca'``
                 SAC, ASCII format
             ``'sacbb'``
@@ -400,7 +400,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        # write directly if filename is given
+        # write directly if file name is given
         if filename:
             return self._toFileOrData(filename, data, True)
         # create temporary file for writing data

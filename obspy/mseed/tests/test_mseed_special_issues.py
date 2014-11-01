@@ -398,7 +398,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Tests issue #289.
 
-        Reading MiniSEED using start-/endtime outside of data should result in
+        Reading MiniSEED using start/end time outside of data should result in
         an empty Stream object.
         """
         # 1
@@ -418,7 +418,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        # start and endtime
+        # start and end time
         ms = _MSStruct(filename)
         ms.read(-1, 0, 1, 0)
         blkt_link = ms.msr.contents.blkts.contents

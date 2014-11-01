@@ -61,7 +61,7 @@ class ResponseStage(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
+            differently depending on the data center/software that generated the
             document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
@@ -682,7 +682,7 @@ class Response(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
+            differently depending on the data center/software that generated the
             document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
@@ -1456,7 +1456,7 @@ class InstrumentPolynomial(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
+            differently depending on the data center/software that generated the
             document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the

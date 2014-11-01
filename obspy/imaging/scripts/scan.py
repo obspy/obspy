@@ -43,8 +43,8 @@ import numpy as np
 
 def compressStartend(x, stop_iteration):
     """
-    Compress 2-dimensional array of piecewise continuous starttime/endtime
-    pairs by merging overlapping and exactly fitting pieces into one.
+    Compress 2-dimensional array of piecewise continuous start/end time pairs
+    by merging overlapping and exactly fitting pieces into one.
     This reduces the number of lines needed in the plot considerably and is
     necessary for very large data sets.
     The maximum number of iterations can be specified.
@@ -300,7 +300,7 @@ def main(argv=None):
         startend = np.array(data[_id])
         if len(startend) == 0:
             continue
-        # restrict plotting of results to given start/endtime
+        # restrict plotting of results to given start/end time
         if args.start_time:
             startend = startend[startend[:, 1] > args.start_time]
         if len(startend) == 0:
@@ -330,7 +330,7 @@ def main(argv=None):
         gap_indices = diffs > 1.8 * np.array(samp_int[_id][:-1])
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
-            # dont handle last endtime as start of gap
+            # don't handle last end time as start of gap
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
             if not args.no_gaps and any(gap_indices):
@@ -349,7 +349,7 @@ def main(argv=None):
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
-    # set x-axis limits according to given start/endtime
+    # set x-axis limits according to given start/end time
     if args.start_time:
         ax.set_xlim(left=args.start_time, auto=None)
     if args.end_time:

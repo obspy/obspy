@@ -81,7 +81,7 @@ def getStartAndEndTime(file_or_file_object):
     # Get the starttime of the first record.
     info = getRecordInformation(file_or_file_object)
     starttime = info['starttime']
-    # Get the endtime of the last record.
+    # Get the end time of the last record.
     info = getRecordInformation(
         file_or_file_object,
         (info['number_of_records'] - 1) * info['record_length'])

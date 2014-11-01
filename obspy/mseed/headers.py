@@ -691,9 +691,9 @@ LinkedIDList._fields_ = [
 ]
 
 
-########################################
-# Done with the C structures defintions.
-########################################
+#########################################
+# Done with the C structures definitions.
+#########################################
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [

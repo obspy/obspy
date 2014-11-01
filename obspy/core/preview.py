@@ -132,7 +132,7 @@ def mergePreviews(stream):
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)
         dtype = dtypes.pop()
-        # Get the minimum start and maximum endtime for all traces.
+        # Get the minimum start and maximum end time for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
         samples = int(round((max_endtime - min_starttime) / delta)) + 1

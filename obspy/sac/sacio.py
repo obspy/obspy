@@ -366,7 +366,7 @@ class SacIO(object):
         else:
             # Only copy the data if they are not of the required type
             self.seis = np.require(trace, native_str('<f4'))
-        # convert stattime to sac reference time, if it is not default
+        # convert start time to sac reference time, if it is not default
         if begin == -12345:
             reftime = starttime
         else:

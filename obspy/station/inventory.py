@@ -39,7 +39,7 @@ def read_inventory(path_or_file_object=None, format=None):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: Filename or file like object. If this
+    :param path_or_file_object: File name or file like object. If this
         attribute is omitted, an example :class:`Inventory`
         object will be returned.
     :type format: str, optional
@@ -174,7 +174,7 @@ class Inventory(ComparingObject):
         Writes the inventory object to a file or file-like object in
         the specified format.
 
-        :param path_or_file_object: Filename or file-like object to be written
+        :param path_or_file_object: File name or file-like object to be written
             to.
         :param format: The format of the written file.
         """
@@ -229,7 +229,7 @@ class Inventory(ComparingObject):
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get response for.
         :rtype: :class:`~obspy.station.response.Response`
-        :returns: Response for timeseries specified by input arguments.
+        :returns: Response for time series specified by input arguments.
         """
         network, _, _, _ = seed_id.split(".")
 
@@ -431,7 +431,7 @@ class Inventory(ComparingObject):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
@@ -605,7 +605,7 @@ class Inventory(ComparingObject):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

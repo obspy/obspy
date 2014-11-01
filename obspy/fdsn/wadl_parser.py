@@ -63,7 +63,7 @@ class WADLParser(object):
         # list of special cases for different WADLs is not a good solution.
         all_parameters = defaultdict(list)
 
-        # Group the parameters by the 'id' attribute of the greatparents tag.
+        # Group the parameters by the 'id' attribute of the grandparents tag.
         # The 'name' tag will always be 'GET' due to the construction of the
         # xpath expression.
         for param in parameters:

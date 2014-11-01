@@ -941,7 +941,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nlow = max(1, nlow)  # avoid using the offset
     nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
-    # to spead up the routine a bit we estimate all steering vectors in advance
+    # to speed up the routine a bit we estimate all steering vectors in advance
     steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                          deltaf, time_shift_table, steer)

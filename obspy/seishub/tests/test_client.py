@@ -267,7 +267,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_localcache(self):
         """
-        Tests local 'caching' of xml seed resources and station list coordinate
+        Tests local 'caching' of XML seed resources and station list coordinate
         information to avoid repeat requests to server.
         Tests..
             - returned information is stored with client instance in memory

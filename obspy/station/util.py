@@ -232,7 +232,7 @@ class Equipment(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
+            differently depending on the data center/software that generated the
             document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contain the same information/be derived from the
@@ -299,7 +299,7 @@ class Operator(ComparingObject):
     @agencies.setter
     def agencies(self, value):
         if not hasattr(value, "__iter__") or len(value) < 1:
-            msg = ("agencies needs to iterable, e.g. a list and contain at "
+            msg = ("agencies needs to be iterable, e.g. a list, and contain at "
                    "least one entry.")
             raise ValueError(msg)
         self._agencies = value
@@ -311,7 +311,7 @@ class Operator(ComparingObject):
     @contacts.setter
     def contacts(self, value):
         if not hasattr(value, "__iter__"):
-            msg = ("contacts needs to iterable, e.g. a list.")
+            msg = ("contacts needs to be iterable, e.g. a list.")
             raise ValueError(msg)
         self._contacts = value
 
