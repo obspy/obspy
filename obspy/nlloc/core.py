@@ -114,7 +114,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     if any([i is None for i in indices_hyp]):
         msg = ("NLLOC HYP file seems corrupt,"
                " could not detect 'NLLOC' and 'END_NLLOC' lines.")
-        raise Exception(msg)
+        raise RuntimeError(msg)
     # strip any other lines around NLLOC block
     lines = lines[indices_hyp[0]:indices_hyp[1]]
 
@@ -122,7 +122,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     if any(indices_phases):
         if not all(indices_phases):
             msg = ("NLLOC HYP file seems corrupt, 'PHASE' block is corrupt.")
-            raise Exception(msg)
+            raise RuntimeError(msg)
         i1, i2 = indices_phases
         lines, phases_lines = lines[:i1] + lines[i2 + 1:], lines[i1 + 1:i2]
     else:
@@ -302,7 +302,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
 
 def write_nlloc_obs(catalog, filename, **kwargs):
     """
-    Reads a NonLinLoc Phase file (NLLOC_OBS) to a
+    Write a NonLinLoc Phase file (NLLOC_OBS) from a
     :class:`~obspy.core.event.Catalog` object.
 
     .. warning::
