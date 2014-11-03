@@ -31,6 +31,7 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 
 from . import utils
+from .download_status import ClientDownloadHelper
 
 
 # Setup the logger.
@@ -178,12 +179,11 @@ class Restrictions(object):
 
     def __iter__(self):
         """
-        Iterator yielding
-        :class:`~obspy.fdsn.download_helpers.download_helpers.Restrictions`
-        instances chunked in ``chunklength``.
+        Iterator yielding time intervals based on the chunklength and
+        temporal settings.
         """
         if not self.chunklength:
-            return iter([copy.deepcopy(self)])
+            return iter([(self.starttime, self.endtime)])
 
         def it():
             starttime = self.starttime
@@ -191,12 +191,8 @@ class Restrictions(object):
             chunklength = self.chunklength
 
             while starttime < endtime:
-                res = copy.deepcopy(self)
-                res.starttime = starttime
-                res.endtime = starttime + chunklength
-                res.chunklength = None
+                yield (starttime, min(starttime + chunklength, endtime))
                 starttime += chunklength
-                yield res
             raise StopIteration
         return it()
 
@@ -263,16 +259,10 @@ class DownloadHelper(object):
             logger.info("Stations already acquired during this run: %i" %
                         len(existing_stations))
 
-            # Get the availability for the given client honoring the
-            # restrictions and the domain.
-            info = utils.get_availability_from_client(
-                client, client_name, restrictions, domain, logger)
-
-            if not info["availability"]:
-                report.append({"client": client_name, "data": []})
-                continue
-
-            availability = availability.values()
+            h = ClientDownloadHelper(client=client, client_name=client_name,
+                                     restrictions=restrictions,
+                                     domain=domain, logger=logger)
+            h.get_availability()
 
             # First filter stage. Remove stations based on the station id,
             # e.g. NETWORK.STATION. Remove all that already exist and all

@@ -540,26 +540,51 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         start = obspy.UTCDateTime(2014, 1, 1)
         res = Restrictions(starttime=start, endtime=start + 10)
 
-        # No chunklength means it should just return itsself.
+        # No chunklength means it should just return one item.
         chunks = list(res)
         self.assertEqual(len(chunks), 1)
-        self.assertEqual(chunks[0], res)
+        self.assertEqual(chunks[0], (start, start + 10))
 
         # One with chunklength should return the chunked pieces.
         res = Restrictions(starttime=start, endtime=start + 10,
                            chunklength=1)
         chunks = list(res)
         self.assertEqual(len(chunks), 10)
-        # All chunklengths should be set to None.
-        self.assertEqual(set([_i.chunklength for _i in chunks]), {None})
         self.assertEqual(
-            [_i.starttime for _i in chunks],
+            [_i[0] for _i in chunks],
             [start + _i * 1 for _i in range(10)])
         self.assertEqual(
-            [_i.endtime for _i in chunks],
+            [_i[1] for _i in chunks],
             [start + _i * 1 for _i in range(1, 11)])
-        self.assertEqual(chunks[0].starttime, start)
-        self.assertEqual(chunks[-1].endtime, start + 10)
+        self.assertEqual(chunks[0][0], start)
+        self.assertEqual(chunks[-1][1], start + 10)
+
+        # Make sure the last piece is cut if it needs to be.
+        start = obspy.UTCDateTime(2012, 1, 1)
+        end = obspy.UTCDateTime(2012, 2, 1)
+        res = Restrictions(starttime=start, endtime=end,
+                           chunklength=86400 * 10)
+        chunks = list(res)
+        self.assertEqual(chunks, [
+            (start, start + 86400 * 10),
+            (start + 86400 * 10, start + 86400 * 20),
+            (start + 86400 * 20, start + 86400 * 30),
+            (start + 86400 * 30, end)])
+
+    def test_channel_str_representation(self):
+        """
+        Test the string representations of channel objects.
+        """
+        # Single interval.
+        intervals = [TimeInterval(
+            obspy.UTCDateTime(2012, 1, 1), obspy.UTCDateTime(2012, 2, 1),
+            filename=None, status=None)]
+        c = Channel(location="", channel="BHE", intervals=intervals)
+        self.assertEqual(str(c), (
+            "Channel(location='', channel=BHE, intervals=[\n"
+            "\tTimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 2, 1, 0, 0), filename=None, status=None)\n"
+            "])"))
 
 
 def suite():
