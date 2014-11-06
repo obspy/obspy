@@ -866,7 +866,7 @@ class SeismicPhase(object):
             # turn within a layer. We have to do this on a per branch basis
             # because of converted phases, e.g. SKS.
             tauBranch = self.tMod.getTauBranch(branchNum, isPWave)
-            if distRayParam > tauBranch.maxrayParam:
+            if distRayParam > tauBranch.maxRayParam:
                 turnDepth = tauBranch.topDepth
             elif distRayParam <= tauBranch.minRayParam:
                 turnDepth = tauBranch.botDepth

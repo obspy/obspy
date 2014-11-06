@@ -431,10 +431,24 @@ class SlownessModel(object):
         # botP = 1.1e300
         waveType = 'P' if isPWave else 'S'
 
+        # top/botCriticalLayer are meant to be layer numbers. Some methods call
+        # this one with the relevant depths instead, which will be a float. So
+        # can check if that's the case and convert to layer numbers (Java
+        # version uses method overloading).
+        if not isinstance(topCriticalLayer,
+                          int) or not isinstance(botCriticalLayer, int):
+            topDepth = topCriticalLayer
+            botDepth = botCriticalLayer
+            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)
+            if self.vMod.layers[topCriticalLayer].botDepth == topDepth:
+                topCriticalLayer += 1
+            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)
+
         if topCriticalLayer > botCriticalLayer:
             raise SlownessModelError(
                 "findDepth: no layers to search (wrong layer num?)")
-        for layerNum in range(topCriticalLayer, botCriticalLayer + 1):
+        for layerNum in range(topCriticalLayer,
+                              botCriticalLayer + 1):
             velLayer = self.vMod.layers[layerNum]
             topVelocity = velLayer.evaluateAtTop(waveType)
             botVelocity = velLayer.evaluateAtBottom(waveType)

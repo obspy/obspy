@@ -4,6 +4,8 @@
 Holds various helper classes to keep the file number manageable.
 """
 
+from math import pi
+
 
 class SlownessModelError(Exception):
     pass
@@ -31,6 +33,9 @@ class TimeDist:
     def add(self, td):
         self.time += td.time
         self.distRadian += td.distRadian
+
+    def getDistDeg(self):
+        return self.distRadian * 180 / pi
 
 
 class CriticalDepth:

@@ -30,7 +30,7 @@ class TauP_Pierce(TauP_Time):
                 branchDepths = self.tModDepth.getBranchDepths()
                 for addDepth in self.addDepth:
                     for branchDepth in branchDepths:
-                        if addDepth == branchDepths:
+                        if addDepth == branchDepth:
                             # Found it, so break and go to the next addDepth.
                             break
                         # Didn't find the depth as a branch, so must
@@ -70,6 +70,7 @@ class TauP_Pierce(TauP_Time):
             self.arrivals += phaseArrivals
 
     def printResult(self):
+        # Todo: fix whitespace, comment lines etc to match the Java output.
         for currArrival in self.arrivals:
             #print(self.getCommentLine(currArrival))
             longWayRound = False
