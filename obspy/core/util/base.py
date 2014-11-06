@@ -426,6 +426,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     ========= ================== ========================================
         Format    Required Module    _`Linked Function Call`
         ========= ================== ========================================
+        CNV       :mod:`obspy.cnv`   :func:`obspy.cnv.core.write_CNV`
         JSON      :mod:`obspy.core`  :func:`obspy.core.json.core.writeJSON`
         NLLOC_OBS :mod:`obspy.nlloc` :func:`obspy.nlloc.core.write_nlloc_obs`
         QUAKEML   :mod:`obspy.core`  :func:`obspy.core.quakeml.writeQuakeML`

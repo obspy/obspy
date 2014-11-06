@@ -32,6 +32,11 @@
      Catalog/Event.write() (see obspy.nlloc and #900)
    * The wrap_long_string utility function is deprecated. Users may use the
      textwrap module which provides similar functionality.
+   * new plugin for CNV event format (used by VELEST) for
+     Catalog/Event.write() (see obspy.cnv and #905)
+ - obspy.cnv:
+   * new plugin to write CNV event files (used by VELEST) from
+     Catalog/Event objects. (see #905)
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
    * Support exporting Inventory objects to CSS relations.

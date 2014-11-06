@@ -254,6 +254,7 @@ ENTRY_POINTS = {
         'NDK = obspy.ndk.core',
         'NLLOC_HYP = obspy.nlloc.core',
         'NLLOC_OBS = obspy.nlloc.core',
+        'CNV = obspy.cnv.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -271,6 +272,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.zmap.core:isZmap',
         'readFormat = obspy.zmap.core:readZmap',
         'writeFormat = obspy.zmap.core:writeZmap',
+    ],
+    'obspy.plugin.event.CNV': [
+        'writeFormat = obspy.cnv.core:write_CNV',
     ],
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.ndk.core:is_ndk',
