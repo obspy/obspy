@@ -88,9 +88,10 @@ class TauModel(object):
         # not in a high slowness zone, i.e. they are smaller than the
         # minimum ray parameter encountered so far.
         numBranches = len(self.sMod.criticalDepths) - 1
-        # Use list comprehension to get array to correct size (could
-        # initialise with TauBranches, but probably slower):
-        self.tauBranches = [[0 for j in range(numBranches)] for i in range(2)]
+        # Use list comprehension to get array to correct size. Initialise with
+        # TauBranches or the IDE gets mightily confused (may be slower):
+        self.tauBranches = [[TauBranch() for j in range(numBranches)]
+                            for i in range(2)]
         # Here we find the list of ray parameters to be used for the tau
         # model. We only need to find ray parameters for S waves since P
         # waves have been constructed to be a subset of the S samples.
@@ -109,6 +110,7 @@ class TauModel(object):
                 tempRayParams[rayNum] = currSLayer.topP
                 rayNum += 1
                 minPSoFar = currSLayer.topP
+            if currSLayer.botP < minPSoFar:
                 # Add the bottom if it is strictly less than the last sample
                 # added. This will always happen unless we are
                 # within a high slowness zone. if currSLayer.botP < minPSoFar:
@@ -365,3 +367,13 @@ class TauModel(object):
             return self.tauBranches[0][branchNum]
         else:
             return self.tauBranches[1][branchNum]
+
+    def getBranchDepths(self):
+        """
+        Return an array of the depths that are boundaries between branches.
+        :return:
+        """
+        branchDepths = [self.getTauBranch(0, True).topDepth]
+        branchDepths += [self.getTauBranch(
+            i - 1, True).botDepth for i in range(1,len(self.tauBranches[0]))]
+        return branchDepths
