@@ -51,13 +51,14 @@ class TestTauPTime(unittest.TestCase):
         if not os.path.isfile("data/java_tauptime_testoutput"):
             subprocess.call("./generate_tauptime_output.sh", shell=True)
         stdout = sys.stdout
-        with open('taup_time_test_output', 'wt') as sys.stdout:
+        with open('data/taup_time_test_output', 'wt') as sys.stdout:
             for degree in [0, 45, 90, 180, 360, 560]:
                 for depth in [0, 100, 1000, 2889]:
                     tauptime = TauP_Time(degrees=degree, depth=depth,
                                          modelName="iasp91",
                                          phaseList=["ttall"])
                     tauptime.start()
+                    # todo: also test multiple models!
         sys.stdout = stdout
         # Using ttall need to sort; or lines with same arrival times are in
         # different order. With explicit names of all the phases might not be
@@ -66,7 +67,7 @@ class TestTauPTime(unittest.TestCase):
         # Use this if lines are in same order:
         #subprocess.check_call("diff -wB data/java_tauptime_testoutput "
         #                     "taup_time_test_output", shell=True)
-        os.remove("taup_time_test_output")
+        os.remove("data/taup_time_test_output")
 
 if __name__ == '__main__':
     unittest.main(buffer=True)

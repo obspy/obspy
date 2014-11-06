@@ -410,6 +410,7 @@ class VelocityModel(object):
                              maxRadius, True, layers)
 
     # @classmethod
+        # Todo: this probably ought to be implemented?
     # def readNDFile(cls, filename):
     #     """
     #     This method reads in a velocity model from a "nd" ASCII text file,

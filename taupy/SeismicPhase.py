@@ -856,7 +856,6 @@ class SeismicPhase(object):
         # Loop from 0 but already done 0 [I just copy the comments, sorry!],
         # so the pierce point when the ray leaves branch i is stored in i + 1.
         # Use linear interpolation between rays that we know.
-        # Todo: wrap this assertion up a bit nicer after initial testing.
         assert len(self.branchSeq) == len(self.waveType) == len(self.downGoing)
         for branchNum, isPWave, isDownGoing in zip(self.branchSeq,
                                                    self.waveType,
@@ -885,6 +884,7 @@ class SeismicPhase(object):
             if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
                 # Head waves and diffracted waves are a special case.
                 # Todo: in that case, add them to the TauP_Time test!
+                # Funnily enough, they come up even when you just use ttall!
                 distA = tauBranch.dist[rayNum]
                 timeA = tauBranch.time[rayNum]
                 distB, timeB = distA, timeA
@@ -920,17 +920,37 @@ class SeismicPhase(object):
         head wave, but not both. Nor can it be a head wave or diffracted
         wave for both P and S.
         """
-        if self.name in ["Pn", "Sn", "Pdiff", "Sdiff"]:
-            phaseSeg = self.name
+        for ps in ["Pn", "Sn", "Pdiff", "Sdiff"]:
+            if ps in self.name:
+                phaseSeg = ps
+                break
         else:
             raise TauModelError("No head/diff segment in" + str(self.name))
         if phaseSeg in ["Pn", "Sn"]:
             headDepth = self.tMod.mohoDepth
         else:
             headDepth = self.tMod.cmbDepth
-        # I can't figure out how this method would be called in the Java code.
-        # Something's fishy.
-        raise NotImplementedError("Now it's needed.")
+        # Can't have both Pxxx and Sxxx in a head wave phase, so one of these
+        # should do nothing.
+        numFound = self.name.count(phaseSeg)
+        refractDist = currArrival.dist - self.dist[0]
+        refractTime = refractDist * currArrival.rayParam
+        out = []
+        j = 0
+        for td in orig:
+            # This is a little weird as we are not checking where we are in
+            # the phase name, but simply if the depth matches. This likely
+            # works in most cases, but may not for head/diffracted waves that
+            # undergo a phase change, if that type of phase can even exist.
+            out.append(TimeDist(td.p, td.time + j * refractTime / numFound,
+                                td.distRadian + j * refractDist / numFound,
+                                td.depth))
+            if td.depth == headDepth:
+                j += 1
+                out.append(TimeDist(td.p, td.time + j * refractTime / numFound,
+                                    td.distRadian + j * refractDist / numFound,
+                                    td.depth))
+        return out
 
     def linearInterpArrival(self, searchDist, rayNum, name, puristName,
                             sourceDepth):

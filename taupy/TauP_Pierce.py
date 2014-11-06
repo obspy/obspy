@@ -6,13 +6,18 @@ class TauP_Pierce(TauP_Time):
     # In effect, the methods here allow using TauP_Time to calculate the
     # pierce points.
 
-    def __init__(self):
+    def __init__(self,
+                 phaseList=[], modelName="iasp91", depth=0, degrees=None):
         TauP_Time.__init__(self)
         self.onlyTurnPoints = False
         self.onlyRevPoints = False
         self.onlyUnderPoints = False
         self.onlyAddPoints = False
         self.addDepth = []
+        self.phaseList = phaseList
+        self.modelName = modelName
+        self.depth = depth
+        self.degrees = degrees
 
     def depthCorrect(self, depth):
         """
@@ -26,7 +31,7 @@ class TauP_Pierce(TauP_Time):
         # source depth is the same, and then check to make sure each addDepth
         # is in the model.
         if self.tModDepth.sourceDepth == depth:
-            if self.addDepth != []:
+            if self.addDepth:
                 branchDepths = self.tModDepth.getBranchDepths()
                 for addDepth in self.addDepth:
                     for branchDepth in branchDepths:
@@ -70,7 +75,6 @@ class TauP_Pierce(TauP_Time):
             self.arrivals += phaseArrivals
 
     def printResult(self):
-        # Todo: fix whitespace, comment lines etc to match the Java output.
         for currArrival in self.arrivals:
             print(self.getCommentLine(currArrival))
             longWayRound = False
@@ -87,8 +91,8 @@ class TauP_Pierce(TauP_Time):
                     nextDepth = currArrival.pierce[j].depth
                 capd = currArrival.pierce[j].depth
                 # Beautifully hand-formatted code:
-                if ((not any((self.onlyTurnPoints, self.onlyRevPoints,
-                              self.onlyUnderPoints, self.onlyAddPoints))) or (
+                if ((not any([self.onlyTurnPoints, self.onlyRevPoints,
+                              self.onlyUnderPoints, self.onlyAddPoints])) or (
                     self.onlyAddPoints and capd in self.addDepth) or (
                     self.onlyRevPoints
                         and ((prevDepth - capd) * (capd - nextDepth) < 0)) or (
@@ -99,22 +103,22 @@ class TauP_Pierce(TauP_Time):
                     print("{:>7.2f} {:>7.1f} {:>7.1f}".format(calcDist,
                           currArrival.pierce[j].depth,
                           currArrival.pierce[j].time))
-                    # Optional (only if used in calc?) coords output here.
+                    # Optional (only if used in calc?) coords output to follow.
 
     def getCommentLine(self, currArrival):
         outName = currArrival.name
         if not currArrival.name == currArrival.puristName:
             outName += "(" + currArrival.puristName + ")"
         return ("> " + outName + " at "
-               + " {:.2f} seconds at ".format(currArrival.time)
-               + " {:.2f} degrees for a ".format(currArrival.getDistDeg())
-               + " {} km deep source in the ".format(currArrival.sourceDepth)
-               + " {} model with rayParam {:.3f} s/deg.".format(
-               self.modelName, currArrival.rayParam * pi / 180))
+                + " {:.2f} seconds at ".format(currArrival.time)
+                + " {:.2f} degrees for a ".format(currArrival.getDistDeg())
+                + " {} km deep source in the ".format(currArrival.sourceDepth)
+                + " {} model with rayParam {:.3f} s/deg.".format(
+                self.modelName, currArrival.rayParam * pi / 180))
 
 
 if __name__ == '__main__':
-    # Permits running as executable.
+    # Permits running as script.
     tauPPierce = TauP_Pierce()
     tauPPierce.readcmdLineArgs()
     tauPPierce.start()

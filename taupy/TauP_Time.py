@@ -17,10 +17,8 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self, phaseList=[], modelName="iasp91", depth=0, degrees=None):
-        # Could have the command line args read here...
-        # No, better do it in  if name == main  because if it's not the main
-        # script that shouldn't happen!
+    def __init__(self,
+                 phaseList=[], modelName="iasp91", depth=0, degrees=None):
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP
