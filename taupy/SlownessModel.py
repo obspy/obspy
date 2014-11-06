@@ -447,8 +447,7 @@ class SlownessModel(object):
         if topCriticalLayer > botCriticalLayer:
             raise SlownessModelError(
                 "findDepth: no layers to search (wrong layer num?)")
-        for layerNum in range(topCriticalLayer,
-                              botCriticalLayer + 1):
+        for layerNum in range(topCriticalLayer, botCriticalLayer + 1):
             velLayer = self.vMod.layers[layerNum]
             topVelocity = velLayer.evaluateAtTop(waveType)
             botVelocity = velLayer.evaluateAtBottom(waveType)

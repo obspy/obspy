@@ -72,7 +72,7 @@ class TauP_Pierce(TauP_Time):
     def printResult(self):
         # Todo: fix whitespace, comment lines etc to match the Java output.
         for currArrival in self.arrivals:
-            #print(self.getCommentLine(currArrival))
+            print(self.getCommentLine(currArrival))
             longWayRound = False
             if (currArrival.dist * 180 / pi) % 360 > 180:
                 longWayRound = True
@@ -96,10 +96,22 @@ class TauP_Pierce(TauP_Time):
                         and ((prevDepth-capd) <= 0 <= (capd-nextDepth))) or (
                     self.onlyUnderPoints
                         and ((prevDepth - capd) >= 0 >= (capd - nextDepth)))):
-                    print(calcDist,
+                    print("{:>7.2f} {:>7.1f} {:>7.1f}".format(calcDist,
                           currArrival.pierce[j].depth,
-                          currArrival.pierce[j].time)
+                          currArrival.pierce[j].time))
                     # Optional (only if used in calc?) coords output here.
+
+    def getCommentLine(self, currArrival):
+        outName = currArrival.name
+        if not currArrival.name == currArrival.puristName:
+            outName += "(" + currArrival.puristName + ")"
+        return ("> " + outName + " at "
+               + " {:.2f} seconds at ".format(currArrival.time)
+               + " {:.2f} degrees for a ".format(currArrival.getDistDeg())
+               + " {} km deep source in the ".format(currArrival.sourceDepth)
+               + " {} model with rayParam {:.3f} s/deg.".format(
+               self.modelName, currArrival.rayParam * pi / 180))
+
 
 if __name__ == '__main__':
     # Permits running as executable.
