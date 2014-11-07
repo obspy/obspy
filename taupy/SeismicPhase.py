@@ -5,6 +5,7 @@ from taupy.Arrival import Arrival
 from taupy.helper_classes import TauModelError, TimeDist
 import math
 from copy import deepcopy
+from itertools import count
 
 
 class SeismicPhase(object):
@@ -779,7 +780,7 @@ class SeismicPhase(object):
                     continue
                 elif (self.dist[rayNum] - searchDist) * (
                             searchDist - self.dist[rayNum + 1]) >= 0:
-                    # Look for distances that bracket the search distance
+                    # Look for distances that bracket the search distance.
                     if self.rayParams[rayNum] == self.rayParams[rayNum + 1] \
                             and len(self.rayParams) > 2:
                         # Here we have a shadow zone, so itis not really an
@@ -911,6 +912,78 @@ class SeismicPhase(object):
             pierce.append(TimeDist(distRayParam, currArrival.time,
                                    currArrival.dist, 0))
         currArrival.pierce = pierce
+        # The arrival is modified in place and must (?) thus be returned.
+        return currArrival
+
+    def calcPath(self, degrees):
+        """
+        Calculates the paths this phase takes through the Earth model, only
+        calls calcPathFromArrival.
+        """
+        arrivals = self.calcTime(degrees)
+        for arrival in arrivals:
+            self.calcPathFromArrival(arrival)
+        return arrivals
+
+    def calcPathFromArrival(self, currArrival):
+        """
+        Calculates the paths this phase takes through the Earth model.
+        """
+        # Find the ray parameter index that corresponds to the arrival ray
+        # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
+        tempTimeDist = [TimeDist(currArrival.rayParam,
+                                 0, 0, self.tMod.sourceDepth)]
+        # pathList is a list of lists.
+        pathList = [tempTimeDist]
+        for i, branchNum, isPWave, isDownGoing in zip(count(), self.branchSeq,
+                                                      self.waveType,
+                                                      self.downGoing):
+            tempTimeDist = self.tMod.getTauBranch(branchNum, isPWave)\
+                .path(currArrival.rayParam, isDownGoing, self.tMod.sMod)
+            if tempTimeDist:
+                pathList.append(tempTimeDist)
+                for ttd in tempTimeDist:
+                    if ttd.getDistDeg() < 0:
+                        raise RuntimeError("Path is backtracking, "
+                                           "this is impossible.")
+            # Special case for head and diffracted waves:
+            if(branchNum == self.tMod.cmbBranch - 1
+               and i < len(self.branchSeq) - 1
+               and self.branchSeq[i + 1] == self.tMod.cmbBranch - 1
+               and ("Pdiff" in self.name or "Sdiff" in self.name)):
+                diffTD = [TimeDist(currArrival.rayParam,
+                                   (currArrival.dist - self.dist[0])
+                                   * currArrival.rayParam,
+                                   currArrival.dist - self.dist[0],
+                                   self.tMod.cmbDepth)]
+                pathList.append(diffTD)
+            elif(branchNum == self.tMod.mohoBranch - 1
+                 and i < len(self.branchSeq) - 1
+                 and self.branchSeq[i + 1] == self.tMod.mohoBranch - 1
+                 and ("Pn" in self.name or "Sn" in self.name)):
+                # Can't have both Pn and Sn in a wave, so one of these is 0.
+                numFound = max(self.name.count("Pn"), self.name.count("Sn"))
+                headTD = [TimeDist(currArrival.rayParam,
+                                   (currArrival.dist - self.dist[0]) / numFound
+                                   * currArrival.rayParam,
+                                   (currArrival.dist - self.dist[0])/numFound,
+                                   self.tMod.mohoDepth)]
+                pathList.append(headTD)
+        if "kmps" in self.name:
+            # kmps phases have no branches, so need to end them at the arrival
+            # distance.
+            headTD = [TimeDist(currArrival.rayParam,
+                               currArrival.dist * currArrival.rayParam,
+                               currArrival.dist, 0)]
+            pathList.append(headTD)
+        currArrival.path = []
+        cumulative = TimeDist(currArrival.rayParam,
+                              0, 0, currArrival.sourceDepth)
+        for branchPath in pathList:
+            for bp in branchPath:
+                cumulative.add(bp)
+                cumulative.depth = bp.depth
+                currArrival.path.append(deepcopy(cumulative))
         return currArrival
 
     def handleHeadOrDiffractedWave(self, currArrival, orig):
@@ -930,8 +1003,6 @@ class SeismicPhase(object):
             headDepth = self.tMod.mohoDepth
         else:
             headDepth = self.tMod.cmbDepth
-        # Can't have both Pxxx and Sxxx in a head wave phase, so one of these
-        # should do nothing.
         numFound = self.name.count(phaseSeg)
         refractDist = currArrival.dist - self.dist[0]
         refractTime = refractDist * currArrival.rayParam
