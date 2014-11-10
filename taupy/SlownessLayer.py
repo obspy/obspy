@@ -209,3 +209,9 @@ class SlownessLayer:
                 raise SlownessModelError(
                     "Calculated Slowness is NaN or negative!")
         return answer
+
+    def hasZeroThickness(self):
+        if self.topDepth == self.botDepth:
+            return True
+        else:
+            return False

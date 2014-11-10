@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from taupy.helper_classes import TauModelError, TimeDist, SlownessModelError
+from taupy.SlownessLayer import SlownessLayer
 
 
 class TauBranch(object):
@@ -270,3 +271,93 @@ class TauBranch(object):
                     botBranch.tau[i + 2] = \
                         self.tau[i] - topBranch.tau[i + 2]
         return botBranch
+
+    def path(self, rayParam, downgoing, sMod):
+        """
+        Called from TauP_Path.
+        :param rayParam:
+        :param downgoing:
+        :param sMod:
+        :return:
+        """
+        if rayParam > self.maxRayParam:
+            return None
+        assert rayParam >= 0
+        try:
+            topLayerNum = sMod.layerNumberBelow(self.topDepth, self.isPWave)
+            botLayerNum = sMod.layerNumberAbove(self.botDepth, self.isPWave)
+        # except NoSuchLayerError as e:
+        except SlownessModelError:
+            raise SlownessModelError("SlownessModel and TauModel are likely"
+                                     "out of sync.")
+        thePath = [TimeDist()] * (botLayerNum - topLayerNum + 1)
+        pathIndex = 0
+        # Check to make sure layers and branches are compatible.
+        sLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
+        if sLayer.topDepth != self.topDepth:
+            raise SlownessModelError("Branch and slowness model are not in "
+                                     "agreement.")
+        sLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
+        if sLayer.botDepth != self.botDepth:
+            raise SlownessModelError("Branch and slowness model are not in "
+                                     "agreement.")
+        # Downgoing branches:
+        if downgoing:
+            sLayerNum = topLayerNum
+            sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            while sLayer.botP >= rayParam and sLayerNum <= botLayerNum:
+                if not sLayer.hasZeroThickness():
+                    thePath[pathIndex] = sMod.layerTimeDist(rayParam,
+                                                            sLayerNum,
+                                                            self.isPWave)
+                    thePath[pathIndex].depth = sLayer.botDepth
+                    pathIndex += 1
+                sLayerNum += 1
+                if sLayerNum <= botLayerNum:
+                    sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            if sLayerNum <= botLayerNum and not sLayer.hasZeroThickness():
+                turnDepth = sLayer.bullenDepthFor(rayParam, sMod.radiusOfEarth)
+                turnSLayer = SlownessLayer(sLayer.topP, sLayer.topDepth,
+                                           rayParam, turnDepth)
+                thePath[pathIndex] = turnSLayer.\
+                    bullenRadialSlowness(rayParam, sMod.radiusOfEarth)
+                thePath[pathIndex].depth = turnSLayer.botDepth
+                pathIndex += 1
+        # Upgoing branches:
+        else:
+            sLayerNum = botLayerNum
+            sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            while((sLayer.topP <= rayParam or sLayer.hasZeroThickness)
+                  and sLayerNum > topLayerNum):
+                sLayerNum -= 1
+                sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            if sLayer.botP < rayParam:
+                turnDepth = sLayer.bullenDepthFor(rayParam, sMod.radiusOfEarth)
+                turnSLayer = SlownessLayer(sLayer.topP, sLayer.topDepth,
+                                           rayParam, turnDepth)
+                thePath[pathIndex] = turnSLayer.\
+                    bullenRadialSlowness(rayParam, sMod.radiusOfEarth)
+                thePath[pathIndex].depth = turnSLayer.topDepth
+                pathIndex += 1
+                sLayerNum -= 1
+                if sLayerNum >= topLayerNum:
+                    sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            while sLayerNum >= topLayerNum:
+                if not sLayer.hasZeroThickness():
+                    thePath[pathIndex] = sMod.layerTimeDist(rayParam,
+                                                            sLayerNum,
+                                                            self.isPWave)
+                    thePath[pathIndex].depth = sLayer.topDepth
+                    pathIndex += 1
+                sLayerNum -= 1
+                if sLayerNum >= topLayerNum:
+                    sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+        tempPath = thePath[0:pathIndex]
+        # This is only for development:
+        assert pathIndex == 7
+        # remove once debugged
+        return tempPath
+
+
+
+
