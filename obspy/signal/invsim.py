@@ -154,21 +154,16 @@ def c_sac_taper(freqs, flimit):
     :param flimit: sequence containing the 4  frequency limits
     :returns: taper
     """
-    twopi = 6.283185307179586
-    dblepi = 0.5 * twopi
     fl1, fl2, fl3, fl4 = flimit
-    taper = []
-    for freq in freqs:
-        if freq < fl3 and freq > fl2:
-            taper_v = 1.0
-        if freq >= fl3 and freq <= fl4:
-            taper_v = 0.5 * (1.0 + M.cos(dblepi * (freq - fl3) / (fl4 - fl3)))
-        if freq > fl4 or freq < fl1:
-            taper_v = 0.0
-        if freq >= fl1 and freq <= fl2:
-            taper_v = 0.5 * (1.0 - M.cos(dblepi * (freq - fl1) / (fl2 - fl1)))
-        taper.append(taper_v)
-    return np.array(taper)
+    taper = np.zeros_like(freqs)
+    for i, freq in enumerate(freqs):
+        if fl1 <= freq <= fl2:
+            taper[i] = 0.5 * (1.0 - M.cos(M.pi * (freq - fl1) / (fl2 - fl1)))
+        elif fl2 < freq < fl3:
+            taper[i] = 1.0
+        elif fl3 <= freq <= fl4:
+            taper[i] = 0.5 * (1.0 + M.cos(M.pi * (freq - fl3) / (fl4 - fl3)))
+    return taper
 
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
