@@ -260,8 +260,8 @@ def cornFreq2Paz(fc, damp=0.707):
     :param damping: Corner frequency
     :return: Dictionary containing poles, zeros and gain
     """
-    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
-    poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
+    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc,
+             -(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
