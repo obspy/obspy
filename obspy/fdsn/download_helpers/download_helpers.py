@@ -112,12 +112,12 @@ class Restrictions(object):
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: The endtime of the data.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param chunklength: The length of one chunk in seconds. If set,
+    :param chunklength_in_sec: The length of one chunk in seconds. If set,
         the time between ``starttime`` and ``endtime`` will be divided into
         segments of ``chunklength`` seconds. Useful for continuous data
         requests. Set to ``None`` if one piece of data is desired between
         ``starttime`` and ``endtime`` (the default).
-    :type chunklength: float, optional
+    :type chunklength_in_sec: float, optional
     :param network: The network code. Can contain wildcards.
     :type network: str, optional
     :param station: The station code. Can contain wildcards.
@@ -148,8 +148,9 @@ class Restrictions(object):
         used if the ``location`` argument is used.
     :type location_priorities: list of str
     """
-    def __init__(self, starttime, endtime, chunklength=None, network=None,
-                 station=None, location=None, channel=None,
+
+    def __init__(self, starttime, endtime, chunklength_in_sec=None,
+                 network=None, station=None, location=None, channel=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
@@ -158,7 +159,7 @@ class Restrictions(object):
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
-        self.chunklength = float(chunklength) if chunklength is not None \
+        self.chunklength = float(chunklength_in_sec) if chunklength_in_sec is not None \
             else None
         self.network = network
         self.station = station
@@ -245,12 +246,14 @@ class DownloadHelper(object):
         """
         # Collect all the downloaded stations.
         existing_stations = set()
+
         # Set of network and station tuples, e.g. {(“NET1”, “STA1”),
         # (“NET2”, “STA2”), …}. Will be used to not attempt to download
         # stations that have been rejected during a previous loop iteration.
         # Station can be rejected if they are too close to an already existing
         # station.
         discarded_station_ids = set()
+
         report = []
 
         # Do it sequentially for each client. Doing it in parallel is not
@@ -259,21 +262,30 @@ class DownloadHelper(object):
             logger.info("Stations already acquired during this run: %i" %
                         len(existing_stations))
 
-            h = ClientDownloadHelper(client=client, client_name=client_name,
-                                     restrictions=restrictions,
-                                     domain=domain, logger=logger)
-            h.get_availability()
+            # The client download helper object is responsible for the
+            # downloads of a single FDSN endpoint.
+            helper = ClientDownloadHelper(
+                client=client, client_name=client_name,
+                restrictions=restrictions, domain=domain,
+                mseed_storage=mseed_storage,
+                stationxml_storage=stationxml_storage, logger=logger)
+            helper.get_availability()
+            # Continue if there is not data.
+            if not helper:
+                report.append({"client": client_name, "data": []})
+                continue
 
             # First filter stage. Remove stations based on the station id,
             # e.g. NETWORK.STATION. Remove all that already exist and all
-            # the are in the discarded station ids set.
-            availability = utils.filter_duplicate_and_discarded_stations(
-                existing_stations, discarded_station_ids, availability)
+            # that are in the discarded station ids set.
+            helper.discard_stations(existing_stations.union(
+                discarded_station_ids))
+
             logger.info("Client '%s' - After discarding duplicates based on "
                         "the station id, %i stations remain." % (
-                        client_name, len(availability)))
+                        client_name, len(helper)))
             # If nothing is there, no need to keep going.
-            if not availability:
+            if not helper:
                 report.append({"client": client_name, "data": []})
                 continue
 
@@ -281,24 +293,30 @@ class DownloadHelper(object):
             # info["reliable"] is True, it is assumed that we can actually
             # get all the data in the availability, otherwise everything
             # will be attempted to be downloaded.
-            f = utils.filter_based_on_interstation_distance(
-                existing_stations=existing_stations,
-                new_stations=availability,
-                reliable_new_stations=info["reliable"],
-                minimum_distance_in_m=
-                restrictions.minimum_interstation_distance_in_m)
-            # Add the rejected stations to the set of discarded station ids
-            # so they will not be attempted to be downloaded again.
-            for station in f["rejected_stations"]:
-                discarded_station_ids.add((station.network, station.station))
-            availability = f["accepted_stations"]
+            # f = utils.filter_based_on_interstation_distance(
+            #     existing_stations=existing_stations,
+            #     new_stations=availability,
+            #     reliable_new_stations=info["reliable"],
+            #     minimum_distance_in_m=
+            #     restrictions.minimum_interstation_distance_in_m)
+            # # Add the rejected stations to the set of discarded station ids
+            # # so they will not be attempted to be downloaded again.
+            # for station in f["rejected_stations"]:
+            #     discarded_station_ids.add((station.network, station.station))
+            # availability = f["accepted_stations"]
+            #
+            # logger.info("Client '%s' - %i station(s) satisfying the "
+            #             "minimum inter-station distance found." % (
+            #             client_name, len(availability)))
+            # if not availability:
+            #     report.append({"client": client_name, "data": []})
+            #     continue
 
-            logger.info("Client '%s' - %i station(s) satisfying the "
-                        "minimum inter-station distance found." % (
-                        client_name, len(availability)))
-            if not availability:
-                report.append({"client": client_name, "data": []})
-                continue
+            helper.prepare_mseed_download()
+            helper.download_mseed(chunk_size_in_mb=download_chunk_size_in_mb,
+                                  threads_per_client=threads_per_client)
+            from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+
 
             # Now attach filenames to the channel objects, and split into a
             # set of existing and non-existing data files.
@@ -483,97 +501,6 @@ class DownloadHelper(object):
                         logger.info("Deleting '%s'." %
                                     channel.mseed_filename)
         return report
-
-    def download_mseed(self, client, client_name, stations, restrictions,
-                       chunk_size_in_mb=25, threads_per_client=5):
-        # Estimate the download size to have equally sized chunks.
-        duration_req = restrictions.endtime - restrictions.starttime
-        channel_sampling_rate = {
-            "F": 5000, "G": 5000, "D": 1000, "C": 1000, "E": 250, "S": 80,
-            "H": 250, "B": 80, "M": 10, "L": 1, "V": 0.1, "U": 0.01,
-            "R": 0.001, "P": 0.0001, "T": 0.00001, "Q": 0.000001, "A": 5000,
-            "O": 5000}
-
-        station_chunks = []
-        station_chunks_curr = []
-        curr_chunks_mb = 0
-        for sta in stations:
-            for cha in sta.channels:
-                # Assume that each sample needs 4 byte, STEIM
-                # compression reduces size to about a third.
-                # chunk size is in MB
-                curr_chunks_mb += \
-                    channel_sampling_rate[cha.channel[0].upper()] * \
-                    duration_req * 4.0 / 3.0 / 1024.0 / 1024.0
-            if curr_chunks_mb >= chunk_size_in_mb:
-                station_chunks.append(station_chunks_curr)
-                station_chunks_curr = []
-                curr_chunks_mb = 0
-            else:
-                station_chunks_curr.append(sta)
-        if station_chunks_curr:
-            station_chunks.append(station_chunks_curr)
-
-        def star_download_mseed(args):
-            try:
-                ret_val = utils.download_and_split_mseed_bulk(
-                    *args, logger=logger)
-            except utils.ERRORS as e:
-                msg = ("Client '%s' - " % args[1]) + str(e)
-                if "no data available" in msg.lower():
-                    logger.info(msg)
-                else:
-                    logger.error(msg)
-                return []
-            return ret_val
-
-        pool = ThreadPool(min(threads_per_client, len(station_chunks)))
-
-        result = pool.map(
-            star_download_mseed,
-            [(client, client_name, restrictions.starttime,
-              restrictions.endtime, chunk) for chunk in station_chunks])
-
-        pool.close()
-
-        filenames = itertools.chain.from_iterable(result)
-        return list(filenames)
-
-    def _parse_miniseed_filenames(self, filenames, restrictions):
-        time_range = restrictions.minimum_length * (restrictions.endtime -
-                                                    restrictions.starttime)
-        channel_availability = []
-        for filename in filenames:
-            st = obspy.read(filename, format="MSEED", headonly=True)
-            if restrictions.reject_channels_with_gaps and len(st) > 1:
-                logger.warning("Channel %s has gap or overlap. Will be "
-                               "removed." % st[0].id)
-                try:
-                    os.remove(filename)
-                except OSError:
-                    pass
-                continue
-            elif len(st) == 0:
-                logger.error("MiniSEED file with no data detected. Should "
-                             "not happen!")
-                continue
-            tr = st[0]
-            duration = tr.stats.endtime - tr.stats.starttime
-            if restrictions.minimum_length and duration < time_range:
-                logger.warning("Channel %s does not satisfy the minimum "
-                               "length requirement. %.2f seconds instead of "
-                               "the required %.2f seconds." % (
-                               tr.id, duration, time_range))
-                try:
-                    os.remove(filename)
-                except OSError:
-                    pass
-                continue
-            channel_availability.append(utils.ChannelAvailability(
-                tr.stats.network, tr.stats.station, tr.stats.location,
-                tr.stats.channel, tr.stats.starttime, tr.stats.endtime,
-                filename))
-        return channel_availability
 
     def download_stationxml(self, client, client_name, stations,
                             restrictions, threads_per_client=10):

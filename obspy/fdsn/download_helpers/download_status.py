@@ -19,11 +19,17 @@ from future import standard_library
 with standard_library.hooks():
     import itertools
 
+
 import collections
 import copy
+from multiprocessing.pool import ThreadPool
+import os
 import time
 
-from .utils import ERRORS, filter_channel_priority
+import obspy
+from obspy.core.util import Enum
+
+from . import utils
 
 # Some application.wadls are wrong...
 OVERWRITE_CAPABILITIES = {
@@ -31,8 +37,26 @@ OVERWRITE_CAPABILITIES = {
 }
 
 
-TimeInterval = collections.namedtuple(
-    "TimeInterval",  ["start", "end", "filename", "status"])
+# The current status of an entity.
+STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists"])
+
+
+class TimeInterval(object):
+    __slots__ = ["start", "end", "filename", "status"]
+
+    def __init__(self, start, end, filename=None, status=None):
+        self.start = start
+        self.end = end
+        self.filename = filename
+        self.status = STATUS.NONE
+
+    def __repr__(self):
+        return "TimeInterval(start={start}, end={end}, filename={filename}, " \
+               "status={status})".format(
+               start=repr(self.start),
+               end=repr(self.end),
+               filename=repr(self.filename),
+               status=repr(self.status))
 
 
 class Station(object):
@@ -45,7 +69,7 @@ class Station(object):
         self.longitude = longitude
         self.channels = channels
         self.stationxml_filename = None
-        self.stationxml_status = None
+        self.stationxml_status = STATUS.NONE
 
     def __str__(self):
         channels = "\n".join(str(i) for i in self.channels)
@@ -62,6 +86,27 @@ class Station(object):
             filename=self.stationxml_filename,
             status=self.stationxml_status,
             channels=channels)
+
+    def prepare_mseed_download(self, mseed_storage):
+        """
+        Loop through all channels of the station and distribute filenames
+        and the current status of the channel. Possible statuses are IGNORE,
+        EXISTS, and NEEDS_DOWNLOADING.
+        """
+        for channel in self.channels:
+            for interval in channel.intervals:
+                interval.filename = utils.get_mseed_filename(
+                    mseed_storage, self.network, self.station,
+                    channel.location, channel.channel, interval.start,
+                    interval.end)
+                if interval.filename is True:
+                    interval.status = STATUS.IGNORE
+                elif os.path.exists(interval.filename):
+                    interval.status = STATUS.EXISTS
+                else:
+                    if not os.path.exists(os.path.dirname(interval.filename)):
+                        os.makedirs(os.path.dirname(interval.filename))
+                    interval.status = STATUS.NEEDS_DOWNLOADING
 
 
 class Channel(object):
@@ -94,14 +139,20 @@ class ClientDownloadHelper(object):
     :param domain: The domain definition.
     :rtype: dict
     """
-    def __init__(self, client, client_name, restrictions, domain, logger):
+    def __init__(self, client, client_name, restrictions, domain,
+                 mseed_storage, stationxml_storage, logger):
         self.client = client
         self.client_name = client_name
         self.restrictions = restrictions
         self.domain = domain
+        self.mseed_storage = mseed_storage
+        self.stationxml_storage = stationxml_storage
         self.logger = logger
         self.stations = {}
         self.is_availability_reliable = None
+
+    def __bool__(self):
+        return bool(len(self))
 
     def __str__(self):
         if self.is_availability_reliable is None:
@@ -124,6 +175,154 @@ class ClientDownloadHelper(object):
 
     def __len__(self):
         return len(self.stations)
+
+    def prepare_mseed_download(self):
+        """
+        Prepare each Station for the MiniSEED downloading stage.
+
+        This will distribute filenames and identify files that require
+        downloading.
+        """
+        for station in self.stations.values():
+            station.prepare_mseed_download(mseed_storage=self.mseed_storage)
+
+    def download_mseed(self, chunk_size_in_mb=25, threads_per_client=5):
+        """
+        Actually download MiniSEED data.
+
+        :param chunk_size_in_mb:
+        :param threads_per_client:
+        :return:
+        """
+        # Estimate the download size to have equally sized chunks.
+        channel_sampling_rate = {
+            "F": 5000, "G": 5000, "D": 1000, "C": 1000, "E": 250, "S": 80,
+            "H": 250, "B": 80, "M": 10, "L": 1, "V": 0.1, "U": 0.01,
+            "R": 0.001, "P": 0.0001, "T": 0.00001, "Q": 0.000001, "A": 5000,
+            "O": 5000}
+
+        # Split into chunks of about equal size in terms of filesize.
+        chunks = []
+        chunks_curr = []
+        curr_chunks_mb = 0
+
+        counter = collections.Counter()
+
+        for sta in self.stations.values():
+            for cha in sta.channels:
+                # The band code is used to estimate the sampling rate of the
+                # data to be downloaded.
+                band_code = cha.channel[0].upper()
+                try:
+                    sr = channel_sampling_rate[band_code]
+                except KeyError:
+                    # Generic sampling rate for exotic band codes.
+                    sr = 1.0
+
+                for interval in cha.intervals:
+                    counter[interval.status] += 1
+                    # Only take those time intervals that actually require
+                    # some downloading.
+                    if interval.status != STATUS.NEEDS_DOWNLOADING:
+                        continue
+                    chunks_curr.append((
+                        sta.network, sta.station, cha.location, cha.channel,
+                        interval.start, interval.end, interval.filename))
+                    # Assume that each sample needs 4 byte, STEIM
+                    # compression reduces size to about a third.
+                    # chunk size is in MB
+                    duration = interval.end - interval.start
+                    curr_chunks_mb += \
+                        sr * duration * 4.0 / 3.0 / 1024.0 / 1024.0
+                    if curr_chunks_mb >= chunk_size_in_mb:
+                        chunks.append(chunks_curr)
+                        chunks_curr = []
+                        curr_chunks_mb = 0
+        if chunks_curr:
+            chunks.append(chunks_curr)
+
+        keys = sorted(counter.keys())
+        for key in keys:
+            self.logger.info(
+                "Client '%s' - Status for %i time intervals/channels: %s"
+                % (self.client_name, counter[key], key.upper()))
+
+        if not chunks:
+            return []
+
+        def star_download_mseed(args):
+            try:
+                ret_val = utils.download_and_split_mseed_bulk(
+                    *args, logger=self.logger)
+            except utils.ERRORS as e:
+                msg = ("Client '%s' - " % args[1]) + str(e)
+                if "no data available" in msg.lower():
+                    self.logger.info(msg)
+                else:
+                    self.logger.error(msg)
+                return []
+            return ret_val
+
+        pool = ThreadPool(min(threads_per_client, len(chunks)))
+
+        result = pool.map(
+            star_download_mseed,
+            [(self.client, self.client_name, chunk) for chunk in chunks])
+
+        pool.close()
+
+        filenames = itertools.chain.from_iterable(result)
+        return list(filenames)
+
+    def _parse_miniseed_filenames(self, filenames, restrictions):
+        time_range = restrictions.minimum_length * (restrictions.endtime -
+                                                    restrictions.starttime)
+        channel_availability = []
+        for filename in filenames:
+            st = obspy.read(filename, format="MSEED", headonly=True)
+            if restrictions.reject_channels_with_gaps and len(st) > 1:
+                self.logger.warning("Channel %s has gap or overlap. Will be "
+                                    "removed." % st[0].id)
+                try:
+                    os.remove(filename)
+                except OSError:
+                    pass
+                continue
+            elif len(st) == 0:
+                self.logger.error("MiniSEED file with no data detected. "
+                                  "Should not happen!")
+                continue
+            tr = st[0]
+            duration = tr.stats.endtime - tr.stats.starttime
+            if restrictions.minimum_length and duration < time_range:
+                self.logger.warning("Channel %s does not satisfy the minimum "
+                                    "length requirement. %.2f seconds instead "
+                                    "of the required %.2f seconds." % (
+                                        tr.id, duration, time_range))
+                try:
+                    os.remove(filename)
+                except OSError:
+                    pass
+                continue
+            channel_availability.append(utils.ChannelAvailability(
+                tr.stats.network, tr.stats.station, tr.stats.location,
+                tr.stats.channel, tr.stats.starttime, tr.stats.endtime,
+                filename))
+        return channel_availability
+
+
+    def discard_stations(self, station_ids):
+        """
+        Discard all stations based on the ids in station_ids.
+
+        :param station_ids: An iterable yielding (NET, STA) tuples. All of
+            these will be removed if available.
+        """
+        for station_id in station_ids:
+            try:
+                del self.stations[station_id]
+            except KeyError:
+                pass
 
     def get_availability(self):
         """
@@ -189,7 +388,7 @@ class ClientDownloadHelper(object):
             start = time.time()
             inv = self.client.get_stations(**arguments)
             end = time.time()
-        except ERRORS as e:
+        except utils.ERRORS as e:
             if "no data available" in str(e).lower():
                 self.logger.info(
                     "Client '%s' - No data available for request." %
@@ -203,8 +402,8 @@ class ClientDownloadHelper(object):
                          "(%.2f seconds)" % (self.client_name, end - start))
 
         # Get the time intervals from the restrictions.
-        intervals = [TimeInterval(start=_i[0], end=_i[1], filename=None,
-                                  status=None) for _i in self.restrictions]
+        intervals = [TimeInterval(start=_i[0], end=_i[1])
+                     for _i in self.restrictions]
         for network in inv:
             for station in network:
                 # Skip the station if it is not in the desired domain.
@@ -246,14 +445,14 @@ class ClientDownloadHelper(object):
                 get_loc = lambda x: x.location
                 for location, _channels in itertools.groupby(
                         sorted(channels, key=get_loc), get_loc):
-                    filtered_channels.extend(filter_channel_priority(
+                    filtered_channels.extend(utils.filter_channel_priority(
                         list(_channels), key="channel",
                         priorities=self.restrictions.channel_priorities))
                 channels = filtered_channels
 
                 # Filter to remove unwanted locations according to the priority
                 # list.
-                channels = filter_channel_priority(
+                channels = utils.filter_channel_priority(
                     channels, key="location",
                     priorities=self.restrictions.location_priorities)
 

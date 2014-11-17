@@ -547,7 +547,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
 
         # One with chunklength should return the chunked pieces.
         res = Restrictions(starttime=start, endtime=start + 10,
-                           chunklength=1)
+                           chunklength_in_sec=1)
         chunks = list(res)
         self.assertEqual(len(chunks), 10)
         self.assertEqual(
@@ -563,7 +563,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         start = obspy.UTCDateTime(2012, 1, 1)
         end = obspy.UTCDateTime(2012, 2, 1)
         res = Restrictions(starttime=start, endtime=end,
-                           chunklength=86400 * 10)
+                           chunklength_in_sec=86400 * 10)
         chunks = list(res)
         self.assertEqual(chunks, [
             (start, start + 86400 * 10),

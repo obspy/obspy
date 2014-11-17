@@ -324,31 +324,94 @@ def download_stationxml(client, client_name, starttime, endtime, station,
     return station.stationxml_filename
 
 
-def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
-                                  stations, logger):
+def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     """
     Downloads the channels of a list of stations in bulk, saves it in the
     temp folder and splits it at the record level to obtain the final
-    miniseed files.
+    MiniSEED files.
 
-    :param client:
-    :param client_name:
-    :param starttime:
-    :param endtime:
-    :param stations:
-    :param temp_folder:
-    :return:
+    :param client: An active client instance.
+    :param client_name: The name of the client instance used for logging
+        purposes.
+    :param chunks: A list of tuples, each denoting a single MiniSEED chunk.
+        Each chunk is a tuple of network, station, location, channel,
+        starttime, endtime, and desired filename.
+    :param logger: An active logger instance.
     """
-    bulk = []
-    filenames = {}
-    for station in stations:
-        for channel in station.channels:
-            net, sta, loc, chan = station.network, station.station, \
-                channel.location, channel.channel
-            filenames["%s.%s.%s.%s" % (net, sta, loc, chan)] = \
-                channel.mseed_filename
-            bulk.append((net, sta, loc, chan, starttime, endtime))
+    # Create a dictionary of channel ids, each containing the
+    filenames = collections.defaultdict(list)
+    for chunk in chunks:
+        filenames[tuple(chunk[:4])].append({
+            "starttime": chunk[4],
+            "endtime": chunk[5],
+            "filename": chunk[6],
+            "current_latest_endtime": None,
+            "sequence_number": None})
 
+    sequence_number = [0]
+
+    def get_filename(starttime, endtime, c):
+        # Make two passes. First find all candidates.
+        candidates = [
+            _i for _i in c if
+            (_i["starttime"] <= starttime <= _i["endtime"]) or
+            (_i["starttime"] <= endtime <= _i["endtime"])]
+        if not candidates:
+            return None
+
+        # If more then one candidate, apply some heuristics to find the
+        # correct time interval. The main complication arises when the same
+        # record is downloaded twice as it overlaps into two different
+        # requested time intervals.
+        if len(candidates) == 2:
+            candidates.sort(key=lambda x: x["starttime"])
+            first, second = candidates
+            # Make sure the assumptions about the type of overlap are correct.
+            if starttime > first["endtime"] or endtime < second["starttime"]:
+                raise NotImplementedError
+            # It must either be the last record of the first, or the first
+            # record of the second candidate.
+            if first["sequence_number"] is None and \
+                    second["sequence_number"] is None:
+                candidates = [second]
+            # Unlikely to happen. Only if nothing but the very last record
+            # of the first interval was available and the second interval
+            # was first in the file.
+            elif first["sequence_number"] is None:
+                candidates = [first]
+            # This is fairly likely and requires and additional check with
+            # the latest time in the first interval.
+            elif second["sequence_number"] is None:
+                if starttime <= first["current_latest_endtime"]:
+                    pass
+                else:
+                    pass
+            # Neither are None. Just use the one with the higher sequence
+            # number.
+            else:
+                if first["sequence_number"] > second["sequence_number"]:
+                    candidates = [first]
+                else:
+                    candidates = [second]
+        elif len(candidates) >= 2:
+            raise NotImplementedError
+
+        # Finally found the correct chunk
+        ret_val = candidates[0]
+        # Increment sequence number and make sure the current chunk is aware
+        # of it.
+        sequence_number[0] += 1
+        ret_val["sequence_number"] = sequence_number[0]
+        # Also write the time of the last chunk.
+        ce = ret_val["current_latest_endtime"]
+        if not ce or endtime > ce:
+            ret_val["current_latest_endtime"] = endtime
+        return ret_val["filename"]
+
+    # Only the filename is not needed for the actual data request.
+    bulk = [_i[:-1] for _i in chunks]
+
+    # Save first to a temporary file, then cut the file into seperate files.
     temp_filename = NamedTemporaryFile().name
 
     try:
@@ -357,20 +420,28 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
         open_files = {}
         # If that succeeds, split the old file into multiple new ones.
         file_size = os.path.getsize(temp_filename)
+
         with open(temp_filename, "rb") as fh:
             try:
                 while True:
                     if fh.tell() >= (file_size - 256):
                         break
                     info = getRecordInformation(fh)
-                    channel_id = "%s.%s.%s.%s" % (
-                        info["network"], info["station"], info["location"],
-                        info["channel"])
-                    # Sometimes the services return something noone wants.
+                    channel_id = (info["network"], info["station"],
+                                  info["location"], info["channel"])
+
+                    # Sometimes the services return something nobody wants...
                     if channel_id not in filenames:
                         fh.read(info["record_length"])
                         continue
-                    filename = filenames[channel_id]
+                    # Get the best matching filename.
+                    filename = get_filename(
+                        starttime=info["starttime"], endtime=info["endtime"],
+                        c=filenames[channel_id])
+                    # Again sometimes there are time ranges nobody asked for...
+                    if filename is None:
+                        fh.read(info["record_length"])
+                        continue
                     if filename not in open_files:
                         open_files[filename] = open(filename, "wb")
                     open_files[filename].write(fh.read(info["record_length"]))
@@ -388,7 +459,6 @@ def download_and_split_mseed_bulk(client, client_name, starttime, endtime,
     logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), len(bulk)))
     return open_files.keys()
-
 
 
 class SphericalNearestNeighbour(object):
