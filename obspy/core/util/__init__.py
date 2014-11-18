@@ -6,11 +6,11 @@ obspy.core.util - Various utilities for ObsPy
 .. note:: Please import all utilities within your custom applications from this
     module rather than from any sub module, e.g.
 
-    >>> from obspy.core.util import OrderedDict  # good
+    >>> from obspy.core.util import AttribDict  # good
 
     instead of
 
-    >>> from obspy.core.util.obspy_types import OrderedDict  # bad
+    >>> from obspy.core.util.attribdict import AttribDict  # bad
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

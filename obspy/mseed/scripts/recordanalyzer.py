@@ -22,10 +22,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    from collections import OrderedDict
 
 from copy import deepcopy
 from obspy import UTCDateTime
-from obspy.core.util import OrderedDict
 from obspy import __version__
 from argparse import ArgumentParser
 from struct import unpack

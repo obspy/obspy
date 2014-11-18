@@ -18,11 +18,11 @@ with standard_library.hooks():
     import queue
     import urllib.parse
     import urllib.request
+    from collections import OrderedDict
 
 import copy
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
