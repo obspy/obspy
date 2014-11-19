@@ -437,7 +437,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
 
 def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
-               flush=True, verbose=0, **_kwargs):
+               sequence_number=None, flush=True, verbose=0, **_kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
@@ -467,6 +467,10 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
         native byte order. If ``-1`` it will be passed directly to libmseed
         which will also default it to big endian. Defaults to big endian.
+    :type sequence_number: int, optional
+    :param sequence_number: Must be an integer ranging between 1 and 999999.
+        Represents the sequence count of the first record of each Trace.
+        Defaults to 1.
     :type flush: bool, optional
     :param flush: If ``True``, all data will be packed into records. If
         ``False`` new records will only be created when there is enough data to
@@ -477,10 +481,13 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         diagnostic output.
 
     .. note::
-        The ``reclen``, ``encoding`` and ``byteorder`` keyword arguments can be
-        set in the ``stats.mseed`` of each :class:`~obspy.core.trace.Trace` as
-        well as ``kwargs`` of this function. If both are given the ``kwargs``
-        will be used.
+        The ``reclen``, ``encoding``, ``byteorder`` and ``sequence_count``
+        keyword arguments can be set in the ``stats.mseed`` of
+        each :class:`~obspy.core.trace.Trace` as well as ``kwargs`` of this
+        function. If both are given the ``kwargs`` will be used.
+
+        The ``stats.mseed.blkt1001.timing_quality`` value will also be written
+        if it is set.
 
         The ``stats.mseed.blkt1001.timing_quality`` value will also be written
         if it is set.
@@ -522,6 +529,19 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     if encoding is not None:
         encoding = util._convert_and_check_encoding_for_writing(encoding)
+
+    if sequence_number is not None:
+        # Check sequence number type
+        try:
+            sequence_number = int(sequence_number)
+            # Check sequence number value
+            if sequence_number < 1 or sequence_number > 999999:
+                raise ValueError("Sequence number out of range. It must be " +
+                                 " between 1 and 999999.")
+        except (TypeError, ValueError):
+            msg = "Invalid sequence number. It must be an integer ranging " +\
+                  "from 1 to 999999."
+            raise ValueError(msg)
 
     trace_attributes = []
     use_blkt_1001 = False
@@ -576,6 +596,29 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             use_blkt_100 = True
         else:
             use_blkt_100 = False
+
+        if sequence_number is not None:
+            trace_attr['sequence_number'] = sequence_number
+        elif hasattr(trace.stats, 'mseed') and \
+                hasattr(trace.stats['mseed'], 'sequence_number'):
+
+            sequence_number = trace.stats['mseed']['sequence_number']
+            # Check sequence number type
+            try:
+                sequence_number = int(sequence_number)
+                # Check sequence number value
+                if sequence_number < 1 or sequence_number > 999999:
+                    raise ValueError("Sequence number out of range in " +
+                                     "Stream[%i].stats. It must be between " +
+                                     "1 and 999999.")
+            except (TypeError, ValueError):
+                msg = "Invalid sequence number in Stream[%i].stats." % _i +\
+                      "mseed.sequence_number. It must be an integer ranging" +\
+                      " from 1 to 999999."
+                raise ValueError(msg)
+            trace_attr['sequence_number'] = sequence_number
+        else:
+            trace_attr['sequence_number'] = sequence_number = 1
 
         # Set data quality to indeterminate (= D) if it is not already set.
         try:
@@ -752,6 +795,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         msr.contents.channel = trace.stats.channel.encode('ascii', 'strict')
         msr.contents.dataquality = trace_attr['dataquality'].\
             encode('ascii', 'strict')
+
+        # Set starting sequence number
+        msr.contents.sequence_number = trace_attr['sequence_number']
 
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:
