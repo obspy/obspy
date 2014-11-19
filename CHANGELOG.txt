@@ -11,6 +11,7 @@
      AttribDict.
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
+   * Support exporting Inventory objects to CSS relations.
  - obspy.fdsn:
    * WADL files are cached per Python process.
    * Bulk station downloading using POST requests.
