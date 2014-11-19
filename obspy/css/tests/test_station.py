@@ -25,6 +25,7 @@ import obspy.station
 
 class CSSStationTestCase(unittest.TestCase):
     """
+    Test cases for css station interface
     """
     def setUp(self):
         # Most generic way to get the actual data directory.

@@ -23,9 +23,19 @@ def _yearday(date):
         return -1
 
 
-def writeCSS(inventory, filename):
+def writeCSS(inventory, basename):
     """
     Writes an inventory object to a CSS database.
+
+    The :class:`~obspy.station.inventory.Inventory`,
+    :class:`~obspy.station.network.Network`,
+    :class:`~obspy.station.station.Station`, and
+    :class:`~obspy.station.channel.Channel` objects are included in the
+    resulting database. Any :class:`~obspy.station.util.Comment` objects are
+    only saved for the network. Any :class:`~obspy.station.response.Response`
+    objects are not saved. For fields that are saved, most of the important
+    information is used, but any extra metadata that cannot be represented in
+    CSS will be lost.
 
     .. note::
         Because CSS stores data in multiple files, you cannot write to a
@@ -40,10 +50,25 @@ def writeCSS(inventory, filename):
 
     :type inventory: :class:`~obspy.station.inventory.Inventory`
     :param inventory: The inventory instance to be written.
-    :type filename: str
-    :param filename: The file to be written to.
+    :type basename: str
+    :param basename: The base name of the files to be written. This export
+        format currently writes to the following files ("relations" in CSS
+        terms):
+
+        ``basename.affiliation``
+            Clusters seismic stations into networks.
+        ``basename.network``
+            Describes general information about seismic networks.
+        ``basename.site``
+            Contains site names and locations on the Earth where seismic
+            measurements are made.
+        ``basename.sitechan``
+            Describes the orientation of recording channels at a site.
+        ``basename.remark``
+            Stores free-form comments that embellish records of other
+            relations.
     """
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(basename, (str, native_str)):
         raise TypeError('Writing an Inventory to a file-like object in CSS '
                         'format is unsupported.')
 
@@ -119,22 +144,22 @@ def writeCSS(inventory, filename):
                 sitechan.append(sitechan_line)
 
     if remark:
-        with open(filename + '.remark', 'wt') as fh:
+        with open(basename + '.remark', 'wt') as fh:
             fh.write('\n'.join(remark))
             fh.write('\n')
     if affiliation:
-        with open(filename + '.affiliation', 'wt') as fh:
+        with open(basename + '.affiliation', 'wt') as fh:
             fh.write('\n'.join(affiliation))
             fh.write('\n')
     if network:
-        with open(filename + '.network', 'wt') as fh:
+        with open(basename + '.network', 'wt') as fh:
             fh.write('\n'.join(network))
             fh.write('\n')
     if site:
-        with open(filename + '.site', 'wt') as fh:
+        with open(basename + '.site', 'wt') as fh:
             fh.write('\n'.join(site))
             fh.write('\n')
     if sitechan:
-        with open(filename + '.sitechan', 'wt') as fh:
+        with open(basename + '.sitechan', 'wt') as fh:
             fh.write('\n'.join(sitechan))
             fh.write('\n')
