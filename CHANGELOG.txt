@@ -34,6 +34,8 @@
    * New utility function `obspy.mseed.util.set_flags_in_fixed_header()`
      giving the ability to overwrite flags in the fixed header of existing
      MiniSEED files.
+   * The sequence number of the first record of each Trace can now be
+     specified when writing MiniSEED files.
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:
