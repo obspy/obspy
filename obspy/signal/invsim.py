@@ -148,7 +148,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
 
 def c_sac_taper(freqs, flimit):
     """
-    Generate a frequency domain taper similar to the frequency domain taper SAC
+    Generate a cosine flank frequency domain taper similar to the one SAC
     applies before instrument response deconvolution. This acts as a bandpass
     filter when applied to the data in frequency space.
 
@@ -161,13 +161,16 @@ def c_sac_taper(freqs, flimit):
     """
     fl1, fl2, fl3, fl4 = flimit
     taper = np.zeros_like(freqs)
-    for i, freq in enumerate(freqs):
-        if fl1 <= freq <= fl2:
-            taper[i] = 0.5 * (1.0 - M.cos(M.pi * (freq - fl1) / (fl2 - fl1)))
-        elif fl2 < freq < fl3:
-            taper[i] = 1.0
-        elif fl3 <= freq <= fl4:
-            taper[i] = 0.5 * (1.0 + M.cos(M.pi * (freq - fl3) / (fl4 - fl3)))
+
+    a = (fl1 <= freqs) & (freqs <= fl2)
+    taper[a] = 0.5 * (1.0 - np.cos(np.pi * (freqs[a] - fl1) / (fl2 - fl1)))
+
+    b = (fl2 < freqs) & (freqs < fl3)
+    taper[b] = 1.0
+
+    c = (fl3 <= freqs) & (freqs <= fl4)
+    taper[c] = 0.5 * (1.0 + np.cos(np.pi * (freqs[c] - fl3) / (fl4 - fl3)))
+
     return taper
 
 
