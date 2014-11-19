@@ -32,15 +32,7 @@ class CSSStationTestCase(unittest.TestCase):
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), 'data', 'station')
 
-    def test_write_default(self):
-        """
-        Test that writing of a CSS station database with all possible
-        relations works.
-        """
-        fname = 'default'
-
-        inv = obspy.station.read_inventory()
-
+    def _run_test(self, inv, fname):
         tempdir = tempfile.mkdtemp(prefix='obspy-')
 
         try:
@@ -61,6 +53,25 @@ class CSSStationTestCase(unittest.TestCase):
 
         finally:
             shutil.rmtree(tempdir)
+
+    def test_default_write(self):
+        """
+        Test that writing of a CSS station database with all possible
+        relations works.
+        """
+
+        fname = 'default'
+
+        inv = obspy.station.read_inventory()
+        inv[0].comments = [
+            obspy.station.Comment('Comment 1'),
+            obspy.station.Comment('Comment 2'),
+        ]
+        inv[1].comments = [
+            obspy.station.Comment('Comment\n3'),
+        ]
+
+        self._run_test(inv, fname)
 
 
 def suite():
