@@ -19,12 +19,6 @@ except ImportError:
     pass
 
 
-# Use OrderedDict from python-future
-from future import standard_library
-with standard_library.hooks():
-    from collections import OrderedDict
-
-
 class Enum(object):
     """
     Enumerated type (enum) implementation for Python.

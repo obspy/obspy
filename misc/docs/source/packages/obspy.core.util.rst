@@ -23,7 +23,6 @@
        ~misc.guessDelta
        ~misc.scoreatpercentile
        ~misc.toIntOrZero
-       ~obspy_types.OrderedDict
        ~obspy_types.Enum
 
 
