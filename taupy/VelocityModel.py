@@ -358,10 +358,9 @@ class VelocityModel(object):
                     "S velocity, ", topSVel, " at depth ", topDepth,
                     " is greater than the P velocity, ", topPVel)
             # if density is present,read it.
-            if len(columns) == 4:
-                topDensity = float(columns[3])
-            else:
-                topDensity = 5571.0
+            if len(columns) != 4:
+                raise ValueError("Top density not specified.")
+            topDensity = float(columns[3])
 
                 # Iterate over the rest of the file.
             for line in f:
@@ -377,10 +376,9 @@ class VelocityModel(object):
                         "S velocity, ", botSVel, " at depth ", botDepth,
                         " is greater than the P velocity, ", botPVel)
                 # if density is present,read it.
-                if len(columns) == 4:
-                    botDensity = float(columns[3])
-                else:
-                    botDensity = topDensity
+                if len(columns) != 4:
+                    raise ValueError("Bottom density not specified.")
+                botDensity = float(columns[3])
 
                 if len(columns) > 4:
                     raise TauPException("Your file has too much information. "

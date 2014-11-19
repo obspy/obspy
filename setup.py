@@ -42,4 +42,4 @@ setup_config = dict(
 
 
 if __name__ == "__main__":
-    setup(**setup_config, requires=['numpy'])
+    setup(**setup_config)

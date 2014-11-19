@@ -30,6 +30,10 @@ class Arrival:
         # pierce and path points
         self.pierce, self.path = [], []
 
+    def __str__(self):
+        return "%s phase arrival at %.3f seconds" % (self.phase.name,
+                                                     self.time)
+
     def getPierce(self):
         """
         Returns pierce points as TimeDist objects.

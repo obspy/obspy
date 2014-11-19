@@ -17,15 +17,15 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self,
-                 phaseList=[], modelName="iasp91", depth=0, degrees=None):
+    def __init__(self, phaseList=[], modelName="iasp91", depth=0,
+                 degrees=None):
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP
         self.phaseList = phaseList
         self.phaseNames = []
         self.modelName = modelName
-        # This is needed to check later if assignment has happened on cmd 
+        # This is needed to check later if assignment has happened on cmd
         # line, or if reading conf is needed.
         self.tMod = None
         # TauModel derived from tMod by correcting it for a non-surface source.
