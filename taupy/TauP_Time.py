@@ -106,8 +106,7 @@ class TauP_Time(object):
     def recalcPhases(self):
         """
         Recalculates the given phases using a possibly new or changed tau
-        model. This should not need to be called by outside classes as it is
-        called by depthCorrect and calculate.
+        model.
         """
         newPhases = []
         for tempPhaseName in self.phaseNames:

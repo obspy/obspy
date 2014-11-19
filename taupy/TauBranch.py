@@ -353,9 +353,6 @@ class TauBranch(object):
                 if sLayerNum >= topLayerNum:
                     sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
         tempPath = thePath[0:pathIndex]
-        # This is only for development:
-        assert pathIndex == 7
-        # remove once debugged
         return tempPath
 
 
