@@ -269,6 +269,7 @@
      (signed 16bit/32bit integer)
  - obspy.segy:
    * fix a bug in plotting (see #689)
+   * Removed the SEG Y benchmark plots. Now part of obspy/apps.
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
