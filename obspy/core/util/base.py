@@ -12,9 +12,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    from collections import OrderedDict
 
 from obspy.core.util.misc import toIntOrZero
-from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
 import doctest
 import inspect

@@ -9,6 +9,8 @@
    * `interpolate()` method for Stream/Trace objects.
    * Dictionary values added to an AttribDict will now be converted to an
      AttribDict.
+   * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
+     provided by the future package.
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
    * Support exporting Inventory objects to CSS relations.
