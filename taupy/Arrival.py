@@ -35,7 +35,7 @@ class Arrival:
                                                      self.time)
 
     @property
-    def rayParam_sec_deg(self):
+    def rayParam_sec_degree(self):
         """
         Returns the ray parameter in seconds per degree.
         """
