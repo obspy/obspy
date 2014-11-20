@@ -67,7 +67,6 @@ NPZ_STORE_KEYS = [
     'delta',
     'freq',
     'id',
-    'is_rotational_data',
     'len',
     'location',
     'merge_method',
@@ -84,6 +83,7 @@ NPZ_STORE_KEYS = [
     'ppsd_length',
     'sampling_rate',
     'spec_bins',
+    'special_handling',
     'station',
     ]
 
@@ -270,8 +270,8 @@ class PPSD(object):
     @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
                           'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
-                 is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5, **kwargs):
+                 db_bins=(-200, -50, 1.), ppsd_length=3600., overlap=0.5,
+                 special_handling=None, **kwargs):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -292,10 +292,8 @@ class PPSD(object):
           is changing over the timespans that are added to the PPSD.
           Use with caution!
 
-        :note: When using `is_rotational_data=True` the applied processing
-               steps are changed (and it is assumed that a dictionary is
-               provided as `metadata`).
-               Differentiation of data (converting velocity
+        :note: When using `special_handling="ringlaser"` the applied processing
+               steps are changed. Differentiation of data (converting velocity
                to acceleration data) will be omitted and a flat instrument
                response is assumed, leaving away response removal and only
                dividing by `metadata['sensitivity']` specified in the provided
@@ -317,9 +315,6 @@ class PPSD(object):
                 `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than `ppsd_length` not
                 used in the PPSD.
-        :type is_rotational_data: bool, optional
-        :param is_rotational_data: If set to True adapt processing of data to
-                rotational data. See note for details.
         :type db_bins: tuple of three ints/floats
         :param db_bins: Specify the lower and upper boundary and the width of
                 the db bins. The bin width might get adjusted to fit  a number
@@ -334,7 +329,20 @@ class PPSD(object):
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
+        :type special_handling: str, optional
+        :param special_handling: Switches on customized handling for
+            data other than seismometer recordings. Can be one of: 'ringlaser'
+            (no instrument correction, just division by
+            `metadata["sensitivity"]` of provided metadata dictionary),
+            'hydrophone' (no differentiation after instrument correction).
         """
+        # remove after release of 0.11.0
+        if kwargs.pop("is_rotational_data", None) is True:
+            msg = ("Keyword 'is_rotational_data' is deprecated. Please use "
+                   "'special_handling=\"ringlaser\"' instead.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+            special_handling = "ringlaser"
+
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
         self.station = stats.station
@@ -342,7 +350,11 @@ class PPSD(object):
         self.channel = stats.channel
         self.sampling_rate = stats.sampling_rate
         self.delta = 1.0 / self.sampling_rate
-        self.is_rotational_data = is_rotational_data
+        self.special_handling = special_handling and special_handling.lower()
+        if self.special_handling not in (None, "ringlaser", "hydrophone"):
+            msg = "Unsupported value for 'special_handling' parameter: %s"
+            msg = msg % self.special_handling
+            raise ValueError(msg)
         self.ppsd_length = ppsd_length
         self.overlap = overlap
         # trace length for one segment
@@ -621,9 +633,11 @@ class PPSD(object):
         # Here we remove the response using the same conventions
         # since the power is squared we want to square the sensitivity
         # we can also convert to acceleration if we have non-rotational data
-        if self.is_rotational_data:
+        if self.special_handling == "ringlaser":
             # in case of rotational data just remove sensitivity
             spec /= self.metadata['sensitivity'] ** 2
+        # special_handling "hydrophone" does instrument correction same as
+        # "normal" data
         else:
             # determine instrument response from metadata
             try:
@@ -644,7 +658,11 @@ class PPSD(object):
             w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
             # Here we do the response removal
-            spec = (w ** 2) * spec / respamp
+            # Do not differentiate when `special_handling="hydrophone"`
+            if self.special_handling == "hydrophone":
+                spec = spec / respamp
+            else:
+                spec = (w ** 2) * spec / respamp
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
@@ -849,6 +867,14 @@ class PPSD(object):
         else:
             with open(filename, 'rb') as file_:
                 ppsd = pickle.load(file_)
+
+        # some workarounds for older PPSD pickle files
+        if hasattr(ppsd, "is_rotational_data"):
+            if ppsd.is_rotational_data is True:
+                ppsd.special_handling = "ringlaser"
+            delattr(ppsd, "is_rotational_data")
+        if not hasattr(ppsd, "special_handling"):
+            ppsd.special_handling = None
 
         return ppsd
 
