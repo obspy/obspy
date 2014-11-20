@@ -112,7 +112,7 @@ class TauP_Create(object):
         # if self.overlayModelFilename != None:
         # ... not sure what that is really meant to do ... #
 
-        # if self.DEBUG:
+        # if self.debug:
         #    print("velocity mode: " + self.vMod)
         return self.vMod
 
@@ -174,7 +174,7 @@ class TauP_Create(object):
             print("Slow model " + " " + str(self.sMod.getNumLayers(True)) +
                   " P layers," + str(self.sMod.getNumLayers(False)) +
                   " S layers")
-        # if self.DEBUG:
+        # if self.debug:
         #    print(self.sMod)
         # set the debug flags to value given here:
         TauModel.DEBUG = self.DEBUG
@@ -197,7 +197,7 @@ class TauP_Create(object):
                 # now it's an instance of it.
                 if self.DEBUG:
                     print("Done calculating Tau branches.")
-                # if self.DEBUG:
+                # if self.debug:
                 #    print(self.tMod)
 
                 # The java behaviour for finding where to store the

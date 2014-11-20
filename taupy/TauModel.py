@@ -9,66 +9,45 @@ import pickle
 from copy import deepcopy
 
 
-# noinspection PyPep8Naming
 class TauModel(object):
     """
     Provides storage of all the TauBranches comprising a model.
     """
-    DEBUG = False
-    # True if this is a spherical slowness model. False if flat.
-    spherical = True
-    # Depth for which tau model was constructed.
-    sourceDepth = 0.0
-    # Branch with the source at its top.
-    sourceBranch = 0
-    # Depths that should not have reflections or phase conversions. For
-    # instance, if the source is not at a branch boundary then noDisconDepths
-    # contains source depth and reflections and phase conversions are not
-    # allowed at this branch boundary. If the source happens to fall on a real
-    # discontinuity then then it is not included.
-    noDisconDepths = []
+    def __init__(self, sMod, spherical=True, debug=False):
+        self.debug = debug
+        self.radiusOfEarth = 6371.0
+        # True if this is a spherical slowness model. False if flat.
+        self.spherical = spherical
 
-    # ###### This code from Java left in for the documentation purposes,
-    # for now #######
-    # # Depth o1f the moho.
-    # protected double mohoDepth;
-    # /** Branch with the moho at its top. */
-    # protected int mohoBranch;
-    # /** Depth of the cmb. */
-    # protected double cmbDepth;
-    # /** Branch with the cmb at its top. */
-    # protected int cmbBranch;
-    # /** Depth of the iocb. */
-    # protected double iocbDepth;
-    # /** Branch with the iocb at its top. */
-    # protected int iocbBranch;
-    # Radius of the Earth in km, usually input from the velocity model.
-    # The slowness model that was used to generate the tau model. This in
-    # needed in order to modify the tau branches from a surface focus event to
-    # an event at depth. This is normally be set when the tau model is
-    # generated to be a clone of the slowness model.
-    # private SlownessModel sMod;
+        # Depth for which tau model was constructed.
+        self.sourceDepth = 0.0
+        # Branch with the source at its top.
+        self.sourceBranch = 0
 
-    radiusOfEarth = 6371.0
-    # Ray parameters used to construct the tau branches. This may only be a
-    # subset of the slownesses/ray parameters saved in the slowness model due
-    # to high slowness zones (low velocity zones).
-    rayParams = []
-    # 2D "array" (list of lists in Python) containing a TauBranch object
-    # corresponding to each "branch" of the tau model, First list is P,
-    # second is S. Branches correspond to depth regions between
-    # discontinuities or reversals in slowness gradient for a wave type.
-    # Each branch contains time, distance, and tau increments for each ray
-    # parameter in rayParams for the layer. Rays that turn above the branch
-    # layer get 0 for time, distance, and tau increments.
-    tauBranches = [[], []]
+        # Depths that should not have reflections or phase conversions. For
+        # instance, if the source is not at a branch boundary then
+        # noDisconDepths contains source depth and reflections and phase
+        # conversions are not allowed at this branch boundary. If the source
+        # happens to fall on a real discontinuity then then it is not
+        # included.
+        self.noDisconDepths = []
 
-    def __init__(self, sMod):
+        # Ray parameters used to construct the tau branches. This may only be
+        # a subset of the slownesses/ray parameters saved in the slowness
+        # model due to high slowness zones (low velocity zones).
+        self.rayParams = []
+
+        # 2D "array" (list of lists in Python) containing a TauBranch object
+        # corresponding to each "branch" of the tau model, First list is P,
+        # second is S. Branches correspond to depth regions between
+        # discontinuities or reversals in slowness gradient for a wave type.
+        # Each branch contains time, distance, and tau increments for each ray
+        # parameter in rayParams for the layer. Rays that turn above the branch
+        # layer get 0 for time, distance, and tau increments.
+        self.tauBranches = [[], []]
 
         self.sMod = sMod
         self.calcTauIncFrom()
-
-        print("This is the init method of TauModel. Hello!")
 
     def calcTauIncFrom(self):
         """
@@ -122,7 +101,7 @@ class TauModel(object):
         # slicing doesn't really mean deep copy, but it works for a list of
         # doubles like this
         self.rayParams = tempRayParams[:rayNum]
-        if self.DEBUG:
+        if self.debug:
             print("Number of slowness samples for tau:" + str(rayNum))
         for waveNum, isPWave in enumerate([True, False]):
             # The minimum slowness seen so far.
@@ -139,7 +118,7 @@ class TauModel(object):
                                    else botCritDepth.sLayerNum) - 1
                 self.tauBranches[waveNum][critNum] = \
                     TauBranch(topCritDepth.depth, botCritDepth.depth, isPWave)
-                self.tauBranches[waveNum][critNum].DEBUG = self.DEBUG
+                self.tauBranches[waveNum][critNum].DEBUG = self.debug
                 self.tauBranches[waveNum][critNum].createBranch(
                     self.sMod, minPSoFar, self.rayParams)
                 # Update minPSoFar. Note that the new minPSoFar could be at
