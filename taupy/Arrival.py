@@ -34,6 +34,17 @@ class Arrival:
         return "%s phase arrival at %.3f seconds" % (self.phase.name,
                                                      self.time)
 
+    @property
+    def rayParam_sec_deg(self):
+        """
+        Returns the ray parameter in seconds per degree.
+        """
+        return self.rayParam * pi / 180.0
+
+    @property
+    def purist_distance(self):
+        return self.dist * 180.0 / pi
+
     def getPierce(self):
         """
         Returns pierce points as TimeDist objects.
