@@ -33,7 +33,7 @@ class TauP_Time(object):
         # List to hold the SeismicPhases for the phases named in phaseNames.
         self.phases = []
         # The following are 'initialised' for the purpose of checking later
-        # whether their value has been given in
+        # whether their value has been given on the cmd line.
         self.depth = depth
         self.degrees = degrees
         self.azimuth = None
@@ -123,15 +123,12 @@ class TauP_Time(object):
                         break
             if not alreadyAdded:
                 # Didn't find it precomputed, so recalculate:
-                # try:
-                #     seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
-                #     newPhases.append(seismicPhase)
-                # except TauModelError:
-                #     print("Error with this phase, skipping it: " +
-                #           str(tempPhaseName))
-                # Uncomment if stacktrace is needed.
-                 seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
-                 newPhases.append(seismicPhase)
+                try:
+                    seismicPhase = SeismicPhase(tempPhaseName, self.tModDepth)
+                    newPhases.append(seismicPhase)
+                except TauModelError:
+                    print("Error with this phase, skipping it: " +
+                          str(tempPhaseName))
             self.phases = newPhases
 
     def calculate(self, degrees):
@@ -199,7 +196,7 @@ class TauP_Time(object):
         :return:
         """
         parser = argparse.ArgumentParser()
-        parser.add_argument('-v', '--verbose', '-d', '--debug',
+        parser.add_argument('-v', '--verbose', '--debug',
                             action='store_true',
                             help='increase output verbosity')
         parser.add_argument('-ph', '--phase_list',

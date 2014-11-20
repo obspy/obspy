@@ -26,7 +26,7 @@ class TestTauPPierce(unittest.TestCase):
         # Use this if lines are in same order:
         #subprocess.check_call("diff -wB data/java_tauppierce_testoutput "
         #                      "data/taup_pierce_test_output", shell=True)
-        # Todo: think of something more clever. It doesn't work, the tiny format differences screw it up.
+        # NB the above doesn't work, the tiny format differences screw it up.
         os.remove("data/taup_pierce_test_output")
 
 if __name__ == '__main__':

@@ -13,30 +13,30 @@ class TauModel(object):
     """
     Provides storage of all the TauBranches comprising a model.
     """
+    # The following really need to be class attributes. For some reason.
+
+    # Depth for which tau model was constructed.
+    sourceDepth = 0.0
+    radiusOfEarth = 6371.0
+    # Branch with the source at its top.
+    sourceBranch = 0
+    # Depths that should not have reflections or phase conversions. For
+    # instance, if the source is not at a branch boundary then
+    # noDisconDepths contains source depth and reflections and phase
+    # conversions are not allowed at this branch boundary. If the source
+    # happens to fall on a real discontinuity then then it is not
+    # included.
+    noDisconDepths = []
+
     def __init__(self, sMod, spherical=True, debug=False):
         self.debug = debug
         self.radiusOfEarth = 6371.0
         # True if this is a spherical slowness model. False if flat.
         self.spherical = spherical
-
-        # Depth for which tau model was constructed.
-        self.sourceDepth = 0.0
-        # Branch with the source at its top.
-        self.sourceBranch = 0
-
-        # Depths that should not have reflections or phase conversions. For
-        # instance, if the source is not at a branch boundary then
-        # noDisconDepths contains source depth and reflections and phase
-        # conversions are not allowed at this branch boundary. If the source
-        # happens to fall on a real discontinuity then then it is not
-        # included.
-        self.noDisconDepths = []
-
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
         self.rayParams = []
-
         # 2D "array" (list of lists in Python) containing a TauBranch object
         # corresponding to each "branch" of the tau model, First list is P,
         # second is S. Branches correspond to depth regions between
