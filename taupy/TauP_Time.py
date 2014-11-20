@@ -26,7 +26,7 @@ class TauP_Time(object):
         self.phaseNames = []
         self.modelName = modelName
         # This is needed to check later if assignment has happened on cmd
-        # line, or if reading conf is needed.
+        # line.
         self.tMod = None
         # TauModel derived from tMod by correcting it for a non-surface source.
         self.tModDepth = None
@@ -38,6 +38,8 @@ class TauP_Time(object):
         self.degrees = degrees
         self.azimuth = None
         self.backAzimuth = None
+        # Todo: implement latitudes and longitudes (maybe with matplotlib or psbasemap?)
+        # Needs to be in input and output
         self.stationLat = None
         self.stationLon = None
         self.eventLat = None
@@ -50,7 +52,6 @@ class TauP_Time(object):
 
     def start(self):
         """Does the calculations and prints the result."""
-        self.readConfig()
         self.phaseNames = parsePhaseList(self.phaseList)
         self.readTauModel()
         if self.degrees is not None or all(x is not None for x in (
@@ -192,10 +193,6 @@ class TauP_Time(object):
             out += "{:<5s}".format(arrival.puristName) + "   "
             print(out)
 
-    def readConfig(self):
-        # If you implement this, make sure given args aren't overwritten.
-        pass
-
     def readcmdLineArgs(self):
         """
         Reads the command line arguments, if present.
@@ -212,7 +209,7 @@ class TauP_Time(object):
         parser.add_argument('-mod', '--modelname',
                             help='Use this velocity model for calculations. '
                                  'Default is iasp91.')
-        parser.add_argument('--depth',
+        parser.add_argument('-d', '--depth',
                             help='source depth in km')
         parser.add_argument('-deg', '--degrees',
                             help='distance in degrees')
