@@ -25,6 +25,7 @@ import copy
 from multiprocessing.pool import ThreadPool
 import os
 import time
+import timeit
 
 import obspy
 from obspy.core.util import Enum
@@ -38,17 +39,33 @@ OVERWRITE_CAPABILITIES = {
 
 
 # The current status of an entity.
-STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists"])
+STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
+               "download_failed", "download_rejected"])
 
 
 class TimeInterval(object):
+    """
+    Simple object representing a time inverval of a channel.
+
+    It knows the temporal bounds of the interval, the (desired) filename,
+    and the current status of the interval.
+
+    :param start: The start of the interval.
+    :type start: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param end: The end of the interval.
+    :type end: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param filename: The filename of the interval.
+    :type filename: str
+    :param status: The status of the time interval.
+    :param status: :class:`~.STATUS`
+    """
     __slots__ = ["start", "end", "filename", "status"]
 
     def __init__(self, start, end, filename=None, status=None):
         self.start = start
         self.end = end
         self.filename = filename
-        self.status = STATUS.NONE
+        self.status = status if status is not None else STATUS.NONE
 
     def __repr__(self):
         return "TimeInterval(start={start}, end={end}, filename={filename}, " \
@@ -60,16 +77,39 @@ class TimeInterval(object):
 
 
 class Station(object):
-    __slots__ = ["network", "station", "latitude", "longitude"]
+    """
+    Object representing a seismic station within the download helper classes.
 
-    def __init__(self, network, station, latitude, longitude, channels):
+    It knows the coordinates of the station to perform the filtering,
+    its channels and the filename and status of the StationXML files.
+
+    :param network: The network code.
+    :type network: str
+    :param station: The station code.
+    :type station: str
+    :param latitude: The latitude of the station.
+    :type latitude: float
+    :param longitude: The longitude of the station.
+    :type longitude: float
+    :param channels: The channels of the station.
+    :type channels: list of :class:`~.Channel` objects
+    :param stationxml_filename: The filename of the StationXML file.
+    :type stationxml_filename: str
+    :param status: The status of the station.
+    :type status: :class:`~.STATUS`
+    """
+    __slots__ = ["network", "station", "latitude", "longitude", "channels",
+                 "stationxml_filename", "stationxml_status"]
+
+    def __init__(self, network, station, latitude, longitude, channels,
+                 stationxml_filename=None, status=None):
         self.network = network
         self.station = station
         self.latitude = latitude
         self.longitude = longitude
         self.channels = channels
-        self.stationxml_filename = None
-        self.stationxml_status = STATUS.NONE
+        self.stationxml_filename = stationxml_filename
+        self.stationxml_status = status if status is not None else STATUS.NONE
 
     def __str__(self):
         channels = "\n".join(str(i) for i in self.channels)
@@ -90,7 +130,12 @@ class Station(object):
     def prepare_mseed_download(self, mseed_storage):
         """
         Loop through all channels of the station and distribute filenames
-        and the current status of the channel. Possible statuses are IGNORE,
+        and the current status of the channel.
+
+        A MiniSEED interval will be ignored, if the `mseed_storage` function
+        returns `True`.
+        Possible statuses are IGNORE,
+
         EXISTS, and NEEDS_DOWNLOADING.
         """
         for channel in self.channels:
@@ -208,6 +253,7 @@ class ClientDownloadHelper(object):
 
         counter = collections.Counter()
 
+        # Keep track of attempted downloads.
         for sta in self.stations.values():
             for cha in sta.channels:
                 # The band code is used to estimate the sampling rate of the
@@ -265,14 +311,121 @@ class ClientDownloadHelper(object):
 
         pool = ThreadPool(min(threads_per_client, len(chunks)))
 
-        result = pool.map(
+        d_start = timeit.default_timer()
+        pool.map(
             star_download_mseed,
             [(self.client, self.client_name, chunk) for chunk in chunks])
-
         pool.close()
+        d_end = timeit.default_timer()
 
-        filenames = itertools.chain.from_iterable(result)
-        return list(filenames)
+        self.logger.info("Client '%s' - Launching basic QC checks..." %
+                         self.client_name)
+        downloaded_bytes, discarded_bytes = self._check_downloaded_data()
+        total_bytes = downloaded_bytes + discarded_bytes
+
+        self.logger.info("Client '%s' - Downloaded %.1f MB [%.2f KB/sec] of "
+                         "data, %.1f MB of which were discarded afterwards." %
+                         (self.client_name, total_bytes / 1024.0 ** 2,
+                          total_bytes / 1024.0 / (d_end - d_start),
+                          discarded_bytes / 1024.0 ** 2))
+
+        # Recount everything to be able to emit some nice statistics.
+        counter = collections.Counter()
+        for sta in self.stations:
+            for interval in sta.channels:
+                counter[interval.status] += 1
+        keys = sorted(counter.keys())
+        for key in keys:
+            self.logger.info(
+                "Client '%s' - Status for %i time intervals/channels after "
+                "downloading: %s" % (
+                self.client_name, counter[key], key.upper()))
+
+        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+
+    def _check_downloaded_data(self):
+        """
+        Read the downloaded data, set the proper status flags and a remove
+        data that does not meet the QC criteria. It just checks the
+        downloaded data for minimum length and gaps/overlaps.
+
+        Returns the downloaded_bytes and the discarded_bytes.
+        """
+        downloaded_bytes = 0
+        discarded_bytes = 0
+        for sta in self.stations:
+            for cha in sta.channels:
+                for interval in cha.intervals:
+                    # The status of the intervals did not change!
+                    if interval.status != STATUS.NEEDS_DOWNLOADING:
+                        continue
+
+                    # If the file does not exist, mark the time interval as
+                    # download failed.
+                    if not os.path.exists(interval.filename):
+                        interval.status = STATUS.DOWNLOAD_FAILED
+                        continue
+
+                    size = os.path.getsize(interval.filename)
+                    if size == 0:
+                        self.logger.warn("Zero byte file '%s'. Will be "
+                                         "deleted." % interval.filename)
+                        utils.safe_delete(interval.filename)
+                        interval.status = STATUS.DOWNLOAD_FAILED
+                        continue
+
+                    # Guard against faulty files.
+                    try:
+                        st = obspy.read(interval.filename, headonly=True)
+                    except Exception as e:
+                        self.logger.warn("Could not read file '%s' due to: %s"
+                                         "\nWill be discarded."
+                                         % (interval.filename, str(e)))
+                        utils.safe_delete(interval.filename)
+                        discarded_bytes += size
+                        interval.status = STATUS.DOWNLOAD_FAILED
+                        continue
+
+                    # Valid files with no data.
+                    if len(st) == 0:
+                        self.logger.warn("Empty file '%s'. Will be deleted." %
+                                         interval.filename)
+                        utils.safe_delete(interval.filename)
+                        discarded_bytes += size
+                        interval.status = STATUS.DOWNLOAD_FAILED
+                        continue
+
+                    # If user did not want gappy files, remove them.
+                    if self.restrictions.reject_channels_with_gaps is True and\
+                            len(st) > 1:
+                        self.logger.info("File '%s' contains %i traces. Will "
+                                         "be deleted." % (interval.filename,
+                                                          len(str)))
+                        utils.safe_delete(interval.filename)
+                        discarded_bytes += size
+                        interval.status = STATUS.DOWNLOAD_REJECTED
+                        continue
+
+                    if self.restrictions.minimum_length:
+                        duration = sum([tr.stats.endtime - tr.stats.starttime
+                                        for tr in st])
+                        expected_min_duration = \
+                            self.restrictions.minimum_length * \
+                            (interval.end - interval.start)
+                        if duration < expected_min_duration:
+                            self.logger.info(
+                                "File '%s' has only %.2f seconds of data. "
+                                "%.2f ar required. File will be deleted." %
+                                (interval.filename, duration,
+                                 expected_min_duration))
+                        utils.safe_delete(interval.filename)
+                        discarded_bytes += size
+                        interval.status = STATUS.DOWNLOAD_REJECTED
+                        continue
+
+                    downloaded_bytes += size
+                    interval.status = STATUS.DOWNLOADED
+        return downloaded_bytes, discarded_bytes
 
     def _parse_miniseed_filenames(self, filenames, restrictions):
         time_range = restrictions.minimum_length * (restrictions.endtime -
