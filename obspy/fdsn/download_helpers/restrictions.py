@@ -63,6 +63,11 @@ class Restrictions(object):
     ...     # Same is true with the minimum length. Any data during a day
     ...     # might be useful.
     ...     minimum_length=0.0,
+    ...     # Sanitize makes sure that each MiniSEED file also has an
+    ...     # associated StationXML file, otherwise the MiniSEED files will
+    ...     # be deleted afterwards. This is not desirable for large noise
+    ...     # data sets.
+    ...     sanitize=False,
     ...     # Guard against the same station having different names.
     ...     minimum_interstation_distance_in_m=100.0)
 
@@ -94,6 +99,11 @@ class Restrictions(object):
         the requested time span. Will be rejected otherwise. Must be between
         ``0.0`` and ``1.0``, defaults to ``0.9``.
     :type minimum_length: float, optional
+    :param sanitize: Sanitize makes sure that each MiniSEED file also has an
+         associated StationXML file, otherwise the MiniSEED files will be
+         deleted afterwards. This is potentially not desirable for large noise
+         data sets.
+    :type sanitize: bool, optional
     :param minimum_interstation_distance_in_m: The minimum inter-station
         distance. Data from any new station closer to any existing station
         will not be downloaded. Also used for duplicate station detection as
@@ -111,21 +121,21 @@ class Restrictions(object):
     def __init__(self, starttime, endtime, chunklength_in_sec=None,
                  network=None, station=None, location=None, channel=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
-                 minimum_interstation_distance_in_m=1000,
+                 sanitize=True, minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
                                      "MH[Z,N,E]", "EH[Z,N,E]",
                                      "LH[Z,N,E]"),
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
-        self.chunklength = float(chunklength_in_sec) if chunklength_in_sec is not None \
-            else None
+        self.chunklength = chunklength_in_sec and float(chunklength_in_sec)
         self.network = network
         self.station = station
         self.location = location
         self.channel = channel
         self.reject_channels_with_gaps = reject_channels_with_gaps
         self.minimum_length = minimum_length
+        self.sanitize = bool(sanitize)
         self.channel_priorities = channel_priorities
         self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \

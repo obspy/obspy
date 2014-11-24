@@ -171,9 +171,10 @@ class DownloadHelper(object):
             helper.prepare_stationxml_download()
             helper.download_stationxml()
 
-            # Sanitize the downloaded things. Assures that all waveform data
-            # also has corresponding
-            helper.sanitize_downloads()
+            # Sanitize the downloaded things if desired. Assures that all
+            # waveform data also has corresponding station information.
+            if restrictions.sanitize:
+                helper.sanitize_downloads()
 
         return report
 
