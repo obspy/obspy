@@ -135,11 +135,11 @@ results in
 **Option 3: Custom Function**
 
 The most complex but also most powerful possibility is to use a function which
-will be evaluated to determine the filename. **If the function returns
-``True``, the MiniSEED file is assumed to already be available and will not be
-downloaded again; keep in mind that in that case no station data will be
-downloaded for that channel.** If it returns a string, the MiniSEED file will
-be saved to that path. Utilize closures to use any other paramters in the
+will be evaluated to determine the filename. **If the function returns**
+``True`` **, the MiniSEED file is assumed to already be available and will
+not be downloaded again; keep in mind that in that case no station data will
+be downloaded for that channel.** If it returns a string, the MiniSEED file
+will be saved to that path. Utilize closures to use any other parameters in the
 function. This hypothetical function checks if the file is already in a
 database and otherwise returns a string.
 
@@ -219,11 +219,12 @@ channel's station information is queried in some database and only those
 channels that do not exist yet will be downloaded. Use closures to pass more
 arguments like the temporal constraints of the station information.
 
->>> def get_stationxml_storage(network, station, channels):
+>>> def get_stationxml_storage(network, station, channels, starttime, endtime):
 ...     available_channels = []
 ...     missing_channels = []
 ...     for location, channel in channels:
-...         if is_in_db(network, station, location, channel):
+...         if is_in_db(network, station, location, channel, starttime,
+...                     endtime):
 ...             available_channels.append((location, channel))
 ...         else:
 ...             missing_channels.append((location, channel))

@@ -62,14 +62,13 @@ class Station(object):
     :type channels: list of :class:`~.Channel` objects
     :param stationxml_filename: The filename of the StationXML file.
     :type stationxml_filename: str
-    :param status: The status of the station.
-    :type status: :class:`~.STATUS`
     """
     __slots__ = ["network", "station", "latitude", "longitude", "channels",
-                 "stationxml_filename", "stationxml_status"]
+                 "_stationxml_filename", "want_station_information",
+                 "miss_station_information", "have_station_information"]
 
     def __init__(self, network, station, latitude, longitude, channels,
-                 stationxml_filename=None, status=None):
+                 stationxml_filename=None):
         # Station attributes.
         self.network = network
         self.station = station
@@ -78,22 +77,65 @@ class Station(object):
         self.channels = channels
         # Station information settings.
         self.stationxml_filename = stationxml_filename
-        self.stationxml_status = status or STATUS.NONE
+
+        # Internally keep track of which channels and time interval want
+        # station information, which miss station information and which
+        # already have some. want_station_information should always be the
+        # union of miss and have.
+        self.want_station_information = {}
+        self.miss_station_information = {}
+        self.have_station_information = {}
+
+    @property
+    def stationxml_filename(self):
+        return self._stationxml_filename
+
+    @stationxml_filename.setter
+    def stationxml_filename(self, value):
+        self._stationxml_filename = value
+        if not value:
+            return
+        dirname = os.path.dirname(value)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+    @property
+    def temporal_bounds(self):
+        """
+        Return the temporal bounds for the station.
+        """
+        starttimes = []
+        endtimes = []
+        for channel in self.channels:
+            s, e = channel.temporal_bounds
+            starttimes.append(s)
+            endtimes.append(e)
+        return min(starttimes), max(endtimes)
 
     def __str__(self):
         channels = "\n".join(str(i) for i in self.channels)
         channels = "\n\t".join(channels.splitlines())
         return (
             "Station '{network}.{station}' [Lat: {lat:.2f}, Lng: {lng:.2f}]\n"
-            "\t-> Filename: {filename}, Status: {status}"
-            "\n\t{channels}"
+            "\t-> Filename: {filename} ({status})\n"
+            "\t-> Wants station information for channels:  {want}\n"
+            "\t-> Has station information for channels:    {has}\n"
+            "\t-> Misses station information for channels: {miss}\n"
+            "\t{channels}"
         ).format(
             network=self.network,
             station=self.station,
             lat=self.latitude,
             lng=self.longitude,
             filename=self.stationxml_filename,
-            status=self.stationxml_status,
+            status="exist" if (self.stationxml_filename and os.path.exists(
+                self.stationxml_filename)) else "does not yet exist",
+            want=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
+                            self.want_station_information.keys()]),
+            has=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
+                          self.have_station_information.keys()]),
+            miss=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
+                           self.miss_station_information.keys()]),
             channels=channels)
 
     def prepare_stationxml_download(self, stationxml_storage):
@@ -102,32 +144,65 @@ class Station(object):
 
         :param stationxml_storage:
         """
+        # Determine what channels actually want to have station information.
+        # This will be a tuple of location code, channel code, starttime,
+        # and endtime.
+        self.want_station_information = {}
+        for channel in self.channels:
+            if channel.wants_station_information is False:
+                continue
+            self.want_station_information[
+                (channel.location, channel.channel)] = channel.temporal_bounds
+
+        # Parse user passed information.
+        s, e = self.temporal_bounds
         storage = utils.get_stationxml_filename(
             stationxml_storage, self.network, self.station,
-            [(_i.location, _i.channel) for _i in self.channels])
+            [(_i.location, _i.channel) for _i in self.channels],
+            starttime=s, endtime=e)
 
         # The simplest case. The function returns a string. Now two things
         # can happen.
         if isinstance(storage, (str, bytes)):
             filename = storage
-            # 1. The file does not yet exist, and all channels that
-            # have intervals with DOWNLOADED and EXISTS status will be
-            # marked as NEEDS_DOWNLOAD. Furthermore the filename will be
-            # attached.
+            self.stationxml_filename = filename
+            # 1. The file does not yet exist. Thus all channels must be
+            # downloaded new.
             if not os.path.exists(filename):
-                for channel in self.channels:
-                    if not channel.intervals_need_station_file:
-                        continue
-
-                self.stationxml_filename = filename
-                self.stationxml_status = STATUS.NEEDS_DOWNLOADING
+                self.miss_station_information = \
+                    copy.deepcopy(self.want_station_information)
+                self.have_station_information = {}
+            # 2. The file does exist. It will be parsed. If it contains ALL
+            # necessary information, nothing will happen. Otherwise it will
+            # be overwritten.
+            else:
+                info = utils.get_stationxml_contents(filename)
+                for c_id, times in self.want_station_information.items():
+                    # Get the temporal range of information in the file.
+                    c_info = [_i for _i in info if
+                              _i.network == self.network and
+                              _i.station == self.station and
+                              _i.location == c_id[0] and
+                              _i.channel == c_id[1]]
+                    if not c_info:
+                        break
+                    starttime = min([_i.starttime for _i in c_info])
+                    endtime = max([_i.endtime for _i in c_info])
+                    if starttime > times[0] or endtime < times[1]:
+                        break
+                # All good if no break is called.
+                else:
+                    self.have_station_information = \
+                        copy.deepcopy(self.want_station_information)
+                    self.miss_station_information = {}
+                    return
+                # Otherwise everything will be downloaded.
+                self.miss_station_information = \
+                    copy.deepcopy(self.want_station_information)
+                self.have_station_information = {}
+        # The other possibility is that a dictionary is returned.
         else:
-            if not storage["missing_channels"]:
-                self.stationxml_status = STATUS.EXISTS
-                self.stationxml_filename = storage["filename"]
-                for channel in self.channels:
-                    channel.station_status = STATUS.EXISTS
-                return
+            raise NotImplementedError
 
     def prepare_mseed_download(self, mseed_storage):
         """
@@ -156,24 +231,57 @@ class Station(object):
                         os.makedirs(os.path.dirname(interval.filename))
                     interval.status = STATUS.NEEDS_DOWNLOADING
 
+    def sanitize_downloads(self, logger):
+        """
+        Should be run after the MiniSEED and StationXML downloads finished.
+        It will make sure that every MiniSEED file also has a corresponding
+        StationXML file.
+        """
+        # All or nothing for each channel.
+        for id in self.miss_station_information:
+            logger.warnings("No station information could be downloaded for "
+                            "%s.%s.%s.%s. All downloaded MiniSEED files "
+                            "will be deleted!" % (
+                                self.network, self.station, id[0], id[1]))
+            channel = self.channels[id]
+            for time_interval in channel.intervals:
+                # Only delete downloaded things!
+                if time_interval.status == STATUS.DOWNLOADED:
+                    utils.safe_delete(time_interval.filename)
+                    time_interval.status = STATUS.DOWNLOAD_REJECTED
+
 
 class Channel(object):
     """
     Object representing a Channel. Each time interval should end up in one
     MiniSEED file.
     """
-    __slots__ = ["location", "channel", "intervals", "station_status"]
+    __slots__ = ["location", "channel", "intervals"]
 
-    def __init__(self, location, channel, intervals, station_status=None):
+    def __init__(self, location, channel, intervals):
         self.location = location
         self.channel = channel
         self.intervals = intervals
-        self.station_status = station_status or STATUS.NONE
+
+    @property
+    def wants_station_information(self):
+        """
+        Determine if the channel requires any station information.
+
+        As soon as at the status of at least one interval is either
+        ``DOWNLOADED`` or ``EXISTS`` the whole channel will be thought of as
+        requiring station information. This does not yet mean that station
+        information will be downloaded. That is decided at a later stage.
+        """
+        status = set([_i.status for _i in self.intervals])
+        if STATUS.DOWNLOADED in status or STATUS.EXISTS in status:
+            return True
+        return False
 
     @property
     def temporal_bounds(self):
         """
-        Returns a tuple of the minimum starttime and the maximum endtime.
+        Returns a tuple of the minimum start time and the maximum end time.
         """
         return (min([_i.start for _i in self.intervals]),
                 max([_i.end for _i in self.intervals]))
@@ -299,6 +407,87 @@ class ClientDownloadHelper(object):
             station.prepare_stationxml_download(
                 stationxml_storage=self.stationxml_storage)
 
+    def download_stationxml(self, threads=10):
+        """
+        Actually download the StationXML files.
+
+        :param threads: Limits the maximum number of threads for the client.
+        """
+
+        def star_download_station(args):
+            """
+            Maps arguments to the utils.download_stationxml() function.
+
+            :param args: The to-be mapped arguments.
+            """
+            try:
+                ret_val = utils.download_stationxml(*args, logger=self.logger)
+            except utils.ERRORS as e:
+                self.logger.error(str(e))
+                return None
+            return ret_val
+
+        arguments = []
+        for station in self.stations.values():
+            if not station.miss_station_information:
+                continue
+            s, e = station.temporal_bounds
+            bulk = [(station.network, station.station, channel.location,
+                     channel.channel, s, e) for channel in station.channels]
+            arguments.append((self.client, self.client_name, bulk,
+                              station.stationxml_filename))
+
+        if not arguments:
+            self.logger.info("Client '%s' - No station information to "
+                             "download." % self.client_name)
+            return
+
+        s_time = timeit.default_timer()
+        pool = ThreadPool(min(threads, len(arguments)))
+        results = pool.map(star_download_station, arguments)
+        pool.close()
+        e_time = timeit.default_timer()
+
+        if isinstance(results[0], list):
+            results = itertools.chain.from_iterable(results)
+        results = [_i for _i in results if _i is not None]
+
+        filecount = 0
+        download_size = 0
+        # Update the station structures.
+        for s_id, filename in results:
+            filecount += 1
+            station = self.stations[s_id]
+            size = os.path.getsize(filename)
+            download_size += size
+            info = utils.get_stationxml_contents(filename)
+
+            still_missing = {}
+            # Make sure all missing information has been downloaded!
+            for c_id, times in station.miss_station_information.items():
+                # Get the temporal range of information in the file.
+                c_info = [_i for _i in info if
+                          _i.network == station.network and
+                          _i.station == station.station and
+                          _i.location == c_id[0] and
+                          _i.channel == c_id[1]]
+                if not c_info:
+                    break
+                starttime = min([_i.starttime for _i in c_info])
+                endtime = max([_i.endtime for _i in c_info])
+                if starttime > times[0] or endtime < times[1]:
+                    still_missing[c_id] = times
+                    continue
+                station.have_station_information[c_id] = times
+            station.miss_station_information = still_missing
+
+        self.logger.info("Client '%s' - Downloaded %i station files [%.1f MB] "
+                         "in %.1f seconds [%.2f KB/sec]." % (
+                             self.client_name, filecount,
+                             download_size / 1024.0 ** 2,
+                             e_time - s_time,
+                             (download_size / 1024.0) / (e_time - s_time)))
+
     def download_mseed(self, chunk_size_in_mb=25, threads_per_client=5):
         """
         Actually download MiniSEED data.
@@ -366,6 +555,12 @@ class ClientDownloadHelper(object):
             return []
 
         def star_download_mseed(args):
+            """
+            Star maps the arguments to the
+            utils.download_and_split_mseed_bulk() function.
+
+            :param args: The arguments to be passed.
+            """
             try:
                 ret_val = utils.download_and_split_mseed_bulk(
                     *args, logger=self.logger)
@@ -409,7 +604,16 @@ class ClientDownloadHelper(object):
             self.logger.info(
                 "Client '%s' - Status for %i time intervals/channels after "
                 "downloading: %s" % (
-                self.client_name, counter[key], key.upper()))
+                    self.client_name, counter[key], key.upper()))
+
+    def sanitize_downloads(self):
+        """
+        Should be run after the MiniSEED and StationXML downloads finished.
+        It will make sure that every MiniSEED file also has a corresponding
+        StationXML file.
+        """
+        for station in self.stations.values():
+            station.sanitize_downloads(logger=self.logger)
 
     def _check_downloaded_data(self):
         """
@@ -617,7 +821,7 @@ class ClientDownloadHelper(object):
                 return
             self.logger.error(
                 "Client '{0}' - Failed getting availability: %s".format(
-                self.client_name), str(e))
+                    self.client_name), str(e))
             return
         self.logger.info("Client '%s' - Successfully requested availability "
                          "(%.2f seconds)" % (self.client_name, end - start))

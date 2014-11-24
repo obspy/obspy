@@ -307,21 +307,33 @@ def filter_stations_with_channel_list(stations, channels):
     return final_stations
 
 
-def download_stationxml(client, client_name, starttime, endtime, station,
-                        logger):
-    bulk = [(station.network, station.station, _i.location, _i.channel,
-             starttime, endtime) for _i in station.channels]
+def download_stationxml(client, client_name, bulk, filename, logger):
+    """
+    Download all channels for a station in the already prepared bulk list.
+
+    :param client: An active client instance.
+    :param client_name: The name of the client mainly used for logging
+        purposes.
+    :param bulk: An already prepared bulk download list for all channels and
+        time intervals for the given station. All items in there are assumed
+        to come from the same station.
+    :param filename: The filename to download to.
+    :param logger: The logger instance to use for logging.
+
+    :returns: A tuple with the network and station id and the filename upon
+        success
+    """
+    network = bulk[0][0]
+    station = bulk[0][1]
     try:
-        client.get_stations_bulk(bulk, level="response",
-                                 filename=station.stationxml_filename)
-    except Exception as e:
+        client.get_stations_bulk(bulk, level="response", filename=filename)
+    except Exception:
         logger.info("Failed to downloaded StationXML from %s for station "
-                    "%s.%s." %
-                    (client_name, station.network, station.station))
+                    "%s.%s." % (client_name, network, station))
         return None
     logger.info("Client '%s' - Successfully downloaded '%s'." %
-                (client_name, station.stationxml_filename))
-    return station.stationxml_filename
+                (client_name, filename))
+    return ((network, station), filename)
 
 
 def download_and_split_mseed_bulk(client, client_name, chunks, logger):
@@ -727,7 +739,8 @@ def get_stationxml_contents(filename):
     return channels
 
 
-def get_stationxml_filename(str_or_fct, network, station, channels):
+def get_stationxml_filename(str_or_fct, network, station, channels,
+                            starttime, endtime):
     """
     Helper function getting the filename of a stationxml file.
 
@@ -743,7 +756,7 @@ def get_stationxml_filename(str_or_fct, network, station, channels):
     """
     # Call if possible.
     if callable(str_or_fct):
-        path = str_or_fct(network, station, channels)
+        path = str_or_fct(network, station, channels, starttime, endtime)
     # Check if its a format template.
     elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct):
         path = str_or_fct.format(network=network, station=station)
@@ -751,8 +764,11 @@ def get_stationxml_filename(str_or_fct, network, station, channels):
     else:
         path = os.path.join(str_or_fct, "{network}.{station}.xml".format(
             network=network, station=station))
+
+    # If it is just a filename, return that.
     if isinstance(path, (str, bytes)):
         return path
+
     elif isinstance(path, collections.Container):
         if "available_channels" not in path or \
                 "missing_channels" not in path or \
