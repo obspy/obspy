@@ -446,7 +446,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                         open_files[filename] = open(filename, "wb")
                     open_files[filename].write(fh.read(info["record_length"]))
             finally:
-                for f in open_files:
+                for f in open_files.values():
                     try:
                         f.close()
                     except:

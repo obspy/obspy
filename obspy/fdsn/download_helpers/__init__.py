@@ -190,7 +190,7 @@ to ``"some_folder/BW/FURT.xml"``.
 .. note::
 
     If the StationXML file already exists, it will be opened to see what is in
-    the file. In case it does not contain all necessary channels, it will be
+    the file. in case it does not contain all necessary channels, it will be
     deleted and only those channels needed in the current run will be
     downloaded again. Pass a custom function to the ``stationxml_path``
     argument if you require different behavior.
@@ -222,11 +222,11 @@ arguments like the temporal constraints of the station information.
 >>> def get_stationxml_storage(network, station, channels):
 ...     available_channels = []
 ...     missing_channels = []
-...     for chan in channels:
-...         if is_in_db(network, station, chan.location, chan.channel):
-...             available_channels.append(chan)
+...     for location, channel in channels:
+...         if is_in_db(network, station, location, channel):
+...             available_channels.append((location, channel))
 ...         else:
-...             missing_channels.append(chan)
+...             missing_channels.append((location, channel))
 ...     filename = os.path.join(ROOT, "%s.%s.xml" % (network, station))
 ...     return {
 ...         "available_channels": available_channels,

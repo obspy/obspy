@@ -312,9 +312,17 @@ class DownloadHelper(object):
             #     report.append({"client": client_name, "data": []})
             #     continue
 
+            # Download MiniSEED data.
             helper.prepare_mseed_download()
             helper.download_mseed(chunk_size_in_mb=download_chunk_size_in_mb,
                                   threads_per_client=threads_per_client)
+
+            # Download StationXML data.
+            helper.prepare_stationxml_download()
+            from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+
+
+
             from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
 
 
