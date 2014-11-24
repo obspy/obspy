@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Download helpers.
+FDSN web services download helpers.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014
@@ -12,13 +12,11 @@ Download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 
 import logging
 from multiprocessing.pool import ThreadPool
 import warnings
 
-import obspy
 from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
@@ -43,12 +41,15 @@ logger.addHandler(ch)
 
 
 class FDSNDownloadHelperException(FDSNException):
+    """
+    Base exception raised by the download helpers.
+    """
     pass
 
 
 class DownloadHelper(object):
     """
-    Class facilitating data acquistion across all FDSN web service
+    Class facilitating data acquisition across all FDSN web service
     implementation.
 
     :param providers: List of FDSN client names or service URLS. Will use
@@ -56,21 +57,31 @@ class DownloadHelper(object):
         in the list also determines their priority, if data is available at
         more then one provider it will always be downloaded from the
         provider that comes first in the list.
+    :type providers: list of str
     """
     def __init__(self, providers=None):
         if providers is None:
             providers = dict(URL_MAPPINGS.items())
-            # In that case make sure IRIS is first, and ORFEUS second! The
+            # In that case make sure IRIS is first, and Orfeus last! The
             # remaining items will be sorted alphabetically to make it
             # deterministic at least to a certain extent.
+            # Orfeus is last as it currently returns StationXML for all
+            # European stations without actually containing the data.
             _p = []
             if "IRIS" in providers:
                 _p.append("IRIS")
                 del providers["IRIS"]
+
+            orfeus = False
             if "ORFEUS" in providers:
-                _p.append("ORFEUS")
+                orfeus = providers["ORFEUS"]
                 del providers["ORFEUS"]
+
             _p.extend(sorted(providers))
+
+            if orfeus:
+                _p.append(orfeus)
+
             providers = _p
 
         self.providers = tuple(providers)
@@ -80,17 +91,31 @@ class DownloadHelper(object):
         self.__initialize_clients()
 
     def download(self, domain, restrictions, mseed_storage,
-                 stationxml_storage, download_chunk_size_in_mb=50,
+                 stationxml_storage, download_chunk_size_in_mb=20,
                  threads_per_client=5):
         """
-        Download data.
+        Launch the actual data download.
 
-        :param domain:
-        :param restrictions:
-        :param mseed_storage:
-        :param stationxml_storage:
-        :param download_chunk_size_in_mb:
-        :param threads_per_client:
+        :param domain: The download domain.
+        :type domain: :class:`~obspy.fdsn.download_helpers.domain.Domain`
+            subclass
+        :param restrictions: Non-spatial downloading restrictions.
+        :type restrictions:
+            :class:`~obspy.fdsn.download_helpers.restrictions.Restrictions`
+        :param mseed_storage: Where to store the waveform files. See
+            the :module:~obspy.fdsn.download_helpers` for more details.
+        :type mseed_storage: str or fct
+        :param stationxml_storage: Where to store the StationXML files. See
+            the :module:~obspy.fdsn.download_helpers` for more details.
+        :type stationxml_storage: str of fct
+        :param download_chunk_size_in_mb: MiniSEED data will be downloaded
+            in bulk chunks. This settings limits the chunk size. A higher
+            numbers means that less total download requests will be send,
+            but each individual download request will be larger.
+        :type download_chunk_size_in_mb: float, optional
+        :param threads_per_client: The number of download threads launched
+            per client.
+        :type threads_per_client: int, optional
         """
         # Collect all the downloaded stations.
         existing_stations = set()
