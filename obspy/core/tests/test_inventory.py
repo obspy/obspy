@@ -253,7 +253,7 @@ class InventoryBasemapTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(method='basemap', projection='ortho', resolution='c',
                      continent_fill_color='0.3', marker='d', label=False,
-                     colormap='hsv', color_per_network=True, outfile=ic.name)
+                     colormap='Set3', color_per_network=True, outfile=ic.name)
 
     def test_location_plot_local(self):
         """
@@ -312,7 +312,7 @@ class InventoryCartopyTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(method='cartopy', projection='ortho', resolution='c',
                      continent_fill_color='0.3', marker='d', label=False,
-                     colormap='hsv', color_per_network=True, outfile=ic.name)
+                     colormap='Set3', color_per_network=True, outfile=ic.name)
 
     def test_location_plot_local(self):
         """
