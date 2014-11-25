@@ -98,7 +98,7 @@ KEYWORDS = [
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>1.0.0',
-    'scipy',
+    'scipy>=0.7.2',
     'matplotlib',
     'lxml',
     'sqlalchemy']
