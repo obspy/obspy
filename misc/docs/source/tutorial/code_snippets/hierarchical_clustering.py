@@ -3,7 +3,8 @@ import urllib
 import numpy as np
 import matplotlib.pyplot as plt
 
-import hcluster
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
 
 url = "http://examples.obspy.org/dissimilarities.npz"
 with np.load(urllib.urlopen(url)) as data:
@@ -12,13 +13,13 @@ with np.load(urllib.urlopen(url)) as data:
 plt.subplot(121)
 plt.imshow(1 - dissimilarity, interpolation="nearest")
 
-dissimilarity = hcluster.squareform(dissimilarity)
+dissimilarity = distance.squareform(dissimilarity)
 threshold = 0.3
-linkage = hcluster.linkage(dissimilarity, method="single")
-clusters = hcluster.fcluster(linkage, 0.3, criterion="distance")
+linkage = hierarchy.linkage(dissimilarity, method="single")
+clusters = hierarchy.fcluster(linkage, threshold, criterion="distance")
 
 plt.subplot(122)
-hcluster.dendrogram(linkage, color_threshold=0.3)
+hierarchy.dendrogram(linkage, color_threshold=0.3)
 plt.xlabel("Event number")
 plt.ylabel("Dissimilarity")
 plt.show()
