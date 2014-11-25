@@ -130,7 +130,8 @@ class DownloadHelper(object):
         report = []
 
         # Do it sequentially for each client. Doing it in parallel is not
-        # really feasible as long as the availability queries are not reliable.
+        # really feasible as long as the availability queries are not
+        # reliable for all endpoints.
         for client_name, client in self._initialized_clients.items():
             logger.info("Stations already acquired during this run: %i" %
                         len(existing_stations))

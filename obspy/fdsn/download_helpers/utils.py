@@ -25,12 +25,8 @@ from lxml import etree
 import numpy as np
 from scipy.spatial import cKDTree
 from socket import timeout as SocketTimeout
-import tempfile
-import time
-from uuid import uuid4
-import obspy
-import warnings
 
+import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.fdsn.client import FDSNException
 from obspy.mseed.util import getRecordInformation
@@ -42,14 +38,8 @@ ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 
 
 # mean earth radius in meter as defined by the International Union of
-# Geodesy and Geophysics.
+# Geodesy and Geophysics. Used for the spherical kd-tree.
 EARTH_RADIUS = 6371009
-
-
-ChannelAvailability = collections.namedtuple(
-    "ChannelAvailability",
-    ["network", "station", "location", "channel", "starttime", "endtime",
-     "filename"])
 
 
 def format_report(report):
@@ -314,16 +304,20 @@ def filter_channel_priority(channels, key, priorities=None):
 
 def safe_delete(filename):
     """
-    "Safely" delete a file. It really just checks if it exists and is a file.
+    "Safely" delete a file. It really just checks if it exists and if it is a
+    file.
 
     :param filename: The filename to delete.
-    :return:
     """
     if not os.path.exists(filename):
         return
     elif not os.path.isfile(filename):
         raise ValueError("'%s' is not a file." % filename)
-    os.remove(filename)
+    try:
+        os.remove(filename)
+    except Exception as e:
+        raise ValueError("Could not delete '%s' because: %s" % (filename,
+                                                                str(e)))
 
 
 def filter_stations(stations, minimum_distance_in_m):
@@ -332,8 +326,8 @@ def filter_stations(stations, minimum_distance_in_m):
     each other.
     """
     stations = copy.copy(stations)
-    nd_tree = SphericalNearestNeighbour(stations)
-    nns = nd_tree.query_pairs(minimum_distance_in_m)
+    kd_tree = SphericalNearestNeighbour(stations)
+    nns = kd_tree.query_pairs(minimum_distance_in_m)
 
     indexes_to_remove = []
 
@@ -429,9 +423,16 @@ def get_stationxml_contents(filename):
     file. Sometimes it is too expensive to parse the full file with ObsPy.
     This is usually orders of magnitudes faster.
 
+    Will only returns channels that contain response information.
+
     :param filename: The path to the file.
     :returns: list of ChannelAvailability objects.
     """
+    ChannelAvailability = collections.namedtuple(
+        "ChannelAvailability",
+        ["network", "station", "location", "channel", "starttime", "endtime",
+         "filename"])
+
     # Small state machine.
     network, station, location, channel, starttime, endtime = [None] * 6
 
@@ -479,9 +480,9 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     """
     Helper function getting the filename of a stationxml file.
 
-    The rule are simple, if it is a function, network and station are passed
-    as arguments and the resulting string is returned. Furthermore a list of
-    channels is passed.
+    The rule are simple, if it is a function, network, station, starttime,
+    and endtime are passed as arguments and the resulting string is
+    returned. Furthermore a list of channels is passed.
 
     If it is a string, and it contains ``"{network}"``, and ``"{station}"``
     formatting specifiers, ``str.format()`` is called.
@@ -531,7 +532,8 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
 
     The rule are simple, if it is a function, network, station, location,
     channel, starttime, and endtime are passed as arguments and the resulting
-    string is returned.
+    string is returned. If the return values is ``True``, the particular
+    time interval will be ignored.
 
     If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
     ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and ``"{endtime}"``
@@ -564,7 +566,7 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
                 e=endtime.strftime(strftime)))
 
     if path is True:
-        return path
+        return True
     elif not isinstance(path, (str, bytes)):
         raise TypeError("'%s' is not a filepath." % str(path))
     return path
