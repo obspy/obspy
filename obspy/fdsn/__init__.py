@@ -29,7 +29,7 @@ providers are:
 >>> from obspy.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
-GEOFON  http://service.geonet.org.nz
+GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
 INGV    http://webservices.rm.ingv.it
 IRIS    http://service.iris.edu
