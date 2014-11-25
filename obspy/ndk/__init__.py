@@ -79,7 +79,7 @@ case to the solutions from February 2011).
 ...
 2011-02-28T20:45:45.700000Z | -20.520,  -69.440 | 5.27 Mwc
 2011-02-28T23:42:21.500000Z | -29.650, -112.280 | 5.54 Mwc
-To see all events call 'print CatalogObject.__str__(print_all=True)'
+To see all events call 'print(CatalogObject.__str__(print_all=True))'
 >>> cat.plot()  # doctest: +SKIP
 
 .. plot::
@@ -92,14 +92,14 @@ To see all events call 'print CatalogObject.__str__(print_all=True)'
 It can also deal with large amounts of data, though it might take a while.
 
 >>> cat = obspy.readEvents("/path/to/jan76_dec10.ndk")  # doctest: +SKIP
->>> print cat  # doctest: +SKIP
+>>> print(cat)  # doctest: +SKIP
 33872 Event(s) in Catalog:
 1976-01-01T01:29:53.400000Z | -29.250, -176.960 | 7.25 Mwc
 1976-01-05T02:31:44.700000Z | -13.420,  -75.140 | 5.65 Mwc
 ...
 2010-12-31T04:11:08.400000Z | -18.980, +167.590 | 5.07 Mwc
 2010-12-31T16:30:59.700000Z |  +0.810,  -26.060 | 5.45 Mwc
-To see all events call 'print CatalogObject.__str__(print_all=True)'
+To see all events call 'print(CatalogObject.__str__(print_all=True))'
 >>> cat.plot()  # doctest: +SKIP
 
 .. figure:: /_images/expensive_plots/GCMT_Catalog_1976-2010.png

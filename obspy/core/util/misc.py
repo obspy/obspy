@@ -28,9 +28,9 @@ import math
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
 # to: SEED MANUAL p.124
-# We use this e.g. in seihub.client.getWaveform to request two samples more on
+# We use this e.g. in seishub.client.getWaveform to request two samples more on
 # both start and end to cut to the samples that really are nearest to requested
-# start/endtime afterwards.
+# start/end time afterwards.
 
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,

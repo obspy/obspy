@@ -39,7 +39,7 @@ class Network(BaseNode):
         :param code: The SEED network code.
         :type total_number_of_stations: int
         :param total_number_of_stations: The total number of stations
-            contained in this networkork, including inactive or terminated
+            contained in this network, including inactive or terminated
             stations.
         :param selected_number_of_stations: The total number of stations in
             this network that were selected by the query that produced this
@@ -158,7 +158,7 @@ class Network(BaseNode):
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get response for.
         :rtype: :class:`~obspy.station.response.Response`
-        :returns: Response for timeseries specified by input arguments.
+        :returns: Response for time series specified by input arguments.
         """
         network, station, location, channel = seed_id.split(".")
         if self.code != network:
@@ -258,7 +258,7 @@ class Network(BaseNode):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see http://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/2/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -374,7 +374,7 @@ class Network(BaseNode):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
@@ -500,7 +500,7 @@ class Network(BaseNode):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

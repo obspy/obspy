@@ -2,13 +2,19 @@
  - general:
    * Support for Python 3.3 and 3.4
    * More generic processing history for most Stream and Trace methods.
+   * Required SciPy version explicitly specified as 0.7.2+.
  - obspy.ah
-   * New submodule for reading the AH (Ad Hoc) waveform format 
+   * New submodule for reading the AH (Ad Hoc) waveform format
  - obspy.core:
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
+   * Dictionary values added to an AttribDict will now be converted to an
+     AttribDict.
+   * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
+     provided by the future package.
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
+   * Support exporting Inventory objects to CSS relations.
  - obspy.fdsn:
    * WADL files are cached per Python process.
    * Bulk station downloading using POST requests.
@@ -19,6 +25,18 @@
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.mseed:
+   * `details=True` when reading will now write to
+     `Trace.stats.mseed.blkt1001.timing_quality` instead of
+     `Trace.stats.mseed.timing_quality`.
+   * The timing quality will now also be written to a file if it is set.
+   * Non-existing values when reading with `details=True` will now be set to
+     `False` instead of `-1`.
+   * New utility function `obspy.mseed.util.set_flags_in_fixed_header()`
+     giving the ability to overwrite flags in the fixed header of existing
+     MiniSEED files.
+   * The sequence number of the first record of each Trace can now be
+     specified when writing MiniSEED files.
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:
@@ -28,6 +46,8 @@
      data please use the obspy.fdsn client (use
      `Client(base_url='ORFEUS', ...)`) and for travel times please use
      obspy.taup.
+ - obspy.seedlink.easyseedlink:
+   * New submodule providing an easier way to create SeedLink clients
  - obspy.seishub:
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
      from a seishub server of version 1.4.0 or higher.
@@ -35,11 +55,16 @@
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
      `weighted average slopes` method from Wiggins 1976.
+   * PPSD has new methods to extract mean and mode of the histogram by
+     frequency (see #804)
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
+   * write support for SACPZ ASCII representation of channel responses.
+ - obspy.zmap:
+   * New module which adds ZMAP read/write support
  - scripts:
    * All scripts now require argparse instead of optparse.
    * All scripts now accept -V or --version to print version information.
@@ -249,6 +274,7 @@
      (signed 16bit/32bit integer)
  - obspy.segy:
    * fix a bug in plotting (see #689)
+   * Removed the SEG Y benchmark plots. Now part of obspy/apps.
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger

@@ -34,7 +34,7 @@ class SpectrogramTestCase(unittest.TestCase):
         Create spectrogram plotting examples in tests/output directory.
         """
         # Create dynamic test_files to avoid dependencies of other modules.
-        # set specific seed value such that random numbers are reproduceable
+        # set specific seed value such that random numbers are reproducible
         np.random.seed(815)
         head = {
             'network': 'BW', 'station': 'BGLD',

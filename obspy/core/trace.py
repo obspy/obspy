@@ -870,10 +870,8 @@ class Trace(object):
         :type filename: str
         :param filename: The name of the file to write.
         :type format: str
-        :param format: The format to write must be specified. One of
-            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
-            :meth:`obspy.core.stream.Stream.write` method for all possible
+        :param format: The format to write must be specified. See
+            :meth:`obspy.core.stream.Stream.write` method for possible
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
@@ -997,7 +995,7 @@ class Trace(object):
                 gap = createEmptyDataChunk(delta, self.data.dtype, fill_value)
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
-                # too large number of pointes, e.g. 189336539799
+                # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((self.data, gap))
@@ -1136,7 +1134,7 @@ class Trace(object):
             # Check if the endtime fits the starttime, npts and sampling_rate.
             if self.stats.endtime != self.stats.starttime + \
                     (self.stats.npts - 1) / float(self.stats.sampling_rate):
-                msg = "Endtime is not the time of the last sample."
+                msg = "End time is not the time of the last sample."
                 raise Exception(msg)
         elif self.stats.npts not in [0, 1]:
             msg = "Data size should be 0, but is %d"
@@ -1505,10 +1503,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         from scipy.signal import get_window
         from scipy.fftpack import rfft, irfft
         factor = self.stats.sampling_rate / float(sampling_rate)
-        # check if endtime changes and this is not explicitly allowed
+        # check if end time changes and this is not explicitly allowed
         if strict_length:
             if len(self.data) % factor != 0.0:
-                msg = "Endtime of trace would change and strict_length=True."
+                msg = "End time of trace would change and strict_length=True."
                 raise ValueError(msg)
         # do automatic lowpass filtering
         if not no_filter:
@@ -1625,9 +1623,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data
         array([0, 4, 8])
         """
-        # check if endtime changes and this is not explicitly allowed
+        # check if end time changes and this is not explicitly allowed
         if strict_length and len(self.data) % factor:
-            msg = "Endtime of trace would change and strict_length=True."
+            msg = "End time of trace would change and strict_length=True."
             raise ValueError(msg)
 
         # do automatic lowpass filtering
@@ -2281,7 +2279,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         Uses the :class:`obspy.station.response.Response` object attached as
         :class:`Trace`.stats.response to deconvolve the instrument response
-        from the trace's timeseries data. Raises an exception if the response
+        from the trace's time series data. Raises an exception if the response
         is not present. Use e.g. :meth:`Trace.attach_response` to attach
         response to trace providing :class:`obspy.station.inventory.Inventory`
         data.

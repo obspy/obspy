@@ -16,6 +16,7 @@ from obspy.mseed.msstruct import _MSStruct
 
 import ctypes as C
 import io
+import multiprocessing
 import numpy as np
 import os
 import random
@@ -397,7 +398,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Tests issue #289.
 
-        Reading MiniSEED using start-/endtime outside of data should result in
+        Reading MiniSEED using start/end time outside of data should result in
         an empty Stream object.
         """
         # 1
@@ -417,7 +418,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        # start and endtime
+        # start and end time
         ms = _MSStruct(filename)
         ms.read(-1, 0, 1, 0)
         blkt_link = ms.msr.contents.blkts.contents
@@ -651,6 +652,28 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # Assert that the data is the same.
         np.testing.assert_array_equal(data_m, data_r)
         np.testing.assert_array_equal(data_m, data_q)
+
+    def test_infinite_loop(self):
+        """
+        Tests that libmseed doesn't enter an infinite loop on buggy files.
+        """
+        filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
+
+        def testFunction(filename):
+            try:
+                st = read(filename)  # noqa
+            except ValueError:
+                # Should occur with broken files
+                pass
+
+        process = multiprocessing.Process(target=testFunction,
+                                          args=(filename, ))
+        process.start()
+        process.join(5)
+
+        fail = process.is_alive()
+        process.terminate()
+        self.assertFalse(fail)
 
 
 def suite():

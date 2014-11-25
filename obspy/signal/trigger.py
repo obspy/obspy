@@ -95,7 +95,7 @@ def recSTALTAPy(a, nsta, nlta):
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = 1e-99  # avoid zero devision
+    lta = 1e-99  # avoid zero division
     charfct = [0.0] * len(a)
     icsta = 1 - csta
     iclta = 1 - clta
@@ -375,7 +375,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     """
     Wrapper for P-picker routine by M. Baer, Schweizer Erdbebendienst.
 
-    :param reltrc: timeseries as numpy.ndarray float32 data, possibly filtered
+    :param reltrc: time series as numpy.ndarray float32 data, possibly filtered
     :param samp_int: number of samples per second
     :param tdownmax: if dtime exceeds tdownmax, the trigger is examined for
         validity
@@ -398,7 +398,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
     reltrc = np.ascontiguousarray(reltrc, np.float32)
-    # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
+    # index in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
@@ -630,8 +630,12 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
                                 + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
-            cft_peak = tr.data[on:off].max()
-            cft_std = tr.data[on:off].std()
+            try:
+                cft_peak = tr.data[on:off].max()
+                cft_std = tr.data[on:off].std()
+            except ValueError:
+                cft_peak = tr.data[on]
+                cft_std = 0
             on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
             off = tr.stats.starttime + float(off) / tr.stats.sampling_rate
             triggers.append((on.timestamp, off.timestamp, tr.id, cft_peak,

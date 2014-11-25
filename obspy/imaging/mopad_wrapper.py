@@ -183,8 +183,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # 1. Need to bring the all patches to the origin (0, 0).
         for p in collection._paths:
             p.vertices -= xy
-        # 2. Then use the offset property of the collection.ection to
-        # position the patches
+        # 2. Then use the offset property of the collection to position the
+        # patches
         collection.set_offsets(xy)
         collection._transOffset = axes.transData
     collection.set_edgecolors(edgecolor)
@@ -284,7 +284,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             mopad_kwargs[mopad_key] = value
     # convert from points to size in cm
     for key in ['plot_aux_plot_size', 'plot_size']:
-        # 100.0 is matplotlibs default dpi for savefig
+        # 100.0 is matplotlib's default DPI for savefig
         mopad_kwargs[key] = mopad_kwargs[key] / 100.0 * 2.54
     # use nofill kwarg
 

@@ -670,7 +670,7 @@ class ParserTestCase(unittest.TestCase):
             tempfile = fh.name
             # this will create two files due to two entries in dataless
             parser.writeXSEED(tempfile, split_stations=True)
-            # the second filename is appended with the timestamp of start
+            # the second file name is appended with the timestamp of start
             # period
             os.remove(tempfile + '.1301529600.0.xml')
 

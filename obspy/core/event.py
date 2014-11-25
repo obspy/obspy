@@ -2680,7 +2680,7 @@ class Event(__Event):
 
     def preferred_magnitude(self):
         """
-        Returns the preferred origin
+        Returns the preferred magnitude
         """
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
@@ -2690,13 +2690,33 @@ class Event(__Event):
 
     def preferred_focal_mechanism(self):
         """
-        Returns the preferred origin
+        Returns the preferred focal mechanism
         """
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
                 getReferredObject()
         except AttributeError:
             return None
+
+    def write(self, filename, format, **kwargs):
+        """
+        Saves event information into a file.
+
+        :type filename: str
+        :param filename: The name of the file to write.
+        :type format: str
+        :param format: The file format to use (e.g. ``"QUAKEML"``). See
+            :meth:`Catalog.write()` for a list of supported formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            plugin's writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy import readEvents
+        >>> event = readEvents()[0]  # doctest: +SKIP
+        >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
+        """
+        Catalog(events=[self]).write(filename, format, **kwargs)
 
 
 class Catalog(object):
@@ -2890,7 +2910,7 @@ class Catalog(object):
             out += "\n...\n"
             out += "\n".join([ev.short_str() for ev in self[-2:]])
             out += "\nTo see all events call " + \
-                   "'print CatalogObject.__str__(print_all=True)'"
+                   "'print(CatalogObject.__str__(print_all=True))'"
         return out
 
     def append(self, event):
@@ -2970,7 +2990,7 @@ class Catalog(object):
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
-        # unorderable types by checking first shortcut on positiv is None
+        # unorderable types by checking first shortcut on positive is None
         # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:
@@ -3111,7 +3131,7 @@ class Catalog(object):
         :param format: The file format to use (e.g. ``"QUAKEML"``). See the
             `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
-            waveform writer method.
+            plugin's writer method.
 
         .. rubric:: Example
 
@@ -3122,8 +3142,9 @@ class Catalog(object):
         Writing single events into files with meaningful filenames can be done
         e.g. using event.id
 
-        >>> for ev in catalog: #doctest: +SKIP
-        ...     ev.write(ev.id + ".xml", format="QUAKEML") #doctest: +SKIP
+        >>> for ev in catalog:  # doctest: +SKIP
+        ...     filename = str(ev.resource_id) + ".xml"
+        ...     ev.write(filename, format="QUAKEML") # doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 

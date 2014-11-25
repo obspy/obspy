@@ -3,6 +3,12 @@
 obspy.seedlink - SeedLink client for ObsPy
 ==========================================
 
+The obspy.seedlink module provides an implementation of the SeedLink client
+protocol for ObsPy.
+
+A higher level client is provided in the :mod:`obspy.seedlink.easyseedlink`
+module.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:

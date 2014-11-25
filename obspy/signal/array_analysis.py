@@ -644,7 +644,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         raise TypeError('only Stream or numpy.ndarray allowed')
 
     if verbose:
-        print(("coordys = " + coordsys))
+        print("coordsys = " + coordsys)
 
     if coordsys == 'lonlat':
         center_lon = geometry[:, 0].mean()
@@ -919,7 +919,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(geometry)
         print("stream contains following traces:")
         print(stream)
-        print(("stime = " + str(stime) + ", etime = " + str(etime)))
+        print("stime = " + str(stime) + ", etime = " + str(etime))
 
     time_shift_table = get_timeshift(geometry, sll_x, sll_y,
                                      sl_s, grdpts_x, grdpts_y)
@@ -941,7 +941,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nlow = max(1, nlow)  # avoid using the offset
     nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
-    # to spead up the routine a bit we estimate all steering vectors in advance
+    # to speed up the routine a bit we estimate all steering vectors in advance
     steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                          deltaf, time_shift_table, steer)
@@ -1004,7 +1004,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
             if verbose:
-                print((newstart, (newstart + (nsamp / fs)), res[-1][1:]))
+                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
         if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep

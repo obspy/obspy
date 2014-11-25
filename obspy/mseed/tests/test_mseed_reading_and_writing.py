@@ -18,6 +18,8 @@ import numpy as np
 import os
 import unittest
 import warnings
+from datetime import datetime
+from struct import unpack
 
 
 class MSEEDReadingAndWritingTestCase(unittest.TestCase):
@@ -84,7 +86,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(datalist[i], trace.data[0:9].tolist())
             i += 1
         del stream
-        # Also test unicode filenames.
+        # Also test unicode file names.
         mseed_filenames = [str('BW.BGLD.__.EHE.D.2008.001.first_record'),
                            str('qualityflags.mseed'),
                            str('test.mseed'),
@@ -221,11 +223,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         The filenames are hard coded so the test will not fail with future
         changes in the structure of the package.
         """
-        # Mini-SEED filenames.
+        # Mini-SEED file names.
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
                            'timingquality.mseed']
-        # Non Mini-SEED filenames.
+        # Non Mini-SEED file names.
         non_mseed_filenames = ['test_mseed_reading_and_writing.py',
                                '__init__.py']
         # Loop over Mini-SEED files
@@ -241,15 +243,15 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readSingleRecordToMSR(self):
         """
-        Tests readSingleRecordtoMSR against start and endtimes.
+        Tests readSingleRecordtoMSR against start and end times.
 
-        Reference start and endtimes are obtained from the tracegroup.
+        Reference start and end times are obtained from the tracegroup.
         Both cases, with and without ms_p argument are tested.
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         start, end = [1199145599915000, 1199145620510000]
-        # start and endtime
+        # start and end time
         ms = _MSStruct(filename, init_msrmsf=False)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
@@ -358,7 +360,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         npts = 1000
         # data array of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         with NamedTemporaryFile() as tf:
@@ -373,7 +375,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
     def test_readMSTracesViaRecords_MultipleIds(self):
         """
         Tests a critical issue when the LibMSEED.readMSTracesViaRecords method
-        is used (e.g. on Windows systems) and a start/endtime is set and the
+        is used (e.g. on Windows systems) and a start/end time is set and the
         file has multiple ids.
 
         This is due to the fact that the readMSTraceViaRecords method uses the
@@ -409,13 +411,101 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Should just result in an empty stream.
         self.assertEqual(len(st), 0)
 
+    def test_writeSequenceNumber(self):
+        """
+        Tests Mini-SEED writing with an sequence number starting at something
+        different than 1.
+        """
+        npts = 2200  # At least 3 records of 512 bytes
+        np.random.seed(815)  # make test reproducible
+        numPyData = np.random.randint(-1000, 1000, npts).astype(np.int32)
+        starttime = UTCDateTime(2008, 1, 1, 0, 0, 10)
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": "str"}}
+
+        # Invalid seq num
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            self.assertRaises(ValueError, dataStream.write, tempfile,
+                              format="MSEED", encoding=11, reclen=512)
+
+        # Seq num out of range #1
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": -1}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            self.assertRaises(ValueError, dataStream.write, tempfile,
+                              format="MSEED", encoding=11, reclen=512)
+        # Seq num out of range #2
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": 1000001}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            self.assertRaises(ValueError, dataStream.write, tempfile,
+                              format="MSEED", encoding=11, reclen=512)
+
+        # Seq num missing, defaults to 1
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D"}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
+            tf.seek(0, os.SEEK_SET)
+            self.assertEqual(tf.read(6), b"000001")
+
+        # Seq num changed to 999998, expecting rollover
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D", "sequence_number": 999998}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
+            tf.seek(0, os.SEEK_SET)
+            seq_counts = [b"999998", b"999999", b"000001"]
+            for count in seq_counts:
+                self.assertEqual(tf.read(6), count)
+                tf.seek(506, os.SEEK_CUR)
+
+        # Setting sequence number as kwarg argument of write
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D"}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512,
+                             sequence_number=42)
+            tf.seek(0, os.SEEK_SET)
+            self.assertEqual(tf.read(6), b"000042")
+
     def test_writeAndReadDifferentRecordLengths(self):
         """
         Tests Mini-SEED writing and record lengths.
         """
         # libmseed instance.
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
@@ -462,7 +552,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         Tests whether the header is correctly written and read.
         """
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         stats = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -490,7 +580,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         trace.stats.mseed.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         # Test all possible combinations of record length, encoding and
         # byte order.
@@ -660,7 +750,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         This test also checks the files created by libmseed to some extend.
         """
         path = os.path.join(self.path, "data", "encoding")
-        # Dictionary. The key is the filename, the value a tuple: dtype,
+        # Dictionary. The key is the file name, the value a tuple: dtype,
         # sampletype, encoding, content
         def_content = np.arange(1, 51, dtype=np.int32)
         files = {
@@ -717,7 +807,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 0)
                 else:
                     self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 1)
-                # Deallocate for debugging with valrgind
+                # Deallocate for debugging with valgrind
                 del ms
 
     def test_writingMicroseconds(self):
@@ -748,7 +838,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         corresponding test in test_libmseed.py as it is just more convenient to
         write it in here.
         """
-        np.random.seed(800)  # make test reproducable
+        np.random.seed(800)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
@@ -861,7 +951,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         methods.
         """
         npts = 1000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randn(npts).astype(np.float64) * 1e3 + .5
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
@@ -938,7 +1028,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st = read(filename, details=True)
         dt = np.dtype([(native_str('npts'), native_str('i4')),
                        (native_str('qual'), native_str('i4'))])
-        res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
+        res = np.array([(tr.stats.npts, tr.stats.mseed.blkt1001.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info
         # timing_quality splits the stream additionally when timing quality
@@ -1078,6 +1168,68 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Test data is from the IRIS ASCII timeseries service.
         self.assertTrue(np.allclose(
             tr.data[:5], np.array([294, 32, 26, 285, 389]), rtol=1E-5))
+
+    def test_write_timing_quality(self):
+        """
+        Test setting blockette 1001's timing quality
+        """
+        npts = 1000
+        np.random.seed(42)  # make test reproducible
+        data = np.random.randint(-1000, 1000, npts).astype(np.int32)
+
+        # Test valid data
+        stat_header = {'network': 'NE', 'station': 'STATI', 'location': 'LO',
+                       'channel': 'CHA', 'npts': len(data), 'sampling_rate': 1,
+                       'mseed': {'dataquality': 'D',
+                                 'blkt1001': {'timing_quality': 63}}}
+
+        stat_header['starttime'] = UTCDateTime(datetime(2012, 8, 1,
+                                                        12, 0, 0, 0))
+        st = Stream([Trace(data=data, header=stat_header)])
+
+        with NamedTemporaryFile() as tf:
+            st.write(tf, format="mseed", encoding=11, reclen=512)
+
+            # Check values
+            tf.seek(0, os.SEEK_SET)
+            # Check timing quality value in the file. Check first, second and
+            # third record and assume all others are ok
+            for recnum in range(0, 3):
+                rec_start = 512 * recnum
+                tf.seek(rec_start + 46, os.SEEK_SET)
+                next_blockette = unpack(native_str(">H"), tf.read(2))[0]
+                while next_blockette != 0:
+                    tf.seek(rec_start + next_blockette, os.SEEK_SET)
+                    blkt_nbr = unpack(native_str(">H"), tf.read(2))[0]
+                    if blkt_nbr == 1001:
+                        tf.seek(2, os.SEEK_CUR)
+                        timing_qual = unpack(native_str("B"), tf.read(1))[0]
+                        self.assertEqual(timing_qual, 63, "timing_qual")
+                        break
+                    else:
+                        next_blockette = unpack(native_str(">H"),
+                                                tf.read(2))[0]
+
+        # Test invalid data: string
+        stat_header['mseed']['blkt1001']['timing_quality'] = "obviouslyinvalid"
+        st = Stream([Trace(data=data, header=stat_header)])
+        with NamedTemporaryFile() as tf:
+            self.assertRaises(ValueError, st.write, tf, format="mseed",
+                              encoding=11, reclen=512)
+
+        # Test invalid data: <0 value
+        stat_header['mseed']['blkt1001']['timing_quality'] = -1
+        st = Stream([Trace(data=data, header=stat_header)])
+        with NamedTemporaryFile() as tf:
+            self.assertRaises(ValueError, st.write, tf, format="mseed",
+                              encoding=11, reclen=512)
+
+        # Test invalid data: > 100 value
+        stat_header['mseed']['blkt1001']['timing_quality'] = 254
+        st = Stream([Trace(data=data, header=stat_header)])
+        with NamedTemporaryFile() as tf:
+            self.assertRaises(ValueError, st.write, tf, format="mseed",
+                              encoding=11, reclen=512)
 
 
 def suite():

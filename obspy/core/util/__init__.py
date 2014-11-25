@@ -6,11 +6,11 @@ obspy.core.util - Various utilities for ObsPy
 .. note:: Please import all utilities within your custom applications from this
     module rather than from any sub module, e.g.
 
-    >>> from obspy.core.util import OrderedDict  # good
+    >>> from obspy.core.util import AttribDict  # good
 
     instead of
 
-    >>> from obspy.core.util.obspy_types import OrderedDict  # bad
+    >>> from obspy.core.util.attribdict import AttribDict  # bad
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -33,9 +33,9 @@ from obspy.core.util.decorator import deprecated, deprecated_keywords, \
     skip, skipIf, uncompressFile
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
-    kilometer2degrees, locations2degrees
+    kilometer2degrees, locations2degrees, degrees2kilometers
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     scoreatpercentile, toIntOrZero, loadtxt, CatchOutput
-from obspy.core.util.obspy_types import OrderedDict, Enum, \
-    ComplexWithUncertainties, FloatWithUncertainties
+from obspy.core.util.obspy_types import ComplexWithUncertainties, Enum, \
+    FloatWithUncertainties
 from obspy.core.util.version import get_git_version as _getVersionString

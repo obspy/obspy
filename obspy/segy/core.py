@@ -359,7 +359,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             byteorder = stream.stats.endian
         else:
             byteorder = '>'
-    # Map the byteorder.
+    # Map the byte order.
     byteorder = ENDIAN[byteorder]
     if textual_header_encoding is None:
         if hasattr(stream, 'stats') and hasattr(

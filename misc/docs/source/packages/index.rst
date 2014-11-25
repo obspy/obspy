@@ -46,6 +46,7 @@ The functionality is provided through the following packages:
    obspy.core.quakeml
    obspy.ndk
    obspy.pde
+   obspy.zmap
 
 .. rubric:: Database or Web Service Access Clients
 

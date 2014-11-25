@@ -130,10 +130,6 @@ Gallery
     :target: tutorial/code_snippets/travel_time_plot.html
     :alt: Travel Time Plot
 
-.. gallery-plot:: tutorial/code_snippets/benchmark.py
-    :target: packages/autogen/obspy.segy.benchmark.plotBenchmark.html
-    :alt: Benchmark Plot
-
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
     :target: tutorial/code_snippets/xcorr_pick_correction.html
     :alt: Cross Correlation Pick Correction

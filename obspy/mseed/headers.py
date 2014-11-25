@@ -78,6 +78,36 @@ UNSUPPORTED_ENCODINGS = {
     33: "RSTN 16 bit gain ranged"
 }
 
+# Maps fixed header activity flags bit number and the matching expected key in
+# the flags_value
+FIXED_HEADER_ACTIVITY_FLAGS = {0: 'calib_signal',
+                               1: 'time_correction',
+                               2: 'begin_event',
+                               3: 'end_event',
+                               4: 'positive_leap',
+                               5: 'negative_leap',
+                               6: 'event_in_progress'}
+
+# Maps fixed header I/O and clock flags bit number and the matching expected
+# key in the flags_value
+FIXED_HEADER_IO_CLOCK_FLAGS = {0: 'sta_vol_parity_error_possible',
+                               1: 'long_record_read',
+                               2: 'short_record_read',
+                               3: 'start_of_time_series',
+                               4: 'end_of_time_series',
+                               5: 'clock_locked'}
+
+# Maps fixed header data quality flags bit number and the matching expected
+# key in the flags_value
+FIXED_HEADER_DATA_QUAL_FLAGS = {0: 'amplifier_sat_detected',
+                                1: 'digitizer_clipping_detected',
+                                2: 'spikes_detected',
+                                3: 'glitches_detected',
+                                4: 'missing_padded_data_present',
+                                5: 'telemetry_sync_error',
+                                6: 'digital_filter_maybe_charging',
+                                7: 'time_tag_questionable'}
+
 # Map the dtype to the samplecode. Redundant information but it is hard coded
 # for performance reasons.
 SAMPLETYPE = {"|S1": "a",
@@ -661,9 +691,9 @@ LinkedIDList._fields_ = [
 ]
 
 
-########################################
-# Done with the C structures defintions.
-########################################
+#########################################
+# Done with the C structures definitions.
+#########################################
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [

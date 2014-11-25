@@ -5,6 +5,7 @@ The InvSim test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from future.utils import native_str
 from future.builtins import *  # NOQA
 
 from obspy import Trace, UTCDateTime, read
@@ -13,12 +14,14 @@ from obspy.core.util.misc import CatchOutput
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
 from obspy.signal.invsim import cosTaper
+from obspy.signal.headers import clibevresp
 
 import io
 import gzip
 import numpy as np
 import os
 import unittest
+import ctypes as C
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one
@@ -200,14 +203,14 @@ class InvSimTestCase(unittest.TestCase):
         #    import subprocess as sp
         #    p = sp.Popen('sac',shell=True,stdin=sp.PIPE)
         #    cd1 = p.stdin
-        #    print >>cd1, "r %s"%sacf
-        #    print >>cd1, "rmean"
-        #    print >>cd1, "rtrend"
-        #    print >>cd1, "taper type cosine width 0.03"
-        #    print >>cd1, "transfer from polezero subtype %s to none \
-        #    freqlimits %f %f %f %f" % (pzf, fl1, fl2, fl3, fl4)
-        #    print >>cd1, "w over ./data/KARC_corrected.sac"
-        #    print >>cd1, "quit"
+        #    print("r %s"%sacf, file=cd1)
+        #    print("rmean", file=cd1)
+        #    print("rtrend", file=cd1)
+        #    print("taper type cosine width 0.03", file=cd1)
+        #    print("transfer from polezero subtype %s to none \
+        #    freqlimits %f %f %f %f" % (pzf, fl1, fl2, fl3, fl4), file=cd1)
+        #    print("w over ./data/KARC_corrected.sac", file=cd1)
+        #    print("quit", file=cd1)
         #    cd1.close()
         #    p.wait()
 
@@ -257,13 +260,13 @@ class InvSimTestCase(unittest.TestCase):
 #            import subprocess as sp
 #            p = sp.Popen('sac', stdin=sp.PIPE)
 #            cd1 = p.stdin
-#            print >>cd1, "r %s" % rawf
-#            print >>cd1, "rmean"
-#            print >>cd1, "taper type cosine width 0.05"
-#            print >>cd1, "transfer from evalresp fname %s to vel freqlimits\
-#            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4)
-#            print >>cd1, "w over %s" % evalrespf
-#            print >>cd1, "quit"
+#            print("r %s" % rawf, file=cd1)
+#            print("rmean", file=cd1)
+#            print("taper type cosine width 0.05", file=cd1)
+#            print("transfer from evalresp fname %s to vel freqlimits\
+#            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4), file=cd1)
+#            print("w over %s" % evalrespf, file=cd1)
+#            print("quit", file=cd1)
 #            cd1.close()
 #            p.wait()
 
@@ -328,13 +331,13 @@ class InvSimTestCase(unittest.TestCase):
         """
         dt = UTCDateTime(2003, 11, 1, 0, 0, 0)
         nfft = 8
-        # linux
+        # Linux
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
         evalresp(0.01, nfft, respf, dt)
-        # mac
+        # Mac
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.mac')
         evalresp(0.01, nfft, respf, dt)
-        # windows
+        # Windows
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
         evalresp(0.01, nfft, respf, dt)
 
@@ -427,6 +430,58 @@ class InvSimTestCase(unittest.TestCase):
         with CatchOutput() as out:
             self.assertRaises(ValueError, evalresp, **kwargs)
         self.assertTrue(b"no response found for" in out.stderr.lower())
+
+    def test_evalresp_spline(self):
+        """
+        evr_spline was based on GPL plotutils, now replaced by LGPL spline
+        library. Unittest for this function.
+        """
+        # char *evr_spline(int num_points, double *t, double *y,
+        #                  double tension, double k,
+        #                  double *xvals_arr, int num_xvals,
+        #                  double **p_retvals_arr, int *p_num_retvals)
+        clibevresp.evr_spline.argtypes = [
+            C.c_int,  # num_points
+            np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                                   flags=native_str('C_CONTIGUOUS')),
+            np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                                   flags=native_str('C_CONTIGUOUS')),
+            C.c_double,  # tension
+            C.c_double,  # k
+            np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                                   flags=native_str('C_CONTIGUOUS')),
+            C.c_int,  # num_xvals
+            C.POINTER(C.POINTER(C.c_double)),
+            C.POINTER(C.c_int)
+        ]
+        clibevresp.evr_spline.restype = C.c_char_p
+
+        x = np.arange(1.2, 2.0, .1)
+        N = len(x)
+        y = np.sin(x)
+
+        xi = x[:-1] + .05
+        Ni = len(xi)
+
+        p_num_retvals = C.c_int(0)
+        p_retvals_arr = C.POINTER(C.c_double)()
+        res = clibevresp.evr_spline(N, x, y, 0.0, 1.0, xi, Ni,
+                                    C.byref(p_retvals_arr),
+                                    C.byref(p_num_retvals))
+        self.assertEqual(res, None)
+        self.assertEqual(Ni, p_num_retvals.value)
+        yi = np.array([p_retvals_arr[i] for i in range(Ni)])
+
+        if False:  # visually verify
+            import matplotlib.pyplot as plt
+            plt.plot(x, y, 'bo-', 'Orig values')
+            plt.plot(xi, yi, 'ro-', 'Cubic Spline interpolated values')
+            plt.legend()
+            plt.show()
+
+        yi_ref = [0.94899576, 0.97572004, 0.9927136, 0.99978309, 0.99686554,
+                  0.98398301, 0.96128491]
+        self.assertTrue(np.allclose(yi, yi_ref, rtol=1e-7, atol=0))
 
 
 def suite():

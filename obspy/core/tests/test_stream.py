@@ -997,7 +997,7 @@ class StreamTestCase(unittest.TestCase):
     def test_bugfixMergeDropTraceIfAlreadyContained(self):
         """
         Trace data already existing in another trace and ending on the same
-        endtime was not correctly merged until now.
+        end time was not correctly merged until now.
         """
         trace1 = Trace(data=np.empty(10))
         trace2 = Trace(data=np.empty(2))
@@ -1062,7 +1062,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.delta, 60.0)
         self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
-        # endtime of last trace
+        # end time of last trace
         endtime = trace1.stats.starttime + \
             (4 * 1440 - 1) * trace1.stats.delta
         self.assertEqual(st[0].stats.endtime, endtime)
@@ -1495,7 +1495,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_trimConsistentStartEndtime(self):
         """
-        Test case for #127. It ensures that the sample start and entimes
+        Test case for #127. It ensures that the sample start and end times
         stay consistent after trimming.
         """
         data = np.zeros(10)
@@ -1516,7 +1516,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_trimConsistentStartEndtimePad(self):
         """
-        Test case for #127. It ensures that the sample start and entimes
+        Test case for #127. It ensures that the sample start and end times
         stay consistent after trimming. Padded version.
         """
         data = np.zeros(10)
@@ -1697,7 +1697,7 @@ class StreamTestCase(unittest.TestCase):
         tr2 = read(dtype='i8')[0]
         self.assertEqual(tr2.data.dtype, np.int64)
         self.assertEqual(tr, tr2)
-        # start-/endtime
+        # start/end time
         tr2 = read(starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
         self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
@@ -1710,7 +1710,7 @@ class StreamTestCase(unittest.TestCase):
         # dtype
         tr = read('http://examples.obspy.org/test.sac', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
-        # start-/endtime
+        # start/end time
         tr2 = read('http://examples.obspy.org/test.sac',
                    starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
@@ -1724,7 +1724,7 @@ class StreamTestCase(unittest.TestCase):
         # dtype
         tr = read('/path/to/slist_float.ascii', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
-        # start-/endtime
+        # start/end time
         tr2 = read('/path/to/slist_float.ascii',
                    starttime=tr.stats.starttime + 0.025,
                    endtime=tr.stats.endtime - 0.05)[0]
@@ -1745,7 +1745,7 @@ class StreamTestCase(unittest.TestCase):
         filename = path + os.sep + 'data' + os.sep + 'NOTEXISTING.*'
         self.assertRaises(Exception, read, filename)
 
-        # argument headonly should not be used with starttime, endtime or dtype
+        # argument headonly should not be used with start or end time or dtype
         with warnings.catch_warnings(record=True):
             # will usually warn only but here we force to raise an exception
             warnings.simplefilter('error', UserWarning)

@@ -4,7 +4,7 @@ obspy.imaging - Plotting Routines for ObsPy
 This module provides routines for plotting and displaying often used in
 seismology. It can currently plot waveform data, generate spectrograms and draw
 beachballs. The module :mod:`obspy.imaging` depends on the plotting module
-`matplotlib <http://matplotlib.sourceforge.net/>`_.
+`matplotlib <http://matplotlib.org/>`_.
 
 
 :copyright:

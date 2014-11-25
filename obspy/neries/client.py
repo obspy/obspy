@@ -168,7 +168,7 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + \
             urllib.parse.urlencode(params)
         if self.debug:
-            print(('\nRequesting %s' % (remoteaddr)))
+            print('\nRequesting %s' % (remoteaddr))
         response = urllib.request.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc

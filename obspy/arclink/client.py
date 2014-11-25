@@ -179,13 +179,13 @@ class Client(object):
 
     def _writeln(self, buffer):
         # Py3k: might be confusing, _writeln accepts str
-        # readln accepts bytes (but was smalles change like that)
+        # readln accepts bytes (but was smallest change like that)
         if self.command_delay:
             time.sleep(self.command_delay)
         b_buffer = (buffer + '\r\n').encode()
         self._client.write(b_buffer)
         if self.debug:
-            print((b'>>> ' + b_buffer))
+            print(b'>>> ' + b_buffer)
 
     def _readln(self, value=b''):
         line = self._client.read_until(value + b'\r\n', self.timeout)
@@ -194,7 +194,7 @@ class Client(object):
             msg = "Timeout waiting for expected %s, got %s"
             raise ArcLinkException(msg % (value, line.decode()))
         if self.debug:
-            print((b'... ' + line))
+            print(b'... ' + line)
         return line
 
     def _hello(self):
@@ -358,7 +358,7 @@ class Client(object):
                 if data.startswith(b'<?xml'):
                     print(data)
                 else:
-                    print(("%d bytes of data read" % len(data)))
+                    print("%d bytes of data read" % len(data))
         finally:
             self._writeln('PURGE %d' % req_id)
             self._bye()
@@ -563,7 +563,7 @@ class Client(object):
         data = self._fetch(rtype, rdata, route=route)
         # check if data is still encrypted
         if data.startswith(b'Salted__'):
-            # set "good" filenames
+            # set "good" file names
             if is_name:
                 if compressed and not filename.endswith('.bz2.openssl'):
                     filename += '.bz2.openssl'
@@ -579,7 +579,7 @@ class Client(object):
                 if unpack:
                     data = bz2.decompress(data)
                 elif is_name and not filename.endswith('.bz2'):
-                    # set "good" filenames
+                    # set "good" file names
                     filename += '.bz2'
         # create file handler if a file name is given
         if is_name:

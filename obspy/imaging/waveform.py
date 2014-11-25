@@ -111,8 +111,11 @@ class WaveformPlotting(object):
             # fix stream times
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
-        # Whether to use straight plotting or the fast minmax method.
-        self.plotting_method = kwargs.get('method', 'full')
+        # Whether to use straight plotting or the fast minmax method. If not
+        # set explicitly by the user "full" method will be used by default and
+        # "fast" method will be used above some threshold of data points to
+        # plot.
+        self.plotting_method = kwargs.get('method', None)
         # Below that value the data points will be plotted normally. Above it
         # the data will be plotted using a different approach (details see
         # below). Can be overwritten by the above self.plotting_method kwarg.
@@ -365,14 +368,20 @@ class WaveformPlotting(object):
                 ax = self.fig.add_subplot(len(stream_new), 1, _i + 1)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
-            if self.plotting_method != 'full' and \
-                ((self.endtime - self.starttime) * sampling_rate >
-                 self.max_npts):
-                self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
-            elif self.plotting_method.lower() == 'fast':
-                self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+            if self.plotting_method is None:
+                if ((self.endtime - self.starttime) * sampling_rate >
+                        self.max_npts):
+                    self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+                else:
+                    self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
             else:
-                self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
+                if self.plotting_method.lower() == 'full':
+                    self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
+                elif self.plotting_method.lower() == 'fast':
+                    self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+                else:
+                    msg = ("Invalid plot method: '%s'") % self.plotting_method
+                    raise ValueError(msg)
         # Set ticks.
         self.__plotSetXTicks()
         self.__plotSetYTicks()
@@ -721,7 +730,7 @@ class WaveformPlotting(object):
         endtime = self.endtime.timestamp
         # The same trace will always have the same sampling_rate.
         sampling_rate = trace[0].stats.sampling_rate
-        # The samples per resulting pixel. The endtime is defined as the time
+        # The samples per resulting pixel. The end time is defined as the time
         # of the last sample.
         pixel_length = int(
             np.ceil(((endtime - starttime) * sampling_rate + 1) / self.width))
@@ -1114,8 +1123,7 @@ class WaveformPlotting(object):
         """
         # Initialise data and plot
         self.__sectInitTraces()
-        self.__sectInitPlot()
-        ax = self.fig.gca()
+        ax = self.__sectInitPlot()
         # Setting up line properties
         for line in ax.lines:
             line.set_alpha(self.alpha)
@@ -1304,6 +1312,7 @@ class WaveformPlotting(object):
                     + self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
         self._sect_plot_init = True
+        return ax
 
     def __sectNormalizeTraces(self):
         """

@@ -49,7 +49,7 @@ class Blockette(object):
         # debug
         if self.debug:
             print("----")
-            print((str(self)))
+            print(str(self))
         # filter versions specific fields
         self.xseed_version = kwargs.get('xseed_version', DEFAULT_XSEED_VERSION)
         self.seed_version = kwargs.get('version', 2.4)
@@ -96,7 +96,7 @@ class Blockette(object):
         start_pos = data.tell()
         # debug
         if self.debug:
-            print((' DATA: %s' % (data.read(expected_length))))
+            print(' DATA: %s' % (data.read(expected_length)))
             data.seek(-expected_length, 1)
         blockette_fields = self.default_fields + self.getFields()
         # loop over all blockette fields

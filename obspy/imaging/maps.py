@@ -59,9 +59,12 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :param lats: Latitudes of the data points.
     :type size: float or list/tuple of floats
     :param size: Size of the individual points in the scatter plot.
-    :type color: float or list/tuple of
-        floats/:class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param color: Color information of the individual data points. Can be
+    :type color: list/tuple of floats (or objects that can be
+        converted to floats, like e.g.
+        :class:`~obspy.core.utcdatetime.UTCDateTime`)
+    :param color: Color information of the individual data points to be
+        used in the specified color map (e.g. origin depths,
+        origin times).
     :type labels: list/tuple of str
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
@@ -86,14 +89,13 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :param water_fill_color: Color of all water bodies.
         Defaults to ``"white"``.
     :type colormap: str, any matplotlib colormap, optional
-    :param colormap: The colormap for color-coding the events.
-        The event with the smallest property will have the
-        color of one end of the colormap and the event with the biggest
-        property the color of the other end with all other events in
-        between.
-        Defaults to None which will use the default colormap for the date
-        encoding and a colormap going from green over yellow to red for the
-        depth encoding.
+    :param colormap: The colormap for color-coding the events as provided
+        in `color` kwarg.
+        The event with the smallest `color` property will have the
+        color of one end of the colormap and the event with the highest
+        `color` property the color of the other end with all other events
+        in between.
+        Defaults to None which will use the default matplotlib colormap.
     :type colorbar: bool, optional
     :param colorbar: When left `None`, a colorbar is plotted if more than one
         object is plotted. Using `True`/`False` the colorbar can be forced
@@ -227,7 +229,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
         raise ValueError(msg)
 
     # draw coast lines, country boundaries, fill continents.
-    plt.gca().set_axis_bgcolor(water_fill_color)
+    map_ax.set_axis_bgcolor(water_fill_color)
     bmap.drawcoastlines(color="0.4")
     bmap.drawcountries(color="0.75")
     bmap.fillcontinents(color=continent_fill_color,

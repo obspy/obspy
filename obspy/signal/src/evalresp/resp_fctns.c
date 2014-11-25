@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "evresp.h"
-#include "evr_spline.h"
+#include "obspy_spline.h"
 
 /* merge_lists:
 

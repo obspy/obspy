@@ -216,7 +216,7 @@ class CoreTestCase(unittest.TestCase):
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
         t2 = sac.reftime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
-        # see that iztype is written corretly
+        # see that iztype is written correctly
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tr.write(tempfile, format="SAC")

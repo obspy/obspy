@@ -231,11 +231,11 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)
-            # Only raise error if no starttime/endtime has been set. This
+            # Only raise error if no start/end time has been set. This
             # will return an empty stream if the user chose a time window with
             # no data in it.
             # XXX: Might cause problems if the data is faulty and the user
-            # set starttime/endtime. Not sure what to do in this case.
+            # set start/end time. Not sure what to do in this case.
             elif not starttime and not endtime:
                 raise Exception("Cannot open file/files: %s" % pathname)
     # Trim if times are given.
@@ -1224,9 +1224,9 @@ class Stream(object):
         Total: 0 gap(s) and 1 overlap(s)
         """
         result = self.getGaps(min_gap, max_gap)
-        print(("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
-                                                 'Next Sample', 'Delta',
-                                                 'Samples')))
+        print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
+                                                'Next Sample', 'Delta',
+                                                'Samples'))
         gaps = 0
         overlaps = 0
         for r in result:
@@ -1454,7 +1454,7 @@ class Stream(object):
         """
         if not self:
             return
-        # select starttime/endtime fitting to a sample point of the first trace
+        # select start/end time fitting to a sample point of the first trace
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
@@ -1533,7 +1533,7 @@ class Stream(object):
 
     def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
         """
-        Returns new Stream object cut to the given start- and endtime.
+        Returns new Stream object cut to the given start and end time.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Specify the start time of all traces.

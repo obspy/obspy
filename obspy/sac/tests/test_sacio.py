@@ -189,7 +189,7 @@ class SacIOTestCase(unittest.TestCase):
     # def test_raiseOnGetDist(self):
     #     """
     #     Test case to check that SACError is raised if obspy.signal is not
-    #     installed. SACError must be raised as it is catched by various
+    #     installed. SACError must be raised as it is caught by various
     #     methods. The import of setuptools introduces a function
     #     findall, which recursively searches directories for pth files.
     #     Could not get obspy.signal out of the path so far...

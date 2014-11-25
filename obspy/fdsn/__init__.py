@@ -29,12 +29,15 @@ providers are:
 >>> from obspy.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
+GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
+INGV    http://webservices.rm.ingv.it
 IRIS    http://service.iris.edu
 NCEDC   http://service.ncedc.org
 NERIES  http://www.seismicportal.eu
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
+SCEC    http://www.data.scec.org
 USGS    http://comcat.cr.usgs.gov
 USP     http://sismo.iag.usp.br
 

@@ -20,5 +20,5 @@ coordinates of two German stations to the regionally used Gauß-Krüger system:
     >>> print(y)
     [5506428.401023342, 5336354.054996853]
 
-.. _`pyproj`: http://pypi.python.org/pypi/pyproj
-.. _`EPSG`: http://www.epsg-registry.org/
+.. _`pyproj`: https://pypi.python.org/pypi/pyproj
+.. _`EPSG`: https://www.epsg-registry.org/

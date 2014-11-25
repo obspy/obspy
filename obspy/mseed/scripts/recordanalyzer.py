@@ -22,10 +22,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+from future import standard_library
+with standard_library.hooks():
+    from collections import OrderedDict
 
 from copy import deepcopy
 from obspy import UTCDateTime
-from obspy.core.util import OrderedDict
 from obspy import __version__
 from argparse import ArgumentParser
 from struct import unpack
@@ -38,10 +40,10 @@ class RecordAnalyser(object):
     Basic usage:
         >> rec = RecordAnalyser(filename)
         # Pretty print the information contained in the first record.
-        >> print rec
+        >> print(rec)
         # Jump to the next record.
         >> rex.next()
-        >> print rec
+        >> print(rec)
     """
     def __init__(self, file_object):
         """
@@ -185,11 +187,12 @@ class RecordAnalyser(object):
             blkt_type, next_blockette = unpack(encoding, self.file.read(4))
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
-            cur_blkt_offset = next_blockette
             self.blockettes[blkt_type] = self._parseBlockette(blkt_type)
             # Also break the loop if next_blockette is zero.
-            if next_blockette == 0:
+            if next_blockette == 0 or next_blockette < 4 or \
+                    next_blockette - 4 < cur_blkt_offset:
                 break
+            cur_blkt_offset = next_blockette
 
     def _parseBlockette(self, blkt_type):
         """
@@ -257,9 +260,9 @@ class RecordAnalyser(object):
             endian = 'Little Endian'
         else:
             endian = 'Big Endian'
-            ret_val = ('FILE: %s\nRecord Offset: %i byte\n' +
-                       'Header Endianness: %s\n\n') % \
-                      (filename, self.record_offset, endian)
+        ret_val = ('FILE: %s\nRecord Offset: %i byte\n' +
+                   'Header Endianness: %s\n\n') % \
+                  (filename, self.record_offset, endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])

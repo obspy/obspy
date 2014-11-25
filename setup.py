@@ -98,7 +98,7 @@ KEYWORDS = [
 INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>1.0.0',
-    'scipy',
+    'scipy>=0.7.2',
     'matplotlib',
     'lxml',
     'sqlalchemy']
@@ -106,6 +106,7 @@ EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
               'pyimgur'],
+    'arclink': ['m2crypto'],
     'neries': ['suds-jurko']}
 # PY2
 if sys.version_info[0] == 2:
@@ -243,6 +244,7 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
+        'ZMAP = obspy.zmap.core',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
         'NDK = obspy.ndk.core'
@@ -259,17 +261,30 @@ ENTRY_POINTS = {
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
     ],
+    'obspy.plugin.event.ZMAP': [
+        'isFormat = obspy.zmap.core:isZmap',
+        'readFormat = obspy.zmap.core:readZmap',
+        'writeFormat = obspy.zmap.core:writeZmap',
+    ],
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.ndk.core:is_ndk',
         'readFormat = obspy.ndk.core:read_ndk',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
+        'SACPZ = obspy.sac.sacpz',
+        'CSS = obspy.css.station',
     ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.station.stationxml:is_StationXML',
         'readFormat = obspy.station.stationxml:read_StationXML',
         'writeFormat = obspy.station.stationxml:write_StationXML',
+    ],
+    'obspy.plugin.inventory.SACPZ': [
+        'writeFormat = obspy.sac.sacpz:write_SACPZ',
+    ],
+    'obspy.plugin.inventory.CSS': [
+        'writeFormat = obspy.css.station:writeCSS',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',

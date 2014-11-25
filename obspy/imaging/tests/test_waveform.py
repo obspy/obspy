@@ -122,7 +122,7 @@ class WaveformTestCase(unittest.TestCase):
         # create and compare image
         image_name = 'waveform_one_hour_many_samples.png'
         with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+            st.plot(outfile=ic.name, method="full")
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotOneHourFewSamples(self):
@@ -152,7 +152,7 @@ class WaveformTestCase(unittest.TestCase):
         # create and compare image
         image_name = 'waveform_simple_gap_many_samples.png'
         with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+            st.plot(outfile=ic.name, method="full")
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotSimpleGapFewSamples(self):
@@ -190,7 +190,7 @@ class WaveformTestCase(unittest.TestCase):
         # create and compare image
         image_name = 'waveform_complex_gap_many_samples.png'
         with ImageComparison(self.path, image_name) as ic:
-            st.plot(outfile=ic.name)
+            st.plot(outfile=ic.name, method="full")
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotComplexGapFewSamples(self):
@@ -282,12 +282,12 @@ class WaveformTestCase(unittest.TestCase):
         tr = Trace(data=np.sin(np.linspace(0, 200, 432000)))
         # create and compare image
         with ImageComparison(self.path, 'waveform_binning_error.png') as ic:
-            tr.plot(outfile=ic.name)
+            tr.plot(outfile=ic.name, method="full")
 
         tr = Trace(data=np.sin(np.linspace(0, 200, 431979)))
         # create and compare image
         with ImageComparison(self.path, 'waveform_binning_error_2.png') as ic:
-            tr.plot(outfile=ic.name)
+            tr.plot(outfile=ic.name, method="full")
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotDefaultSection(self):

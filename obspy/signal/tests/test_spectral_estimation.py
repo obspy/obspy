@@ -18,13 +18,67 @@ import unittest
 import warnings
 
 
+PATH = os.path.join(os.path.dirname(__file__), 'data')
+
+
+def _get_sample_data():
+    """
+    Returns some real data (trace and poles and zeroes) for PPSD testing.
+
+    Data was downsampled to 100Hz so the PPSD is a bit distorted which does
+    not matter for the purpose of testing.
+    """
+    # load test file
+    file_data = os.path.join(
+        PATH, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
+    # parameters for the test
+    # no with due to py 2.6
+    f = gzip.open(file_data)
+    data = np.loadtxt(f)
+    f.close()
+    stats = {'_format': 'MSEED',
+             'calib': 1.0,
+             'channel': 'EHZ',
+             'delta': 0.01,
+             'endtime': UTCDateTime(2011, 3, 31, 2, 36, 0, 180000),
+             'location': '',
+             'mseed': {'dataquality': 'D', 'record_length': 512,
+                       'encoding': 'STEIM2', 'byteorder': '>'},
+             'network': 'BW',
+             'npts': 936001,
+             'sampling_rate': 100.0,
+             'starttime': UTCDateTime(2011, 3, 31, 0, 0, 0, 180000),
+             'station': 'KW1'}
+    tr = Trace(data, stats)
+
+    paz = {'gain': 60077000.0,
+           'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
+                     (-251.33 + 0j), (-131.04 - 467.29j),
+                     (-131.04 + 467.29j)],
+           'sensitivity': 2516778400.0,
+           'zeros': [0j, 0j]}
+
+    return tr, paz
+
+
+def _get_ppsd():
+    """
+    Returns ready computed ppsd for testing purposes.
+    """
+    tr, paz = _get_sample_data()
+    st = Stream([tr])
+    ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
+    ppsd.add(st)
+    return ppsd
+
+
 class PsdTestCase(unittest.TestCase):
     """
     Test cases for psd.
     """
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = PATH
 
     def test_obspy_psd_vs_pitsa(self):
         """
@@ -85,46 +139,20 @@ class PsdTestCase(unittest.TestCase):
 
     def test_PPSD(self):
         """
-        Test PPSD routine with some real data. Data was downsampled to 100Hz
-        so the ppsd is a bit distorted which does not matter for the purpose
-        of testing.
+        Test PPSD routine with some real data.
         """
-        # load test file
-        file_data = os.path.join(
-            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
+        # paths of the expected result data
         file_histogram = os.path.join(
             self.path,
             'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
         file_binning = os.path.join(
             self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
-        # parameters for the test
-        # no with due to py 2.6
-        f = gzip.open(file_data)
-        data = np.loadtxt(f)
-        f.close()
-        stats = {'_format': 'MSEED',
-                 'calib': 1.0,
-                 'channel': 'EHZ',
-                 'delta': 0.01,
-                 'endtime': UTCDateTime(2011, 3, 31, 2, 36, 0, 180000),
-                 'location': '',
-                 'mseed': {'dataquality': 'D', 'record_length': 512,
-                           'encoding': 'STEIM2', 'byteorder': '>'},
-                 'network': 'BW',
-                 'npts': 936001,
-                 'sampling_rate': 100.0,
-                 'starttime': UTCDateTime(2011, 3, 31, 0, 0, 0, 180000),
-                 'station': 'KW1'}
-        tr = Trace(data, stats)
+        file_mode_mean = os.path.join(
+            self.path,
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mode_mean.npz')
+        tr, paz = _get_sample_data()
         st = Stream([tr])
-        paz = {'gain': 60077000.0,
-               'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
-                         (-251.33 + 0j), (-131.04 - 467.29j),
-                         (-131.04 + 467.29j)],
-               'sensitivity': 2516778400.0,
-               'zeros': [0j, 0j]}
-        ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
-        ppsd.add(st)
+        ppsd = _get_ppsd()
         # read results and compare
         result_hist = np.load(file_histogram)
         self.assertEqual(len(ppsd.times), 4)
@@ -141,6 +169,15 @@ class PsdTestCase(unittest.TestCase):
         binning = np.load(file_binning)
         np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])
         np.testing.assert_array_equal(ppsd.period_bins, binning['period_bins'])
+
+        # test the mode/mean getter functions
+        per_mode, mode = ppsd.get_mode()
+        per_mean, mean = ppsd.get_mean()
+        result_mode_mean = np.load(file_mode_mean)
+        np.testing.assert_array_equal(per_mode, result_mode_mean['per_mode'])
+        np.testing.assert_array_equal(mode, result_mode_mean['mode'])
+        np.testing.assert_array_equal(per_mean, result_mode_mean['per_mean'])
+        np.testing.assert_array_equal(mean, result_mode_mean['mean'])
 
         # test saving and loading of the PPSD (using a temporary file)
         with NamedTemporaryFile() as tf:

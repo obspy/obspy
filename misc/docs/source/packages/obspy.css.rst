@@ -10,5 +10,6 @@
        :nosignatures:
 
        core
+       station
 
     .. comment to end block

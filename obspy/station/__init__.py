@@ -40,8 +40,8 @@ Inventory created at 2013-12-07T18:00:42.878000Z
         Channels (3):
             BW.RJOB..EHE, BW.RJOB..EHN, BW.RJOB..EHZ
 
-The file format in priciple is autodected. However, the autodetection uses the
-official StationXML XSD schema and unfortunately many real world files
+The file format in principle is autodetected. However, the autodetection uses
+the official StationXML XSD schema and unfortunately many real world files
 currently show minor deviations from the official StationXML definition causing
 the autodetection to fail. Thus, manually specifying the format is a good idea:
 

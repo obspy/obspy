@@ -19,11 +19,11 @@ with standard_library.hooks():
     import urllib.error
     import urllib.parse
     import urllib.request
+    from collections import OrderedDict
 
 import copy
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.core.util.obspy_types import OrderedDict
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
@@ -1473,13 +1473,11 @@ def download_url(url, timeout=10, headers={}, debug=False,
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())
             print(msg)
-            return e.code, None
-        raise
+        return e.code, None
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
-            return None, None
-        raise
+        return None, None
 
     code = url_obj.getcode()
     if return_string is False:
