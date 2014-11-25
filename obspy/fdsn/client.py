@@ -1466,13 +1466,11 @@ def download_url(url, timeout=10, headers={}, debug=False,
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())
             print(msg)
-            return e.code, None
-        raise
+        return e.code, None
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
-            return None, None
-        raise
+        return None, None
 
     code = url_obj.getcode()
     if return_string is False:
