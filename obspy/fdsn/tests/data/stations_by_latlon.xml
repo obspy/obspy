@@ -6,7 +6,7 @@
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?latitude=-56.1&amp;maxradius=15.0&amp;longitude=-26.7</ModuleURI>
  <Created>2014-07-26T09:13:05</Created>
- <Network code="AI" startDate="1992-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+ <Network code="AI" startDate="1992-01-01T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
   <Description>Antarctic Seismographic Argentinean Italian Network (ASAIN)</Description>
   <TotalNumberStations>6</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
@@ -22,7 +22,7 @@
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
  </Network>
- <Network code="II" startDate="1986-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+ <Network code="II" startDate="1986-01-01T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/IDA)</Description>
   <TotalNumberStations>50</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
@@ -43,7 +43,7 @@
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
  </Network>
- <Network code="SY" startDate="1900-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+ <Network code="SY" startDate="1900-01-01T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
   <Description>Synthetic Seismograms</Description>
   <TotalNumberStations>4157</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
