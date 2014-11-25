@@ -1,10 +1,13 @@
-import hcluster
-import matplotlib.pyplot as plt
-import pickle
 import urllib
 
-url = "http://examples.obspy.org/dissimilarities.pkl"
-dissimilarity = pickle.load(urllib.urlopen(url))
+import numpy as np
+import matplotlib.pyplot as plt
+
+import hcluster
+
+url = "http://examples.obspy.org/dissimilarities.npz"
+with np.load(urllib.urlopen(url)) as data:
+    dissimilarity = data['dissimilarity']
 
 plt.subplot(121)
 plt.imshow(1 - dissimilarity, interpolation="nearest")
