@@ -84,8 +84,9 @@ class Client(object):
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
         (default is ``0``).
-    :var status_delay: Delay in seconds between each status request (default is
-        ``0.5`` seconds).
+    :type status_delay: float, optional
+    :param status_delay: Delay in seconds between each status request (default
+        is ``0.5`` seconds).
 
     .. rubric:: Notes
 
@@ -103,13 +104,10 @@ class Client(object):
     * IPGP:  eida.ipgp.fr:18001
     * USP:   seisrequest.iag.usp.br:18001
     """
-    #: Delay in seconds between each status request
-    status_delay = 0.5
-
     def __init__(self, host="webdc.eu", port=18002, user=None,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
-                 command_delay=0):
+                 command_delay=0, status_delay=0.5):
         """
         Initializes an ArcLink client.
 
@@ -123,6 +121,8 @@ class Client(object):
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
+        self.status_delay = status_delay
+
         self.init_host = host
         self.init_port = port
         self.timeout = timeout
