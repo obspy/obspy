@@ -40,11 +40,13 @@ def eigval(datax, datay, dataz, fk, normf=1):
     the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
     :type datax: :class:`~numpy.ndarray`
-    :param datax: Data of x component.
+    :param datax: Data of x component. Note this is most usefull with
+        windowed data, represented by a 2 dimensional array. First
+        dimension window number, second dimension the actualy data.
     :type datay: :class:`~numpy.ndarray`
-    :param datay: Data of y component.
+    :param datay: Data of y component. See also note in datax.
     :type dataz: :class:`~numpy.ndarray`
-    :param dataz: Data of z component.
+    :param dataz: Data of z component. See also note in datax.
     :type fk: list
     :param fk: Coefficients of polynomial used for calculating the time
         derivatives.
@@ -54,6 +56,11 @@ def eigval(datax, datay, dataz, fk, normf=1):
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
         time derivative of rectilinearity, Time derivative of planarity.
     """
+    # function is made for windowed (two dimensional input).
+    # However be nice and allow one dimensional input, see #919
+    datax = np.atleast_2d(datax)
+    datay = np.atleast_2d(datay)
+    dataz = np.atleast_2d(dataz)
     covmat = np.zeros([3, 3])
     leigenv1 = np.zeros(datax.shape[0], dtype=np.float64)
     leigenv2 = np.zeros(datax.shape[0], dtype=np.float64)
