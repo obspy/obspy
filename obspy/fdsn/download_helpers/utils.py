@@ -176,7 +176,29 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
         return ret_val["filename"]
 
     # Only the filename is not needed for the actual data request.
-    bulk = [_i[:-1] for _i in chunks]
+    bulk = [list(_i[:-1]) for _i in chunks]
+
+    # Merge adjacent bulk-request for continuous downloads. This is a bit
+    # redundant after splitting it up before, but eases the logic in the
+    # other parts and puts less strain on the data centers' FDSN
+    # implementation.
+    bulk_channels = collections.defaultdict(list)
+    for b in bulk:
+        bulk_channels[(b[0], b[1])].append(b)
+    # Merge them.
+    for key, value in bulk_channels.items():
+        # Sort.
+        value = sorted(value, key=lambda x: x[4])
+        # Merge adjacent.
+        cur_bulk = value[0:1]
+        for b in value[1:]:
+            # Random threshold of 5 seconds.
+            if b[4] <= cur_bulk[-1][5] + 5:
+                cur_bulk[-1][5] = b[5]
+                continue
+            cur_bulk.append(b)
+        bulk_channels[key] = cur_bulk
+    bulk = list(itertools.chain.from_iterable(bulk_channels.values()))
 
     # Save first to a temporary file, then cut the file into seperate files.
     temp_filename = NamedTemporaryFile().name
