@@ -249,15 +249,14 @@ class SphericalNearestNeighbour(object):
     @staticmethod
     def spherical2cartesian(data):
         """
-        Converts a list of :class:`~obspy.fdsn.download_helpers.Station`
+        Converts a list of :class:`~obspy.fdsn.download_status.Station`
         objects to an array of shape(len(list), 3) containing x/y/z in meters.
         """
         # Create three arrays containing lat/lng/elevation.
         shape = len(data)
         lat = np.array([_i.latitude for _i in data], dtype=np.float64)
         lon = np.array([_i.longitude for _i in data], dtype=np.float64)
-        r = np.array([EARTH_RADIUS + _i.elevation_in_m for _i in data],
-                     dtype=np.float64)
+        r = np.array([EARTH_RADIUS for _i in data], dtype=np.float64)
         # Convert data from lat/lng to x/y/z.
         colat = 90.0 - lat
         cart_data = np.empty((shape, 3), dtype=np.float64)

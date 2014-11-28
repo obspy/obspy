@@ -117,24 +117,18 @@ class DownloadHelper(object):
             per client.
         :type threads_per_client: int, optional
         """
-        # Collect all the downloaded stations.
-        existing_stations = set()
-
-        # Set of network and station tuples, e.g. {(“NET1”, “STA1”),
-        # (“NET2”, “STA2”), …}. Will be used to not attempt to download
-        # stations that have been rejected during a previous loop iteration.
-        # Station can be rejected if they are too close to an already existing
-        # station.
-        discarded_station_ids = set()
-
-        report = []
+        # The downloads from each client will be handled separately.
+        # Nonetheless collect all in this dictionary.
+        client_download_helpers = {}
 
         # Do it sequentially for each client. Doing it in parallel is not
         # really feasible as long as the availability queries are not
         # reliable for all endpoints.
         for client_name, client in self._initialized_clients.items():
+            station_count = sum([len(_i) for _i in
+                                 client_download_helpers.values()])
             logger.info("Stations already acquired during this run: %i" %
-                        len(existing_stations))
+                        station_count)
 
             # The client download helper object is responsible for the
             # downloads of a single FDSN endpoint.
@@ -143,50 +137,44 @@ class DownloadHelper(object):
                 restrictions=restrictions, domain=domain,
                 mseed_storage=mseed_storage,
                 stationxml_storage=stationxml_storage, logger=logger)
+            existing_client_dl_helpers = list(
+                client_download_helpers.values())
+            client_download_helpers[client_name] = helper
 
             # Request the availability.
             helper.get_availability()
-            # Continue if there is not data.
+
+            # Continue if there is no data.
             if not helper:
-                report.append({"client": client_name, "data": []})
+                logger.info("Client '%s' - No data available." % client_name)
                 continue
 
             # First filter stage. Remove stations based on the station id,
-            # e.g. NETWORK.STATION. Remove all that already exist and all
-            # that are in the discarded station ids set.
-            helper.discard_stations(existing_stations.union(
-                discarded_station_ids))
+            # e.g. NETWORK.STATION. Remove all that already exist.
+            helper.discard_stations(
+                existing_client_dl_helpers=existing_client_dl_helpers)
 
-            logger.info("Client '%s' - After discarding duplicates based on "
-                        "the station id, %i stations remain." % (
-                            client_name, len(helper)))
-            # If nothing is there, no need to keep going.
+            # Continue if there is no data.
             if not helper:
-                report.append({"client": client_name, "data": []})
+                logger.info("Client '%s' - No new data available after "
+                            "discarding already downloaded data." %
+                            client_name)
                 continue
 
-            # Filter based on the distance to the next closest station. If
-            # info["reliable"] is True, it is assumed that we can actually
-            # get all the data in the availability, otherwise everything
-            # will be attempted to be downloaded.
-            # f = utils.filter_based_on_interstation_distance(
-            #     existing_stations=existing_stations,
-            #     new_stations=availability,
-            #     reliable_new_stations=info["reliable"],
-            #     minimum_distance_in_m=
-            #     restrictions.minimum_interstation_distance_in_m)
-            # # Add the rejected stations to the set of discarded station ids
-            # # so they will not be attempted to be downloaded again.
-            # for station in f["rejected_stations"]:
-            #     discarded_station_ids.add((station.network, station.station))
-            # availability = f["accepted_stations"]
-            #
-            # logger.info("Client '%s' - %i station(s) satisfying the "
-            #             "minimum inter-station distance found." % (
-            #             client_name, len(availability)))
-            # if not availability:
-            #     report.append({"client": client_name, "data": []})
-            #     continue
+            # If the availability information is reliable, the filtering
+            # will happen before the downloading.
+            if helper.is_availability_reliable:
+                helper.filter_stations_based_on_minimum_distance(
+                    existing_client_dl_helpers=existing_client_dl_helpers)
+                # Continue if there is not data left after the filtering.
+                if not helper:
+                    logger.info("Client '%s' - No new data available after "
+                                "discarding based on the minimal "
+                                "inter-station distance." % client_name)
+                    continue
+
+            logger.info("Client '%s' - Will attempt to download data from %i "
+                        "stations." % (client_name, len(helper)))
 
             # Download MiniSEED data.
             helper.prepare_mseed_download()
@@ -202,7 +190,13 @@ class DownloadHelper(object):
             if restrictions.sanitize:
                 helper.sanitize_downloads()
 
-        return report
+            # Filter afterwards if availability information is not reliable.
+            # This unfortunately results in already downloaded data to be
+            # discarded but it is the only currently feasible way.
+            if not helper.is_availability_reliable:
+                helper.filter_stations_based_on_minimum_distance(
+                    existing_client_dl_helpers=existing_client_dl_helpers)
+        return client_download_helpers
 
     def __initialize_clients(self):
         """

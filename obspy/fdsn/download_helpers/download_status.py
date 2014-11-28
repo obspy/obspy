@@ -87,6 +87,33 @@ class Station(object):
         self.have_station_information = {}
 
     @property
+    def has_existing_or_downloaded_time_intervals(self):
+        """
+        Returns true if any of the station's time intervals have status
+        "DOWNLOADED" or "EXISTS". Otherwise it returns False meaning it does
+        not have to be considered anymore.
+        """
+        status = []
+        for chan in self.channels:
+            for ti in chan.intervals:
+                status.append(ti.status)
+        status = list(set(status))
+        if STATUS.EXISTS in status or STATUS.DOWNLOADED in status:
+            return True
+        return False
+
+    @property
+    def existing_time_intervals(self):
+        """
+        Returns True if any of the station's time intervals already exist.
+        """
+        for chan in self.channels:
+            for ti in chan.intervals:
+                if ti.status == STATUS.EXISTS:
+                    return True
+        return False
+
+    @property
     def stationxml_filename(self):
         return self._stationxml_filename
 
@@ -396,6 +423,48 @@ class ClientDownloadHelper(object):
         for station in self.stations.values():
             station.prepare_mseed_download(mseed_storage=self.mseed_storage)
 
+    def filter_stations_based_on_minimum_distance(self):
+        """
+        Removes stations until all stations have a certain minimum distance to
+        each other.
+        """
+        stations = copy.copy(list(self.stations.values()))
+        # Deterministic behaviour by sorting!
+        stations = sorted(stations, key=lambda x: (x.network, x.station))
+
+        # Build k-d-tree and query for the neighbours of each point within
+        # the minimum distance.
+        kd_tree = utils.SphericalNearestNeighbour(stations)
+        nns = kd_tree.query_pairs(
+            self.restrictions.minimum_interstation_distance_in_m)
+
+        indexes_to_remove = []
+
+        # Keep removing the station with the most pairs until no pairs are
+        # left.
+        while nns:
+            most_common = collections.Counter(
+                itertools.chain.from_iterable(nns)).most_common()[0][0]
+            indexes_to_remove.append(most_common)
+            nns = list(itertools.filterfalse(lambda x: most_common in x, nns))
+
+        # Remove these indices this results in a set of stations we wish to
+        # keep.
+        stations = set([_i[1] for _i in itertools.filterfalse(
+            lambda x: x[0] in indexes_to_remove,
+            enumerate(stations))])
+
+        # Get the stations to be deleted and delete them.
+        existing_ids = set(self.stations.keys())
+        to_be_removed = existing_ids.difference(
+            set([(_i.network, _i.station) for _i in stations]))
+
+        # Now actually delete the files and everything.
+        for s_id in to_be_removed:
+
+
+        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+
     def prepare_stationxml_download(self):
         """
         Prepare each Station for the StationXML downloading stage.
@@ -605,6 +674,21 @@ class ClientDownloadHelper(object):
                 "Client '%s' - Status for %i time intervals/channels after "
                 "downloading: %s" % (
                     self.client_name, counter[key], key.upper()))
+
+        self._remove_failed_and_ignored_stations()
+
+    def _remove_failed_and_ignored_stations(self):
+        """
+        Removes all stations that have no time interval with either exists
+        or downloaded status.
+        """
+        to_be_removed_keys = []
+        for key, station in self.stations.items():
+            if station.has_existing_or_downloaded_time_intervals is True:
+                continue
+            to_be_removed_keys.append(key)
+        for key in to_be_removed_keys:
+            del self.stations[key]
 
     def sanitize_downloads(self):
         """
