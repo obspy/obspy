@@ -362,4 +362,3 @@ from future.builtins import *  # NOQA
 from .download_helpers import DownloadHelper
 from .restrictions import Restrictions
 from .domain import Domain, RectangularDomain, CircularDomain, GlobalDomain
-from .utils import format_report

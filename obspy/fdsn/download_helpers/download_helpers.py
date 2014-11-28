@@ -13,8 +13,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 import logging
 from multiprocessing.pool import ThreadPool
+import os
 import warnings
 
 from obspy.core.util.obspy_types import OrderedDict
@@ -22,7 +24,7 @@ from obspy.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.fdsn import Client
 
 from . import utils
-from .download_status import ClientDownloadHelper
+from .download_status import ClientDownloadHelper, STATUS
 
 
 # Setup the logger.
@@ -92,7 +94,7 @@ class DownloadHelper(object):
 
     def download(self, domain, restrictions, mseed_storage,
                  stationxml_storage, download_chunk_size_in_mb=20,
-                 threads_per_client=5):
+                 threads_per_client=5, print_report=True):
         """
         Launch the actual data download.
 
@@ -127,7 +129,7 @@ class DownloadHelper(object):
         for client_name, client in self._initialized_clients.items():
             station_count = sum([len(_i) for _i in
                                  client_download_helpers.values()])
-            logger.info("Stations already acquired during this run: %i" %
+            logger.info("Total acquired or preexisting stations: %i" %
                         station_count)
 
             # The client download helper object is responsible for the
@@ -196,6 +198,60 @@ class DownloadHelper(object):
             if not helper.is_availability_reliable:
                 helper.filter_stations_based_on_minimum_distance(
                     existing_client_dl_helpers=existing_client_dl_helpers)
+
+        if print_report:
+            # Collect already existing things.
+            existing_miniseed_files = []
+            existing_stationxml_files = []
+            new_miniseed_files = collections.defaultdict(list)
+            new_stationxml_files = collections.defaultdict(list)
+
+            for cdh in client_download_helpers.values():
+                for station in cdh.stations.values():
+                    if station.stationxml_status == STATUS.EXISTS:
+                        existing_stationxml_files.append(
+                            station.stationxml_filename)
+                    elif station.stationxml_status == STATUS.DOWNLOADED:
+                        new_stationxml_files[cdh.client_name].append(
+                            station.stationxml_filename)
+                    for channel in station.channels:
+                        for ti in channel.intervals:
+                            if ti.status == STATUS.EXISTS:
+                                existing_miniseed_files.append(ti.filename)
+                            elif ti.status == STATUS.DOWNLOADED:
+                                new_miniseed_files[cdh.client_name].append(
+                                    ti.filename)
+
+            def count_filesize(list_of_files):
+                return sum([os.path.getsize(_i) for _i in list_of_files if
+                            os.path.exists(_i)])
+
+            logger.info(30 * "=" + " Final report")
+            logger.info("%i MiniSEED files [%.1f MB] already existed." % (
+                len(existing_miniseed_files),
+                count_filesize(existing_miniseed_files) / 1024.0 ** 2))
+            logger.info("%i StationXML files [%.1f MB] already existed." % (
+                len(existing_stationxml_files),
+                count_filesize(existing_stationxml_files) / 1024.0 ** 2))
+
+            total_downloaded_filesize = 0
+            for cdh in client_download_helpers.values():
+                mseed_files = new_miniseed_files[cdh.client_name]
+                stationxml_files = new_stationxml_files[cdh.client_name]
+                mseed_filesize = count_filesize(mseed_files)
+                stationxml_filesize = count_filesize(stationxml_files)
+                total_downloaded_filesize += mseed_filesize
+                total_downloaded_filesize += stationxml_filesize
+                logger.info("Client '%s' - Acquired %i MiniSEED files "
+                            "[%.1f MB]." % (cdh.client_name, len(mseed_files),
+                                            mseed_filesize / 1024.0 ** 2))
+                logger.info("Client '%s' - Acquired %i StationXML files "
+                            "[%.1f MB]." % (
+                                cdh.client_name, len(stationxml_files),
+                                stationxml_filesize / 1024.0 ** 2))
+            logger.info("Downloaded %.1f MB in total." % (
+                total_downloaded_filesize / 1024.0 ** 2))
+
         return client_download_helpers
 
     def __initialize_clients(self):

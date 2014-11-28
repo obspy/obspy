@@ -476,6 +476,9 @@ class ClientDownloadHelper(object):
         for dlh in existing_client_dl_helpers:
             existing_stations.extend(list(dlh.stations.values()))
 
+        remaining_stations = []
+        rejected_stations = []
+
         # There are essentially two possibilities. If no station exists yet,
         # it will choose the largest subset of stations satisfying the
         # minimum inter-station distance constraint.
@@ -508,8 +511,6 @@ class ClientDownloadHelper(object):
             to_be_removed = existing_ids.difference(
                 set([(_i.network, _i.station) for _i in stations]))
 
-            remaining_stations = []
-            rejected_stations = []
             for station in stations:
                 if (station.network, station.station) not in to_be_removed:
                     remaining_stations.append(station)
@@ -518,8 +519,6 @@ class ClientDownloadHelper(object):
         # Otherwise it will add new stations approximating a Poisson disk
         # distribution.
         else:
-            remaning_stations = []
-            rejected_stations = []
             for station in stations:
                 kd_tree = utils.SphericalNearestNeighbour(existing_stations)
                 neighbours = kd_tree.query([station])[0][0]
@@ -530,7 +529,7 @@ class ClientDownloadHelper(object):
                         self.restrictions.minimum_interstation_distance_in_m:
                     rejected_stations.append(station)
                     continue
-                remaning_stations.append(station)
+                remaining_stations.append(station)
 
         # Now actually delete the files and everything of the rejected
         # stations.
