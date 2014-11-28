@@ -199,6 +199,57 @@ class InventoryTestCase(unittest.TestCase):
                 inv.plot_response(0.01, output="ACC", channel="*N",
                                   station="[WR]*", time=t, outfile=ic.name)
 
+    def test_inventory_merging_metadata_update(self):
+        """
+        Tests the metadata update during merging of inventory objects.
+        """
+        inv_1 = read_inventory()
+        inv_2 = read_inventory()
+
+        inv_1 += inv_2
+
+        self.assertEqual(inv_1.source, inv_2.source)
+        self.assertEqual(inv_1.sender, inv_2.sender)
+        self.assertTrue("ObsPy" in inv_1.module)
+        self.assertTrue("obspy.org" in inv_1.module_uri)
+        self.assertTrue((UTCDateTime() - inv_1.created) < 5)
+
+        # Now a more advanced case.
+        inv_1 = read_inventory()
+        inv_2 = read_inventory()
+
+        inv_1.source = "B"
+        inv_2.source = "A"
+
+        inv_1.sender = "Random"
+        inv_2.sender = "String"
+
+        inv_1 += inv_2
+
+        self.assertEqual(inv_1.source, "A,B")
+        self.assertEqual(inv_1.sender, "Random,String")
+        self.assertTrue("ObsPy" in inv_1.module)
+        self.assertTrue("obspy.org" in inv_1.module_uri)
+        self.assertTrue((UTCDateTime() - inv_1.created) < 5)
+
+        # One more. Containing a couple of Nones.
+        inv_1 = read_inventory()
+        inv_2 = read_inventory()
+
+        inv_1.source = None
+        inv_2.source = "A"
+
+        inv_1.sender = "Random"
+        inv_2.sender = None
+
+        inv_1 += inv_2
+
+        self.assertEqual(inv_1.source, "A")
+        self.assertEqual(inv_1.sender, "Random")
+        self.assertTrue("ObsPy" in inv_1.module)
+        self.assertTrue("obspy.org" in inv_1.module_uri)
+        self.assertTrue((UTCDateTime() - inv_1.created) < 5)
+
 
 def suite():
     return unittest.makeSuite(InventoryTestCase, 'test')
