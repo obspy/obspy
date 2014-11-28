@@ -108,7 +108,7 @@ def readCSS(filename, **kwargs):
             fh.seek(offset)
             data = fh.read(read_fmt.itemsize * npts)
             data = frombuffer(data, dtype=read_fmt)
-            data = data.astype(fmt, copy=False)
+            data = np.require(data, dtype=fmt)
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()
