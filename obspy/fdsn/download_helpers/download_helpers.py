@@ -80,7 +80,7 @@ class DownloadHelper(object):
             _p.extend(sorted(providers))
 
             if orfeus:
-                _p.append(orfeus)
+                _p.append("ORFEUS")
 
             providers = _p
 

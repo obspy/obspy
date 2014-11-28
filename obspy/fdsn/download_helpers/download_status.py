@@ -40,7 +40,8 @@ OVERWRITE_CAPABILITIES = {
 
 # The current status of an entity.
 STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
-               "download_failed", "download_rejected"])
+               "download_failed", "download_rejected",
+               "download_partially_failed"])
 
 
 class Station(object):
@@ -65,10 +66,11 @@ class Station(object):
     """
     __slots__ = ["network", "station", "latitude", "longitude", "channels",
                  "_stationxml_filename", "want_station_information",
-                 "miss_station_information", "have_station_information"]
+                 "miss_station_information", "have_station_information",
+                 "stationxml_status"]
 
     def __init__(self, network, station, latitude, longitude, channels,
-                 stationxml_filename=None):
+                 stationxml_filename=None, stationxml_status=None):
         # Station attributes.
         self.network = network
         self.station = station
@@ -77,6 +79,7 @@ class Station(object):
         self.channels = channels
         # Station information settings.
         self.stationxml_filename = stationxml_filename
+        self.stationxml_status = stationxml_status and STATUS.NONE
 
         # Internally keep track of which channels and time interval want
         # station information, which miss station information and which
@@ -103,7 +106,7 @@ class Station(object):
         return False
 
     @property
-    def existing_time_intervals(self):
+    def has_existing_time_intervals(self):
         """
         Returns True if any of the station's time intervals already exist.
         """
@@ -112,6 +115,25 @@ class Station(object):
                 if ti.status == STATUS.EXISTS:
                     return True
         return False
+
+    def remove_files(self, logger):
+        """
+        Delete all files under it. Only delete stuff that actually has been
+        downloaded!
+        """
+        for chan in self.channels:
+            for ti in chan.intervals:
+                if ti.status != STATUS.DOWNLOADED:
+                    continue
+                if os.path.exists(ti.filename):
+                    logger.info("Deleting MiniSEED file '%s'." % ti.filename)
+                    utils.safe_delete(ti.filename)
+
+        if self.stationxml_status == STATUS.DOWNLOADED and \
+                os.path.exists(self.stationxml_filename):
+            logger.info("Deleting StationXMl file '%s'." %
+                        self.stationxml_filename)
+            utils.safe_delete(self.stationxml_filename)
 
     @property
     def stationxml_filename(self):
@@ -199,6 +221,7 @@ class Station(object):
                 self.miss_station_information = \
                     copy.deepcopy(self.want_station_information)
                 self.have_station_information = {}
+                self.stationxml_status = STATUS.NEEDS_DOWNLOADING
             # 2. The file does exist. It will be parsed. If it contains ALL
             # necessary information, nothing will happen. Otherwise it will
             # be overwritten.
@@ -222,11 +245,13 @@ class Station(object):
                     self.have_station_information = \
                         copy.deepcopy(self.want_station_information)
                     self.miss_station_information = {}
+                    self.stationxml_status = STATUS.EXISTS
                     return
                 # Otherwise everything will be downloaded.
                 self.miss_station_information = \
                     copy.deepcopy(self.want_station_information)
                 self.have_station_information = {}
+                self.stationxml_status = STATUS.NEEDS_DOWNLOADING
         # The other possibility is that a dictionary is returned.
         else:
             raise NotImplementedError
@@ -263,13 +288,17 @@ class Station(object):
         Should be run after the MiniSEED and StationXML downloads finished.
         It will make sure that every MiniSEED file also has a corresponding
         StationXML file.
+
+        It will delete MiniSEED files but never a StationXML file. The logic
+        of the download helpers does not allow for a StationXML file with not
+        data.
         """
         # All or nothing for each channel.
         for id in self.miss_station_information:
-            logger.warnings("No station information could be downloaded for "
-                            "%s.%s.%s.%s. All downloaded MiniSEED files "
-                            "will be deleted!" % (
-                                self.network, self.station, id[0], id[1]))
+            logger.warning("No station information could be downloaded for "
+                           "%s.%s.%s.%s. All downloaded MiniSEED files "
+                           "will be deleted!" % (
+                               self.network, self.station, id[0], id[1]))
             channel = self.channels[id]
             for time_interval in channel.intervals:
                 # Only delete downloaded things!
@@ -423,47 +452,65 @@ class ClientDownloadHelper(object):
         for station in self.stations.values():
             station.prepare_mseed_download(mseed_storage=self.mseed_storage)
 
-    def filter_stations_based_on_minimum_distance(self):
+    def filter_stations_based_on_minimum_distance(
+            self, existing_client_dl_helpers):
         """
         Removes stations until all stations have a certain minimum distance to
         each other.
+
+        :param existing_client_dl_helpers: Instances of already existing
+            client download helpers.
+        :type existing_client_dl_helpers: list of
+            :class:`~.ClientDownloadHelper`
         """
+        # Create a sorted copy that will be used in the following. Make it
+        # more deterministic by sorting the stations based on the id.
         stations = copy.copy(list(self.stations.values()))
-        # Deterministic behaviour by sorting!
         stations = sorted(stations, key=lambda x: (x.network, x.station))
 
-        # Build k-d-tree and query for the neighbours of each point within
-        # the minimum distance.
-        kd_tree = utils.SphericalNearestNeighbour(stations)
-        nns = kd_tree.query_pairs(
-            self.restrictions.minimum_interstation_distance_in_m)
+        # There are essentially two possibilities. If no station exists yet,
+        # it will choose the largest subset of stations satisfying the
+        # minimum inter-station distance constraint.
+        if not existing_client_dl_helpers and \
+                not any([_i.has_existing_time_intervals for _i in stations]):
+            # Build k-d-tree and query for the neighbours of each point within
+            # the minimum distance.
+            kd_tree = utils.SphericalNearestNeighbour(stations)
+            nns = kd_tree.query_pairs(
+                self.restrictions.minimum_interstation_distance_in_m)
 
-        indexes_to_remove = []
+            indexes_to_remove = []
+            # Keep removing the station with the most pairs until no pairs are
+            # left.
+            while nns:
+                most_common = collections.Counter(
+                    itertools.chain.from_iterable(nns)).most_common()[0][0]
+                indexes_to_remove.append(most_common)
+                nns = list(itertools.filterfalse(
+                    lambda x: most_common in x, nns))
 
-        # Keep removing the station with the most pairs until no pairs are
-        # left.
-        while nns:
-            most_common = collections.Counter(
-                itertools.chain.from_iterable(nns)).most_common()[0][0]
-            indexes_to_remove.append(most_common)
-            nns = list(itertools.filterfalse(lambda x: most_common in x, nns))
+            # Remove these indices this results in a set of stations we wish to
+            # keep.
+            stations = set([_i[1] for _i in itertools.filterfalse(
+                lambda x: x[0] in indexes_to_remove,
+                enumerate(stations))])
 
-        # Remove these indices this results in a set of stations we wish to
-        # keep.
-        stations = set([_i[1] for _i in itertools.filterfalse(
-            lambda x: x[0] in indexes_to_remove,
-            enumerate(stations))])
+            # Get the stations to be deleted and delete them.
+            existing_ids = set(self.stations.keys())
+            to_be_removed = existing_ids.difference(
+                set([(_i.network, _i.station) for _i in stations]))
 
-        # Get the stations to be deleted and delete them.
-        existing_ids = set(self.stations.keys())
-        to_be_removed = existing_ids.difference(
-            set([(_i.network, _i.station) for _i in stations]))
-
-        # Now actually delete the files and everything.
-        for s_id in to_be_removed:
-
-
-        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+            remaining_stations = []
+            # Now actually delete the files and everything.
+            for station in stations:
+                if (station.network, station.station) not in to_be_removed:
+                    remaining_stations.append(station)
+                    continue
+                station.remove_files(logger=self.logger)
+        # Otherwise it will add new stations approximating a Poisson disk
+        # distribution.
+        else:
+            pass
 
     def prepare_stationxml_download(self):
         """
@@ -548,7 +595,18 @@ class ClientDownloadHelper(object):
                     still_missing[c_id] = times
                     continue
                 station.have_station_information[c_id] = times
+
             station.miss_station_information = still_missing
+            if still_missing:
+                station.stationxml_status = STATUS.DOWNLOAD_PARTIALLY_FAILED
+            else:
+                station.stationxml_status = STATUS.DOWNLOADED
+
+        # Now loop over all stations and that the status of the ones that
+        # still need downloading to download failed.
+        for station in self.stations.values():
+            if station.stationxml_status == STATUS.NEEDS_DOWNLOADING:
+                station.stationxml_status = STATUS.DOWNLOAD_FAILED
 
         self.logger.info("Client '%s' - Downloaded %i station files [%.1f MB] "
                          "in %.1f seconds [%.2f KB/sec]." % (
@@ -576,6 +634,9 @@ class ClientDownloadHelper(object):
         chunks = []
         chunks_curr = []
         curr_chunks_mb = 0
+
+        # Don't request more than 50 chunks at once to not choke the servers.
+        MAX_CHUNK_LENGTH = 50
 
         counter = collections.Counter()
 
@@ -606,7 +667,8 @@ class ClientDownloadHelper(object):
                     duration = interval.end - interval.start
                     curr_chunks_mb += \
                         sr * duration * 4.0 / 3.0 / 1024.0 / 1024.0
-                    if curr_chunks_mb >= chunk_size_in_mb:
+                    if curr_chunks_mb >= chunk_size_in_mb or \
+                            len(chunks_curr) >= MAX_CHUNK_LENGTH:
                         chunks.append(chunks_curr)
                         chunks_curr = []
                         curr_chunks_mb = 0
@@ -820,13 +882,22 @@ class ClientDownloadHelper(object):
                 filename))
         return channel_availability
 
-    def discard_stations(self, station_ids):
+    def discard_stations(self, existing_client_dl_helpers):
         """
-        Discard all stations based on the ids in station_ids.
+        Discard all stations part of any of the already existing client
+        download helper instances. The station discarding happens purely
+        based on station ids.
 
-        :param station_ids: An iterable yielding (NET, STA) tuples. All of
-            these will be removed if available.
+        :param existing_client_dl_helpers: Instances of already existing
+            client download helpers. All stations part of this will not be
+            downloaded anymore.
+        :type existing_client_dl_helpers: list of
+            :class:`~.ClientDownloadHelper`
         """
+        station_ids = []
+        for helper in existing_client_dl_helpers:
+            station_ids.extend(helper.stations.keys())
+
         for station_id in station_ids:
             try:
                 del self.stations[station_id]

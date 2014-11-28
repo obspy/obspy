@@ -181,10 +181,9 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     # Save first to a temporary file, then cut the file into seperate files.
     temp_filename = NamedTemporaryFile().name
 
+    open_files = {}
     try:
         client.get_waveforms_bulk(bulk, filename=temp_filename)
-
-        open_files = {}
         # If that succeeds, split the old file into multiple new ones.
         file_size = os.path.getsize(temp_filename)
 
