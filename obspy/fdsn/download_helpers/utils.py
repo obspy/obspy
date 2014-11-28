@@ -18,7 +18,6 @@ with standard_library.hooks():
     from urllib.error import HTTPError, URLError
 
 import collections
-import copy
 import fnmatch
 import os
 from lxml import etree
@@ -40,26 +39,6 @@ ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 # mean earth radius in meter as defined by the International Union of
 # Geodesy and Geophysics. Used for the spherical kd-tree.
 EARTH_RADIUS = 6371009
-
-
-def format_report(report):
-    """
-    Pretty print the report returned from the download() function of the
-    download helper.
-    """
-    print("\nAttempted to acquire data from %i clients." % len(report))
-    for info in report:
-        stationxmls = []
-        mseeds = []
-        for station in info["data"]:
-            stationxmls.append(station.stationxml_filename)
-            mseeds.extend([i.mseed_filename for i in station.channels])
-        filesize = sum(os.path.getsize(i) for i in (mseeds + stationxmls))
-        filesize /= (1024.0 * 1024.0)
-        print("\tClient %10s - %4i StationXML files | %5i MiniSEED files "
-              "| Total Size: %.2f MB" %
-              ('%s' % info["client"], len(stationxmls), len(mseeds),
-               filesize))
 
 
 def download_stationxml(client, client_name, bulk, filename, logger):
@@ -338,103 +317,6 @@ def safe_delete(filename):
     except Exception as e:
         raise ValueError("Could not delete '%s' because: %s" % (filename,
                                                                 str(e)))
-
-
-def filter_stations(stations, minimum_distance_in_m):
-    """
-    Removes stations until all stations have a certain minimum distance to
-    each other.
-    """
-    stations = copy.copy(stations)
-    kd_tree = SphericalNearestNeighbour(stations)
-    nns = kd_tree.query_pairs(minimum_distance_in_m)
-
-    indexes_to_remove = []
-
-    # Keep removing the station with the most pairs until no pairs are left.
-    while nns:
-        most_common = collections.Counter(
-            itertools.chain.from_iterable(nns)).most_common()[0][0]
-        indexes_to_remove.append(most_common)
-        nns = list(itertools.filterfalse(lambda x: most_common in x, nns))
-
-    # Remove these indices.
-    return set([_i[1] for _i in itertools.filterfalse(
-                lambda x: x[0] in indexes_to_remove,
-                enumerate(stations))])
-
-
-def filter_based_on_interstation_distance(
-        existing_stations, new_stations, reliable_new_stations,
-        minimum_distance_in_m=0):
-    """
-    Filter two lists of stations, successively adding each station in one
-    list to the stations in the list of existing stations satisfying the
-    required minimum inter-station distances. If minimum distance in meter
-    is 0, it will just merge both lists and return.
-
-    The duplicate ids between new and existing stations can be assumed to
-    already have been removed.
-
-    Returns a dictionary containing two sets, one with the accepted stations
-    and one with the rejected stations.
-
-    :param reliable_new_stations: Determines if the contribution of the new
-        stations will also be taken into account when calculating the
-        minimum inter-station distance. If True, the check for each new
-        station will be performed by successively adding stations. Otherwise
-        it will be performed only against the existing stations.
-    """
-    # Shallow copies.
-    existing_stations = set(copy.copy(existing_stations))
-    new_stations = set(copy.copy(new_stations))
-
-    # If no requirement given, just merge
-    if not minimum_distance_in_m:
-        return {
-            "accepted_stations": existing_stations.intersection(new_stations),
-            "rejected_stations": set()
-        }
-
-    # If no existing stations yet, just make sure the minimum inner station
-    # distances are satisfied.
-    if not existing_stations:
-        if reliable_new_stations:
-            accepted_stations = filter_stations(new_stations,
-                                                minimum_distance_in_m)
-            return {
-                "accepted_stations": accepted_stations,
-                "rejected_stations": new_stations.difference(accepted_stations)
-            }
-        else:
-            return {
-                "accepted_stations": new_stations,
-                "rejected_stations": set()
-            }
-
-    accepted_stations = set()
-    rejected_stations = set()
-
-    test_set = copy.copy(existing_stations)
-
-    for station in new_stations:
-        kd_tree = SphericalNearestNeighbour(test_set)
-        neighbours = kd_tree.query([station])[0][0]
-        if np.isinf(neighbours[0]):
-            from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
-            continue
-        min_distance = neighbours[0]
-        if min_distance < minimum_distance_in_m:
-            rejected_stations.add(station)
-            continue
-        accepted_stations.add(station)
-        if reliable_new_stations:
-            test_set.add(station)
-
-    return {
-        "accepted_stations": accepted_stations,
-        "rejected_stations": rejected_stations,
-    }
 
 
 def get_stationxml_contents(filename):

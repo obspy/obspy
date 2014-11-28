@@ -19,10 +19,10 @@ from future import standard_library
 with standard_library.hooks():
     import itertools
 
-
 import collections
 import copy
 from multiprocessing.pool import ThreadPool
+import numpy as np
 import os
 import time
 import timeit
@@ -36,7 +36,6 @@ from . import utils
 OVERWRITE_CAPABILITIES = {
     "resif": None
 }
-
 
 # The current status of an entity.
 STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
@@ -362,7 +361,7 @@ class Channel(object):
 
 class TimeInterval(object):
     """
-    Simple object representing a time inverval of a channel.
+    Simple object representing a time interval of a channel.
 
     It knows the temporal bounds of the interval, the (desired) filename,
     and the current status of the interval.
@@ -403,7 +402,9 @@ class ClientDownloadHelper(object):
     :param restrictions: The non-domain related restrictions for the query.
     :type domain: :class:`obspy.fdsn.download_helpers.Domain` subclass
     :param domain: The domain definition.
-    :rtype: dict
+    :param mseed_storage: The MiniSEED storage settings.
+    :param stationxml_storage: THe StationXML storage settings.
+    :param logger: An active logger instance.
     """
     def __init__(self, client, client_name, restrictions, domain,
                  mseed_storage, stationxml_storage, logger):
@@ -463,15 +464,22 @@ class ClientDownloadHelper(object):
         :type existing_client_dl_helpers: list of
             :class:`~.ClientDownloadHelper`
         """
+        if not self.restrictions.minimum_interstation_distance_in_m:
+            return
+
         # Create a sorted copy that will be used in the following. Make it
         # more deterministic by sorting the stations based on the id.
         stations = copy.copy(list(self.stations.values()))
         stations = sorted(stations, key=lambda x: (x.network, x.station))
 
+        existing_stations = []
+        for dlh in existing_client_dl_helpers:
+            existing_stations.extend(list(dlh.stations.values()))
+
         # There are essentially two possibilities. If no station exists yet,
         # it will choose the largest subset of stations satisfying the
         # minimum inter-station distance constraint.
-        if not existing_client_dl_helpers and \
+        if not existing_stations and \
                 not any([_i.has_existing_time_intervals for _i in stations]):
             # Build k-d-tree and query for the neighbours of each point within
             # the minimum distance.
@@ -501,16 +509,36 @@ class ClientDownloadHelper(object):
                 set([(_i.network, _i.station) for _i in stations]))
 
             remaining_stations = []
-            # Now actually delete the files and everything.
+            rejected_stations = []
             for station in stations:
                 if (station.network, station.station) not in to_be_removed:
                     remaining_stations.append(station)
                     continue
-                station.remove_files(logger=self.logger)
+                rejected_stations.append(station)
         # Otherwise it will add new stations approximating a Poisson disk
         # distribution.
         else:
-            pass
+            remaning_stations = []
+            rejected_stations = []
+            for station in stations:
+                kd_tree = utils.SphericalNearestNeighbour(existing_stations)
+                neighbours = kd_tree.query([station])[0][0]
+                if np.isinf(neighbours[0]):
+                    continue
+                min_distance = neighbours[0]
+                if min_distance < \
+                        self.restrictions.minimum_interstation_distance_in_m:
+                    rejected_stations.append(station)
+                    continue
+                remaning_stations.append(station)
+
+        # Now actually delete the files and everything of the rejected
+        # stations.
+        for station in rejected_stations:
+            station.remove_files(logger=self.logger)
+        self.stations = {}
+        for station in remaining_stations:
+            self.stations[(station.network, station.station)] = station
 
     def prepare_stationxml_download(self):
         """
