@@ -1234,19 +1234,19 @@ class WaveformPlotting(object):
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
         for _i, _tr in enumerate(self._tr_selected):
-                if len(self.stream[_tr].data) >= self.max_npts:
-                    tmp_data = signal.resample(
-                        self.stream[_tr].data, self.max_npts)
-                else:
-                    tmp_data = self.stream[_tr].data
-                # Initialising trace stats
-                self._tr_data.append(tmp_data)
-                self._tr_starttimes.append(self.stream[_tr].stats.starttime)
-                self._tr_max_count[_i] = tmp_data.max()
-                self._tr_npts[_i] = tmp_data.size
-                self._tr_delta[_i] = (
-                    self.stream[_tr].stats.endtime -
-                    self.stream[_tr].stats.starttime) / self._tr_npts[_i]
+            if len(self.stream[_tr].data) >= self.max_npts:
+                tmp_data = signal.resample(self.stream[_tr].data,
+                                           self.max_npts)
+            else:
+                tmp_data = self.stream[_tr].data
+            # Initialising trace stats
+            self._tr_data.append(tmp_data)
+            self._tr_starttimes.append(self.stream[_tr].stats.starttime)
+            self._tr_max_count[_i] = tmp_data.max()
+            self._tr_npts[_i] = tmp_data.size
+            self._tr_delta[_i] = (
+                self.stream[_tr].stats.endtime -
+                self.stream[_tr].stats.starttime) / self._tr_npts[_i]
         # Maximum global count of the traces
         self._tr_max_count_glob = np.abs(self._tr_max_count).max()
         # Init time vectors
