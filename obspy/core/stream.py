@@ -2455,7 +2455,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 system to left handed Z, North, and East system.
 
         :type back_azimuth: float, optional
-        :param angle: Depends on the chosen method.
+        :param back_azimuth: Depends on the chosen method.
             A single float, the back azimuth from station to source in degrees.
             If not given, ``stats.back_azimuth`` will be used. It will also be
             written after the rotation is done.
