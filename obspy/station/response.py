@@ -137,19 +137,19 @@ class ResponseStage(ComparingObject):
             "{decimation}").format(
             response_type=self.__class__.__name__,
             response_stage=self.stage_sequence_number,
+            gain=self.stage_gain,
+            gain_freq=self.stage_gain_frequency,
             name_desc="\t%s %s\n" % (
                 self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
-            resource_id="\tResource Id: %s" % self.resource_id
-            if self.resource_id else "",
+            resource_id=("\tResource Id: %s" % self.resource_id
+                         if self.resource_id else ""),
             input_units=self.input_units if self.input_units else "UNKNOWN",
-            input_desc=" (%s)" % self.input_units_description
-            if self.input_units_description else "",
+            input_desc=(" (%s)" % self.input_units_description
+                        if self.input_units_description else ""),
             output_units=self.output_units if self.output_units else "UNKNOWN",
-            output_desc=" (%s)" % self.output_units_description
-            if self.output_units_description else "",
-            gain=self.stage_gain,
-            gain_freq=self.stage_gain_frequency,
+            output_desc=(" (%s)" % self.output_units_description
+                         if self.output_units_description else ""),
             decimation=(
                 "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
                 "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
