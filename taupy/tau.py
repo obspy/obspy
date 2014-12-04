@@ -3,7 +3,9 @@
 from __future__ import absolute_import
 
 from .TauModelLoader import load
-from .TauP_Time import TauP_Time, parsePhaseList
+from .TauP_Time import TauP_Time
+from .TauP_Pierce import TauP_Pierce
+from .TauP_Path import TauP_Path
 
 
 class Arrivals(list):
@@ -29,35 +31,30 @@ class TauPyModel(object):
     High level interface to TauPy.
     """
     def __init__(self, model="iasp91", verbose=False):
+        # todo: if .taup doesn't exist, make one, else:
         self.model = load(model, ".", verbose=verbose)
         self.verbose = verbose
 
-    # def get_travel_time(self, source_depth_in_km, distance_in_degree,
-    #                     phase_list=None):
-    #     phase_list = phase_list if phase_list is not None else ["ttall"]
-    #     phase_list = parsePhaseList(phase_list)
-    #
-    #     tt = TauP_Time()
-    #     tt.DEBUG = self.verbose
-    #     tt.phaseNames = phase_list
-    #     tt.phaseFile = None
-    #     tt.depth = float(source_depth_in_km)
-    #     tt.degrees = float(distance_in_degree)
-    #     tt.kilometres = None
-    #
-    #     tt.tMod = self.model
-    #     tt.tModDepth = self.model
-    #     tt.modelName = self.model.sMod.vMod.modelName
-    #
-    #     tt.depthCorrect(source_depth_in_km)
-    #     tt.calculate(distance_in_degree)
-    #
-    #     return Arrivals(tt.arrivals)
-
     def get_travel_time(self, source_depth_in_km, distance_in_degree,
-                         phase_list=None, print_output=False):
+                        phase_list=None, print_output=False):
         phase_list = phase_list if phase_list is not None else ["ttall"]
         tt = TauP_Time(phase_list, self.model.sMod.vMod.modelName,
                        source_depth_in_km, distance_in_degree)
         tt.run(print_output)
         return Arrivals(tt.arrivals)
+
+    def get_pierce_points(self, source_depth_in_km, distance_in_degree,
+                          phase_list=None, print_output=False):
+        phase_list = phase_list if phase_list is not None else ["ttall"]
+        pp = TauP_Pierce(phase_list, self.model.sMod.vMod.modelName,
+                         source_depth_in_km, distance_in_degree)
+        pp.run(print_output)
+        return Arrivals(pp.arrivals)
+
+    def get_ray_paths(self, source_depth_in_km, distance_in_degree,
+                      phase_list=None, print_output=False):
+        phase_list = phase_list if phase_list is not None else ["ttall"]
+        rp = TauP_Path(phase_list, self.model.sMod.vMod.modelName,
+                       source_depth_in_km, distance_in_degree)
+        rp.run(print_output)
+        return Arrivals(rp.arrivals)

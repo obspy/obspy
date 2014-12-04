@@ -17,8 +17,9 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self, phaseList=[], modelName="iasp91", depth=0,
+    def __init__(self, phaseList=None, modelName="iasp91", depth=0,
                  degrees=None):
+        phaseList = phaseList if phaseList is not None else []
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP

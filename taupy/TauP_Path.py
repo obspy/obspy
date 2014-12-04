@@ -8,7 +8,9 @@ class TauP_Path(TauP_Pierce):
     # In effect, the methods here allow using TauP_Time to calculate the
     # pierce points.
 
-    def __init__(self):
+    def __init__(self,
+                 phaseList=None, modelName="iasp91", depth=0, degrees=None):
+        phaseList = phaseList if phaseList is not None else []
         TauP_Pierce.__init__(self)
         #self.mapWidthUnit = "i"
         #self.mapWidth = 6
@@ -16,6 +18,10 @@ class TauP_Path(TauP_Pierce):
         #self.svgOutput =False
         self.maxPathTime = 1e300
         self.maxPathInc = 1
+        self.phaseList = phaseList
+        self.modelName = modelName
+        self.depth = depth
+        self.degrees = degrees
 
     def calculate(self, degrees):
         self.depthCorrect(self.sourceDepth)
@@ -99,8 +105,6 @@ class TauP_Path(TauP_Pierce):
 
     def printDistRadius(self, calcDist, radius):
         print("{}  {}".format(calcDist, radius))
-
-
 
 
 if __name__ == '__main__':

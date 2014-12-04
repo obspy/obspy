@@ -7,7 +7,8 @@ class TauP_Pierce(TauP_Time):
     # pierce points.
 
     def __init__(self,
-                 phaseList=[], modelName="iasp91", depth=0, degrees=None):
+                 phaseList=None, modelName="iasp91", depth=0, degrees=None):
+        phaseList = phaseList if phaseList is not None else []
         TauP_Time.__init__(self)
         self.onlyTurnPoints = False
         self.onlyRevPoints = False

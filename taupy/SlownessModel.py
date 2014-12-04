@@ -924,14 +924,16 @@ class SlownessModel(object):
                         # as “The IEEE 754 standard specifies that every
                         # floating point arithmetic operation, including
                         # division by zero, has a well-defined result”.
-                        # Use np.divide instead:
-                        np.seterr(divide='ignore')
-                        if (abs(currTD.time -
-                                ((splitTD.time - prevTD.time)
-                                 * np.divide((currTD.distRadian
-                                             - prevTD.distRadian),
-                                (splitTD.distRadian - prevTD.distRadian))
-                                + prevTD.time)) > self.maxInterpError):
+                        # Use numpy's division instead by using np.array:
+                        with np.errstate(divide='ignore', invalid='ignore'):
+                            diff = (currTD.time -
+                                    ((splitTD.time - prevTD.time)
+                                     * ((currTD.distRadian
+                                        - prevTD.distRadian) /
+                                    np.array(splitTD.distRadian
+                                             - prevTD.distRadian))
+                                    + prevTD.time))
+                        if abs(diff) > self.maxInterpError:
                             self.addSlowness((prevSLayer.topP
                                               + prevSLayer. botP) / 2,
                                              self.PWAVE)
