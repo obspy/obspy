@@ -6,6 +6,7 @@ from .TauModelLoader import load
 from .TauP_Time import TauP_Time
 from .TauP_Pierce import TauP_Pierce
 from .TauP_Path import TauP_Path
+from .TauP_Create import TauP_Create
 
 
 class Arrivals(list):
@@ -58,3 +59,6 @@ class TauPyModel(object):
                        source_depth_in_km, distance_in_degree)
         rp.run(print_output)
         return Arrivals(rp.arrivals)
+
+    def create_taup_model(self):
+        TauP_Create.main(self.model.sMod.vMod.modelName)

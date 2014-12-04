@@ -23,7 +23,7 @@ class TauP_Create(object):
     plotTmod = False
 
     #  "constructor"
-    def __init__(self):
+    def __init__(self, modelFilename=None):
         # Parse command line arguments. Very clever module, e.g. it
         # can print usage automatically.
         parser = argparse.ArgumentParser()
@@ -46,21 +46,24 @@ class TauP_Create(object):
         self.DEBUG = args.verbose
         self.directory = args.input_dir
         self.outdir = args.output_dir
-        self.modelFilename = args.filename
+        if modelFilename is None:
+            self.modelFilename = args.filename
+        else:
+            self.modelFilename = modelFilename
+        if self.modelFilename is None:
+            raise ValueError("Model file name not specified.")
 
         if self.directory is None:
             # if no directory given, assume data is in ./data:
             self.directory = os.path.join(os.path.dirname(os.path.abspath(
                 inspect.getfile(inspect.currentframe()))), "data")
-        if self.modelFilename is None:
-            self.modelFilename = "iasp91.tvel"
 
     @classmethod
-    def main(cls):
+    def main(cls, modelFilename=None):
         """ Do loadVMod, then start. """
 
         print("TauP_Create starting...")
-        tauPCreate = TauP_Create()
+        tauPCreate = TauP_Create(modelFilename)
 
         # try:
         #     print("Loading velocity model.")

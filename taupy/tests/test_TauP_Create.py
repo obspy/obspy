@@ -14,7 +14,7 @@ data_dir = os.path.join(os.path.dirname(os.path.abspath(
 
 class TestTauPCreate(unittest.TestCase):
     def test_taupcreate(self):
-        TauP_Create.main()
+        TauP_Create.main(modelFilename='iasp91.tvel')
 
 
 if __name__ == '__main__':
