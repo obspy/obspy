@@ -293,12 +293,13 @@ class Station(object):
         data.
         """
         # All or nothing for each channel.
-        for id in self.miss_station_information:
+        for id in self.miss_station_information.keys():
             logger.warning("No station information could be downloaded for "
                            "%s.%s.%s.%s. All downloaded MiniSEED files "
                            "will be deleted!" % (
                                self.network, self.station, id[0], id[1]))
-            channel = self.channels[id]
+            channel = [_i for _i in self.channels if
+                       (_i.location, _i.channel) == id][0]
             for time_interval in channel.intervals:
                 # Only delete downloaded things!
                 if time_interval.status == STATUS.DOWNLOADED:

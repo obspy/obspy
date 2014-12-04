@@ -156,6 +156,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
 
     # Only the filename is not needed for the actual data request.
     bulk = [list(_i[:-1]) for _i in chunks]
+    original_bulk_length = len(bulk)
 
     # Merge adjacent bulk-request for continuous downloads. This is a bit
     # redundant after splitting it up before, but eases the logic in the
@@ -224,7 +225,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
         except:
             pass
     logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
-        client_name, len(open_files), len(bulk)))
+        client_name, len(open_files), original_bulk_length))
     return open_files.keys()
 
 
