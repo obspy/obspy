@@ -161,9 +161,9 @@ class Channel(BaseNode):
         ret = (
             "Channel '{id}', Location '{location}' {description}\n"
             "{availability}"
-            "\tTimerange: {start_date} - {end_date}\n"
+            "\tTime range: {start_date} - {end_date}\n"
             "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
-            "\tElevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
+            "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
             "{azimuth}"
             "{dip}"
             "{channel_types}"
