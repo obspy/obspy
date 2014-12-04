@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -22,8 +22,7 @@ class TauP_Create(object):
     plotSmod = False
     plotTmod = False
 
-    #  "constructor"
-    def __init__(self, modelFilename=None):
+    def __init__(self, modelFilename=None, output_dir=None):
         # Parse command line arguments. Very clever module, e.g. it
         # can print usage automatically.
         parser = argparse.ArgumentParser()
@@ -45,7 +44,7 @@ class TauP_Create(object):
 
         self.DEBUG = args.verbose
         self.directory = args.input_dir
-        self.outdir = args.output_dir
+        self.outdir = args.output_dir if output_dir is None else output_dir
         if modelFilename is None:
             self.modelFilename = args.filename
         else:
@@ -59,25 +58,14 @@ class TauP_Create(object):
                 inspect.getfile(inspect.currentframe()))), "data")
 
     @classmethod
-    def main(cls, modelFilename=None):
+    def main(cls, modelFilename=None, output_dir=None):
         """ Do loadVMod, then start. """
-
         print("TauP_Create starting...")
-        tauPCreate = TauP_Create(modelFilename)
-
-        # try:
-        #     print("Loading velocity model.")
-        #     tauPCreate.loadVMod()
-        #     print("Running tauPCreate.run.")
-        #     tauPCreate.run()
-        #     print("Done!")
-        # except Exception as e:
-        #     print("Something went fundamentally wrong:", e)
-        # I need a stack trace:
-        print("Loading velocity model.")
+        tauPCreate = TauP_Create(modelFilename, output_dir)
+        #print("Loading velocity model.")
         tauPCreate.loadVMod()
-        print("Running tauPCreate.run.")
-        tauPCreate.start()
+        #print("Running tauPCreate.run.")
+        tauPCreate.run()
 
     def loadVMod(self):
         """ Tries to load a velocity model first via readVelocityFile,
@@ -145,9 +133,8 @@ class TauP_Create(object):
             maxInterpError = float(ssm.get('maxInterpError', 0.05))
             allowInnerCoreS = ssm.getboolean('allowInnerCoreS', True)
         except KeyError:
-            print("Couldn't read config file, using defaults. Config file "
-                  "must be a file named TauP_config (in working dir) with a "
-                  "section named SlownessModel_created_from_VelocityModel.")
+            if self.DEBUG:
+                print("Couldn't find or read config file, using defaults.")
             minDeltaP = 0.1
             maxDeltaP = 11
             maxDepthInterval = 115
@@ -185,7 +172,7 @@ class TauP_Create(object):
         # Creates tau model from slownesses.
         return TauModel(self.sMod)
 
-    def start(self):
+    def run(self):
         """ Creates a tau model from a velocity model. Called by
         TauP_Create.main after loadVMod; calls createTauModel and
         writes the result to a .taup file. """
@@ -203,10 +190,6 @@ class TauP_Create(object):
                 # if self.debug:
                 #    print(self.tMod)
 
-                # The java behaviour for finding where to store the
-                # file was pretty silly. It stored the out file to the
-                # working dir, but in two different ways. Here, just store to
-                # current dir:
                 outModelFileName = self.vMod.modelName + ".taup"
                 if self.outdir is None:
                     outFile = os.path.join(os.path.dirname(os.path.abspath(

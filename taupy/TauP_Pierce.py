@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from taupy.TauP_Time import TauP_Time
 from math import pi
 

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from taupy.TauP_Pierce import TauP_Pierce
 from taupy.helper_classes import TimeDist
 import numpy as np
@@ -20,8 +23,9 @@ class TauP_Path(TauP_Pierce):
         self.maxPathInc = 1
         self.phaseList = phaseList
         self.modelName = modelName
-        self.depth = depth
-        self.degrees = degrees
+        # This type conversion is important (somehow).
+        self.depth = float(depth)
+        self.degrees = float(degrees)
 
     def calculate(self, degrees):
         self.depthCorrect(self.sourceDepth)

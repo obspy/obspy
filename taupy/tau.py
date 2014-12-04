@@ -32,8 +32,14 @@ class TauPyModel(object):
     High level interface to TauPy.
     """
     def __init__(self, model="iasp91", verbose=False):
-        # todo: if .taup doesn't exist, make one, else:
-        self.model = load(model, ".", verbose=verbose)
+        try:
+            self.model = load(model, ".", verbose=verbose)
+        except FileNotFoundError:
+            print("A {}.taup model file was not found in this "
+                  "directory, will try to create one. "
+                  "This may take a while.".format(model))
+            self.create_taup_model(model, ".")
+            self.model = load(model, ".", verbose=verbose)
         self.verbose = verbose
 
     def get_travel_time(self, source_depth_in_km, distance_in_degree,
@@ -60,5 +66,12 @@ class TauPyModel(object):
         rp.run(print_output)
         return Arrivals(rp.arrivals)
 
-    def create_taup_model(self):
-        TauP_Create.main(self.model.sMod.vMod.modelName)
+    @staticmethod
+    def create_taup_model(model_name, output_dir):
+        if model_name.endswith(".nd"):
+            model_file_name = model_name
+        elif model_name.endswith(".tvel"):
+            model_file_name = model_name
+        else:
+            model_file_name = model_name + ".tvel"
+        TauP_Create.main(model_file_name, output_dir)
