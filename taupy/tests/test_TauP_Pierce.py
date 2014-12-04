@@ -17,7 +17,7 @@ class TestTauPPierce(unittest.TestCase):
                     tauppierce = TauP_Pierce(degrees=degree, depth=depth,
                                              modelName="iasp91",
                                              phaseList=["ttall"])
-                    tauppierce.start()
+                    tauppierce.run(printOutput=True)
         sys.stdout = stdout
         # Using ttall need to sort; or lines with same arrival times are in
         # different order. With explicit names of all the phases might not be

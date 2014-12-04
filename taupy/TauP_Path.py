@@ -107,4 +107,4 @@ if __name__ == '__main__':
     # Permits running as script.
     tauPPath = TauP_Path()
     tauPPath.readcmdLineArgs()
-    tauPPath.start()
+    tauPPath.run(printOutput=True)

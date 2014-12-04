@@ -121,4 +121,4 @@ if __name__ == '__main__':
     # Permits running as script.
     tauPPierce = TauP_Pierce()
     tauPPierce.readcmdLineArgs()
-    tauPPierce.start()
+    tauPPierce.run(printOutput=True)

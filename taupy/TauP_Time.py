@@ -50,7 +50,7 @@ class TauP_Time(object):
         # outside of constructor - is that so bad? Who knows.
         self.relativeArrival = None
 
-    def start(self):
+    def run(self, printOutput=False):
         """Does the calculations and prints the result."""
         self.phaseNames = parsePhaseList(self.phaseList)
         self.readTauModel()
@@ -67,7 +67,8 @@ class TauP_Time(object):
                                           "degrees for now.")
             self.depthCorrect(self.depth)
             self.calculate(self.degrees)
-            self.printResult()
+            if printOutput:
+                self.printResult()
         else:
             # Get the info from interactive mode. Not necessary to implement
             #  just now.
@@ -334,5 +335,5 @@ if __name__ == '__main__':
     # called whenever the program, that is TauP_Time, is executed.
     tauPTime = TauP_Time()
     tauPTime.readcmdLineArgs()
-    tauPTime.start()
+    tauPTime.run(printOutput=True)
 

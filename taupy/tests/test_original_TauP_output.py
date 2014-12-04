@@ -41,6 +41,7 @@ def parse_taup_time_output(filename):
             })
     return arrivals
 
+
 def compare_arrivals_with_taup_time_output(arrivals, filename):
     """
     """

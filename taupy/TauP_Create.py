@@ -65,15 +65,15 @@ class TauP_Create(object):
         # try:
         #     print("Loading velocity model.")
         #     tauPCreate.loadVMod()
-        #     print("Running tauPCreate.start.")
-        #     tauPCreate.start()
+        #     print("Running tauPCreate.run.")
+        #     tauPCreate.run()
         #     print("Done!")
         # except Exception as e:
         #     print("Something went fundamentally wrong:", e)
         # I need a stack trace:
         print("Loading velocity model.")
         tauPCreate.loadVMod()
-        print("Running tauPCreate.start.")
+        print("Running tauPCreate.run.")
         tauPCreate.start()
 
     def loadVMod(self):
@@ -223,7 +223,7 @@ class TauP_Create(object):
         #     print("Caught VelocityModelException.", e)
         finally:
             if self.DEBUG:
-                print("Method start is done, but not necessarily successful.")
+                print("Method run is done, but not necessarily successful.")
 
 
 if __name__ == '__main__':
