@@ -25,7 +25,7 @@ class TauP_Path(TauP_Pierce):
         self.modelName = modelName
         # This type conversion is important (somehow).
         self.depth = float(depth)
-        self.degrees = float(degrees)
+        self.degrees = degrees
 
     def calculate(self, degrees):
         self.depthCorrect(self.sourceDepth)
