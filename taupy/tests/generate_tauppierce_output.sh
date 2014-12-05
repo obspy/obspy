@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script for creating Java tauP output for the purpose of comparing it to Taupy's output
-file='data/java_tauppierce_testoutput'
+file='java_tauppierce_testoutput'
 # If file already exists, delete it.
 [[ -f "$file" ]] && rm "$file"
 for degree in 0 45 90 180 360 560

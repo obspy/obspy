@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 """
 This file tests the high-level interface of TauPy against the original TauPy
-output.
+output for the TauP_Time utility
 """
 import inspect
 import os
+import unittest
 
 from taupy.tau import TauPyModel
 
@@ -88,3 +89,21 @@ def test_all_phases_iasp91_35_deg_distance():
                                 distance_in_degree=35.0)
     compare_arrivals_with_taup_time_output(
         tts, "taup_time_-h_10_-ph_ttall_-deg_35")
+
+
+# For some reason this test throws nosetests off if not in the unittest
+# framwork like the test above...?
+class TauPTimeTests(unittest.TestCase):
+    def test_all_phases_ak135_35_deg_distance(self):
+        """
+        Tests a run at 35 degree distance for the ak135 model.
+        """
+        model = TauPyModel("ak135")
+        tts = model.get_travel_time(source_depth_in_km=10.0,
+                                    distance_in_degree=35.0)
+        compare_arrivals_with_taup_time_output(
+            tts, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
+
+
+if __name__ == '__main__':
+    unittest.main(buffer=True)
