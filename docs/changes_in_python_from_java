@@ -1,1 +1,0 @@
-Given that SphericalSModel is the only class which inherits from SlownessModel -- flat slowness models aren't yet implemented, says the commentary to TauP_Create -- I will merge the two classes and just have SlownessModel. Advantages: reduce number of classes by one and don't have to deal with abstract methods in python.
