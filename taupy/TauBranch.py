@@ -274,7 +274,7 @@ class TauBranch(object):
 
     def path(self, rayParam, downgoing, sMod):
         """
-        Called from TauP_Path.
+        Called from TauP_Path to calculate ray paths.
         :param rayParam:
         :param downgoing:
         :param sMod:
@@ -327,7 +327,7 @@ class TauBranch(object):
         else:
             sLayerNum = botLayerNum
             sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            while((sLayer.topP <= rayParam or sLayer.hasZeroThickness)
+            while((sLayer.topP <= rayParam or sLayer.hasZeroThickness())
                   and sLayerNum > topLayerNum):
                 sLayerNum -= 1
                 sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
