@@ -65,6 +65,7 @@ class TauP_Time(object):
                 stn = (self.stationLat, self.stationLon)
                 event = (self.eventLat, self.eventLon)
                 self.degrees = great_circle(stn, event).km
+                # todo: test this at least a little bit
             self.depthCorrect(self.depth)
             self.calculate(self.degrees)
             if printOutput:
