@@ -884,8 +884,6 @@ class SeismicPhase(object):
                                                          isPWave)
             if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
                 # Head waves and diffracted waves are a special case.
-                # Todo: in that case, add them to the TauP_Time test!
-                # Funnily enough, they come up even when you just use ttall!
                 distA = tauBranch.dist[rayNum]
                 timeA = tauBranch.time[rayNum]
                 distB, timeB = distA, timeA
@@ -1161,12 +1159,5 @@ def legPuller(name):
                 raise TauModelError(
                     "Invalid phase name {nchar} in {name}.".format(**locals()))
     legs.append("END")
-    phaseValidate(legs)
+    # phaseValidate(legs)
     return legs
-
-
-def phaseValidate(legs):
-    # Raise an exception here if validation fails.
-    # Validating the phase names is IMO not necessary now, wrong names raise
-    # an exception anyway.
-    pass

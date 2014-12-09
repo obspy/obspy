@@ -56,6 +56,7 @@ class TauPyModel(object):
         pp = TauP_Pierce(phase_list, self.model.sMod.vMod.modelName,
                          source_depth_in_km, distance_in_degree)
         pp.run(print_output)
+        # todo: shouldn't this maybe only return the pierce points?
         return Arrivals(pp.arrivals)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree,

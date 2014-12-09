@@ -42,6 +42,7 @@ class TauP_Path(TauP_Pierce):
     def printResult(self):
         radiusOfEarth = self.tModDepth.radiusOfEarth
         for currArrival in self.arrivals:
+            print(self.getCommentLine(currArrival))
             longWayRound = False
             if currArrival.getDistDeg() % 360 > 180:
                 longWayRound = True
@@ -108,7 +109,7 @@ class TauP_Path(TauP_Pierce):
                                              radiusOfEarth - calcDepth)
 
     def printDistRadius(self, calcDist, radius):
-        print("{}  {}".format(calcDist, radius))
+        print("{:4.2f}  {:4.1f}".format(calcDist, radius))
 
 
 if __name__ == '__main__':
