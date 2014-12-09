@@ -4,10 +4,12 @@
 import os
 import inspect
 import argparse
+from math import pi
+from geopy.distance import great_circle
+
 import taupy.TauModelLoader as TauModelLoader
 from taupy.helper_classes import TauModelError
 from taupy.SeismicPhase import SeismicPhase
-from math import pi
 
 
 class TauP_Time(object):
@@ -40,8 +42,6 @@ class TauP_Time(object):
         self.degrees = degrees
         self.azimuth = None
         self.backAzimuth = None
-        # Todo: implement latitudes and longitudes (maybe with matplotlib or psbasemap?)
-        # Needs to be in input and output
         self.stationLat = None
         self.stationLon = None
         self.eventLat = None
@@ -62,11 +62,9 @@ class TauP_Time(object):
             # Enough information has been given on the command line, just do
             #  simple calculation.
             if self.degrees is None:
-                # self.degrees = SphericalCoords.distance
-                # Check for maybe numpy libraries that handle this kind of
-                # calculations!
-                raise NotImplementedError("Distance must be provided in "
-                                          "degrees for now.")
+                stn = (self.stationLat, self.stationLon)
+                event = (self.eventLat, self.eventLon)
+                self.degrees = great_circle(stn, event).km
             self.depthCorrect(self.depth)
             self.calculate(self.degrees)
             if printOutput:

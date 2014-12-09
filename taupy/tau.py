@@ -61,7 +61,6 @@ class TauPyModel(object):
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree,
                       phase_list=None, print_output=False):
-        # todo: test this
         phase_list = phase_list if phase_list is not None else ["ttall"]
         rp = TauP_Path(phase_list, self.model.sMod.vMod.modelName,
                        source_depth_in_km, distance_in_degree)
