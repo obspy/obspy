@@ -304,11 +304,6 @@ ENTRY_POINTS = {
         'lowpassFIR = obspy.signal.filter:lowpassFIR',
         'remezFIR = obspy.signal.filter:remezFIR',
     ],
-    'obspy.plugin.integrate': [
-        'cumtrapz = scipy.integrate:cumtrapz',
-        'simps = scipy.integrate:simps',
-        'romb = scipy.integrate:romb',
-    ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
         'weighted_average_slopes = '

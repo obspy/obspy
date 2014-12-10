@@ -1213,8 +1213,11 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(101) * 0.01
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.integrate(type='cumtrapz')
-        np.testing.assert_almost_equal(tr.data[-1], 0.1)
+        tr.integrate()
+        # Assert the time shift.
+        self.assertEqual(tr.stats.starttime, UTCDateTime(0.1))
+        np.testing.assert_array_almost_equal(
+            tr.data, np.cumsum(data)[:-1] * 0.1)
 
     def test_issue317(self):
         """

@@ -1726,14 +1726,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @skipIfNoData
     @_add_processing_info
-    def integrate(self, type='cumtrapz', **options):
+    def integrate(self, **options):
         """
-        Method to integrate the trace with respect to time.
-
-        :type type: str, optional
-        :param type: Method to use for integration. Defaults to
-            ``'cumtrapz'``. See the `Supported Methods`_ section below for
-            further details.
+        Integrate the trace with respect to time.
 
         .. note::
 
@@ -1743,37 +1738,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your trace object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
-
-        .. rubric:: _`Supported Methods`
-
-        ``'cumtrapz'``
-            Trapezoidal rule to cumulatively compute integral (uses
-            :func:`scipy.integrate.cumtrapz`). Result has one sample less then
-            the input!
-
-        ``'simps'``
-            Simpson's rule to compute integral from samples (uses
-            :func:`scipy.integrate.simps`).
-
-        ``'romb'``
-            Romberg Integration to compute integral from (2**k + 1)
-            evenly-spaced samples. (uses :func:`scipy.integrate.romb`).
         """
-        type = type.lower()
-        # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('integrate', type)
-        # handle function specific settings
-        if func.__module__.startswith('scipy'):
-            # SciPy needs to set dx keyword if not given in options
-            if 'dx' not in options:
-                options['dx'] = self.stats.delta
-            args = [self.data]
-        else:
-            args = [self.data, self.stats.delta]
+        from scipy.integrate import cumtrapz
+        options['dx'] = self.stats.delta
+        if "type" in options:
+            warnings.warn("The 'type' argument is no longer supported. It "
+                          "will now always just use the 'cumtrapz' method.",
+                          DeprecationWarning)
+            del options["type"]
         # integrating
-        self.data = func(*args, **options)
+        self.data = cumtrapz(self.data, **options)
         # Correct for time shift introduced by the integration.
-        self.stats.starttime -= self.stats.delta
+        self.stats.starttime += self.stats.delta
         return self
 
     @skipIfNoData
