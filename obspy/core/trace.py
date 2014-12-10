@@ -1776,6 +1776,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             args = [self.data, self.stats.delta]
         # integrating
         self.data = func(*args, **options)
+        # Correct for time shift introduced by the integration.
+        self.stats.starttime -= self.stats.delta
         return self
 
     @skipIfNoData
