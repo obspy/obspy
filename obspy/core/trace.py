@@ -1730,6 +1730,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Integrate the trace with respect to time.
 
+        The first value will be always be zero and the total length of the
+        time series will not change.
+
         .. note::
 
             This operation is performed in place on the actual data arrays. The
@@ -1749,10 +1752,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                           "integration method and will be ignored.",
                           DeprecationWarning)
         from scipy.integrate import cumtrapz
-        # integrating
-        self.data = cumtrapz(self.data, dx=self.stats.delta)
-        # Correct for time shift introduced by the integration.
-        self.stats.starttime += self.stats.delta
+        # Integrate. Set first value to zero to avoid changing the total
+        # length of the array.
+        self.data = cumtrapz(self.data, dx=self.stats.delta, initial=0)
         return self
 
     @skipIfNoData

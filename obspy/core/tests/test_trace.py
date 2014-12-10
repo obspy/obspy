@@ -1214,10 +1214,11 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=data)
         tr.stats.delta = 0.1
         tr.integrate()
-        # Assert the time shift.
-        self.assertEqual(tr.stats.starttime, UTCDateTime(0.1))
+        # Assert time and length of resulting array.
+        self.assertEqual(tr.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr.stats.npts, 101)
         np.testing.assert_array_almost_equal(
-            tr.data, np.cumsum(data)[:-1] * 0.1)
+            tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
     def test_issue317(self):
         """
