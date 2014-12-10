@@ -1739,15 +1739,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
         """
-        from scipy.integrate import cumtrapz
-        options['dx'] = self.stats.delta
         if "type" in options:
             warnings.warn("The 'type' argument is no longer supported. It "
                           "will now always just use the 'cumtrapz' method.",
                           DeprecationWarning)
             del options["type"]
+        if options:
+            warnings.warn("Options are now longer passed to the underlying "
+                          "integration method and will be ignored.",
+                          DeprecationWarning)
+        from scipy.integrate import cumtrapz
         # integrating
-        self.data = cumtrapz(self.data, **options)
+        self.data = cumtrapz(self.data, dx=self.stats.delta)
         # Correct for time shift introduced by the integration.
         self.stats.starttime += self.stats.delta
         return self
