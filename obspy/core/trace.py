@@ -1726,12 +1726,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @skipIfNoData
     @_add_processing_info
-    def integrate(self, **options):
+    def integrate(self, method="cumtrapz", **options):
         """
         Integrate the trace with respect to time.
 
-        The first value will be always be zero and the total length of the
-        time series will not change.
+        .. rubric:: _`Supported Methods`
+
+        ``'cumtrapz'``
+            First order integration of data using the trapezoidal rule. Uses
+            :func:`obspy.signal.differentiate_and_integrate.integrate_cumtrapz`
+
+        ``'spline'``
+            Integrates by generating an interpolating spline and integrating
+            that. Uses
+            :func:`obspy.signal.differentiate_and_integrate.integrate_spline`
 
         .. note::
 
@@ -1742,19 +1750,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
         """
+        method = method.lower()
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('integrate', method)
+
         if "type" in options:
             warnings.warn("The 'type' argument is no longer supported. It "
-                          "will now always just use the 'cumtrapz' method.",
+                          "will be ignored. Use the 'method' argument.",
                           DeprecationWarning)
             del options["type"]
-        if options:
-            warnings.warn("Options are now longer passed to the underlying "
-                          "integration method and will be ignored.",
-                          DeprecationWarning)
-        from scipy.integrate import cumtrapz
-        # Integrate. Set first value to zero to avoid changing the total
-        # length of the array.
-        self.data = cumtrapz(self.data, dx=self.stats.delta, initial=0)
+
+        self.data = func(data=self.data, dx=self.stats.delta, **options)
         return self
 
     @skipIfNoData

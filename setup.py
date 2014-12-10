@@ -295,6 +295,12 @@ ENTRY_POINTS = {
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
     ],
+    'obspy.plugin.integrate': [
+        'cumtrapz = '
+        'obspy.signal.differentiate_and_integrate:integrate_cumtrapz',
+        'spline = '
+        'obspy.signal.differentiate_and_integrate:integrate_spline',
+    ],
     'obspy.plugin.filter': [
         'bandpass = obspy.signal.filter:bandpass',
         'bandstop = obspy.signal.filter:bandstop',

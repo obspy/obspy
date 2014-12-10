@@ -230,6 +230,7 @@ ENTRY_POINTS = {
     'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
     'interpolate': _getEntryPoints('obspy.plugin.interpolate'),
+    'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
