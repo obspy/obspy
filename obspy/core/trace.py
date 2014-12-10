@@ -1751,10 +1751,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             :func:`scipy.integrate.cumtrapz`). Result has one sample less then
             the input!
 
-        ``'trapz'``
-            Trapezoidal rule to compute integral from samples (uses
-            :func:`scipy.integrate.trapz`).
-
         ``'simps'``
             Simpson's rule to compute integral from samples (uses
             :func:`scipy.integrate.simps`).
