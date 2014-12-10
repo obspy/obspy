@@ -2237,7 +2237,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(type=type, **options)
+            tr.integrate(**options)
         return self
 
     @raiseIfMasked
