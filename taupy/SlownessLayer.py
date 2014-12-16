@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from taupy.helper_classes import TimeDist, SlownessModelError
 import math
+
 import numpy as np
+
+from taupy.helper_classes import TimeDist, SlownessModelError
 
 
 # noinspection PyPep8Naming
@@ -26,28 +28,6 @@ class SlownessLayer:
                 + ", bot p " + str(self.botP) + ", botDepth " +
                 str(self.botDepth))
         return desc
-
-    def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
-                           isSpherical=True):
-        """
-        Compute the slowness layer from a velocity layer.
-
-        Note first argument is NOT meant to be self, this
-        throws at least my IDE off into flagging wrong class errors.
-        Seriously, it breaks with 'self' for some reason...
-        Probably would be best to turn this into a function
-        """
-        topDepth = vLayer.topDepth
-        botDepth = vLayer.botDepth
-        waveType = ('p' if isPWave else 's')
-        if isSpherical:
-            topP = (radiusOfEarth - topDepth) / \
-                vLayer.evaluateAtTop(waveType)
-            botP = (radiusOfEarth - botDepth) / \
-                vLayer.evaluateAtBottom(waveType)
-        else:
-            raise NotImplementedError("no flat models yet")
-        return SlownessLayer(topP, topDepth, botP, botDepth)
 
     def validate(self):
         if math.isnan(self.topDepth) \
@@ -215,3 +195,21 @@ class SlownessLayer:
             return True
         else:
             return False
+
+
+def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
+                       isSpherical=True):
+    """
+    Compute the slowness layer from a velocity layer.
+    """
+    topDepth = vLayer.topDepth
+    botDepth = vLayer.botDepth
+    waveType = ('p' if isPWave else 's')
+    if isSpherical:
+        topP = (radiusOfEarth - topDepth) / \
+            vLayer.evaluateAtTop(waveType)
+        botP = (radiusOfEarth - botDepth) / \
+            vLayer.evaluateAtBottom(waveType)
+    else:
+        raise NotImplementedError("no flat models yet")
+    return SlownessLayer(topP, topDepth, botP, botDepth)

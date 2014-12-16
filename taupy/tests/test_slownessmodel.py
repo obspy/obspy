@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from taupy.SlownessLayer import SlownessLayer
+from taupy.SlownessLayer import create_from_vlayer
 from taupy.VelocityLayer import VelocityLayer
 
 
@@ -20,10 +20,10 @@ class TestSlownessModel(unittest.TestCase):
     # noinspection PyCallByClass
     def test_slownesslayer(self):
         vLayer = VelocityLayer(1, 10, 31, 3, 5, 2, 4)
-        a = SlownessLayer.create_from_vlayer(vLayer, True)
+        a = create_from_vlayer(vLayer, True)
         self.assertEqual(a.botP, 1268.0)
         self.assertEqual(a.botDepth, 31.0)
-        b = SlownessLayer.create_from_vlayer(vLayer, False)
+        b = create_from_vlayer(vLayer, False)
         self.assertEqual(b.topP, 3180.5)
 
 if __name__ == '__main__':
