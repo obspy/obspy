@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+import inspect
+import os
 
 from .TauModelLoader import load
 from .TauP_Time import TauP_Time
@@ -30,16 +32,23 @@ class Arrivals(list):
 class TauPyModel(object):
     """
     High level interface to TauPy.
+    Example usage:
+    >>> from taupy import tau
+    >>> i91 = tau.TauPyModel()
+    >>> tt = i91.get_travel_time(10, 20, ["P, S"])
     """
+
     def __init__(self, model="iasp91", verbose=False):
+        taup_model_path = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), "data", "taup_models")
         try:
-            self.model = load(model, ".", verbose=verbose)
+            self.model = load(model, taup_model_path, verbose=verbose)
         except FileNotFoundError:
-            print("A {}.taup model file was not found in this "
+            print("A {}.taup model file was not found in the taup_models"
                   "directory, will try to create one. "
                   "This may take a while.".format(model))
-            self.create_taup_model(model, ".")
-            self.model = load(model, ".", verbose=verbose)
+            self.create_taup_model(model, taup_model_path)
+            self.model = load(model, taup_model_path, verbose=verbose)
         self.verbose = verbose
 
     def get_travel_time(self, source_depth_in_km, distance_in_degree,
@@ -69,9 +78,7 @@ class TauPyModel(object):
 
     @staticmethod
     def create_taup_model(model_name, output_dir):
-        if model_name.endswith(".nd"):
-            model_file_name = model_name
-        elif model_name.endswith(".tvel"):
+        if "." in model_name:
             model_file_name = model_name
         else:
             model_file_name = model_name + ".tvel"

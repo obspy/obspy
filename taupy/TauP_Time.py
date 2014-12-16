@@ -82,8 +82,8 @@ class TauP_Time(object):
         # This should be the same model path that was used by TauP_Create
         # for writing!
         # Current directory:
-        modelPath = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
+        modelPath = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
+            inspect.currentframe()))), "data", "taup_models")
         tModLoaded = TauModelLoader.load(self.modelName, modelPath,
                                          self.verbose)
         if tModLoaded is not None:

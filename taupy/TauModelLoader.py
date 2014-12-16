@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 
 
-def internalLoad(modelName, searchPath, verbose):
+def internalLoad(modelName, model_path, verbose):
     if modelName.endswith(".taup"):
         filename = modelName
     else:
@@ -20,18 +21,19 @@ def internalLoad(modelName, searchPath, verbose):
     # I also don't think finding the model just somewhere in the paths is
     # good practice.
     #  Maybe put the following in a TauModel.readModel method?
+    modelFilename = os.path.join(model_path, filename)
     import pickle
-    with open(filename, 'rb') as f:
+    with open(modelFilename, 'rb') as f:
         return pickle.load(f)
 
 
-def load(modelName, searchPath, verbose):
+def load(modelName, model_path, verbose):
     """
     Read a tau model that was previously saved.
     """
     out = loadFromCache(modelName)
     if out is None:
-        out = internalLoad(modelName, searchPath, verbose)
+        out = internalLoad(modelName, model_path, verbose)
         # cache(out)
     return out
 

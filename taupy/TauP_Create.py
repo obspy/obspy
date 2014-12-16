@@ -36,7 +36,7 @@ class TauP_Create(object):
                             help='set where to write the .taup model - be '
                                  'careful, this will overwrite any previous '
                                  'models of the same name (default: '
-                                 'current dir)')
+                                 './data/taup_models)')
         parser.add_argument('-f', '--filename',
                             help='the velocity model name '
                                  '(default: iasp91.tvel)')
@@ -77,7 +77,6 @@ class TauP_Create(object):
         filename = os.path.join(self.directory, self.modelFilename)
         if self.DEBUG:
             print("filename =", filename)
-
         self.vMod = VelocityModel.readVelocityFile(filename)
         if self.vMod is None:
             # try and load internally
@@ -100,18 +99,15 @@ class TauP_Create(object):
             print("Done reading velocity model.")
             print("Radius of model " + self.vMod.modelName + " is " +
                   str(self.vMod.radiusOfEarth))
-        # if self.overlayModelFilename != None:
-        # ... not sure what that is really meant to do ... #
-
         # if self.debug:
         #    print("velocity mode: " + self.vMod)
         return self.vMod
 
     def createTauModel(self, vMod):
-        """ Takes a v model and makes a SlownessModel out of it,
-        then passes that to TauModel """
+        """ Takes a velocity model and makes a slowness model out of it,
+        then passes that to TauModel. """
         if vMod is None:
-            raise ValueError("vMod cannot be null")
+            raise ValueError("vMod is None.")
         if vMod.isSpherical is False:
             raise Exception("Flat slowness model not yet implemented.")
         SlownessModel.DEBUG = self.DEBUG
@@ -178,9 +174,8 @@ class TauP_Create(object):
         writes the result to a .taup file. """
         try:
             if self.plotVmod or self.plotSmod or self.plotTmod:
-                print("Plotting is not implemented for smod and tmod even in "
-                      "java. vmod would call "
-                      "self.vMod.printGMT(self.plotVmodFilename)")
+                raise NotImplementedError("Plotting is not implemented for "
+                                          "smod and tmod.")
             else:
                 self.tMod = self.createTauModel(self.vMod)
                 # this reassigns tMod! Used to be TauModel() class,
@@ -192,11 +187,12 @@ class TauP_Create(object):
 
                 outModelFileName = self.vMod.modelName + ".taup"
                 if self.outdir is None:
-                    outFile = os.path.join(os.path.dirname(os.path.abspath(
+                    self.outdir = os.path.join(os.path.dirname(os.path.abspath(
                         inspect.getfile(inspect.currentframe()))),
-                        outModelFileName)
-                else:
-                    outFile = os.path.join(self.outdir, outModelFileName)
+                        "data", "taup_models")
+                if os.path.isdir(self.outdir) is False:
+                    os.mkdir(self.outdir)
+                outFile = os.path.join(self.outdir, outModelFileName)
                 self.tMod.writeModel(outFile)
                 if self.DEBUG:
                     print("Done Saving " + outFile)
