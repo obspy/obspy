@@ -67,7 +67,6 @@ class TauPyModel(object):
         rp.run(print_output)
         return Arrivals(rp.arrivals)
 
-
     @staticmethod
     def create_taup_model(model_name, output_dir):
         if model_name.endswith(".nd"):

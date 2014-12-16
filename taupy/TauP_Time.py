@@ -4,8 +4,7 @@
 import os
 import inspect
 import argparse
-from math import pi
-from geopy.distance import great_circle
+import math
 
 import taupy.TauModelLoader as TauModelLoader
 from taupy.helper_classes import TauModelError
@@ -21,7 +20,8 @@ class TauP_Time(object):
     verbose = False
 
     def __init__(self, phaseList=None, modelName="iasp91", depth=0,
-                 degrees=None):
+                 degrees=None, stationLat=None, stationLon=None,
+                 eventLat=None, eventLon=None):
         phaseList = phaseList if phaseList is not None else []
         # Allow phases originating in the core
         self.expert = False
@@ -40,12 +40,12 @@ class TauP_Time(object):
         # whether their value has been given on the cmd line.
         self.depth = depth
         self.degrees = degrees
-        self.azimuth = None
-        self.backAzimuth = None
-        self.stationLat = None
-        self.stationLon = None
-        self.eventLat = None
-        self.eventLon = None
+        #self.azimuth = None
+        #self.backAzimuth = None
+        self.stationLat = stationLat
+        self.stationLon = stationLon
+        self.eventLat = eventLat
+        self.eventLon = eventLon
         self.arrivals = []
         self.relativePhaseName = None
         # That's not even necessary, but otherwise attribute is added
@@ -64,8 +64,7 @@ class TauP_Time(object):
             if self.degrees is None:
                 stn = (self.stationLat, self.stationLon)
                 event = (self.eventLat, self.eventLon)
-                self.degrees = great_circle(stn, event).km
-                # todo: test this at least a little bit
+                self.degrees = great_circle_dist(stn, event)
             self.depthCorrect(self.depth)
             self.calculate(self.degrees)
             if printOutput:
@@ -73,7 +72,8 @@ class TauP_Time(object):
         else:
             # Get the info from interactive mode. Not necessary to implement
             #  just now.
-            raise TypeError("Not enough info given on cmd line.")
+            raise TypeError("Not enough info given on cmd line. "
+                            "Use -h for help")
 
     def readTauModel(self):
         """
@@ -182,12 +182,12 @@ class TauP_Time(object):
             out += "{:>5.1f}".format(self.depth) + "   "
             out += "{0:<{1}s}".format(arrival.name, namespacewidth + 2) + "   "
             out += "{:>8.2f}".format(arrival.time) + "   "
-            out += "{:>8.3f}".format(arrival.rayParam * pi/180) + "   "
+            out += "{:>8.3f}".format(arrival.rayParam * math.pi/180) + "   "
             if arrival.takeoffAngle == -0.0:
                 arrival.takeoffAngle = 0  # for output comparability
             out += "{:>6.2f}".format(arrival.takeoffAngle) + "   "
             out += "{:>7.2f}".format(arrival.incidentAngle) + "   "
-            out += "{:>7.2f}".format(arrival.dist*180/pi) + \
+            out += "{:>7.2f}".format(arrival.dist*180/math.pi) + \
                    ("  = " if arrival.puristName == arrival.name else "  * ")
             out += "{:<5s}".format(arrival.puristName) + "   "
             print(out)
@@ -203,8 +203,6 @@ class TauP_Time(object):
                             help='increase output verbosity')
         parser.add_argument('-ph', '--phase_list',
                             help='comma separated phase list, no white space!')
-        parser.add_argument('-pf', '--phase_file',
-                            help='file containing phases')
         parser.add_argument('-mod', '--modelname',
                             help='Use this velocity model for calculations. '
                                  'Default is iasp91.')
@@ -214,18 +212,26 @@ class TauP_Time(object):
                             help='distance in degrees')
         parser.add_argument('-km', '--kilometres',
                             help='distance in kilometres')
+        parser.add_argument('-staLat', help='station latitude')
+        parser.add_argument('-staLon', help='station longitude')
+        parser.add_argument('-evtLat', help='event latitude')
+        parser.add_argument('-evtLon', help='event longitude')
         # Can add station/event lat long instead
         parser.add_argument('-o', '--outfile',
                             help='output is redirected to "outfile"')
         args = parser.parse_args()
         # Avoid overwriting already set variables with None:
         self.DEBUG = args.verbose if args.verbose else self.DEBUG
-        self.phaseList = args.phase_list.split(',') if args.phase_list else self.phaseList
-        self.phaseFile = args.phase_file if args.phase_file else None
+        self.phaseList = args.phase_list.split(',') \
+            if args.phase_list else self.phaseList
         self.modelName = args.modelname if args.modelname else self.modelName
         self.depth = float(args.depth) if args.depth else self.depth
         self.degrees = float(args.degrees) if args.degrees else self.degrees
         self.kilometres = float(args.kilometres) if args.kilometres else None
+        self.stationLat = float(args.staLat) if args.staLat else None
+        self.stationLon = float(args.staLon) if args.staLon else None
+        self.eventLat = float(args.evtLat) if args.evtLat else None
+        self.eventLon = float(args.evtLon) if args.evtLon else None
         self.outFile = args.outfile
 
 
@@ -330,6 +336,18 @@ def getPhaseNames(phaseName):
     else:
         names.append(phaseName)
     return names
+
+
+def great_circle_dist(stn, event):
+    rtod = 180 / math.pi
+    dtor = math.pi / 180
+    latA = stn[0]
+    lonA = stn[1]
+    latB = event[0]
+    lonB = event[1]
+    return rtod * math.acos(math.sin(latA * dtor) * math.sin(latB * dtor)
+                            + math.cos(latA * dtor) * math.cos(latB * dtor)
+                            * math.cos((lonB - lonA) * dtor))
 
 if __name__ == '__main__':
     # Replace the Java main method, which is a static (i.e. class) method

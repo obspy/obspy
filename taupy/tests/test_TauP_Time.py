@@ -132,5 +132,11 @@ class TestTauPTime(unittest.TestCase):
         #                     "taup_time_test_output", shell=True)
         os.remove("data/taup_time_test_output")
 
+    def test_degree_distance_from_coords(self):
+        tt = TauP_Time(depth=143.2, phaseList=["ttall"], stationLat=13,
+                       stationLon=14, eventLat=50, eventLon=200)
+        tt.run()
+        self.assertEqual(tt.degrees, 116.77958601543997)
+
 if __name__ == '__main__':
     unittest.main(buffer=True)
