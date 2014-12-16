@@ -44,6 +44,11 @@ class TauP_Create(object):
 
         self.DEBUG = args.verbose
         self.directory = args.input_dir
+        # Todo: think more about refactoring this so input_dir can be passed
+        # through the tau interface... but can't really think of a very
+        # elegant solution. Either: pass through the input directory Or: make
+        # the modelname input (optionally) a modelFilename, with whole path...
+        # Neither is ideal.
         self.outdir = args.output_dir if output_dir is None else output_dir
         if modelFilename is None:
             self.modelFilename = args.filename
@@ -90,11 +95,8 @@ class TauP_Create(object):
             # somewhere anyway, that's cosmetic.
             pass
         if self.vMod is None:
-            raise IOError("Velocity model file not found: " +
-                          self.modelFilename +
-                          ", tried internally (not really) and from file: "
-                          + filename)
-        # if model was read:
+            raise IOError("Velocity model file not found: " + filename)
+        # If model was read:
         if self.DEBUG:
             print("Done reading velocity model.")
             print("Radius of model " + self.vMod.modelName + " is " +

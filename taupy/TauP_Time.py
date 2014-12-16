@@ -20,8 +20,7 @@ class TauP_Time(object):
     verbose = False
 
     def __init__(self, phaseList=None, modelName="iasp91", depth=0,
-                 degrees=None, stationLat=None, stationLon=None,
-                 eventLat=None, eventLon=None):
+                 degrees=None, coordinate_list=None):
         phaseList = phaseList if phaseList is not None else []
         # Allow phases originating in the core
         self.expert = False
@@ -42,10 +41,12 @@ class TauP_Time(object):
         self.degrees = degrees
         #self.azimuth = None
         #self.backAzimuth = None
-        self.stationLat = stationLat
-        self.stationLon = stationLon
-        self.eventLat = eventLat
-        self.eventLon = eventLon
+        if coordinate_list is None:
+            coordinate_list = [None, None, None, None]
+        self.stationLat = coordinate_list[2]
+        self.stationLon = coordinate_list[3]
+        self.eventLat = coordinate_list[0]
+        self.eventLon = coordinate_list[1]
         self.arrivals = []
         self.relativePhaseName = None
         # That's not even necessary, but otherwise attribute is added
@@ -72,8 +73,8 @@ class TauP_Time(object):
         else:
             # Get the info from interactive mode. Not necessary to implement
             #  just now.
-            raise TypeError("Not enough info given on cmd line. "
-                            "Use -h for help")
+            raise ValueError("You must specify either distance in degrees "
+                             "or event and station coordinates.")
 
     def readTauModel(self):
         """
@@ -167,8 +168,11 @@ class TauP_Time(object):
     def printResult(self):
         # Do  only a simple way for now.
         print("\nModel:", self.modelName)
-        namespacewidth = len(max([arrival.name for arrival in self.arrivals],
-                            key=len)) - 2
+        if self.arrivals:
+            namespacewidth = len(max([arrival.name for arrival in self.arrivals],
+                                 key=len)) - 2
+        else:
+            namespacewidth = 5
 
         lineOne = "Distance   Depth   Phase" + " "*namespacewidth +  \
                   "Travel    Ray Param   Takeoff  Incident  Purist     Purist"
