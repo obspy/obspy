@@ -893,7 +893,7 @@ class Stream(object):
         :param face_color: Face color of the matplotlib canvas.
             Defaults to ``'white'``.
         :param transparent: Make all backgrounds transparent (True/False). This
-            will overwrite the ``bgcolor`` and ``face_color`` arguments.
+            will override the ``bgcolor`` and ``face_color`` arguments.
             Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
             Defaults to ``4``.
@@ -954,11 +954,11 @@ class Stream(object):
             Defaults to ``15``.
         :param time_offset: Only used if ``type='dayplot'``. The difference
             between the timezone of the data (specified with the kwarg
-            'timezone') and UTC time in hours. Will be displayed in a string.
+            ``timezone``) and UTC time in hours. Will be displayed in a string.
             Defaults to the current offset of the system time to UTC time.
         :param timezone: Defines the name of the user defined time scale. Will
             be displayed in a string together with the actual offset defined in
-            the kwarg 'time_offset'.
+            the kwarg ``time_offset``.
             Defaults to ``'local time'``.
         :param localization_dict: Enables limited localization of the dayplot
             through the usage of a dictionary. To change the labels to, e.g.
@@ -968,11 +968,12 @@ class Stream(object):
                                    'minutes': 'Minuten', 'hours': 'Stunden'}
 
         :param data_unit: If given, the scale of the data will be drawn on the
-            right hand side in the form "%f {data_unit}". The unit is supposed
-            to be a string containing the actual unit of the data. Can be a
-            LaTeX expression if matplotlib has been built with LaTeX support,
-            e.g. "$\\\\frac{m}{s}$". Be careful to escape the backslashes, or
-            use r-prefixed strings, e.g. r"$\\\\frac{m}{s}$".
+            right hand side in the form ``"%f {data_unit}"``. The unit is
+            supposed to be a string containing the actual unit of the data. Can
+            be a LaTeX expression if matplotlib has been built with LaTeX
+            support, e.g., ``"$\\\\frac{m}{s}$"``. Be careful to escape the
+            backslashes, or use r-prefixed strings, e.g.,
+            ``r"$\\\\frac{m}{s}$"``.
             Defaults to ``None``, meaning no scale is drawn.
         :param events: An optional list of events can be drawn on the plot if
             given.  They will be displayed as yellow stars with optional
@@ -1021,7 +1022,7 @@ class Stream(object):
         :param show_y_UTC_label: Whether or not to display the Y UTC vertical
             label.
             Defaults to ``True``.
-        :param title: The title to display on top of the plot
+        :param title: The title to display on top of the plot.
             Defaults to ``self.stream[0].id``.
 
         **Section Parameters**
@@ -1030,8 +1031,7 @@ class Stream(object):
         plot a record section the ObsPy header ``trace.stats.distance`` must be
         defined in meters (Default). Or ``trace.stats.coordinates.latitude`` &
         ``trace.stats.coordinates.longitude`` must be set if plotted in
-        azimuthal distances (``azim_dist=True``) along with ``ev_lat``
-        and ``ev_lon``.
+        azimuthal distances (``dist_degree=True``) along with ``ev_coord``.
 
         :type scale: float, optional
         :param scale: Scale the traces width with this factor.
@@ -1057,7 +1057,7 @@ class Stream(object):
             ``(latitude, longitude)``.
         :type plot_dx: int, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
-            Either km or degree, depending on ``azim_dist``
+            Either km or degree, depending on ``dist_degree``.
         :type recordstart: int, optional
         :param recordstart: Seconds to crop from the beginning.
         :type recordlength: int, optional

@@ -1202,7 +1202,7 @@ class WaveformPlotting(object):
                         self.ev_coord[0], self.ev_coord[1])
             except:
                 msg = 'Define latitude/longitude in trace.stats.' + \
-                    'coordinates and ev_lat/ev_lon. See documentation.'
+                    'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
         if self.sect_offset_min is None:
