@@ -916,7 +916,15 @@ class Stream(object):
             the seismogram at 0 seconds. ``'normal'`` will produce a standard
             plot.
             Defaults to ``'normal'``.
-        :param equal_scale: Is enabled all plots are equally scaled.
+        :param equal_scale: If enabled all plots are equally scaled.
+            Defaults to ``True``.
+        :param show: If True, show the plot interactively after plotting. This
+            is ignored if any of ``outfile``, ``format``, ``handle``, or
+            ``fig`` are specified.
+            Defaults to ``True``.
+        :param draw: If True, the figure canvas is explicitly re-drawn, which
+            ensures that *existing* figures are fresh. It makes no difference
+            for figures that are not yet visible.
             Defaults to ``True``.
         :param block: If True block call to showing plot. Only works if the
             active matplotlib backend supports it.
@@ -1038,17 +1046,17 @@ class Stream(object):
             Defaults to ``1.0``.
         :type vred: float, optional
         :param vred: Perform velocity reduction, in m/s.
-        :type norm: str, optional
-        :param norm: Defines how the traces are normalized,
-            either against each ``trace`` or against the global
-            maximum ``stream``.
+        :type norm_method: str, optional
+        :param norm_method: Defines how the traces are normalized, either
+            against each ``trace`` or against the global maximum ``stream``.
             Defaults to ``trace``.
         :type offset_min: float or None, optional
         :param offset_min: Minimum offset in meters to plot.
             Defaults to minimum offset of all traces.
         :type offset_max: float or None, optional
-        :param offset_min: Maximum offset in meters to plot.
+        :param offset_max: Maximum offset in meters to plot.
             Defaults to maximum offset of all traces.
+        :type dist_degree: bool, optional
         :param dist_degree: Plot trace distance in degree from epicenter. If
             ``True``, parameter ``ev_coord`` has to be defined.
             Defaults to ``False``.
@@ -1058,9 +1066,9 @@ class Stream(object):
         :type plot_dx: int, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
             Either km or degree, depending on ``dist_degree``.
-        :type recordstart: int, optional
+        :type recordstart: int or float, optional
         :param recordstart: Seconds to crop from the beginning.
-        :type recordlength: int, optional
+        :type recordlength: int or float, optional
         :param recordlength: Length of the record section in seconds.
         :type alpha: float, optional
         :param alpha: Transparency of the traces between 0.0 - 1.0.
