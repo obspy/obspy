@@ -31,6 +31,7 @@ from obspy.fdsn.header import DEFAULT_USER_AGENT, \
 from obspy.core.util.misc import wrap_long_string
 
 import collections
+import gzip
 import io
 from lxml import etree
 from socket import timeout as SocketTimeout
@@ -590,7 +591,9 @@ class Client(object):
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
-        data_stream = self._download(url)
+        # Gzip not worth it for MiniSEED and most likely disabled for this
+        # route in any case.
+        data_stream = self._download(url, use_gzip=False)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1155,10 +1158,11 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None):
+    def _download(self, url, return_string=False, data=None, use_gzip=True):
         code, data = download_url(
             url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data, timeout=self.timeout)
+            return_string=return_string, data=data, timeout=self.timeout,
+            use_gzip=use_gzip)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
@@ -1446,7 +1450,7 @@ def build_url(base_url, service, major_version, resource_type,
 
 
 def download_url(url, timeout=10, headers={}, debug=False,
-                 return_string=True, data=None):
+                 return_string=True, data=None, use_gzip=True):
     """
     Returns a pair of tuples.
 
@@ -1463,10 +1467,13 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print("Downloading %s" % url)
 
     try:
-        url_obj = urllib.request.urlopen(
-            urllib.request.Request(url=url, headers=headers),
-            timeout=timeout,
-            data=data)
+        request = urllib.request.Request(url=url, headers=headers,
+                                         data=data)
+        # Request gzip encoding if desired.
+        if use_gzip:
+            request.add_header("Accept-encoding", "gzip")
+
+        response = urllib.request.urlopen(request, timeout=timeout)
     # Catch HTTP errors.
     except urllib.request.HTTPError as e:
         if debug is True:
@@ -1479,11 +1486,22 @@ def download_url(url, timeout=10, headers={}, debug=False,
             print("Error while downloading: %s" % url)
         return None, None
 
-    code = url_obj.getcode()
-    if return_string is False:
-        data = io.BytesIO(url_obj.read())
+    code = response.getcode()
+
+    # Unpack gzip if necessary.
+    if response.info().get("Content-Encoding") == "gzip":
+        # Cannot directly stream to gzip from urllib!
+        # http://www.enricozini.org/2011/cazzeggio/python-gzip/
+        buf = io.BytesIO(response.read())
+        buf.seek(0, 0)
+        f = gzip.GzipFile(fileobj=buf)
     else:
-        data = url_obj.read()
+        f = response
+
+    if return_string is False:
+        data = io.BytesIO(f.read())
+    else:
+        data = f.read()
 
     if debug is True:
         print("Downloaded %s with HTTP code: %i" % (url, code))
