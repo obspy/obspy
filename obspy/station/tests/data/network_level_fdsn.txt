@@ -1,0 +1,18 @@
+#Network | Description | StartTime | EndTime | TotalStations
+TA|USArray Transportable Array (NSF EarthScope Project)|2003-01-01T00:00:00|2500-12-31T23:59:59|1700
+TC|Red Sismologica Nacional|2011-01-01T00:00:00|2500-12-31T23:59:59|0
+TD|TransAlta Monitoring Network|2013-01-01T00:00:00|2500-12-31T23:59:59|27
+TH|Thueringer Seismisches Netz (TSN)|2009-01-01T00:00:00|2500-12-31T23:59:59|0
+TI|Centro Sismologico de America Central (CASC)|1992-01-01T00:00:00|2500-12-31T23:59:59|0
+TJ|Tajikistan National Seismic Network|2005-01-01T00:00:00|2500-12-31T23:59:59|8
+TK|National Strong-Motion Network of Turkey (TR-NSMN)|1973-01-01T00:00:00|2500-12-31T23:59:59|0
+TL|Armutlu Local Seismic Network|2006-01-01T00:00:00|2500-12-31T23:59:59|0
+TM|Thai Seismic Monitoring Network|2008-01-01T00:00:00|2500-12-31T23:59:59|17
+TN|Eastern Tennessee Seismic Network|1998-01-01T00:00:00|2500-12-31T23:59:59|0
+TO|Tectonic Observatory|2004-01-01T00:00:00|2500-12-31T23:59:59|146
+TR|Eastern Caribbean Seismograph Network|1965-01-01T00:00:00|2500-12-31T23:59:59|46
+TS|TERRAscope (Southern California Seismic Network)|1988-01-01T00:00:00|2500-12-31T23:59:59|23
+TT|Seismic Network of Tunisia|2008-01-01T00:00:00|2500-12-31T23:59:59|3
+TU|National Seismic Network of Turkey (DDA)|1990-01-01T00:00:00|2500-12-31T23:59:59|0
+TV|INGV experiments network|2010-01-01T00:00:00|2500-12-31T23:59:59|0
+TW|Broadband Array in Taiwan for Seismology|1994-01-01T00:00:00|2500-12-31T23:59:59|22
