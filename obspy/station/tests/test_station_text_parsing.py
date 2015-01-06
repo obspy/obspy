@@ -89,6 +89,19 @@ class StationTextTestCase(unittest.TestCase):
                     self.assertFalse(fdsn_text.is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
 
+    def test_reading_network_file(self):
+        """
+        Test reading a file at the network level.
+        """
+        filename = os.path.join(self.data_dir, "network_level_fdsn.txt")
+        print(fdsn_text.read_FDSN_station_text_file(filename))
+
+        filename = os.path.join(self.data_dir, "station_level_fdsn.txt")
+        print(fdsn_text.read_FDSN_station_text_file(filename))
+
+        filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
+        print(fdsn_text.read_FDSN_station_text_file(filename))
+
 
 def suite():
     return unittest.makeSuite(StationTextTestCase, "test")
