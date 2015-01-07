@@ -23,15 +23,14 @@ class TauP_Create(object):
     plotTmod = False
 
     def __init__(self, modelFilename=None, output_dir=None):
-        # Parse command line arguments. Very clever module, e.g. it
-        # can print usage automatically.
+        # Parse command line arguments.
         parser = argparse.ArgumentParser()
         parser.add_argument('-v', '--verbose', '-d', '--debug',
                             action='store_true',
                             help='increase output verbosity')
         parser.add_argument('-i', '--input_dir',
                             help='set directory of input velocity models '
-                                 '(default: ./data/)')
+                                 '(default: ./data)')
         parser.add_argument('-o', '--output_dir',
                             help='set where to write the .taup model - be '
                                  'careful, this will overwrite any previous '
@@ -41,9 +40,10 @@ class TauP_Create(object):
                             help='the velocity model name '
                                  '(default: iasp91.tvel)')
         args = parser.parse_args()
-
         self.DEBUG = args.verbose
+        # This is the directory that will be looked in for the velocity models:
         self.directory = args.input_dir
+
         # Todo: think more about refactoring this so input_dir can be passed
         # through the tau interface... but can't really think of a very
         # elegant solution. Either: pass through the input directory Or: make
@@ -73,11 +73,9 @@ class TauP_Create(object):
         tauPCreate.run()
 
     def loadVMod(self):
-        """ Tries to load a velocity model first via readVelocityFile,
-        or if unsuccessful load internally from a previously stored
-        model.
+        """ Tries to load a velocity model via readVelocityFile from the
+        directory specified on command line, or from ./data/.
         """
-
         # Read the velocity model file.
         filename = os.path.join(self.directory, self.modelFilename)
         if self.DEBUG:
@@ -91,8 +89,7 @@ class TauP_Create(object):
             # exception and force user to be clear about what VelocityModel
             # to read from where. Maybe this could be done sensibly,
             # as in if a model is specified but no path, some standard models
-            # can be used? But given that they have to be in the package
-            # somewhere anyway, that's cosmetic.
+            # can be used?
             pass
         if self.vMod is None:
             raise IOError("Velocity model file not found: " + filename)
@@ -173,7 +170,9 @@ class TauP_Create(object):
     def run(self):
         """ Creates a tau model from a velocity model. Called by
         TauP_Create.main after loadVMod; calls createTauModel and
-        writes the result to a .taup file. """
+        writes the result to a .taup file in ./data/taup_models/ (if not
+        specified differently).
+        """
         try:
             if self.plotVmod or self.plotSmod or self.plotTmod:
                 raise NotImplementedError("Plotting is not implemented for "
@@ -203,8 +202,6 @@ class TauP_Create(object):
                   "permission in this directory?", e)
         except KeyError as e:
             print('file not found or wrong key?', e)
-        # except VelocityModelException as e:
-        #     print("Caught VelocityModelException.", e)
         finally:
             if self.DEBUG:
                 print("Method run is done, but not necessarily successful.")
