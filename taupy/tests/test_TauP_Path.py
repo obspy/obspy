@@ -34,3 +34,16 @@ class TestTauPPath(TestCase):
                               "stdout_-h_10_-ph_P_-deg_35_-mod_ak135 "
                               "data/tmp_tauppath_test_output", shell=True)
         os.remove("data/tmp_tauppath_test_output")
+
+    def test_script_output_h10_deg35_iasp91_with_tau_interface(self):
+        from taupy import tau
+        i91 = tau.TauPyModel("iasp91")
+
+        stdout = sys.stdout
+        with open('data/tmp_tauppath_test_output', 'wt') as sys.stdout:
+            i91.get_ray_paths(10, 35, ["P"], print_output=True)
+        sys.stdout = stdout
+        subprocess.check_call("diff -wB data/TauP_test_data/taup_path_-o_"
+                              "stdout_-h_10_-ph_P_-deg_35 "
+                              "data/tmp_tauppath_test_output", shell=True)
+        os.remove("data/tmp_tauppath_test_output")

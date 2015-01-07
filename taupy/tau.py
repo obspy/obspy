@@ -97,8 +97,9 @@ class TauPyModel(object):
         >>> i91.get_travel_time(10, phase_list = ["ttall"], coordinate_list =
         ...                     [13,14,50,200], print_output=True)
         """
-        # todo: consider adding a capability to access the arrivals not just by
-        # list indices but by phase name?
+        # Accessing the arrivals not just by list indices but by phase name
+        # might be useful, but also difficult: several arrivals can have the
+        # same phase (check again?).
         phase_list = phase_list if phase_list is not None else ["ttall"]
         tt = TauP_Time(phase_list, self.model.sMod.vMod.modelName,
                        source_depth_in_km, distance_in_degree, coordinate_list)
@@ -113,7 +114,6 @@ class TauPyModel(object):
         pp = TauP_Pierce(phase_list, self.model.sMod.vMod.modelName,
                          source_depth_in_km, distance_in_degree)
         pp.run(print_output)
-        # todo: shouldn't this maybe only return the pierce points?
         if print_output:
             return
         return Arrivals(pp.arrivals)

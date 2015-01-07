@@ -133,6 +133,9 @@ class TestTauPTime(unittest.TestCase):
         os.remove("data/taup_time_test_output")
 
     def test_degree_distance_from_coords(self):
+        """
+        Test the calculation of spherical distance from given coordinates.
+        """
         tt = TauP_Time(depth=143.2, phaseList=["ttall"],
                        coordinate_list=[13, 14, 50, 200])
         tt.run()
