@@ -36,33 +36,64 @@ class TauPyModel(object):
     Example usage:
     >>> from taupy import tau
     >>> i91 = tau.TauPyModel("iasp91")
-    >>> tt = i91.get_travel_time(10, 20, ["P, S"])
+    >>> tt = i91.get_travel_timess(10, 20, ["P, S"])
     """
 
-    def __init__(self, model="iasp91", verbose=False):
+    def __init__(self, model="iasp91", verbose=False, taup_model_path=None):
         """
         Loads or creates a tau model object.
         At the moment the models are by default read from and stored in
-        ./data/taup_models.
+        [python script location]/TauPy/taupy/data/taup_models.
         :param model: The name of the velocity model which should be used to
             create the tau model or which should be loaded if one has been
             created before.
+        :param taup_model_path: Set the path for .taup models here, then it
+            will be used for model creation and the get* commands.
+
+        Usage:
+        >>> from taupy import tau
+        >>> i91 = tau.TauPyModel()
+        >>> i91.get_travel_timess(10, 20)[0].name
+        'Pn'
+        >>> i91.get_travel_timess(10, 20)[0].time
+        15.60164282924581
+        >>> i91.get_travel_timess(100, 50, phase_list = ["P", "S"],
+        ...                 print_output=True)
+
+        Model: iasp91
+        Distance   Depth   PhaseTravel    Ray Param   Takeoff  Incident  Purist     Purist
+           (deg)    (km)   Name Time (s)  p (s/deg)     (deg)     (deg)  Distance   Name
+        --------------------------------------------------------------------------------
+           50.00   100.0   P     523.92      7.563    33.79     23.23     50.00  = P
+           50.00   100.0   S     947.65     13.903    34.80     24.84     50.00  = S
+
+        >>> i91.get_travel_timess(10, phase_list = ["ttall"], coordinate_list =
+        ...                     [13,14,50,200], print_output=True)
         """
-        taup_model_path = os.path.join(os.path.dirname(os.path.abspath(
+
+        # If needed, change where to look for .taup models here in this
+        # section.
+        # NB the currentframe here is the location of this script!
+        default_taup_model_path = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data", "taup_models")
+        if taup_model_path is not None:
+            self.taup_model_path = taup_model_path
+        else:
+            self.taup_model_path = default_taup_model_path
+        # Load or create a .taup model:
         try:
-            self.model = load(model, taup_model_path, verbose=verbose)
+            self.model = load(model, self.taup_model_path, verbose=verbose)
         except FileNotFoundError:
-            print("A {}.taup model file was not found in the taup_models"
+            print("A {}.taup model file was not found in the {} "
                   "directory, will try to create one. "
-                  "This may take a while.".format(model))
-            self.create_taup_model(model, taup_model_path)
-            self.model = load(model, taup_model_path, verbose=verbose)
+                  "This may take a while.".format(model, self.taup_model_path))
+            self.create_taup_model(model, self.taup_model_path)
+            self.model = load(model, self.taup_model_path, verbose=verbose)
         self.verbose = verbose
 
-    def get_travel_time(self, source_depth_in_km, distance_in_degree=None,
-                        phase_list=None, print_output=False,
-                        coordinate_list=None):
+    def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
+                         phase_list=None, print_output=False,
+                         coordinate_list=None):
         """
         Returns travel times of every given phase.
         :param source_depth_in_km: Depth of wave path source.
@@ -78,43 +109,27 @@ class TauPyModel(object):
         :return Arrivals:  List of 'arrival' objects, each of which has the
             time, corresponding phase name, ray parameter, takeoff angle etc
             as attributes.
-
-        Usage:
-        >>> from taupy import tau
-        >>> i91 = tau.TauPyModel()
-        >>> i91.get_travel_time(10, 20)[0].name
-        'Pn'
-        >>> i91.get_travel_time(10, 20)[0].time
-        15.60164282924581
-        >>> i91.get_travel_time(100, 50, phase_list = ["P", "S"],
-        ...                 print_output=True)
-
-        Model: iasp91
-        Distance   Depth   PhaseTravel    Ray Param   Takeoff  Incident  Purist     Purist
-           (deg)    (km)   Name Time (s)  p (s/deg)     (deg)     (deg)  Distance   Name
-        --------------------------------------------------------------------------------
-           50.00   100.0   P     523.92      7.563    33.79     23.23     50.00  = P
-           50.00   100.0   S     947.65     13.903    34.80     24.84     50.00  = S
-
-        >>> i91.get_travel_time(10, phase_list = ["ttall"], coordinate_list =
-        ...                     [13,14,50,200], print_output=True)
         """
         # Accessing the arrivals not just by list indices but by phase name
         # might be useful, but also difficult: several arrivals can have the
         # same phase (check again?).
         phase_list = phase_list if phase_list is not None else ["ttall"]
         tt = TauP_Time(phase_list, self.model.sMod.vMod.modelName,
-                       source_depth_in_km, distance_in_degree, coordinate_list)
+                       source_depth_in_km, distance_in_degree, coordinate_list,
+                       self.taup_model_path)
         tt.run(print_output)
         if print_output:
             return
         return Arrivals(tt.arrivals)
 
     def get_pierce_points(self, source_depth_in_km, distance_in_degree,
-                          phase_list=None, print_output=False):
+                          phase_list=None, coordinate_list=None,
+                          print_output=False):
         phase_list = phase_list if phase_list is not None else ["ttall"]
+        # todo: add the coordinates and specified model path capabilites to puerce and path
         pp = TauP_Pierce(phase_list, self.model.sMod.vMod.modelName,
-                         source_depth_in_km, distance_in_degree)
+                         source_depth_in_km, distance_in_degree,
+                         coordinate_list, self.taup_model_path)
         pp.run(print_output)
         if print_output:
             return

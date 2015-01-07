@@ -11,4 +11,4 @@ except FileNotFoundError:
 i91 = tau.TauPyModel("iasp91")
 i91.get_pierce_points(100, 10)
 i91.get_ray_paths(5000, 180)
-i91.get_travel_time(2000, 1)
+i91.get_travel_times(2000, 1)

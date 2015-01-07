@@ -20,7 +20,7 @@ class TauP_Time(object):
     verbose = False
 
     def __init__(self, phaseList=None, modelName="iasp91", depth=0,
-                 degrees=None, coordinate_list=None):
+                 degrees=None, coordinate_list=None, taup_model_path=None):
         phaseList = phaseList if phaseList is not None else []
         # Allow phases originating in the core
         self.expert = False
@@ -49,9 +49,14 @@ class TauP_Time(object):
         self.eventLon = coordinate_list[1]
         self.arrivals = []
         self.relativePhaseName = None
-        # That's not even necessary, but otherwise attribute is added
-        # outside of constructor - is that so bad? Who knows.
         self.relativeArrival = None
+        if taup_model_path is None:
+            # default path is ./data/taup_models/
+            self.taup_model_path = os.path.join(os.path.dirname(
+                os.path.abspath(inspect.getfile(inspect.currentframe()))),
+                "data", "taup_models")
+        else:
+            self.taup_model_path = taup_model_path
 
     def run(self, printOutput=False):
         """
@@ -83,16 +88,8 @@ class TauP_Time(object):
     def readTauModel(self):
         """
         Read a previously created .taup model.
-        NB: as of now, this looks only in ./data/taup_models/, which is the
-        default output directory for TauP_Create, if the .taup models aren't
-        stored there they won't be found!
         """
-        # This should be the same model path that was used by TauP_Create
-        # for writing!
-        # Current directory:
-        modelPath = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe()))), "data", "taup_models")
-        tModLoaded = TauModelLoader.load(self.modelName, modelPath,
+        tModLoaded = TauModelLoader.load(self.modelName, self.taup_model_path,
                                          self.verbose)
         if tModLoaded is not None:
             self.tMod = tModLoaded

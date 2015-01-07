@@ -87,7 +87,7 @@ def test_all_phases_iasp91_35_deg_distance():
     Tests tauptime at 35 degree distance, phases ttall.
     """
     model = TauPyModel("iasp91")
-    tts = model.get_travel_time(source_depth_in_km=10.0,
+    tts = model.get_travel_times(source_depth_in_km=10.0,
                                 distance_in_degree=35.0)
     compare_arrivals_with_taup_time_output(
         tts, "taup_time_-h_10_-ph_ttall_-deg_35")
@@ -101,7 +101,7 @@ class TestTauPTime(unittest.TestCase):
         Tests tauptime at 35 degree distance for the ak135 model, phases ttall.
         """
         model = TauPyModel("ak135")
-        tts = model.get_travel_time(source_depth_in_km=10.0,
+        tts = model.get_travel_times(source_depth_in_km=10.0,
                                     distance_in_degree=35.0)
         compare_arrivals_with_taup_time_output(
             tts, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
