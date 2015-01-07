@@ -6,8 +6,10 @@ from math import pi
 
 
 class TauP_Pierce(TauP_Time):
-    # In effect, the methods here allow using TauP_Time to calculate the
-    # pierce points.
+    """
+    The methods here allow using TauP_Time to calculate the pierce points
+    relating to the different arrivals.
+    """
 
     def __init__(self,
                  phaseList=None, modelName="iasp91", depth=0, degrees=None):
@@ -62,6 +64,9 @@ class TauP_Pierce(TauP_Time):
             self.tMod = tModOrig
 
     def calculate(self, degrees):
+        """
+        Call all the necessary calculations to obtain the pierce points.
+        """
         self.depthCorrect(self.sourceDepth)
         self.recalcPhases()
         self.arrivals = []
@@ -69,11 +74,10 @@ class TauP_Pierce(TauP_Time):
 
     def calcPierce(self, degrees):
         """
-        Calculates the pierce points for phases ar the given distance.
-        :param degrees:
-        :return:
+        Calculates the pierce points for phases at the given distance by
+        calling the calcPierce method of the SeismicPhase class. The results
+        are then in self.arrivals.
         """
-        # This seems stupid: self.degrees = degrees -- see if it's needed.
         for phase in self.phases:
             phaseArrivals = phase.calcPierce(degrees)
             self.arrivals += phaseArrivals

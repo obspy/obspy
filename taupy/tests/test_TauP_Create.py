@@ -8,12 +8,15 @@ import unittest
 from taupy.TauP_Create import TauP_Create
 
 # to get ./data:
-data_dir = os.path.join(os.path.dirname(os.path.abspath(
-    inspect.getfile(inspect.currentframe()))), "data")
+#data_dir = os.path.join(os.path.dirname(os.path.abspath(
+#    inspect.getfile(inspect.currentframe()))), "data")
 
 
 class TestTauPCreate(unittest.TestCase):
     def test_taupcreate(self):
+        """
+        Simple test for TauP_Create only tests if executed without error.
+        """
         TauP_Create.main(modelFilename='iasp91.tvel')
 
 

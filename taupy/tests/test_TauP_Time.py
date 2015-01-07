@@ -48,8 +48,6 @@ def parse_taup_time_output(filename):
 
 
 def compare_arrivals_with_taup_time_output(arrivals, filename):
-    """
-    """
     filename = os.path.join(DATA, filename)
     expected_arrivals = parse_taup_time_output(filename)
 

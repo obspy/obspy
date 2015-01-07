@@ -8,8 +8,9 @@ import math
 
 
 class TauP_Path(TauP_Pierce):
-    # In effect, the methods here allow using TauP_Time to calculate the
-    # pierce points.
+    """
+    Calcualate the ray paths for each phase, using TauP_Pierce and TauP_Time.
+    """
 
     def __init__(self,
                  phaseList=None, modelName="iasp91", depth=0, degrees=None):
@@ -28,12 +29,20 @@ class TauP_Path(TauP_Pierce):
         self.degrees = degrees
 
     def calculate(self, degrees):
+        """
+        Call all the necessary calculations to obtain the ray paths.
+        """
         self.depthCorrect(self.sourceDepth)
         self.recalcPhases()
         self.arrivals = []
         self.calcPath(degrees)
 
     def calcPath(self, degrees):
+        """
+        Calculates the ray paths for phases at the given distance by
+        calling the calcPath method of the SeismicPhase class. The results
+        are then in self.arrivals.
+        """
         self.degrees = degrees
         for phase in self.phases:
             phaseArrivals = phase.calcPath(degrees)

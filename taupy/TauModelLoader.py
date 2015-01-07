@@ -4,6 +4,9 @@ import os
 
 
 def internalLoad(modelName, model_path, verbose):
+    """
+    Try to un-pickle a .taup model of given name in a given path.
+    """
     if modelName.endswith(".taup"):
         filename = modelName
     else:
@@ -29,7 +32,9 @@ def internalLoad(modelName, model_path, verbose):
 
 def load(modelName, model_path, verbose):
     """
-    Read a tau model that was previously saved.
+    Read a .taup model that was previously saved, given a filename and path.
+    Uses unpickle, but could also handle loading from cache (not yet
+    implemented).
     """
     out = loadFromCache(modelName)
     if out is None:
@@ -40,6 +45,6 @@ def load(modelName, model_path, verbose):
 
 def loadFromCache(modelName):
     """
-    Caching could be useful for many reruns...
+    Caching could be useful for many reruns, but is not yet implemented.
     """
     return None

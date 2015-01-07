@@ -749,7 +749,6 @@ class SeismicPhase(object):
     def calcTime(self, degrees):
         """
         Calculates arrival times for this phase, sorted by time.
-
         :param degrees:
         :return arrivals:
         """
@@ -815,8 +814,9 @@ class SeismicPhase(object):
 
     def calcPierce(self, degrees):
         """
-        Calculates the "pierce points" for the arrivals stored in arrivals. The
-        pierce points are stored within each arrival object.
+        First calculates arrivals, then the "pierce points" corresponding to
+        the stored arrivals. The pierce points are stored within each arrival
+        object.
         """
         arrivals = self.calcTime(degrees)
         for arrival in arrivals:
@@ -826,11 +826,9 @@ class SeismicPhase(object):
     def calcPierceFromArrival(self, currArrival):
         """
         Calculates the pierce points for a particular arrival. The returned
-        arrival is the same as the input arguement but now has the pierce
+        arrival is the same as the input argument but now has the pierce
         points filled in.
         """
-        # Choose between silly long name and overloading.
-
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, ie it is between rayNum and rayNum+1,
         # We know that it must be <tMod.rayParams.length-1 since the last

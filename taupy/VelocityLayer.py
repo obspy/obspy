@@ -33,9 +33,6 @@ class VelocityLayer(object):
 
     @property
     def thickness(self):
-        """
-        Thickness of the layer.
-        """
         return self.botDepth - self.topDepth
 
     def evaluateAtBottom(self, materialProperty):

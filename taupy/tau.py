@@ -42,6 +42,8 @@ class TauPyModel(object):
     def __init__(self, model="iasp91", verbose=False):
         """
         Loads or creates a tau model object.
+        At the moment the models are by default read from and stored in
+        ./data/taup_models.
         :param model: The name of the velocity model which should be used to
             create the tau model or which should be loaded if one has been
             created before.
@@ -130,6 +132,12 @@ class TauPyModel(object):
 
     @staticmethod
     def create_taup_model(model_name, output_dir):
+        """
+        Create
+        :param model_name:
+        :param output_dir:
+        :return:
+        """
         if "." in model_name:
             model_file_name = model_name
         else:

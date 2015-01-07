@@ -54,7 +54,11 @@ class TauP_Time(object):
         self.relativeArrival = None
 
     def run(self, printOutput=False):
-        """Does the calculations and prints the result."""
+        """
+        Do all the calculations and print the output if told to. The resulting
+        arrival times will be in self.arrivals.
+        :param printOutput: Whether to print the output to stdout.
+        """
         self.phaseNames = parsePhaseList(self.phaseList)
         self.readTauModel()
         if self.degrees is not None or all(x is not None for x in (
@@ -78,7 +82,10 @@ class TauP_Time(object):
 
     def readTauModel(self):
         """
-        Do the reading simply for now.
+        Read a previously created .taup model.
+        NB: as of now, this looks only in ./data/taup_models/, which is the
+        default output directory for TauP_Create, if the .taup models aren't
+        stored there they won't be found!
         """
         # This should be the same model path that was used by TauP_Create
         # for writing!
@@ -150,8 +157,8 @@ class TauP_Time(object):
 
     def calcTime(self, degrees):
         """
-        :param degrees:
-        :return self.arrivals:
+        Calls the calcTime method of SeismicPhase to calculate arrival
+        times for every phase, each sorted by time.
         """
         self.degrees = degrees
         self.arrivals = []
@@ -161,6 +168,9 @@ class TauP_Time(object):
         self.sortArrivals()
 
     def sortArrivals(self):
+        """
+        Sort the arrivals by their arrival time.
+        """
         self.arrivals = sorted(self.arrivals,
                                key=lambda arrivals: arrivals.time)
         pass
@@ -199,7 +209,6 @@ class TauP_Time(object):
     def readcmdLineArgs(self):
         """
         Reads the command line arguments, if present.
-        :return:
         """
         parser = argparse.ArgumentParser()
         parser.add_argument('-v', '--verbose', '--debug',
@@ -255,6 +264,9 @@ def parsePhaseList(phaseList):
 
 
 def getPhaseNames(phaseName):
+    """
+    Called by parsePhaseList to replace e.g. ttall with the relevant phases.
+    """
     names = []
     if(phaseName.lower() == "ttp"
             or phaseName.lower() == "tts"
@@ -343,6 +355,13 @@ def getPhaseNames(phaseName):
 
 
 def great_circle_dist(stn, event):
+    """
+    Returns an angular distance for a given pair of station and event
+    coordinates using a simple great circle formula.
+    :param stn: Station coordinates as a list with [latitude, longitude].
+    :param event: Event coordinates as a list with [latitude, longitude].
+    :return distance: Great circle distance in degrees.
+    """
     rtod = 180 / math.pi
     dtor = math.pi / 180
     latA = stn[0]

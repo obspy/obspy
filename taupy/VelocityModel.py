@@ -132,18 +132,6 @@ class VelocityModel(object):
         layer = self.layers[self.layerNumberBelow(depth)]
         return layer.evaluateAt(depth, materialProperty)
 
-    # These two seem to be just WRONG even in the java code, let's see if
-    # they're necessary for anything before fixing
-    # def evaluateAtTop(self, layerNumber, materialProperty):
-    #    """
-    #    Returns the value of the given material property, usually P or S
-    #   velocity, at the top of the given layer.
-    #   """
-    #    tempLayer = VelocityLayer()
-    #    tempLayer = self.layers[layerNumber]
-    #    return tempLayer.evaluateAtTop(materialProperty)
-    # def evaluateAtBottom(self, layerNumber, materialProperty):
-
     def depthAtTop(self, layerNumber):
         """ returns the depth at the top of the given layer. """
         layer = self.layers[layerNumber]
@@ -271,7 +259,6 @@ class VelocityModel(object):
         return True
 
     def __str__(self):
-        """ generated source for method toString """
         desc = "modelName=" + str(self.modelName) + "\n" + \
                "\n radiusOfEarth=" + str(
             self.radiusOfEarth) + "\n mohoDepth=" + str(self.mohoDepth) + \
@@ -282,19 +269,14 @@ class VelocityModel(object):
         # desc += "\ngetNumLayers()=" + str(self.getNumLayers()) + "\n"
         return desc
 
-    # def print_(self):
-    #     """ generated source for method print_ """
-    #     i = 0
-    #     for i in range(0, self.getNumLayers):
-    #         print(self.layers[i])
-
     @classmethod
     def readVelocityFile(cls, filename):
         """
         Reads in a velocity file by given file name (must be a
         string). The type of file is determined from the file name
-        (changed from the java!). Calls readTVelFile or readNDFile.
+        (changed from the java!). Calls readTVelFile.
         Raises exception if the type of file cannot be determined.
+        .nd files are not currently supported!
         """
         # filename formatting
         if filename.endswith(".nd"):
@@ -308,7 +290,9 @@ class VelocityModel(object):
 
         # the actual reading of the velocity file
         if fileType.lower() == "nd":
-            vMod = cls.readNDFile(filename)
+            raise NotImplementedError(".nd files are not curently supported."
+                                      "Sorry.")
+            #vMod = cls.readNDFile(filename)
         elif fileType.lower() == "tvel":
             vMod = cls.readTVelFile(filename)
         else:
@@ -406,137 +390,6 @@ class VelocityModel(object):
         return VelocityModel(modelName, radiusOfEarth, cls.default_moho,
                              cls.default_cmb, cls.default_iocb, 0,
                              maxRadius, True, layers)
-
-    # @classmethod
-    # def readNDFile(cls, filename):
-    #     """
-    #     This method reads in a velocity model from a "nd" ASCII text file,
-    #     the
-    #     format used by Xgbm. The name of the model file for model "modelname"
-    #     should be "modelname.nd". The format of the file is: depth pVel sVel
-    #     Density Qp Qs depth pVel sVel Density Qp Qs . . . with each major
-    #     boundary separated with a line with "mantle", "outer-core" or
-    #     "inner-core". "moho", "cmb" and "icocb" are allowed as synonyms
-    #     respectively. This feature makes phase interpretation much easier to
-    #     code. Also, as they are not needed for travel time calculations, the
-    #     density, Qp and Qs may be omitted.
-    #
-    #     The velocities are assumed to be linear between sample points.
-    #    Because
-    #     this type of model file doesn't give complete information we make the
-    #     following assumptions:
-    #
-    #     modelname - from the filename, with ".nd" dropped
-    #
-    #     radiusOfEarth - the largest depth in the model
-    #
-    #     Only # Comments are allowed
-    #
-    #     TauPModelExceptions occur for various reasons.
-    #     """
-    #
-        # # Some  variables
-        # layers = []
-        # myLayerNumber = 0
-        # # these are only potentially changed:
-        # topDensity = 2.6
-        # topQp = 1000
-        # topQs = 2000
-        # botDensity = topDensity
-        # botQp = topQp
-        # botQs = topQs
-        #
-        # with open(filename, 'rt') as f:
-        #
-        #     # Read the first line to provide initial top values.
-        #     line = f.readline()
-        #     line = line.partition('#')[0]  # other comment options?
-        #     line = line.rstrip()
-        #     columns = line.split()
-        #     topDepth = float(columns[0])
-        #     topPVel = float(columns[1])
-        #     topSVel = float(columns[2])
-        #     if topSVel > topPVel:
-        #         raise TauPException("S velocity, ", topSVel, " at depth ",
-        # topDepth,
-        #                             " is greater than the P velocity, ",
-        # topPVel)
-        #     # if density, Qp and Qs are present,read them.
-        #     if len(columns) > 3:
-        #         topDensity = float(columns[3])
-        #         if len(columns) > 4:
-        #             topQp = float(columns[4])
-        #             if len(columns) > 5:
-        #                 topQs = float(columns[5])
-        #                 if len(columns) > 6:
-        #                     raise TauPException("Your file has too much
-        # information. Stick to 6 columns.")
-        #     # Default values which should be supplied in an ND file!
-        #     mohoDepth = cls.default_moho
-        #     cmbdepth = cls.default_cmb
-        #     iocbdepth = cls.default_iocb
-        #
-        #     # Loop over all remaining lines.
-        #     for line in f:
-        #         line = line.partition('#')[0]  # other comment options?
-        #         line = line.rstrip()
-        #
-        #         # Check for a named discontinuity
-        #         if line.lower() == "mantle" or line.lower() == "moho":
-        #             mohoDepth = topDepth
-        #         if line.lower() == "outer-core" or line.lower() == "cmb":
-        #             cmbDepth = topDepth
-        #         if line.lower() == "inner-core" or line.lower() == "icocb"
-        # or line.lower() == "iocb":
-        #             iocbDepth = topDepth
-        #
-        #         columns = line.split()
-        #         botDepth = float(columns[0])
-        #         botPVel = float(columns[1])
-        #         botSVel = float(columns[2])
-        #         if botSVel > botPVel:
-        #             raise TauPException("S velocity, ", botSVel,
-        # " at depth ", botDepth,
-        #                                 " is greater than the P velocity,
-        # ", botPVel)
-        #         # if density, Qp and Qs are present,read them.
-        #         if len(columns) > 3:
-        #             botDensity = float(columns[3])
-        #             if len(columns) > 4:
-        #                 botQp = float(columns[4])
-        #                 if len(columns) > 5:
-        #                     botQs = float(columns[5])
-        #                     if len(columns) > 6:
-        #                         raise TauPException(
-        # "Your file has too much information. Stick to 6 columns.")
-        #
-        #         tempLayer = VelocityLayer(myLayerNumber, topDepth, botDepth,
-        # topPVel, botPVel, topSVel, botSVel,
-        #                                   topDensity, botDensity, topQp,
-        # botQp, topQs, botQs)
-        #         topDepth = botDepth
-        #         topPVel = botPVel
-        #         topSVel = botSVel
-        #         topDensity = botDensity
-        #         topQp = botQp
-        #         topQs = botQs
-        #
-        #         if tempLayer.topDepth != tempLayer.botDepth:
-        #             # Don't use zero thickness layers, first order
-        # discontinuities
-        #             # are taken care of by storing top and bottom depths.
-        #             layers.append(tempLayer)
-        #             myLayerNumber += 1
-        # radiusOfEarth = topDepth
-        # maxRadius = topDepth
-        # # I assume that this is a whole earth model so the maximum
-        # # depth is equal to the maximum radius is equal to the earth
-        # # radius.
-        #
-        # modelName = os.path.basename(filename)  # remove leading path
-        # modelName = modelName[:-3]  # strip .nd
-        # return VelocityModel(modelName, radiusOfEarth, mohoDepth, cmbDepth,
-        # iocbDepth, 0, maxRadius, True, layers)
 
     def fixDisconDepths(self):
         """
