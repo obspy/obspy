@@ -12,6 +12,7 @@ from .TauP_Create import TauP_Create
 
 
 class Arrivals(list):
+    """Class that is returned by the interface methods."""
     __slots__ = ["arrivals"]
 
     def __init__(self, arrivals):
@@ -96,11 +97,14 @@ class TauPyModel(object):
         >>> i91.get_travel_time(10, phase_list = ["ttall"], coordinate_list =
         ...                     [13,14,50,200], print_output=True)
         """
-
+        # todo: consider adding a capability to access the arrivals not just by
+        # list indices but by phase name?
         phase_list = phase_list if phase_list is not None else ["ttall"]
         tt = TauP_Time(phase_list, self.model.sMod.vMod.modelName,
                        source_depth_in_km, distance_in_degree, coordinate_list)
         tt.run(print_output)
+        if print_output:
+            return
         return Arrivals(tt.arrivals)
 
     def get_pierce_points(self, source_depth_in_km, distance_in_degree,
@@ -110,6 +114,8 @@ class TauPyModel(object):
                          source_depth_in_km, distance_in_degree)
         pp.run(print_output)
         # todo: shouldn't this maybe only return the pierce points?
+        if print_output:
+            return
         return Arrivals(pp.arrivals)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree,
@@ -118,6 +124,8 @@ class TauPyModel(object):
         rp = TauP_Path(phase_list, self.model.sMod.vMod.modelName,
                        source_depth_in_km, distance_in_degree)
         rp.run(print_output)
+        if print_output:
+            return
         return Arrivals(rp.arrivals)
 
     @staticmethod
