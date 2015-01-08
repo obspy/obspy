@@ -274,6 +274,7 @@ ENTRY_POINTS = {
         'STATIONXML = obspy.station.stationxml',
         'SACPZ = obspy.sac.sacpz',
         'CSS = obspy.css.station',
+        'FDSNTXT = obspy.station.fdsn_text',
     ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.station.stationxml:is_StationXML',
@@ -286,6 +287,10 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory.CSS': [
         'writeFormat = obspy.css.station:writeCSS',
     ],
+    'obspy.plugin.inventory.FDSNTXT': [
+        'isFormat = obspy.station.fdsn_text:is_FDSN_station_text_file',
+        'readFormat = obspy.station.fdsn_text:read_FDSN_station_text_file',
+        ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',
