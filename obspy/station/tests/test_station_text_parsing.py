@@ -147,6 +147,72 @@ class StationTextTestCase(unittest.TestCase):
         inv.created = expected_inv.created
         self.assertEqual(inv, expected_inv)
 
+    def test_reading_station_file(self):
+        """
+        Test reading a file at the station level.
+        """
+        # Manually create an expected Inventory object.
+        expected_inv = obspy.station.Inventory(source=None, networks=[
+            obspy.station.Network(
+                code="TA", stations=[
+                    obspy.station.Station(
+                        code="A04A", latitude=48.7197, longitude=-122.707,
+                        elevation=23.0, site=obspy.station.Site(
+                            name="Legoe Bay, Lummi Island, WA, USA"),
+                        start_date=obspy.UTCDateTime("2004-09-19T00:00:00"),
+                        end_date=obspy.UTCDateTime("2008-02-19T23:59:59")),
+                    obspy.station.Station(
+                        code="A04D", latitude=48.7201, longitude=-122.7063,
+                        elevation=13.0, site=obspy.station.Site(
+                            name="Lummi Island, WA, USA"),
+                        start_date=obspy.UTCDateTime("2010-08-18T00:00:00"),
+                        end_date=obspy.UTCDateTime("2599-12-31T23:59:59"))
+                ]),
+            obspy.station.Network(
+                code="TR", stations=[
+                    obspy.station.Station(
+                        code="ALNG", latitude=10.1814, longitude=-61.6883,
+                        elevation=10.0, site=obspy.station.Site(
+                            name="Trinidad, Point Fortin"),
+                        start_date=obspy.UTCDateTime("2000-01-01T00:00:00"),
+                        end_date=obspy.UTCDateTime("2599-12-31T23:59:59"))])])
+
+        # Read from a filename.
+        filename = os.path.join(self.data_dir, "station_level_fdsn.txt")
+        inv = fdsn_text.read_FDSN_station_text_file(filename)
+
+        # Copy creation date as it will be slightly different otherwise.
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from open file in text mode.
+        with open(filename, "rt") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from open file in binary mode.
+        with open(filename, "rb") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from StringIO.
+        with open(filename, "rt") as fh:
+            with io.StringIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from BytesIO.
+        with open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
 
 def suite():
     return unittest.makeSuite(StationTextTestCase, "test")

@@ -148,13 +148,15 @@ def read_FDSN_station_text_file(path_or_file_object):
                 total_number_of_stations=net[4])
             inv.networks.append(network)
     elif level == "station":
-        networks = collections.defaultdict(list)
+        networks = collections.OrderedDict()
         for sta in converted_content:
             site = obspy.station.Site(name=sta[5])
             station = obspy.station.Station(
                 code=sta[1], latitude=sta[2], longitude=sta[3],
                 elevation=sta[4], site=site, start_date=sta[6],
                 end_date=sta[7])
+            if sta[0] not in networks:
+                networks[sta[0]] = []
             networks[sta[0]].append(station)
         for network_code, stations in networks.items():
             net = obspy.station.Network(code=network_code, stations=stations)
