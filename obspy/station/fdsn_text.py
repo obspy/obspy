@@ -164,8 +164,8 @@ def read_FDSN_station_text_file(path_or_file_object):
             net = obspy.station.Network(code=network_code, stations=stations)
             inv.networks.append(net)
     elif level == "channel":
-        networks = {}
-        stations = {}
+        networks = collections.OrderedDict()
+        stations = collections.OrderedDict()
 
         for channel in converted_content:
             net, sta, loc, chan, lat, lng, ele, dep, azi, dip, inst, scale, \

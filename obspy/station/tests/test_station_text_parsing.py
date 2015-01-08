@@ -213,6 +213,203 @@ class StationTextTestCase(unittest.TestCase):
         inv.created = expected_inv.created
         self.assertEqual(inv, expected_inv)
 
+    def test_reading_channel_file(self):
+        """
+        Test reading a file at the channel level.
+        """
+        # Manually create an expected Inventory object.
+        expected_inv = obspy.station.Inventory(source=None, networks=[
+            obspy.station.Network(
+                code="AK", stations=[
+                    obspy.station.Station(
+                        code="BAGL",
+                        latitude=60.4896,
+                        longitude=-142.0915,
+                        elevation=1470,
+                        channels=[
+                            obspy.station.Channel(
+                                code="LHZ", location_code="",
+                                latitude=60.4896,
+                                longitude=-142.0915,
+                                elevation=1470,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=1.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Nanometrics Trillium 240 Sec "
+                                         "Response sn 400 and a"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-01-01T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2599-12-31T23:59:59"),
+                                response=obspy.station.Response(
+                                    instrument_sensitivity=obspy.station
+                                    .InstrumentSensitivity(
+                                        frequency=0.02, input_units="M/S",
+                                        output_units=None, value=4.88233E8)))
+                        ]),
+                    obspy.station.Station(
+                        code="BWN",
+                        latitude=64.1732,
+                        longitude=-149.2991,
+                        elevation=356.0,
+                        channels=[
+                            obspy.station.Channel(
+                                code="LHZ", location_code="",
+                                latitude=64.1732,
+                                longitude=-149.2991,
+                                elevation=356.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=1.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Nanometrics Trillium 240 Sec "
+                                         "Response sn 400 and a"),
+                                start_date=obspy.UTCDateTime(
+                                    "2010-07-23T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2014-05-28T23:59:59"),
+                                response=obspy.station.Response(
+                                    instrument_sensitivity=obspy.station
+                                    .InstrumentSensitivity(
+                                        frequency=0.02, input_units="M/S",
+                                        output_units=None, value=4.88233E8))),
+                            obspy.station.Channel(
+                                code="LHZ", location_code="",
+                                latitude=64.1732,
+                                longitude=-149.2991,
+                                elevation=356.0,
+                                depth=1.5,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=1.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Nanometrics Trillium 120 Sec "
+                                         "Response/Quanterra 33"),
+                                start_date=obspy.UTCDateTime(
+                                    "2014-08-01T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2599-12-31T23:59:59"),
+                                response=obspy.station.Response(
+                                    instrument_sensitivity=obspy.station
+                                    .InstrumentSensitivity(
+                                        frequency=0.03, input_units="M/S",
+                                        output_units=None, value=4.98112E8)))
+                        ])
+                ]),
+            obspy.station.Network(
+                code="AZ", stations=[
+                    obspy.station.Station(
+                        code="BZN",
+                        latitude=33.4915,
+                        longitude=-116.667,
+                        elevation=1301.0,
+                        channels=[
+                            obspy.station.Channel(
+                                code="LHZ", location_code="",
+                                latitude=33.4915,
+                                longitude=-116.667,
+                                elevation=1301.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=1.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Streckeisen STS-2 G1/Quanterra 330 "
+                                         "Linear Phase Be"),
+                                start_date=obspy.UTCDateTime(
+                                    "2010-07-26T17:22:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2013-07-15T21:22:23"),
+                                response=obspy.station.Response(
+                                    instrument_sensitivity=obspy.station
+                                    .InstrumentSensitivity(
+                                        frequency=0.03, input_units="M/S",
+                                        output_units=None, value=6.27252E8))),
+                            obspy.station.Channel(
+                                code="LHZ", location_code="",
+                                latitude=33.4915,
+                                longitude=-116.667,
+                                elevation=1301.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=1.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Streckeisen STS-2 G1/Quanterra 330 "
+                                         "Linear Phase Be"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-07-15T21:22:23"),
+                                end_date=obspy.UTCDateTime(
+                                    "2013-10-22T19:30:00"),
+                                response=obspy.station.Response(
+                                    instrument_sensitivity=obspy.station
+                                    .InstrumentSensitivity(
+                                        frequency=0.03, input_units="M/S",
+                                        output_units=None, value=6.27252E8))),
+                            obspy.station.Channel(
+                                code="LHZ", location_code="",
+                                latitude=33.4915,
+                                longitude=-116.667,
+                                elevation=1301.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=-90.0,
+                                sample_rate=1.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Streckeisen STS-2 G1/Quanterra 330 "
+                                         "Linear Phase Be"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-10-22T19:30:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2599-12-31T23:59:59"),
+                                response=obspy.station.Response(
+                                    instrument_sensitivity=obspy.station
+                                    .InstrumentSensitivity(
+                                        frequency=0.03, input_units="M/S",
+                                        output_units=None, value=6.27252E8))),
+                        ])
+                ])
+            ])
+
+        # Read from a filename.
+        filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
+        inv = fdsn_text.read_FDSN_station_text_file(filename)
+
+        # Copy creation date as it will be slightly different otherwise.
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from open file in text mode.
+        with open(filename, "rt") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from open file in binary mode.
+        with open(filename, "rb") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from StringIO.
+        with open(filename, "rt") as fh:
+            with io.StringIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from BytesIO.
+        with open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
 
 def suite():
     return unittest.makeSuite(StationTextTestCase, "test")
