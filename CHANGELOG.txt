@@ -63,6 +63,7 @@
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
    * write support for SACPZ ASCII representation of channel responses.
+   * read support for the text format of the FDSN web services.
  - obspy.zmap:
    * New module which adds ZMAP read/write support
  - scripts:
