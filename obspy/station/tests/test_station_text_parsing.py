@@ -18,6 +18,8 @@ import io
 import os
 import unittest
 
+import obspy
+import obspy.station
 from obspy.station import fdsn_text
 
 
@@ -93,14 +95,57 @@ class StationTextTestCase(unittest.TestCase):
         """
         Test reading a file at the network level.
         """
+        # Manually create an expected Inventory object.
+        expected_inv = obspy.station.Inventory(source=None, networks=[
+            obspy.station.Network(
+                code="TA", total_number_of_stations=1700,
+                start_date=obspy.UTCDateTime("2003-01-01T00:00:00"),
+                end_date=obspy.UTCDateTime("2500-12-31T23:59:59"),
+                description="USArray Transportable Array (NSF EarthScope "
+                            "Project)"),
+
+            obspy.station.Network(
+                code="TC", total_number_of_stations=0,
+                start_date=obspy.UTCDateTime("2011-01-01T00:00:00"),
+                end_date=obspy.UTCDateTime("2500-12-31T23:59:59"),
+                description="Red Sismologica Nacional")
+        ])
+
+        # Read from a filename.
         filename = os.path.join(self.data_dir, "network_level_fdsn.txt")
-        print(fdsn_text.read_FDSN_station_text_file(filename))
+        inv = fdsn_text.read_FDSN_station_text_file(filename)
 
-        filename = os.path.join(self.data_dir, "station_level_fdsn.txt")
-        print(fdsn_text.read_FDSN_station_text_file(filename))
+        # Copy creation date as it will be slightly different otherwise.
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
 
-        filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
-        print(fdsn_text.read_FDSN_station_text_file(filename))
+        # Read from open file in text mode.
+        with open(filename, "rt") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from open file in binary mode.
+        with open(filename, "rb") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from StringIO.
+        with open(filename, "rt") as fh:
+            with io.StringIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+
+        # Read from BytesIO.
+        with open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+        inv.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
 
 
 def suite():

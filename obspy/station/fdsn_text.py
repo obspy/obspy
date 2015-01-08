@@ -16,6 +16,7 @@ from future.utils import native_str
 
 import collections
 import csv
+import io
 
 import obspy
 import obspy.station
@@ -82,7 +83,7 @@ def is_FDSN_station_text_file(path_or_file_object):
 
 def read_FDSN_station_text_file(path_or_file_object):
     """
-    Function reading a FDSN station text file.
+    Function reading a FDSN station text file to an inventory object.
 
     :param path_or_file_object: File name or file like object.
     """
@@ -99,6 +100,14 @@ def read_FDSN_station_text_file(path_or_file_object):
             all_lines.append([_i.strip() for _i in line])
         return {"header": tuple(_i.lower() for _i in header),
                 "content": all_lines}
+
+    # Enable reading from files and buffers opened in binary mode.
+    if (hasattr(path_or_file_object, "mode") and
+            "b" in path_or_file_object.mode) or \
+            isinstance(path_or_file_object, io.BytesIO):
+        buf = io.StringIO(path_or_file_object.read().decode())
+        buf.seek(0, 0)
+        path_or_file_object = buf
 
     if hasattr(path_or_file_object, "read"):
         content = _read(path_or_file_object)
@@ -127,7 +136,7 @@ def read_FDSN_station_text_file(path_or_file_object):
             v_type(value) for value, v_type in zip(line, filetypes)])
 
     # Now convert to an inventory object.
-    inv = obspy.station.Inventory(networks=[], source="")
+    inv = obspy.station.Inventory(networks=[], source=None)
 
     if level == "network":
         for net in converted_content:
