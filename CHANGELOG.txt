@@ -20,6 +20,7 @@
    * Bulk station downloading using POST requests.
    * Support for FDSNWS 1.1, e.g. the `matchtimeseries` parameter for the
      station service.
+   * Now requests gzipped data for the XML files. Much smaller files!
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
