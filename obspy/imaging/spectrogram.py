@@ -20,12 +20,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import math as M
+import math
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
+from matplotlib.dates import date2num
 
 from obspy.imaging.cm import obspy_sequential
 
@@ -44,8 +45,8 @@ def _nearest_pow_2(x):
     :rtype: Int
     :return: Nearest power of 2 to x
     """
-    a = M.pow(2, M.ceil(np.log2(x)))
-    b = M.pow(2, M.floor(np.log2(x)))
+    a = math.pow(2, math.ceil(np.log2(x)))
+    b = math.pow(2, math.floor(np.log2(x)))
     if abs(a - x) < abs(b - x):
         return a
     else:
@@ -55,7 +56,7 @@ def _nearest_pow_2(x):
 def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 outfile=None, fmt=None, axes=None, dbscale=False,
                 mult=8.0, cmap=obspy_sequential, zorder=None, title=None,
-                show=True, sphinx=False, clip=[0.0, 1.0]):
+                show=True, sphinx=False, clip=[0.0, 1.0], starttime=None):
     """
     Computes and plots spectrogram of the input data.
 
@@ -102,7 +103,21 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :param clip: adjust colormap to clip at lower and/or upper end. The given
         percentages of the amplitude range (linear or logarithmic depending
         on option `dbscale`) are clipped.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param starttime: The start time of the data array can be provided to use
+        absolute values on the time axis. This can be useful to combine
+        multiple spectrogram calls in the same axes.
     """
+    if axes:
+        if log and axes.images:
+            msg = ("Combinations of spectrogram plots with `log=True` "
+                   "and `log=False` are not possible.")
+            raise NotImplementedError(msg)
+        if not log and axes.collections:
+            msg = ("Combinations of spectrogram plots with `log=True` "
+                   "and `log=False` are not possible.")
+            raise NotImplementedError(msg)
+
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 
@@ -123,7 +138,6 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
-    end = npts / samp_rate
 
     # Here we call not plt.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
@@ -147,15 +161,23 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     vmax = specgram.min() + vmax * _range
     norm = Normalize(vmin, vmax, clip=True)
 
-    if not axes:
+    if axes:
+        ax = axes
+        fig = ax.get_figure()
+    else:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-    else:
-        ax = axes
 
     # calculate half bin width
     halfbin_time = (time[1] - time[0]) / 2.0
     halfbin_freq = (freq[1] - freq[0]) / 2.0
+
+    if starttime is not None:
+        time = date2num([(starttime + (t + halfbin_time)).datetime
+                         for t in time])
+        # we need to convert halfbin_time to days
+        # (used in matplotlib time axis)
+        halfbin_time /= 24 * 3600
 
     # argument None is not allowed for kwargs on matplotlib python 3.3
     kwargs = {k: v for k, v in (('cmap', cmap), ('zorder', zorder))
@@ -183,13 +205,39 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # set correct way of axis, whitespace before and after with window
     # length
     ax.axis('tight')
-    ax.set_xlim(0, end)
+    ax.set_xlim(ax.xaxis.get_data_interval())
     ax.grid(False)
 
     if axes:
+        # if we reuse an existing plot we have to update all plots to use the
+        # same color normalization
+        if log:
+            plots = ax.collections
+        else:
+            plots = ax.images
+        vmin = min([p.get_array().min() for p in plots])
+        vmax = max([p.get_array().max() for p in plots])
+        _range = float(vmax - vmin)
+        vmin = vmin + clip[0] * _range
+        vmax = vmin + clip[1] * _range
+        norm = Normalize(vmin, vmax, clip=True)
+        for p in plots:
+            p.set_norm(norm)
+        # when we have multiple plots we will end up with (small) blank spots
+        # in between data parts, so set figure facecolor as axes background
+        # color..
+        ax.set_axis_bgcolor(fig.get_facecolor())
         return ax
 
-    ax.set_xlabel('Time [s]')
+    if starttime is None:
+        # relative time scale plot
+        ax.set_xlabel('Time [s]')
+    else:
+        # absolute time scale plot
+        ax.set_xlabel('')
+        ax.xaxis_date()
+        fig.autofmt_xdate()
+
     ax.set_ylabel('Frequency [Hz]')
     if title:
         ax.set_title(title)
