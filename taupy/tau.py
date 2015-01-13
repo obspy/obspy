@@ -39,16 +39,19 @@ class TauPyModel(object):
     >>> tt = i91.get_travel_timess(10, 20, ["P, S"])
     """
 
-    def __init__(self, model="iasp91", verbose=False, taup_model_path=None):
+    def __init__(self, model="iasp91", verbose=False, taup_model_path=None,
+                 velocity_model_path=None):
         """
         Loads or creates a tau model object.
         At the moment the models are by default read from and stored in
-        [python script location]/TauPy/taupy/data/taup_models.
+        [python script location]/TauPy/taupy/data/.
         :param model: The name of the velocity model which should be used to
             create the tau model or which should be loaded if one has been
             created before.
         :param taup_model_path: Set the path for .taup models here, then it
-            will be used for model creation and the get* commands.
+            will be used for model creation and the get... commands.
+        :param velocity_model_path: Set the path to the .tvel input velocity
+            files which are to be used in creating the .taup models here.
 
         Usage:
         >>> from taupy import tau
@@ -71,15 +74,22 @@ class TauPyModel(object):
         ...                     [13,14,50,200], print_output=True)
         """
 
-        # If needed, change where to look for .taup models here in this
+        # If needed, change where to look for models here in this
         # section.
         # NB the currentframe here is the location of this script!
         default_taup_model_path = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data", "taup_models")
+        default_velocity_model_path = os.path.join(os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))), "data")
         if taup_model_path is not None:
             self.taup_model_path = taup_model_path
         else:
             self.taup_model_path = default_taup_model_path
+        if velocity_model_path is not None:
+            self.velocity_model_path = velocity_model_path
+        else:
+            self.velocity_model_path = default_velocity_model_path
+
         # Load or create a .taup model:
         try:
             self.model = load(model, self.taup_model_path, verbose=verbose)
@@ -87,7 +97,8 @@ class TauPyModel(object):
             print("A {}.taup model file was not found in the {} "
                   "directory, will try to create one. "
                   "This may take a while.".format(model, self.taup_model_path))
-            self.create_taup_model(model, self.taup_model_path)
+            create_taup_model(model, self.taup_model_path,
+                              self.velocity_model_path)
             self.model = load(model, self.taup_model_path, verbose=verbose)
         self.verbose = verbose
 
@@ -112,7 +123,7 @@ class TauPyModel(object):
         """
         # Accessing the arrivals not just by list indices but by phase name
         # might be useful, but also difficult: several arrivals can have the
-        # same phase (check again?).
+        # same phase.
         phase_list = phase_list if phase_list is not None else ["ttall"]
         tt = TauP_Time(phase_list, self.model.sMod.vMod.modelName,
                        source_depth_in_km, distance_in_degree, coordinate_list,
@@ -122,7 +133,7 @@ class TauPyModel(object):
             return
         return Arrivals(tt.arrivals)
 
-    def get_pierce_points(self, source_depth_in_km, distance_in_degree,
+    def get_pierce_points(self, source_depth_in_km, distance_in_degree=None,
                           phase_list=None, coordinate_list=None,
                           print_output=False):
         phase_list = phase_list if phase_list is not None else ["ttall"]
@@ -134,7 +145,7 @@ class TauPyModel(object):
             return
         return Arrivals(pp.arrivals)
 
-    def get_ray_paths(self, source_depth_in_km, distance_in_degree,
+    def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
                       phase_list=None, coordinate_list=None,
                       print_output=False):
         phase_list = phase_list if phase_list is not None else ["ttall"]
@@ -146,16 +157,15 @@ class TauPyModel(object):
             return
         return Arrivals(rp.arrivals)
 
-    @staticmethod
-    def create_taup_model(model_name, output_dir):
-        """
-        Create
-        :param model_name:
-        :param output_dir:
-        :return:
-        """
-        if "." in model_name:
-            model_file_name = model_name
-        else:
-            model_file_name = model_name + ".tvel"
-        TauP_Create.main(model_file_name, output_dir)
+
+def create_taup_model(model_name, output_dir, input_dir):
+    """
+    Create a .taup model from a .tvel file.
+    :param model_name:
+    :param output_dir:
+    """
+    if "." in model_name:
+        model_file_name = model_name
+    else:
+        model_file_name = model_name + ".tvel"
+    TauP_Create.main(model_file_name, output_dir, input_dir)

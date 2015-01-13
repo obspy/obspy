@@ -22,7 +22,7 @@ class TauP_Create(object):
     plotSmod = False
     plotTmod = False
 
-    def __init__(self, modelFilename=None, output_dir=None):
+    def __init__(self, modelFilename=None, output_dir=None, input_dir=None):
         # Parse command line arguments.
         parser = argparse.ArgumentParser()
         parser.add_argument('-v', '--verbose', '-d', '--debug',
@@ -42,13 +42,13 @@ class TauP_Create(object):
         args = parser.parse_args()
         self.DEBUG = args.verbose
         # This is the directory that will be looked in for the velocity models:
-        self.directory = args.input_dir
-
-        # Todo: think more about refactoring this so input_dir can be passed
-        # through the tau interface... but can't really think of a very
-        # elegant solution. Either: pass through the input directory Or: make
-        # the modelname input (optionally) a modelFilename, with whole path...
-        # Neither is ideal.
+        self.input_dir = args.input_dir if input_dir is None else input_dir
+        if self.input_dir is None:
+            # If no directory given, assume data is in ./data.
+            # This will only happen if this is used as a script, not through
+            # the tau interface.
+            self.input_dir = os.path.join(os.path.dirname(os.path.abspath(
+                inspect.getfile(inspect.currentframe()))), "data")
         self.outdir = args.output_dir if output_dir is None else output_dir
         if modelFilename is None:
             self.modelFilename = args.filename
@@ -57,16 +57,12 @@ class TauP_Create(object):
         if self.modelFilename is None:
             raise ValueError("Model file name not specified.")
 
-        if self.directory is None:
-            # if no directory given, assume data is in ./data:
-            self.directory = os.path.join(os.path.dirname(os.path.abspath(
-                inspect.getfile(inspect.currentframe()))), "data")
 
     @classmethod
-    def main(cls, modelFilename=None, output_dir=None):
+    def main(cls, modelFilename=None, output_dir=None, input_dir=None):
         """ Do loadVMod, then start. """
-        print("TauP_Create starting...")
-        tauPCreate = TauP_Create(modelFilename, output_dir)
+        #print("TauP_Create starting...")
+        tauPCreate = TauP_Create(modelFilename, output_dir, input_dir)
         #print("Loading velocity model.")
         tauPCreate.loadVMod()
         #print("Running tauPCreate.run.")
@@ -77,7 +73,7 @@ class TauP_Create(object):
         directory specified on command line, or from ./data/.
         """
         # Read the velocity model file.
-        filename = os.path.join(self.directory, self.modelFilename)
+        filename = os.path.join(self.input_dir, self.modelFilename)
         if self.DEBUG:
             print("filename =", filename)
         self.vMod = VelocityModel.readVelocityFile(filename)

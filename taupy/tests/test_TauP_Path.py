@@ -47,3 +47,11 @@ class TestTauPPath(TestCase):
                               "stdout_-h_10_-ph_P_-deg_35 "
                               "data/tmp_tauppath_test_output", shell=True)
         os.remove("data/tmp_tauppath_test_output")
+
+        # Just a check that coordinates are also passed through.
+        i91.get_ray_paths(10, coordinate_list=[10, 20, 30, 40],
+                          phase_list=["P", "PcS"])
+
+        # This doesn't work as subprocess, but to check cli execution use:
+        # ../TauP_Path.py -mod iasp91 -d 10 -ph P,PcS -deg 30
+        # in bash.

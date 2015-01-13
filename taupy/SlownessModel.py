@@ -9,7 +9,6 @@ from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist, \
 from copy import deepcopy
 
 
-# noinspection PyPep8Naming
 class SlownessModel(object):
     """
     This class provides storage and methods for generating slowness-depth
@@ -139,11 +138,11 @@ class SlownessModel(object):
         self.fixCriticalPoints()
 
         if self.validate() is True:
-            print("createSample seems to be done successfully.")
+            if self.DEBUG:
+                print("createSample seems to be done successfully.")
         else:
             raise SlownessModelError('SlownessModel.validate failed!')
 
-    # noinspection PyCallByClass
     def findCriticalPoints(self):
         """ Finds all critical points within a velocity model.
 
@@ -218,7 +217,7 @@ class SlownessModel(object):
                 self.fluidLayerDepths.append(fluidZone)
 
             currPLayer = create_from_vlayer(currVLayer,
-                                                          self.PWAVE)
+                                            self.PWAVE)
             # If we are in a fluid zone ( S velocity = 0.0 ) or if we are below
             # the outer core and allowInnerCoreS=false then use the P velocity
             # structure to look for critical points.
@@ -227,7 +226,7 @@ class SlownessModel(object):
                 currSLayer = currPLayer
             else:
                 currSLayer = create_from_vlayer(currVLayer,
-                                                              self.SWAVE)
+                                                self.SWAVE)
 
             if prevSLayer.botP != currSLayer.topP \
                     or prevPLayer.botP != currPLayer.topP:
@@ -588,7 +587,7 @@ class SlownessModel(object):
                     prevVLayer.botDepth, prevVLayer.botPVelocity,
                     origVLayer.topPVelocity, topSVel, botSVel)
                 currPLayer = create_from_vlayer(currVLayer,
-                                                              self.PWAVE)
+                                                self.PWAVE)
                 self.PLayers.append(currPLayer)
                 if (prevVLayer.botSVelocity == 0
                     and origVLayer.topSVelocity == 0) \
@@ -597,10 +596,10 @@ class SlownessModel(object):
                     currSLayer = currPLayer
                 else:
                     currSLayer = create_from_vlayer(currVLayer,
-                                                                  self.SWAVE)
+                                                    self.SWAVE)
                 self.SLayers.append(currSLayer)
             currPLayer = create_from_vlayer(origVLayer,
-                                                          self.PWAVE)
+                                            self.PWAVE)
             self.PLayers.append(currPLayer)
             if self.depthInFluid(origVLayer.topDepth) or (
                     self.allowInnerCoreS is False
@@ -608,7 +607,7 @@ class SlownessModel(object):
                 currSLayer = currPLayer
             else:
                 currSLayer = create_from_vlayer(origVLayer,
-                                                              self.SWAVE)
+                                                self.SWAVE)
             self.SLayers.append(currSLayer)
         # Make sure that all high slowness layers are sampled exactly
         # at their bottom

@@ -17,7 +17,9 @@ class TestTauPCreate(unittest.TestCase):
         """
         Simple test for TauP_Create only tests if executed without error.
         """
-        TauP_Create.main(modelFilename='iasp91.tvel')
+        #TauP_Create.main(modelFilename='iasp91.tvel')
+        pass
+        # This is tested in test_tauPyModel, so commentd out here to save time.
 
 
 if __name__ == '__main__':
