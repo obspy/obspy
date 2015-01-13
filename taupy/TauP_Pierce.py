@@ -12,9 +12,11 @@ class TauP_Pierce(TauP_Time):
     """
 
     def __init__(self,
-                 phaseList=None, modelName="iasp91", depth=0, degrees=None):
+                 phaseList=None, modelName="iasp91", depth=0, degrees=None,
+                 coordinate_list=None, taup_model_path=None):
         phaseList = phaseList if phaseList is not None else []
-        TauP_Time.__init__(self)
+        TauP_Time.__init__(self, coordinate_list=coordinate_list,
+                           taup_model_path=taup_model_path)
         self.onlyTurnPoints = False
         self.onlyRevPoints = False
         self.onlyUnderPoints = False

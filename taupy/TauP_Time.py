@@ -50,12 +50,18 @@ class TauP_Time(object):
         self.arrivals = []
         self.relativePhaseName = None
         self.relativeArrival = None
+        # In case the tau interface is not called, i.e. using the CLI, this
+        # default model directory location needs to be specified here.
+        # This could be removed, but the script interface and test scripts
+        # would need to be rewritten.
         if taup_model_path is None:
-            # default path is ./data/taup_models/
+            # default path is ./data/taup_models/, relative to this script's
+            # location
             self.taup_model_path = os.path.join(os.path.dirname(
                 os.path.abspath(inspect.getfile(inspect.currentframe()))),
                 "data", "taup_models")
         else:
+            # The tau interface should always provide a directory.
             self.taup_model_path = taup_model_path
 
     def run(self, printOutput=False):

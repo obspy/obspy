@@ -92,8 +92,8 @@ class TauPyModel(object):
         self.verbose = verbose
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
-                         phase_list=None, print_output=False,
-                         coordinate_list=None):
+                         phase_list=None, coordinate_list=None,
+                         print_output=False):
         """
         Returns travel times of every given phase.
         :param source_depth_in_km: Depth of wave path source.
@@ -126,7 +126,6 @@ class TauPyModel(object):
                           phase_list=None, coordinate_list=None,
                           print_output=False):
         phase_list = phase_list if phase_list is not None else ["ttall"]
-        # todo: add the coordinates and specified model path capabilites to puerce and path
         pp = TauP_Pierce(phase_list, self.model.sMod.vMod.modelName,
                          source_depth_in_km, distance_in_degree,
                          coordinate_list, self.taup_model_path)
@@ -136,10 +135,12 @@ class TauPyModel(object):
         return Arrivals(pp.arrivals)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree,
-                      phase_list=None, print_output=False):
+                      phase_list=None, coordinate_list=None,
+                      print_output=False):
         phase_list = phase_list if phase_list is not None else ["ttall"]
         rp = TauP_Path(phase_list, self.model.sMod.vMod.modelName,
-                       source_depth_in_km, distance_in_degree)
+                       source_depth_in_km, distance_in_degree,
+                       coordinate_list, self.taup_model_path)
         rp.run(print_output)
         if print_output:
             return
