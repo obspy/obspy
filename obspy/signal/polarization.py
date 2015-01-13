@@ -161,8 +161,10 @@ def flinn(stream, noise_thres=0):
     X = np.vstack((E, N, Z))
     covmat = np.cov(X)
     eigvec, eigenval, v = (np.linalg.svd(covmat))
-    rect = 1 - (eigenval[1] / eigenval[0])
-    plan = 1 - math.sqrt(eigenval[2] / eigenval[1])
+    # rectilinearity defined after Montalbetti & Kanasewich, 1970
+    rect = 1. - np.sqrt(eigenval[1] / eigenval[0])
+    # planarity defined after Jurkevics, 1988
+    plan = 1. - (2.*eigenval[2] / (eigenval[1] + eigenval[0]))
     azimuth = 180 * math.atan2(eigvec[0][0], eigvec[1][0]) / math.pi
     eve = np.sqrt(eigvec[0][0] ** 2 + eigvec[1][0] ** 2)
     incidence = 180 * math.atan2(eve, eigvec[2][0]) / math.pi
@@ -261,9 +263,9 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         if (newstart + (adapt / 2) / fs) > etime:
             break
 
-        Zx = Za[spoint[2] + offset - adapt / 2: spoint[2] + offset + adapt / 2]
-        Nx = Na[spoint[1] + offset - adapt / 2: spoint[1] + offset + adapt / 2]
-        Ex = Ea[spoint[0] + offset - adapt / 2: spoint[0] + offset + adapt / 2]
+        Zx = Za[int(spoint[2] + offset - adapt / 2): int(spoint[2] + offset + adapt / 2)]
+        Nx = Na[int(spoint[1] + offset - adapt / 2): int(spoint[1] + offset + adapt / 2)]
+        Ex = Ea[int(spoint[0] + offset - adapt / 2): int(spoint[0] + offset + adapt / 2)]
         Zx -= Zx.mean()
         Nx -= Nx.mean()
         Ex -= Ex.mean()
@@ -287,8 +289,11 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         final = fminbound(fun, 0., math.pi, full_output=True)
         X = 1. - final[1]
         ellip = math.sqrt(1 - X ** 2) / X
-        rect = 1 - (eigenval[1] / eigenval[0])
-        plan = 1 - math.sqrt(eigenval[2] / eigenval[1])
+        # rectilinearity defined after Montalbetti & Kanasewich, 1970
+        rect = 1. - np.sqrt(eigenval[1] / eigenval[0])
+        # planarity defined after Jurkevics, 1988
+        plan = 1. - (2.*eigenval[2] / (eigenval[1] + eigenval[0]))
+
         azimuth = 180 * math.atan2(eigvec[0][0].real, eigvec[1][0].real) / \
             math.pi
         eve = np.sqrt(eigvec[0][0].real ** 2 + eigvec[1][0].real ** 2)
@@ -361,7 +366,6 @@ def particleMotionOdr(stream, noise_thres=0):
     out = odr.run()
     in_slope = out.beta[0]
     in_error = out.sd_beta[0]
-    # in_relerror = out.rel_error
 
     azim = math.atan2(1.0, az_slope)
     inc = math.atan2(1.0, in_slope)
@@ -369,18 +373,6 @@ def particleMotionOdr(stream, noise_thres=0):
     in_error = 1.0 / ((1.0 ** 2 + in_slope ** 2) * inc) * in_error
     azim *= 180.0 / math.pi
     inc *= 180.0 / math.pi
-    # XXX if azimuth < 0:
-    # XXX     azimuth = 360.0 + azimuth
-    # XXX if incidence < 0:
-    # XXX     incidence += 180.0
-    # XXX if incidence > 90:
-    # XXX     incidence = 180. - incidence
-    # XXX     if azimuth > 180.:
-    # XXX         azimuth -= 180.0
-    # XXX     else:
-    # XXX         azimuth += 180.0
-    # XXX if azimuth > 180:
-    # XXX     azimuth -= 180.0
 
     return azim, inc, az_error, in_error
 
