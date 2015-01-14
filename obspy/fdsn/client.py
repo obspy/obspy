@@ -301,7 +301,7 @@ class Client(object):
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, matchtimeseries=None, filename=None,
-                     **kwargs):
+                     format="xml", **kwargs):
         """
         Query the station service of the FDSN client.
 
@@ -457,6 +457,10 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type format: str
+        :param format: The format of the returned station information. Most
+            services support "xml" and "text". ObsPy can also deal with the
+            text outut but the information is much more limited in that case.
         :rtype: :class:`~obspy.station.inventory.Inventory`
         :returns: Inventory with requested station information.
 
@@ -482,7 +486,8 @@ class Client(object):
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
         else:
-            inventory = read_inventory(data_stream, format="STATIONXML")
+            # This works with XML and StationXML data.
+            inventory = read_inventory(data_stream)
             data_stream.close()
             return inventory
 
@@ -1464,7 +1469,8 @@ def download_url(url, timeout=10, headers={}, debug=False,
     Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
-        print("Downloading %s" % url)
+        print("Downloading %s %s requesting gzip compression" % (
+            url, "with" if use_gzip else "without"))
 
     try:
         request = urllib.request.Request(url=url, headers=headers,
@@ -1490,6 +1496,8 @@ def download_url(url, timeout=10, headers={}, debug=False,
 
     # Unpack gzip if necessary.
     if response.info().get("Content-Encoding") == "gzip":
+        if debug is True:
+            print("Uncompressing gzipped response for %s" % url)
         # Cannot directly stream to gzip from urllib!
         # http://www.enricozini.org/2011/cazzeggio/python-gzip/
         buf = io.BytesIO(response.read())
