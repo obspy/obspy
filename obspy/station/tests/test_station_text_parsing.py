@@ -652,6 +652,44 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_good, inv_bad)
         self.assertEqual(inv_good, inv_obs_bad)
 
+    def test_parsing_files_with_no_endtime(self):
+        """
+        Tests the parsing of text files with no endtime.
+        """
+        file_pairs = [
+            (os.path.join(self.data_dir, "network_level_fdsn.txt"),
+             os.path.join(self.data_dir, "network_level_fdsn_no_endtime.txt")),
+            (os.path.join(self.data_dir, "station_level_fdsn.txt"),
+             os.path.join(self.data_dir, "station_level_fdsn_no_endtime.txt")),
+            (os.path.join(self.data_dir, "channel_level_fdsn.txt"),
+             os.path.join(self.data_dir, "channel_level_fdsn_no_endtime.txt")),
+        ]
+
+        for file_a, file_b in file_pairs:
+            inv_a = fdsn_text.read_FDSN_station_text_file(file_a)
+            inv_obs_a = obspy.read_inventory(file_a)
+            inv_b = fdsn_text.read_FDSN_station_text_file(file_b)
+            inv_obs_b = obspy.read_inventory(file_b)
+
+            # Copy creation dates as it will be slightly different otherwise.
+            inv_obs_a.created = inv_a.created
+            inv_b.created = inv_a.created
+            inv_obs_b.created = inv_a.created
+
+            # Recursively set all end times to None.
+            for inv in [inv_a, inv_obs_a, inv_b, inv_obs_b]:
+                for net in inv:
+                    net.end_date = None
+                    for sta in net:
+                        sta.end_date = None
+                        for cha in sta:
+                            cha.end_date = None
+
+            # The parsed data should now be equal in all of them.
+            self.assertEqual(inv_a, inv_obs_a)
+            self.assertEqual(inv_a, inv_b)
+            self.assertEqual(inv_a, inv_obs_b)
+
 
 def suite():
     return unittest.makeSuite(StationTextTestCase, "test")

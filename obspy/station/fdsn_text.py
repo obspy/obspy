@@ -31,21 +31,28 @@ def float_or_none(value):
         return float(value)
 
 
+def utcdatetime_or_none(value):
+    if not value:
+        return None
+    else:
+        return obspy.UTCDateTime(value)
+
+
 # The header fields of the text files at the different request levels.
 network_components = ("network", "description", "starttime", "endtime",
                       "totalstations")
-network_types = (str, str, obspy.UTCDateTime, obspy.UTCDateTime, int)
+network_types = (str, str, obspy.UTCDateTime, utcdatetime_or_none, int)
 station_components = ("network", "station", "latitude", "longitude",
                       "elevation", "sitename", "starttime", "endtime")
 station_types = (str, str, float, float, float, str, obspy.UTCDateTime,
-                 obspy.UTCDateTime)
+                 utcdatetime_or_none)
 channel_components = ("network", "station", "location", "channel", "latitude",
                       "longitude", "elevation", "depth", "azimuth", "dip",
                       "sensordescription", "scale", "scalefreq", "scaleunits",
                       "samplerate", "starttime", "endtime")
 channel_types = (str, str, str, str, float, float, float, float, float,
                  float, str, float_or_none, float_or_none, str, float,
-                 obspy.UTCDateTime, obspy.UTCDateTime)
+                 obspy.UTCDateTime, utcdatetime_or_none)
 all_components = (network_components, station_components, channel_components)
 
 
