@@ -41,7 +41,7 @@ station_types = (str, str, float, float, float, str, obspy.UTCDateTime,
                  obspy.UTCDateTime)
 channel_components = ("network", "station", "location", "channel", "latitude",
                       "longitude", "elevation", "depth", "azimuth", "dip",
-                      "instrument", "scale", "scalefreq", "scaleunits",
+                      "sensordescription", "scale", "scalefreq", "scaleunits",
                       "samplerate", "starttime", "endtime")
 channel_types = (str, str, str, str, float, float, float, float, float,
                  float, str, float_or_none, float_or_none, str, float,
@@ -102,6 +102,10 @@ def is_FDSN_station_text_file(path_or_file_object):
     first_line = first_line.lstrip("#").strip()
     if not first_line:
         return False
+
+    # IRIS currently has a wrong header name. Just map it.
+    first_line = first_line.replace("Instrument", "SensorDescription")
+
     components = tuple(_i.strip().lower() for _i in first_line.split("|"))
     if components in all_components:
         return True
@@ -118,15 +122,18 @@ def read_FDSN_station_text_file(path_or_file_object):
         r = unicode_csv_reader(obj, delimiter=native_str("|"))
         header = next(r)
         header[0] = header[0].lstrip("#")
-        header = [_i.strip() for _i in header]
+        header = [_i.strip().lower() for _i in header]
+        # IRIS currently has a wrong header name. Just map it.
+        header = [_i.replace("instrument", "sensordescription") for _i in
+                  header]
+
         all_lines = []
         for line in r:
             # Skip comment lines.
             if line[0].startswith("#"):
                 continue
             all_lines.append([_i.strip() for _i in line])
-        return {"header": tuple(_i.lower() for _i in header),
-                "content": all_lines}
+        return {"header": tuple(header), "content": all_lines}
 
     # Enable reading from files and buffers opened in binary mode.
     if (hasattr(path_or_file_object, "mode") and

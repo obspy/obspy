@@ -627,6 +627,31 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv, expected_inv)
         self.assertEqual(inv_obs, expected_inv)
 
+    def test_parsing_faulty_header_at_channel_level(self):
+        """
+        IRIS currently (2015/1/14) calls the "SensorDescription" header
+        "Instrument". Some services probably just mirror whatever IRIS is
+        doing thus this has to be dealt with.
+        """
+        good_file = os.path.join(self.data_dir, "channel_level_fdsn.txt")
+        bad_file = os.path.join(self.data_dir,
+                                "channel_level_fdsn_faulty_header.txt")
+
+        inv_good = fdsn_text.read_FDSN_station_text_file(good_file)
+        inv_obs_good = obspy.read_inventory(good_file)
+        inv_bad = fdsn_text.read_FDSN_station_text_file(bad_file)
+        inv_obs_bad = obspy.read_inventory(bad_file)
+
+        # Copy creation dates as it will be slightly different otherwise.
+        inv_obs_good.created = inv_good.created
+        inv_bad.created = inv_good.created
+        inv_obs_bad.created = inv_good.created
+
+        # The parsed data should be equal in all of them.
+        self.assertEqual(inv_good, inv_obs_good)
+        self.assertEqual(inv_good, inv_bad)
+        self.assertEqual(inv_good, inv_obs_bad)
+
 
 def suite():
     return unittest.makeSuite(StationTextTestCase, "test")
