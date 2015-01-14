@@ -65,6 +65,7 @@
    * read/write support for DataAvailability tags in StationXML files.
    * write support for SACPZ ASCII representation of channel responses.
    * read support for the text format of the FDSN web services.
+   * StationXML detection now based on the XML root tag.
  - obspy.zmap:
    * New module which adds ZMAP read/write support
  - scripts:
