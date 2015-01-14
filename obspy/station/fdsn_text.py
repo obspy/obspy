@@ -41,6 +41,23 @@ channel_types = (str, str, str, str, float, float, float, float, float,
 all_components = (network_components, station_components, channel_components)
 
 
+def unicode_csv_reader(unicode_csv_data, **kwargs):
+    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data), **kwargs)
+    for row in csv_reader:
+        try:
+            yield [str(cell, "utf8") for cell in row]
+        except:
+            yield [str(cell) for cell in row]
+
+
+def utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        if isinstance(line, native_str):
+            yield line
+        else:
+            yield line.encode('utf-8')
+
+
 def is_FDSN_station_text_file(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid FDSN
@@ -68,7 +85,7 @@ def is_FDSN_station_text_file(path_or_file_object):
 
     # Attempt to decode.
     try:
-        first_line = first_line.decode()
+        first_line = first_line.decode("utf-8")
     except:
         pass
 
@@ -90,7 +107,7 @@ def read_FDSN_station_text_file(path_or_file_object):
     :param path_or_file_object: File name or file like object.
     """
     def _read(obj):
-        r = csv.reader(obj, delimiter=native_str("|"))
+        r = unicode_csv_reader(obj, delimiter=native_str("|"))
         header = next(r)
         header[0] = header[0].lstrip("#")
         header = [_i.strip() for _i in header]
@@ -107,7 +124,7 @@ def read_FDSN_station_text_file(path_or_file_object):
     if (hasattr(path_or_file_object, "mode") and
             "b" in path_or_file_object.mode) or \
             isinstance(path_or_file_object, io.BytesIO):
-        buf = io.StringIO(path_or_file_object.read().decode())
+        buf = io.StringIO(path_or_file_object.read().decode("utf-8"))
         buf.seek(0, 0)
         path_or_file_object = buf
 
