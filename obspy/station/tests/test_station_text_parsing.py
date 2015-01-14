@@ -537,6 +537,96 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv, expected_inv)
         self.assertEqual(inv_obs, expected_inv)
 
+    def test_reading_channel_without_response_info(self):
+        """
+        Test reading a file at the channel level with missing scale,
+        scale frequency and units. This is common for the log channel of
+        instruments.
+        """
+        # Manually create an expected Inventory object.
+        expected_inv = obspy.station.Inventory(source=None, networks=[
+            obspy.station.Network(
+                code="6E", stations=[
+                    obspy.station.Station(
+                        code="SH01",
+                        latitude=37.7457,
+                        longitude=-88.1368,
+                        elevation=0.0,
+                        channels=[
+                            obspy.station.Channel(
+                                code="LOG", location_code="",
+                                latitude=37.7457,
+                                longitude=-88.1368,
+                                elevation=0.0,
+                                depth=0.0,
+                                azimuth=0.0,
+                                dip=0.0,
+                                sample_rate=0.0,
+                                sensor=obspy.station.Equipment(
+                                    type="Reftek 130 Datalogger"),
+                                start_date=obspy.UTCDateTime(
+                                    "2013-11-23T00:00:00"),
+                                end_date=obspy.UTCDateTime(
+                                    "2016-12-31T23:59:59"))
+                        ]),
+                ])
+        ])
+
+        # Read from a filename.
+        filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
+        inv = fdsn_text.read_FDSN_station_text_file(filename)
+        inv_obs = obspy.read_inventory(filename)
+
+        # Copy creation date as it will be slightly different otherwise.
+        inv.created = expected_inv.created
+        inv_obs.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+        self.assertEqual(inv_obs, expected_inv)
+
+        # Read from open file in text mode.
+        with open(filename, "rt") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            fh.seek(0, 0)
+            inv_obs = obspy.read_inventory(fh)
+        inv.created = expected_inv.created
+        inv_obs.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+        self.assertEqual(inv_obs, expected_inv)
+
+        # Read from open file in binary mode.
+        with open(filename, "rb") as fh:
+            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            fh.seek(0, 0)
+            inv_obs = obspy.read_inventory(fh)
+        inv.created = expected_inv.created
+        inv_obs.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+        self.assertEqual(inv_obs, expected_inv)
+
+        # Read from StringIO.
+        with open(filename, "rt") as fh:
+            with io.StringIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                buf.seek(0, 0)
+                inv_obs = obspy.read_inventory(buf)
+        inv.created = expected_inv.created
+        inv_obs.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+        self.assertEqual(inv_obs, expected_inv)
+
+        # Read from BytesIO.
+        with open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                buf.seek(0, 0)
+                inv_obs = obspy.read_inventory(buf)
+        inv.created = expected_inv.created
+        inv_obs.created = expected_inv.created
+        self.assertEqual(inv, expected_inv)
+        self.assertEqual(inv_obs, expected_inv)
+
 
 def suite():
     return unittest.makeSuite(StationTextTestCase, "test")
