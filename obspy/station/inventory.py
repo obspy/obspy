@@ -12,6 +12,7 @@ Provides the Inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 from pkg_resources import load_entry_point
 import obspy
@@ -51,6 +52,7 @@ def read_inventory(path_or_file_object=None, format=None):
     return _readFromPlugin("inventory", path_or_file_object, format=format)[0]
 
 
+@python_2_unicode_compatible
 class Inventory(ComparingObject):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.

@@ -12,6 +12,7 @@ Provides the Network class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 from obspy.station.util import BaseNode
 from obspy.station.station import Station
@@ -21,6 +22,7 @@ import fnmatch
 import copy
 
 
+@python_2_unicode_compatible
 class Network(BaseNode):
     """
     From the StationXML definition:
