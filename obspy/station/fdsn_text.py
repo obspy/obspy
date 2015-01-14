@@ -23,6 +23,14 @@ import io
 import obspy
 import obspy.station
 
+
+def float_or_none(value):
+    if not value:
+        return None
+    else:
+        return float(value)
+
+
 # The header fields of the text files at the different request levels.
 network_components = ("network", "description", "starttime", "endtime",
                       "totalstations")
@@ -36,8 +44,8 @@ channel_components = ("network", "station", "location", "channel", "latitude",
                       "instrument", "scale", "scalefreq", "scaleunits",
                       "samplerate", "starttime", "endtime")
 channel_types = (str, str, str, str, float, float, float, float, float,
-                 float, str, float, float, str, float, obspy.UTCDateTime,
-                 obspy.UTCDateTime)
+                 float, str, float_or_none, float_or_none, str, float,
+                 obspy.UTCDateTime, obspy.UTCDateTime)
 all_components = (network_components, station_components, channel_components)
 
 
@@ -198,10 +206,13 @@ def read_FDSN_station_text_file(path_or_file_object):
                 stations[(net, sta)] = station
 
             sensor = obspy.station.Equipment(type=inst)
-            resp = obspy.station.Response(
-                instrument_sensitivity=obspy.station.InstrumentSensitivity(
-                    value=scale, frequency=scale_freq,
-                    input_units=scale_units, output_units=None))
+            if scale is not None and scale_freq is not None:
+                resp = obspy.station.Response(
+                    instrument_sensitivity=obspy.station.InstrumentSensitivity(
+                        value=scale, frequency=scale_freq,
+                        input_units=scale_units, output_units=None))
+            else:
+                resp = None
             channel = obspy.station.Channel(
                 code=chan, location_code=loc, latitude=lat, longitude=lng,
                 elevation=ele, depth=dep, azimuth=azi, dip=dip, sensor=sensor,

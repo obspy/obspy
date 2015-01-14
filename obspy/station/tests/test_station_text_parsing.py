@@ -551,13 +551,13 @@ class StationTextTestCase(unittest.TestCase):
                         code="SH01",
                         latitude=37.7457,
                         longitude=-88.1368,
-                        elevation=0.0,
+                        elevation=126.0,
                         channels=[
                             obspy.station.Channel(
                                 code="LOG", location_code="",
                                 latitude=37.7457,
                                 longitude=-88.1368,
-                                elevation=0.0,
+                                elevation=126.0,
                                 depth=0.0,
                                 azimuth=0.0,
                                 dip=0.0,
@@ -573,7 +573,7 @@ class StationTextTestCase(unittest.TestCase):
         ])
 
         # Read from a filename.
-        filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
+        filename = os.path.join(self.data_dir, "log_channel_fdsn.txt")
         inv = fdsn_text.read_FDSN_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
