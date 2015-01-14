@@ -1,0 +1,2 @@
+#Network | Station | Latitude | Longitude | Elevation | SiteName | StartTime | EndTime
+PR|CTN1|18.43718|-67.1303|10.0|CATA¿O DEFENSA CIVIL|2004-01-27T00:00:00|2599-12-31T23:59:59
