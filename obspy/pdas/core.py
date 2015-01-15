@@ -8,6 +8,10 @@ PDAS bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
 import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
 
