@@ -1,0 +1,56 @@
+NonLinLoc Phase file format (ASCII, NLLoc obsFileType = NLLOC_OBS)
+
+The NonLinLoc Phase file format is intended to give a comprehensive phase time-pick description that is easy to write and read.
+
+For each event to be located, this file contains one set of records. In each set there is one "arrival-time" record for each phase at each seismic station. The final record of each set is a blank. As many events as desired can be included in one file.
+
+Each record has a fixed format, with a blank space between fields. A field should never be left blank - use a "?" for unused characther fields and a zero or invalid numeric value for numeric fields.
+
+The NonLinLoc Phase file record is identical to the first part of each phase record in the NLLoc Hypocenter-Phase file output by the program NLLoc. Thus the phase list output by NLLoc can be used without modification as time pick observations for other runs of NLLoc.
+
+NonLinLoc phase record:
+Fields:
+Station name (char*6)
+    station name or code 
+Instrument (char*4)
+    instument identification for the trace for which the time pick corresponds (i.e. SP, BRB, VBB) 
+Component (char*4)
+    component identification for the trace for which the time pick corresponds (i.e. Z, N, E, H) 
+P phase onset (char*1)
+    description of P phase arrival onset; i, e 
+Phase descriptor (char*6)
+    Phase identification (i.e. P, S, PmP) 
+First Motion (char*1)
+    first motion direction of P arrival; c, C, u, U = compression; d, D = dilatation; +, -, Z, N; . or ? = not readable. 
+Date (yyyymmdd) (int*6)
+    year (with century), month, day 
+Hour/minute (hhmm) (int*4)
+    Hour, min 
+Seconds (float*7.4)
+    seconds of phase arrival 
+Err (char*3)
+    Error/uncertainty type; GAU 
+ErrMag (expFloat*9.2)
+    Error/uncertainty magnitude in seconds 
+Coda duration (expFloat*9.2)
+    coda duration reading 
+Amplitude (expFloat*9.2)
+    Maxumim peak-to-peak amplitude 
+Period (expFloat*9.2)
+    Period of amplitude reading 
+PriorWt (expFloat*9.2)
+
+A-priori phase weight Currently can be 0 (do not use reading) or 1 (use reading). (NLL_FORMAT_VER_2 - WARNING: under development)
+
+Example:
+
+GRX    ?    ?    ? P      U 19940217 2216   44.9200 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+GRX    ?    ?    ? S      ? 19940217 2216   48.6900 GAU  4.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+CAD    ?    ?    ? P      D 19940217 2216   46.3500 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+CAD    ?    ?    ? S      ? 19940217 2216   50.4000 GAU  4.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+BMT    ?    ?    ? P      U 19940217 2216   47.3500 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+BMT    ?    ?    ? S      ? 19940217 2216   52.8700 GAU  4.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+ESC    ?    ?    ? P      D 19940217 2216   47.4700 GAU  2.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+ESC    ?    ?    ? S      ? 19940217 2216   52.8100 GAU  4.00e-02 -1.00e+00 -1.00e+00 -1.00e+00
+BST    ?    ?    ? P      D 19940217 2216   48.0000 GAU  1.00e+05 -1.00e+00 -1.00e+00 -1.00e+00
+BST    ?    ?    ? S      ? 19940217 2216   54.6600 GAU  4.00e-02 -1.00e+00 -1.00e+00 -1.00e+00

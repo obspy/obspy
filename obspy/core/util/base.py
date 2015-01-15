@@ -30,7 +30,7 @@ import tempfile
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk', 'ah', 'zmap']
+                   'ndk', 'ah', 'zmap', 'nlloc']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -40,7 +40,7 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
                             'AH']
-EVENT_PREFERRED_ORDER = ['QUAKEML']
+EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -401,13 +401,14 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
-    ======= ================= =======================================
-        Format  Required Module   _`Linked Function Call`
-        ======= ================= =======================================
-        JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
-        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
-        ZMAP    :mod:`obspy.zmap` :func:`obspy.zmap.core.writeZmap`
-        ======= ================= =======================================
+    ========= ================== ========================================
+        Format    Required Module    _`Linked Function Call`
+        ========= ================== ========================================
+        JSON      :mod:`obspy.core`  :func:`obspy.core.json.core.writeJSON`
+        NLLOC_OBS :mod:`obspy.nlloc` :func:`obspy.nlloc.core.write_nlloc_obs`
+        QUAKEML   :mod:`obspy.core`  :func:`obspy.core.quakeml.writeQuakeML`
+        ZMAP      :mod:`obspy.zmap`  :func:`obspy.zmap.core.writeZmap`
+        ========= ================== ========================================
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").

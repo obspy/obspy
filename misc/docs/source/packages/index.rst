@@ -45,6 +45,7 @@ The functionality is provided through the following packages:
 
    obspy.core.quakeml
    obspy.ndk
+   obspy.nlloc
    obspy.pde
    obspy.zmap
 
