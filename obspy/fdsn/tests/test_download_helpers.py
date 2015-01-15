@@ -22,6 +22,8 @@ from obspy.fdsn.download_helpers import domain, Restrictions
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     get_stationxml_filename, get_mseed_filename, \
     get_stationxml_contents
+from obspy.fdsn.download_helpers.download_status import Channel, \
+    TimeInterval, STATUS
 
 
 class DomainTestCase(unittest.TestCase):
@@ -593,10 +595,82 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             "])"))
 
 
+class TimeIntervalTestCase(unittest.TestCase):
+    """
+    Test cases for the TimeInterval class.
+    """
+    def test_repr(self):
+        st = obspy.UTCDateTime(2012, 1, 1)
+        et = obspy.UTCDateTime(2012, 1, 2)
+        ti = TimeInterval(st, et)
+        self.assertEqual(
+            repr(ti),
+            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 1, 2, 0, 0), filename=None, status='none')")
+
+        st = obspy.UTCDateTime(2012, 1, 1)
+        et = obspy.UTCDateTime(2012, 1, 2)
+        ti = TimeInterval(st, et, filename="dummy.txt")
+        self.assertEqual(
+            repr(ti),
+            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 1, 2, 0, 0), filename='dummy.txt', "
+            "status='none')")
+
+        st = obspy.UTCDateTime(2012, 1, 1)
+        et = obspy.UTCDateTime(2012, 1, 2)
+        ti = TimeInterval(st, et, filename="dummy.txt", status=STATUS.IGNORE)
+        self.assertEqual(
+            repr(ti),
+            "TimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
+            "end=UTCDateTime(2012, 1, 2, 0, 0), filename='dummy.txt', "
+            "status='ignore')")
+
+
+class StationTestCase(unittest.TestCase):
+    """
+    Test cases for the Station class.
+    """
+    def test_temporal_bounds(self):
+        """
+        Tests the temporal bounds retrieval.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c = Channel(location="", channel="BHZ", intervals=time_intervals)
+        self.assertEqual(c.temporal_bounds, (st, st + 10 * 60))
+
+    def test_wants_station_information(self):
+        """
+        Tests the wants station information property.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c = Channel(location="", channel="BHZ", intervals=time_intervals)
+
+        # Right now all intervals have status NONE.
+        self.assertFalse(c.needs_station_file)
+
+        # As soon as at least one interval has status DOWNLOADED or EXISTS,
+        # a station file is required.
+        c.intervals[1].status = STATUS.EXISTS
+        self.assertTrue(c.needs_station_file)
+        c.intervals[1].status = STATUS.DOWNLOADED
+        self.assertTrue(c.needs_station_file)
+
+        # Any other status does not trigger the need to download.
+        c.intervals[1].status = STATUS.DOWNLOAD_REJECTED
+        self.assertFalse(c.needs_station_file)
+
+
 def suite():
     testsuite = unittest.TestSuite()
     testsuite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(DownloadHelpersUtilTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(TimeIntervalTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(StationTestCase, 'test'))
     return testsuite
 
 

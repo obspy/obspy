@@ -62,6 +62,9 @@ class Station(object):
     :type channels: list of :class:`~.Channel` objects
     :param stationxml_filename: The filename of the StationXML file.
     :type stationxml_filename: str
+    :param stationxml_status: The current status of the station.
+    :type stationxml_filename:
+        :class:`~obspy.fdsn.download_helpers.download_status.STATUS`
     """
     __slots__ = ["network", "station", "latitude", "longitude", "channels",
                  "_stationxml_filename", "want_station_information",
@@ -197,7 +200,7 @@ class Station(object):
         # and endtime.
         self.want_station_information = {}
         for channel in self.channels:
-            if channel.wants_station_information is False:
+            if channel.needs_station_file is False:
                 continue
             self.want_station_information[
                 (channel.location, channel.channel)] = channel.temporal_bounds
@@ -253,6 +256,11 @@ class Station(object):
                 self.stationxml_status = STATUS.NEEDS_DOWNLOADING
         # The other possibility is that a dictionary is returned.
         else:
+            # The types are already checked by the get_stationxml_filename()
+            # function.
+            missing_channels = storage["missing_channels"]
+            available_channels = storage["available_channels"]
+            filename = storage["filename"]
             raise NotImplementedError
 
     def prepare_mseed_download(self, mseed_storage):
@@ -320,7 +328,7 @@ class Channel(object):
         self.intervals = intervals
 
     @property
-    def wants_station_information(self):
+    def needs_station_file(self):
         """
         Determine if the channel requires any station information.
 
@@ -341,18 +349,6 @@ class Channel(object):
         """
         return (min([_i.start for _i in self.intervals]),
                 max([_i.end for _i in self.intervals]))
-
-    @property
-    def intervals_need_station_file(self):
-        """
-        Returns True if at least one interval has either status DOWNLOADED
-        or EXISTS.
-        """
-        valid_status = [STATUS.DOWNLOADED, STATUS.EXISTS]
-        for interval in self.intervals:
-            if interval.status in valid_status:
-                return True
-        return False
 
     def __str__(self):
         return "Channel '{location}.{channel}:'\n\t{intervals}".format(
