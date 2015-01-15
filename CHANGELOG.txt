@@ -48,14 +48,14 @@
      data please use the obspy.fdsn client (use
      `Client(base_url='ORFEUS', ...)`) and for travel times please use
      obspy.taup.
- - obspy.pdas:
-   * read support for PDAS waveform files
- - obspy.seedlink.easyseedlink:
-   * New submodule providing an easier way to create SeedLink clients
  - obspy.nlloc:
    * new plugins to write NonLinLoc Phase observations files from
      Catalog/Event objects and to read NonLinLoc Hypocenter-Phase file into
      Catalog/Event objects. (see #900)
+ - obspy.pdas:
+   * read support for PDAS waveform files
+ - obspy.seedlink.easyseedlink:
+   * New submodule providing an easier way to create SeedLink clients
  - obspy.seishub:
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
      from a seishub server of version 1.4.0 or higher.
@@ -65,6 +65,8 @@
      `weighted average slopes` method from Wiggins 1976.
    * PPSD has new methods to extract mean and mode of the histogram by
      frequency (see #804)
+   * PPSD: water level in instrument correction can now be specified by user
+     on PPSD initialization
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)

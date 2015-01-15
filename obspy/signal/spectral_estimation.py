@@ -296,7 +296,7 @@ class PPSD():
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5):
+                 ppsd_length=3600., overlap=0.5, water_level=600.0):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -354,6 +354,8 @@ class PPSD():
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
+        :type water_level: float, optional
+        :param water_level: Water level used in instrument correction.
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
@@ -375,6 +377,7 @@ class PPSD():
         self.is_rotational_data = is_rotational_data
         self.ppsd_length = ppsd_length
         self.overlap = overlap
+        self.water_level = water_level
         # trace length for one segment
         self.len = int(self.sampling_rate * ppsd_length)
         # set paz either from kwarg or try to get it from stats
@@ -638,7 +641,8 @@ class PPSD():
             tr.data /= paz['sensitivity']
         else:
             tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                        paz_simulate=None, simulate_sensitivity=False)
+                        paz_simulate=None, simulate_sensitivity=False,
+                        water_level=self.water_level)
 
         # go to acceleration, do nothing for rotational data:
         if self.is_rotational_data:
