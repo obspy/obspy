@@ -48,6 +48,8 @@
      data please use the obspy.fdsn client (use
      `Client(base_url='ORFEUS', ...)`) and for travel times please use
      obspy.taup.
+ - obspy.pdas:
+   * read support for PDAS waveform files
  - obspy.seedlink.easyseedlink:
    * New submodule providing an easier way to create SeedLink clients
  - obspy.nlloc:

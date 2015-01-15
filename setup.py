@@ -88,13 +88,13 @@ KEYWORDS = [
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
     'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
-    'observatory', 'ORFEUS', 'picker', 'processing', 'PQLX', 'Q', 'real time',
-    'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED', 'SeedLink',
-    'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
-    'seismogram', 'seismograms', 'signal', 'slink', 'spectrogram',
-    'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
-    'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
-    'XML-SEED', 'XSEED']
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
@@ -144,6 +144,7 @@ ENTRY_POINTS = {
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
+        'PDAS = obspy.pdas.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
         'Y = obspy.y.core',
@@ -192,6 +193,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.mseed.core:isMSEED',
         'readFormat = obspy.mseed.core:readMSEED',
         'writeFormat = obspy.mseed.core:writeMSEED',
+    ],
+    'obspy.plugin.waveform.PDAS': [
+        'isFormat = obspy.pdas.core:isPDAS',
+        'readFormat = obspy.pdas.core:readPDAS',
     ],
     'obspy.plugin.waveform.SAC': [
         'isFormat = obspy.sac.core:isSAC',
