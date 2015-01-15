@@ -13,11 +13,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import mock
-import obspy
 import os
 import unittest
 
+import obspy
+from obspy.core.compatibility import mock
 from obspy.fdsn.download_helpers import domain, Restrictions
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     get_stationxml_filename, get_mseed_filename, \
@@ -325,76 +325,83 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Tests the get_stationxml_filename() function.
         """
-        c1 = Channel("", "BHE")
-        c2 = Channel("10", "SHE")
+        c1 = ("", "BHE")
+        c2 = ("10", "SHE")
+        starttime = obspy.UTCDateTime(2012, 1, 1)
+        endtime = obspy.UTCDateTime(2012, 1, 2)
         channels = [c1, c2]
 
         # A normal string is considered a path.
         self.assertEqual(get_stationxml_filename(
-            "FOLDER", network="BW", station="FURT", channels=channels),
+            "FOLDER", network="BW", station="FURT", channels=channels,
+            starttime=starttime, endtime=endtime),
             os.path.join("FOLDER", "BW.FURT.xml"))
         self.assertEqual(get_stationxml_filename(
-            "stations", network="BW", station="FURT", channels=channels),
+            "stations", network="BW", station="FURT", channels=channels,
+            starttime=starttime, endtime=endtime),
             os.path.join("stations", "BW.FURT.xml"))
 
         # Passing a format string causes it to be used.
         self.assertEqual(get_stationxml_filename(
             "{network}_{station}.xml", network="BW", station="FURT",
-            channels=channels), "BW_FURT.xml")
+            channels=channels, starttime=starttime, endtime=endtime),
+            "BW_FURT.xml")
         self.assertEqual(get_stationxml_filename(
             "TEMP/{network}/{station}.xml", network="BW", station="FURT",
-            channels=channels), "TEMP/BW/FURT.xml")
+            channels=channels, starttime=starttime, endtime=endtime),
+            "TEMP/BW/FURT.xml")
 
         # A passed function will be executed. A string should just be returned.
-        def get_name(network, station, channels):
+        def get_name(network, station, channels, starttime, endtime):
             return "network" + "__" + station
         self.assertEqual(get_stationxml_filename(
-            get_name, network="BW", station="FURT", channels=channels),
-            "network__FURT")
+            get_name, network="BW", station="FURT", channels=channels,
+            starttime=starttime, endtime=endtime), "network__FURT")
 
         # A dictionary with certain keys are also acceptable.
-        def get_name(network, station, channels):
+        def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": [c2],
                     "filename": "test.xml"}
         self.assertEqual(get_stationxml_filename(
-            get_name, network="BW", station="FURT", channels=channels),
+            get_name, network="BW", station="FURT", channels=channels,
+            starttime=starttime, endtime=endtime),
             {"missing_channels": [c1], "available_channels": [c2],
              "filename": "test.xml"})
 
         # Missing keys raise.
-        def get_name(network, station, channels):
+        def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": [c2]}
         self.assertRaises(ValueError, get_stationxml_filename, get_name,
-                          "BW", "FURT", channels)
+                          "BW", "FURT", channels, starttime, endtime)
 
         # Wrong value types should also raise.
-        def get_name(network, station, channels):
+        def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": [c2],
                     "filename": True}
         self.assertRaises(ValueError, get_stationxml_filename, get_name,
-                          "BW", "FURT", channels)
+                          "BW", "FURT", channels, starttime, endtime)
 
-        def get_name(network, station, channels):
+        def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": True,
                     "available_channels": [c2],
                     "filename": "test.xml"}
         self.assertRaises(ValueError, get_stationxml_filename, get_name,
-                          "BW", "FURT", channels)
+                          "BW", "FURT", channels, starttime, endtime)
 
-        def get_name(network, station, channels):
+        def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": True,
                     "filename": "test.xml"}
         self.assertRaises(ValueError, get_stationxml_filename, get_name,
-                          "BW", "FURT", channels)
+                          "BW", "FURT", channels, starttime, endtime)
 
         # It will raise a type error, if the function does not return the
         # proper type.
         self.assertRaises(TypeError, get_stationxml_filename, lambda x: 1,
-                          "BW", "FURT")
+                          "BW", "FURT", starttime, endtime)
 
     def test_mseed_filename_helper(self):
         """

@@ -72,9 +72,13 @@ def download_stationxml(client, client_name, bulk, filename, logger):
 
 def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     """
-    Downloads the channels of a list of stations in bulk, saves it in the
-    temp folder and splits it at the record level to obtain the final
+    Downloads the channels of a list of stations in bulk, saves it to a
+    temporary folder and splits it at the record level to obtain the final
     MiniSEED files.
+
+    The big advantage of this approach is that it does not mess with the
+    MiniSEED files at all. Each record, including all blockettes, will end
+    up in the final files as they are served from the data centers.
 
     :param client: An active client instance.
     :param client_name: The name of the client instance used for logging
@@ -84,7 +88,8 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
         starttime, endtime, and desired filename.
     :param logger: An active logger instance.
     """
-    # Create a dictionary of channel ids, each containing the
+    # Create a dictionary of channel ids, each containing a list of
+    # intervals, each of which will end up in a separate file.
     filenames = collections.defaultdict(list)
     for chunk in chunks:
         filenames[tuple(chunk[:4])].append({
@@ -97,7 +102,17 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     sequence_number = [0]
 
     def get_filename(starttime, endtime, c):
-        # Make two passes. First find all candidates.
+        """
+        Helper function finding the corresponding filename in all filenames.
+
+        :param starttime: The start time of the record.
+        :param endtime: The end time of the record.
+        :param c: A list of candidates.
+        """
+        # Make two passes. First find all candidates. This assumes that a
+        # record cannot be larger than a single desired time interval. This
+        # is probably always given except if somebody wants to download
+        # files split into 1 second intervals...
         candidates = [
             _i for _i in c if
             (_i["starttime"] <= starttime <= _i["endtime"]) or
@@ -112,28 +127,34 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
         if len(candidates) == 2:
             candidates.sort(key=lambda x: x["starttime"])
             first, second = candidates
+
             # Make sure the assumptions about the type of overlap are correct.
             if starttime > first["endtime"] or endtime < second["starttime"]:
                 raise NotImplementedError
+
             # It must either be the last record of the first, or the first
             # record of the second candidate.
             if first["sequence_number"] is None and \
                     second["sequence_number"] is None:
                 candidates = [second]
+
             # Unlikely to happen. Only if nothing but the very last record
             # of the first interval was available and the second interval
             # was first in the file.
             elif first["sequence_number"] is None:
                 candidates = [first]
-            # This is fairly likely and requires and additional check with
+
+            # This is fairly likely and requires an additional check with
             # the latest time in the first interval.
             elif second["sequence_number"] is None:
                 if starttime <= first["current_latest_endtime"]:
-                    pass
+                    candidates = [second]
                 else:
-                    pass
+                    candidates = [first]
+
             # Neither are None. Just use the one with the higher sequence
-            # number.
+            # number. This probably does not happen. If it happens something
+            # else is a bit strange.
             else:
                 if first["sequence_number"] > second["sequence_number"]:
                     candidates = [first]
@@ -144,14 +165,17 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
 
         # Finally found the correct chunk
         ret_val = candidates[0]
+
         # Increment sequence number and make sure the current chunk is aware
         # of it.
         sequence_number[0] += 1
         ret_val["sequence_number"] = sequence_number[0]
-        # Also write the time of the last chunk.
+
+        # Also write the time of the last chunk to it if necessary.
         ce = ret_val["current_latest_endtime"]
         if not ce or endtime > ce:
             ret_val["current_latest_endtime"] = endtime
+
         return ret_val["filename"]
 
     # Only the filename is not needed for the actual data request.
@@ -161,19 +185,22 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     # Merge adjacent bulk-request for continuous downloads. This is a bit
     # redundant after splitting it up before, but eases the logic in the
     # other parts and puts less strain on the data centers' FDSN
-    # implementation.
+    # implementation. It furthermore avoid the repeated download of records
+    # that are part of two neighbouring time intervals.
     bulk_channels = collections.defaultdict(list)
     for b in bulk:
-        bulk_channels[(b[0], b[1])].append(b)
+        bulk_channels[(b[0], b[1], b[2], b[3])].append(b)
+
     # Merge them.
     for key, value in bulk_channels.items():
-        # Sort.
+        # Sort based on starttime.
         value = sorted(value, key=lambda x: x[4])
         # Merge adjacent.
         cur_bulk = value[0:1]
         for b in value[1:]:
-            # Random threshold of 5 seconds.
-            if b[4] <= cur_bulk[-1][5] + 5:
+            # Random threshold of 2 seconds. Reasonable for most real world
+            # cases.
+            if b[4] <= cur_bulk[-1][5] + 2:
                 cur_bulk[-1][5] = b[5]
                 continue
             cur_bulk.append(b)
@@ -381,17 +408,33 @@ def get_stationxml_contents(filename):
 def get_stationxml_filename(str_or_fct, network, station, channels,
                             starttime, endtime):
     """
-    Helper function getting the filename of a stationxml file.
+    Helper function getting the filename of a StationXML file.
 
-    The rule are simple, if it is a function, network, station, starttime,
-    and endtime are passed as arguments and the resulting string is
-    returned. Furthermore a list of channels is passed.
+    :param str_or_fct: The string or function to be evaluated.
+    :type str_or_fct: function or str
+    :param network: The network code.
+    :type network: str
+    :param station: The station code.
+    :type station: str
+    :param channels: The channels. Each channel is a tuple of two strings:
+        location code and channel code.
+    :type channels: list of tuples
+    :param starttime: The start time.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: The end time.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+
+    The rules are simple, if it is a function, network, station, channels,
+    starttime, and endtime are passed as arguments.
 
     If it is a string, and it contains ``"{network}"``, and ``"{station}"``
     formatting specifiers, ``str.format()`` is called.
 
     Otherwise it is considered to be a folder name and the resulting
     filename will be ``"FOLDER_NAME/NET.STA.xml"``
+
+    This function will either return a string or a dictionary with three
+    keys: ``"available_channels"``, ``"missing_channels"``, and ``"filename"``.
     """
     # Call if possible.
     if callable(str_or_fct):
@@ -433,7 +476,7 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     """
     Helper function getting the filename of a MiniSEED file.
 
-    The rule are simple, if it is a function, network, station, location,
+    The rules are simple, if it is a function, network, station, location,
     channel, starttime, and endtime are passed as arguments and the resulting
     string is returned. If the return values is ``True``, the particular
     time interval will be ignored.

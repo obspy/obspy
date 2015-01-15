@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Data Acquisition Helpers for FDSN web services
-==============================================
+Data Acquisition Helpers for FDSN compliant web services
+========================================================
 
 This package contains functionality to query and integrate data from any
 number of FDSN web service providers. It can be used by itself or as a
 library integrated into a bigger project.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -28,13 +28,14 @@ files is lost in the process.
 Usage
 -----
 
-Using the download helpers requires three distinct steps:
+Using the download helpers requires the definition of three separate things,
+all of which are detailed in the following paragraphs.
 
-1. **What to download:** Limiting the data to be downloaded geographically,
-   temporal, and with some additional constraints.
-2. **Where to store:** Defining where the final MiniSEED and StationXML files
+1. **Data Selection:** The data to be downloaded can be defined by enforcing
+   geographical or temporal constraints and a couple of other options.
+2. **Storage Options:** Choosing where the final MiniSEED and StationXML files
    should be stored.
-3. **From where to get:** Choose from which provider(s) to download and then
+3. **Start the Download:** Choose from which provider(s) to download and then
    launch the downloading process.
 
 
@@ -42,17 +43,18 @@ Step 1: Data Selection
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Data set selection serves the purpose to limit the data to be downloaded to
-data useful for the purpose at hand. It handled by two objects: subclasses of
-the  :class:`~obspy.fdsn.download_helpers.domain.Domain` object, and
-the :class:`~obspy.fdsn.download_helpers.download_helpers.Restrictions` class.
+data useful for the purpose at hand. It is handled by two objects:
+subclasses of the  :class:`~obspy.fdsn.download_helpers.domain.Domain`
+object and the
+:class:`~obspy.fdsn.download_helpers.restrictions.Restrictions` class.
 
-The :class:`~obspy.fdsn.download_helpers.domain` module currently defines
-three different domains used to limit the geographical extent of the queried
+The :class:`~obspy.fdsn.download_helpers.domain` module currently defines three
+different domain types used to limit the geographical extent of the queried
 data: :class:`~obspy.fdsn.download_helpers.domain.RectangularDomain`,
 :class:`~obspy.fdsn.download_helpers.domain.CircularDomain`, and
 :class:`~obspy.fdsn.download_helpers.domain.GlobalDomain`. Subclassing
-:class:`~obspy.fdsn.download_helpers.domain.Domain` enables the construction
-of arbitrary complex domains. Please see the
+:class:`~obspy.fdsn.download_helpers.domain.Domain` enables the construction of
+arbitrary complex domains. Please see the
 :class:`~obspy.fdsn.download_helpers.domain` module for more details.
 Instances of these classes will later be passed to the function sparking the
 downloading process. A rectangular domain for example is defined like this:
@@ -63,7 +65,7 @@ downloading process. A rectangular domain for example is defined like this:
 
 Additional restrictions like temporal bounds, SEED identifier wildcards,
 and other things are set with the help of
-the :class:`~obspy.fdsn.download_helpers.download_helpers.Restrictions` class.
+the :class:`~obspy.fdsn.download_helpers.restrictions.Restrictions` class.
 Please refer to its documentation for a more detailed explanation of the
 parameters.
 
@@ -97,7 +99,8 @@ Storing MiniSEED waveforms
 
 The MiniSEED storage rules are set by the ``mseed_storage`` argument of the
 :func:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper.download`
-method of the DownloadHelper class.
+method of the
+:class:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper` class.
 
 **Option 1: Folder Name**
 
@@ -105,7 +108,7 @@ In the simplest case it is just a folder name:
 
 >>> mseed_storage = "waveforms"
 
-will cause all MiniSEED files to be stored as
+This will cause all MiniSEED files to be stored as
 
 ``waveforms/NETWORK.STATION.LOCATION.CHANNEL__STARTTIME__ENDTIME.mseed``.
 
@@ -119,8 +122,8 @@ which is rather general but also quite long.
 
 For more control use the second possibility and provide a string containing
 ``{network}``, ``{station}``, ``{location}``, ``{channel}``, ``{starttime}``,
-and ``{endtime}`` format specifiers. The values will be interpolated to acquire
-the final filename. The start and end times will be formatted with
+and ``{endtime}`` format specifiers. These values will be interpolated to
+acquire the final filename. The start and end times will be formatted with
 ``strftime()`` with the specifier ``'%Y-%m-%dT%H-%M-%SZ'`` in an effort to
 avoid colons which are troublesome in filenames on many systems.
 
@@ -131,17 +134,19 @@ results in
 
 ``some_folder/BW/FURT/.BHZ.2014-10-27T16-37-23Z.2014-10-27T16-37-33Z.mseed``.
 
+The download helpers will create any non-existing folders along the path.
 
 **Option 3: Custom Function**
 
 The most complex but also most powerful possibility is to use a function which
 will be evaluated to determine the filename. **If the function returns**
-``True`` **, the MiniSEED file is assumed to already be available and will
-not be downloaded again; keep in mind that in that case no station data will
-be downloaded for that channel.** If it returns a string, the MiniSEED file
-will be saved to that path. Utilize closures to use any other parameters in the
+``True`` **, the MiniSEED file is assumed to already be available and will not
+be downloaded again; keep in mind that in that case no station data will be
+downloaded for that channel.** If it returns a string, the MiniSEED file will
+be saved to that path. Utilize closures to use any other parameters in the
 function. This hypothetical function checks if the file is already in a
-database and otherwise returns a string.
+database and otherwise returns a string which will be interpreted as a
+filename.
 
 >>> def get_mseed_storage(network, station, location, channel, starttime,
 ...                       endtime):
@@ -149,6 +154,7 @@ database and otherwise returns a string.
 ...     # will be downloaded.
 ...     if is_in_db(network, station, location, channel, starttime, endtime):
 ...         return True
+...     # If a string is returned the file will be saved in that location.
 ...     return os.path.join(ROOT, "%s.%s.%s.%s.mseed." % (network, station,
 ...                                                       location, channel))
 >>> mseed_storage = get_mseed_storage
@@ -166,9 +172,10 @@ Storing StationXML files
 The same logic applies to the StationXML files. This time the rules are set by
 the ``stationxml_storage`` argument of the
 :func:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper.download`
-method of the DownloadHelper class. StationXML files will be downloaded on a
-per-station basis thus all channels and locations from one station will end up
-in the same StationXML file.
+method of the
+:class:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper` class.
+StationXML files will be downloaded on a per-station basis thus all channels
+and locations from one station will end up in the same StationXML file.
 
 **Option 1: Folder Name**
 
@@ -190,10 +197,10 @@ to ``"some_folder/BW/FURT.xml"``.
 .. note::
 
     If the StationXML file already exists, it will be opened to see what is in
-    the file. in case it does not contain all necessary channels, it will be
-    deleted and only those channels needed in the current run will be
-    downloaded again. Pass a custom function to the ``stationxml_path``
-    argument if you require different behavior.
+    the file. In case it does not contain all necessary channels, it will be
+    deleted and **only those channels needed in the current run will be
+    downloaded again**. Pass a custom function to the ``stationxml_path``
+    argument if you require different behavior as documented in thefollowing.
 
 **Option 3: Custom Function**
 
@@ -217,7 +224,7 @@ same as two first options for the ``stationxml_storage`` argument.
 The next example illustrates a complex use case where the availability of each
 channel's station information is queried in some database and only those
 channels that do not exist yet will be downloaded. Use closures to pass more
-arguments like the temporal constraints of the station information.
+arguments to the function.
 
 >>> def get_stationxml_storage(network, station, channels, starttime, endtime):
 ...     available_channels = []
@@ -235,13 +242,13 @@ arguments like the temporal constraints of the station information.
 ...         "filename": filename}
 >>> stationxml_storage = get_stationxml_storage
 
-Step 3: Starting the Download
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: Start the Download
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 >>> dlh = DownloadHelper()
 
 >>> dlh.download(domain, restrictions, chunk_size_in_mb=50,
-...              thread_per_client=5, mseed_storage=mseed_storage,
+...              thread_per_client=3, mseed_storage=mseed_storage,
 ...              stationxml_storage=stationxml_storage)
 
 

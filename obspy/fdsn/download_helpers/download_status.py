@@ -551,7 +551,7 @@ class ClientDownloadHelper(object):
             station.prepare_stationxml_download(
                 stationxml_storage=self.stationxml_storage)
 
-    def download_stationxml(self, threads=10):
+    def download_stationxml(self, threads=3):
         """
         Actually download the StationXML files.
 
@@ -643,7 +643,7 @@ class ClientDownloadHelper(object):
                              e_time - s_time,
                              (download_size / 1024.0) / (e_time - s_time)))
 
-    def download_mseed(self, chunk_size_in_mb=25, threads_per_client=5):
+    def download_mseed(self, chunk_size_in_mb=25, threads_per_client=3):
         """
         Actually download MiniSEED data.
 
@@ -977,11 +977,15 @@ class ClientDownloadHelper(object):
                 raise NotImplementedError
         elif "matchtimeseries" in self.client.services["station"]:
             arguments["matchtimeseries"] = True
+            if "format" in self.client.services["station"]:
+                arguments["format"] = "text"
             self.is_availability_reliable = True
         elif "includeavailability" in self.client.services["station"]:
             self.is_availability_reliable = True
             arguments["includeavailability"] = True
         else:
+            if "format" in self.client.services["station"]:
+                arguments["format"] = "text"
             self.is_availability_reliable = False
 
         if self.is_availability_reliable:

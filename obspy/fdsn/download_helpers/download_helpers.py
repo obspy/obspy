@@ -94,7 +94,7 @@ class DownloadHelper(object):
 
     def download(self, domain, restrictions, mseed_storage,
                  stationxml_storage, download_chunk_size_in_mb=20,
-                 threads_per_client=5, print_report=True):
+                 threads_per_client=3, print_report=True):
         """
         Launch the actual data download.
 
