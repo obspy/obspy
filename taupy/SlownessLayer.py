@@ -93,10 +93,10 @@ class SlownessLayer:
                               / (radiusOfEarth - self.botDepth)))
                 # This is a cludge but it's needed to mimic the Java behaviour.
                 try:
-                    A = np.divide(self.topP,
-                                  math.pow((radiusOfEarth - self.topDepth), B))
+                    denom = math.pow((radiusOfEarth - self.topDepth), B)
                 except OverflowError:
-                    A = 0
+                    denom = np.inf
+                A = np.divide(self.topP, denom)
                 with np.errstate(divide='ignore', invalid='ignore'):
                     tempDepth = radiusOfEarth - math.exp(
                         1.0 / B * math.log(np.divide(rayParam, A)))
