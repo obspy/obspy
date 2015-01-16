@@ -67,6 +67,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 import io
 import math
 import numpy as np
@@ -4087,7 +4088,7 @@ def main(argv=None):
         # if total decomposition:
         if kwargs_dict['decomp_out_complete']:
             if kwargs_dict['decomp_out_fancy']:
-                print(MT.get_full_decomposition())
+                print(MT.get_full_decomposition().encode("utf-8"))
                 return
             else:
                 return MT.get_decomposition(in_system=kwargs_dict['in_system'],
@@ -5187,7 +5188,19 @@ The 'source mechanism' as a comma-separated list of length:
 
     aa = _handle_input(M_raw, args)
     if aa is not None:
-        print(aa)
+        if isinstance(aa, (bytes, str)):
+            print(aa.encode("utf-8"))
+        elif isinstance(aa, collections.Iterable):
+            bb = []
+            for _i in aa:
+                try:
+                    _i = _i.encode("utf-8")
+                except:
+                    pass
+                bb.append(_i)
+            print(bb)
+        else:
+            print(aa)
 
 
 if __name__ == '__main__':

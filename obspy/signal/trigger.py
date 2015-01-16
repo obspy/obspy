@@ -221,7 +221,7 @@ def classicSTALTAPy(a, nsta, nlta):
     sta = np.cumsum(a ** 2)
 
     # Convert to float
-    sta = sta.astype(np.float, copy=False)
+    sta = np.require(sta, dtype=np.float)
 
     # Copy for LTA
     lta = sta.copy()
