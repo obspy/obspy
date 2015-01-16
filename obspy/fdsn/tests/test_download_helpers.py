@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import os
 import unittest
 
@@ -23,7 +24,7 @@ from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     get_stationxml_filename, get_mseed_filename, \
     get_stationxml_contents
 from obspy.fdsn.download_helpers.download_status import Channel, \
-    TimeInterval, STATUS
+    TimeInterval, Station, STATUS
 
 
 class DomainTestCase(unittest.TestCase):
@@ -627,9 +628,9 @@ class TimeIntervalTestCase(unittest.TestCase):
             "status='ignore')")
 
 
-class StationTestCase(unittest.TestCase):
+class ChannelTestCase(unittest.TestCase):
     """
-    Test cases for the Station class.
+    Test cases for the Channel class.
     """
     def test_temporal_bounds(self):
         """
@@ -665,11 +666,78 @@ class StationTestCase(unittest.TestCase):
         self.assertFalse(c.needs_station_file)
 
 
+class StationTestCase(unittest.TestCase):
+    """
+    Test cases for the Station class.
+    """
+    def test_has_existing_or_downloaded_time_intervals(self):
+        """
+        Tests for the property testing for existing or downloaded time
+        intervals.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.copy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.copy(time_intervals))
+        channels = [c1, c2]
+
+        # False per default.
+        station = Station(network="TA", station="A001", latitude=1,
+                          longitude=2, channels=channels)
+        self.assertFalse(station.has_existing_or_downloaded_time_intervals)
+
+        # Changing one interval to DOWNLOADED affects the whole station.
+        station.channels[0].intervals[0].status = STATUS.DOWNLOADED
+        self.assertTrue(station.has_existing_or_downloaded_time_intervals)
+
+        # Some with EXISTS.
+        station.channels[0].intervals[0].status = STATUS.EXISTS
+        self.assertTrue(station.has_existing_or_downloaded_time_intervals)
+
+        # Changing back.
+        station.channels[0].intervals[0].status = STATUS.NONE
+        self.assertFalse(station.has_existing_or_downloaded_time_intervals)
+
+    def test_has_existing_time_intervals(self):
+        """
+        Tests for the property testing for existing time intervals.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.copy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.copy(time_intervals))
+        channels = [c1, c2]
+
+        # False per default.
+        station = Station(network="TA", station="A001", latitude=1,
+                          longitude=2, channels=channels)
+        self.assertFalse(station.has_existing_time_intervals)
+
+        # Changing one interval to DOWNLOADED does not do anything
+        station.channels[0].intervals[0].status = STATUS.DOWNLOADED
+        self.assertFalse(station.has_existing_time_intervals)
+
+        # EXISTS on the other hand does.
+        station.channels[0].intervals[0].status = STATUS.EXISTS
+        self.assertTrue(station.has_existing_time_intervals)
+
+        # Changing back.
+        station.channels[0].intervals[0].status = STATUS.NONE
+        self.assertFalse(station.has_existing_time_intervals)
+
+
 def suite():
     testsuite = unittest.TestSuite()
     testsuite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(DownloadHelpersUtilTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(TimeIntervalTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(ChannelTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(StationTestCase, 'test'))
     return testsuite
 
