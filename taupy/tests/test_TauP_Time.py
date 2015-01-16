@@ -139,5 +139,14 @@ class TestTauPTime(unittest.TestCase):
         tt.run()
         self.assertEqual(tt.degrees, 116.77958601543997)
 
+    def test_MCM_model(self):
+        """
+        Test Taup_Time for the MCM_MPS05_XPYQ_C1D2L_S09-M2.tvel model.
+        """
+        mcm = TauPyModel("MCM_MPS05_XPYQ_C1D2L_S09-M2.tvel")
+        times = mcm.get_travel_times(300, 180)
+        compare_arrivals_with_taup_time_output(times,
+                                               "taup_time_MCM_testfile")
+
 if __name__ == '__main__':
     unittest.main(buffer=True)

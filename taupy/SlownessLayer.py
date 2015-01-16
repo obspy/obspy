@@ -91,10 +91,15 @@ class SlownessLayer:
                 B = np.divide(math.log(self.topP / self.botP),
                               math.log((radiusOfEarth - self.topDepth)
                               / (radiusOfEarth - self.botDepth)))
-                A = np.divide(self.topP,
-                              math.pow((radiusOfEarth - self.topDepth), B))
-                tempDepth = radiusOfEarth - math.exp(
-                    1.0 / B * math.log(rayParam / A))
+                # This is a cludge but it's needed to mimic the Java behaviour.
+                try:
+                    A = np.divide(self.topP,
+                                  math.pow((radiusOfEarth - self.topDepth), B))
+                except OverflowError:
+                    A = 0
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    tempDepth = radiusOfEarth - math.exp(
+                        1.0 / B * math.log(np.divide(rayParam, A)))
                 # or equivalent (maybe better stability?):
                 # tempDepth = radiusOfEarth - math.pow(rayParam/A, 1/B)
                 # Check if slightly outside layer due to rounding or

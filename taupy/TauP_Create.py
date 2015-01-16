@@ -36,7 +36,7 @@ class TauP_Create(object):
                                  'careful, this will overwrite any previous '
                                  'models of the same name (default: '
                                  './data/taup_models)')
-        parser.add_argument('-f', '--filename',
+        parser.add_argument('-mod', '--filename',
                             help='the velocity model name '
                                  '(default: iasp91.tvel)')
         args = parser.parse_args()

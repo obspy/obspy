@@ -91,6 +91,8 @@ class TauPyModel(object):
             self.velocity_model_path = default_velocity_model_path
 
         # Load or create a .taup model:
+        if model.endswith(".tvel"):
+            model = model[:-5]
         try:
             self.model = load(model, self.taup_model_path, verbose=verbose)
         except FileNotFoundError:

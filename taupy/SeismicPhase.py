@@ -683,7 +683,7 @@ class SeismicPhase(object):
             self.time[1] = self.time[0]
         self.minDistance = min(self.dist)
         self.maxDistance = max(self.dist)
-        # Now check to see if our ray parameter range inclides any ray
+        # Now check to see if our ray parameter range includes any ray
         # parameters that are associated with high slowness zones. If so,
         # then we will need to insert a "shadow zone" into our time and
         # distance arrays. It is represented by a repeated ray parameter.
@@ -716,7 +716,7 @@ class SeismicPhase(object):
                         newdist = deepcopy(self.dist[:hszIndex])
                         newtime = deepcopy(self.time[:hszIndex])
                         newrayParams = deepcopy(self.rayParams[:hszIndex])
-                        newrayParams.append = hszi.rayParam
+                        newrayParams.append(hszi.rayParam)
                         # Sum the branches with an appropriate multiplier.
                         newdist.append(0)
                         newtime.append(0)
@@ -731,16 +731,16 @@ class SeismicPhase(object):
                                 newtime[hszIndex] += tb * taub.time[
                                     self.maxRayParamIndex + hszIndex -
                                     indexOffset]
-                            if tbs != 0 and taub.topDepth < hszi.topDepth:
+                            if tbs != 0 and taubs.topDepth < hszi.topDepth:
                                 newdist[hszIndex] += tbs * taubs.dist[
                                     self.maxRayParamIndex + hszIndex -
                                     indexOffset]
                                 newtime[hszIndex] += tbs * taubs.time[
                                     self.maxRayParamIndex + hszIndex -
                                     indexOffset]
-                        newdist.append(self.dist[hszIndex:])
-                        newtime.append(self.time[hszIndex:])
-                        newrayParams.append(self.rayParams[hszIndex:])
+                        newdist += self.dist[hszIndex:]
+                        newtime += self.time[hszIndex:]
+                        newrayParams += self.rayParams[hszIndex:]
                         indexOffset += 1
                         self.dist = newdist
                         self.time = newtime
