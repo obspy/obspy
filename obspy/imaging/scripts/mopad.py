@@ -1930,7 +1930,8 @@ class BeachBall:
 
         try:
             plotfig.savefig(outfile_abs_name, dpi=self._plot_dpi,
-                            transparent=True, format=outfile_format)
+                            transparent=True, facecolor='k',
+                            format=outfile_format)
         except:
             print('ERROR!! -- Saving of plot not possible')
             return

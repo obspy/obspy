@@ -283,7 +283,8 @@ class WaveformPlotting(object):
                           'edgecolor': self.face_color}
         else:
             extra_args = {'dpi': self.dpi,
-                          'transparent': self.transparent}
+                          'transparent': self.transparent,
+                          'facecolor': 'k'}
         if self.outfile:
             # If format is set use it.
             if self.format:
