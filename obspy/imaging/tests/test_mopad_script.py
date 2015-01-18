@@ -49,7 +49,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -65,7 +65,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     def test_script_convert_type_tensor_large(self):
         with CatchOutput() as out:
@@ -81,7 +81,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     def test_script_convert_basis(self):
         expected = [
@@ -125,7 +125,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         expected = str(self.mt) + '\n'
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     #
     # obspy-mopad decompose
@@ -146,7 +146,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     #
     # obspy-mopad gmt
