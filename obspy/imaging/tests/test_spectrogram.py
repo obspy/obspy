@@ -8,8 +8,7 @@ from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.util.base import getMatplotlibVersion
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison
 from obspy.imaging import spectrogram
 import numpy as np
 import os
@@ -28,7 +27,6 @@ class SpectrogramTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_spectrogram(self):
         """
         Create spectrogram plotting examples in tests/output directory.

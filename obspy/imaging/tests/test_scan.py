@@ -8,8 +8,7 @@ from future.builtins import *  # NOQA
 
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
-from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir
 import shutil
@@ -42,7 +41,6 @@ class ScanTestCase(unittest.TestCase):
                           for i in gse2_files])
         self.all_files = all_files
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_scan(self):
         """
         Run obspy-scan on selected tests/data directories
@@ -60,7 +58,6 @@ class ScanTestCase(unittest.TestCase):
                 with CatchOutput():
                     obspy_scan([os.curdir] + ['--output', ic.name])
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_scanTimes(self):
         """
         Checks for timing related options
@@ -83,7 +80,6 @@ class ScanTestCase(unittest.TestCase):
                                ['--event-time', '2004-03-14T15:09:26'] +
                                ['--event-time', '2004-02-07T18:28:18'])
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_multipleSamplingrates(self):
         """
         Check for multiple sampling rates

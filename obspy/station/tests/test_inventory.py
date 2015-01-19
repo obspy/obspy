@@ -19,7 +19,7 @@ import numpy as np
 
 from obspy.station import Inventory, Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison
 from obspy.core.util.decorator import skipIf
 import warnings
 
@@ -143,8 +143,7 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_cylindrical(self):
         """
         Tests the inventory location preview plot, default parameters.
@@ -154,8 +153,7 @@ class InventoryTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(outfile=ic.name)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_ortho(self):
         """
         Tests the inventory location preview plot, ortho projection, some
@@ -169,8 +167,7 @@ class InventoryTestCase(unittest.TestCase):
                      label=False, outfile=ic.name, colormap="hsv",
                      color_per_network=True)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_local(self):
         """
         Tests the inventory location preview plot, local projection, some more
@@ -183,7 +180,6 @@ class InventoryTestCase(unittest.TestCase):
                      color_per_network={"GR": "b", "BW": "green"},
                      outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_response_plot(self):
         """
         Tests the response plot.

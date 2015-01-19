@@ -15,14 +15,11 @@ from future.builtins import *  # NOQA
 
 from obspy.station import read_inventory
 import os
+from matplotlib import rcParams
 import numpy as np
 import unittest
 import warnings
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
-
-if HAS_COMPARE_IMAGE:
-    from matplotlib import rcParams
+from obspy.core.util.testing import ImageComparison
 
 
 class StationTest(unittest.TestCase):
@@ -37,7 +34,6 @@ class StationTest(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_response_plot(self):
         """
         Tests the response plot.

@@ -23,7 +23,7 @@ from obspy.xseed import Parser
 from obspy.station.response import _pitick2latex
 import os
 import unittest
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.misc import CatchOutput
 import warnings
@@ -122,8 +122,7 @@ class ResponseTest(unittest.TestCase):
         self.assertEqual(_pitick2latex(300 * pi + 0.01), r'942.')
         self.assertEqual(_pitick2latex(3000 * pi + 0.01), r'9.42e+03')
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_response_plot(self):
         """
         Tests the response plot.

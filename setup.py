@@ -105,7 +105,6 @@ INSTALL_REQUIRES = [
     'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose',
               'pyimgur',
               'pyproj'],
     'arclink': ['m2crypto'],

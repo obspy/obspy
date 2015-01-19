@@ -8,9 +8,8 @@ from future.builtins import *  # NOQA
 
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.misc import CatchOutput
-from obspy.core.util.testing import (ImageComparison, ImageComparisonException,
-                                     HAS_COMPARE_IMAGE)
-from obspy.core.util.decorator import skip, skipIf
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
+from obspy.core.util.decorator import skip
 from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 import numpy as np
@@ -219,7 +218,6 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     #
 
     @skip('Currently broken until further review.')
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_script_plot(self):
         # See test_Beachball:
         data = [

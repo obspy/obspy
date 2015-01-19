@@ -14,12 +14,13 @@ from future.builtins import *  # NOQA
 from future.utils import native_str, PY2
 
 from obspy.core.util.misc import get_untracked_files_from_git, CatchOutput
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile
 
 import fnmatch
 import inspect
 import os
 import io
+import numpy as np
 import re
 import difflib
 import glob
@@ -113,23 +114,113 @@ def add_doctests(testsuite, module_name):
                 pass
 
 
-def checkForMatplotlibCompareImages():
-    try:
-        # trying to stay inside 80 char line
-        import matplotlib.testing.compare as _compare
-        compare_images = _compare.compare_images  # NOQA @UnusedVariable
-    except:
-        return False
-    # matplotlib's (< 1.2) compare_images() uses PIL internally
-    if getMatplotlibVersion() < [1, 2, 0]:
-        try:
-            import PIL  # NOQA @UnusedImport
-        except ImportError:
-            return False
-    return True
+def compare_images(expected, actual, tol):
+    """
+    Custom version of :func:`matplotlib.testing.compare.compare_images`.
+    This enable ObsPy to have the same image comparison metrics across
+    matplotlib versions. Futhermore nose is no longer a test dependency of
+    ObsPy.
 
+    Only works with png files in contrast to the matplotlib version.
 
-HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
+    Compare two "image" files checking differences within a tolerance.
+
+    Parameters
+    ----------
+    expected : str
+        The filename of the expected image.
+    actual :str
+        The filename of the actual image.
+    tol : float
+        The tolerance (a color value difference, where 255 is the
+        maximal difference).  The test fails if the average pixel
+        difference is greater than this value.
+
+    Example
+    -------
+    img1 = "./baseline/plot.png"
+    img2 = "./output/plot.png"
+    compare_images( img1, img2, 0.001 ):
+    """
+    from matplotlib import _png
+
+    if not os.path.exists(actual):
+        msg = "Output image %s does not exist." % actual
+        raise Exception(msg)
+
+    if os.stat(actual).st_size == 0:
+        msg = "Output image file %s is empty." % actual
+        raise Exception(msg)
+
+    if not os.path.exists(expected):
+        raise IOError('Baseline image %r does not exist.' % expected)
+
+    # open the image files and remove the alpha channel (if it exists)
+    expectedImage = _png.read_png_int(expected)
+    actualImage = _png.read_png_int(actual)
+    expectedImage = expectedImage[:, :, :3]
+    actualImage = actualImage[:, :, :3]
+
+    # convert to signed integers, so that the images can be subtracted without
+    # overflow
+    expectedImage = expectedImage.astype(np.int16)
+    actualImage = actualImage.astype(np.int16)
+
+    "Calculate the per-pixel errors, then compute the root mean square error."
+    num_values = np.prod(expectedImage.shape)
+    abs_diff_image = abs(expectedImage - actualImage)
+
+    # On Numpy 1.6, we can use bincount with minlength, which is much
+    # faster than using histogram
+    histogram = np.histogram(abs_diff_image, bins=np.arange(257))[0]
+    sum_of_squares = np.sum(histogram * np.arange(len(histogram)) ** 2)
+    rms = np.sqrt(float(sum_of_squares) / num_values)
+
+    base, ext = os.path.splitext(actual)
+    diff_image = '%s-%s%s' % (base, 'failed-diff', ext)
+
+    if rms <= tol:
+        if os.path.exists(diff_image):
+            os.unlink(diff_image)
+        return None
+
+    # Create and save the diff image.
+    expectedImage = _png.read_png(expected)
+    actualImage = _png.read_png(actual)
+    expectedImage = np.array(expectedImage).astype(np.float)
+    actualImage = np.array(actualImage).astype(np.float)
+    assert expectedImage.ndim == actualImage.ndim
+    assert expectedImage.shape == actualImage.shape
+    absDiffImage = abs(expectedImage - actualImage)
+
+    # expand differences in luminance domain
+    absDiffImage *= 255 * 10
+    save_image_np = np.clip(absDiffImage, 0, 255).astype(np.uint8)
+    height, width, depth = save_image_np.shape
+
+    # The PDF renderer doesn't produce an alpha channel, but the
+    # matplotlib PNG writer requires one, so expand the array
+    if depth == 3:
+        with_alpha = np.empty((height, width, 4), dtype=np.uint8)
+        with_alpha[:, :, 0:3] = save_image_np
+        save_image_np = with_alpha
+
+    # Hard-code the alpha channel to fully solid
+    save_image_np[:, :, 3] = 255
+
+    _png.write_png(save_image_np.tostring(), width, height, diff_image)
+
+    results = dict(rms=rms, expected=str(expected),
+                   actual=str(actual), diff=str(diff_image), tol=tol)
+
+    # Then the results should be a string suitable for stdout.
+    template = ['Error: Image files did not match.',
+                'RMS Value: {rms}',
+                'Expected:  \n    {expected}',
+                'Actual:    \n    {actual}',
+                'Difference:\n    {diff}',
+                'Tolerance: \n    {tol}', ]
+    return '\n  '.join([line.format(**results) for line in template])
 
 
 class ImageComparisonException(unittest.TestCase.failureException):
@@ -192,7 +283,7 @@ class ImageComparison(NamedTemporaryFile):
         self.keep_only_failed = "OBSPY_KEEP_ONLY_FAILED_IMAGES" in os.environ
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
-        self.tol = get_matplotlib_defaul_tolerance() * reltol
+        self.tol = reltol * 2.0
 
     def __enter__(self):
         """
@@ -281,18 +372,20 @@ class ImageComparison(NamedTemporaryFile):
             if os.path.exists(self.diff_filename):
                 os.remove(self.diff_filename)
 
-    def compare(self, reltol=1):  # @UnusedVariable
+    def compare(self):
         """
-        Run :func:`matplotlib.testing.compare.compare_images` and raise an
+        Run a custom version
+        of :func:`matplotlib.testing.compare.compare_images` and raise an
         unittest.TestCase.failureException with the message string given by
         matplotlib if the comparison exceeds the allowed tolerance.
         """
-        from matplotlib.testing.compare import compare_images
         if os.stat(self.name).st_size == 0:
             msg = "Empty output image file."
             raise ImageComparisonException(msg)
+
         msg = compare_images(native_str(self.baseline_image),
                              native_str(self.name), tol=self.tol)
+
         return msg
 
     def _copy_tempfiles(self):
@@ -366,24 +459,6 @@ class ImageComparison(NamedTemporaryFile):
             warnings.warn(msg % str(e))
             return ""
         return "\n".join(msg)
-
-
-def get_matplotlib_defaul_tolerance():
-    """
-    The two test images ("ok", "fail") result in the following rms values:
-    matplotlib v1.4.2: 0.811804 and 9.062037
-    matplotlib v1.3.x (git rev. 26b18e2): 0.811804 and 9.062037
-    matplotlib v1.2.1: 1.7e-3 and 3.6e-3
-    """
-    # Images also tested with 1.4.2
-    if getMatplotlibVersion() >= [1, 4, 0]:
-        return 2
-    # Baseline images are created with 1.3.1
-    elif getMatplotlibVersion() == [1, 3, 1]:
-        return 2
-    else:
-        # Be very generous when testing other matplotlib versions
-        return 20
 
 
 FLAKE8_EXCLUDE_FILES = [

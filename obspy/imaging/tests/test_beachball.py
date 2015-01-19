@@ -7,8 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
-from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
 import matplotlib.pyplot as plt
@@ -27,7 +26,6 @@ class BeachballTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_Beachball(self):
         """
         Create beachball examples in tests/output directory.
@@ -196,7 +194,6 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(P.dip, 33.5833323)
         self.assertAlmostEqual(P.strike, 213.273886)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection(self):
         """
         Tests to plot beachballs as collection into an existing axis
@@ -295,7 +292,6 @@ class BeachballTestCase(unittest.TestCase):
                              reltol=reltol) as ic:
             fig.savefig(ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection_aspect_x(self):
         """
         Tests to plot beachball into a non-scaled axes with an x-axis larger
@@ -305,7 +301,6 @@ class BeachballTestCase(unittest.TestCase):
                                filename_width='bb_aspect_x.png',
                                filename_width_height='bb_aspect_x_height.png')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection_aspect_y(self):
         """
         Tests to plot beachball into a non-scaled axes with a y-axis larger

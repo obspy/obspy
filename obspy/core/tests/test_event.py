@@ -7,7 +7,7 @@ import copy
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison
 from obspy.core.util.decorator import skipIf
 import os
 import sys
@@ -425,8 +425,7 @@ class CatalogTestCase(unittest.TestCase):
         cat = readEvents(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_catalog_plot_cylindrical(self):
         """
         Tests the catalog preview plot, default parameters.
@@ -436,8 +435,7 @@ class CatalogTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_catalog_plot_ortho(self):
         """
         Tests the catalog preview plot, ortho projection, some non-default
@@ -450,8 +448,7 @@ class CatalogTestCase(unittest.TestCase):
                      resolution="c",
                      water_fill_color="b", label=None)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default

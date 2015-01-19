@@ -18,7 +18,7 @@ from obspy.station import read_inventory
 import os
 import numpy as np
 import unittest
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison
 from obspy.core.util.decorator import skipIf
 import warnings
 
@@ -48,8 +48,7 @@ class ChannelTest(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_response_plot(self):
         """
         Tests the response plot.
