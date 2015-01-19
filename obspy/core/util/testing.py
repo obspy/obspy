@@ -371,14 +371,18 @@ class ImageComparison(NamedTemporaryFile):
 def get_matplotlib_defaul_tolerance():
     """
     The two test images ("ok", "fail") result in the following rms values:
-    matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
+    matplotlib v1.4.2: 0.811804 and 9.062037
+    matplotlib v1.3.x (git rev. 26b18e2): 0.811804 and 9.062037
     matplotlib v1.2.1: 1.7e-3 and 3.6e-3
     """
-    # Baseline images are created with 1.3.1,
-    # be very generous when testing other matplotlib versions.
-    if getMatplotlibVersion() == [1, 3, 1]:
+    # Images also tested with 1.4.2
+    if getMatplotlibVersion() >= [1, 4, 0]:
+        return 2
+    # Baseline images are created with 1.3.1
+    elif getMatplotlibVersion() == [1, 3, 1]:
         return 2
     else:
+        # Be very generous when testing other matplotlib versions
         return 20
 
 
