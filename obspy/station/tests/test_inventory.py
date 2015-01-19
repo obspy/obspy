@@ -143,7 +143,7 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
-    @skipIf(HAS_BASEMAP, 'basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_cylindrical(self):
         """
         Tests the inventory location preview plot, default parameters.
@@ -153,7 +153,7 @@ class InventoryTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(outfile=ic.name)
 
-    @skipIf(HAS_BASEMAP, 'basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_ortho(self):
         """
         Tests the inventory location preview plot, ortho projection, some
@@ -167,7 +167,7 @@ class InventoryTestCase(unittest.TestCase):
                      label=False, outfile=ic.name, colormap="hsv",
                      color_per_network=True)
 
-    @skipIf(HAS_BASEMAP, 'basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_local(self):
         """
         Tests the inventory location preview plot, local projection, some more
