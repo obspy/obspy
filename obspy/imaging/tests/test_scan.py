@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
@@ -14,9 +14,6 @@ from os.path import dirname, abspath, join, pardir
 import shutil
 import os
 import unittest
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ScanTestCase(unittest.TestCase):
@@ -45,16 +42,12 @@ class ScanTestCase(unittest.TestCase):
         """
         Run obspy-scan on selected tests/data directories
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
-
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
+            with ImageComparison(self.path, 'scan.png') as ic:
                 with CatchOutput():
                     obspy_scan([os.curdir] + ['--output', ic.name])
 
@@ -62,17 +55,12 @@ class ScanTestCase(unittest.TestCase):
         """
         Checks for timing related options
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
-
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan_times.png',
-                                 reltol=reltol) as ic:
+            with ImageComparison(self.path, 'scan_times.png') as ic:
                 with CatchOutput():
                     obspy_scan([os.curdir] + ['--output', ic.name] +
                                ['--start-time', '2004-01-01'] +
@@ -92,9 +80,7 @@ class ScanTestCase(unittest.TestCase):
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
+
         files = []
         with NamedTemporaryFile() as f1:
             with NamedTemporaryFile() as f2:
@@ -105,8 +91,8 @@ class ScanTestCase(unittest.TestCase):
                         fp.flush()
                         fp.seek(0)
                         files.append(fp.name)
-                    with ImageComparison(self.path, 'scan_mult_sampl.png',
-                                         reltol=reltol) as ic:
+                    with ImageComparison(self.path, 'scan_mult_sampl.png') \
+                            as ic:
                         with CatchOutput():
                             obspy_scan(files + ['--output', ic.name])
 

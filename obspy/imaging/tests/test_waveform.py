@@ -11,12 +11,9 @@ from obspy.core.event import readEvents
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
 from obspy.core.util.testing import ImageComparison
-from obspy.core.util.base import getMatplotlibVersion
 import numpy as np
 import os
 import unittest
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class WaveformTestCase(unittest.TestCase):
@@ -211,44 +208,35 @@ class WaveformTestCase(unittest.TestCase):
         """
         Plots multiple traces underneath.
         """
-        reltol = 1
-        if [1, 0, 0] < MATPLOTLIB_VERSION < [1, 2, 0]:
-            reltol = 20
         # 1 trace
         st = read()[1]
-        with ImageComparison(self.path, 'waveform_1_trace.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_1_trace.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 3 traces
         st = read()
-        with ImageComparison(self.path, 'waveform_3_traces.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_3_traces.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 5 traces
         st = st[1] * 5
-        with ImageComparison(self.path, 'waveform_5_traces.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_5_traces.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 10 traces
         st = st[1] * 10
-        with ImageComparison(self.path, 'waveform_10_traces.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_10_traces.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 10 traces - huge numbers
         st = st[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data * 10 ** i
-        with ImageComparison(self.path, 'waveform_10_traces_huge.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_10_traces_huge.png') as ic:
             st.plot(outfile=ic.name, automerge=False, equal_scale=False)
         # 10 traces - tiny numbers
         st = st[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data / (10 ** i)
-        with ImageComparison(self.path, 'waveform_10_traces_tiny.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_10_traces_tiny.png') as ic:
             st.plot(outfile=ic.name, automerge=False, equal_scale=False)
 
     def test_plotWithLabels(self):

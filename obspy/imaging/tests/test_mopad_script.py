@@ -6,7 +6,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.core.util.decorator import skip
@@ -18,9 +17,6 @@ import io
 from itertools import product, zip_longest
 import os
 import unittest
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class MopadTestCase(unittest.TestCase):
@@ -253,14 +249,10 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
             'bb_20040905_0_mt.png', 'bb_miyagi_mt.png', 'bb_chile_mt.png',
         ]
 
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
-
         messages = ''
         for mt, filename in zip(data, filenames):
             try:
-                with ImageComparison(self.path, filename, reltol=reltol) as ic:
+                with ImageComparison(self.path, filename) as ic:
                     with CatchOutput() as out:
                         obspy_mopad(['plot',
                                      '--output-file', ic.name,
