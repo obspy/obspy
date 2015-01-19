@@ -183,8 +183,7 @@ class InventoryTestCase(unittest.TestCase):
                      color_per_network={"GR": "b", "BW": "green"},
                      outfile=ic.name)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_response_plot(self):
         """
         Tests the response plot.
