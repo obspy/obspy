@@ -27,14 +27,14 @@ EPSG:31468) and then we convert to WGS84 (EPSG:4326). The `z` coordinate is
 already in kilometers downwards and can be left as is. For the conversion we
 use `pyproj`.
 
->>> import pyproj
->>> proj_wgs84 = pyproj.Proj(init="epsg:4326")
->>> proj_gk4 = pyproj.Proj(init="epsg:31468")
+>>> import pyproj  # doctest: +SKIP
+>>> proj_wgs84 = pyproj.Proj(init="epsg:4326")  # doctest: +SKIP
+>>> proj_gk4 = pyproj.Proj(init="epsg:31468")  # doctest: +SKIP
 >>> def my_conversion(x, y, z):
 ...     x *= 1e3
 ...     y *= 1e3
 ...     x, y = pyproj.transform(proj_gk4, proj_wgs84, x, y)
-...     return x, y, z
+...     return x, y, z  # doctest: +SKIP
 
 Then, we can load the NonLinLoc Hypocenter-Phase file into an ObsPy
 :class:`~obspy.core.event.Catalog` object using
@@ -43,13 +43,14 @@ as `coordinate_converter` kwarg, which will be passed down to the low-level
 routine :func:`~obspy.nlloc.core.read_nlloc_hyp`.
 
 >>> from obspy import readEvents
->>> cat = readEvents("/path/to/nlloc.hyp", coordinate_converter=my_conversion)
->>> print(cat)
+>>> cat = readEvents("/path/to/nlloc.hyp",
+...                  coordinate_converter=my_conversion)  # doctest: +SKIP
+>>> print(cat)  # doctest: +SKIP
 1 Event(s) in Catalog:
 2010-05-27T16:56:24.612600Z | +48.047,  +11.646
 
->>> event = cat[0]
->>> print(event)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+>>> event = cat[0]  # doctest: +SKIP
+>>> print(event)  # doctest: +SKIP
 Event:  2010-05-27T16:56:24.612600Z | +48.047,  +11.646
 <BLANKLINE>
        resource_id: ResourceIdentifier(id="smi:local/...")
@@ -58,8 +59,8 @@ Event:  2010-05-27T16:56:24.612600Z | +48.047,  +11.646
              picks: 8 Elements
            origins: 1 Elements
 
->>> origin = event.origins[0]
->>> print(origin)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+>>> origin = event.origins[0]  # doctest: +SKIP
+>>> print(origin)  # doctest: +SKIP
     Origin
                 resource_id: ResourceIdentifier(id="smi:local/...")
                        time: UTCDateTime(2010, 5, 27, 16, 56, 24, 612600)
