@@ -283,7 +283,7 @@ class ImageComparison(NamedTemporaryFile):
         self.keep_only_failed = "OBSPY_KEEP_ONLY_FAILED_IMAGES" in os.environ
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
-        self.tol = reltol * 2.0
+        self.tol = reltol * 3.0
 
     def __enter__(self):
         """
