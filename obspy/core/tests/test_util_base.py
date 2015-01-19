@@ -59,6 +59,10 @@ class UtilBaseTestCase(unittest.TestCase):
         version = getMatplotlibVersion()
         self.assertEqual(version, [1, 2, 0])
 
+        matplotlib.__version__ = "1.3.1rc2"
+        version = getMatplotlibVersion()
+        self.assertEqual(version, [1, 3, 1])
+
         # Set it to the original version str just in case.
         matplotlib.__version__ = original_version
 
