@@ -156,8 +156,8 @@ def compare_images(expected, actual, tol):
         raise IOError('Baseline image %r does not exist.' % expected)
 
     # open the image files and remove the alpha channel (if it exists)
-    expectedImage = _png.read_png_int(expected)
-    actualImage = _png.read_png_int(actual)
+    expectedImage = np.uint8(_png.read_png(expected) * 255.0)
+    actualImage = np.uint8(_png.read_png(actual) * 255.0)
     expectedImage = expectedImage[:, :, :3]
     actualImage = actualImage[:, :, :3]
 
