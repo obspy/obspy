@@ -104,9 +104,7 @@ INSTALL_REQUIRES = [
     'lxml',
     'sqlalchemy']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2',
-              'pyimgur',
-              'pyproj'],
+    'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],
     'neries': ['suds-jurko']}
 # PY2
