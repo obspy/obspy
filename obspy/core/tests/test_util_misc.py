@@ -7,7 +7,6 @@ from future.utils import PY2
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
-from obspy.core.util.decorator import skipIf
 import os
 import platform
 import sys
@@ -53,9 +52,9 @@ class UtilMiscTestCase(unittest.TestCase):
                     "\t\tID numbers assigned by\n"
                     "\t\tthe IRIS DMC")
 
-    @skipIf(not PY2, 'Solely test related Py3k issue')
     def test_CatchOutput(self):
         """
+        Tests for CatchOutput context manager.
         """
         libc = CDLL(find_library("c"))
 
@@ -87,7 +86,10 @@ class UtilMiscTestCase(unittest.TestCase):
                 self.assertEqual(out.stderr, b"123\n456\n")
 
     def test_CatchOutput_IO(self):
-        with CatchOutput() as out:
+        """
+        Tests that CatchOutput context manager does not break I/O.
+        """
+        with CatchOutput():
             fn = tempfile.TemporaryFile(prefix='obspy')
 
         try:
