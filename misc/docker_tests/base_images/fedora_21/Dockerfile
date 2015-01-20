@@ -7,3 +7,5 @@ RUN rpm -Uvh http://download.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-
 RUN yum -y upgrade || true
 RUN yum install -y numpy scipy gcc-gfortran python-matplotlib python-sqlalchemy python-lxml python-mock python-basemap python-basemap-data python-tornado python-nose python-pip
 RUN pip install flake8 suds-jurko future pyproj
+# Fedora has a slightly messed up basemap installation.
+RUN mv /usr/share/basemap/* /usr/lib64/python2.7/site-packages/mpl_toolkits/basemap/data/
