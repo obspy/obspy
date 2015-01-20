@@ -49,7 +49,10 @@ echo "#### Working on $GITTARGET"
 cd $GITDIR
 git clean -fxd
 git checkout -- .
-git checkout $GITTARGET
+if [ "$GITTARGET" != "master" ]
+then
+    git checkout -b $GITTARGET origin/$GITTARGET
+fi
 git clean -fxd
 # first of all selectively use debian build instructions for either
 # buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
