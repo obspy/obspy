@@ -11,6 +11,7 @@ from obspy.core.util.decorator import skipIf
 import os
 import platform
 import sys
+import tempfile
 import unittest
 
 
@@ -84,6 +85,18 @@ class UtilMiscTestCase(unittest.TestCase):
             else:
                 self.assertEqual(out.stdout, b"abc\nghi\njkl\n")
                 self.assertEqual(out.stderr, b"123\n456\n")
+
+    def test_CatchOutput_IO(self):
+        with CatchOutput() as out:
+            fn = tempfile.TemporaryFile(prefix='obspy')
+
+        try:
+            fn.write(b'abc')
+            fn.seek(0)
+            fn.read(3)
+            fn.close()
+        except OSError as e:
+            self.fail('CatchOutput has broken file I/O!\n' + str(e))
 
     def test_no_obspy_imports(self):
         """
