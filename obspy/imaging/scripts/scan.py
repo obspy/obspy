@@ -350,9 +350,11 @@ def main(argv=None):
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
     # set x-axis limits according to given start/end time
-    if args.start_time:
+    if args.start_time and args.end_time:
+        ax.set_xlim(left=args.start_time, right=args.end_time)
+    elif args.start_time:
         ax.set_xlim(left=args.start_time, auto=None)
-    if args.end_time:
+    elif args.end_time:
         ax.set_xlim(right=args.end_time, auto=None)
     fig.autofmt_xdate()  # rotate date
     plt.subplots_adjust(left=0.2)
@@ -363,18 +365,30 @@ def main(argv=None):
         height = len(ids) * 0.5
         height = max(4, height)
         fig.set_figheight(height)
+
         # tight_layout() only available from matplotlib >= 1.1
         try:
             plt.tight_layout()
+        except:
+            pass
+
+        if not args.start_time or not args.end_time:
             days = ax.get_xlim()
             days = days[1] - days[0]
-            width = max(6, days / 30.)
-            width = min(width, height * 4)
-            fig.set_figwidth(width)
-            plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+        else:
+            days = args.end_time - args.start_time
+
+        width = max(6, days / 30.)
+        width = min(width, height * 4)
+        fig.set_figwidth(width)
+        plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+
+        # tight_layout() only available from matplotlib >= 1.1
+        try:
             plt.tight_layout()
         except:
             pass
+
         fig.savefig(args.output)
     sys.stdout.write('\n')
 
