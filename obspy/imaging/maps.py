@@ -214,9 +214,16 @@ def plot_basemap(lons, lats, size, color, labels=None,
 
         N1 = int(np.ceil(height / max(width, height) * 8))
         N2 = int(np.ceil(width / max(width, height) * 8))
-        bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                     lat_0 + height / 2 / deg2m_lat, N1),
-                           labels=[0, 1, 1, 0])
+        parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
+                              lat_0 + height / 2 / deg2m_lat, N1)
+
+        # Old basemap versions have problems with non-integer parallels.
+        try:
+            bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+        except KeyError:
+            parallels = sorted(list(set(map(int, parallels))))
+            bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+
         if min(lons) < -150 and max(lons) > 150:
             lon_0 %= 360
         meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
