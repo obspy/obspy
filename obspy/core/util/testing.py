@@ -14,7 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str, PY2
 
 from obspy.core.util.misc import get_untracked_files_from_git, CatchOutput
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 
 import fnmatch
 import inspect
@@ -29,6 +29,9 @@ import doctest
 import shutil
 import warnings
 from lxml import etree
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 def add_unittests(testsuite, module_name):
@@ -114,6 +117,40 @@ def add_doctests(testsuite, module_name):
                 pass
 
 
+def write_png(arr, filename):
+    """
+    Custom write_png() function. matplotlib < 1.3 cannot write RGBA png files.
+
+    Modified from http://stackoverflow.com/a/19174800/1657047
+    """
+    import zlib
+    import struct
+
+    buf = arr[::-1, :, :].tostring()
+    height, width, _ = arr.shape
+
+    # reverse the vertical line order and add null bytes at the start
+    width_byte_4 = width * 4
+    raw_data = b''.join(
+        b'\x00' + buf[span:span + width_byte_4]
+        for span in range((height - 1) * width * 4, -1, - width_byte_4))
+
+    def png_pack(png_tag, data):
+        chunk_head = png_tag + data
+        return (struct.pack(native_str("!I"), len(data)) +
+                chunk_head +
+                struct.pack(native_str("!I"),
+                            0xFFFFFFFF & zlib.crc32(chunk_head)))
+
+    with open(filename, "wb") as fh:
+        fh.write(b''.join([
+            b'\x89PNG\r\n\x1a\n',
+            png_pack(b'IHDR', struct.pack(native_str("!2I5B"),
+                     width, height, 8, 6, 0, 0, 0)),
+            png_pack(b'IDAT', zlib.compress(raw_data, 9)),
+            png_pack(b'IEND', b'')]))
+
+
 def compare_images(expected, actual, tol):
     """
     Custom version of :func:`matplotlib.testing.compare.compare_images`.
@@ -122,6 +159,10 @@ def compare_images(expected, actual, tol):
     ObsPy.
 
     Only works with png files in contrast to the matplotlib version.
+    Fully transparent pixels will be set to white to not care about
+    differences in transparent pixels.
+
+    Additionally this version uses a straight RMSE.
 
     Compare two "image" files checking differences within a tolerance.
 
@@ -142,7 +183,7 @@ def compare_images(expected, actual, tol):
     img2 = "./output/plot.png"
     compare_images( img1, img2, 0.001 ):
     """
-    from matplotlib import _png
+    import matplotlib.image
 
     if not os.path.exists(actual):
         msg = "Output image %s does not exist." % actual
@@ -155,26 +196,35 @@ def compare_images(expected, actual, tol):
     if not os.path.exists(expected):
         raise IOError('Baseline image %r does not exist.' % expected)
 
-    # open the image files and remove the alpha channel (if it exists)
-    expectedImage = np.uint8(_png.read_png(expected) * 255.0)
-    actualImage = np.uint8(_png.read_png(actual) * 255.0)
-    expectedImage = expectedImage[:, :, :3]
-    actualImage = actualImage[:, :, :3]
+    # open the image files channel and convert to int16 so that the images
+    # can be subtracted without overflow.
+    expected_image = matplotlib.image.imread(native_str(expected))
+    actual_image = matplotlib.image.imread(native_str(actual))
+    if expected_image.shape != actual_image.shape:
+        raise ImageComparisonException(
+            "The shape of the received image %s is not equal to the expected "
+            "shape %s." % (str(actual_image.shape),
+                           str(expected_image.shape)))
 
-    # convert to signed integers, so that the images can be subtracted without
-    # overflow
-    expectedImage = expectedImage.astype(np.int16)
-    actualImage = actualImage.astype(np.int16)
+    print(expected_image)
+    print(expected_image.mean())
+    print(expected_image.std())
+    print("=================")
+    print(actual_image)
+    print(actual_image.mean())
+    print(actual_image.std())
 
-    "Calculate the per-pixel errors, then compute the root mean square error."
-    num_values = np.prod(expectedImage.shape)
-    abs_diff_image = abs(expectedImage - actualImage)
+    # Set all fully transparent pixels to white. This avoid the issue of
+    # different "colors" for transparent pixels.
+    expected_image[expected_image[..., 3] == 0.0] = 1.0
+    actual_image[actual_image[..., 3] == 0.0] = 1.0
 
-    # On Numpy 1.6, we can use bincount with minlength, which is much
-    # faster than using histogram
-    histogram = np.histogram(abs_diff_image, bins=np.arange(257))[0]
-    sum_of_squares = np.sum(histogram * np.arange(len(histogram)) ** 2)
-    rms = np.sqrt(float(sum_of_squares) / num_values)
+    # This deviates a bit from the matplotlib version and just calculates
+    # the root mean square error of all pixel values without any other fancy
+    # considerations. It also uses the alpha channel of the images. Scaled
+    # by 255.
+    rms = np.sqrt(np.sum((255.0 * (expected_image - actual_image)) ** 2) /
+                  float(expected_image.size))
 
     base, ext = os.path.splitext(actual)
     diff_image = '%s-%s%s' % (base, 'failed-diff', ext)
@@ -184,31 +234,14 @@ def compare_images(expected, actual, tol):
             os.unlink(diff_image)
         return None
 
-    # Create and save the diff image.
-    expectedImage = _png.read_png(expected)
-    actualImage = _png.read_png(actual)
-    expectedImage = np.array(expectedImage).astype(np.float)
-    actualImage = np.array(actualImage).astype(np.float)
-    assert expectedImage.ndim == actualImage.ndim
-    assert expectedImage.shape == actualImage.shape
-    absDiffImage = abs(expectedImage - actualImage)
-
-    # expand differences in luminance domain
-    absDiffImage *= 255 * 10
-    save_image_np = np.clip(absDiffImage, 0, 255).astype(np.uint8)
-    height, width, depth = save_image_np.shape
-
-    # The PDF renderer doesn't produce an alpha channel, but the
-    # matplotlib PNG writer requires one, so expand the array
-    if depth == 3:
-        with_alpha = np.empty((height, width, 4), dtype=np.uint8)
-        with_alpha[:, :, 0:3] = save_image_np
-        save_image_np = with_alpha
-
+    # Save diff image, expand differences in luminance domain
+    absDiffImage = np.abs(expected_image - actual_image)
+    absDiffImage *= 10.0
+    save_image_np = np.clip(absDiffImage, 0.0, 1.0)
     # Hard-code the alpha channel to fully solid
-    save_image_np[:, :, 3] = 255
+    save_image_np[:, :, 3] = 1.0
 
-    _png.write_png(save_image_np.tostring(), width, height, diff_image)
+    write_png(np.uint8(save_image_np * 255.0), diff_image)
 
     results = dict(rms=rms, expected=str(expected),
                    actual=str(actual), diff=str(diff_image), tol=tol)
@@ -284,6 +317,13 @@ class ImageComparison(NamedTemporaryFile):
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
         self.tol = reltol * 3.0
+
+        # Higher tolerance for older matplotlib versions. This is pretty
+        # high but the pictures are at least guaranteed to be generated and
+        # look (roughly!) similar. Otherwise testing is just a pain and
+        # frankly not worth the effort!
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            self.tol *= 30
 
     def __enter__(self):
         """
@@ -383,8 +423,7 @@ class ImageComparison(NamedTemporaryFile):
             msg = "Empty output image file."
             raise ImageComparisonException(msg)
 
-        msg = compare_images(native_str(self.baseline_image),
-                             native_str(self.name), tol=self.tol)
+        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
 
         return msg
 
