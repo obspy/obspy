@@ -71,8 +71,19 @@ run_tests_on_image () {
     $DOCKER cp $ID:/INSTALL_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
 
-    $DOCKER cp $ID:/obspy/obspy/imaging/tests/images/testrun $LOG_DIR
-    mv $LOG_DIR/testrun $LOG_DIR/test_images
+    $DOCKER cp $ID:/obspy/obspy/imaging/tests/images/testrun $LOG_DIR/imaging_testrun
+    $DOCKER cp $ID:/obspy/obspy/core/tests/images/testrun $LOG_DIR/core_testrun
+    $DOCKER cp $ID:/obspy/obspy/station/tests/images/testrun $LOG_DIR/station_testrun
+
+    mkdir -p $LOG_DIR/test_images
+
+    mv $LOG_DIR/imaging_testrun/testrun $LOG_DIR/test_images/imaging
+    mv $LOG_DIR/core_testrun/testrun $LOG_DIR/test_images/core
+    mv $LOG_DIR/station_testrun/testrun $LOG_DIR/test_images/station
+
+    rm -rf $LOG_DIR/imaging_testrun
+    rm -rf $LOG_DIR/core_testrun
+    rm -rf $LOG_DIR/station_testrun
 
     $DOCKER rm $ID
     $DOCKER rmi temp:temp
