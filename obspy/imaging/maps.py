@@ -25,7 +25,7 @@ import datetime
 import numpy as np
 import warnings
 from obspy import UTCDateTime
-from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.base import getMatplotlibVersion, getBasemapVersion
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -37,10 +37,17 @@ else:
     path_effect_kwargs = dict(
         path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
 
-try:
+
+BASEMAP_VERSION = getBasemapVersion()
+if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True
-except ImportError:
+    if BASEMAP_VERSION < [1, 0, 4]:
+        warnings.warn("All basemap version < 1.0.4 contain a serious bug "
+                      "when rendering countries and continents. ObsPy will "
+                      "still work but the maps might be wrong. Please update "
+                      "your basemap installation.")
+else:
     warnings.warn("basemap not installed.")
     HAS_BASEMAP = False
 

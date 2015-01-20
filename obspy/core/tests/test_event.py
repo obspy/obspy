@@ -7,12 +7,15 @@ import copy
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import getBasemapVersion
 from obspy.core.util.testing import ImageComparison
 from obspy.core.util.decorator import skipIf
 import os
 import sys
 import unittest
 import warnings
+
+BASEMAP_VERSION = getBasemapVersion()
 
 # checking for matplotlib/basemap
 try:
@@ -456,10 +459,10 @@ class CatalogTestCase(unittest.TestCase):
         """
         cat = readEvents()
         reltol = 1
-        # some ticklabels are slightly offset on py 3.3.3 in travis..
-        # e.g. see http://tests.obspy.org/13309/#1
-        if (sys.version_info[0]) == 3:
-            reltol = 5
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100
         with ImageComparison(self.image_dir, "catalog3.png",
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72

@@ -19,6 +19,7 @@ import numpy as np
 
 from obspy.station import Inventory, Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.base import getBasemapVersion
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 import warnings
@@ -33,8 +34,8 @@ try:
 except ImportError:
     HAS_BASEMAP = False
 
-
 MATPLOTLIB_VERSION = getMatplotlibVersion()
+BASEMAP_VERSION = getBasemapVersion()
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -177,7 +178,13 @@ class InventoryTestCase(unittest.TestCase):
         non-default parameters.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir, "inventory_location3.png") as ic:
+        reltol = 1
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100
+        with ImageComparison(self.image_dir, "inventory_location3.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             inv.plot(projection="local", resolution="i", size=20**2,
                      color_per_network={"GR": "b", "BW": "green"},

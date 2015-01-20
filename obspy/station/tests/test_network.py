@@ -20,6 +20,7 @@ import numpy as np
 
 from obspy.station import Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
+from obspy.core.util.base import getBasemapVersion
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 
@@ -33,7 +34,7 @@ try:
 except ImportError:
     HAS_BASEMAP = False
 
-
+BASEMAP_VERSION = getBasemapVersion()
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
@@ -162,7 +163,13 @@ class NetworkTestCase(unittest.TestCase):
         non-default parameters.
         """
         net = read_inventory()[0]
-        with ImageComparison(self.image_dir, "network_location3.png") as ic:
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        reltol = 1.0
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100.0
+        with ImageComparison(self.image_dir, "network_location3.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             net.plot(projection="local", resolution="i", size=13**2,
                      outfile=ic.name)

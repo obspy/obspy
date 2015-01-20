@@ -310,6 +310,28 @@ def getMatplotlibVersion():
     return version
 
 
+def getBasemapVersion():
+    """
+    Get basemap version information.
+
+    :returns: basemap version as a list of three integers or ``None`` if
+        basemap import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        from mpl_toolkits import basemap
+        version = basemap.__version__
+        version = version.split("rc")[0].strip("~")
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
 def getSciPyVersion():
     """
     Get SciPy version information.
