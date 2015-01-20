@@ -154,34 +154,26 @@ def write_png(arr, filename):
 def compare_images(expected, actual, tol):
     """
     Custom version of :func:`matplotlib.testing.compare.compare_images`.
-    This enable ObsPy to have the same image comparison metrics across
-    matplotlib versions. Futhermore nose is no longer a test dependency of
+    This enable ObsPy to have the same image comparison metric across
+    matplotlib versions. Furthermore nose is no longer a test dependency of
     ObsPy.
 
-    Only works with png files in contrast to the matplotlib version.
-    Fully transparent pixels will be set to white to not care about
-    differences in transparent pixels.
+    In contrast to the matplotlib version this one only works with png
+    files. Fully transparent pixels will have their color set to white as
+    the RGB values of fully transparent pixels change depending on the
+    matplotlib version.
 
-    Additionally this version uses a straight RMSE.
+    Additionally this version uses a straight RMSE definition instead of the
+    binned one of matplotlib.
 
-    Compare two "image" files checking differences within a tolerance.
-
-    Parameters
-    ----------
-    expected : str
-        The filename of the expected image.
-    actual :str
-        The filename of the actual image.
-    tol : float
-        The tolerance (a color value difference, where 255 is the
-        maximal difference).  The test fails if the average pixel
-        difference is greater than this value.
-
-    Example
-    -------
-    img1 = "./baseline/plot.png"
-    img2 = "./output/plot.png"
-    compare_images( img1, img2, 0.001 ):
+    :param expected: The filename of the expected png file.
+    :type expected: str
+    :param actual: The filename of the actual png file.
+    :type actual: str
+    :param tol: The tolerance (a color value difference, where 255 is the
+        maximal difference). The test fails if the average pixel difference
+        is greater than this value.
+    :type tol: float
     """
     import matplotlib.image
 
@@ -208,8 +200,8 @@ def compare_images(expected, actual, tol):
 
     # Set all fully transparent pixels to white. This avoid the issue of
     # different "colors" for transparent pixels.
-    expected_image[expected_image[..., 3] == 0.0] = 1.0
-    actual_image[actual_image[..., 3] == 0.0] = 1.0
+    expected_image[expected_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
+    actual_image[actual_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
 
     # This deviates a bit from the matplotlib version and just calculates
     # the root mean square error of all pixel values without any other fancy
