@@ -6,7 +6,8 @@ no_color='\e[0m'
 # Install ObsPy and run the tests.
 cd /obspy
 
-pip install -v . > /INSTALL_LOG.txt 2>&1
+pip install -v -e . > /INSTALL_LOG.txt 2>&1
+
 if [ $? != 0 ]; then
     echo -e "${red}Installation failed!${no_color}"
 else
