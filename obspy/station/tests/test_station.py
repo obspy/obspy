@@ -19,7 +19,10 @@ from matplotlib import rcParams
 import numpy as np
 import unittest
 import warnings
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class StationTest(unittest.TestCase):
@@ -38,10 +41,17 @@ class StationTest(unittest.TestCase):
         """
         Tests the response plot.
         """
+        # Bug in matplotlib 1.4.0 - 1.4.2:
+        # See https://github.com/matplotlib/matplotlib/issues/4012
+        reltol = 1.0
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 4, 2]:
+            reltol = 2.0
+
         sta = read_inventory()[0][0]
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "station_response.png") as ic:
+            with ImageComparison(self.image_dir, "station_response.png",
+                                 reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", outfile=ic.name)
 
