@@ -144,7 +144,6 @@ def plot_basemap(lons, lats, size, color, labels=None,
     if show_colorbar:
         map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
         cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
-        plt.sca(map_ax)
     else:
         ax_y0, ax_height = 0.05, 0.85
         if projection == "local":
@@ -251,11 +250,11 @@ def plot_basemap(lons, lats, size, color, labels=None,
                 # large values if it cannot project a point.
                 if xpt > 1e25:
                     continue
-                plt.text(xpt, ypt, name, weight="heavy",
-                         color="k", zorder=100, **path_effect_kwargs)
+                map_ax.text(xpt, ypt, name, weight="heavy",
+                            color="k", zorder=100, **path_effect_kwargs)
         elif len(lons) == 1:
-            plt.text(x[0], y[0], labels[0], weight="heavy", color="k",
-                     **path_effect_kwargs)
+            map_ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
+                        **path_effect_kwargs)
 
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
                            zorder=10, cmap=colormap)
