@@ -259,6 +259,9 @@ class ImageComparison(NamedTemporaryFile):
     :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
+    :type adjust_tolerance: bool, optional
+    :param adjust_tolerance: Adjust the tolerance based on the matplotlib
+        version. Can optionally be turned off to simply compare two images.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -290,7 +293,8 @@ class ImageComparison(NamedTemporaryFile):
     ...     st.plot(outfile=ic.name)  # doctest: +SKIP
     ...     # image is compared against baseline image automatically
     """
-    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
+    def __init__(self, image_path, image_name, reltol=1,
+                 adjust_tolerance=True, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -306,8 +310,9 @@ class ImageComparison(NamedTemporaryFile):
         # high but the pictures are at least guaranteed to be generated and
         # look (roughly!) similar. Otherwise testing is just a pain and
         # frankly not worth the effort!
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            self.tol *= 30
+        if adjust_tolerance:
+            if MATPLOTLIB_VERSION < [1, 3, 0]:
+                self.tol *= 30
 
     def __enter__(self):
         """

@@ -24,7 +24,7 @@ def image_comparison_in_function(path, img_basename, img_to_compare):
     """
     This is just used to wrap an image comparison to check if it raises or not.
     """
-    with ImageComparison(path, img_basename) as ic:
+    with ImageComparison(path, img_basename, adjust_tolerance=False) as ic:
         shutil.copy(img_to_compare, ic.name)
 
 
