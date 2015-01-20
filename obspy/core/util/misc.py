@@ -408,9 +408,6 @@ def CatchOutput():
                 os.dup2(stdout_file, fd_stdout)
                 os.dup2(stderr_file, fd_stderr)
 
-                os.close(stdout_file)
-                os.close(stderr_file)
-
                 try:
                     raised = False
                     yield out
