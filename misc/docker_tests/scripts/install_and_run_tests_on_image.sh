@@ -15,7 +15,8 @@ fi
 
 cd
 
-obspy-runtests -r --node=docker-$(cat /container_name.txt) > /TEST_LOG.txt 2>&1
+obspy-runtests -r --keep-images --node=docker-$(cat /container_name.txt) > /TEST_LOG.txt 2>&1
+
 
 if [ $? != 0 ]; then
     echo -e "${red}Tests failed!${no_color}"
