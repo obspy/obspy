@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.plot import main as obspy_plot
 from os.path import dirname, abspath, join, pardir, basename
@@ -40,8 +40,7 @@ class PlotTestCase(unittest.TestCase):
                 all_files += [newname]
 
             with ImageComparison(self.path, 'plot.png') as ic:
-                with CatchOutput():
-                    obspy_plot(['--outfile', ic.name] + all_files)
+                obspy_plot(['--outfile', ic.name] + all_files)
 
     def test_plotNoMerge(self):
         """
@@ -56,9 +55,8 @@ class PlotTestCase(unittest.TestCase):
                 all_files += [newname]
 
             with ImageComparison(self.path, 'plot_nomerge.png') as ic:
-                with CatchOutput():
-                    obspy_plot(['--no-automerge', '--outfile', ic.name] +
-                               all_files)
+                obspy_plot(['--no-automerge', '--outfile', ic.name] +
+                           all_files)
 
 
 def suite():
