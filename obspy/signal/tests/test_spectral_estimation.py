@@ -155,7 +155,6 @@ class PsdTestCase(unittest.TestCase):
         ppsd = _get_ppsd()
         # read results and compare
         result_hist = np.load(file_histogram)
-        print(file_histogram)
         self.assertEqual(len(ppsd.times), 4)
         self.assertEqual(ppsd.nfft, 65536)
         self.assertEqual(ppsd.nlap, 49152)
