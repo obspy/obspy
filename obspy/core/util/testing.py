@@ -206,14 +206,6 @@ def compare_images(expected, actual, tol):
             "shape %s." % (str(actual_image.shape),
                            str(expected_image.shape)))
 
-    print(expected_image)
-    print(expected_image.mean())
-    print(expected_image.std())
-    print("=================")
-    print(actual_image)
-    print(actual_image.mean())
-    print(actual_image.std())
-
     # Set all fully transparent pixels to white. This avoid the issue of
     # different "colors" for transparent pixels.
     expected_image[expected_image[..., 3] == 0.0] = 1.0
