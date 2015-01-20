@@ -1,4 +1,4 @@
-FROM mmckeen/opensuse-13-1:latest
+FROM opensuse:13.1
 
 MAINTAINER Lion Krischer
 
