@@ -458,7 +458,7 @@ class CatalogTestCase(unittest.TestCase):
         parameters.
         """
         cat = readEvents()
-        reltol = 1
+        reltol = 1.5
         # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
         # tolerance must be much higher.
         if BASEMAP_VERSION < [1, 0, 4]:
