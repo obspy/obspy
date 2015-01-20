@@ -596,19 +596,11 @@ class PPSD():
         # Yes, you should avoid removing the response until after you
         # have estimated the spectra to avoid elevated lp noise
 
-        
-
-        # go to acceleration, do nothing for rotational data:
-        if self.is_rotational_data:
-            pass
-        else:
-            tr.data = np.gradient(tr.data, self.delta)
-
         spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
-                               detrend=mlab.detrend_linear, window=fft_taper,
-                               noverlap=self.nlap, sides='onesided',
-                               scale_by_freq=True)
-
+                          detrend=mlab.detrend_linear, window=fft_taper,
+                          noverlap=self.nlap, sides='onesided',
+                          scale_by_freq=True)
+        
         # leave out first entry (offset)
         spec = spec[1:]
 
@@ -623,21 +615,18 @@ class PPSD():
             spec /= paz['sensitivity']**2
         else:
             #Get the complex response from the pole/zero model
-            resp = pazToFreqResp(paz['poles'],paz['zeros'],
-                paz['gain']*paz['sensitivity'],self.sampling_rate,
-                nfft=self.nfft)
+            resp = pazToFreqResp(paz['poles'], paz['zeros'],
+                                 paz['gain']*paz['sensitivity'],
+                                 self.sampling_rate, nfft=self.nfft)
             resp = resp[1:]
             resp = resp[::-1]
             #Now get the amplitude response (squared)
-            respamp = np.absolute(resp*np.conjugate(resp))
+            respamp = np.absolute(resp * np.conjugate(resp))
             #Make omega with the same conventions as spec
-            w = 2.0 *math.pi*_freq[1:]
+            w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
-            #Here we do the response removal 
+            #Here we do the response removal
             spec = (w**2) * spec / respamp
-
-
-
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
