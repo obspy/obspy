@@ -290,7 +290,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
             if datetimeplot:
                 locator = AutoDateLocator()
                 formatter = AutoDateFormatter(locator)
-                formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
+                # Compat with old matplotlib versions.
+                if hasattr(formatter, "scaled"):
+                    formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
             else:
                 locator = None
                 formatter = None
@@ -298,9 +300,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
                       orientation='horizontal',
                       ticks=locator,
                       format=formatter)
-        #              format=formatter)
-        #              ticks=mpl.ticker.MaxNLocator(4))
-        cb.update_ticks()
+        # Compat with old matplotlib versions.
+        if hasattr(cb, "update_ticks"):
+            cb.update_ticks()
 
     if show:
         plt.show()
