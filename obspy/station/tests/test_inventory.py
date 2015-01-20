@@ -166,7 +166,7 @@ class InventoryTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, "inventory_location2.png") as ic:
             rcParams['savefig.dpi'] = 72
             inv.plot(projection="ortho", resolution="c",
-                     continent_fill_color="0.3", marker="D",
+                     continent_fill_color="0.3", marker="d",
                      label=False, outfile=ic.name, colormap="hsv",
                      color_per_network=True)
 
