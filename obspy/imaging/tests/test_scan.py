@@ -7,7 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir
@@ -48,8 +48,7 @@ class ScanTestCase(unittest.TestCase):
                 shutil.copy(filename, os.curdir)
 
             with ImageComparison(self.path, 'scan.png') as ic:
-                with CatchOutput():
-                    obspy_scan([os.curdir] + ['--output', ic.name])
+                obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
 
     def test_scanTimes(self):
         """
@@ -61,12 +60,12 @@ class ScanTestCase(unittest.TestCase):
                 shutil.copy(filename, os.curdir)
 
             with ImageComparison(self.path, 'scan_times.png') as ic:
-                with CatchOutput():
-                    obspy_scan([os.curdir] + ['--output', ic.name] +
-                               ['--start-time', '2004-01-01'] +
-                               ['--end-time', '2004-12-31'] +
-                               ['--event-time', '2004-03-14T15:09:26'] +
-                               ['--event-time', '2004-02-07T18:28:18'])
+                obspy_scan([os.curdir] + ['--output', ic.name] +
+                           ['--start-time', '2004-01-01'] +
+                           ['--end-time', '2004-12-31'] +
+                           ['--event-time', '2004-03-14T15:09:26'] +
+                           ['--event-time', '2004-02-07T18:28:18'] +
+                           ['--quiet'])
 
     def test_multipleSamplingrates(self):
         """
@@ -91,10 +90,9 @@ class ScanTestCase(unittest.TestCase):
                         fp.flush()
                         fp.seek(0)
                         files.append(fp.name)
-                    with ImageComparison(self.path, 'scan_mult_sampl.png') \
+                    with ImageComparison(self.path, 'scan_mult_sampl.png')\
                             as ic:
-                        with CatchOutput():
-                            obspy_scan(files + ['--output', ic.name])
+                        obspy_scan(files + ['--output', ic.name, '--quiet'])
 
 
 def suite():
