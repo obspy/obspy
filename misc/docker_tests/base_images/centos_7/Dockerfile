@@ -6,4 +6,4 @@ RUN rpm -Uvh http://download.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-
 # Can fail on occasion.
 RUN yum -y upgrade || true
 RUN yum install -y numpy scipy gcc-gfortran python-matplotlib python-sqlalchemy0.8 python-lxml python-mock python-basemap python-basemap-data python-nose python-pip
-RUN pip install flake8 suds-jurko future pyproj
+RUN pip install flake8 suds-jurko future
