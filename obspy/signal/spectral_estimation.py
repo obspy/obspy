@@ -678,7 +678,7 @@ class PPSD():
             w = 2.0 *math.pi*_freq[1:]
             w = w[::-1]
             #Here we do the response removal 
-            spec = (w**2) * spec /respamp
+            spec = (w**2) * spec / respamp
 
 
 
