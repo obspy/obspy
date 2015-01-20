@@ -639,14 +639,6 @@ class PPSD():
         # Yes, you should avoid removing the response until after you
         # have estimated the spectra to avoid elevated lp noise
 
-        
-
-        # go to acceleration, do nothing for rotational data:
-        if self.is_rotational_data:
-            pass
-        else:
-            tr.data = np.gradient(tr.data, self.delta)
-
         # use our own wrapper for mlab.psd to have consistent results on all
         # matplotlib versions
         spec, _freq = psd(tr.data, self.nfft, self.sampling_rate,
