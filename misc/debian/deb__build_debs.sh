@@ -38,6 +38,7 @@ GITDIR=$BUILDDIR/git
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
 git clone git://github.com/${GITFORK}/obspy.git $GITDIR
+cd $GITDIR
 if [ "$GITFORK" != "obspy" ]
 then
     git remote add upstream git://github.com/obspy/obspy.git

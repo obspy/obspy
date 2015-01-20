@@ -29,12 +29,12 @@ echo '#############'
 echo "#### `date`"
 
 git clone git://github.com/${GITFORK}/obspy.git $GITDIR
+cd $GITDIR
 if [ "$GITFORK" != "obspy" ]
 then
     git remote add upstream git://github.com/obspy/obspy.git
     git fetch upstream
 fi
-cd $GITDIR
 git clean -fxd
 git checkout -- .
 if [ "$GITTARGET" != "master" ]
