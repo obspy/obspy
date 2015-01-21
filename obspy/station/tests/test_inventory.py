@@ -178,11 +178,13 @@ class InventoryTestCase(unittest.TestCase):
         non-default parameters.
         """
         inv = read_inventory()
-        reltol = 1
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        reltol = 2.0
         # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
         # tolerance must be much higher.
         if BASEMAP_VERSION < [1, 0, 4]:
-            reltol = 100
+            reltol = 100.0
         with ImageComparison(self.image_dir, "inventory_location3.png",
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72

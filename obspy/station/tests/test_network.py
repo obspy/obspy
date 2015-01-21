@@ -163,9 +163,11 @@ class NetworkTestCase(unittest.TestCase):
         non-default parameters.
         """
         net = read_inventory()[0]
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        reltol = 2.0
         # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
         # tolerance must be much higher.
-        reltol = 1.0
         if BASEMAP_VERSION < [1, 0, 4]:
             reltol = 100.0
         with ImageComparison(self.image_dir, "network_location3.png",
