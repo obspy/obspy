@@ -1,8 +1,11 @@
 0.10.0:
  - general:
-   * Support for Python 3.3 and 3.4
+   * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
    * More generic processing history for most Stream and Trace methods.
-   * Required SciPy version explicitly specified as 0.7.2+.
+   * Now requires NumPy >= 1.4.0
+   * Now requires SciPy >= 0.7.2
+   * Tested compatibility with most major Linux distributions still
+     receiving updates.
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
  - obspy.core:
