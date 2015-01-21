@@ -107,6 +107,8 @@ class WaveformPlotting(object):
             # fix stream times
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
+        elif self.type == 'section':
+            self.sect_reftime = kwargs.get('reftime', None)
         # Whether to use straight plotting or the fast minmax method. If not
         # set explicitly by the user "full" method will be used by default and
         # "fast" method will be used above some threshold of data points to
@@ -1257,7 +1259,7 @@ class WaveformPlotting(object):
         """
         Define the time vector for each trace
         """
-        reftime = min(self._tr_starttimes)
+        reftime = self.sect_reftime or min(self._tr_starttimes)
         self._tr_times = []
         for _tr in range(self._tr_num):
             self._tr_times.append(
