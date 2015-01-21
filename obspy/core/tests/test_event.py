@@ -15,15 +15,10 @@ import sys
 import unittest
 import warnings
 
-BASEMAP_VERSION = getBasemapVersion()
 
-# checking for matplotlib/basemap
-try:
+BASEMAP_VERSION = getBasemapVersion()
+if BASEMAP_VERSION:
     from matplotlib import rcParams
-    import mpl_toolkits.basemap  # NOQA
-    HAS_BASEMAP = True
-except ImportError:
-    HAS_BASEMAP = False
 
 
 class EventTestCase(unittest.TestCase):
@@ -428,7 +423,7 @@ class CatalogTestCase(unittest.TestCase):
         cat = readEvents(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    @skipIf(not HAS_BASEMAP, 'basemap not installed')
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_cylindrical(self):
         """
         Tests the catalog preview plot, default parameters.
@@ -438,7 +433,7 @@ class CatalogTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
 
-    @skipIf(not HAS_BASEMAP, 'basemap not installed')
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_ortho(self):
         """
         Tests the catalog preview plot, ortho projection, some non-default
@@ -451,7 +446,7 @@ class CatalogTestCase(unittest.TestCase):
                      resolution="c",
                      water_fill_color="b", label=None)
 
-    @skipIf(not HAS_BASEMAP, 'basemap not installed')
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default
