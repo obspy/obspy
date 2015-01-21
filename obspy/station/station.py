@@ -173,6 +173,37 @@ class Station(BaseNode):
         return content_dict
 
     @property
+    def __geo_interface__(self):
+        """
+        __geo_interface__ method for GeoJSON-type GIS protocol
+
+        :return: dict of valid GeoJSON
+
+        Reference
+        ---------
+        Python geo_interface specifications:
+        https://gist.github.com/sgillies/2217756
+
+        """
+        # Convert UTCDateTime objects to str
+        times = dict([(a, str(getattr(self, a))) for a in ('start_date',
+                     'end_date', 'creation_date', 'termination_date')
+                     if getattr(self, a) is not None])
+
+        point = {
+            "type": "Point",
+            "coordinates": (self.longitude, self.latitude, self.elevation),
+            "id": self.code,
+            }
+        props = {
+            "start_date": times.get('start_date'),
+            "end_date": times.get('end_date'),
+            "creation_date": times.get('creation_date'),
+            "termination_date": times.get('termination_date'),
+            }
+        return {"type": "Feature", "properties": props, "geometry": point}
+
+    @property
     def operators(self):
         return self._operators
 
