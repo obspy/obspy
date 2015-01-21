@@ -72,7 +72,7 @@ run_tests_on_image () {
 
     $DOCKER build -t temp:temp $TEMP_PATH
 
-    $DOCKER run -i -t --name=$ID temp:temp
+    $DOCKER run --name=$ID temp:temp
 
     $DOCKER cp $ID:/INSTALL_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
