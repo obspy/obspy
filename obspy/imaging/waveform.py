@@ -96,7 +96,6 @@ class WaveformPlotting(object):
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
-        self.sect_timeshift = kwargs.get('timeshift', False)
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
         # normalize times
@@ -1258,16 +1257,14 @@ class WaveformPlotting(object):
         """
         Define the time vector for each trace
         """
+        reftime = min(self._tr_starttimes)
         self._tr_times = []
         for _tr in range(self._tr_num):
             self._tr_times.append(
-                np.arange(self._tr_npts[_tr]) * self._tr_delta[_tr])
+                (np.arange(self._tr_npts[_tr]) +
+                 (self._tr_starttimes[_tr] - reftime)) * self._tr_delta[_tr])
             if self.sect_vred:
                 self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
-            if self.sect_timeshift:
-                self._tr_times[-1] += \
-                    (self._tr_starttimes[_tr] - min(self._tr_starttimes))\
-                    * self._tr_delta[_tr]
 
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()

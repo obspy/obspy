@@ -274,7 +274,8 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = Stream()
         for _i in range(10):
-            st += self._createStream(start, start + 3600, 100)
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
             st[-1].stats.distance = _i * 10e3
         # create and compare image
         with ImageComparison(self.path, 'waveform_default_section.png') as ic:
