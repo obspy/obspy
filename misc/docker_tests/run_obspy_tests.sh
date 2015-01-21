@@ -1,6 +1,12 @@
 #!/bin/bash
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
+# Remove all test images stored locally. Otherwise they'll end up on the
+# images.
+rm -rf $OBSPY_PATH/obspy/core/tests/images/testrun
+rm -rf $OBSPY_PATH/obspy/imaging/tests/images/testrun
+rm -rf $OBSPY_PATH/obspy/station/tests/images/testrun
+
 DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
