@@ -227,17 +227,8 @@ def compare_images(expected, actual, tol):
 
     write_png(np.uint8(save_image_np * 255.0), diff_image)
 
-    results = dict(rms=rms, expected=str(expected),
-                   actual=str(actual), diff=str(diff_image), tol=tol)
-
-    # Then the results should be a string suitable for stdout.
-    template = ['Error: Image files did not match.',
-                'RMS Value: {rms}',
-                'Expected:  \n    {expected}',
-                'Actual:    \n    {actual}',
-                'Difference:\n    {diff}',
-                'Tolerance: \n    {tol}', ]
-    return '\n  '.join([line.format(**results) for line in template])
+    return dict(rms=rms, expected=str(expected), actual=str(actual),
+                diff=str(diff_image), tol=tol)
 
 
 class ImageComparisonException(unittest.TestCase.failureException):
@@ -358,7 +349,6 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
-        msg = ""
         try:
             # only compare images if no exception occurred in the with
             # statement. this avoids masking previously occurred exceptions (as
@@ -372,8 +362,8 @@ class ImageComparison(NamedTemporaryFile):
             failed = True
             msg = str(e)
             if "operands could not be broadcast together" in msg:
-                msg = self._upload_and_append_message(msg)
-                raise ImageComparisonException(msg)
+                upload_msg = self._upload_images()
+                raise ImageComparisonException("\n".join([msg, upload_msg]))
             raise
         # simply reraise on any other unhandled exceptions
         except:
@@ -383,9 +373,29 @@ class ImageComparison(NamedTemporaryFile):
         # message back or the test passed if we get an empty message
         else:
             if msg:
-                msg = self._upload_and_append_message(msg)
+                upload_msg = self._upload_images()
                 failed = True
-                raise ImageComparisonException(msg)
+                if self.keep_output and not (self.keep_only_failed and not
+                                             failed):
+                    self._copy_tempfiles()
+                    ff = self._get_final_filenames()
+                    msg = ("Image comparision failed.\n"
+                           "\tExpected:  {expected}\n"
+                           "\tActual:    {actual}\n"
+                           "\tDiff:      {diff}\n"
+                           "\tRMS:       {rms}\n"
+                           "\tTolerance: {tol}").format(
+                        expected=ff["expected"],
+                        actual=ff["actual"],
+                        diff=ff["diff"],
+                        rms=msg["rms"],
+                        tol=msg["tol"])
+                else:
+                    msg = ("Image comparision failed, RMS={rms}, "
+                           "tolerance={tol}. Set the "
+                           "OBSPY_KEEP_IMAGES env variable to keep "
+                           "the test images.").format(**msg)
+                raise ImageComparisonException("\n".join([msg, upload_msg]))
             failed = False
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
@@ -412,14 +422,27 @@ class ImageComparison(NamedTemporaryFile):
             msg = "Empty output image file."
             raise ImageComparisonException(msg)
 
-        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
+        return compare_images(self.baseline_image, self.name, tol=self.tol)
 
-        return msg
+    def _get_final_filenames(self):
+        """
+        Helper function returning the
+        :return:
+        """
+        directory = self.output_path
+        filename_new = os.path.join(directory, self.image_name)
+        diff_filename_new = "-failed-diff.".join(
+            self.image_name.rsplit(".", 1))
+        diff_filename_new = os.path.join(directory, diff_filename_new)
+        return {"actual": os.path.abspath(filename_new),
+                "expected": os.path.abspath(self.baseline_image),
+                "diff": os.path.abspath(diff_filename_new)}
 
     def _copy_tempfiles(self):
         """
         Copies created images from tempfiles to a subfolder of baseline images.
         """
+        filenames = self._get_final_filenames()
         directory = self.output_path
         if os.path.exists(directory) and not os.path.isdir(directory):
             msg = "Could not keep output image, target directory exists:" + \
@@ -429,22 +452,8 @@ class ImageComparison(NamedTemporaryFile):
         if not os.path.exists(directory):
             os.mkdir(directory)
         if os.path.isfile(self.diff_filename):
-            diff_filename_new = \
-                "-failed-diff.".join(self.image_name.rsplit(".", 1))
-            shutil.copy(self.diff_filename, os.path.join(directory,
-                                                         diff_filename_new))
-        shutil.copy(self.name, os.path.join(directory, self.image_name))
-
-    def _upload_and_append_message(self, msg):
-        """
-        Takes an error message from image comparison, uploads any output images
-        and appends the corresponding imgur links to the original error
-        message.
-        """
-        msg_ = self._upload_images()
-        if msg_:
-            msg = "\n".join([msg, msg_])
-        return msg
+            shutil.copy(self.diff_filename, filenames["diff"])
+        shutil.copy(self.name, filenames["actual"])
 
     def _upload_images(self):
         """
