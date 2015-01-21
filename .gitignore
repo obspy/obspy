@@ -26,3 +26,7 @@ obspy/lib/*.pyd
 /obspy.pstats
 __pycache__
 debian
+obspy/core/tests/images/testrun/
+obspy/station/tests/images/testrun/
+obspy/imaging/tests/images/testrun/
+misc/docker_tests/temp/

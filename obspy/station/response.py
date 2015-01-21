@@ -23,7 +23,11 @@ from collections import defaultdict
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex, \
     FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
+from obspy.core.util.base import getMatplotlibVersion
 from obspy.station.util import Frequency, Angle
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ResponseStage(ComparingObject):
@@ -1234,7 +1238,11 @@ class Response(ComparingObject):
         lw = 1.5
         lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
         color = lines[0].get_color()
-        if self.instrument_sensitivity:
+        # Cannot be plotted with matplotlib < 1.0.0
+        if MATPLOTLIB_VERSION < [1, 0, 0]:
+            warnings.warn("Cannot plot the instrument sensitivity. Your "
+                          "matplotlib version is too old. Please update.")
+        if self.instrument_sensitivity and MATPLOTLIB_VERSION >= [1, 0, 0]:
             trans_above = blended_transform_factory(ax1.transData,
                                                     ax1.transAxes)
             trans_right = blended_transform_factory(ax1.transAxes,

@@ -19,7 +19,8 @@ import numpy as np
 
 from obspy.station import Inventory, Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.base import getBasemapVersion
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 import warnings
 
@@ -32,6 +33,9 @@ try:
     HAS_BASEMAP = True
 except ImportError:
     HAS_BASEMAP = False
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
+BASEMAP_VERSION = getBasemapVersion()
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -143,8 +147,7 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_cylindrical(self):
         """
         Tests the inventory location preview plot, default parameters.
@@ -154,8 +157,7 @@ class InventoryTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(outfile=ic.name)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_ortho(self):
         """
         Tests the inventory location preview plot, ortho projection, some
@@ -165,35 +167,47 @@ class InventoryTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, "inventory_location2.png") as ic:
             rcParams['savefig.dpi'] = 72
             inv.plot(projection="ortho", resolution="c",
-                     continent_fill_color="0.3", marker="D",
+                     continent_fill_color="0.3", marker="d",
                      label=False, outfile=ic.name, colormap="hsv",
                      color_per_network=True)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_local(self):
         """
         Tests the inventory location preview plot, local projection, some more
         non-default parameters.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir, "inventory_location3.png") as ic:
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        reltol = 2.0
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100.0
+        with ImageComparison(self.image_dir, "inventory_location3.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             inv.plot(projection="local", resolution="i", size=20**2,
                      color_per_network={"GR": "b", "BW": "green"},
                      outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_response_plot(self):
         """
         Tests the response plot.
         """
+        # Bug in matplotlib 1.4.0 - 1.4.2:
+        # See https://github.com/matplotlib/matplotlib/issues/4012
+        reltol = 1.0
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 4, 2]:
+            reltol = 2.0
+
         inv = read_inventory()
         t = UTCDateTime(2008, 7, 1)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "inventory_response.png") \
-                    as ic:
+            with ImageComparison(self.image_dir, "inventory_response.png",
+                                 reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 inv.plot_response(0.01, output="ACC", channel="*N",
                                   station="[WR]*", time=t, outfile=ic.name)

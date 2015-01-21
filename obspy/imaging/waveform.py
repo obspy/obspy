@@ -24,7 +24,7 @@ from future.utils import native_str
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
-    getMatplotlibVersion, locations2degrees
+    locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
 
 from copy import copy
@@ -36,9 +36,6 @@ import matplotlib.patches as patches
 import numpy as np
 import scipy.signal as signal
 import warnings
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class WaveformPlotting(object):

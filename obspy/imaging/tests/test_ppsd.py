@@ -6,8 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison
 from obspy.signal.tests.test_spectral_estimation import _get_ppsd
 from copy import deepcopy
 import os
@@ -26,7 +25,6 @@ class PPSDTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         self.ppsd = deepcopy(ppsd)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_ppsd_plot(self):
         """
         """
