@@ -25,7 +25,7 @@ if HAS_COMPARE_IMAGE:
     from matplotlib import rcParams
 
 
-class StationTest(unittest.TestCase):
+class StationTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.station.Station` class.
     """
@@ -51,7 +51,7 @@ class StationTest(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(StationTest, 'test')
+    return unittest.makeSuite(StationTestCase, 'test')
 
 
 if __name__ == '__main__':

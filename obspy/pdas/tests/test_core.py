@@ -10,7 +10,7 @@ from obspy import Stream, UTCDateTime
 from obspy.pdas import readPDAS, isPDAS
 
 
-class PDASCase(unittest.TestCase):
+class PDASTestCase(unittest.TestCase):
     """
     Test suite for pdas.
     """
@@ -59,7 +59,7 @@ class PDASCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(PDASCase, 'test')
+    return unittest.makeSuite(PDASTestCase, 'test')
 
 
 if __name__ == '__main__':

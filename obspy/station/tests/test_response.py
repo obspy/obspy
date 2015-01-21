@@ -39,7 +39,7 @@ except ImportError:
     HAS_BASEMAP = False
 
 
-class ResponseTest(unittest.TestCase):
+class ResponseTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.response.Response` class.
     """
@@ -164,7 +164,7 @@ class ResponseTest(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(ResponseTest, 'test')
+    return unittest.makeSuite(ResponseTestCase, 'test')
 
 
 if __name__ == '__main__':

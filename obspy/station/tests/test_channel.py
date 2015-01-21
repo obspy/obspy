@@ -33,7 +33,7 @@ except ImportError:
     HAS_BASEMAP = False
 
 
-class ChannelTest(unittest.TestCase):
+class ChannelTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.channel.Channel` class.
     """
@@ -63,7 +63,7 @@ class ChannelTest(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(ChannelTest, 'test')
+    return unittest.makeSuite(ChannelTestCase, 'test')
 
 
 if __name__ == '__main__':
