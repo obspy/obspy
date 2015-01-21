@@ -188,8 +188,7 @@ def compare_images(expected, actual, tol):
     if not os.path.exists(expected):
         raise IOError('Baseline image %r does not exist.' % expected)
 
-    # open the image files channel and convert to int16 so that the images
-    # can be subtracted without overflow.
+    # Open the images. Will be opened as RGBA as float32 ranging from 0 to 1.
     expected_image = matplotlib.image.imread(native_str(expected))
     actual_image = matplotlib.image.imread(native_str(actual))
     if expected_image.shape != actual_image.shape:
@@ -198,8 +197,8 @@ def compare_images(expected, actual, tol):
             "shape %s." % (str(actual_image.shape),
                            str(expected_image.shape)))
 
-    # Set all fully transparent pixels to white. This avoid the issue of
-    # different "colors" for transparent pixels.
+    # Set the "color" of fully transparent pixels to white. This avoids the
+    # issue of different "colors" for transparent pixels.
     expected_image[expected_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
     actual_image[actual_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
 
