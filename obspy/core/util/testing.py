@@ -308,7 +308,7 @@ class ImageComparison(NamedTemporaryFile):
         """
         Set matplotlib defaults.
         """
-        from matplotlib import get_backend, rcParams, rcdefaults
+        from matplotlib import font_manager, get_backend, rcParams, rcdefaults
         import locale
 
         try:
@@ -333,6 +333,12 @@ class ImageComparison(NamedTemporaryFile):
         # set matplotlib builtin default settings for testing
         rcdefaults()
         rcParams['font.family'] = 'Bitstream Vera Sans'
+        with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings('always', 'findfont:.*')
+            font_manager.findfont('Bitstream Vera Sans')
+        if w:
+            warnings.warn('Unable to find the Bitstream Vera Sans font. '
+                          'Plotting tests will likely fail.')
         try:
             rcParams['text.hinting'] = False
         except KeyError:
