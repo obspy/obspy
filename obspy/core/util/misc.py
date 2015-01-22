@@ -374,9 +374,7 @@ def CatchOutput():
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Roughly based on: http://stackoverflow.com/a/17954769
-
-    This variant does not leak file descriptors.
+    Based on: http://bugs.python.org/msg184312
 
     >>> with CatchOutput() as out:  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
@@ -386,71 +384,49 @@ def CatchOutput():
     >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
-    stdout_file, stdout_filename = tempfile.mkstemp(prefix="obspy-")
-    stderr_file, stderr_filename = tempfile.mkstemp(prefix="obspy-")
 
-    try:
-        fd_stdout = sys.stdout.fileno()
-        fd_stderr = sys.stderr.fileno()
+    # Dummy class to transport the output.
+    class Output():
+        pass
+    out = Output()
+    out.stdout = ''
+    out.stderr = ''
 
-        # Dummy class to transport the output.
-        class Output():
-            pass
-        out = Output()
-        out.stdout = ""
-        out.stderr = ""
+    stdout_fd = sys.stdout.fileno()
+    stderr_fd = sys.stderr.fileno()
+    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
+        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
+            stdout_copy = os.dup(stdout_fd)
+            stderr_copy = os.dup(stderr_fd)
 
-        with os.fdopen(os.dup(sys.stdout.fileno()), "wb") as old_stdout:
-            with os.fdopen(os.dup(sys.stderr.fileno()), "wb") as old_stderr:
+            try:
                 sys.stdout.flush()
+                os.dup2(tmp_stdout.fileno(), stdout_fd)
+
                 sys.stderr.flush()
+                os.dup2(tmp_stderr.fileno(), stderr_fd)
 
-                os.dup2(stdout_file, fd_stdout)
-                os.dup2(stderr_file, fd_stderr)
+                raised = False
+                yield out
 
-                try:
-                    raised = False
-                    yield out
-                except SystemExit:
-                    raised = True
-                finally:
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    os.fsync(sys.stdout.fileno())
-                    os.fsync(sys.stderr.fileno())
-                    sys.stdout = sys.__stdout__
-                    sys.stderr = sys.__stderr__
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    os.dup2(old_stdout.fileno(), sys.stdout.fileno())
-                    os.dup2(old_stderr.fileno(), sys.stderr.fileno())
+            except SystemExit:
+                raised = True
 
-                    with open(stdout_filename, "rb") as fh:
-                        out.stdout = fh.read()
-                    with open(stderr_filename, "rb") as fh:
-                        out.stderr = fh.read()
+            finally:
+                sys.stdout.flush()
+                os.dup2(stdout_copy, stdout_fd)
+                os.close(stdout_copy)
+                tmp_stdout.seek(0)
+                out.stdout = tmp_stdout.read()
 
-                    if raised:
-                        raise SystemExit(out.stderr)
+                sys.stderr.flush()
+                os.dup2(stderr_copy, stderr_fd)
+                os.close(stderr_copy)
+                tmp_stderr.seek(0)
+                out.stderr = tmp_stderr.read()
 
-    finally:
-        # Make sure to always close and remove the temporary files.
-        try:
-            os.close(stdout_file)
-        except:
-            pass
-        try:
-            os.close(stderr_file)
-        except:
-            pass
-        try:
-            os.remove(stdout_filename)
-        except OSError:
-            pass
-        try:
-            os.remove(stderr_filename)
-        except OSError:
-            pass
+                if raised:
+                    raise SystemExit(out.stderr)
 
 
 @contextmanager
