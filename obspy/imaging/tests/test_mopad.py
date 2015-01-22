@@ -52,26 +52,28 @@ class MopadTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
-        # Initialize figure
-        fig = plt.figure(figsize=(6, 6), dpi=300)
-        ax = fig.add_subplot(111, aspect='equal')
-
-        # Plot the stations or borders
-        ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
-
-        x = -100
-        y = -100
-        for i, t in enumerate(mt):
-            # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(Beach(t, width=30, xy=(x, y), linewidth=.6))
-            x += 50
-            if (i + 1) % 5 == 0:
-                x = -100
-                y += 50
-        # set the x and y limits and save the output
-        ax.axis([-120, 120, -120, 120])
-        # create and compare image
         with ImageComparison(self.path, 'mopad_collection.png') as ic:
+            # Initialize figure
+            fig = plt.figure(figsize=(6, 6), dpi=300)
+            ax = fig.add_subplot(111, aspect='equal')
+
+            # Plot the stations or borders
+            ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
+
+            x = -100
+            y = -100
+            for i, t in enumerate(mt):
+                # add the beachball (a collection of two patches) to the axis
+                ax.add_collection(Beach(t, width=30, xy=(x, y), linewidth=.6))
+                x += 50
+                if (i + 1) % 5 == 0:
+                    x = -100
+                    y += 50
+
+            # set the x and y limits
+            ax.axis([-120, 120, -120, 120])
+
+            # create and compare image
             fig.savefig(ic.name)
 
 
