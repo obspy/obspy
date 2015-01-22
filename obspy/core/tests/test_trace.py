@@ -1500,6 +1500,14 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr_3.stats.sampling_rate, 10.0)
         self.assertEqual(tr_3.stats.starttime, tr.stats.starttime)
 
+        tr_4 = tr.copy()
+        tr_4.data = np.require(tr_4.data,
+                               dtype=tr_4.data.dtype.newbyteorder('>'))
+        tr_4 = tr_4.resample(sampling_rate=10.0)
+        self.assertEqual(tr_4.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
+        self.assertEqual(tr_4.stats.sampling_rate, 10.0)
+        self.assertEqual(tr_4.stats.starttime, tr.stats.starttime)
+
     def test_method_chaining(self):
         """
         Tests that method chaining works for all methods on the Trace object
