@@ -107,6 +107,9 @@ class Network(BaseNode):
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def get_contents(self):
         """
         Returns a dictionary containing the contents of the object.

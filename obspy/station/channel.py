@@ -194,6 +194,9 @@ class Channel(BaseNode):
                           if self.response else ""))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     @property
     def location_code(self):
         return self._location_code
