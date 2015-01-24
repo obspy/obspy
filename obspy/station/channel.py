@@ -186,9 +186,9 @@ class Channel(BaseNode):
                      self.dip if self.dip is not None else ""),
                 channel_types=("\tChannel types: %s\n" % ", ".join(self.types)
                                if self.types else ""),
-                sampling_rate=("\tSampling Rate: {sampling_rate:.2f} Hz\n" %
+                sampling_rate=("\tSampling Rate: %.2f Hz\n" %
                                self.sample_rate if self.sample_rate else ""),
-                sensor=("\tSensor: {sensor}\n" % self.sensor.type
+                sensor=("\tSensor: %s\n" % self.sensor.type
                         if self.sensor else ""),
                 response=("\tResponse information available"
                           if self.response else ""))
