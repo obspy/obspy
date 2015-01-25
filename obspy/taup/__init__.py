@@ -21,6 +21,7 @@ __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
 
 # Convenience imports.
 from .taup import getTravelTimes, travelTimePlot  # NOQA
+from .tau import TauPyModel  # NOQA
 
 if __name__ == '__main__':
     import doctest
