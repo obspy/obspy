@@ -48,6 +48,7 @@ from distutils.util import change_root
 from numpy.distutils.core import setup, DistutilsSetupError
 from numpy.distutils.command.build import build
 from numpy.distutils.command.install import install
+from numpy.distutils.command.develop import develop
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
@@ -699,7 +700,7 @@ def setupPackage():
             'install': CustomInstallCommand,
             'develop': CustomDevelopCommand,
             'build_man': Help2ManBuild,
-            'install_man': Help2ManInstall},
+            'install_man': Help2ManInstall
         },
         configuration=configuration)
 
