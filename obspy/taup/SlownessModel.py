@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
+from future.builtins import *  # NOQA
 
 from copy import deepcopy
-from decimal import *
 import math
 import numpy as np
 
@@ -935,9 +934,8 @@ class SlownessModel(object):
                                     ((splitTD.time - prevTD.time)
                                      * ((currTD.distRadian
                                         - prevTD.distRadian) /
-                                    np.array(splitTD.distRadian
-                                             - prevTD.distRadian))
-                                    + prevTD.time))
+                                        np.array(splitTD.distRadian -
+                                        prevTD.distRadian)) + prevTD.time))
                         if abs(diff) > self.maxInterpError:
                             self.addSlowness((prevSLayer.topP
                                               + prevSLayer. botP) / 2,

@@ -3,7 +3,7 @@
 # Manual test to just check if the tau interface runs without upsets.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
+from future.builtins import *  # NOQA
 
 import inspect
 import os
@@ -51,13 +51,13 @@ def _compare_arrivals_with_file(arrivals, filename):
         assert arr.name == expected_arr["name"]
         assert round(arr.time, 2) == round(expected_arr["time"], 2)
         assert round(arr.rayParam_sec_degree, 3) == \
-               round(expected_arr["rayParam_sec_degree"], 3)
+            round(expected_arr["rayParam_sec_degree"], 3)
         assert round(arr.takeoffAngle, 2) == \
-               round(expected_arr["takeoffAngle"], 2)
+            round(expected_arr["takeoffAngle"], 2)
         assert round(arr.incidentAngle, 2) == \
-               round(expected_arr["incidentAngle"], 2)
+            round(expected_arr["incidentAngle"], 2)
         assert round(arr.purist_distance, 2) == \
-               round(expected_arr["purist_distance"], 2)
+            round(expected_arr["purist_distance"], 2)
         assert arr.puristName == expected_arr["puristName"]
 
 
@@ -90,6 +90,7 @@ def test_p_ak135():
                                   distance_in_degree=35.0, phase_list=["P"])
     _compare_arrivals_with_file(
         arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
+
 
 def test_iasp91():
     m = tau.TauPyModel(model="iasp91")

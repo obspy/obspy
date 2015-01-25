@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
+from future.builtins import *  # NOQA
 
 import math
 import numpy as np
@@ -81,11 +81,9 @@ class TauP_Path(TauP_Pierce):
                                               capj.time),
                                              (capjminus.getDistDeg(),
                                               capj.getDistDeg()))
-                        calcDepth = np.interp(self.maxPathTime,
-                                             (capjminus.time,
-                                              capj.time),
-                                             (capjminus.depth,
-                                              capj.depth))
+                        calcDepth = np.interp(
+                            self.maxPathTime, (capjminus.time, capj.time),
+                            (capjminus.depth, capj.depth))
                         prevDepth = calcDepth
                         calcTime = self.maxPathTime
                     else:

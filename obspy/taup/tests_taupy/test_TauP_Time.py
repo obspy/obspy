@@ -7,7 +7,7 @@ interface.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
+from future.builtins import *  # NOQA
 import inspect
 import os
 import unittest
@@ -91,7 +91,7 @@ def test_all_phases_iasp91_35_deg_distance():
     """
     model = TauPyModel("iasp91")
     tts = model.get_travel_times(source_depth_in_km=10.0,
-                                distance_in_degree=35.0)
+                                 distance_in_degree=35.0)
     compare_arrivals_with_taup_time_output(
         tts, "taup_time_-h_10_-ph_ttall_-deg_35")
 
@@ -105,7 +105,7 @@ class TestTauPTime(unittest.TestCase):
         """
         model = TauPyModel("ak135")
         tts = model.get_travel_times(source_depth_in_km=10.0,
-                                    distance_in_degree=35.0)
+                                     distance_in_degree=35.0)
         compare_arrivals_with_taup_time_output(
             tts, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
@@ -129,8 +129,8 @@ class TestTauPTime(unittest.TestCase):
         # a problem.
         subprocess.check_call("./compare_tauptime_outputs.sh", shell=True)
         # Use this if lines are in same order:
-        #subprocess.check_call("diff -wB data/java_tauptime_testoutput "
-        #                     "taup_time_test_output", shell=True)
+        # subprocess.check_call("diff -wB data/java_tauptime_testoutput "
+        #                       "taup_time_test_output", shell=True)
         os.remove("data/taup_time_test_output")
 
     def test_degree_distance_from_coords(self):
