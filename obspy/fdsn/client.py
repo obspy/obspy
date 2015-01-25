@@ -1048,6 +1048,9 @@ class Client(object):
                                          services=services_string))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def help(self, service=None):
         """
         Print a more extensive help for a given service.

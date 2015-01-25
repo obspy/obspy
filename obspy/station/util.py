@@ -199,6 +199,9 @@ class DataAvailability(ComparingObject):
         return "Data Availability from %s to %s." % (str(self.start),
                                                      str(self.end))
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Equipment(ComparingObject):
     """
@@ -565,6 +568,9 @@ class Site(ComparingObject):
             town=self.town, county=self.county, region=self.region,
             country=self.country)
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class Latitude(FloatWithUncertaintiesFixedUnit):

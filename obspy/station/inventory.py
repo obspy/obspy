@@ -204,6 +204,9 @@ class Inventory(ComparingObject):
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret_str
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def write(self, path_or_file_object, format, **kwargs):
         """
         Writes the inventory object to a file or file-like object in

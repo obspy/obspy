@@ -164,6 +164,9 @@ class ResponseStage(ComparingObject):
                 if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class PolesZerosResponseStage(ResponseStage):
     """
@@ -244,6 +247,9 @@ class PolesZerosResponseStage(ResponseStage):
             zeros=", ".join(map(str, self.zeros)),
             )
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def zeros(self):
@@ -365,6 +371,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 transfer_fct_type=self.cf_transfer_function_type,
                 num_count=len(self.numerator), den_count=len(self.denominator))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def numerator(self):
@@ -1135,6 +1144,9 @@ class Response(ComparingObject):
                      ("%g" % i.stage_gain) if i.stage_gain else "UNKNOWN")
                  for i in self.response_stages]))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,

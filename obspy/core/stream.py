@@ -549,6 +549,9 @@ class Stream(object):
                 'Stream.__str__(extended=True))" to print all Traces]'
         return out
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(self.__str__(extended=p.verbose))
+
     def __eq__(self, other):
         """
         Implements rich comparison of Stream objects for "==" operator.

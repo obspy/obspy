@@ -198,6 +198,9 @@ class Stats(AttribDict):
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 def _add_processing_info(func):
     """
@@ -388,6 +391,9 @@ class Trace(object):
         if np.ma.count_masked(self.data):
             out += ' (masked)'
         return trace_id + out % (self.stats)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __len__(self):
         """

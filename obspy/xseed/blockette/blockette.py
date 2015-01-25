@@ -70,6 +70,9 @@ class Blockette(object):
             temp += os.linesep
         return temp.strip()
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def getFields(self, xseed_version=DEFAULT_XSEED_VERSION):
         fields = []
         for field in self.fields:

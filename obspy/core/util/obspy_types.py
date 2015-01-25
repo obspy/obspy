@@ -136,6 +136,9 @@ class Enum(object):
         keys = list(self.__enums.keys())
         return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class CustomComplex(complex):
     """
