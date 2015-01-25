@@ -22,7 +22,7 @@ class TauP_Create(object):
     """
     def __init__(self, input_filename, output_filename, verbose=False,
                  min_delta_p=0.1, max_delta_p=11.0, max_depth_interval=115.0,
-                 max_range_interval=2.5, max_interp_error=0.5,
+                 max_range_interval=2.5, max_interp_error=0.05,
                  allow_inner_core_s=True):
         self.input_filename = input_filename
         self.output_filename = output_filename
