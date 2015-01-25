@@ -10,7 +10,6 @@ from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import (NamedTemporaryFile, getSciPyVersion)
 from obspy.xseed import Parser
-from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import pickle
