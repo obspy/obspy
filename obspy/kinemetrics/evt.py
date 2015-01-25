@@ -99,36 +99,39 @@ class Evt(object):
             is_fileobject = False
             file_pointer = open(filename_or_object, "rb")
 
-        self.e_tag.read(file_pointer)
-        endian = self.e_tag.endian
-        self.e_header.unsetdico()
-        self.e_header.read(file_pointer, self.e_tag.length, endian)
+        try:
+            self.e_tag.read(file_pointer)
+            endian = self.e_tag.endian
+            self.e_header.unsetdico()
+            self.e_header.read(file_pointer, self.e_tag.length, endian)
 
-        self.data = np.ndarray([self.e_header.nchannels, 0])
+            self.data = np.ndarray([self.e_header.nchannels, 0])
 
-        while True:
-            try:
-                self.e_tag.read(file_pointer)
-                retparam = self.e_frame.read(file_pointer,
-                                             self.e_tag.length, endian)
-                if self.samplingrate == 0:
-                    self.samplingrate = retparam[0]
-                elif self.samplingrate != retparam[0]:
-                    raise EvtBadHeaderError("Sampling rate not constant")
-                datal = self.e_data.read(file_pointer,
-                                         self.e_tag.datalength,
-                                         endian, retparam)
-                npdata = np.array(datal)
-                self.data = np.hstack((self.data, npdata))  # append data
-            except EvtEOFError:
-                break
+            while True:
+                try:
+                    self.e_tag.read(file_pointer)
+                    retparam = self.e_frame.read(file_pointer,
+                                                 self.e_tag.length, endian)
+                    if self.samplingrate == 0:
+                        self.samplingrate = retparam[0]
+                    elif self.samplingrate != retparam[0]:
+                        raise EvtBadHeaderError("Sampling rate not constant")
+                    datal = self.e_data.read(file_pointer,
+                                             self.e_tag.datalength,
+                                             endian, retparam)
+                    npdata = np.array(datal)
+                    self.data = np.hstack((self.data, npdata))  # append data
+                except EvtEOFError:
+                    break
+        finally:
+            if not is_fileobject:
+                file_pointer.close()
+
         if self.e_frame.count() != self.e_header.duration:
             raise EvtBadDataError("Bad number of blocks")
 
         if not raw:
             self.calibration()
-        if is_fileobject is False:
-            file_pointer.close()
 
         traces = []
         for i in range(self.e_header.nchannels):
