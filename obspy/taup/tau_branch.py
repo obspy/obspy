@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from .helper_classes import TauModelError, TimeDist, SlownessModelError
-from .SlownessLayer import SlownessLayer
+from .slowness_layer import SlownessLayer
 
 
 class TauBranch(object):

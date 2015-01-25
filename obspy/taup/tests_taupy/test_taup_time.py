@@ -56,14 +56,14 @@ def compare_arrivals_with_taup_time_output(arrivals, filename):
 
     arrivals = [
         {
-            "distance": _i.getModuloDistDeg(),
+            "distance": _i.get_modulo_dist_deg(),
             "depth": _i.sourceDepth,
             "phase_name": _i.phase.name,
             "time": _i.time,
             "ray_param": _i.rayParam_sec_degree,
             "takeoff": _i.takeoffAngle,
             "incident": _i.incidentAngle,
-            "purist_distance": _i.getDistDeg(),
+            "purist_distance": _i.get_dist_deg(),
             "purist_name": _i.puristName
         } for _i in arrivals]
 

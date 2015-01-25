@@ -8,7 +8,7 @@ import argparse
 import math
 
 from .helper_classes import TauModelError
-from .SeismicPhase import SeismicPhase
+from .seismic_phase import SeismicPhase
 
 
 class TauP_Time(object):
@@ -124,7 +124,7 @@ class TauP_Time(object):
             splitNames = getPhaseNames(self.relativePhaseName)  # Static!
             for sName in splitNames:
                 relPhases.append(SeismicPhase(sName, self.tModDepth))
-            self.relativeArrival = SeismicPhase.getEarliestArrival(relPhases,
+            self.relativeArrival = SeismicPhase.get_earliest_arrival(relPhases,
                                                                    degrees)
 
     def calcTime(self, degrees):
@@ -135,7 +135,7 @@ class TauP_Time(object):
         self.degrees = degrees
         self.arrivals = []
         for phase in self.phases:
-            phaseArrivals = phase.calcTime(degrees)
+            phaseArrivals = phase.calc_time(degrees)
             self.arrivals += phaseArrivals
         self.sortArrivals()
 
@@ -165,7 +165,7 @@ class TauP_Time(object):
         print(lineTwo)
         print("-"*(len(lineOne)-2))  # for output comparison to Java
         for arrival in self.arrivals:
-            out = "{:>8.2f}".format(arrival.getModuloDistDeg()) + "   "
+            out = "{:>8.2f}".format(arrival.get_modulo_dist_deg()) + "   "
             out += "{:>5.1f}".format(self.depth) + "   "
             out += "{0:<{1}s}".format(arrival.name, namespacewidth + 2) + "   "
             out += "{:>8.2f}".format(arrival.time) + "   "

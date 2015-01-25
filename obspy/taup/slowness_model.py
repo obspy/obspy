@@ -9,8 +9,8 @@ import decimal
 import math
 import numpy as np
 
-from .VelocityLayer import VelocityLayer
-from .SlownessLayer import SlownessLayer, create_from_vlayer
+from .velocity_layer import VelocityLayer
+from .slowness_layer import SlownessLayer, create_from_vlayer
 from .helper_classes import DepthRange, CriticalDepth, TimeDist, \
     SlownessModelError, SplitLayerInfo
 

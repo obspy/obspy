@@ -56,5 +56,5 @@ class TestTauPPath(TestCase):
                           phase_list=["P", "PcS"])
 
         # This doesn't work as subprocess, but to check cli execution use:
-        # ../TauP_Path.py -mod iasp91 -d 10 -ph P,PcS -deg 30
+        # ../taup_path.py -mod iasp91 -d 10 -ph P,PcS -deg 30
         # in bash.

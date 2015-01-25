@@ -46,7 +46,7 @@ def _compare_arrivals_with_file(arrivals, filename):
                                key=lambda x: x["time"])
 
     for arr, expected_arr in zip(arrivals, expected_arrivals):
-        assert arr.getModuloDistDeg() == expected_arr["distance"]
+        assert arr.get_modulo_dist_deg() == expected_arr["distance"]
         assert arr.sourceDepth == expected_arr["depth"]
         assert arr.name == expected_arr["name"]
         assert round(arr.time, 2) == round(expected_arr["time"], 2)

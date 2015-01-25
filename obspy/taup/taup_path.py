@@ -7,7 +7,7 @@ from future.builtins import *  # NOQA
 import math
 import numpy as np
 
-from .TauP_Pierce import TauP_Pierce
+from .taup_pierce import TauP_Pierce
 from .helper_classes import TimeDist
 
 
@@ -47,7 +47,7 @@ class TauP_Path(TauP_Pierce):
         """
         self.degrees = degrees
         for phase in self.phases:
-            phaseArrivals = phase.calcPath(degrees)
+            phaseArrivals = phase.calc_path(degrees)
             self.arrivals += phaseArrivals
 
     def printResult(self):
@@ -55,7 +55,7 @@ class TauP_Path(TauP_Pierce):
         for currArrival in self.arrivals:
             print(self.getCommentLine(currArrival))
             longWayRound = False
-            if currArrival.getDistDeg() % 360 > 180:
+            if currArrival.get_dist_deg() % 360 > 180:
                 longWayRound = True
             prevTimeDist = TimeDist(0, 0, 0, 0)
             for j in range(len(currArrival.path)):
@@ -71,7 +71,7 @@ class TauP_Path(TauP_Pierce):
                 calcTime = capj.time
                 calcDepth = capj.depth
                 prevDepth = calcDepth  # only used for interpolating below
-                calcDist = capj.getDistDeg()
+                calcDist = capj.get_dist_deg()
                 if calcTime > self.maxPathTime:
                     if(j != 0
                        and capjminus.time < self.maxPathTime):
@@ -79,8 +79,8 @@ class TauP_Path(TauP_Pierce):
                         calcDist = np.interp(self.maxPathTime,
                                              (capjminus.time,
                                               capj.time),
-                                             (capjminus.getDistDeg(),
-                                              capj.getDistDeg()))
+                                             (capjminus.get_dist_deg(),
+                                              capj.get_dist_deg()))
                         calcDepth = np.interp(
                             self.maxPathTime, (capjminus.time, capj.time),
                             (capjminus.depth, capj.depth))
@@ -94,23 +94,23 @@ class TauP_Path(TauP_Pierce):
                 if calcTime >= self.maxPathTime:
                     break
                 if (j < len(currArrival.path) - 1 and currArrival.rayParam != 0
-                    and capjplus.getDistDeg()
-                        - capj.getDistDeg() > self.maxPathInc):
+                    and capjplus.get_dist_deg()
+                        - capj.get_dist_deg() > self.maxPathInc):
                     # Interpolate to steps of at most maxPathInc degrees for
                     # path.
-                    maxInterpNum = math.ceil((capjplus.getDistDeg()
-                                              - capj.getDistDeg())
+                    maxInterpNum = math.ceil((capjplus.get_dist_deg()
+                                              - capj.get_dist_deg())
                                              / self.maxPathInc)
                     for interpNum in range(1, maxInterpNum):
                         calcTime += (capjplus.time - capj.time) / maxInterpNum
                         if calcTime > self.maxPathTime:
                             break
                         if longWayRound:
-                            calcDist -= (capjplus.getDistDeg()
-                                         - capj.getDistDeg()) / maxInterpNum
+                            calcDist -= (capjplus.get_dist_deg()
+                                         - capj.get_dist_deg()) / maxInterpNum
                         else:
-                            calcDist += (capjplus.getDistDeg()
-                                         - capj.getDistDeg()) / maxInterpNum
+                            calcDist += (capjplus.get_dist_deg()
+                                         - capj.get_dist_deg()) / maxInterpNum
                         calcDepth = prevDepth + (interpNum
                                                  * (capjplus.depth - prevDepth)
                                                  / maxInterpNum)

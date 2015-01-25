@@ -49,23 +49,23 @@ class Arrival:
     def purist_distance(self):
         return self.dist * 180.0 / pi
 
-    def getPierce(self):
+    def get_pierce(self):
         """
         Returns pierce points as TimeDist objects.
         """
         if not self.pierce:
-            self.pierce == self.phase.calcPierce(self).getPierce()
+            self.pierce == self.phase.calc_pierce(self).get_pierce()
         return self.pierce
 
-    def getPath(self):
+    def get_path(self):
         """
         Returns pierce points as TimeDist objects.
         """
         if not self.path:
-            self.path == self.phase.calcPath(self).getPath()
+            self.path == self.phase.calc_path(self).get_path()
         return self.path
 
-    def getModuloDistDeg(self):
+    def get_modulo_dist_deg(self):
         """
         Returns distance in degrees from 0 - 180. Note this may not be the
         actual distance travelled.
@@ -75,5 +75,5 @@ class Arrival:
             moduloDist = 360 - moduloDist
         return moduloDist
 
-    def getDistDeg(self):
+    def get_dist_deg(self):
         return self.dist * 180 / pi

@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 
 from math import pi
 
-from .TauP_Time import TauP_Time
+from .taup_time import TauP_Time
 
 
 class TauP_Pierce(TauP_Time):
@@ -85,7 +85,7 @@ class TauP_Pierce(TauP_Time):
         are then in self.arrivals.
         """
         for phase in self.phases:
-            phaseArrivals = phase.calcPierce(degrees)
+            phaseArrivals = phase.calc_pierce(degrees)
             self.arrivals += phaseArrivals
 
     def printResult(self):
@@ -96,7 +96,7 @@ class TauP_Pierce(TauP_Time):
                 longWayRound = True
             prevDepth = currArrival.pierce[0].depth
             for j, calcDist in enumerate(
-                    [p.getDistDeg() for p in currArrival.pierce]):
+                    [p.get_dist_deg() for p in currArrival.pierce]):
                 if longWayRound is True and calcDist != 0:
                     calcDist *= -1
                 if j < len(currArrival.pierce) - 1:
@@ -125,7 +125,7 @@ class TauP_Pierce(TauP_Time):
             outName += "(" + currArrival.puristName + ")"
         return ("> " + outName + " at "
                 + " {:.2f} seconds at ".format(currArrival.time)
-                + " {:.2f} degrees for a ".format(currArrival.getDistDeg())
+                + " {:.2f} degrees for a ".format(currArrival.get_dist_deg())
                 + " {} km deep source in the ".format(currArrival.sourceDepth)
                 + " {} model with rayParam {:.3f} s/deg.".format(
                     self.modelName, currArrival.rayParam * pi / 180))

@@ -81,7 +81,7 @@ def compare_arrivals_with_taup_pierce_output(arrivals, filename):
         {
             "phase_name": _i.name,
             "time": _i.time,
-            "pp_distance": [_p.getDistDeg() for _p in _i.pierce],
+            "pp_distance": [_p.get_dist_deg() for _p in _i.pierce],
             "pp_depth": [_p.depth for _p in _i.pierce],
             "pp_time": [_p.time for _p in _i.pierce]
         } for _i in arrivals]

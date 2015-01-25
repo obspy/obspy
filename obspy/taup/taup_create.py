@@ -6,9 +6,9 @@ from future.builtins import *  # NOQA
 
 import argparse
 import os
-from .SlownessModel import SlownessModel
-from .TauModel import TauModel
-from .VelocityModel import VelocityModel
+from .slowness_model import SlownessModel
+from .tau_model import TauModel
+from .velocity_model import VelocityModel
 
 
 class TauP_Create(object):

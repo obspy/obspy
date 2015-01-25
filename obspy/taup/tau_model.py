@@ -10,7 +10,7 @@ from math import pi
 import pickle
 
 from .helper_classes import SlownessModelError, TauModelError
-from .TauBranch import TauBranch
+from .tau_branch import TauBranch
 
 
 class TauModel(object):

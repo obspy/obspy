@@ -4,11 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .TauModelLoader import load
-from .TauP_Time import TauP_Time
-from .TauP_Pierce import TauP_Pierce
-from .TauP_Path import TauP_Path
-from .TauP_Create import TauP_Create
+from .tau_model_loader import load
+from .taup_time import TauP_Time
+from .taup_pierce import TauP_Pierce
+from .taup_path import TauP_Path
+from .taup_create import TauP_Create
 
 
 class Arrivals(list):

@@ -37,7 +37,7 @@ class TimeDist:
         self.time += td.time
         self.distRadian += td.distRadian
 
-    def getDistDeg(self):
+    def get_dist_deg(self):
         return self.distRadian * 180 / pi
 
 

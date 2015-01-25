@@ -11,7 +11,7 @@ import os
 import sys
 
 from .header import TauPException
-from .VelocityLayer import VelocityLayer
+from .velocity_layer import VelocityLayer
 
 
 class VelocityModel(object):
