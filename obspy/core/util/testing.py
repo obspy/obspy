@@ -354,6 +354,7 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
+        msg = ""
         try:
             # only compare images if no exception occurred in the with
             # statement. this avoids masking previously occurred exceptions (as
