@@ -15,19 +15,15 @@ class TauP_Pierce(TauP_Time):
     relating to the different arrivals.
     """
 
-    def __init__(self,
-                 phaseList=None, modelName="iasp91", depth=0, degrees=None,
-                 coordinate_list=None, taup_model_path=None):
-        phaseList = phaseList if phaseList is not None else []
-        TauP_Time.__init__(self, coordinate_list=coordinate_list,
-                           taup_model_path=taup_model_path)
+    def __init__(self, model, phase_list, depth, degrees):
+        super().__init__(model=model, phase_list=phase_list, depth=depth,
+                         degrees=degrees)
         self.onlyTurnPoints = False
         self.onlyRevPoints = False
         self.onlyUnderPoints = False
         self.onlyAddPoints = False
         self.addDepth = []
-        self.phaseList = phaseList
-        self.modelName = modelName
+        self.phaseList = phase_list
         self.depth = depth
         self.degrees = degrees
 

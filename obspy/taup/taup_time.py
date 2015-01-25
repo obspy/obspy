@@ -19,18 +19,16 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self, taupy_model, phaseList=None, depth=0,
-                 degrees=None, coordinate_list=None):
-        self.tMod = taupy_model
+    def __init__(self, model, phase_list, depth, degrees):
+        self.tMod = model
         # tModDepth will be depth-corrected if source depth is not 0.
         self.tModDepth = self.tMod
         self.modelName = self.tMod.sMod.vMod.modelName
 
-        phaseList = phaseList if phaseList is not None else []
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP
-        self.phaseList = phaseList
+        self.phaseList = phase_list
         self.phaseNames = []
         # List to hold the SeismicPhases for the phases named in phaseNames.
         self.phases = []
@@ -38,12 +36,6 @@ class TauP_Time(object):
         # whether their value has been given on the cmd line.
         self.depth = depth
         self.degrees = degrees
-        if coordinate_list is None:
-            coordinate_list = [None, None, None, None]
-        self.stationLat = coordinate_list[2]
-        self.stationLon = coordinate_list[3]
-        self.eventLat = coordinate_list[0]
-        self.eventLon = coordinate_list[1]
         self.arrivals = []
         self.relativePhaseName = None
         self.relativeArrival = None

@@ -17,14 +17,14 @@ class TauP_Path(TauP_Pierce):
     """
 
     def __init__(self,
-                 phaseList=None, modelName="iasp91", depth=0, degrees=None,
+                 phase_list=None, modelName="iasp91", depth=0, degrees=None,
                  coordinate_list=None, taup_model_path=None):
         TauP_Pierce.__init__(self, coordinate_list=coordinate_list,
                              taup_model_path=taup_model_path)
-        phaseList = phaseList if phaseList is not None else []
+        phase_list = phase_list if phase_list is not None else []
         self.maxPathTime = 1e300
         self.maxPathInc = 1
-        self.phaseList = phaseList
+        self.phaseList = phase_list
         self.modelName = modelName
         # This type conversion is important (somehow).
         self.depth = float(depth)
