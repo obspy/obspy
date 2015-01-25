@@ -27,11 +27,11 @@ from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
-from obspy.core.util.misc import wrap_long_string
 
 import collections
 import io
 from lxml import etree
+import textwrap
 import threading
 import warnings
 import os
@@ -1113,8 +1113,10 @@ class Client(object):
                 if req_def:
                     req_def = ", %s" % req_def
                 if param["doc_title"]:
-                    doc_title = wrap_long_string(param["doc_title"],
-                                                 prefix="        ")
+                    doc_title = textwrap.fill(param["doc_title"], width=79,
+                                              initial_indent="        ",
+                                              subsequent_indent="        ",
+                                              break_long_words=False)
                     doc_title = "\n" + doc_title
                 else:
                     doc_title = ""

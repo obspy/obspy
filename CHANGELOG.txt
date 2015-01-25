@@ -20,6 +20,8 @@
      provided by the future package.
    * new plugins for NonLinLoc formats for readEvents() and
      Catalog/Event.write() (see obspy.nlloc and #900)
+   * The wrap_long_string utility function is deprecated. Users may use the
+     textwrap module which provides similar functionality.
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
    * Support exporting Inventory objects to CSS relations.

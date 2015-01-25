@@ -288,6 +288,10 @@ def wrap_long_string(string, line_length=79, prefix="",
         line to be longer than the specified line length. If set to True,
         Long words will be force-hyphenated to fit the line.
 
+    .. deprecated:: 0.10.0
+        The wrap_long_string function is deprecated. Please use the textwrap
+        module from the standard library instead.
+
     .. rubric:: Examples
 
     >>> string = ("Retrieve an event based on the unique origin "
@@ -323,6 +327,11 @@ def wrap_long_string(string, line_length=79, prefix="",
                     ID numbers assigned by
                     the IRIS DMC
     """
+
+    warnings.warn('The wrap_long_string function is deprecated. Please use '
+                  'the textwrap module from the standard library instead.',
+                  DeprecationWarning)
+
     def text_width_for_prefix(line_length, prefix):
         text_width = line_length - len(prefix) - \
             (assumed_tab_width - 1) * prefix.count("\t")
