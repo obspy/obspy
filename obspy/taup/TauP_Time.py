@@ -151,7 +151,8 @@ class TauP_Time(object):
         # Do  only a simple way for now.
         print("\nModel:", self.modelName)
         if self.arrivals:
-            namespacewidth = len(max([arrival.name for arrival in self.arrivals],
+            namespacewidth = len(max([arrival.name
+                                      for arrival in self.arrivals],
                                  key=len)) - 2
         else:
             namespacewidth = 5
@@ -350,4 +351,3 @@ if __name__ == '__main__':
     tauPTime = TauP_Time()
     tauPTime.readcmdLineArgs()
     tauPTime.run(printOutput=True)
-

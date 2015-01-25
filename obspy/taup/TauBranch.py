@@ -357,7 +357,3 @@ class TauBranch(object):
                     sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
         tempPath = thePath[0:pathIndex]
         return tempPath
-
-
-
-

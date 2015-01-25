@@ -358,5 +358,5 @@ class TauModel(object):
         """
         branchDepths = [self.getTauBranch(0, True).topDepth]
         branchDepths += [self.getTauBranch(
-            i - 1, True).botDepth for i in range(1,len(self.tauBranches[0]))]
+            i - 1, True).botDepth for i in range(1, len(self.tauBranches[0]))]
         return branchDepths

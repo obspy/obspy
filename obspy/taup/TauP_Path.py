@@ -112,7 +112,7 @@ class TauP_Path(TauP_Pierce):
                             calcDist += (capjplus.getDistDeg()
                                          - capj.getDistDeg()) / maxInterpNum
                         calcDepth = prevDepth + (interpNum
-                                                 * (capjplus.depth- prevDepth)
+                                                 * (capjplus.depth - prevDepth)
                                                  / maxInterpNum)
                         self.printDistRadius(calcDist,
                                              radiusOfEarth - calcDepth)
