@@ -63,6 +63,10 @@ else:
     Catalog.write.__doc__ = \
         Catalog.write.__doc__ % make_format_plugin_table("event", "write",
                                                          numspaces=8)
+import sys
+if sys.version_info[:2] == (2, 6):
+    msg = "Python 2.6 support will be dropped for the next release"
+    raise DeprecationWarning(msg)
 
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "readEvents", "Catalog", "read_inventory"]

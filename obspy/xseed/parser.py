@@ -139,6 +139,9 @@ class Parser(object):
                  channel["latitude"], channel["longitude"])
         return ret_str.strip()
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     @map_example_filename("data")
     def read(self, data):
         """

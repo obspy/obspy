@@ -198,6 +198,9 @@ class Stats(AttribDict):
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 def _add_processing_info(func):
     """
@@ -388,6 +391,9 @@ class Trace(object):
         if np.ma.count_masked(self.data):
             out += ' (masked)'
         return trace_id + out % (self.stats)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __len__(self):
         """
@@ -1519,8 +1525,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
 
+        orig_dtype = self.data.dtype
+        new_dtype = np.float32 if orig_dtype.itemsize == 4 else np.float64
+
         # resample in the frequency domain
-        X = rfft(self.data)
+        X = rfft(np.require(self.data, dtype=new_dtype))
         X = np.insert(X, 1, 0)
         if self.stats.npts % 2 == 0:
             X = np.append(X, [0])
@@ -1557,6 +1566,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if num % 2 == 0:
             Y = np.delete(Y, -1)
         self.data = irfft(Y) * (float(num) / float(self.stats.npts))
+        self.data = np.require(self.data, dtype=orig_dtype)
         self.stats.sampling_rate = sampling_rate
 
         return self

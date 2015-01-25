@@ -43,30 +43,21 @@ def sonogram(data, fs, fc1, nofb, no_win):
     :param no_win: Number of data windows.
     :return: Half octave bands.
     """
-    fc = np.zeros([nofb])
-    fmin = np.zeros([nofb])
-    fmax = np.zeros([nofb])
+    fc = float(fc1) * 1.5**np.arange(nofb)
+    fmin = fc / np.sqrt(5. / 3.)
+    fmax = fc * np.sqrt(5. / 3.)
 
-    fc[0] = float(fc1)
-    fmin[0] = fc[0] / np.sqrt(float(5. / 3.))
-    fmax[0] = fc[0] * np.sqrt(float(5. / 3.))
-    for i in range(1, nofb):
-        fc[i] = fc[i - 1] * 1.5
-        fmin[i] = fc[i] / np.sqrt(float(5. / 3.))
-        fmax[i] = fc[i] * np.sqrt(float(5. / 3.))
-    nfft = util.nextpow2(data.shape[np.size(data.shape) - 1])
-    # c = np.zeros((data.shape), dtype=np.complex64)
+    nfft = util.nextpow2(data.shape[-1])
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
     c = fftpack.fft(data, nfft)
-    z = np.zeros([len(c[:, 1]), nofb])
-    z_tot = np.zeros(len(c[:, 1]))
-    hob = np.zeros([no_win, nofb])
-    for k in range(no_win):
-        for j in range(len(c[1, :])):
-            z_tot[k] = z_tot[k] + pow(np.abs(c[k, j]), 2)
-        for i in range(nofb):
-            start = int(round(fmin[i] * nfft * 1. / float(fs), 0))
-            end = int(round(fmax[i] * nfft * 1. / float(fs), 0)) + 1
-            for j in range(start, end):
-                z[k, i] = z[k, i] + pow(np.abs(c[k, j - 1]), 2)
-            hob[k, i] = np.log(z[k, i] / z_tot[k])
+    z_tot = np.sum(np.abs(c)**2, axis=1)
+
+    start = np.around(fmin * nfft / fs, 0).astype(int) - 1
+    end = np.around(fmax * nfft / fs, 0).astype(int)
+    z = np.zeros([c.shape[0], nofb])
+    for i in range(nofb):
+        z[:, i] = np.sum(np.abs(c[:, start[i]:end[i]])**2, axis=1)
+
+    hob = np.log(z / z_tot[:, np.newaxis])
     return hob

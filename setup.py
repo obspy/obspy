@@ -87,25 +87,24 @@ KEYWORDS = [
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
-    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
+    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
-    'numpy>1.0.0',
+    'numpy>1.4.0',
     'scipy>=0.7.2',
     'matplotlib',
     'lxml',
     'sqlalchemy']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2',
-              'nose',
-              'pyimgur'],
+    'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],
     'neries': ['suds-jurko']}
 # PY2
@@ -142,6 +141,7 @@ ENTRY_POINTS = {
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
+        'PDAS = obspy.pdas.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
         'Y = obspy.y.core',
@@ -190,6 +190,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.mseed.core:isMSEED',
         'readFormat = obspy.mseed.core:readMSEED',
         'writeFormat = obspy.mseed.core:writeMSEED',
+    ],
+    'obspy.plugin.waveform.PDAS': [
+        'isFormat = obspy.pdas.core:isPDAS',
+        'readFormat = obspy.pdas.core:readPDAS',
     ],
     'obspy.plugin.waveform.SAC': [
         'isFormat = obspy.sac.core:isSAC',
@@ -247,7 +251,9 @@ ENTRY_POINTS = {
         'ZMAP = obspy.zmap.core',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
-        'NDK = obspy.ndk.core'
+        'NDK = obspy.ndk.core',
+        'NLLOC_HYP = obspy.nlloc.core',
+        'NLLOC_OBS = obspy.nlloc.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -269,6 +275,13 @@ ENTRY_POINTS = {
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.ndk.core:is_ndk',
         'readFormat = obspy.ndk.core:read_ndk',
+        ],
+    'obspy.plugin.event.NLLOC_HYP': [
+        'isFormat = obspy.nlloc.core:is_nlloc_hyp',
+        'readFormat = obspy.nlloc.core:read_nlloc_hyp',
+        ],
+    'obspy.plugin.event.NLLOC_OBS': [
+        'writeFormat = obspy.nlloc.core:write_nlloc_obs',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',

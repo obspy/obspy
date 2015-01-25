@@ -123,6 +123,9 @@ class SEGYFile(object):
         """
         return '%i traces in the SEG Y structure.' % len(self.traces)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def _autodetectEndianness(self):
         """
         Tries to automatically determine the endianness of the file at hand.
@@ -387,6 +390,9 @@ class SEGYBinaryFileHeader(object):
                                            str(getattr(self, item[1]))))
         return "\n".join(final_str)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def write(self, file, endian=None):
         """
         Writes the header to an open file like object.
@@ -589,6 +595,9 @@ class SEGYTrace(object):
                 float(1E6)))
         return ret_val
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __getattr__(self, name):
         """
         This method is only called if the attribute is not found in the usual
@@ -734,6 +743,9 @@ class SEGYTraceHeader(object):
             retval += '%s: %i\n' % (name, getattr(self, name))
         return retval
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def _createEmptyTraceHeader(self):
         """
         Init the trace header with zeros.
@@ -874,6 +886,9 @@ class SUFile(object):
         Prints some information about the SU file.
         """
         return '%i traces in the SU structure.' % len(self.traces)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def _readTraces(self, unpack_headers=False, headonly=False):
         """

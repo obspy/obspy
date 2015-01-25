@@ -17,7 +17,8 @@ from future.builtins import *  # NOQA
 
 from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
-from obspy.mseed.headers import clibmseed, HPTMODULUS, MSRecord
+from obspy.core.util.decorator import deprecated_keywords
+from obspy.mseed.headers import clibmseed, HPTMODULUS
 from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray
 from obspy.seedlink.seedlinkexception import SeedLinkException
 import ctypes as C
@@ -68,15 +69,16 @@ class SLPacket(object):
     ERRORSIGNATURE = b"ERROR\r\n"
     ENDSIGNATURE = b"END"
 
-    def __init__(self, bytes=None, offset=None):
-        if bytes is None or offset is None:
+    @deprecated_keywords({'bytes': 'data'})
+    def __init__(self, data=None, offset=None):
+        if data is None or offset is None:
             return
-        if len(bytes) - offset < self.SLHEADSIZE + self.SLRECSIZE:
+        if len(data) - offset < self.SLHEADSIZE + self.SLRECSIZE:
             msg = "not enough bytes in sub array to construct a new SLPacket"
             raise SeedLinkException(msg)
-        self.slhead = bytes[offset: offset + self.SLHEADSIZE]
-        self.msrecord = bytes[offset + self.SLHEADSIZE:
-                              offset + self.SLHEADSIZE + self.SLRECSIZE]
+        self.slhead = data[offset: offset + self.SLHEADSIZE]
+        self.msrecord = data[offset + self.SLHEADSIZE:
+                             offset + self.SLHEADSIZE + self.SLRECSIZE]
         self.trace = None
 
     def getSequenceNumber(self):
@@ -108,7 +110,7 @@ class SLPacket(object):
 
     def getMSRecord(self):
         # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse
-        msr = clibmseed.msr_init(C.POINTER(MSRecord)())
+        msr = clibmseed.msr_init(None)
         pyobj = frombuffer(self.msrecord, dtype=np.uint8)
         errcode = \
             clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
@@ -119,16 +121,32 @@ class SLPacket(object):
         # print "DEBUG: msr:", msr
         msrecord_py = msr.contents
         # print "DEBUG: msrecord_py:", msrecord_py
-        return msrecord_py
+        return msr, msrecord_py
+
+    def freeMSRecord(self, msr, msrecord_py):
+        clibmseed.msr_free(msr)
 
     def getTrace(self):
 
         if self.trace is not None:
             return self.trace
 
-        msrecord_py = self.getMSRecord()
-        # print "DEBUG: msrecord_py:", msrecord_py
-        header = _convertMSRToDict(msrecord_py)
+        msr, msrecord_py = self.getMSRecord()
+        try:
+            header = _convertMSRToDict(msrecord_py)
+
+            # XXX Workaround: in Python 3 msrecord_py.sampletype is a byte
+            # (e.g. b'i'), while keys of mseed.headers.SAMPLESIZES are
+            # unicode ('i') (see above)
+            sampletype = msrecord_py.sampletype
+            if not isinstance(sampletype, str):
+                sampletype = sampletype.decode()
+
+            data = _ctypesArray2NumpyArray(msrecord_py.datasamples,
+                                           msrecord_py.numsamples,
+                                           sampletype)
+        finally:
+            self.freeMSRecord(msr, msrecord_py)
 
         # XXX Workaround: the fields in the returned struct of type
         # obspy.mseed.header.MSRecord_s have byte values in Python 3, while
@@ -148,16 +166,6 @@ class SLPacket(object):
             del header['samprate']
         # Access data directly as NumPy array.
 
-        # XXX Workaround: in Python 3 msrecord_py.sampletype is a byte
-        # (e.g. b'i'), while keys of mseed.headers.SAMPLESIZES are
-        # unicode ('i') (see above)
-        sampletype = msrecord_py.sampletype
-        if not isinstance(sampletype, str):
-            sampletype = sampletype.decode()
-
-        data = _ctypesArray2NumpyArray(msrecord_py.datasamples,
-                                       msrecord_py.numsamples,
-                                       sampletype)
         self.trace = Trace(data, header)
         return self.trace
 
@@ -165,11 +173,15 @@ class SLPacket(object):
         """
         Get the MiniSEED payload, parsed as string.
         """
-        msrecord_py = self.getMSRecord()
+        msr, msrecord_py = self.getMSRecord()
 
-        # This is the same data buffer that is accessed by
-        # _ctypesArray2NumpyArray in getTrace above.
-        payload = C.string_at(msrecord_py.datasamples, msrecord_py.samplecnt)
+        try:
+            # This is the same data buffer that is accessed by
+            # _ctypesArray2NumpyArray in getTrace above.
+            payload = C.string_at(msrecord_py.datasamples,
+                                  msrecord_py.samplecnt)
+        finally:
+            self.freeMSRecord(msr, msrecord_py)
 
         return payload
 
@@ -181,27 +193,9 @@ class SLPacket(object):
                 return self.TYPE_SLINFT
             else:
                 return self.TYPE_SLINF
-        msrecord_py = self.getMSRecord()
-        # print "DEBUG: msrecord_py:", msrecord_py
-        # print "DEBUG: msrecord_py.reclen:", msrecord_py.reclen
-        # print "DEBUG: msrecord_py.sequence_number:",
-        # print msrecord_py.sequence_number
-        # print "DEBUG: msrecord_py.samplecnt:", msrecord_py.samplecnt
-        # print "DEBUG: msrecord_py.encoding:", msrecord_py.encoding
-        # print "DEBUG: msrecord_py.byteorder:", msrecord_py.byteorder
-        # print "DEBUG: msrecord_py.numsamples:", msrecord_py.numsamples
-        # print "DEBUG: msrecord_py.sampletype:", msrecord_py.sampletype
-        # print "DEBUG: msrecord_py.blkts:", msrecord_py.blkts
-        blockette = msrecord_py.blkts.contents
-        while blockette:
-            # print "DEBUG: ===================="
-            # print "DEBUG: blkt_type:", blockette.blkt_type
-            # print "DEBUG: next_blkt:", blockette.next_blkt
-            # print "DEBUG: blktdata:", blockette.blktdata
-            # print "DEBUG: blktdatalen:", blockette.blktdatalen
-            # print "DEBUG: next:", blockette.next
-            try:
-                blockette = blockette.next.contents
-            except:
-                blockette = None
-        return msrecord_py.blkts.contents.blkt_type
+        msr, msrecord_py = self.getMSRecord()
+        try:
+            ret = msrecord_py.blkts.contents.blkt_type
+        finally:
+            self.freeMSRecord(msr, msrecord_py)
+        return ret

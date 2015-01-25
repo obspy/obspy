@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -------------------------------------------------------------------
+# --------------------------------------------------------------------
 # Filename: libgse2.py
 #  Purpose: Python wrapper for gse_functions of Stefan Stange
 #   Author: Moritz Beyreuther

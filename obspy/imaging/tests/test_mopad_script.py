@@ -6,11 +6,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.misc import CatchOutput
-from obspy.core.util.testing import (ImageComparison, ImageComparisonException,
-                                     HAS_COMPARE_IMAGE)
-from obspy.core.util.decorator import skip, skipIf
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
+from obspy.core.util.decorator import skip
 from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 import numpy as np
@@ -19,9 +17,6 @@ import io
 from itertools import product, zip_longest
 import os
 import unittest
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class MopadTestCase(unittest.TestCase):
@@ -49,7 +44,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -65,7 +60,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     def test_script_convert_type_tensor_large(self):
         with CatchOutput() as out:
@@ -81,7 +76,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     def test_script_convert_basis(self):
         expected = [
@@ -125,7 +120,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         expected = str(self.mt) + '\n'
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     #
     # obspy-mopad decompose
@@ -146,7 +141,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
 '''
 
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected, out.stdout.decode("utf-8"))
 
     #
     # obspy-mopad gmt
@@ -219,7 +214,6 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     #
 
     @skip('Currently broken until further review.')
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_script_plot(self):
         # See test_Beachball:
         data = [
@@ -255,14 +249,10 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
             'bb_20040905_0_mt.png', 'bb_miyagi_mt.png', 'bb_chile_mt.png',
         ]
 
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
-
         messages = ''
         for mt, filename in zip(data, filenames):
             try:
-                with ImageComparison(self.path, filename, reltol=reltol) as ic:
+                with ImageComparison(self.path, filename) as ic:
                     with CatchOutput() as out:
                         obspy_mopad(['plot',
                                      '--output-file', ic.name,

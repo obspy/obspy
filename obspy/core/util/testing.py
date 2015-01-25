@@ -19,11 +19,19 @@ from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 import fnmatch
 import inspect
 import os
+import io
+import numpy as np
+import re
+import difflib
 import glob
 import unittest
 import doctest
 import shutil
 import warnings
+from lxml import etree
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 def add_unittests(testsuite, module_name):
@@ -109,23 +117,117 @@ def add_doctests(testsuite, module_name):
                 pass
 
 
-def checkForMatplotlibCompareImages():
-    try:
-        # trying to stay inside 80 char line
-        import matplotlib.testing.compare as _compare
-        compare_images = _compare.compare_images  # NOQA @UnusedVariable
-    except:
-        return False
-    # matplotlib's (< 1.2) compare_images() uses PIL internally
-    if getMatplotlibVersion() < [1, 2, 0]:
-        try:
-            import PIL  # NOQA @UnusedImport
-        except ImportError:
-            return False
-    return True
+def write_png(arr, filename):
+    """
+    Custom write_png() function. matplotlib < 1.3 cannot write RGBA png files.
+
+    Modified from http://stackoverflow.com/a/19174800/1657047
+    """
+    import zlib
+    import struct
+
+    buf = arr[::-1, :, :].tostring()
+    height, width, _ = arr.shape
+
+    # reverse the vertical line order and add null bytes at the start
+    width_byte_4 = width * 4
+    raw_data = b''.join(
+        b'\x00' + buf[span:span + width_byte_4]
+        for span in range((height - 1) * width * 4, -1, - width_byte_4))
+
+    def png_pack(png_tag, data):
+        chunk_head = png_tag + data
+        return (struct.pack(native_str("!I"), len(data)) +
+                chunk_head +
+                struct.pack(native_str("!I"),
+                            0xFFFFFFFF & zlib.crc32(chunk_head)))
+
+    with open(filename, "wb") as fh:
+        fh.write(b''.join([
+            b'\x89PNG\r\n\x1a\n',
+            png_pack(b'IHDR', struct.pack(native_str("!2I5B"),
+                     width, height, 8, 6, 0, 0, 0)),
+            png_pack(b'IDAT', zlib.compress(raw_data, 9)),
+            png_pack(b'IEND', b'')]))
 
 
-HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
+def compare_images(expected, actual, tol):
+    """
+    Custom version of :func:`matplotlib.testing.compare.compare_images`.
+    This enable ObsPy to have the same image comparison metric across
+    matplotlib versions. Furthermore nose is no longer a test dependency of
+    ObsPy.
+
+    In contrast to the matplotlib version this one only works with png
+    files. Fully transparent pixels will have their color set to white as
+    the RGB values of fully transparent pixels change depending on the
+    matplotlib version.
+
+    Additionally this version uses a straight RMSE definition instead of the
+    binned one of matplotlib.
+
+    :param expected: The filename of the expected png file.
+    :type expected: str
+    :param actual: The filename of the actual png file.
+    :type actual: str
+    :param tol: The tolerance (a color value difference, where 255 is the
+        maximal difference). The test fails if the average pixel difference
+        is greater than this value.
+    :type tol: float
+    """
+    import matplotlib.image
+
+    if not os.path.exists(actual):
+        msg = "Output image %s does not exist." % actual
+        raise Exception(msg)
+
+    if os.stat(actual).st_size == 0:
+        msg = "Output image file %s is empty." % actual
+        raise Exception(msg)
+
+    if not os.path.exists(expected):
+        raise IOError('Baseline image %r does not exist.' % expected)
+
+    # Open the images. Will be opened as RGBA as float32 ranging from 0 to 1.
+    expected_image = matplotlib.image.imread(native_str(expected))
+    actual_image = matplotlib.image.imread(native_str(actual))
+    if expected_image.shape != actual_image.shape:
+        raise ImageComparisonException(
+            "The shape of the received image %s is not equal to the expected "
+            "shape %s." % (str(actual_image.shape),
+                           str(expected_image.shape)))
+
+    # Set the "color" of fully transparent pixels to white. This avoids the
+    # issue of different "colors" for transparent pixels.
+    expected_image[expected_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
+    actual_image[actual_image[..., 3] <= 0.0035] = [1.0, 1.0, 1.0, 0.0]
+
+    # This deviates a bit from the matplotlib version and just calculates
+    # the root mean square error of all pixel values without any other fancy
+    # considerations. It also uses the alpha channel of the images. Scaled
+    # by 255.
+    rms = np.sqrt(np.sum((255.0 * (expected_image - actual_image)) ** 2) /
+                  float(expected_image.size))
+
+    base, ext = os.path.splitext(actual)
+    diff_image = '%s-%s%s' % (base, 'failed-diff', ext)
+
+    if rms <= tol:
+        if os.path.exists(diff_image):
+            os.unlink(diff_image)
+        return None
+
+    # Save diff image, expand differences in luminance domain
+    absDiffImage = np.abs(expected_image - actual_image)
+    absDiffImage *= 10.0
+    save_image_np = np.clip(absDiffImage, 0.0, 1.0)
+    # Hard-code the alpha channel to fully solid
+    save_image_np[:, :, 3] = 1.0
+
+    write_png(np.uint8(save_image_np * 255.0), diff_image)
+
+    return dict(rms=rms, expected=str(expected), actual=str(actual),
+                diff=str(diff_image), tol=tol)
 
 
 class ImageComparisonException(unittest.TestCase.failureException):
@@ -147,6 +249,9 @@ class ImageComparison(NamedTemporaryFile):
     :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
+    :type adjust_tolerance: bool, optional
+    :param adjust_tolerance: Adjust the tolerance based on the matplotlib
+        version. Can optionally be turned off to simply compare two images.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -178,7 +283,8 @@ class ImageComparison(NamedTemporaryFile):
     ...     st.plot(outfile=ic.name)  # doctest: +SKIP
     ...     # image is compared against baseline image automatically
     """
-    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
+    def __init__(self, image_path, image_name, reltol=1,
+                 adjust_tolerance=True, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -188,13 +294,21 @@ class ImageComparison(NamedTemporaryFile):
         self.keep_only_failed = "OBSPY_KEEP_ONLY_FAILED_IMAGES" in os.environ
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
-        self.tol = get_matplotlib_defaul_tolerance() * reltol
+        self.tol = reltol * 3.0
+
+        # Higher tolerance for older matplotlib versions. This is pretty
+        # high but the pictures are at least guaranteed to be generated and
+        # look (roughly!) similar. Otherwise testing is just a pain and
+        # frankly not worth the effort!
+        if adjust_tolerance:
+            if MATPLOTLIB_VERSION < [1, 3, 0]:
+                self.tol *= 30
 
     def __enter__(self):
         """
         Set matplotlib defaults.
         """
-        from matplotlib import get_backend, rcParams, rcdefaults
+        from matplotlib import font_manager, get_backend, rcParams, rcdefaults
         import locale
 
         try:
@@ -219,6 +333,12 @@ class ImageComparison(NamedTemporaryFile):
         # set matplotlib builtin default settings for testing
         rcdefaults()
         rcParams['font.family'] = 'Bitstream Vera Sans'
+        with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings('always', 'findfont:.*')
+            font_manager.findfont('Bitstream Vera Sans')
+        if w:
+            warnings.warn('Unable to find the Bitstream Vera Sans font. '
+                          'Plotting tests will likely fail.')
         try:
             rcParams['text.hinting'] = False
         except KeyError:
@@ -234,7 +354,6 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
-        msg = ""
         try:
             # only compare images if no exception occurred in the with
             # statement. this avoids masking previously occurred exceptions (as
@@ -248,8 +367,8 @@ class ImageComparison(NamedTemporaryFile):
             failed = True
             msg = str(e)
             if "operands could not be broadcast together" in msg:
-                msg = self._upload_and_append_message(msg)
-                raise ImageComparisonException(msg)
+                upload_msg = self._upload_images()
+                raise ImageComparisonException("\n".join([msg, upload_msg]))
             raise
         # simply reraise on any other unhandled exceptions
         except:
@@ -259,9 +378,29 @@ class ImageComparison(NamedTemporaryFile):
         # message back or the test passed if we get an empty message
         else:
             if msg:
-                msg = self._upload_and_append_message(msg)
+                upload_msg = self._upload_images()
                 failed = True
-                raise ImageComparisonException(msg)
+                if self.keep_output and not (self.keep_only_failed and not
+                                             failed):
+                    self._copy_tempfiles()
+                    ff = self._get_final_filenames()
+                    msg = ("Image comparision failed.\n"
+                           "\tExpected:  {expected}\n"
+                           "\tActual:    {actual}\n"
+                           "\tDiff:      {diff}\n"
+                           "\tRMS:       {rms}\n"
+                           "\tTolerance: {tol}").format(
+                        expected=ff["expected"],
+                        actual=ff["actual"],
+                        diff=ff["diff"],
+                        rms=msg["rms"],
+                        tol=msg["tol"])
+                else:
+                    msg = ("Image comparision failed, RMS={rms}, "
+                           "tolerance={tol}. Set the "
+                           "OBSPY_KEEP_IMAGES env variable to keep "
+                           "the test images.").format(**msg)
+                raise ImageComparisonException("\n".join([msg, upload_msg]))
             failed = False
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
@@ -277,24 +416,38 @@ class ImageComparison(NamedTemporaryFile):
             if os.path.exists(self.diff_filename):
                 os.remove(self.diff_filename)
 
-    def compare(self, reltol=1):  # @UnusedVariable
+    def compare(self):
         """
-        Run :func:`matplotlib.testing.compare.compare_images` and raise an
+        Run a custom version
+        of :func:`matplotlib.testing.compare.compare_images` and raise an
         unittest.TestCase.failureException with the message string given by
         matplotlib if the comparison exceeds the allowed tolerance.
         """
-        from matplotlib.testing.compare import compare_images
         if os.stat(self.name).st_size == 0:
             msg = "Empty output image file."
             raise ImageComparisonException(msg)
-        msg = compare_images(native_str(self.baseline_image),
-                             native_str(self.name), tol=self.tol)
-        return msg
+
+        return compare_images(self.baseline_image, self.name, tol=self.tol)
+
+    def _get_final_filenames(self):
+        """
+        Helper function returning the
+        :return:
+        """
+        directory = self.output_path
+        filename_new = os.path.join(directory, self.image_name)
+        diff_filename_new = "-failed-diff.".join(
+            self.image_name.rsplit(".", 1))
+        diff_filename_new = os.path.join(directory, diff_filename_new)
+        return {"actual": os.path.abspath(filename_new),
+                "expected": os.path.abspath(self.baseline_image),
+                "diff": os.path.abspath(diff_filename_new)}
 
     def _copy_tempfiles(self):
         """
         Copies created images from tempfiles to a subfolder of baseline images.
         """
+        filenames = self._get_final_filenames()
         directory = self.output_path
         if os.path.exists(directory) and not os.path.isdir(directory):
             msg = "Could not keep output image, target directory exists:" + \
@@ -304,22 +457,8 @@ class ImageComparison(NamedTemporaryFile):
         if not os.path.exists(directory):
             os.mkdir(directory)
         if os.path.isfile(self.diff_filename):
-            diff_filename_new = \
-                "-failed-diff.".join(self.image_name.rsplit(".", 1))
-            shutil.copy(self.diff_filename, os.path.join(directory,
-                                                         diff_filename_new))
-        shutil.copy(self.name, os.path.join(directory, self.image_name))
-
-    def _upload_and_append_message(self, msg):
-        """
-        Takes an error message from image comparison, uploads any output images
-        and appends the corresponding imgur links to the original error
-        message.
-        """
-        msg_ = self._upload_images()
-        if msg_:
-            msg = "\n".join([msg, msg_])
-        return msg
+            shutil.copy(self.diff_filename, filenames["diff"])
+        shutil.copy(self.name, filenames["actual"])
 
     def _upload_images(self):
         """
@@ -362,20 +501,6 @@ class ImageComparison(NamedTemporaryFile):
             warnings.warn(msg % str(e))
             return ""
         return "\n".join(msg)
-
-
-def get_matplotlib_defaul_tolerance():
-    """
-    The two test images ("ok", "fail") result in the following rms values:
-    matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
-    matplotlib v1.2.1: 1.7e-3 and 3.6e-3
-    """
-    # Baseline images are created with 1.3.1,
-    # be very generous when testing other matplotlib versions.
-    if getMatplotlibVersion() == [1, 3, 1]:
-        return 2
-    else:
-        return 20
 
 
 FLAKE8_EXCLUDE_FILES = [
@@ -452,6 +577,69 @@ def check_flake8():
 MODULE_TEST_SKIP_CHECKS = {
     'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
     }
+
+
+def compare_xml_strings(doc1, doc2):
+    """
+    Simple helper function to compare two XML strings.
+
+    :type doc1: str
+    :type doc2: str
+    """
+    # Compat py2k and py3k
+    try:
+        doc1 = doc1.encode()
+        doc2 = doc2.encode()
+    except:
+        pass
+    obj1 = etree.fromstring(doc1).getroottree()
+    obj2 = etree.fromstring(doc2).getroottree()
+
+    buf = io.BytesIO()
+    obj1.write_c14n(buf)
+    buf.seek(0, 0)
+    str1 = buf.read().decode()
+    str1 = [_i.strip() for _i in str1.splitlines()]
+
+    buf = io.BytesIO()
+    obj2.write_c14n(buf)
+    buf.seek(0, 0)
+    str2 = buf.read().decode()
+    str2 = [_i.strip() for _i in str2.splitlines()]
+
+    unified_diff = difflib.unified_diff(str1, str2)
+
+    err_msg = "\n".join(unified_diff)
+    if err_msg:  # pragma: no cover
+        raise AssertionError("Strings are not equal.\n" + err_msg)
+
+
+def remove_unique_IDs(xml_string, remove_creation_time=False):
+    """
+    Removes unique ID parts of e.g. 'publicID="..."' attributes from xml
+    strings.
+
+    :type xml_string: str
+    :param xml_string: xml string to process
+    :type remove_creation_time: bool
+    :param xml_string: controls whether to remove 'creationTime' tags or not.
+    :rtype: str
+    """
+    prefixes = ["id", "publicID", "pickID", "originID", "preferredOriginID",
+                "preferredMagnitudeID", "preferredFocalMechanismID",
+                "referenceSystemID", "methodID", "earthModelID",
+                "triggeringOriginID", "derivedOriginID", "momentMagnitudeID",
+                "greensFunctionID", "filterID", "amplitudeID",
+                "stationMagnitudeID", "earthModelID", "slownessMethodID",
+                "pickReference", "amplitudeReference"]
+    if remove_creation_time:
+        prefixes.append("creationTime")
+    for prefix in prefixes:
+        xml_string = re.sub("%s='.*?'" % prefix, '%s=""' % prefix, xml_string)
+        xml_string = re.sub('%s=".*?"' % prefix, '%s=""' % prefix, xml_string)
+        xml_string = re.sub("<%s>.*?</%s>" % (prefix, prefix),
+                            '<%s/>' % prefix, xml_string)
+    return xml_string
 
 
 if __name__ == '__main__':

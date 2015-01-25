@@ -7,20 +7,18 @@ import copy
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.base import getBasemapVersion
+from obspy.core.util.testing import ImageComparison
 from obspy.core.util.decorator import skipIf
 import os
 import sys
 import unittest
 import warnings
 
-# checking for matplotlib/basemap
-try:
+
+BASEMAP_VERSION = getBasemapVersion()
+if BASEMAP_VERSION:
     from matplotlib import rcParams
-    import mpl_toolkits.basemap  # NOQA
-    HAS_BASEMAP = True
-except ImportError:
-    HAS_BASEMAP = False
 
 
 class EventTestCase(unittest.TestCase):
@@ -425,8 +423,7 @@ class CatalogTestCase(unittest.TestCase):
         cat = readEvents(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_cylindrical(self):
         """
         Tests the catalog preview plot, default parameters.
@@ -436,8 +433,7 @@ class CatalogTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_ortho(self):
         """
         Tests the catalog preview plot, ortho projection, some non-default
@@ -450,19 +446,18 @@ class CatalogTestCase(unittest.TestCase):
                      resolution="c",
                      water_fill_color="b", label=None)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default
         parameters.
         """
         cat = readEvents()
-        reltol = 1
-        # some ticklabels are slightly offset on py 3.3.3 in travis..
-        # e.g. see http://tests.obspy.org/13309/#1
-        if (sys.version_info[0]) == 3:
-            reltol = 5
+        reltol = 1.5
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100
         with ImageComparison(self.image_dir, "catalog3.png",
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72

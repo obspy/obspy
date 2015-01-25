@@ -6,17 +6,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
-from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.testing import ImageComparison
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
 import matplotlib.pyplot as plt
 import os
 import unittest
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class BeachballTestCase(unittest.TestCase):
@@ -27,14 +23,10 @@ class BeachballTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_Beachball(self):
         """
         Create beachball examples in tests/output directory.
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
         # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         data = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
                 [274, 13, 55],
@@ -83,7 +75,7 @@ class BeachballTestCase(unittest.TestCase):
                      'bb_chile_mt.png',
                      ]
         for data_, filename in zip(data, filenames):
-            with ImageComparison(self.path, filename, reltol=reltol) as ic:
+            with ImageComparison(self.path, filename) as ic:
                 Beachball(data_, outfile=ic.name)
 
     def test_BeachBallOutputFormats(self):
@@ -196,7 +188,6 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(P.dip, 33.5833323)
         self.assertAlmostEqual(P.strike, 213.273886)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection(self):
         """
         Tests to plot beachballs as collection into an existing axis
@@ -204,9 +195,6 @@ class BeachballTestCase(unittest.TestCase):
         test_Beachball unit test. See that test for more information about
         the parameters.
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 2, 0]:
-            reltol = 20
         mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
               [274, 13, 55],
               [130, 79, 98],
@@ -250,17 +238,13 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'bb_collection.png') as ic:
             fig.savefig(ic.name)
 
     def collection_aspect(self, axis, filename_width, filename_width_height):
         """
         Common part of the test_collection_aspect_[xy] tests.
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 2, 0]:
-            reltol = 20
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
 
         # Test passing only a width
@@ -275,8 +259,7 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits
         ax.axis(axis)
         # create and compare image
-        with ImageComparison(self.path, filename_width,
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, filename_width) as ic:
             fig.savefig(ic.name)
 
         # Test passing a width and a height
@@ -291,11 +274,9 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis(axis)
         # create and compare image
-        with ImageComparison(self.path, filename_width_height,
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, filename_width_height) as ic:
             fig.savefig(ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection_aspect_x(self):
         """
         Tests to plot beachball into a non-scaled axes with an x-axis larger
@@ -305,7 +286,6 @@ class BeachballTestCase(unittest.TestCase):
                                filename_width='bb_aspect_x.png',
                                filename_width_height='bb_aspect_x_height.png')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection_aspect_y(self):
         """
         Tests to plot beachball into a non-scaled axes with a y-axis larger

@@ -479,8 +479,6 @@ def _ctypesArray2NumpyArray(buffer_, buffer_elements, sampletype):
     Takes a Ctypes array and its length and type and returns it as a
     NumPy array.
 
-    This works by reference and no data is copied.
-
     :param buffer_: Ctypes c_void_p pointer to buffer.
     :param buffer_elements: length of the whole buffer
     :param sampletype: type of sample, on of "a", "i", "f", "d"

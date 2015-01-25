@@ -24,7 +24,7 @@ from future.utils import native_str
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
-    getMatplotlibVersion, locations2degrees
+    locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
 
 from copy import copy
@@ -36,9 +36,6 @@ import matplotlib.patches as patches
 import numpy as np
 import scipy.signal as signal
 import warnings
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class WaveformPlotting(object):
@@ -99,7 +96,6 @@ class WaveformPlotting(object):
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
-        self.sect_timeshift = kwargs.get('timeshift', False)
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
         # normalize times
@@ -111,6 +107,8 @@ class WaveformPlotting(object):
             # fix stream times
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
+        elif self.type == 'section':
+            self.sect_reftime = kwargs.get('reftime', None)
         # Whether to use straight plotting or the fast minmax method. If not
         # set explicitly by the user "full" method will be used by default and
         # "fast" method will be used above some threshold of data points to
@@ -283,7 +281,8 @@ class WaveformPlotting(object):
                           'edgecolor': self.face_color}
         else:
             extra_args = {'dpi': self.dpi,
-                          'transparent': self.transparent}
+                          'transparent': self.transparent,
+                          'facecolor': 'k'}
         if self.outfile:
             # If format is set use it.
             if self.format:
@@ -1159,7 +1158,7 @@ class WaveformPlotting(object):
             ax.set_xticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
-        ax.set_ylim([0, self._time_max])
+        ax.set_ylim([self._time_min, self._time_max])
         if self.sect_recordstart is not None:
             ax.set_ylim(bottom=self.sect_recordstart)
         if self.sect_recordlength is not None:
@@ -1187,22 +1186,22 @@ class WaveformPlotting(object):
         if not self.sect_dist_degree:
             # Define offset in km from tr.stats.distance
             try:
-                for _tr in range(len(self.stream)):
-                    self._tr_offsets[_tr] = self.stream[_tr].stats.distance
+                for _i, tr in enumerate(self.stream):
+                    self._tr_offsets[_i] = tr.stats.distance
             except:
                 msg = 'Define trace.stats.distance in meters to epicenter'
                 raise ValueError(msg)
         else:
             # Define offset as degree from epicenter
             try:
-                for _tr in range(len(self.stream)):
-                    self._tr_offsets[_tr] = locations2degrees(
-                        self.stream[_tr].stats.coordinates.latitude,
-                        self.stream[_tr].stats.coordinates.longitude,
+                for _i, tr in enumerate(self.stream):
+                    self._tr_offsets[_i] = locations2degrees(
+                        tr.stats.coordinates.latitude,
+                        tr.stats.coordinates.longitude,
                         self.ev_coord[0], self.ev_coord[1])
             except:
                 msg = 'Define latitude/longitude in trace.stats.' + \
-                    'coordinates and ev_lat/ev_lon. See documentation.'
+                    'coordinates and ev_coord. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
         if self.sect_offset_min is None:
@@ -1215,12 +1214,10 @@ class WaveformPlotting(object):
         else:
             self._offset_max = self.sect_offset_max
         # Reduce data to indexes within offset_min/max
-        self._tr_selected = np.where(
-            (self._tr_offsets >= self._offset_min) &
-            (self._tr_offsets <= self._offset_max))[0]
-        self._tr_offsets = self._tr_offsets[
-            (self._tr_offsets >= self._offset_min) &
-            (self._tr_offsets <= self._offset_max)]
+        mask = ((self._tr_offsets >= self._offset_min) &
+                (self._tr_offsets <= self._offset_max))
+        self._tr_offsets = self._tr_offsets[mask]
+        stream = [tr for m, tr in zip(mask, self.stream) if m]
         # Normalized offsets for plotting
         self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
         # Number of traces
@@ -1233,26 +1230,21 @@ class WaveformPlotting(object):
         self._tr_npts = np.empty(self._tr_num)
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
-        for _i, _tr in enumerate(self._tr_selected):
-            if len(self.stream[_tr].data) >= self.max_npts:
-                tmp_data = signal.resample(self.stream[_tr].data,
-                                           self.max_npts)
+        for _i, tr in enumerate(stream):
+            if len(tr.data) >= self.max_npts:
+                tmp_data = signal.resample(tr.data, self.max_npts)
             else:
-                tmp_data = self.stream[_tr].data
+                tmp_data = tr.data
             # Initialising trace stats
             self._tr_data.append(tmp_data)
-            self._tr_starttimes.append(self.stream[_tr].stats.starttime)
+            self._tr_starttimes.append(tr.stats.starttime)
             self._tr_max_count[_i] = tmp_data.max()
             self._tr_npts[_i] = tmp_data.size
             self._tr_delta[_i] = (
-                self.stream[_tr].stats.endtime -
-                self.stream[_tr].stats.starttime) / self._tr_npts[_i]
-        # Maximum global count of the traces
-        self._tr_max_count_glob = np.abs(self._tr_max_count).max()
+                tr.stats.endtime -
+                tr.stats.starttime) / self._tr_npts[_i]
         # Init time vectors
         self.__sectInitTime()
-        # Traces initiated!
-        self._traces_init = True
 
     def __sectScaleTraces(self, scale=None):
         """
@@ -1267,16 +1259,14 @@ class WaveformPlotting(object):
         """
         Define the time vector for each trace
         """
+        reftime = self.sect_reftime or min(self._tr_starttimes)
         self._tr_times = []
         for _tr in range(self._tr_num):
             self._tr_times.append(
-                np.arange(self._tr_npts[_tr]) * self._tr_delta[_tr])
+                (np.arange(self._tr_npts[_tr]) +
+                 (self._tr_starttimes[_tr] - reftime)) * self._tr_delta[_tr])
             if self.sect_vred:
                 self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
-            if self.sect_timeshift:
-                self._tr_times[-1] += \
-                    (self._tr_starttimes[_tr] - min(self._tr_starttimes))\
-                    * self._tr_delta[_tr]
 
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
@@ -1311,7 +1301,6 @@ class WaveformPlotting(object):
                     * (1. / self._sect_scale)
                     + self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
-        self._sect_plot_init = True
         return ax
 
     def __sectNormalizeTraces(self):
@@ -1325,13 +1314,12 @@ class WaveformPlotting(object):
                 self._tr_normfac[tr] = np.abs(self._tr_data[tr]).max()
         elif self.sect_norm_method == 'stream':
             # Normalize the whole stream
-            self._tr_normfac.fill(self._tr_max_count_glob)
+            tr_max_count_glob = np.abs(self._tr_max_count).max()
+            self._tr_normfac.fill(tr_max_count_glob)
         else:
             msg = 'Define a normalisation method. Valid normalisations' + \
                 'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
-
-        self._plot_init = False
 
     def __setupFigure(self):
         """

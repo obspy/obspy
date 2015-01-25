@@ -8,16 +8,12 @@ from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream, __version__
 from obspy.core import Stats
 from obspy.core.compatibility import mock
-from obspy.core.util.base import getMatplotlibVersion
-from obspy.core.util.decorator import skipIf
 from obspy.xseed import Parser
 import math
 import numpy as np
 import unittest
 import warnings
 import os
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class TraceTestCase(unittest.TestCase):
@@ -1380,7 +1376,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
@@ -1388,7 +1383,6 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(25))
         tr.plot(show=False)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
@@ -1509,6 +1503,14 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr_3.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
         self.assertEqual(tr_3.stats.sampling_rate, 10.0)
         self.assertEqual(tr_3.stats.starttime, tr.stats.starttime)
+
+        tr_4 = tr.copy()
+        tr_4.data = np.require(tr_4.data,
+                               dtype=tr_4.data.dtype.newbyteorder('>'))
+        tr_4 = tr_4.resample(sampling_rate=10.0)
+        self.assertEqual(tr_4.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
+        self.assertEqual(tr_4.stats.sampling_rate, 10.0)
+        self.assertEqual(tr_4.stats.starttime, tr.stats.starttime)
 
     def test_method_chaining(self):
         """

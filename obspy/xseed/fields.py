@@ -56,6 +56,9 @@ class Field(object):
         if self.id:
             return "F%02d" % self.id
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def convert(self, value):
         return value
 

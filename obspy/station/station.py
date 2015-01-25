@@ -141,6 +141,9 @@ class Station(BaseNode):
             subsequent_indent="\t\t", expand_tabs=False))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __getitem__(self, index):
         return self.channels[index]
 
