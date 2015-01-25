@@ -22,20 +22,19 @@ class TauP_Time(object):
     DEBUG = False
     verbose = False
 
-    def __init__(self, phaseList=None, modelName="iasp91", depth=0,
-                 degrees=None, coordinate_list=None, taup_model_path=None):
+    def __init__(self, taupy_model, phaseList=None, depth=0,
+                 degrees=None, coordinate_list=None):
+        self.tMod = taupy_model
+        # tModDepth will be depth-corrected if source depth is not 0.
+        self.tModDepth = self.tMod
+        self.modelName = self.tMod.sMod.vMod.modelName
+
         phaseList = phaseList if phaseList is not None else []
         # Allow phases originating in the core
         self.expert = False
         # Names of phases to be used, e.g. PKIKP
         self.phaseList = phaseList
         self.phaseNames = []
-        self.modelName = modelName
-        # This is needed to check later if assignment has happened on cmd
-        # line.
-        self.tMod = None
-        # TauModel derived from tMod by correcting it for a non-surface source.
-        self.tModDepth = None
         # List to hold the SeismicPhases for the phases named in phaseNames.
         self.phases = []
         # The following are 'initialised' for the purpose of checking later
@@ -53,19 +52,6 @@ class TauP_Time(object):
         self.arrivals = []
         self.relativePhaseName = None
         self.relativeArrival = None
-        # In case the tau interface is not called, i.e. using the CLI, this
-        # default model directory location needs to be specified here.
-        # This could be removed, but the script interface and test scripts
-        # would need to be rewritten.
-        if taup_model_path is None:
-            # default path is ./data/taup_models/, relative to this script's
-            # location
-            self.taup_model_path = os.path.join(os.path.dirname(
-                os.path.abspath(inspect.getfile(inspect.currentframe()))),
-                "data", "taup_models")
-        else:
-            # The tau interface should always provide a directory.
-            self.taup_model_path = taup_model_path
 
     def run(self, printOutput=False):
         """
@@ -74,7 +60,6 @@ class TauP_Time(object):
         :param printOutput: Whether to print the output to stdout.
         """
         self.phaseNames = parsePhaseList(self.phaseList)
-        self.readTauModel()
         if self.degrees is not None or all(x is not None for x in (
                 self.stationLat, self.stationLon, self.eventLat,
                 self.eventLon)):
@@ -94,20 +79,6 @@ class TauP_Time(object):
             raise ValueError("You must specify either distance in degrees "
                              "or event and station coordinates.")
 
-    def readTauModel(self):
-        """
-        Read a previously created .taup model.
-        """
-        tModLoaded = TauModelLoader.load(self.modelName, self.taup_model_path,
-                                         self.verbose)
-        if tModLoaded is not None:
-            self.tMod = tModLoaded
-            # tModDepth will be depth-corrected if source depth is not 0.
-            self.tModDepth = self.tMod
-            self.modelName = self.tMod.sMod.vMod.modelName
-        else:
-            raise TauModelError("Unable to load " + str(self.modelName))
-
     def depthCorrect(self, depth):
         """
         Corrects the TauModel for the given source depth (if not already
@@ -115,7 +86,6 @@ class TauP_Time(object):
         """
         if self.tModDepth is None or self.tModDepth.sourceDepth != depth:
             # This is not recursion!
-            self.tModDepth = self.tMod.depthCorrect(depth)
             self.arrivals = []
             self.recalcPhases()
         self.sourceDepth = depth

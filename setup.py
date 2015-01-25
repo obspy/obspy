@@ -22,14 +22,6 @@ ROOT = os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe())))
 
 
-def __get_model_filename(model_name, model_dir):
-    model_name = os.path.splitext(os.path.basename(model_name))[0]
-    filename = os.path.join(
-        model_dir, model_name +
-        ("__py%i%i__tvel" % sys.version_info[:2]) + os.path.extsep + "pickle")
-    return filename
-
-
 def build_models():
     """
     Builds the models during install time. This is needed as the models are
@@ -37,15 +29,15 @@ def build_models():
     """
     taupy_path = os.path.join(ROOT, "taupy")
     model_input = os.path.join(taupy_path, "data")
-    model_dir = os.path.join(model_input, "taup_models")
 
     sys.path.insert(0, ROOT)
     from taupy.TauP_Create import TauP_Create
+    from taupy.utils import _get_model_filename
 
     for model in glob.glob(os.path.join(model_input, "*.tvel")):
         print("Building model '%s'..." % model)
         sys.stdout.flush()
-        output_filename = __get_model_filename(model, model_dir)
+        output_filename = _get_model_filename(model)
         mod_create = TauP_Create(input_filename=model,
                                  output_filename=output_filename)
         mod_create.loadVMod()
@@ -86,5 +78,6 @@ setup_config = dict(
 
 
 if __name__ == "__main__":
+    # XXX: Called twice right now.
     build_models()
     setup(**setup_config)

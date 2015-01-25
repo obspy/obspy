@@ -1,3 +1,6 @@
 *.pyc
 *~
 *.egg-info
+taupy/data/models
+build
+dist
