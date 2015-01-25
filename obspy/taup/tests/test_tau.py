@@ -150,20 +150,24 @@ def test_pierce_p_iasp91():
 
 
 def test_vs_java_iasp91():
+    # TODO: takes for ever and partially fails!!!
     m = TauPyModel(model="iasp91")
-    #
     filename = "java_tauptime_testoutput"
     pos = 0
-    arr, pos = _read_taup_output(filename, pos)
-    for _, a in enumerate(arr):
-        b = m.get_travel_times(source_depth_in_km=a['depth'],
-                               distance_in_degree=a['distance'],
-                               phase_list=[a["name"]])[0]
-        # non defined values
-        if b.time == 0.0:
-            continue
-        _assert_arrivals_equal(b, a)
-    # TODO: go to next position
+    while True:
+        old_pos = pos
+        arr, pos = _read_taup_output(filename, pos)
+        if pos == old_pos:
+            break
+        for _, a in enumerate(arr):
+            b_l = m.get_travel_times(source_depth_in_km=a['depth'],
+                                     distance_in_degree=a['distance'],
+                                     phase_list=[a["name"]])
+            b = sorted(b_l, key=lambda x: abs(x.time - a['time']))[0]
+            # non defined values
+            if b.time == 0.0:
+                continue
+            _assert_arrivals_equal(b, a)
 
 
 def test_pierce_all_phases():
