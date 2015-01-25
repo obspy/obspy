@@ -43,6 +43,7 @@ libraries and applications, our build tools and our web sites.
     * Lion Krischer
     * Marcus Walther
     * Marius Isken
+    * Markus Bank
     * Martin van Driel
     * Moritz Beyreuther
     * Nathaniel C. Miller
