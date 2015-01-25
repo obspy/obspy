@@ -85,6 +85,7 @@ class TauP_Time(object):
         corrected).
         """
         if self.tModDepth is None or self.tModDepth.sourceDepth != depth:
+            self.tModDepth = self.tMod.depthCorrect(depth)
             # This is not recursion!
             self.arrivals = []
             self.recalcPhases()
