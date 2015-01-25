@@ -118,7 +118,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # check byte order
                     if format == 'SAC':
                         # SAC format preserves byteorder on writing
-                        self.assertIn(st[0].data.dtype.byteorder, ('=', byteorder))
+                        self.assertTrue(st[0].data.dtype.byteorder
+                                        in ('=', byteorder))
                     else:
                         self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
