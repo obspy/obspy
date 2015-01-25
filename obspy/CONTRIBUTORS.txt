@@ -39,6 +39,7 @@ Bernhard Morgenstern
 Nathaniel C. Miller
 Celso Reyes
 Tom Richter
+Nicolas Rothenhäusler
 Emiliano Russo
 Elliott Sales de Andrade
 Claudio Satriano
