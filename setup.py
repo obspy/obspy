@@ -33,7 +33,7 @@ setup_config = dict(
     url="https://github.com/obspy/TauPy",
     license="GNU General Public License, version 3 (GPLv3)",
     platforms="OS Independent",
-    requires=["numpy"],
+    requires=["numpy", "future"],
     include_package_data=True,
     # this is needed for "easy_install taupy==dev"
     download_url=("https://github.com/obspy/TauPy/zipball/master"
