@@ -627,7 +627,7 @@ def build_taup_models():
                   "delete the existing version." % output_filename)
             sys.stdout.flush()
             continue
-        print("Building obspy.taup model '%s'..." % model)
+        print("Building obspy.taup model for '%s' ..." % model)
         sys.stdout.flush()
         mod_create = TauP_Create(input_filename=model,
                                  output_filename=output_filename)
