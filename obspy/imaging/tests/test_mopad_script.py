@@ -17,7 +17,6 @@ import io
 from itertools import product, zip_longest
 import os
 import unittest
-from spyderlib.utils.iofuncs import pd
 
 
 class MopadTestCase(unittest.TestCase):
