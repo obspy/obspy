@@ -17,17 +17,20 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data", "TauP_test_data")
 
 
-def _read_taup_output(filename):
+def _read_taup_output(filename, pos):
     output = []
     with open(os.path.join(DATA, filename), "rt") as fh:
+        fh.seek(pos)
         while True:
             line = fh.readline().strip()
             if line.startswith("-----"):
                 break
-        for line in fh:
-            line = line.replace("=", "").strip()
+        while True:
+            line = fh.readline().strip()
+            print(line)
             if not line:
-                continue
+                break
+            line = line.replace("=", "").strip()
             line = line.split()
             output.append({
                 "distance": float(line[0]),
@@ -39,12 +42,14 @@ def _read_taup_output(filename):
                 "incident_angle": float(line[6]),
                 "purist_distance": float(line[7]),
                 "purist_name": line[8]})
-    return output
+        pos = fh.tell()
+    return output, pos
 
 
-def _compare_arrivals_with_file(arrivals, filename):
+def _compare_arrivals_with_file(arrivals, filename, pos=0):
     arrivals = sorted(arrivals, key=lambda x: x.time)
-    expected_arrivals = sorted(_read_taup_output(filename),
+    _expected_arrivals_unsorted, _ = _read_taup_output(filename, pos=0)
+    expected_arrivals = sorted(_expected_arrivals_unsorted,
                                key=lambda x: x["time"])
 
     for arr, expected_arr in zip(arrivals, expected_arrivals):
@@ -109,3 +114,12 @@ def test_ak135():
                                   phase_list=["ttall"])
     _compare_arrivals_with_file(
         arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
+
+
+# def test_vs_java():
+#     m = tau.TauPyModel(model="ak135")
+#     arrivals = m.get_travel_times(source_depth_in_km=10.0,
+#                                   distance_in_degree=35.0,
+#                                   phase_list=["ttall"])
+#     _compare_arrivals_with_file(
+#         arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
