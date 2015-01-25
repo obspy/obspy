@@ -7,6 +7,7 @@ from future.builtins import *
 from taupy.Arrival import Arrival
 from taupy.helper_classes import TauModelError, TimeDist
 import math
+import numpy as np
 from copy import deepcopy
 from itertools import count
 
@@ -1044,9 +1045,10 @@ class SeismicPhase(object):
                 # Fake negative velocity so angle is negative in case of
                 # upgoing ray.
                 takeoffVelocity = -1 * vMod.evaluateAbove(sourceDepth, name[0])
-            takeoffAngle = (180 / math.pi) * math.asin(
+            takeoffAngle = (180 / math.pi) * math.asin(np.clip(
                 takeoffVelocity * arrivalRayParam / (self.tMod.radiusOfEarth -
-                                                     self.sourceDepth))
+                                                     self.sourceDepth),
+                                                       -1.0, 1.0))
             lastLeg = self.legs[-2][0]  # very last item is "END"
             incidentAngle = (180 / math.pi) * math.asin(
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /
