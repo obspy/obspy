@@ -11,7 +11,7 @@ import os
 import unittest
 
 
-class TauPTestCase(unittest.TestCase):
+class ObsPyTauPWrapperTestCase(unittest.TestCase):
     """
     Test suite for obspy.taup.
     """
@@ -119,7 +119,7 @@ class TauPTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(TauPTestCase, 'test')
+    return unittest.makeSuite(ObsPyTauPWrapperTestCase, 'test')
 
 
 if __name__ == '__main__':
