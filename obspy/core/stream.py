@@ -1076,6 +1076,9 @@ class Stream(object):
         :type time_down: bool, optional
         :param time_down: Flip the plot horizontally, time goes down.
             Defaults to ``False``, i.e., time goes up.
+        :type reftime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param reftime: The reference time to which the time scale will refer.
+            Defaults to the minimum start time of the visible traces.
 
         **Relative Parameters**
 
