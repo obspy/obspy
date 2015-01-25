@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from ctypes import CDLL
 from ctypes.util import find_library
-from obspy.core.util.misc import wrap_long_string, CatchOutput
+from obspy.core.util.misc import CatchOutput
 import os
 import platform
 import sys
