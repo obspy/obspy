@@ -8,6 +8,9 @@ degrees, that would be difficult to implement. It can probably be assumed that
 if TauP_Time works well for a range of inputs, TauP_Pierce would too.
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *
 import inspect
 import os
 import unittest

@@ -1,4 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # Manual test to just check if the tau interface runs without upsets.
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *
 from taupy import tau
 import os
 

@@ -5,6 +5,9 @@ This file tests the TauP_Time utility  against the original TauPy using
 both the high-level tau interface of TauPy and the java-like old script-based
 interface.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *
 import inspect
 import os
 import unittest

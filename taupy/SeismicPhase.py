@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *
 
 from taupy.Arrival import Arrival
 from taupy.helper_classes import TauModelError, TimeDist
