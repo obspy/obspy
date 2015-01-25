@@ -17,21 +17,18 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data", "TauP_test_data")
 
 
-def _read_taup_output(filename):
+def _read_taup_output(filename, pos):
     output = []
     with open(os.path.join(DATA, filename), "rt") as fh:
+        fh.seek(pos)
         while True:
             line = fh.readline().strip()
             if line.startswith("-----"):
                 break
-<<<<<<< HEAD
-        for line in fh:
-=======
         while True:
             line = fh.readline().strip()
             if not line:
                 break
->>>>>>> trying to get tests against java to run
             line = line.replace("=", "").strip()
             if not line:
                 continue
@@ -46,19 +43,15 @@ def _read_taup_output(filename):
                 "incident_angle": float(line[6]),
                 "purist_distance": float(line[7]),
                 "purist_name": line[8]})
-    return output
+        pos = fh.tell()
+    return output, pos
 
 
 def _compare_arrivals_with_file(arrivals, filename):
     arrivals = sorted(arrivals, key=lambda x: x.time)
-<<<<<<< HEAD
-    expected_arrivals = sorted(_read_taup_output(filename),
-=======
     _expected_arrivals_unsorted, pos = _read_taup_output(filename, pos=0)
     expected_arrivals = sorted(_expected_arrivals_unsorted,
->>>>>>> trying to get tests against java to run
                                key=lambda x: x["time"])
-
     for arr, expected_arr in zip(arrivals, expected_arrivals):
         _assert_arrivals_equal(arr, expected_arr)
 
