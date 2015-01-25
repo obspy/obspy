@@ -51,11 +51,11 @@ class TauPyModel(object):
         Usage:
         >>> from taupy import tau
         >>> i91 = tau.TauPyModel()
-        >>> i91.get_travel_timess(10, 20)[0].name
+        >>> i91.get_travel_times(10, 20)[0].name
         'Pn'
-        >>> i91.get_travel_timess(10, 20)[0].time
+        >>> i91.get_travel_times(10, 20)[0].time
         15.60164282924581
-        >>> i91.get_travel_timess(100, 50, phase_list = ["P", "S"],
+        >>> i91.get_travel_times(100, 50, phase_list = ["P", "S"],
         ...                 print_output=True)
 
         Model: iasp91
@@ -65,7 +65,7 @@ class TauPyModel(object):
            50.00   100.0   P     523.92      7.563    33.79     23.23     50.00  = P
            50.00   100.0   S     947.65     13.903    34.80     24.84     50.00  = S
 
-        >>> i91.get_travel_timess(10, phase_list = ["ttall"], coordinate_list =
+        >>> i91.get_travel_times(10, phase_list = ["ttall"], coordinate_list =
         ...                     [13,14,50,200], print_output=True)
         """
         self.verbose = verbose
