@@ -628,7 +628,29 @@ def build_taup_models():
         mod_create.loadVMod()
         mod_create.run()
 
-build_taup_models()
+
+def friendly(command_subclass):
+    """
+    A decorator for classes subclassing one of the setuptools commands.
+
+    It modifies the run() method so that it prints a friendly greeting.
+    """
+    orig_run = command_subclass.run
+
+    def modified_run(self):
+        build_taup_models()
+        orig_run(self)
+
+    command_subclass.run = modified_run
+    return command_subclass
+
+@friendly
+class CustomDevelopCommand(develop):
+    pass
+
+@friendly
+class CustomInstallCommand(install):
+    pass
 
 
 def setupPackage():
@@ -673,7 +695,12 @@ def setupPackage():
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
-        cmdclass={'build_man': Help2ManBuild, 'install_man': Help2ManInstall},
+        cmdclass={
+            'install': CustomInstallCommand,
+            'develop': CustomDevelopCommand,
+            'build_man': Help2ManBuild,
+            'install_man': Help2ManInstall},
+        },
         configuration=configuration)
 
 
