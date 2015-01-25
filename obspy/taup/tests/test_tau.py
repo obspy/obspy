@@ -17,20 +17,17 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data", "TauP_test_data")
 
 
-def _read_taup_output(filename, pos):
+def _read_taup_output(filename):
     output = []
     with open(os.path.join(DATA, filename), "rt") as fh:
-        fh.seek(pos)
         while True:
             line = fh.readline().strip()
             if line.startswith("-----"):
                 break
-        while True:
-            line = fh.readline().strip()
-            print(line)
-            if not line:
-                break
+        for line in fh:
             line = line.replace("=", "").strip()
+            if not line:
+                continue
             line = line.split()
             output.append({
                 "distance": float(line[0]),
@@ -42,14 +39,12 @@ def _read_taup_output(filename, pos):
                 "incident_angle": float(line[6]),
                 "purist_distance": float(line[7]),
                 "purist_name": line[8]})
-        pos = fh.tell()
-    return output, pos
+    return output
 
 
-def _compare_arrivals_with_file(arrivals, filename, pos=0):
+def _compare_arrivals_with_file(arrivals, filename):
     arrivals = sorted(arrivals, key=lambda x: x.time)
-    _expected_arrivals_unsorted, _ = _read_taup_output(filename, pos=0)
-    expected_arrivals = sorted(_expected_arrivals_unsorted,
+    expected_arrivals = sorted(_read_taup_output(filename),
                                key=lambda x: x["time"])
 
     for arr, expected_arr in zip(arrivals, expected_arrivals):
@@ -116,10 +111,29 @@ def test_ak135():
         arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
 
-# def test_vs_java():
-#     m = tau.TauPyModel(model="ak135")
-#     arrivals = m.get_travel_times(source_depth_in_km=10.0,
-#                                   distance_in_degree=35.0,
-#                                   phase_list=["ttall"])
-#     _compare_arrivals_with_file(
-#         arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
+def test_pierce_p_iasp91():
+    m = TauPyModel(model="iasp91")
+    arrivals = m.get_pierce_points(source_depth_in_km=10.0,
+                                   distance_in_degree=35.0, phase_list=["P"])
+    assert len(arrivals) == 1
+    p_arr = arrivals[0]
+
+    # Open test file.
+    filename = os.path.join(DATA, "taup_pierce_-h_10_-ph_P_-deg_35")
+
+    expected = []
+    with open(filename, "rt") as fh:
+        fh.readline()
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            expected.append(list(map(float, line.split())))
+
+    actual = []
+    for pierce in p_arr.pierce:
+        actual.append([round(pierce.get_dist_deg(), 2),
+                       round(pierce.depth, 1),
+                       round(pierce.time, 1)])
+
+    assert expected == actual
