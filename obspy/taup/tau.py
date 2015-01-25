@@ -12,7 +12,9 @@ from .taup_create import TauP_Create
 
 
 class Arrivals(list):
-    """Class that is returned by the interface methods."""
+    """
+    Class that is returned by the interface methods.
+    """
     __slots__ = ["arrivals"]
 
     def __init__(self, arrivals):
@@ -31,14 +33,6 @@ class Arrivals(list):
 
 
 class TauPyModel(object):
-    """
-    High level interface to TauPy.
-    Example usage:
-    >>> from obspy.taup import tau
-    >>> i91 = tau.TauPyModel("iasp91")
-    >>> tt = i91.get_travel_timess(10, 20, ["P, S"])
-    """
-
     def __init__(self, model="iasp91", verbose=False):
         """
         Loads an already created TauPy model.
@@ -70,57 +64,72 @@ class TauPyModel(object):
         self.model = load(model)
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
-                         phase_list=None, coordinate_list=None,
-                         print_output=False):
+                         phase_list=("ttall",)):
         """
         Returns travel times of every given phase.
-        :param source_depth_in_km: Depth of wave path source.
-        :param distance_in_degree: Distance between the source and receiver in
-            degrees. If this is not given, coordinate_list must be specified.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param distance_in_degree: Epicentral distance in degrees.
+        :type distance_in_degree: float
         :param phase_list: List of phases for which travel times should be
-            calculated. If this is empty, all phases will be used ("ttall").
-        :param print_output: Whether to print the traveltimes for all phases
-            to the screen.
-        :param coordinate_list: List of source latitude, source longitude,
-            receiver latitude, receiver longitude. Used only to calulate the
-            distance in degrees.
-        :return Arrivals:  List of 'arrival' objects, each of which has the
-            time, corresponding phase name, ray parameter, takeoff angle etc
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+
+        :return Arrivals:  List of ``Arrival`` objects, each of which has the
+            time, corresponding phase name, ray parameter, takeoff angle, etc.
             as attributes.
         """
         # Accessing the arrivals not just by list indices but by phase name
         # might be useful, but also difficult: several arrivals can have the
         # same phase.
-        phase_list = phase_list if phase_list is not None else ["ttall"]
         tt = TauP_Time(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree, coordinate_list)
-        tt.run(print_output)
-        if print_output:
-            return
+                       distance_in_degree)
+        tt.run()
         return Arrivals(tt.arrivals)
 
-    def get_pierce_points(self, source_depth_in_km, distance_in_degree=None,
-                          phase_list=None, coordinate_list=None,
-                          print_output=False):
-        phase_list = phase_list if phase_list is not None else ["ttall"]
-        pp = TauP_Pierce(phase_list, self.model.sMod.vMod.modelName,
-                         source_depth_in_km, distance_in_degree,
-                         coordinate_list, self.taup_model_path)
-        pp.run(print_output)
-        if print_output:
-            return
+    def get_pierce_points(self, source_depth_in_km, distance_in_degree,
+                          phase_list=("ttall",)):
+        """
+        Returns pierce points of every given phase.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param distance_in_degree: Epicentral distance in degrees.
+        :type distance_in_degree: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+
+        :return Arrivals:  List of ``Arrival`` objects, each of which has the
+            time, corresponding phase name, ray parameter, takeoff angle, etc.
+            as attributes.
+        """
+        pp = TauP_Pierce(self.model, phase_list, source_depth_in_km,
+                         distance_in_degree)
+        pp.run()
         return Arrivals(pp.arrivals)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
-                      phase_list=None, coordinate_list=None,
-                      print_output=False):
-        phase_list = phase_list if phase_list is not None else ["ttall"]
-        rp = TauP_Path(phase_list, self.model.sMod.vMod.modelName,
-                       source_depth_in_km, distance_in_degree,
-                       coordinate_list, self.taup_model_path)
-        rp.run(print_output)
-        if print_output:
-            return
+                      phase_list=("ttall,")):
+        """
+        Returns ray paths of every given phase.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param distance_in_degree: Epicentral distance in degrees.
+        :type distance_in_degree: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+
+        :return Arrivals:  List of ``Arrival`` objects, each of which has the
+            time, corresponding phase name, ray parameter, takeoff angle, etc.
+            as attributes.
+        """
+        rp = TauP_Path(self.model, phase_list, source_depth_in_km,
+                       distance_in_degree)
+        rp.run()
         return Arrivals(rp.arrivals)
 
 
