@@ -68,7 +68,7 @@ def getTravelTimes(delta, depth, model='iasp91', phase_list=["ttall"]):
     return [{
         "phase_name": arr.name,
         "time": arr.time,
-        "take-off angle": arr.takeOffAngle,
+        "take-off angle": arr.takeoffAngle,
         "dT/dD": arr.rayParam_sec_degree} for arr in tt]
 
 
