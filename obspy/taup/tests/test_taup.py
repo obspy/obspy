@@ -69,8 +69,8 @@ class TauPTestCase(unittest.TestCase):
         with open(filename, 'rt') as fp:
             data = fp.readlines()
         # 1
-        tt = getTravelTimes(delta=52.474, depth=611.0, model='iasp91')
-        lines = data[5:29]
+        tt = getTravelTimes(delta=52.474, depth=611.0, model='iasp91')[:16]
+        lines = data[5:21]
         self.assertEqual(len(tt), len(lines))
         # check calculated tt against original
         for i in range(len(lines)):
@@ -78,12 +78,14 @@ class TauPTestCase(unittest.TestCase):
             item = tt[i]
             self.assertEqual(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 1)
-            self.assertAlmostEqual(item['take-off angle'],
-                                   float(parts[2].strip()), 1)
+            if item["take-off angle"] < 0.0:
+                item["take-off angle"] += 180.0
+            self.assertAlmostEqual(round(item['take-off angle']),
+                                   round(float(parts[2].strip())))
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
         # 2
-        tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')
-        lines = data[34:59]
+        tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')[:19]
+        lines = data[26:45]
         self.assertEqual(len(tt), len(lines))
         # check calculated tt against original
         for i in range(len(lines)):
@@ -91,21 +93,10 @@ class TauPTestCase(unittest.TestCase):
             item = tt[i]
             self.assertEqual(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 1)
-            self.assertAlmostEqual(item['take-off angle'],
-                                   float(parts[2].strip()), 1)
-            self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
-        # 3
-        tt = getTravelTimes(delta=150.0, depth=300.0, model='iasp91')
-        lines = data[61:89]
-        self.assertEqual(len(tt), len(lines))
-        # check calculated tt against original
-        for i in range(len(lines)):
-            parts = lines[i][13:].split()
-            item = tt[i]
-            self.assertEqual(item['phase_name'], parts[0].strip())
-            self.assertAlmostEqual(item['time'], float(parts[1].strip()), 1)
-            self.assertAlmostEqual(item['take-off angle'],
-                                   float(parts[2].strip()), 1)
+            if item["take-off angle"] < 0.0:
+                item["take-off angle"] += 180.0
+            self.assertAlmostEqual(round(item['take-off angle']),
+                                   round(float(parts[2].strip())), 1)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
 
     def test_issue_with_global_state(self):
