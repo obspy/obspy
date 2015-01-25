@@ -163,7 +163,8 @@ def test_vs_java_iasp91():
             b_l = m.get_travel_times(source_depth_in_km=a['depth'],
                                      distance_in_degree=a['distance'],
                                      phase_list=[a["name"]])
-            b = sorted(b_l, key=lambda x: abs(x.time - a['time']))[0]
+            b = sorted(b_l, key=lambda x: abs(x.time - a['time']) +
+                       abs(x.ray_param_sec_degree - a['ray_param_sec_degree']))[0]
             # non defined values
             if b.time == 0.0:
                 continue
