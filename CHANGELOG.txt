@@ -6,6 +6,7 @@
    * Now requires SciPy >= 0.7.2
    * Tested compatibility with most major Linux distributions still
      receiving updates.
+   * Python 2.6 support will be dropped for the next release
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
  - obspy.core:
