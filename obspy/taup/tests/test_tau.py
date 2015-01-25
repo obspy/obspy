@@ -24,7 +24,14 @@ def _read_taup_output(filename):
             line = fh.readline().strip()
             if line.startswith("-----"):
                 break
+<<<<<<< HEAD
         for line in fh:
+=======
+        while True:
+            line = fh.readline().strip()
+            if not line:
+                break
+>>>>>>> trying to get tests against java to run
             line = line.replace("=", "").strip()
             if not line:
                 continue
@@ -44,23 +51,32 @@ def _read_taup_output(filename):
 
 def _compare_arrivals_with_file(arrivals, filename):
     arrivals = sorted(arrivals, key=lambda x: x.time)
+<<<<<<< HEAD
     expected_arrivals = sorted(_read_taup_output(filename),
+=======
+    _expected_arrivals_unsorted, pos = _read_taup_output(filename, pos=0)
+    expected_arrivals = sorted(_expected_arrivals_unsorted,
+>>>>>>> trying to get tests against java to run
                                key=lambda x: x["time"])
 
     for arr, expected_arr in zip(arrivals, expected_arrivals):
-        assert arr.get_modulo_dist_deg() == expected_arr["distance"]
-        assert arr.source_depth == expected_arr["depth"]
-        assert arr.name == expected_arr["name"]
-        assert round(arr.time, 2) == round(expected_arr["time"], 2)
-        assert round(arr.ray_param_sec_degree, 3) == \
-            round(expected_arr["ray_param_sec_degree"], 3)
-        assert round(arr.takeoff_angle, 2) == \
-            round(expected_arr["takeoff_angle"], 2)
-        assert round(arr.incident_angle, 2) == \
-            round(expected_arr["incident_angle"], 2)
-        assert round(arr.purist_distance, 2) == \
-            round(expected_arr["purist_distance"], 2)
-        assert arr.purist_name == expected_arr["purist_name"]
+        _assert_arrivals_equal(arr, expected_arr)
+
+
+def _assert_arrivals_equal(arr, expected_arr):
+    assert arr.get_modulo_dist_deg() == expected_arr["distance"]
+    assert arr.source_depth == expected_arr["depth"]
+    assert arr.name == expected_arr["name"]
+    assert round(arr.time, 2) == round(expected_arr["time"], 2)
+    assert round(arr.ray_param_sec_degree, 3) == \
+        round(expected_arr["ray_param_sec_degree"], 3)
+    assert round(arr.takeoff_angle, 2) == \
+        round(expected_arr["takeoff_angle"], 2)
+    assert round(arr.incident_angle, 2) == \
+        round(expected_arr["incident_angle"], 2)
+    assert round(arr.purist_distance, 2) == \
+        round(expected_arr["purist_distance"], 2)
+    assert arr.purist_name == expected_arr["purist_name"]
 
 
 def test_p_iasp91_manual():
@@ -137,3 +153,18 @@ def test_pierce_p_iasp91():
                        round(pierce.time, 1)])
 
     assert expected == actual
+
+
+def test_vs_java_ak135():
+    m = TauPyModel(model="ak135")
+    #
+    filename = "java_tauptime_testoutput"
+    pos = 0
+    arr, pos = _read_taup_output(filename, pos)
+    for _, a in enumerate(arr):
+        continue
+        # TODO: currently never executed
+        b = m.get_travel_times(source_depth_in_km=a['depth'],
+                               distance_in_degree=a['distance'],
+                               phase_list=a["name"])[0]
+        _assert_arrivals_equal(b, a)
