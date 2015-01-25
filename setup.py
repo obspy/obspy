@@ -609,7 +609,7 @@ class Help2ManInstall(install):
 
 def build_taup_models():
     """
-    Builds the obspy.tau models during install time. This is needed as the
+    Builds the obspy.taup models during install time. This is needed as the
     models are pickled Python classes which are not compatible across Python
     versions.
     """
@@ -621,9 +621,14 @@ def build_taup_models():
     from taup.utils import _get_model_filename
 
     for model in glob.glob(os.path.join(model_input, "*.tvel")):
-        print("Building model '%s'..." % model)
-        sys.stdout.flush()
         output_filename = _get_model_filename(model)
+        if os.path.exists(output_filename):
+            print("obspy.taup model '%s' already exists. To rebuild, please "
+                  "delete the existing version." % output_filename)
+            sys.stdout.flush()
+            continue
+        print("Building obspy.taup model '%s'..." % model)
+        sys.stdout.flush()
         mod_create = TauP_Create(input_filename=model,
                                  output_filename=output_filename)
         mod_create.loadVMod()
