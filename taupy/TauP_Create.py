@@ -20,69 +20,32 @@ class TauP_Create(object):
     pp 1271-1302. This creates the SlownessModel and tau branches and
     saves them for later use.
     """
-    overlayModelFilename = None
-    plotVmod = False
-    plotSmod = False
-    plotTmod = False
-
-    def __init__(self, modelFilename=None, output_dir=None, input_dir=None):
-        # Parse command line arguments.
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-v', '--verbose', '-d', '--debug',
-                            action='store_true',
-                            help='increase output verbosity')
-        parser.add_argument('-i', '--input_dir',
-                            help='set directory of input velocity models '
-                                 '(default: ./data)')
-        parser.add_argument('-o', '--output_dir',
-                            help='set where to write the .taup model - be '
-                                 'careful, this will overwrite any previous '
-                                 'models of the same name (default: '
-                                 './data/taup_models)')
-        parser.add_argument('-mod', '--filename',
-                            help='the velocity model name '
-                                 '(default: iasp91.tvel)')
-        args = parser.parse_args()
-        self.DEBUG = args.verbose
-        # This is the directory that will be looked in for the velocity models:
-        self.input_dir = args.input_dir if input_dir is None else input_dir
-        if self.input_dir is None:
-            # If no directory given, assume data is in ./data.
-            # This will only happen if this is used as a script, not through
-            # the tau interface.
-            self.input_dir = os.path.join(os.path.dirname(os.path.abspath(
-                inspect.getfile(inspect.currentframe()))), "data")
-        self.outdir = args.output_dir if output_dir is None else output_dir
-        if modelFilename is None:
-            self.modelFilename = args.filename
-        else:
-            self.modelFilename = modelFilename
-        if self.modelFilename is None:
-            raise ValueError("Model file name not specified.")
-
-
-    @classmethod
-    def main(cls, modelFilename=None, output_dir=None, input_dir=None):
-        """ Do loadVMod, then start. """
-        #print("TauP_Create starting...")
-        tauPCreate = TauP_Create(modelFilename, output_dir, input_dir)
-        #print("Loading velocity model.")
-        tauPCreate.loadVMod()
-        #print("Running tauPCreate.run.")
-        tauPCreate.run()
+    def __init__(self, input_filename, output_filename, verbose=False,
+                 min_delta_p=0.1, max_delta_p=11.0, max_depth_interval=115.0,
+                 max_range_interval=2.5, max_interp_error=0.5,
+                 allow_inner_core_s=True):
+        self.input_filename = input_filename
+        self.output_filename = output_filename
+        self.debug = verbose
+        self.min_delta_p = min_delta_p
+        self.max_delta_p = max_delta_p
+        self.max_depth_interval = max_depth_interval
+        self.max_range_interval = max_range_interval
+        self.max_interp_error = max_interp_error
+        self.allow_inner_core_s = allow_inner_core_s
 
     def loadVMod(self):
         """ Tries to load a velocity model via readVelocityFile from the
         directory specified on command line, or from ./data/.
         """
         # Read the velocity model file.
-        filename = os.path.join(self.input_dir, self.modelFilename)
-        if self.DEBUG:
+        filename = self.input_filename
+        if self.debug:
             print("filename =", filename)
         self.vMod = VelocityModel.readVelocityFile(filename)
         if self.vMod is None:
             # try and load internally
-            # self.vMod = TauModelLoader.loadVelocityModel(self.modelFilename)
+            # self.vMod = TauModelLoader.loadVelocityModel(self.model_filename)
             # Frankly, I don't think it's a good idea to somehow load the
             # model from a non-obvious path. Better to just raise the
             # exception and force user to be clear about what VelocityModel
@@ -93,7 +56,7 @@ class TauP_Create(object):
         if self.vMod is None:
             raise IOError("Velocity model file not found: " + filename)
         # If model was read:
-        if self.DEBUG:
+        if self.debug:
             print("Done reading velocity model.")
             print("Radius of model " + self.vMod.modelName + " is " +
                   str(self.vMod.radiusOfEarth))
@@ -108,42 +71,20 @@ class TauP_Create(object):
             raise ValueError("vMod is None.")
         if vMod.isSpherical is False:
             raise Exception("Flat slowness model not yet implemented.")
-        SlownessModel.DEBUG = self.DEBUG
-        if self.DEBUG:
+        SlownessModel.DEBUG = self.debug
+        if self.debug:
             print("Using parameters provided in TauP_config.ini (or defaults "
                   "if not) to call SlownessModel...")
-        import configparser
-        config = configparser.ConfigParser()
-        try:
-            config.read('TauP_config.ini')
-            ssm = config['SlownessModel_created_from_VelocityModel']
-            # Read values from the appropriate section if defined, else use
-            # default values.
-            # (are actually case-insensitive)
-            minDeltaP = float(ssm.get('mindeltaP', 0.1))
-            maxDeltaP = float(ssm.get('maxDeltaP', 11))
-            maxDepthInterval = float(ssm.get('maxDepthInterval', 115))
-            maxRangeInterval = float(ssm.get('maxRangeInterval', 2.5))
-            maxInterpError = float(ssm.get('maxInterpError', 0.05))
-            allowInnerCoreS = ssm.getboolean('allowInnerCoreS', True)
-        except KeyError:
-            if self.DEBUG:
-                print("Couldn't find or read config file, using defaults.")
-            minDeltaP = 0.1
-            maxDeltaP = 11
-            maxDepthInterval = 115
-            maxRangeInterval = 2.5
-            maxInterpError = 0.05
-            allowInnerCoreS = True
 
         from math import pi
         self.sMod = SlownessModel(
-            vMod, minDeltaP, maxDeltaP, maxDepthInterval,
-            maxRangeInterval * pi / 180, maxInterpError, allowInnerCoreS,
+            vMod, self.min_delta_p, self.max_delta_p, self.max_depth_interval,
+            self.max_range_interval * pi / 180.0, self.max_interp_error,
+            self.allow_inner_core_s,
             SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
-        if self.DEBUG:
+        if self.debug:
             print("Parameters are:")
-            print("taup.create.minDeltaP = " + str(self.sMod.minDeltaP) +
+            print("taup.create.min_delta_p = " + str(self.sMod.minDeltaP) +
                   " sec / radian")
             print("taup.create.maxDeltaP = " + str(self.sMod.maxDeltaP) +
                   " sec / radian")
@@ -161,8 +102,8 @@ class TauP_Create(object):
         # if self.debug:
         #    print(self.sMod)
         # set the debug flags to value given here:
-        TauModel.DEBUG = self.DEBUG
-        SlownessModel.DEBUG = self.DEBUG
+        TauModel.DEBUG = self.debug
+        SlownessModel.DEBUG = self.debug
         # Creates tau model from slownesses.
         return TauModel(self.sMod)
 
@@ -173,38 +114,46 @@ class TauP_Create(object):
         specified differently).
         """
         try:
-            if self.plotVmod or self.plotSmod or self.plotTmod:
-                raise NotImplementedError("Plotting is not implemented for "
-                                          "smod and tmod.")
-            else:
-                self.tMod = self.createTauModel(self.vMod)
-                # this reassigns tMod! Used to be TauModel() class,
-                # now it's an instance of it.
-                if self.DEBUG:
-                    print("Done calculating Tau branches.")
-                # if self.debug:
-                #    print(self.tMod)
+            self.tMod = self.createTauModel(self.vMod)
+            # this reassigns tMod! Used to be TauModel() class,
+            # now it's an instance of it.
+            if self.debug:
+                print("Done calculating Tau branches.")
 
-                outModelFileName = self.vMod.modelName + ".taup"
-                if self.outdir is None:
-                    self.outdir = os.path.join(os.path.dirname(os.path.abspath(
-                        inspect.getfile(inspect.currentframe()))),
-                        "data", "taup_models")
-                if os.path.isdir(self.outdir) is False:
-                    os.mkdir(self.outdir)
-                outFile = os.path.join(self.outdir, outModelFileName)
-                self.tMod.writeModel(outFile)
-                if self.DEBUG:
-                    print("Done Saving " + outFile)
+            if not os.path.exists(os.path.dirname(self.output_filename)):
+                os.makedirs(os.path.dirname(self.output_filename))
+            self.tMod.writeModel(self.output_filename)
+            if self.debug:
+                print("Done Saving " + self.output_filename)
         except IOError as e:
             print("Tried to write!\n Caught IOError. Do you have write "
                   "permission in this directory?", e)
         except KeyError as e:
             print('file not found or wrong key?', e)
         finally:
-            if self.DEBUG:
+            if self.debug:
                 print("Method run is done, but not necessarily successful.")
 
 
 if __name__ == '__main__':
-    TauP_Create.main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', '-d', '--debug',
+                        action='store_true',
+                        help='increase output verbosity')
+    parser.add_argument('-i', '--input_dir',
+                        help='set directory of input velocity models '
+                             '(default: ./data)')
+    parser.add_argument('-o', '--output_dir',
+                        help='set where to write the .taup model - be '
+                             'careful, this will overwrite any previous '
+                             'models of the same name (default: '
+                             './data/taup_models)')
+    parser.add_argument('-mod', '--filename',
+                        help='the velocity model name '
+                             '(default: iasp91.tvel)')
+    args = parser.parse_args()
+
+    tauPCreate = TauP_Create(modelFilename=args.mod, output_dir=args.o,
+                             input_dir=args.i, verbose=args.verbose)
+    tauPCreate.loadVMod()
+    tauPCreate.run()
