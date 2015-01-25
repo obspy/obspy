@@ -54,6 +54,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
+                    if format == 'SAC' and byteorder == '=':
+                        # SAC file format enforces '<' or '>'
+                        # byteorder on writing
+                        continue
                     # new trace object in native byte order
                     dt = np.dtype(np.int_).newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
@@ -112,7 +116,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             os.remove(outfile[:-4] + '.QBN')
                             os.remove(outfile[:-4] + '.QHD')
                     # check byte order
-                    self.assertEqual(st[0].data.dtype.byteorder, '=')
+                    if format == 'SAC':
+                        # SAC format preserves byteorder on writing
+                        self.assertIn(st[0].data.dtype.byteorder, ('=', byteorder))
+                    else:
+                        self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
                     if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
