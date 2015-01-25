@@ -30,13 +30,13 @@ setup_config = dict(
         'Programming Language :: Python :: 3.4',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Physics'],
-    url="https://github.com/krischer/TauPy",
+    url="https://github.com/obspy/TauPy",
     license="GNU General Public License, version 3 (GPLv3)",
     platforms="OS Independent",
     requires=["numpy"],
     include_package_data=True,
     # this is needed for "easy_install taupy==dev"
-    download_url=("https://github.com/krischer/TauPy/zipball/master"
+    download_url=("https://github.com/obspy/TauPy/zipball/master"
                   "#egg=obspy=dev"),
 )
 
