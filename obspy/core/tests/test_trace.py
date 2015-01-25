@@ -1199,7 +1199,7 @@ class TraceTestCase(unittest.TestCase):
         data = 0.1 * t + 1.
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.differentiate(type='gradient')
+        tr.differentiate(method='gradient')
         np.testing.assert_array_almost_equal(tr.data, np.ones(11) * 0.1)
 
     def test_integrate(self):

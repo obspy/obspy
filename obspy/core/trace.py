@@ -1730,7 +1730,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('differentiate', type)
+        func = _getFunctionFromEntryPoint('differentiate', method)
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
         return self
