@@ -616,9 +616,9 @@ def build_taup_models():
     obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
     model_input = os.path.join(obspy_taup_path, "data")
 
-    sys.path.insert(0, os.path.join(SETUP_DIRECTORY, "obspy"))
-    from taup.TauP_Create import TauP_Create
-    from taup.utils import _get_model_filename
+    sys.path.insert(0, os.path.join(SETUP_DIRECTORY))
+    from obspy.taup.TauP_Create import TauP_Create
+    from obspy.taup.utils import _get_model_filename
 
     for model in glob.glob(os.path.join(model_input, "*.tvel")):
         output_filename = _get_model_filename(model)

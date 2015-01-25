@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from copy import deepcopy
+import decimal
 import math
 import numpy as np
 
@@ -707,8 +708,9 @@ class SlownessModel(object):
                         return currentNum
                     currentNum += 1
             else:
-                currentNum = int(Decimal((tooSmallNum + tooLargeNum) / 2.0)
-                                 .to_integral_value(ROUND_HALF_EVEN))
+                currentNum = int(
+                    decimal.Decimal((tooSmallNum + tooLargeNum) /  2.0)
+                        .to_integral_value(decimal.ROUND_HALF_EVEN))
             tempLayer = self.getSlownessLayer(currentNum, isPWave)
             if tempLayer.topDepth > depth:
                 tooLargeNum = currentNum - 1
