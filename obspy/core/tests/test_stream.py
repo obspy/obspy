@@ -10,7 +10,6 @@ from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import (NamedTemporaryFile, getSciPyVersion)
 from obspy.xseed import Parser
-from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import pickle
@@ -2151,20 +2150,6 @@ class StreamTestCase(unittest.TestCase):
         for tr in st1:
             tr.integrate()
         st2.integrate()
-        self.assertEqual(st1, st2)
-
-    @skipIf(SCIPY_VERSION < [0, 11, 0], 'SciPy is too old')
-    def test_integrate_args(self):
-        """
-        Tests that the integrate command is called for all traces of a Stream
-        object and options are passed along correctly.
-        """
-        st1 = read()
-        st2 = read()
-
-        for tr in st1:
-            tr.integrate(type='cumtrapz', initial=0)
-        st2.integrate(type='cumtrapz', initial=0)
         self.assertEqual(st1, st2)
 
 

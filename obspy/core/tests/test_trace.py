@@ -1209,8 +1209,12 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(101) * 0.01
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.integrate(type='cumtrapz')
-        np.testing.assert_almost_equal(tr.data[-1], 0.1)
+        tr.integrate()
+        # Assert time and length of resulting array.
+        self.assertEqual(tr.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr.stats.npts, 101)
+        np.testing.assert_array_almost_equal(
+            tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
     def test_issue317(self):
         """

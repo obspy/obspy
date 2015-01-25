@@ -308,6 +308,12 @@ ENTRY_POINTS = {
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
     ],
+    'obspy.plugin.integrate': [
+        'cumtrapz = '
+        'obspy.signal.differentiate_and_integrate:integrate_cumtrapz',
+        'spline = '
+        'obspy.signal.differentiate_and_integrate:integrate_spline',
+    ],
     'obspy.plugin.filter': [
         'bandpass = obspy.signal.filter:bandpass',
         'bandstop = obspy.signal.filter:bandstop',
@@ -316,12 +322,6 @@ ENTRY_POINTS = {
         'lowpassCheby2 = obspy.signal.filter:lowpassCheby2',
         'lowpassFIR = obspy.signal.filter:lowpassFIR',
         'remezFIR = obspy.signal.filter:remezFIR',
-    ],
-    'obspy.plugin.integrate': [
-        'trapz = scipy.integrate:trapz',
-        'cumtrapz = scipy.integrate:cumtrapz',
-        'simps = scipy.integrate:simps',
-        'romb = scipy.integrate:romb',
     ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',

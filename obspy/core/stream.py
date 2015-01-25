@@ -2233,18 +2233,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.differentiate(type=type)
         return self
 
-    def integrate(self, type='cumtrapz', **options):
+    def integrate(self, **options):
         """
-        Method to integrate all traces with respect to time.
+        Integrate all traces with respect to time.
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.integrate` method of
         :class:`~obspy.core.trace.Trace`.
-
-        :type type: str, optional
-        :param type: Method to use for integration. Defaults to
-            ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
-            further details.
 
         .. note::
 
@@ -2256,7 +2251,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(type=type, **options)
+            tr.integrate(**options)
         return self
 
     @raiseIfMasked

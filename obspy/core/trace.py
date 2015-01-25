@@ -1736,14 +1736,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @skipIfNoData
     @_add_processing_info
-    def integrate(self, type='cumtrapz', **options):
+    def integrate(self, method="cumtrapz", **options):
         """
-        Method to integrate the trace with respect to time.
+        Integrate the trace with respect to time.
 
-        :type type: str, optional
-        :param type: Method to use for integration. Defaults to
-            ``'cumtrapz'``. See the `Supported Methods`_ section below for
-            further details.
+        .. rubric:: _`Supported Methods`
+
+        ``'cumtrapz'``
+            First order integration of data using the trapezoidal rule. Uses
+            :func:`obspy.signal.differentiate_and_integrate.integrate_cumtrapz`
+
+        ``'spline'``
+            Integrates by generating an interpolating spline and integrating
+            that. Uses
+            :func:`obspy.signal.differentiate_and_integrate.integrate_spline`
 
         .. note::
 
@@ -1753,39 +1759,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your trace object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
-
-        .. rubric:: _`Supported Methods`
-
-        ``'cumtrapz'``
-            Trapezoidal rule to cumulatively compute integral (uses
-            :func:`scipy.integrate.cumtrapz`). Result has one sample less then
-            the input!
-
-        ``'trapz'``
-            Trapezoidal rule to compute integral from samples (uses
-            :func:`scipy.integrate.trapz`).
-
-        ``'simps'``
-            Simpson's rule to compute integral from samples (uses
-            :func:`scipy.integrate.simps`).
-
-        ``'romb'``
-            Romberg Integration to compute integral from (2**k + 1)
-            evenly-spaced samples. (uses :func:`scipy.integrate.romb`).
         """
-        type = type.lower()
+        method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('integrate', type)
-        # handle function specific settings
-        if func.__module__.startswith('scipy'):
-            # SciPy needs to set dx keyword if not given in options
-            if 'dx' not in options:
-                options['dx'] = self.stats.delta
-            args = [self.data]
-        else:
-            args = [self.data, self.stats.delta]
-        # integrating
-        self.data = func(*args, **options)
+        func = _getFunctionFromEntryPoint('integrate', method)
+
+        if "type" in options:
+            warnings.warn("The 'type' argument is no longer supported. It "
+                          "will be ignored. Use the 'method' argument.",
+                          DeprecationWarning)
+            del options["type"]
+
+        self.data = func(data=self.data, dx=self.stats.delta, **options)
         return self
 
     @skipIfNoData

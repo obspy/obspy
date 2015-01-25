@@ -23,6 +23,11 @@
      AttribDict.
    * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
      provided by the future package.
+   * Removed 'type' argument from the Trace.integrate() method. Now always
+     performs a cumtrapz integration. The first value of an integrated trace
+     will now always be zero to avoid changes in the total length of the
+     time series. Furthermore no more options are allowed as they might mess
+     with the time of a trace.
    * new plugins for NonLinLoc formats for readEvents() and
      Catalog/Event.write() (see obspy.nlloc and #900)
    * The wrap_long_string utility function is deprecated. Users may use the
