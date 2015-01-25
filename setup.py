@@ -85,7 +85,7 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
-    'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
+    'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
     'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
@@ -405,27 +405,6 @@ if IS_MSVC:
     from distutils.command.build_ext import build_ext
     build_ext.get_export_symbols = _get_export_symbols
 
-    # tau shared library has to be compiled with gfortran directly
-    def link(self, _target_desc, objects, output_filename,
-             *args, **kwargs):  # @UnusedVariable
-        # check if 'tau' library is linked
-        if 'tau' not in output_filename:
-            # otherwise just use the original link method
-            return self.original_link(_target_desc, objects, output_filename,
-                                      *args, **kwargs)
-        if '32' in platform.architecture()[0]:
-            taupargs = ["-m32"]
-        else:
-            taupargs = ["-m64"]
-        # ignoring all f2py objects
-        objects = objects[2:]
-        self.spawn(['gfortran.exe'] +
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] +
-                   taupargs + objects + ["-o", output_filename])
-
-    MSVCCompiler.original_link = MSVCCompiler.link
-    MSVCCompiler.link = link
-
 
 # helper function for collecting export symbols from .def files
 def export_symbols(*path):
@@ -458,7 +437,7 @@ def add_features():
 
 def configuration(parent_package="", top_path=None):
     """
-    Config function mainly used to compile C and Fortran code.
+    Config function mainly used to compile C code.
     """
     config = Configuration("", parent_package, top_path)
 
@@ -535,31 +514,6 @@ def configuration(parent_package="", top_path=None):
         kwargs['libraries'] = ['evresp']
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
-
-    # TAUP
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau", add_extension_suffix=False)
-    files = glob.glob(os.path.join(path, "*.f"))
-    # compiler specific options
-    kwargs = {'libraries': []}
-    # XXX: The build subdirectory is difficult to determine if installed
-    # via pypi or other means. I could not find a reliable way of doing it.
-    new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
-    interface_file = os.path.join(path, "_libtau.pyf")
-    with open(interface_file, "r") as open_file:
-        interface_file = open_file.read()
-    # In the original .pyf file the library is called _libtau.
-    interface_file = interface_file.replace("_libtau", libname)
-    if not os.path.exists("build"):
-        os.mkdir("build")
-    with open(new_interface_path, "w") as open_file:
-        open_file.write(interface_file)
-    files.insert(0, new_interface_path)
-    # we do not need this when linking with gcc, only when linking with
-    # gfortran the option -lgcov is required
-    if os.environ.get('OBSPY_C_COVERAGE', ""):
-        kwargs['libraries'].append('gcov')
-    config.add_extension(libname, files, **kwargs)
 
     add_data_files(config)
 
