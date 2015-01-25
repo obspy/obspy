@@ -72,21 +72,21 @@ class SlownessLayer:
             raise SlownessModelError("timedist.time or .distRadian < 0 or Nan")
         return timedist
 
-    def bullenDepthFor(self, rayParam, radiusOfEarth):
+    def bullenDepthFor(self, ray_param, radiusOfEarth):
         """
         Finds the depth for a ray parameter within this layer. Uses a Bullen
         interpolant, Ar^B. Special case for botP == 0 or
         botDepth == radiusOfEarth as these cause div by 0, use linear
         interpolation in this case.
         """
-        if (self.topP - rayParam) * (rayParam - self.botP) >= 0:
+        if (self.topP - ray_param) * (ray_param - self.botP) >= 0:
             # Easy cases for 0 thickness layer, or ray parameter found at
             # top or bottom.
             if self.topDepth == self.botDepth:
                 return self.botDepth
-            if self.topP == rayParam:
+            if self.topP == ray_param:
                 return self.topDepth
-            if self.botP == rayParam:
+            if self.botP == ray_param:
                 return self.botDepth
             if self.botP != 0 and self.botDepth != radiusOfEarth:
                 B = np.divide(math.log(self.topP / self.botP),
@@ -100,7 +100,7 @@ class SlownessLayer:
                 A = np.divide(self.topP, denom)
                 with np.errstate(divide='ignore', invalid='ignore'):
                     tempDepth = radiusOfEarth - math.exp(
-                        1.0 / B * math.log(np.divide(rayParam, A)))
+                        1.0 / B * math.log(np.divide(ray_param, A)))
                 # or equivalent (maybe better stability?):
                 # tempDepth = radiusOfEarth - math.pow(ray_param/A, 1/B)
                 # Check if slightly outside layer due to rounding or
@@ -119,7 +119,7 @@ class SlownessLayer:
                     if self.botDepth - self.topDepth < 5:
                         linear = ((self.botDepth - self.topDepth) /
                                   (self.botP - self.topP)
-                                  * (rayParam - self.topP) + self.topDepth)
+                                  * (ray_param - self.topP) + self.topDepth)
                         if linear >= 0 \
                                 and not math.isnan(linear) \
                                 and not math.isinf(linear):
@@ -138,7 +138,7 @@ class SlownessLayer:
                 # Special case for the centre of the Earth, since Ar^B might
                 #  blow up at r = 0.
                 if self.topP != self.botP:
-                    return (self.botDepth + (rayParam - self.botP)
+                    return (self.botDepth + (ray_param - self.botP)
                             * (self.topDepth - self.botDepth) /
                             (self.topP - self.botP))
                 else:

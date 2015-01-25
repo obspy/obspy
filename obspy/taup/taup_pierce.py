@@ -124,7 +124,7 @@ class TauP_Pierce(TauP_Time):
                 + " {:.2f} degrees for a ".format(currArrival.get_dist_deg())
                 + " {} km deep source in the ".format(currArrival.sourceDepth)
                 + " {} model with ray_param {:.3f} s/deg.".format(
-                    self.modelName, currArrival.rayParam * pi / 180))
+                    self.modelName, currArrival.ray_param * pi / 180))
 
 
 if __name__ == '__main__':

@@ -40,13 +40,13 @@ class TauModel(object):
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
-        self.rayParams = []
+        self.ray_params = []
         # 2D "array" (list of lists in Python) containing a TauBranch object
         # corresponding to each "branch" of the tau model, First list is P,
         # second is S. Branches correspond to depth regions between
         # discontinuities or reversals in slowness gradient for a wave type.
         # Each branch contains time, distance, and tau increments for each ray
-        # parameter in rayParams for the layer. Rays that turn above the branch
+        # parameter in ray_param for the layer. Rays that turn above the branch
         # layer get 0 for time, distance, and tau increments.
         self.tauBranches = [[], []]
 
@@ -100,11 +100,11 @@ class TauModel(object):
                 tempRayParams[rayNum] = currSLayer.botP
                 rayNum += 1
                 minPSoFar = currSLayer.botP
-        # Copy tempRayParams to rayParams while chopping off trailing zeros
+        # Copy tempRayParams to ray_param while chopping off trailing zeros
         # (from the initialisation), so the size is exactly right. NB
         # slicing doesn't really mean deep copy, but it works for a list of
         # doubles like this
-        self.rayParams = tempRayParams[:rayNum]
+        self.ray_params = tempRayParams[:rayNum]
         if self.debug:
             print("Number of slowness samples for tau:" + str(rayNum))
         for waveNum, isPWave in enumerate([True, False]):
@@ -124,7 +124,7 @@ class TauModel(object):
                     TauBranch(topCritDepth.depth, botCritDepth.depth, isPWave)
                 self.tauBranches[waveNum][critNum].DEBUG = self.debug
                 self.tauBranches[waveNum][critNum].createBranch(
-                    self.sMod, minPSoFar, self.rayParams)
+                    self.sMod, minPSoFar, self.ray_params)
                 # Update minPSoFar. Note that the new minPSoFar could be at
                 # the start of a discontinuity over a high slowness zone,
                 # so we need to check the top, bottom and the layer just
@@ -168,11 +168,11 @@ class TauModel(object):
 
     def __str__(self):
         desc = "Delta tau for each slowness sample and layer.\n"
-        for j, rayParam in enumerate(self.rayParams):
+        for j, ray_param in enumerate(self.ray_params):
             for i, tb in enumerate(self.tauBranches[0]):
                 desc += (
                     " i " + str(i) + " j " + str(j) + " ray_param "
-                    + str(rayParam)
+                    + str(ray_param)
                     + " tau " + str(tb.tau[j]) + " time "
                     + str(tb.time[j]) + " dist "
                     + str(tb.dist[j]) + " degrees "
@@ -233,8 +233,8 @@ class TauModel(object):
         indexS = -1
         SWaveRayParam = -1
         outSMod = self.sMod
-        outRayParams = deepcopy(self.rayParams)  # necessary?
-        oldRayParams = self.rayParams
+        outRayParams = deepcopy(self.ray_params)  # necessary?
+        oldRayParams = self.ray_params
         # Do S wave first since the S ray param is > P ray param.
         for isPWave in [False, True]:
             splitInfo = outSMod.splitLayer(depth, isPWave)
@@ -242,8 +242,8 @@ class TauModel(object):
             if splitInfo.neededSplit and not splitInfo.movedSample:
                 # Split the slowness layers containing depth into two layers
                 # each.
-                newRayParam = splitInfo.rayParam
-                # Insert the new ray parameters into the rayParams array.
+                newRayParam = splitInfo.ray_param
+                # Insert the new ray parameters into the ray_param array.
                 for index, trp, brp in zip(count(), oldRayParams[:-1],
                                            oldRayParams[1:]):
                     if trp < newRayParam < brp:
@@ -324,7 +324,7 @@ class TauModel(object):
         tMod.cmbBranch = outcmbBranch
         tMod.iocbBranch = outiocbBranch
         tMod.sMod = outSMod
-        tMod.rayParams = outRayParams
+        tMod.ray_params = outRayParams
         tMod.tauBranches = newTauBranches
         tMod.noDisconDepths.append(depth)
         if not tMod.validate():

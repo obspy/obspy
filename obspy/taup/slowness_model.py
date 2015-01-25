@@ -131,8 +131,8 @@ class SlownessModel(object):
         if self.DEBUG and self.validate() is False:
             raise (SlownessModelError('validate failed after coarseSample'))
         if self.DEBUG:
-            print("rayParamCheck")
-        self.rayParamIncCheck()
+            print("ray_paramCheck")
+        self.ray_paramIncCheck()
         if self.DEBUG:
             print("depthIncCheck")
         self.depthIncCheck()
@@ -275,7 +275,7 @@ class SlownessModel(object):
                     inHighSlownessZoneS = True
                     highSlownessZoneS = \
                         DepthRange(topDepth=currSLayer.topDepth)
-                    highSlownessZoneS.rayParam = minSSoFar
+                    highSlownessZoneS.ray_param = minSSoFar
                 if inHighSlownessZoneP is False and (
                         prevPLayer.botP < currPLayer.topP or
                         currPLayer.topP < currPLayer.botP):
@@ -286,7 +286,7 @@ class SlownessModel(object):
                     inHighSlownessZoneP = True
                     highSlownessZoneP = \
                         DepthRange(topDepth=currPLayer.topDepth)
-                    highSlownessZoneP.rayParam = minPSoFar
+                    highSlownessZoneP.ray_param = minPSoFar
 
             elif ((prevSLayer.topP - prevSLayer.botP) *
                   (prevSLayer.botP - currSLayer.botP) < 0) or (
@@ -307,7 +307,7 @@ class SlownessModel(object):
                     inHighSlownessZoneP = True
                     highSlownessZoneP = \
                         DepthRange(topDepth=currPLayer.topDepth)
-                    highSlownessZoneP.rayParam = minPSoFar
+                    highSlownessZoneP.ray_param = minPSoFar
                 if inHighSlownessZoneS is False \
                         and currSLayer.topP < currSLayer.botP:
                     if self.DEBUG:
@@ -317,7 +317,7 @@ class SlownessModel(object):
                     inHighSlownessZoneS = True
                     highSlownessZoneS = \
                         DepthRange(topDepth=currSLayer.topDepth)
-                    highSlownessZoneS.rayParam = minSSoFar
+                    highSlownessZoneS.ray_param = minSSoFar
 
             if inHighSlownessZoneP and currPLayer.botP < minPSoFar:
                 # P: layer contains the bottom of a high slowness zone. java
@@ -401,7 +401,7 @@ class SlownessModel(object):
         else:
             return len(self.SLayers)
 
-    def findDepth_from_depths(self, rayParam, topDepth, botDepth, isPWave):
+    def findDepth_from_depths(self, ray_param, topDepth, botDepth, isPWave):
         """
         Finds a depth corresponding to a slowness between two given depths
         in the Velocity Model by calling findDepth with layer numbers.
@@ -410,7 +410,7 @@ class SlownessModel(object):
         if self.vMod.layers[topLayerNum].botDepth == topDepth:
             topLayerNum += 1
         botLayerNum = self.vMod.layerNumberAbove(botDepth)
-        return self.findDepth(rayParam, topLayerNum, botLayerNum, isPWave)
+        return self.findDepth(ray_param, topLayerNum, botLayerNum, isPWave)
 
     def findDepth(self, p, topCriticalLayer, botCriticalLayer, isPWave):
         """
@@ -621,22 +621,22 @@ class SlownessModel(object):
             sLayerNum = self.layerNumberAbove(highZone.botDepth, self.SWAVE)
             highSLayer = self.SLayers[sLayerNum]
             while highSLayer.topDepth == highSLayer.botDepth and (
-                    (highSLayer.topP - highZone.rayParam) *
-                    (highZone.rayParam - highSLayer.botP) < 0):
+                    (highSLayer.topP - highZone.ray_param) *
+                    (highZone.ray_param - highSLayer.botP) < 0):
                 sLayerNum += 1
                 highSLayer = self.SLayers[sLayerNum]
-            if highZone.rayParam != highSLayer.botP:
-                self.addSlowness(highZone.rayParam, self.SWAVE)
+            if highZone.ray_param != highSLayer.botP:
+                self.addSlowness(highZone.ray_param, self.SWAVE)
         for highZone in self.highSlownessLayerDepthsP:
             sLayerNum = self.layerNumberAbove(highZone.botDepth, self.PWAVE)
             highSLayer = self.PLayers[sLayerNum]
             while highSLayer.topDepth == highSLayer.botDepth and (
-                    (highSLayer.topP - highZone.rayParam)
-                    * (highZone.rayParam - highSLayer.botP) < 0):
+                    (highSLayer.topP - highZone.ray_param)
+                    * (highZone.ray_param - highSLayer.botP) < 0):
                 sLayerNum += 1
                 highSLayer = self.PLayers[sLayerNum]
-            if highZone.rayParam != highSLayer.botP:
-                self.addSlowness(highZone.rayParam, self.PWAVE)
+            if highZone.ray_param != highSLayer.botP:
+                self.addSlowness(highZone.ray_param, self.PWAVE)
         # Make sure P and S are consistent
         botP = -1
         for layer in self.PLayers:
@@ -799,7 +799,7 @@ class SlownessModel(object):
                     otherLayers.insert(otherIndex, botLayer)
                     otherLayers.insert(otherIndex, topLayer)
 
-    def rayParamIncCheck(self):
+    def ray_paramIncCheck(self):
         """
         Checks to make sure that no slowness layer spans more than maxDeltaP.
         """
@@ -979,7 +979,7 @@ class SlownessModel(object):
                 print("Number of " + ("P" if currWaveType else "S") +
                       " slowness layers: " + str(j))
 
-    def depthInHighSlowness(self, depth, rayParam, isPWave):
+    def depthInHighSlowness(self, depth, ray_param, isPWave):
         """
         Determines if the given depth and corresponding slowness is contained
         within a high slowness zone. Whether the high slowness zone includes
@@ -1000,8 +1000,8 @@ class SlownessModel(object):
             highSlownessLayerDepths = self.highSlownessLayerDepthsS
         for tempRange in highSlownessLayerDepths:
             if tempRange.topDepth <= depth <= tempRange.botDepth:
-                if rayParam > tempRange.rayParam \
-                        or (rayParam == tempRange.rayParam
+                if ray_param > tempRange.ray_param \
+                        or (ray_param == tempRange.ray_param
                             and depth == tempRange.topDepth):
                     return True
         return False

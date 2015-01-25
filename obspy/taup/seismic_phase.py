@@ -52,11 +52,11 @@ class SeismicPhase(object):
         # Minimum/maximum ray parameters that exist for this phase.
         self.minRayParam = None
         self.maxRayParam = None
-        # Index within TauModel.rayParams that corresponds to maxRayParam.
+        # Index within TauModel.ray_param that corresponds to maxRayParam.
         # Note that maxRayParamIndex < minRayParamIndex as ray parameter
         # decreases with increasing index.
         self.maxRayParamIndex = -1
-        # Index within TauModel.rayParams that corresponds to minRayParam.
+        # Index within TauModel.ray_param that corresponds to minRayParam.
         # Note that maxRayParamIndex < minRayParamIndex as ray parameter
         # decreases with increasing index.
         self.minRayParamIndex = -1
@@ -75,13 +75,13 @@ class SeismicPhase(object):
         # TauModel to generate phase for.
         self.tMod = tMod
         # Array of distances corresponding to the ray parameters stored in
-        # rayParams.
+        # ray_param.
         self.dist = []
         # Array of times corresponding to the ray parameters stored in
-        # rayParams.
+        # ray_param.
         self.time = []
         # Array of possible ray parameters for this phase.
-        self.rayParams = []
+        self.ray_param = []
         # The minimum distance that this phase can be theoretically observed.
         self.minDistance = 0.0
         # The maximum distance that this phase can be theoretically observed.
@@ -589,7 +589,7 @@ class SeismicPhase(object):
         """Sum the appropriate branches for this phase."""
         if self.maxRayParam < 0 or self.minRayParam > self.maxRayParam:
             # Phase has no arrivals, possibly due to source depth.
-            self.rayParams = []
+            self.ray_param = []
             self.minRayParam = -1
             self.maxRayParam = -1
             self.dist = []
@@ -600,42 +600,42 @@ class SeismicPhase(object):
         if self.name.endswith("kmps"):
             self.dist = [0, 0]
             self.time = [0, 0]
-            self.rayParams = [0, 0]
-            self.rayParams[0] = tMod.radiusOfEarth / float(self.name[:-4])
+            self.ray_param = [0, 0]
+            self.ray_param[0] = tMod.radiusOfEarth / float(self.name[:-4])
             self.dist[1] = 2 * math.pi
             self.time[1] = \
                 2 * math.pi * tMod.radiusOfEarth / float(self.name[:-4])
-            self.rayParams[1] = self.rayParams[0]
+            self.ray_param[1] = self.ray_param[0]
             self.minDistance = 0
             self.maxDistance = 2 * math.pi
             self.downGoing.append(True)
             return
         # Find the ray parameter index that corresponds to the minRayParam
         # and maxRayParam.
-        for i, rp in enumerate(tMod.rayParams):
+        for i, rp in enumerate(tMod.ray_params):
             if rp >= self.minRayParam:
                 self.minRayParamIndex = i
             if rp >= self.maxRayParam:
                 self.maxRayParamIndex = i
         if self.maxRayParamIndex == 0 \
-                and self.minRayParamIndex == len(tMod.rayParams) - 1:
+                and self.minRayParamIndex == len(tMod.ray_params) - 1:
             # All ray parameters are valid so just copy:
-            self.rayParams = deepcopy(tMod.rayParams)
+            self.ray_param = deepcopy(tMod.ray_param)
         elif self.maxRayParamIndex == self.minRayParamIndex:
             # if "Sdiff" in self.name or "Pdiff" in self.name:
-            # self.rayParams = [self.minRayParam, self.minRayParam]
+            # self.ray_param = [self.minRayParam, self.minRayParam]
             # elif "Pn" in self.name or "Sn" in self.name:
-            # self.rayParams = [self.minRayParam, self.minRayParam]
+            # self.ray_param = [self.minRayParam, self.minRayParam]
             if self.name.endswith("kmps"):
-                self.rayParams = [0, self.maxRayParam]
+                self.ray_param = [0, self.maxRayParam]
             else:
-                self.rayParams = [self.minRayParam, self.minRayParam]
+                self.ray_param = [self.minRayParam, self.minRayParam]
         else:
             # Only a subset of the ray parameters is valid so use these.
-            self.rayParams = deepcopy(tMod.rayParams[
+            self.ray_param = deepcopy(tMod.ray_params[
                 self.maxRayParamIndex:self.minRayParamIndex + 1])
-        self.dist = [0 for i in range(len(self.rayParams))]
-        self.time = [0 for i in range(len(self.rayParams))]
+        self.dist = [0 for i in range(len(self.ray_param))]
+        self.time = [0 for i in range(len(self.ray_param))]
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
         timesBranches = [[0 for i in range(
             len(tMod.tauBranches[0]))] for j in range(2)]
@@ -670,7 +670,7 @@ class SeismicPhase(object):
                 self.maxDistance = -1
                 self.time = []
                 self.dist = []
-                self.rayParams = []
+                self.ray_param = []
                 return
             else:
                 self.dist[1] = \
@@ -695,7 +695,7 @@ class SeismicPhase(object):
                 else tMod.sMod.highSlownessLayerDepthsS
             indexOffset = 0
             for hszi in hsz:
-                if self.maxRayParam > hszi.rayParam > self.minRayParam:
+                if self.maxRayParam > hszi.ray_param > self.minRayParam:
                     # There is a high slowness zone within our ray parameter
                     # range so might need to add a shadow zone. Need to
                     # check if the current wave type is part of the phase at
@@ -714,11 +714,11 @@ class SeismicPhase(object):
                             foundOverlap = True
                             break
                     if foundOverlap:
-                        hszIndex = self.rayParams.index(hszi.rayParam)
+                        hszIndex = self.ray_param.index(hszi.ray_param)
                         newdist = deepcopy(self.dist[:hszIndex])
                         newtime = deepcopy(self.time[:hszIndex])
-                        newrayParams = deepcopy(self.rayParams[:hszIndex])
-                        newrayParams.append(hszi.rayParam)
+                        new_ray_params = deepcopy(self.ray_param[:hszIndex])
+                        new_ray_params.append(hszi.ray_param)
                         # Sum the branches with an appropriate multiplier.
                         newdist.append(0)
                         newtime.append(0)
@@ -742,11 +742,11 @@ class SeismicPhase(object):
                                     indexOffset]
                         newdist += self.dist[hszIndex:]
                         newtime += self.time[hszIndex:]
-                        newrayParams += self.rayParams[hszIndex:]
+                        new_ray_params += self.ray_param[hszIndex:]
                         indexOffset += 1
                         self.dist = newdist
                         self.time = newtime
-                        self.rayParams = newrayParams
+                        self.ray_param = new_ray_params
 
     def calc_time(self, degrees):
         """
@@ -782,8 +782,8 @@ class SeismicPhase(object):
                 elif (self.dist[rayNum] - searchDist) * (
                         searchDist - self.dist[rayNum + 1]) >= 0:
                     # Look for distances that bracket the search distance.
-                    if self.rayParams[rayNum] == self.rayParams[rayNum + 1] \
-                            and len(self.rayParams) > 2:
+                    if self.ray_param[rayNum] == self.ray_param[rayNum + 1] \
+                            and len(self.ray_param) > 2:
                         # Here we have a shadow zone, so itis not really an
                         # arrival.
                         continue
@@ -801,9 +801,9 @@ class SeismicPhase(object):
                         continue
                     elif (self.dist[rayNum] - searchDist) * (
                             searchDist - self.dist[rayNum + 1]) >= 0:
-                        if self.rayParams[rayNum] == \
-                                self.rayParams[rayNum + 1] \
-                                and len(self.rayParams) > 2:
+                        if self.ray_param[rayNum] == \
+                                self.ray_param[rayNum + 1] \
+                                and len(self.ray_param) > 2:
                             # Here we have a shadow zone, so it is not really
                             # an arrival.
                             continue
@@ -833,23 +833,23 @@ class SeismicPhase(object):
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, ie it is between rayNum and rayNum+1,
-        # We know that it must be <tMod.rayParams.length-1 since the last
+        # We know that it must be <tMod.ray_param.length-1 since the last
         # ray parameter sample is 0 in a spherical model.
         rayNum = 0
-        for i, rp in enumerate(self.tMod.rayParams[:-1]):
-            if rp >= currArrival.rayParam:
+        for i, rp in enumerate(self.tMod.ray_params[:-1]):
+            if rp >= currArrival.ray_param:
                 rayNum = i
             else:
                 break
         # Here we use ray parameter and dist info stored within the
         # SeismicPhase so we can use currArrival.ray_param_index, which
-        # may not correspond to rayNum (for tMod.rayParams).
-        rayParamA = self.rayParams[currArrival.rayParamIndex]
-        rayParamB = self.rayParams[currArrival.rayParamIndex + 1]
-        distA = self.dist[currArrival.rayParamIndex]
-        distB = self.dist[currArrival.rayParamIndex + 1]
+        # may not correspond to rayNum (for tMod.ray_param).
+        ray_param_a = self.ray_param[currArrival.ray_param_index]
+        ray_param_b = self.ray_param[currArrival.ray_param_index + 1]
+        distA = self.dist[currArrival.ray_param_index]
+        distB = self.dist[currArrival.ray_param_index + 1]
         distRatio = (currArrival.dist - distA) / (distB - distA)
-        distRayParam = distRatio * (rayParamB - rayParamA) + rayParamA
+        distRayParam = distRatio * (ray_param_b - ray_param_a) + ray_param_a
         # First pierce point is always 0 distance at the source depth.
         pierce = [TimeDist(distRayParam, 0, 0, self.tMod.sourceDepth)]
         branchDist = 0
@@ -929,7 +929,7 @@ class SeismicPhase(object):
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
-        tempTimeDist = [TimeDist(currArrival.rayParam,
+        tempTimeDist = [TimeDist(currArrival.ray_param,
                                  0, 0, self.tMod.sourceDepth)]
         # pathList is a list of lists.
         pathList = [tempTimeDist]
@@ -937,7 +937,7 @@ class SeismicPhase(object):
                                                       self.waveType,
                                                       self.downGoing):
             tempTimeDist = self.tMod.getTauBranch(branchNum, isPWave)\
-                .path(currArrival.rayParam, isDownGoing, self.tMod.sMod)
+                .path(currArrival.ray_param, isDownGoing, self.tMod.sMod)
             if tempTimeDist:
                 pathList.append(tempTimeDist)
                 for ttd in tempTimeDist:
@@ -949,9 +949,9 @@ class SeismicPhase(object):
                and i < len(self.branchSeq) - 1
                and self.branchSeq[i + 1] == self.tMod.cmbBranch - 1
                and ("Pdiff" in self.name or "Sdiff" in self.name)):
-                diffTD = [TimeDist(currArrival.rayParam,
+                diffTD = [TimeDist(currArrival.ray_param,
                                    (currArrival.dist - self.dist[0])
-                                   * currArrival.rayParam,
+                                   * currArrival.ray_param,
                                    currArrival.dist - self.dist[0],
                                    self.tMod.cmbDepth)]
                 pathList.append(diffTD)
@@ -961,21 +961,21 @@ class SeismicPhase(object):
                  and ("Pn" in self.name or "Sn" in self.name)):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 numFound = max(self.name.count("Pn"), self.name.count("Sn"))
-                headTD = [TimeDist(currArrival.rayParam,
+                headTD = [TimeDist(currArrival.ray_param,
                                    (currArrival.dist - self.dist[0]) / numFound
-                                   * currArrival.rayParam,
+                                   * currArrival.ray_param,
                                    (currArrival.dist - self.dist[0])/numFound,
                                    self.tMod.mohoDepth)]
                 pathList.append(headTD)
         if "kmps" in self.name:
             # kmps phases have no branches, so need to end them at the arrival
             # distance.
-            headTD = [TimeDist(currArrival.rayParam,
-                               currArrival.dist * currArrival.rayParam,
+            headTD = [TimeDist(currArrival.ray_param,
+                               currArrival.dist * currArrival.ray_param,
                                currArrival.dist, 0)]
             pathList.append(headTD)
         currArrival.path = []
-        cumulative = TimeDist(currArrival.rayParam,
+        cumulative = TimeDist(currArrival.ray_param,
                               0, 0, currArrival.sourceDepth)
         for branchPath in pathList:
             for bp in branchPath:
@@ -1003,7 +1003,7 @@ class SeismicPhase(object):
             headDepth = self.tMod.cmbDepth
         numFound = self.name.count(phaseSeg)
         refractDist = currArrival.dist - self.dist[0]
-        refractTime = refractDist * currArrival.rayParam
+        refractTime = refractDist * currArrival.ray_param
         out = []
         j = 0
         for td in orig:
@@ -1028,10 +1028,10 @@ class SeismicPhase(object):
                        * (self.time[rayNum + 1] - self.time[rayNum]) +
                        self.time[rayNum])
         arrivalRayParam = ((searchDist - self.dist[rayNum + 1]) *
-                           (self.rayParams[rayNum] -
-                            self.rayParams[rayNum + 1])
+                           (self.ray_param[rayNum] -
+                            self.ray_param[rayNum + 1])
                            / (self.dist[rayNum] - self.dist[rayNum + 1]) +
-                           self.rayParams[rayNum + 1])
+                           self.ray_param[rayNum + 1])
         if name.endswith("kmps"):
             takeoffAngle = 0
             incidentAngle = 0

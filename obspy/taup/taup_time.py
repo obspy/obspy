@@ -161,7 +161,7 @@ class TauP_Time(object):
             out += "{:>5.1f}".format(self.depth) + "   "
             out += "{0:<{1}s}".format(arrival.name, namespacewidth + 2) + "   "
             out += "{:>8.2f}".format(arrival.time) + "   "
-            out += "{:>8.3f}".format(arrival.rayParam * math.pi/180) + "   "
+            out += "{:>8.3f}".format(arrival.ray_param * math.pi/180) + "   "
             if arrival.takeoffAngle == -0.0:
                 arrival.takeoffAngle = 0  # for output comparability
             out += "{:>6.2f}".format(arrival.takeoffAngle) + "   "

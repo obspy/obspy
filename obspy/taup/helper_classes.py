@@ -58,15 +58,15 @@ class DepthRange:
     Convenience class for storing a depth range. It has a top and a bottom and
     can have an associated ray parameter.
     """
-    def __init__(self, topDepth=None, botDepth=None, rayParam=-1):
+    def __init__(self, topDepth=None, botDepth=None, ray_param=-1):
         self.topDepth = topDepth
         self.botDepth = botDepth
-        self.rayParam = rayParam
+        self.ray_param = ray_param
 
 
 class SplitLayerInfo:
-    def __init__(self, sMod, neededSplit, movedSample, rayParam):
+    def __init__(self, sMod, neededSplit, movedSample, ray_param):
         self.sMod = sMod
         self.neededSplit = neededSplit
         self.movedSample = movedSample
-        self.rayParam = rayParam
+        self.ray_param = ray_param

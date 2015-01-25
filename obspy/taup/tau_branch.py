@@ -33,7 +33,7 @@ class TauBranch(object):
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    def createBranch(self, sMod, minPSoFar, rayParams):
+    def createBranch(self, sMod, minPSoFar, ray_params):
         """
         Calculates tau for this branch, between slowness layers topLayerNum and
         botLayerNum, inclusive.
@@ -71,12 +71,12 @@ class TauBranch(object):
         self.minRayParam = sMod.getMinRayParam(self.botDepth, self.isPWave)
 
         timeDist = [self.calcTimeDist(sMod, topLayerNum, botLayerNum, p)
-                    for p in rayParams]
+                    for p in ray_params]
         self.dist = [_t.distRadian for _t in timeDist]
         self.time = [_t.time for _t in timeDist]
         # This would maybe be easier using numpy arrays?
         self.tau = [time - p * dist for (time, dist, p)
-                    in zip(self.time, self.dist, rayParams)]
+                    in zip(self.time, self.dist, ray_params)]
 
     def calcTimeDist(self, sMod, topLayerNum, botLayerNum, p):
         timeDist = TimeDist(p)
@@ -95,7 +95,7 @@ class TauBranch(object):
                     "Ray turns in the middle of this layer!")
         return timeDist
 
-    def insert(self, rayParam, sMod, index):
+    def insert(self, ray_param, sMod, index):
         """
         Inserts the distance, time, and tau increment for the slowness sample
         given to the branch. This is used for making the depth correction to a
@@ -109,20 +109,20 @@ class TauBranch(object):
                 or botSLayer.botDepth != self.botDepth:
             raise TauModelError(
                 "TauBranch depths not compatible with slowness sampling.")
-        td = TimeDist(rayParam, 0, 0)
-        if topSLayer.botP >= rayParam and topSLayer.topP >= rayParam:
+        td = TimeDist(ray_param, 0, 0)
+        if topSLayer.botP >= ray_param and topSLayer.topP >= ray_param:
             for i in range(botLayerNum + 1):
-                if sMod.getSlownessLayer(i, self.isPWave).botP < rayParam:
+                if sMod.getSlownessLayer(i, self.isPWave).botP < ray_param:
                     # So we don't sum below the turning depth.
                     break
                 else:
-                    temptd = sMod.layerTimeDist(rayParam, i, self.isPWave)
+                    temptd = sMod.layerTimeDist(ray_param, i, self.isPWave)
                     td.distRadian += temptd.distRadian
                     td.time += temptd.time
         self.shiftBranch(index)
         self.dist[index] = td.distRadian
         self.time[index] = td.time
-        self.tau[index] = td.time - rayParam * td.distRadian
+        self.tau[index] = td.time - ray_param * td.distRadian
 
     def shiftBranch(self, index):
         newDist = self.dist[:index]
@@ -139,7 +139,7 @@ class TauBranch(object):
         self.tau = newTau
 
     def difference(self, topBranch, indexP, indexS, sMod, minPSoFar,
-                   rayParams):
+                   ray_params):
         """
         Generates a new tau branch by "subtracting" the given tau branch from
         this tau branch (self). The given tau branch is assumed to by the
@@ -181,11 +181,11 @@ class TauBranch(object):
         # parameters at the top of this branch.
         sLayer = sMod.getSlownessLayer(sMod.layerNumberBelow(
             topBranch.botDepth, True), True)
-        if indexP >= 0 and sLayer.topP != rayParams[indexP]:
+        if indexP >= 0 and sLayer.topP != ray_params[indexP]:
             raise TauModelError("P wave index doesn't match top layer.")
         sLayer = sMod.getSlownessLayer(sMod.layerNumberBelow(
             topBranch.botDepth, False), False)
-        if indexS >= 0 and sLayer.topP != rayParams[indexS]:
+        if indexS >= 0 and sLayer.topP != ray_params[indexS]:
             raise TauModelError("S wave index doesn't match top layer.")
         del sLayer
         # Construct the new TauBranch, going from the bottom of the top half
@@ -199,12 +199,12 @@ class TauBranch(object):
         arrayLength = len(self.dist)
         if indexP != -1:
             arrayLength += 1
-            PRayParam = rayParams[indexP]
+            PRayParam = ray_params[indexP]
             timeDistP = botBranch.calcTimeDist(sMod, topLayerNum, botLayerNum,
                                                PRayParam)
         if indexS != -1 and indexS != indexP:
             arrayLength += 1
-            SRayParam = rayParams[indexS]
+            SRayParam = ray_params[indexS]
             timeDistS = botBranch.calcTimeDist(sMod, topLayerNum, botLayerNum,
                                                SRayParam)
         else:
@@ -275,17 +275,17 @@ class TauBranch(object):
                         self.tau[i] - topBranch.tau[i + 2]
         return botBranch
 
-    def path(self, rayParam, downgoing, sMod):
+    def path(self, ray_param, downgoing, sMod):
         """
         Called from TauP_Path to calculate ray paths.
-        :param rayParam:
+        :param ray_param:
         :param downgoing:
         :param sMod:
         :return:
         """
-        if rayParam > self.maxRayParam:
+        if ray_param > self.maxRayParam:
             return None
-        assert rayParam >= 0
+        assert ray_param >= 0
         try:
             topLayerNum = sMod.layerNumberBelow(self.topDepth, self.isPWave)
             botLayerNum = sMod.layerNumberAbove(self.botDepth, self.isPWave)
@@ -308,9 +308,9 @@ class TauBranch(object):
         if downgoing:
             sLayerNum = topLayerNum
             sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            while sLayer.botP >= rayParam and sLayerNum <= botLayerNum:
+            while sLayer.botP >= ray_param and sLayerNum <= botLayerNum:
                 if not sLayer.hasZeroThickness():
-                    thePath[pathIndex] = sMod.layerTimeDist(rayParam,
+                    thePath[pathIndex] = sMod.layerTimeDist(ray_param,
                                                             sLayerNum,
                                                             self.isPWave)
                     thePath[pathIndex].depth = sLayer.botDepth
@@ -319,27 +319,27 @@ class TauBranch(object):
                 if sLayerNum <= botLayerNum:
                     sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
             if sLayerNum <= botLayerNum and not sLayer.hasZeroThickness():
-                turnDepth = sLayer.bullenDepthFor(rayParam, sMod.radiusOfEarth)
+                turnDepth = sLayer.bullenDepthFor(ray_param, sMod.radiusOfEarth)
                 turnSLayer = SlownessLayer(sLayer.topP, sLayer.topDepth,
-                                           rayParam, turnDepth)
+                                           ray_param, turnDepth)
                 thePath[pathIndex] = turnSLayer.\
-                    bullenRadialSlowness(rayParam, sMod.radiusOfEarth)
+                    bullenRadialSlowness(ray_param, sMod.radiusOfEarth)
                 thePath[pathIndex].depth = turnSLayer.botDepth
                 pathIndex += 1
         # Upgoing branches:
         else:
             sLayerNum = botLayerNum
             sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            while((sLayer.topP <= rayParam or sLayer.hasZeroThickness())
+            while((sLayer.topP <= ray_param or sLayer.hasZeroThickness())
                   and sLayerNum > topLayerNum):
                 sLayerNum -= 1
                 sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            if sLayer.botP < rayParam:
-                turnDepth = sLayer.bullenDepthFor(rayParam, sMod.radiusOfEarth)
+            if sLayer.botP < ray_param:
+                turnDepth = sLayer.bullenDepthFor(ray_param, sMod.radiusOfEarth)
                 turnSLayer = SlownessLayer(sLayer.topP, sLayer.topDepth,
-                                           rayParam, turnDepth)
+                                           ray_param, turnDepth)
                 thePath[pathIndex] = turnSLayer.\
-                    bullenRadialSlowness(rayParam, sMod.radiusOfEarth)
+                    bullenRadialSlowness(ray_param, sMod.radiusOfEarth)
                 thePath[pathIndex].depth = turnSLayer.topDepth
                 pathIndex += 1
                 sLayerNum -= 1
@@ -347,7 +347,7 @@ class TauBranch(object):
                     sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
             while sLayerNum >= topLayerNum:
                 if not sLayer.hasZeroThickness():
-                    thePath[pathIndex] = sMod.layerTimeDist(rayParam,
+                    thePath[pathIndex] = sMod.layerTimeDist(ray_param,
                                                             sLayerNum,
                                                             self.isPWave)
                     thePath[pathIndex].depth = sLayer.topDepth
