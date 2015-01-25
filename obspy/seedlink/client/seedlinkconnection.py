@@ -430,7 +430,7 @@ class SeedLinkConnection(object):
         """
         # Parse the streams and selectors
 
-        # print "DEBUG: streamlist:", streamlist
+        # print("DEBUG: streamlist:", streamlist)
         stacount = 0
         for streamToken in streamlist.split(","):
             streamToken = streamToken.strip()
@@ -465,7 +465,7 @@ class SeedLinkConnection(object):
                 else:
                     # If no specific selectors, use the default
                     staselect = defselect
-                # print "DEBUG: staselect:", staselect
+                # print("DEBUG: staselect:", staselect)
                 # Add this to the stream chain
                 if configure:
                     self.addStream(net, station, staselect, -1, None)
@@ -499,7 +499,7 @@ class SeedLinkConnection(object):
         :raise SeedLinkException: on error.
         """
         # Sanity, check for a uni-station mode entry
-        # print "DEBUG: selectors_str:", selectors_str
+        # print("DEBUG: selectors_str:", selectors_str)
         if len(self.streams) > 0:
             stream = self.streams[0]
             if stream.net == SeedLinkConnection.UNINETWORK and \
@@ -688,8 +688,8 @@ class SeedLinkConnection(object):
         try:
             # Loop through the stream chain
             for curstream in self.streams:
-                # print "DEBUG: curstream:", curstream.net, curstream.station,
-                # print curstream.btime
+                # print("DEBUG: curstream:", curstream.net, curstream.station,
+                #       curstream.btime)
                 if curstream.btime is not None:
                     statefile_file.write(
                         curstream.net + " " +
@@ -745,8 +745,8 @@ class SeedLinkConnection(object):
                 logger.critical(msg)
                 raise SeedLinkException(msg)
             self.state.previous_time = time.time()
-            # print "DEBUG: self.state.previous_time set:",
-            # print self.state.previous_time
+            # print("DEBUG: self.state.previous_time set:",
+            #       self.state.previous_time)
             self.state.netto_trig = -1
             self.state.keepalive_trig = -1
 
@@ -755,7 +755,7 @@ class SeedLinkConnection(object):
         while True:
 
             logger.debug("primary loop pass %s" % (npass))
-            # print "DEBUG: self.state.state:", self.state.state
+            # print("DEBUG: self.state.state:", self.state.state)
             npass += 1
 
             # we are terminating (abnormally!)
@@ -895,12 +895,12 @@ class SeedLinkConnection(object):
                                 slpacket = self.state.getPacket()
                                 # construct info String
                                 packet_type = slpacket.getType()
-                                # print "DEBUG: slpacket.getType():",
-                                # print slpacket.getType()
-                                # print "DEBUG: SLPacket.TYPE_SLINF:",
-                                # print SLPacket.TYPE_SLINF
-                                # print "DEBUG: SLPacket.TYPE_SLINFT:",
-                                # print SLPacket.TYPE_SLINFT
+                                # print("DEBUG: slpacket.getType():",
+                                #       slpacket.getType())
+                                # print("DEBUG: SLPacket.TYPE_SLINF:",
+                                #       SLPacket.TYPE_SLINF)
+                                # print("DEBUG: SLPacket.TYPE_SLINFT:",
+                                #       SLPacket.TYPE_SLINFT)
                                 data = slpacket.getStringPayload()
                                 self.info_response_buffer.write(data)
 
@@ -983,14 +983,14 @@ class SeedLinkConnection(object):
 
             # Update timing variables when more than a 1/4 second has passed
             now = time.time()
-            # print "DEBUG: if now - self.state.previous_time >= 0.25:", now,
-            # print self.state.previous_time, now - self.state.previous_time
+            # print("DEBUG: if now - self.state.previous_time >= 0.25:", now,
+            #       self.state.previous_time, now - self.state.previous_time)
             if now - self.state.previous_time >= 0.25:
-                # print "DEBUG: now - self.state.previous_time >= 0.25:",
-                # print self.state.previous_time
+                # print("DEBUG: now - self.state.previous_time >= 0.25:",
+                #       self.state.previous_time)
                 self.state.previous_time = time.time()
-                # print "DEBUG: self.state.previous_time set:",
-                # print self.state.previous_time
+                # print("DEBUG: self.state.previous_time set:",
+                #       self.state.previous_time)
 
                 # Network timeout timing logic
                 if self.netto > 0:
@@ -1000,15 +1000,15 @@ class SeedLinkConnection(object):
                     elif self.state.netto_trig == 0 and \
                             now - self.state.netto_time > self.netto:
                         self.state.netto_trig = 1
-                # print "DEBUG: self.keepalive:", self.keepalive
+                # print("DEBUG: self.keepalive:", self.keepalive)
 
                 # Keepalive/heartbeat interval timing logic
                 if self.keepalive > 0:
-                    # print "DEBUG: self.state.keepalive_trig:",
-                    # print self.state.keepalive_trig
-                    # print "DEBUG: now - self.state.keepalive_time",
-                    # print " >=self.keepalive:", self.state.previous_time,
-                    # print now - self.state.keepalive_time, self.keepalive
+                    # print("DEBUG: self.state.keepalive_trig:",
+                    #       self.state.keepalive_trig)
+                    # print("DEBUG: now - self.state.keepalive_time",
+                    #       " >=self.keepalive:", self.state.previous_time,
+                    #       now - self.state.keepalive_time, self.keepalive)
                     if self.state.keepalive_trig == -1:
                         self.state.keepalive_time = now
                         self.state.keepalive_trig = 0
@@ -1047,9 +1047,9 @@ class SeedLinkConnection(object):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            # print "DEBUG: sock.connect:", self.sladdr, host_name, nport
+            # print("DEBUG: sock.connect:", self.sladdr, host_name, nport)
             sock.connect((host_name, nport))
-            # print "DEBUG: sock.connect: sock:", sock
+            # print("DEBUG: sock.connect: sock:", sock)
             if sock is None:
                 raise Exception
             self.socket = sock
@@ -1136,10 +1136,10 @@ class SeedLinkConnection(object):
             _ready_to_read, ready_to_write, _in_error = \
                 select.select([sock], [sock], [], timeout)
 
-        # print "DEBUG: sock:", sock
-        # print "DEBUG: ready_to_read:", ready_to_read
-        # print "DEBUG: ready_to_write:", ready_to_write
-        # print "DEBUG: in_error:", in_error
+        # print("DEBUG: sock:", sock)
+        # print("DEBUG: ready_to_read:", ready_to_read)
+        # print("DEBUG: ready_to_write:", ready_to_write)
+        # print("DEBUG: in_error:", in_error)
         if sock in ready_to_write:
             return True
         return False
@@ -1159,7 +1159,7 @@ class SeedLinkConnection(object):
         :raise IOException: if an I/O error occurs.
 
         """
-        # print "DEBUG: sendbytes:", repr(sendbytes)
+        # print("DEBUG: sendbytes:", repr(sendbytes))
         try:
             self.socket.send(sendbytes)
         except IOError as ioe:
@@ -1206,7 +1206,7 @@ class SeedLinkConnection(object):
         except IOError as ioe:
             # traceback.print_exc()
             raise ioe
-        # print "DEBUG: bytesread:", repr(bytesread)
+        # print("DEBUG: bytesread:", repr(bytesread))
         nbytesread = len(bytesread)
 
         # check for end or no bytes read
@@ -1232,8 +1232,8 @@ class SeedLinkConnection(object):
         """
         sendStr = b"HELLO"
         logger.debug("sending: %s" % (sendStr.decode()))
-        bytes = sendStr + b"\r"
-        bytesread = self.sendData(bytes, self.sladdr,
+        bytes_ = sendStr + b"\r"
+        bytesread = self.sendData(bytes_, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
 
         # Parse the server ID and version from the returned string
@@ -1248,8 +1248,8 @@ class SeedLinkConnection(object):
                 self.server_id = servstr[0:vndx]
                 tmpstr = servstr[vndx + 2:]
                 endndx = tmpstr.find(" ")
-                # print "DEBUG: tmpstr:", tmpstr
-                # print "DEBUG: tmpstr[0:endndx]:", tmpstr[0:endndx]
+                # print("DEBUG: tmpstr:", tmpstr)
+                # print("DEBUG: tmpstr[0:endndx]:", tmpstr[0:endndx])
                 self.server_version = float(tmpstr[0:endndx])
         except:
             msg = "bad server ID/version string: '%s'"
@@ -1291,13 +1291,13 @@ class SeedLinkConnection(object):
         :raise IOException: if an I/O error occurs.
         """
         if self.checkVersion(2.92) >= 0:
-            bytes = b"INFO " + infoLevel.encode('ascii', 'strict') + b"\r"
+            bytes_ = b"INFO " + infoLevel.encode('ascii', 'strict') + b"\r"
             msg = "sending: requesting INFO level %s" % (infoLevel)
             if verb_level == 1:
                 logger.info(msg)
             else:
                 logger.debug(msg)
-            self.sendData(bytes, self.sladdr, 0)
+            self.sendData(bytes_, self.sladdr, 0)
         else:
             msg = "detected SeedLink version %s does not support INFO requests"
             raise SeedLinkException(msg % (self.server_version))
@@ -1367,9 +1367,9 @@ class SeedLinkConnection(object):
                 # Build SELECT command, send it and receive response
                 sendStr = b"SELECT " + selector
                 logger.debug("sending: %s" % (sendStr))
-                bytes = sendStr + b"\r"
+                bytes_ = sendStr + b"\r"
                 bytesread = None
-                bytesread = self.sendData(bytes, self.sladdr,
+                bytesread = self.sendData(bytes_, self.sladdr,
                                           SeedLinkConnection.DFT_READBUF_SIZE)
                 readStr = bytesread.decode()
 
@@ -1443,9 +1443,9 @@ class SeedLinkConnection(object):
 
         # Send action command and receive response
         logger.debug("sending: %s" % (sendStr))
-        bytes = sendStr + b"\r"
+        bytes_ = sendStr + b"\r"
         bytesread = None
-        bytesread = self.sendData(bytes, self.sladdr,
+        bytesread = self.sendData(bytes_, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
 
         # Check response to DATA/FETCH/TIME
@@ -1517,9 +1517,9 @@ class SeedLinkConnection(object):
             sendStr = ("STATION  " + curstream.station + " " +
                        curstream.net).encode('ascii', 'strict')
             logger.debug("sending: %s" % sendStr.decode())
-            bytes = sendStr + b"\r"
+            bytes_ = sendStr + b"\r"
             bytesread = None
-            bytesread = self.sendData(bytes, self.sladdr,
+            bytesread = self.sendData(bytes_, self.sladdr,
                                       SeedLinkConnection.DFT_READBUF_SIZE)
             readStr = bytesread
 
@@ -1553,8 +1553,8 @@ class SeedLinkConnection(object):
         # Issue END action command
         sendStr = b"END"
         logger.debug("sending: %s" % (sendStr.decode()))
-        bytes = sendStr + b"\r"
-        self.sendData(bytes, self.sladdr, 0)
+        bytes_ = sendStr + b"\r"
+        self.sendData(bytes_, self.sladdr, 0)
 
     def updateStream(self, slpacket):
         """
@@ -1583,7 +1583,7 @@ class SeedLinkConnection(object):
             station = trace.stats['station']
             net = trace.stats['network']
             btime = trace.stats['starttime']
-            # print "DEBUG: station, net, btime:", station, net, btime
+            # print("DEBUG: station, net, btime:", station, net, btime)
         except Exception as se:
             raise SeedLinkException("trace header read error: %s" % (se))
 
@@ -1616,7 +1616,7 @@ class SeedLinkConnection(object):
                 # wildcard character found
                 wildcarded = True
             stream = None
-        # print "DEBUG: stream:", stream.net, stream.station, stream.btime
+        # print("DEBUG: stream:", stream.net, stream.station, stream.btime)
 
         # update net/station entry in the stream chain
         if stream is not None:

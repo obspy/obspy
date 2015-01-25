@@ -109,9 +109,9 @@ The traces are a list of :class:`~obspy.segy.segy.SEGYTrace` objects stored in
 By default these header values will not be unpacked and thus will not show up
 in ipython's tab completion. See :const:`obspy.segy.header.TRACE_HEADER_FORMAT`
 `(source)
-<http://obspy.org/browser/obspy/trunk/obspy.segy/obspy/segy/header.py#L47>`_
-for a list of all available trace header attributes. They will be unpacked on
-the fly if they are accessed as class attributes.
+<https://github.com/obspy/obspy/blob/master/obspy/segy/header.py#L53>`_ for a
+list of all available trace header attributes. They will be unpacked on the
+fly if they are accessed as class attributes.
 
 By default trace data are read into memory, but this may be impractical for
 very large datasets. To skip loading data into memory, read SEG Y files with
@@ -182,7 +182,7 @@ script::
     for _i in xrange(3):
         # Create some random data.
         data = np.random.ranf(1000)
-        data = np.require(data, dtype='float32')
+        data = np.require(data, dtype=np.float32)
         trace = Trace(data=data)
 
         # Attributes in trace.stats will overwrite everything in

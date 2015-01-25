@@ -40,8 +40,8 @@ Inventory created at 2013-12-07T18:00:42.878000Z
         Channels (3):
             BW.RJOB..EHE, BW.RJOB..EHN, BW.RJOB..EHZ
 
-The file format in priciple is autodected. However, the autodetection uses the
-official StationXML XSD schema and unfortunately many real world files
+The file format in principle is autodetected. However, the autodetection uses
+the official StationXML XSD schema and unfortunately many real world files
 currently show minor deviations from the official StationXML definition causing
 the autodetection to fail. Thus, manually specifying the format is a good idea:
 
@@ -97,15 +97,15 @@ Channel 'EHZ', Location ''
    Sensor: Streckeisen STS-2/N seismometer
    Response information available
 
->>> print(cha.response)  # doctest: +NORMALIZE_WHITESPACE
+>>> print(cha.response)  # doctest: +NORMALIZE_WHITESPACE + ELLIPSIS
 Channel Response
    From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
    Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
    4 stages:
-      Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
-      Stage 2: CoefficientsTypeResponseStage from V to COUNTS, gain: 1677850.00
-      Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-      Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+      Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
+      Stage 2: CoefficientsTypeResponseStage from V to COUNTS, gain: 1.67...
+      Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+      Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
 Preview plots of station map and instrument response
 ----------------------------------------------------

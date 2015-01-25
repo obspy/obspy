@@ -78,7 +78,7 @@ class UtilTypesTestCase(unittest.TestCase):
             f1, f2, lower_uncertainty=complex(lu1, lu2),
             upper_uncertainty=complex(uu1, uu2))
         c4 = ComplexWithUncertainties(fu1, fu2)
-        # c1 should be 0+0j with uncertanties of None
+        # c1 should be 0+0j with uncertainties of None
         self._check_complex_with_u(c1, 0, None, None, 0, None, None)
         # c2 should return the floats
         self._check_complex_with_u(c2, f1, None, None, f2, None, None)

@@ -10,13 +10,16 @@ Helper module containing xseed fields.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
-from lxml.etree import Element, SubElement
-from obspy import UTCDateTime
-from obspy.xseed import utils
 import re
 import warnings
+
+from lxml.etree import Element, SubElement
+
+from obspy import UTCDateTime
+from obspy.xseed.utils import toTag, DateTime2String, setXPath, \
+    SEEDParserException, getXPath
 
 
 class SEEDTypeException(Exception):
@@ -40,8 +43,8 @@ class Field(object):
             self.field_id = "F%02d" % self.id
         else:
             self.field_id = None
-        self.field_name = kwargs.get('xml_tag', utils.toTag(self.name))
-        self.attribute_name = utils.toTag(self.name)
+        self.field_name = kwargs.get('xml_tag', toTag(self.name))
+        self.attribute_name = toTag(self.name)
         # options
         self.optional = kwargs.get('optional', False)
         self.ignore = kwargs.get('ignore', False)
@@ -52,6 +55,9 @@ class Field(object):
     def __str__(self):
         if self.id:
             return "F%02d" % self.id
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def convert(self, value):
         return value
@@ -70,7 +76,7 @@ class Field(object):
         if self.flags and 'T' in self.flags:
             if not sn and self.default_value:
                 return self.default_value
-            return utils.DateTime2String(sn, self.compact)
+            return DateTime2String(sn, self.compact)
         if not self.flags:
             return sn
         rx_list = []
@@ -122,7 +128,7 @@ class Field(object):
         self.data = text
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, text)))
+            print('  %s: %s' % (self, text))
 
     def getSEED(self, blockette, pos=0):
         """
@@ -140,7 +146,7 @@ class Field(object):
             result = result[pos]
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, result)))
+            print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
 
     def getXML(self, blockette, pos=0):
@@ -177,7 +183,7 @@ class Field(object):
             result = self.write(result)
         # Converts to XPath if necessary.
         if self.xpath:
-            result = utils.setXPath(self.xpath, result)
+            result = setXPath(self.xpath, result)
         # create XML element
         node = Element(self.field_name)
         if isinstance(result, bytes):
@@ -186,7 +192,7 @@ class Field(object):
             node.text = str(result).strip()
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, [node])))
+            print('  %s: %s' % (self, [node]))
         return [node]
 
     def parseXML(self, blockette, xml_doc, pos=0):
@@ -204,7 +210,7 @@ class Field(object):
         # Parse X-Path if necessary. The isdigit test assures legacy support
         # for XSEED without XPaths.
         if self.xpath and not text.isdigit():
-            text = utils.getXPath(text)
+            text = getXPath(text)
         # check if already exists
         if hasattr(blockette, self.attribute_name):
             temp = getattr(blockette, self.attribute_name)
@@ -215,7 +221,7 @@ class Field(object):
         setattr(blockette, self.attribute_name, self.convert(text))
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, text)))
+            print('  %s: %s' % (self, text))
 
 
 class Integer(Field):
@@ -364,7 +370,7 @@ class VariableString(Field):
                 return self.default_value
             if self.min_length:
                 if strict:
-                    raise utils.SEEDParserException
+                    raise SEEDParserException
                 warnings.warn('Date is required.', UserWarning)
             return ""
         else:
@@ -430,7 +436,7 @@ class Loop(Field):
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
         self.data_fields = data_fields
-        self.index_field = utils.toTag(index_field)
+        self.index_field = toTag(index_field)
         self.length = 0
         # loop types
         self.repeat_title = kwargs.get('repeat_title', False)
@@ -458,9 +464,9 @@ class Loop(Field):
         # debug
         if debug:
             if len(temp) > 3:
-                print(('  LOOP: ... (%d elements) ' % (len(temp))))
+                print('  LOOP: ... (%d elements) ' % (len(temp)))
             else:
-                print(('  LOOP: %s' % (temp)))
+                print('  LOOP: %s' % (temp))
             blockette.debug = debug
 
     def getSEED(self, blockette):

@@ -50,7 +50,7 @@ def _get_lib_name(lib, add_extension_suffix):
         builtin `sysconfig.get_config_var("EXT_SUFFIX")`. So when loading the
         file we have to add this suffix, but not during building.
     """
-    # our custom defined part of the extension filename
+    # our custom defined part of the extension file name
     libname = "lib%s_%s_%s_py%s" % (
         lib, platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
@@ -85,7 +85,7 @@ def _load_CDLL(name):
     :param name: Name of the library to load (e.g. 'mseed').
     :rtype: :class:`ctypes.CDLL`
     """
-    # our custom defined part of the extension filename
+    # our custom defined part of the extension file name
     libname = _get_lib_name(name, add_extension_suffix=True)
     libdir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
                           'lib')

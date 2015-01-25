@@ -23,7 +23,6 @@ sqlalchemy
 
 # Tutorial
 basemap
-hcluster
 mlpy
 ## doctests only:
 pyproj

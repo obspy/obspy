@@ -21,6 +21,7 @@ from fnmatch import fnmatch
 import io
 from lxml import objectify, etree
 from telnetlib import Telnet
+from numpy import pi
 import os
 import time
 import warnings
@@ -84,8 +85,9 @@ class Client(object):
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
         (default is ``0``).
-    :var status_delay: Delay in seconds between each status request (default is
-        ``0.5`` seconds).
+    :type status_delay: float, optional
+    :param status_delay: Delay in seconds between each status request (default
+        is ``0.5`` seconds).
 
     .. rubric:: Notes
 
@@ -103,13 +105,10 @@ class Client(object):
     * IPGP:  eida.ipgp.fr:18001
     * USP:   seisrequest.iag.usp.br:18001
     """
-    #: Delay in seconds between each status request
-    status_delay = 0.5
-
     def __init__(self, host="webdc.eu", port=18002, user=None,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
-                 command_delay=0):
+                 command_delay=0, status_delay=0.5):
         """
         Initializes an ArcLink client.
 
@@ -123,6 +122,8 @@ class Client(object):
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
+        self.status_delay = status_delay
+
         self.init_host = host
         self.init_port = port
         self.timeout = timeout
@@ -179,13 +180,13 @@ class Client(object):
 
     def _writeln(self, buffer):
         # Py3k: might be confusing, _writeln accepts str
-        # readln accepts bytes (but was smalles change like that)
+        # readln accepts bytes (but was smallest change like that)
         if self.command_delay:
             time.sleep(self.command_delay)
         b_buffer = (buffer + '\r\n').encode()
         self._client.write(b_buffer)
         if self.debug:
-            print((b'>>> ' + b_buffer))
+            print(b'>>> ' + b_buffer)
 
     def _readln(self, value=b''):
         line = self._client.read_until(value + b'\r\n', self.timeout)
@@ -194,7 +195,7 @@ class Client(object):
             msg = "Timeout waiting for expected %s, got %s"
             raise ArcLinkException(msg % (value, line.decode()))
         if self.debug:
-            print((b'... ' + line))
+            print(b'... ' + line)
         return line
 
     def _hello(self):
@@ -358,7 +359,7 @@ class Client(object):
                 if data.startswith(b'<?xml'):
                     print(data)
                 else:
-                    print(("%d bytes of data read" % len(data)))
+                    print("%d bytes of data read" % len(data))
         finally:
             self._writeln('PURGE %d' % req_id)
             self._bye()
@@ -563,7 +564,7 @@ class Client(object):
         data = self._fetch(rtype, rdata, route=route)
         # check if data is still encrypted
         if data.startswith(b'Salted__'):
-            # set "good" filenames
+            # set "good" file names
             if is_name:
                 if compressed and not filename.endswith('.bz2.openssl'):
                     filename += '.bz2.openssl'
@@ -579,7 +580,7 @@ class Client(object):
                 if unpack:
                     data = bz2.decompress(data)
                 elif is_name and not filename.endswith('.bz2'):
-                    # set "good" filenames
+                    # set "good" file names
                     filename += '.bz2'
         # create file handler if a file name is given
         if is_name:
@@ -620,9 +621,9 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _ROUTING_NS_1_0 in list(xml_doc.nsmap.values()):
+        if _ROUTING_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _ROUTING_NS_1_0
-        elif _ROUTING_NS_0_1 in list(xml_doc.nsmap.values()):
+        elif _ROUTING_NS_0_1 in xml_doc.nsmap.values():
             xml_ns = _ROUTING_NS_0_1
         else:
             msg = "Unknown routing namespace %s"
@@ -833,6 +834,13 @@ class Client(object):
         paz = AttribDict()
         # instrument name
         paz['name'] = xml_doc.get('name', '')
+
+        # Response type: A=Laplace(rad/s), B=Analog(Hz), C, D
+        try:
+            paz['response_type'] = xml_doc.get('type')
+        except:
+            paz['response_type'] = None
+
         # normalization factor
         try:
             if xml_ns == _INVENTORY_NS_1_0:
@@ -1126,14 +1134,14 @@ class Client(object):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if _INVENTORY_NS_1_0 in list(xml_doc.nsmap.values()):
+        if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'
             component_ns = 'stream'
             seismometer_ns = 'sensor'
             name_ns = 'publicID'
             resp_paz_ns = 'responsePAZ'
-        elif _INVENTORY_NS_0_2 in list(xml_doc.nsmap.values()):
+        elif _INVENTORY_NS_0_2 in xml_doc.nsmap.values():
             xml_ns = _INVENTORY_NS_0_2
             stream_ns = 'seis_stream'
             component_ns = 'component'
@@ -1305,6 +1313,18 @@ class Client(object):
                             continue
                         # parse PAZ
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
+
+                        # convert from Hz (Analog) to rad/s (Laplace)
+                        if paz['response_type'] == "B":
+                            x2pi = lambda x: (x * 2 * pi)
+                            paz['poles'] = list(map(x2pi, paz['poles']))
+                            paz['zeros'] = list(map(x2pi, paz['zeros']))
+                            paz['normalization_factor'] = \
+                                paz['normalization_factor'] * (2 * pi) ** \
+                                (len(paz['poles']) - len(paz['zeros']))
+                            paz['gain'] = paz['normalization_factor']
+                            paz['response_type'] = "A"
+
                         # sensitivity
                         paz['sensitivity'] = temp['sensitivity']
                         paz['sensitivity_frequency'] = \
@@ -1359,7 +1379,7 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in list(data.items())
+        stations = [value for key, value in data.items()
                     if key.startswith(network + '.')
                     and "code" in value]
         return stations

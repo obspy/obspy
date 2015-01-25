@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -------------------------------------------------------------------
+# --------------------------------------------------------------------
 # Filename: libgse2.py
 #  Purpose: Python wrapper for gse_functions of Stefan Stange
 #   Author: Moritz Beyreuther
@@ -15,7 +15,7 @@ Currently CM6 compressed GSE2 files are supported, this should be
 sufficient for most cases. Gse_functions is written in C and
 interfaced via python-ctypes.
 
-See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
+See: http://www.orfeus-eu.org/software/seismo_softwarelibrary.html#gse
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -40,31 +40,31 @@ clibgse2 = _load_CDLL("gse2")
 
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
 clibgse2.decomp_6b_buffer.restype = C.c_int
 
 clibgse2.rem_2nd_diff.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int]
 clibgse2.rem_2nd_diff.restype = C.c_int
 
 clibgse2.check_sum.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int32]
 clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
 clibgse2.diff_2nd.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int]
 clibgse2.diff_2nd.restype = C.c_void_p
 
 clibgse2.compress_6b_buffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.CFUNCTYPE(C.c_int, C.c_char)]
@@ -249,10 +249,10 @@ def uncompress_CM6(f, n_samps):
 
     cread83 = C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p)(read83)
     if n_samps == 0:
-        data = np.empty(0, dtype='int32')
+        data = np.empty(0, dtype=np.int32)
     else:
         # aborts with segmentation fault when n_samps == 0
-        data = np.empty(n_samps, dtype='int32')
+        data = np.empty(n_samps, dtype=np.int32)
         n = clibgse2.decomp_6b_buffer(n_samps, data, cread83, None)
         if n != n_samps:
             raise GSEUtiError("Mismatching length in lib.decomp_6b")
@@ -268,11 +268,11 @@ def compress_CM6(data):
     :param data: the data to write
     :returns: NumPy chararray containing compressed samples
     """
-    data = np.require(data, 'int32', ['C_CONTIGUOUS'])
+    data = np.ascontiguousarray(data, np.int32)
     N = len(data)
     count = [0]  # closure, must be container
     # 4 character bytes per int32_t
-    carr = np.zeros(N * 4, dtype='c')
+    carr = np.zeros(N * 4, dtype=native_str('c'))
 
     def writer(char):
         carr[count[0]] = char
@@ -285,9 +285,9 @@ def compress_CM6(data):
         raise GSEUtiError(msg % ierr)
     cnt = count[0]
     if cnt < 80:
-        return carr[:cnt].view('|S%d' % cnt)
+        return carr[:cnt].view(native_str('|S%d' % cnt))
     else:
-        return carr[:(cnt // 80 + 1) * 80].view('|S80')
+        return carr[:(cnt // 80 + 1) * 80].view(native_str('|S80'))
 
 
 def verifyChecksum(fh, data, version=2):

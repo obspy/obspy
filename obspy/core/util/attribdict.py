@@ -10,7 +10,7 @@ AttribDict class for ObsPy.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  # NOQA
+from future.builtins import *  # NOQA @UnusedWildImport
 
 import collections
 import copy
@@ -80,7 +80,12 @@ class AttribDict(collections.MutableMapping):
         if key in self.readonly:
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
-        self.__dict__[key] = value
+
+        if isinstance(value, collections.Mapping) and \
+           not isinstance(value, AttribDict):
+            self.__dict__[key] = AttribDict(value)
+        else:
+            self.__dict__[key] = value
 
     def __delitem__(self, name):
         del self.__dict__[name]
@@ -116,7 +121,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in list(adict.items()):
+        for (key, value) in adict.items():
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)

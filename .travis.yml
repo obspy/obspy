@@ -7,15 +7,14 @@ python:
 before_install:
   - lsb_release -a # get info on the operating system
   - sudo apt-get update
-  - sudo apt-get install -qq gfortran
+  - sudo apt-get install -qq gfortran proj-data
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy scipy suds-jurko lxml sqlalchemy m2crypto mock nose
-  - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy==1.8.2 scipy==0.14.0 lxml sqlalchemy mock nose pyproj
+  - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
   - pip install --use-mirrors geographiclib
-  - pip install --use-mirrors suds-jurko
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib==1.3.1
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
   - pip install --use-mirrors flake8
@@ -40,6 +39,9 @@ script:
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
   - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r
 after_success:
+  - mv .coverage ../.coverage.empty
+  - cd ..
+  - coverage combine
   - coveralls
 notifications:
     email: false

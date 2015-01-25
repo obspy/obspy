@@ -198,6 +198,9 @@ class Stats(AttribDict):
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 def _add_processing_info(func):
     """
@@ -388,6 +391,9 @@ class Trace(object):
         if np.ma.count_masked(self.data):
             out += ' (masked)'
         return trace_id + out % (self.stats)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __len__(self):
         """
@@ -870,10 +876,8 @@ class Trace(object):
         :type filename: str
         :param filename: The name of the file to write.
         :type format: str
-        :param format: The format to write must be specified. One of
-            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
-            :meth:`obspy.core.stream.Stream.write` method for all possible
+        :param format: The format to write must be specified. See
+            :meth:`obspy.core.stream.Stream.write` method for possible
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
@@ -997,7 +1001,7 @@ class Trace(object):
                 gap = createEmptyDataChunk(delta, self.data.dtype, fill_value)
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
-                # too large number of pointes, e.g. 189336539799
+                # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((self.data, gap))
@@ -1136,7 +1140,7 @@ class Trace(object):
             # Check if the endtime fits the starttime, npts and sampling_rate.
             if self.stats.endtime != self.stats.starttime + \
                     (self.stats.npts - 1) / float(self.stats.sampling_rate):
-                msg = "Endtime is not the time of the last sample."
+                msg = "End time is not the time of the last sample."
                 raise Exception(msg)
         elif self.stats.npts not in [0, 1]:
             msg = "Data size should be 0, but is %d"
@@ -1449,7 +1453,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
-        Resample trace data using Fourier method.
+        Resample trace data using Fourier method. Spectra are linearly
+        interpolated if required.
 
         :type sampling_rate: float
         :param sampling_rate: The sampling rate of the resampled signal.
@@ -1501,12 +1506,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         array([ 0.5       ,  0.40432914,  0.3232233 ,  0.26903012,  0.25 ...
         """
-        from scipy.signal import resample
+        from scipy.signal import get_window
+        from scipy.fftpack import rfft, irfft
         factor = self.stats.sampling_rate / float(sampling_rate)
-        # check if endtime changes and this is not explicitly allowed
-        if strict_length and len(self.data) % factor != 0.0:
-            msg = "Endtime of trace would change and strict_length=True."
-            raise ValueError(msg)
+        # check if end time changes and this is not explicitly allowed
+        if strict_length:
+            if len(self.data) % factor != 0.0:
+                msg = "End time of trace would change and strict_length=True."
+                raise ValueError(msg)
         # do automatic lowpass filtering
         if not no_filter:
             # be sure filter still behaves good
@@ -1517,10 +1524,51 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 raise ArithmeticError(msg)
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpassCheby2', freq=freq, maxorder=12)
-        # resample
+
+        orig_dtype = self.data.dtype
+        new_dtype = np.float32 if orig_dtype.itemsize == 4 else np.float64
+
+        # resample in the frequency domain
+        X = rfft(np.require(self.data, dtype=new_dtype))
+        X = np.insert(X, 1, 0)
+        if self.stats.npts % 2 == 0:
+            X = np.append(X, [0])
+        Xr = X[::2]
+        Xi = X[1::2]
+
+        if window is not None:
+            if callable(window):
+                W = window(np.fft.fftfreq(self.stats.npts))
+            elif isinstance(window, np.ndarray):
+                if window.shape != (self.stats.npts,):
+                    msg = "Window has the wrong shape. Window length must " + \
+                          "equal the number of points."
+                    raise ValueError(msg)
+                W = window
+            else:
+                W = np.fft.ifftshift(get_window(native_str(window),
+                                                self.stats.npts))
+            Xr *= W[:self.stats.npts//2+1]
+            Xi *= W[:self.stats.npts//2+1]
+
+        # interpolate
         num = int(self.stats.npts / factor)
-        self.data = resample(self.data, num, window=native_str(window))
+        df = 1.0 / (self.stats.npts * self.stats.delta)
+        dF = 1.0 / num * sampling_rate
+        f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
+        nF = num // 2 + 1
+        F = dF * np.arange(0, nF, dtype=np.int32)
+        Y = np.zeros((2*nF))
+        Y[::2] = np.interp(F, f, Xr)
+        Y[1::2] = np.interp(F, f, Xi)
+
+        Y = np.delete(Y, 1)
+        if num % 2 == 0:
+            Y = np.delete(Y, -1)
+        self.data = irfft(Y) * (float(num) / float(self.stats.npts))
+        self.data = np.require(self.data, dtype=orig_dtype)
         self.stats.sampling_rate = sampling_rate
+
         return self
 
     @_add_processing_info
@@ -1585,9 +1633,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data
         array([0, 4, 8])
         """
-        # check if endtime changes and this is not explicitly allowed
+        # check if end time changes and this is not explicitly allowed
         if strict_length and len(self.data) % factor:
-            msg = "Endtime of trace would change and strict_length=True."
+            msg = "End time of trace would change and strict_length=True."
             raise ValueError(msg)
 
         # do automatic lowpass filtering
@@ -1688,14 +1736,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     @skipIfNoData
     @_add_processing_info
-    def integrate(self, type='cumtrapz', **options):
+    def integrate(self, method="cumtrapz", **options):
         """
-        Method to integrate the trace with respect to time.
+        Integrate the trace with respect to time.
 
-        :type type: str, optional
-        :param type: Method to use for integration. Defaults to
-            ``'cumtrapz'``. See the `Supported Methods`_ section below for
-            further details.
+        .. rubric:: _`Supported Methods`
+
+        ``'cumtrapz'``
+            First order integration of data using the trapezoidal rule. Uses
+            :func:`obspy.signal.differentiate_and_integrate.integrate_cumtrapz`
+
+        ``'spline'``
+            Integrates by generating an interpolating spline and integrating
+            that. Uses
+            :func:`obspy.signal.differentiate_and_integrate.integrate_spline`
 
         .. note::
 
@@ -1705,39 +1759,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your trace object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
-
-        .. rubric:: _`Supported Methods`
-
-        ``'cumtrapz'``
-            Trapezoidal rule to cumulatively compute integral (uses
-            :func:`scipy.integrate.cumtrapz`). Result has one sample less then
-            the input!
-
-        ``'trapz'``
-            Trapezoidal rule to compute integral from samples (uses
-            :func:`scipy.integrate.trapz`).
-
-        ``'simps'``
-            Simpson's rule to compute integral from samples (uses
-            :func:`scipy.integrate.simps`).
-
-        ``'romb'``
-            Romberg Integration to compute integral from (2**k + 1)
-            evenly-spaced samples. (uses :func:`scipy.integrate.romb`).
         """
-        type = type.lower()
+        method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('integrate', type)
-        # handle function specific settings
-        if func.__module__.startswith('scipy'):
-            # SciPy needs to set dx keyword if not given in options
-            if 'dx' not in options:
-                options['dx'] = self.stats.delta
-            args = [self.data]
-        else:
-            args = [self.data, self.stats.delta]
-        # integrating
-        self.data = func(*args, **options)
+        func = _getFunctionFromEntryPoint('integrate', method)
+
+        if "type" in options:
+            warnings.warn("The 'type' argument is no longer supported. It "
+                          "will be ignored. Use the 'method' argument.",
+                          DeprecationWarning)
+            del options["type"]
+
+        self.data = func(data=self.data, dx=self.stats.delta, **options)
         return self
 
     @skipIfNoData
@@ -1972,7 +2005,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             norm = self.max()
 
-        self.data = self.data.astype("float64")
+        self.data = self.data.astype(np.float64)
         self.data /= abs(norm)
 
         return self
@@ -2155,8 +2188,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if npts is None:
             npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
                                   dt)) + 1
-        self.data = func(np.require(self.data, dtype="float64"), old_start,
-                         old_dt, starttime, dt, npts, type=method)
+        self.data = np.atleast_1d(func(np.require(self.data, dtype=np.float64),
+                                       old_start, old_dt, starttime, dt, npts,
+                                       type=method))
         self.stats.starttime = UTCDateTime(starttime)
         self.stats.delta = dt
 
@@ -2198,10 +2232,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
            4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
               Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
         :type inventories: :class:`~obspy.station.inventory.Inventory` or
             :class:`~obspy.station.network.Network` or a list containing
@@ -2240,7 +2274,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         Uses the :class:`obspy.station.response.Response` object attached as
         :class:`Trace`.stats.response to deconvolve the instrument response
-        from the trace's timeseries data. Raises an exception if the response
+        from the trace's time series data. Raises an exception if the response
         is not present. Use e.g. :meth:`Trace.attach_response` to attach
         response to trace providing :class:`obspy.station.inventory.Inventory`
         data.
@@ -2283,10 +2317,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
             Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
             4 stages:
-                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
                 Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
         >>> tr.remove_response()  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
@@ -2362,7 +2396,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             return self
 
         # use evalresp
-        data = self.data.astype("float64")
+        data = self.data.astype(np.float64)
         npts = len(data)
         # time domain pre-processing
         if zero_mean:

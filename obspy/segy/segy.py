@@ -123,6 +123,9 @@ class SEGYFile(object):
         """
         return '%i traces in the SEG Y structure.' % len(self.traces)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def _autodetectEndianness(self):
         """
         Tries to automatically determine the endianness of the file at hand.
@@ -132,13 +135,13 @@ class SEGYFile(object):
         self.file.seek(3224, 1)
         format = unpack(b'>h', self.file.read(2))[0]
         # Check if valid.
-        if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
+        if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
             self.endian = '>'
         # Else test little endian.
         else:
             self.file.seek(-2, 1)
             format = unpack(b'<h', self.file.read(2))[0]
-            if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
+            if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
                 self.endian = '<'
             else:
                 msg = 'Unable to determine the endianness of the file. ' + \
@@ -387,6 +390,9 @@ class SEGYBinaryFileHeader(object):
                                            str(getattr(self, item[1]))))
         return "\n".join(final_str)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def write(self, file, endian=None):
         """
         Writes the header to an open file like object.
@@ -573,7 +579,7 @@ class SEGYTrace(object):
         """
         Creates an empty trace with an empty header.
         """
-        self.data = np.zeros(0, dtype='float32')
+        self.data = np.zeros(0, dtype=np.float32)
         self.header = SEGYTraceHeader(header=None, endian=self.endian)
 
     def __str__(self):
@@ -588,6 +594,9 @@ class SEGYTrace(object):
             (self.header.sample_interval_in_ms_for_this_trace /
                 float(1E6)))
         return ret_val
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __getattr__(self, name):
         """
@@ -734,6 +743,9 @@ class SEGYTraceHeader(object):
             retval += '%s: %i\n' % (name, getattr(self, name))
         return retval
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def _createEmptyTraceHeader(self):
         """
         Init the trace header with zeros.
@@ -874,6 +886,9 @@ class SUFile(object):
         Prints some information about the SU file.
         """
         return '%i traces in the SU structure.' % len(self.traces)
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def _readTraces(self, unpack_headers=False, headonly=False):
         """

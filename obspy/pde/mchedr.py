@@ -4,7 +4,7 @@ NEIC PDE mchedr (machine-readable Earthquake Data Report) read support.
 
 Only supports file format revision of February 24, 2004.
 
-.. seealso:: http://earthquake.usgs.gov/research/data/pde.php
+.. seealso:: http://earthquake.usgs.gov/data/pde.php
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Claudio Satriano
@@ -58,7 +58,7 @@ def isMchedr(filename):
         return False
     with open(filename, 'rb') as fh:
         for line in fh.readlines():
-            # skip blanck lines at beginnning, if any
+            # skip blank lines at beginning, if any
             if line.strip() == b'':
                 continue
             # first record has to be 'HY':
@@ -134,7 +134,7 @@ class Unpickler(object):
         return val
 
     def _floatWithFormat(self, string, format_string, scale=1):
-        ndigits, ndec = list(map(int, format_string.split('.')))
+        ndigits, ndec = map(int, format_string.split('.'))
         nint = ndigits - ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint + ndec])
         if val is not None:
@@ -971,7 +971,7 @@ angles-between-two-n-dimensional-vectors-in-python
                 # means 'used'
                 if depth_usage_flag == 'X':
                     # FIXME: is this enough to say that
-                    # the event is constained by depth pahses?
+                    # the event is constrained by depth phases?
                     origin.depth_type = 'constrained by depth phases'
                     origin.quality.depth_phase_count += 1
             else:

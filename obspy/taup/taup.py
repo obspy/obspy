@@ -17,12 +17,12 @@ lib_name = _get_lib_name('tau', add_extension_suffix=False)
 
 # Import libtau in a platform specific way.
 try:
-    # linux / mac using python import
+    # Linux / Mac using python import
     libtau = __import__('obspy.lib.' + lib_name, globals(), locals(),
                         ['ttimes'])
     ttimes = libtau.ttimes
 except ImportError:
-    # windows using ctypes
+    # Windows using ctypes
     if platform.system() == "Windows":
         import ctypes as C
         libtau = _load_CDLL("tau")

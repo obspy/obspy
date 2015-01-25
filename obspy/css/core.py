@@ -7,12 +7,35 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import os
-import struct
+
 import numpy as np
+
 from obspy import UTCDateTime, Trace, Stream
+from obspy.core.compatibility import frombuffer
 
 
-DTYPE = {b's4': b"i", b't4': b"f", b's2': b"h"}
+DTYPE = {
+    # Big-endian integers
+    b's4': b'>i',
+    b's2': b'>h',
+    # Little-endian integers
+    b'i4': b'<i',
+    b'i2': b'<h',
+    # ASCII integers
+    b'c0': (b'S12', np.int),
+    b'c#': (b'S12', np.int),
+    # Big-endian floating point
+    b't4': b'>f',
+    b't8': b'>d',
+    # Little-endian floating point
+    b'f4': b'<f',
+    b'f8': b'<d',
+    # ASCII floating point
+    b'a0': (b'S15', np.float32),
+    b'a#': (b'S15', np.float32),
+    b'b0': (b'S24', np.float64),
+    b'b#': (b'S24', np.float64),
+}
 
 
 def isCSS(filename):
@@ -75,13 +98,17 @@ def readCSS(filename, **kwargs):
         filename = os.path.join(basedir, dirname, filename)
         offset = int(line[246:256])
         dtype = DTYPE[line[143:145]]
-        fmt = b">" + dtype * npts
+        if isinstance(dtype, tuple):
+            read_fmt = np.dtype(dtype[0])
+            fmt = dtype[1]
+        else:
+            read_fmt = np.dtype(dtype)
+            fmt = read_fmt
         with open(filename, "rb") as fh:
             fh.seek(offset)
-            size = struct.calcsize(fmt)
-            data = fh.read(size)
-            data = struct.unpack(fmt, data)
-            data = np.array(data)
+            data = fh.read(read_fmt.itemsize * npts)
+            data = frombuffer(data, dtype=read_fmt)
+            data = np.require(data, dtype=fmt)
         header = {}
         header['station'] = line[0:6].strip().decode()
         header['channel'] = line[7:15].strip().decode()

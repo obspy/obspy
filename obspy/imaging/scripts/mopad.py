@@ -15,8 +15,7 @@ USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
     #######################################################################
     #########################   MoPaD  ####################################
-
-    ######### Moment tensor Plotting and Decomposition tool #############
+    ######### Moment tensor Plotting and Decomposition tool ###############
     #######################################################################
 
     Multi method tool for:
@@ -75,62 +74,11 @@ import os
 import os.path
 import sys
 import warnings
+from obspy import __version__
 
 
 MOPAD_VERSION = 0.7
 
-USAGE_STRING = """
-###############################################################################
-####################   MoPaD    (Version %.1f)   ##############################
-
-usage:
-                   mopad.py 'method' 'source mechanism' ['options']
-  or
-            python mopad.py 'method' 'source mechanism' ['options']
-
-###############################################################################
-
-Several methods are implemented in this tool.
-It is chosen by providing its name as the first argument:
-
-- (p)lot      :  plotting a beachball projection of the provided mechanism
-- (d)ecompose :  decompose a given mechanism into its components
-- (g)mt       :  return  the beachball as a string, to be piped into GMT's psxy
-- (c)onvert   :  convert a mechanism to/in (strike,dip,slip-rake) from/to
-                 matrix form *or* convert a matrix, vector, tuple into
-                different basis representations
-
--------------------------------------------------------------------------------
-
-The  'source mechanism' as a comma-separated list of length:
-
-- 3 (strike,dip,rake),
-- 4 (strike,dip,rake,moment),
-- 6 (M11,M22,M33,M12,M13,M23),
-- 7 (M11,M22,M33,M12,M13,M23,moment),
-- 9 (full moment tensor)
-
-(With all angles to be given in degrees)
--------------------------------------------------------------------------------
-
-HELP for a particular method is shown with:
-
-             elk_mopad.py 'method' -h
-   or
-             elk_mopad.py 'method' --help
-
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
-
-Example:
-
-To generate a beachball for a normal faulting mechnism (a snake's eye type):
-
-    elk_mopad.py plot 0,45,-90   or   elk_mopad.py plot p 0,1,-1,0,0,0
-
-###############################################################################
-
-""" % (MOPAD_VERSION)
 
 # constants:
 dynecm = 1e-7
@@ -616,7 +564,7 @@ class MomentTensor:
         EW_devi, EV_devi = np.linalg.eigh(M_devi)
         EW_order = np.argsort(EW_devi)
 
-        # print 'order',EW_order
+        # print('order', EW_order)
 
         if 1:  # self._plot_isotropic_part:
             trace_M = np.trace(M)
@@ -835,7 +783,7 @@ class MomentTensor:
         pnt_sorted_EV_matrix = self._rotation_matrix.copy()
 
         # resort only necessary, if abs(p) <= abs(t)
-        # print self._plot_clr_order
+        # print(self._plot_clr_order)
         if self._plot_clr_order < 0:
             pnt_sorted_EV_matrix[:, 0] = self._rotation_matrix[:, 2]
             pnt_sorted_EV_matrix[:, 2] = self._rotation_matrix[:, 0]
@@ -1085,7 +1033,7 @@ class MomentTensor:
         style (to be viewed with 'print')
         """
         if style == 'f':
-            print('\n   Full moment tensor in %s-coordinates: ' % (system))
+            print('\n   Full moment tensor in %s-coordinates:' % (system))
             return self._matrix_w_style_and_system(self._M, system, style)
         else:
             return self._matrix_w_style_and_system(self._M, system, style)
@@ -1190,10 +1138,10 @@ class MomentTensor:
         """
         Returns the decomposition type.
         """
-        decomp_dict = dict(list(zip(('20', '21', '31'),
-                                    ('ISO + DC + CLVD',
-                                     'ISO + major DC + minor DC',
-                                     'ISO + DC1 + DC2 + DC3'))))
+        decomp_dict = dict(zip(('20', '21', '31'),
+                               ('ISO + DC + CLVD',
+                                'ISO + major DC + minor DC',
+                                'ISO + DC1 + DC2 + DC3')))
         if style == 'f':
             print('\n Decomposition type: \n  ')
             return decomp_dict[str(self._decomposition_key)]
@@ -1846,7 +1794,7 @@ def fancy_matrix(m_in):
     """
     m = m_in.copy()
 
-    norm_factor = round(max(abs(m.flatten())), 5)
+    norm_factor = round(np.max(np.abs(m.flatten())), 5)
 
     try:
         if (norm_factor < 0.1) or (norm_factor >= 10):
@@ -1863,7 +1811,7 @@ def fancy_matrix(m_in):
         pass
 
     return "\n  / %5.2F %5.2F %5.2F \\\n" % (m[0, 0], m[0, 1], m[0, 2]) + \
-           "  | %5.2F %5.2F %5.2F  | \n" % (m[1, 0], m[1, 1], m[1, 2]) + \
+           "  | %5.2F %5.2F %5.2F  |\n" % (m[1, 0], m[1, 1], m[1, 2]) + \
            "  \\ %5.2F %5.2F %5.2F /\n" % (m[2, 0], m[2, 1], m[2, 2])
 
 
@@ -1982,7 +1930,8 @@ class BeachBall:
 
         try:
             plotfig.savefig(outfile_abs_name, dpi=self._plot_dpi,
-                            transparent=True, format=outfile_format)
+                            transparent=True, facecolor='k',
+                            format=outfile_format)
         except:
             print('ERROR!! -- Saving of plot not possible')
             return
@@ -2042,7 +1991,7 @@ class BeachBall:
         file handler.
         """
         colour_Z = colour
-        wstring = '> -Z%i\n' % (colour_Z)
+        wstring = bytes('> -Z%i\n' % (colour_Z), encoding='utf-8')
         FH_string.write(wstring)
         np.savetxt(FH_string, self._GMT_scaling * curve.transpose())
 
@@ -2061,9 +2010,9 @@ class BeachBall:
         pressure_colour = self._GMT_pressure_colour
 
         # build strings for possible GMT-output, used by 'psxy'
-        GMT_string_FH = io.StringIO()
-        GMT_linestring_FH = io.StringIO()
-        GMT_EVs_FH = io.StringIO()
+        GMT_string_FH = io.BytesIO()
+        GMT_linestring_FH = io.BytesIO()
+        GMT_EVs_FH = io.BytesIO()
 
         self._add_2_GMT_string(GMT_EVs_FH, EV_2_plot, tension_colour)
         GMT_EVs_FH.flush()
@@ -2344,7 +2293,7 @@ class BeachBall:
             fontsize = plot_size_in_points / 66.
             symsize = plot_size_in_points / 77.
 
-            direction_letters = list('NSEWDU')
+            direction_letters = 'NSEWDU'
             for idx, val in enumerate(BV_2_plot):
                 x_coord = val[0]
                 y_coord = val[1]
@@ -2522,7 +2471,7 @@ class BeachBall:
 
         self._plot_total_alpha = 1.
 
-        # possibility to add external data (e.g. measured polariations)
+        # possibility to add external data (e.g. measured polarizations)
         self._plot_external_data = False
         self._external_data = None
 
@@ -2540,7 +2489,7 @@ class BeachBall:
         the object, the value is updated. Otherwise, the keyword is
         ignored.
         """
-        for key in list(kwargs.keys()):
+        for key in kwargs.keys():
             if key[0] == '_':
                 kw = key[1:]
             else:
@@ -2631,7 +2580,7 @@ class BeachBall:
                 R_start = start_r
 
                 # add one point on the edge every fraction of degree given by
-                # input parameter, increase the radius linearily
+                # input parameter, increase the radius linearly
                 phi_end_larger = np.sign(phi_end - phi_start)
                 angle_smaller_pi = np.sign(pi - np.abs(phi_end - phi_start))
 
@@ -2694,7 +2643,7 @@ class BeachBall:
         - array with 6 points, describing positive and negative part of 3
           principal axes
         - array with partition of full circle (angle values in degrees)
-          fraction is given by parametre n_curve_points
+          fraction is given by parameter n_curve_points
         """
         # build the nodallines of positive/negative areas in the principal axes
         # system
@@ -2703,7 +2652,7 @@ class BeachBall:
         # phi is the angle between neutral axis and horizontal projection
         # of the curve point to the surface, spanned by H- and
         # N-axis. Running mathematically negative (clockwise) around the
-        # SIGMA-axis. Stepsize is given by the parametre for number of
+        # SIGMA-axis. Stepsize is given by the parameter for number of
         # curve points
         phi = (np.arange(n_curve_points) / float(n_curve_points) +
                1. / n_curve_points) * 2 * pi
@@ -2714,7 +2663,7 @@ class BeachBall:
         # is 0, if curve lies directly on the SIGMA axis)
 
         # CASE: including isotropic part
-        # sigma axis flippes, if EWn flippes sign
+        # sigma axis flips, if EWn flips sign
 
         EWh_devi = self.MT.get_eigvals()[0] - 1. / 3 * np.trace(self._M)
         EWn_devi = self.MT.get_eigvals()[1] - 1. / 3 * np.trace(self._M)
@@ -3405,7 +3354,7 @@ class BeachBall:
         # check, if perhaps more values with same r - if so, take point with
         # lowest phi
         other_idces = \
-            list(np.where(r_phi_curve[:, 0] == r_phi_curve[largest_r_idx, 0]))
+            np.where(r_phi_curve[:, 0] == r_phi_curve[largest_r_idx, 0])
         if len(other_idces) > 1:
             best_idx = np.argmin(r_phi_curve[other_idces, 1])
             start_idx_curve = other_idces[best_idx]
@@ -3687,7 +3636,7 @@ class BeachBall:
 
         lo_visible_BV = []
         dummy_list1 = []
-        direction_letters = list('NSEWDU')
+        direction_letters = 'NSEWDU'
 
         for idx, val in enumerate(self._all_BV_2D.transpose()):
             r_bv = math.sqrt(val[0] ** 2 + val[1] ** 2)
@@ -3892,7 +3841,7 @@ class BeachBall:
             fontsize = plot_size_in_points / 40.
             symsize = plot_size_in_points / 61.
 
-            direction_letters = list('NSEWDU')
+            direction_letters = 'NSEWDU'
 
             for val in self._all_BV_2D_US:
                 x_coord = val[0]
@@ -3926,7 +3875,7 @@ class BeachBall:
                                s=symsize ** 2, c='k', facecolor='k',
                                zorder=300)
 
-        # plot 4 fake points, guaranteeing full visibilty of the sphere
+        # plot 4 fake points, guaranteeing full visibility of the sphere
         ax.plot([0, 1.05, 0, -1.05], [1.05, 0, -1.05, 0], ',', alpha=0.)
         # scaling behavior
         ax.autoscale_view(tight=True, scalex=True, scaley=True)
@@ -3940,55 +3889,30 @@ class BeachBall:
 #
 # -------------------------------------------------------------------
 
-def main():
+def main(argv=None):
     """
     Usage
 
-    elk_mopad plot M
-    elk_mopad save M
-    elk_mopad gmt  M
-    elk_mopad convert M
-    elk_mopad decompose M
+    obspy-mopad plot M
+    obspy-mopad save M
+    obspy-mopad gmt  M
+    obspy-mopad convert M
+    obspy-mopad decompose M
     """
-    def _which_call(call_raw):
-        """
-        """
-        try:
-            call = \
-                dict(list(zip(('p', 'g', 'c', 'd'),
-                          ('plot', 'gmt', 'convert', 'decompose')))
-                     )[call_raw[0]]
-        except:
-            call = 'help'
-
-        return call
-
-    def _handle_input(call, M_in, call_args, optparser):
+    def _handle_input(M_in, args):
         """
         take the original method and its arguments, the source mechanism,
         and the dictionary with proper parsers for each call,
         """
         # construct a dict with consistent keyword args suited for the current
         # call
-        kwargs = _parse_arguments(call, call_args, optparser)
+        kwargs = args.build(args)
         # set the fitting input basis system
         in_system = kwargs.get('in_system', 'NED')
         # build the moment tensor object
         mt = MomentTensor(M=M_in, system=in_system)
         # call the main routine to handle the moment tensor
-        return _call_main(mt, call, kwargs)
-
-    def _call_main(MT, main_call, kwargs_dict):
-        """
-        """
-        if main_call == 'plot':
-            return _call_plot(MT, kwargs_dict)
-        elif main_call == 'convert':
-            return _call_convert(MT, kwargs_dict)
-        elif main_call == 'gmt':
-            return _call_gmt(MT, kwargs_dict)
-        elif main_call == 'decompose':
-            return _call_decompose(MT, kwargs_dict)
+        return args.call(mt, kwargs)
 
     def _call_plot(MT, kwargs_dict):
         """
@@ -4016,14 +3940,14 @@ def main():
         """
         if kwargs_dict['type_conversion']:
 
-            if kwargs_dict['type_conversion'].lower() == 'sdr':
+            if kwargs_dict['type_conversion'] == 'SDR':
                 if kwargs_dict['fancy_conversion']:
                     return MT.get_fps(style='f')
                 else:
                     return MT.get_fps(style='n')
-            elif kwargs_dict['type_conversion'].upper() == 'T':
+            elif kwargs_dict['type_conversion'] == 'T':
                 if kwargs_dict['basis_conversion']:
-                    out_system = kwargs_dict['out_system'].upper()
+                    out_system = kwargs_dict['out_system']
                     if kwargs_dict['fancy_conversion']:
                         return MT.get_M(system=out_system, style='f')
                     else:
@@ -4042,12 +3966,12 @@ def main():
                         'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
                         print('\n  Moment tensor in basis  %s:\n ' %
-                              (kwargs_dict['in_system'].upper()))
+                              (kwargs_dict['in_system']))
                         print(fancy_matrix(MT.get_M(
-                              system=kwargs_dict['in_system'].upper())))
+                              system=kwargs_dict['in_system'])))
                         print()
                         print('\n Moment tensor in basis  %s:\n ' %
-                              (kwargs_dict['out_system'].upper()))
+                              (kwargs_dict['out_system']))
                         return fancy_matrix(M_converted)
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
@@ -4058,12 +3982,12 @@ def main():
                         MT.get_M(), 'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
                         print('\n  Moment tensor in basis  %s:\n ' %
-                              (kwargs_dict['in_system'].upper()))
+                              (kwargs_dict['in_system']))
                         print(fancy_matrix(MT.get_M(
-                              system=kwargs_dict['in_system'].upper())))
+                              system=kwargs_dict['in_system'])))
                         print()
                         print('\n Moment tensor in basis  %s:\n ' %
-                              (kwargs_dict['out_system'].upper()))
+                              (kwargs_dict['out_system']))
                         return fancy_matrix(M_converted)
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
@@ -4085,7 +4009,7 @@ def main():
                     MT.get_M(), 'NED', kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
                     print('\n  Moment tensor in basis  %s: ' %
-                          (kwargs_dict['out_system'].upper()))
+                          (kwargs_dict['out_system']))
                     return fancy_matrix(M_converted)
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
@@ -4097,7 +4021,7 @@ def main():
                                                  kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
                     print('\n  Momemnt tensor in basis  %s: ' %
-                          (kwargs_dict['out_system'].upper()))
+                          (kwargs_dict['out_system']))
                     return fancy_matrix(M_converted)
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
@@ -4116,11 +4040,11 @@ def main():
         if kwargs_dict['vector_conversion']:
             if kwargs_dict['fancy_conversion']:
                 print('\n  Vector in basis  %s:\n ' %
-                      (kwargs_dict['vector_in_system'].upper()))
+                      (kwargs_dict['vector_in_system']))
                 print(fancy_vector(MT._original_M))
                 print()
                 print('\n  Vector in basis  %s:\n ' %
-                      (kwargs_dict['vector_out_system'].upper()))
+                      (kwargs_dict['vector_out_system']))
                 return fancy_vector(_puzzle_basis_transformation(
                     MT._original_M, kwargs_dict['vector_in_system'],
                     kwargs_dict['vector_out_system']))
@@ -4138,7 +4062,7 @@ def main():
         """
         """
         bb = BeachBall(MT, kwargs_dict)
-        return bb.get_psxy(kwargs_dict)
+        return bb.get_psxy(kwargs_dict).decode('utf-8')
 
     def _call_decompose(MT, kwargs_dict):
         """
@@ -4164,7 +4088,10 @@ def main():
         # if total decomposition:
         if kwargs_dict['decomp_out_complete']:
             if kwargs_dict['decomp_out_fancy']:
-                print(MT.get_full_decomposition())
+                try:
+                    print(MT.get_full_decomposition())
+                except:
+                    print(MT.get_full_decomposition().encode("utf-8"))
                 return
             else:
                 return MT.get_decomposition(in_system=kwargs_dict['in_system'],
@@ -4172,35 +4099,35 @@ def main():
         # otherwise:
         else:
             # argument dictionary - setting the appropriate calls
-            do_calls = dict(list(zip(('in', 'out',
-                                      'type',
-                                      'full', 'm',
-                                      'iso', 'iso_perc',
-                                      'dev', 'devi', 'devi_perc',
-                                      'dc', 'dc_perc',
-                                      'dc2', 'dc2_perc',
-                                      'dc3', 'dc3_perc',
-                                      'clvd', 'clvd_perc',
-                                      'mom', 'mag',
-                                      'eigvals', 'eigvecs',
-                                      't', 'n', 'p',
-                                      'fps', 'faultplanes', 'fp',
-                                      'decomp_key'),
-                                     ('input_system', 'output_system',
-                                      'decomp_type',
-                                      'M', 'M',
-                                      'iso', 'iso_percentage',
-                                      'devi', 'devi', 'devi_percentage',
-                                      'DC', 'DC_percentage',
-                                      'DC2', 'DC2_percentage',
-                                      'DC3', 'DC3_percentage',
-                                      'CLVD', 'CLVD_percentage',
-                                      'moment', 'mag',
-                                      'eigvals', 'eigvecs',
-                                      't_axis', 'null_axis', 'p_axis',
-                                      'fps', 'fps', 'fps',
-                                      'decomp_type')
-                                     )))
+            do_calls = dict(zip(('in', 'out',
+                                 'type',
+                                 'full', 'm',
+                                 'iso', 'iso_perc',
+                                 'dev', 'devi', 'devi_perc',
+                                 'dc', 'dc_perc',
+                                 'dc2', 'dc2_perc',
+                                 'dc3', 'dc3_perc',
+                                 'clvd', 'clvd_perc',
+                                 'mom', 'mag',
+                                 'eigvals', 'eigvecs',
+                                 't', 'n', 'p',
+                                 'fps', 'faultplanes', 'fp',
+                                 'decomp_key'),
+                                ('input_system', 'output_system',
+                                 'decomp_type',
+                                 'M', 'M',
+                                 'iso', 'iso_percentage',
+                                 'devi', 'devi', 'devi_percentage',
+                                 'DC', 'DC_percentage',
+                                 'DC2', 'DC2_percentage',
+                                 'DC3', 'DC3_percentage',
+                                 'CLVD', 'CLVD_percentage',
+                                 'moment', 'mag',
+                                 'eigvals', 'eigvecs',
+                                 't_axis', 'null_axis', 'p_axis',
+                                 'fps', 'fps', 'fps',
+                                 'decomp_type')
+                                ))
 
             # build argument for local call within MT object:
             lo_args = kwargs_dict['decomp_out_part']
@@ -4229,57 +4156,41 @@ def main():
                 else:
                     return outlist
 
-    def _build_gmt_dict(options, optparser):
+    def _build_gmt_dict(args):
         """
         """
         consistent_kwargs_dict = {}
-        temp_dict = {}
-        lo_allowed_options = ['GMT_string_type', 'GMT_scaling',
-                              'GMT_tension_colour', 'GMT_pressure_colour',
-                              'GMT_show_2FP2', 'GMT_show_1FP',
-                              'plot_viewpoint', 'GMT_plot_isotropic_part',
-                              'GMT_projection']
 
-        # check for allowed options:
-        for ao in lo_allowed_options:
-            if hasattr(options, ao):
-                temp_dict[ao] = getattr(options, ao)
+        if args.GMT_show_1FP:
+            consistent_kwargs_dict['_GMT_1fp'] = args.GMT_show_1FP
 
-        if temp_dict['GMT_show_1FP']:
-            try:
-                if int(float(temp_dict['GMT_show_1FP'])) in [1, 2]:
-                    consistent_kwargs_dict['_GMT_1fp'] = \
-                        int(float(temp_dict['GMT_show_1FP']))
-            except:
-                pass
-
-        if temp_dict['GMT_show_2FP2']:
-            temp_dict['GMT_show_1FP'] = 0
+        if args.GMT_show_2FP2:
+            args.GMT_show_1FP = 0
 
             consistent_kwargs_dict['_GMT_2fps'] = True
             consistent_kwargs_dict['_GMT_1fp'] = 0
 
-        if temp_dict['GMT_string_type'][0].lower() not in ['f', 'l', 'e']:
+        if args.GMT_string_type[0] not in ['F', 'L', 'E']:
             print('type of desired string not known - taking "fill" instead')
             consistent_kwargs_dict['_GMT_type'] = 'fill'
 
         else:
-            if temp_dict['GMT_string_type'][0] == 'f':
+            if args.GMT_string_type[0] == 'F':
                 consistent_kwargs_dict['_GMT_type'] = 'fill'
-            elif temp_dict['GMT_string_type'][0] == 'l':
+            elif args.GMT_string_type[0] == 'L':
                 consistent_kwargs_dict['_GMT_type'] = 'lines'
             else:
                 consistent_kwargs_dict['_GMT_type'] = 'EVs'
 
-        if float(temp_dict['GMT_scaling']) < epsilon:
+        if args.GMT_scaling < epsilon:
             print('GMT scaling factor must be a factor larger than')
             print('%f - set to 1, due to obviously stupid input value' %
                   (epsilon))
-            temp_dict['GMT_scaling'] = 1
+            args.GMT_scaling = 1.0
 
-        if temp_dict['plot_viewpoint']:
+        if args.plot_viewpoint:
             try:
-                vp = temp_dict['plot_viewpoint'].split(',')
+                vp = args.plot_viewpoint.split(',')
                 if not len(vp) == 3:
                     raise
                 if not -90 <= float(vp[0]) <= 90:
@@ -4293,16 +4204,15 @@ def main():
             except:
                 pass
 
-        if temp_dict['GMT_projection']:
-            lo_allowed_projections = ['stereo', 'ortho', 'lambert']  # ,'gnom']
-            do_allowed_projections = dict(list(zip(('s', 'o', 'l', 'g'),
-                                                   ('stereo', 'ortho',
-                                                    'lambert', 'gnom'))))
+        if args.GMT_projection:
+            lo_allowed_projections = ['STEREO', 'ORTHO', 'LAMBERT']  # ,'GNOM']
+            do_allowed_projections = dict((x[0], x.lower()) for x in
+                                          lo_allowed_projections)
             try:
-                gmtp = temp_dict['GMT_projection'].lower()
+                gmtp = args.GMT_projection
                 if gmtp in lo_allowed_projections:
-                    consistent_kwargs_dict['plot_projection'] = gmtp
-                elif gmtp in list(do_allowed_projections.keys()):
+                    consistent_kwargs_dict['plot_projection'] = gmtp.lower()
+                elif gmtp in do_allowed_projections.keys():
                     consistent_kwargs_dict['plot_projection'] = \
                         do_allowed_projections[gmtp]
                 else:
@@ -4310,58 +4220,32 @@ def main():
             except:
                 pass
 
-        consistent_kwargs_dict['_GMT_scaling'] = \
-            temp_dict['GMT_scaling']
-        consistent_kwargs_dict['_GMT_tension_colour'] = \
-            temp_dict['GMT_tension_colour']
+        consistent_kwargs_dict['_GMT_scaling'] = args.GMT_scaling
+        consistent_kwargs_dict['_GMT_tension_colour'] = args.GMT_tension_colour
         consistent_kwargs_dict['_GMT_pressure_colour'] = \
-            temp_dict['GMT_pressure_colour']
+            args.GMT_pressure_colour
         consistent_kwargs_dict['_plot_isotropic_part'] = \
-            temp_dict['GMT_plot_isotropic_part']
+            args.GMT_plot_isotropic_part
 
         return consistent_kwargs_dict
 
-    def _build_decompose_dict(options, optparser):
+    def _build_decompose_dict(args):
         """
         """
         consistent_kwargs_dict = {}
-        temp_dict = {}
-        lo_allowed_options = ['decomp_out_complete', 'decomp_out_fancy',
-                              'decomp_out_part', 'decomp_in_system',
-                              'decomp_out_system', 'decomp_key']
-        lo_allowed_systems = ['NED', 'USE', 'XYZ', 'NWU']
 
-        # check for allowed options:
-        for ao in lo_allowed_options:
-            if hasattr(options, ao):
-                temp_dict[ao] = getattr(options, ao)
+        consistent_kwargs_dict['in_system'] = args.decomp_in_system
 
-        consistent_kwargs_dict['in_system'] = 'NED'
-        if temp_dict['decomp_in_system']:
-            if temp_dict['decomp_in_system'].upper() in lo_allowed_systems:
-                consistent_kwargs_dict['in_system'] = \
-                    temp_dict['decomp_in_system'].upper()
+        consistent_kwargs_dict['decomp_out_system'] = args.decomp_out_system
 
-        consistent_kwargs_dict['decomp_out_system'] = 'NED'
-        if temp_dict['decomp_out_system']:
-            if temp_dict['decomp_out_system'].upper() in lo_allowed_systems:
-                consistent_kwargs_dict['decomp_out_system'] = \
-                    temp_dict['decomp_out_system'].upper()
+        consistent_kwargs_dict['decomposition_key'] = args.decomp_key
 
-        consistent_kwargs_dict['decomposition_key'] = 20
-        if temp_dict['decomp_key']:
-            try:
-                key_no = int(float(temp_dict['decomp_key']))
-                if key_no in [20, 21, 31]:
-                    consistent_kwargs_dict['decomposition_key'] = key_no
-            except:
-                pass
         # if option 'partial' is not chosen, take complete decomposition:
-        if not temp_dict['decomp_out_part']:
+        if not args.decomp_out_part:
             consistent_kwargs_dict['decomp_out_complete'] = 1
             consistent_kwargs_dict['decomp_out_part'] = 0
 
-            if temp_dict['decomp_out_fancy']:
+            if args.decomp_out_fancy:
                 consistent_kwargs_dict['decomp_out_fancy'] = 1
             else:
                 consistent_kwargs_dict['decomp_out_fancy'] = 0
@@ -4380,7 +4264,7 @@ def main():
                                   't', 'n', 'p',
                                   'fps', 'faultplanes', 'fp',
                                   'decomp_key']
-            lo_desired_attribs = temp_dict['decomp_out_part'].split(',')
+            lo_desired_attribs = args.decomp_out_part.split(',')
             lo_correct_attribs = []
 
             # check for allowed parts of decomposition:
@@ -4391,32 +4275,30 @@ def main():
             # if only wrong or no arguments are handed over, change to complete
             # decomposition:
             if len(lo_correct_attribs) == 0:
-                print(' no correct attributes for partial decomposition -',
-                      end=' ')
-                print('returning complete decomposition')
+                print(' no correct attributes for partial decomposition - '
+                      'returning complete decomposition')
                 consistent_kwargs_dict['decomp_out_complete'] = 1
                 consistent_kwargs_dict['decomp_out_part'] = 0
-                if temp_dict['decomp_out_fancy']:
+                if args.decomp_out_fancy:
                     consistent_kwargs_dict['decomp_out_fancy'] = 1
                 else:
                     consistent_kwargs_dict['decomp_out_fancy'] = 0
 
-            # if only one part is desired to be schown, fancy style is possible
+            # if only one part is desired to be shown, fancy style is possible
             elif len(lo_correct_attribs) == 1:
                 consistent_kwargs_dict['decomp_out_complete'] = 0
-                consistent_kwargs_dict['decomp_out_part'] = \
-                    [lo_correct_attribs[0]]
-                if temp_dict['decomp_out_fancy']:
+                consistent_kwargs_dict['decomp_out_part'] = lo_correct_attribs
+                if args.decomp_out_fancy:
                     consistent_kwargs_dict['decomp_out_fancy'] = 1
                 else:
                     consistent_kwargs_dict['decomp_out_fancy'] = 0
 
-            # if several parts are desired to be schown, fancy style is
+            # if several parts are desired to be shown, fancy style is
             # NOT possible:
             else:
                 consistent_kwargs_dict['decomp_out_complete'] = 0
                 consistent_kwargs_dict['decomp_out_part'] = lo_correct_attribs
-                if temp_dict['decomp_out_fancy']:
+                if args.decomp_out_fancy:
                     consistent_kwargs_dict['decomp_out_fancy'] = 1
                 else:
                     consistent_kwargs_dict['decomp_out_fancy'] = 0
@@ -4427,96 +4309,56 @@ def main():
 
         return consistent_kwargs_dict
 
-    def _build_convert_dict(options, optparser):
+    def _build_convert_dict(args):
         """
         """
         consistent_kwargs_dict = {}
-        temp_dict = {}
         lo_allowed_options = ['type_conversion', 'basis_conversion',
                               'vector_conversion', 'fancy_conversion']
         # check for allowed options:
         for ao in lo_allowed_options:
-            if hasattr(options, ao):
-                temp_dict[ao] = getattr(options, ao)
+            if hasattr(args, ao):
+                consistent_kwargs_dict[ao] = getattr(args, ao)
 
         consistent_kwargs_dict['in_system'] = 'NED'
-        consistent_kwargs_dict = temp_dict
-
         if 'out_system' not in consistent_kwargs_dict:
             consistent_kwargs_dict['out_system'] = 'NED'
 
-        if (temp_dict['type_conversion'] and temp_dict['vector_conversion']):
-            print('decide for ONE option of "-t" OR "-v" ')
-            optparser.print_help()
+        if args.type_conversion and args.vector_conversion:
+            print('decide for ONE option of "-t" OR "-v"')
             sys.exit(-1)
 
-        if (temp_dict['type_conversion']) and \
-           (not temp_dict['type_conversion'].lower() in ['sdr', 't']):
-            print('argument of -t must be "sdr" or "T" ')
-            optparser.print_help()
-            sys.exit(-1)
+        if args.basis_conversion:
+            consistent_kwargs_dict['in_system'] = args.basis_conversion[0]
+            consistent_kwargs_dict['out_system'] = args.basis_conversion[1]
 
-        if (temp_dict['basis_conversion']):
-            for arg in temp_dict['basis_conversion']:
-                if not arg.upper() in ['NED', 'XYZ', 'USE', 'NWU']:
-                    print('arguments of -b must be "NED","USE","XYZ","NWU" ')
-                    optparser.print_help()
-                    sys.exit(-1)
-            consistent_kwargs_dict['in_system'] = \
-                temp_dict['basis_conversion'][0].upper()
-            consistent_kwargs_dict['out_system'] = \
-                temp_dict['basis_conversion'][1].upper()
-
-        if temp_dict['type_conversion'] and \
-           temp_dict['type_conversion'].lower() == 'sdr':
-            if temp_dict['basis_conversion']:
-                if temp_dict['basis_conversion'][1] != 'NED':
-                    print('output "sdr" from type conversion cannot be',
-                          end=' ')
-                    print('displayed in another basis system!')
+        if args.type_conversion and args.type_conversion == 'SDR':
+            if args.basis_conversion:
+                if args.basis_conversion[1] != 'NED':
+                    print('output "sdr" from type conversion cannot be '
+                          'displayed in another basis system!')
                     consistent_kwargs_dict['out_system'] = 'NED'
 
-        if (temp_dict['vector_conversion']):
-            for arg in temp_dict['vector_conversion']:
-                if not arg.upper() in ['NED', 'XYZ', 'USE', 'NWU']:
-                    print('arguments of -v must be "NED","USE","XYZ","NWU" ')
-                    optparser.print_help()
-                    sys.exit(-1)
+        if args.vector_conversion:
             consistent_kwargs_dict['vector_in_system'] = \
-                temp_dict['vector_conversion'][0].upper()
+                args.vector_conversion[0]
             consistent_kwargs_dict['vector_out_system'] = \
-                temp_dict['vector_conversion'][1].upper()
+                args.vector_conversion[1]
 
         return consistent_kwargs_dict
 
-    def _build_plot_dict(options, optparser):
+    def _build_plot_dict(args):
         """
         """
         consistent_kwargs_dict = {}
-        temp_dict = {}
-
-        lo_allowed_options = [
-            'plot_outfile', 'plot_pa_plot', 'plot_full_sphere',
-            'plot_viewpoint', 'plot_projection', 'plot_show_upper_hemis',
-            'plot_n_points', 'plot_size', 'plot_tension_colour',
-            'plot_pressure_colour', 'plot_total_alpha',
-            'plot_show_faultplanes', 'plot_show_1faultplane',
-            'plot_show_princ_axes', 'plot_show_basis_axes', 'plot_outerline',
-            'plot_nodalline', 'plot_dpi', 'plot_only_lines',
-            'plot_input_system', 'plot_isotropic_part']
-
-        # check for allowed options:
-        for ao in lo_allowed_options:
-            if hasattr(options, ao):
-                temp_dict[ao] = getattr(options, ao)
 
         consistent_kwargs_dict['plot_save_plot'] = False
-        if temp_dict['plot_outfile']:
+        if args.plot_outfile:
             consistent_kwargs_dict['plot_save_plot'] = True
             lo_possible_formats = ['svg', 'png', 'eps', 'pdf', 'ps']
 
             try:
-                (filepath, filename) = os.path.split(temp_dict['plot_outfile'])
+                (filepath, filename) = os.path.split(args.plot_outfile)
                 if not filename:
                     filename = 'dummy_filename.svg'
                 (shortname, extension) = os.path.splitext(filename)
@@ -4556,20 +4398,20 @@ def main():
                 msg += ' <format> must be svg, png, eps, pdf, or ps '
                 exit(msg)
 
-        if temp_dict['plot_pa_plot']:
+        if args.plot_pa_plot:
             consistent_kwargs_dict['plot_pa_plot'] = True
         else:
             consistent_kwargs_dict['plot_pa_plot'] = False
 
-        if temp_dict['plot_full_sphere']:
+        if args.plot_full_sphere:
             consistent_kwargs_dict['plot_full_sphere'] = True
             consistent_kwargs_dict['plot_pa_plot'] = False
         else:
             consistent_kwargs_dict['plot_full_sphere'] = False
 
-        if temp_dict['plot_viewpoint']:
+        if args.plot_viewpoint:
             try:
-                vp = temp_dict['plot_viewpoint'].split(',')
+                vp = args.plot_viewpoint.split(',')
                 if not len(vp) == 3:
                     raise
                 if not -90 <= float(vp[0]) <= 90:
@@ -4583,16 +4425,15 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_projection']:
-            lo_allowed_projections = ['stereo', 'ortho', 'lambert']  # ,'gnom']
-            do_allowed_projections = dict(list(zip(('s', 'o', 'l', 'g'),
-                                                   ('stereo', 'ortho',
-                                                    'lambert', 'gnom'))))
+        if args.plot_projection:
+            lo_allowed_projections = ['STEREO', 'ORTHO', 'LAMBERT']  # ,'GNOM']
+            do_allowed_projections = dict((x[0], x.lower()) for x in
+                                          lo_allowed_projections)
             try:
-                ppl = temp_dict['plot_projection'].lower()
+                ppl = args.plot_projection
                 if ppl in lo_allowed_projections:
-                    consistent_kwargs_dict['plot_projection'] = ppl
-                elif ppl in list(do_allowed_projections.keys()):
+                    consistent_kwargs_dict['plot_projection'] = ppl.lower()
+                elif ppl in do_allowed_projections.keys():
                     consistent_kwargs_dict['plot_projection'] = \
                         do_allowed_projections[ppl]
                 else:
@@ -4600,25 +4441,20 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_show_upper_hemis']:
+        if args.plot_show_upper_hemis:
             consistent_kwargs_dict['plot_show_upper_hemis'] = True
 
-        if temp_dict['plot_n_points']:
-            try:
-                if temp_dict['plot_n_points'] > 360:
-                    consistent_kwargs_dict['plot_n_points'] = \
-                        int(temp_dict['plot_n_points'])
-            except:
-                pass
+        if args.plot_n_points and args.plot_n_points > 360:
+            consistent_kwargs_dict['plot_n_points'] = args.plot_n_points
 
-        if temp_dict['plot_size']:
+        if args.plot_size:
             try:
-                if 0.01 < temp_dict['plot_size'] <= 1:
+                if 0.01 < args.plot_size <= 1:
                     consistent_kwargs_dict['plot_size'] = \
-                        temp_dict['plot_size'] * 10 / 2.54
-                elif 1 < temp_dict['plot_size'] < 45:
+                        args.plot_size * 10 / 2.54
+                elif 1 < args.plot_size < 45:
                     consistent_kwargs_dict['plot_size'] = \
-                        temp_dict['plot_size'] / 2.54
+                        args.plot_size / 2.54
                 else:
                     consistent_kwargs_dict['plot_size'] = 5
                 consistent_kwargs_dict['plot_aux_plot_size'] = \
@@ -4626,11 +4462,11 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_pressure_colour']:
+        if args.plot_pressure_colour:
             try:
-                sec_colour_raw = temp_dict['plot_pressure_colour'].split(',')
+                sec_colour_raw = args.plot_pressure_colour.split(',')
                 if len(sec_colour_raw) == 1:
-                    if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                    if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                         consistent_kwargs_dict['plot_pressure_colour'] = \
                             sec_colour_raw[0].lower()[0]
                     else:
@@ -4648,11 +4484,11 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_tension_colour']:
+        if args.plot_tension_colour:
             try:
-                sec_colour_raw = temp_dict['plot_tension_colour'].split(',')
+                sec_colour_raw = args.plot_tension_colour.split(',')
                 if len(sec_colour_raw) == 1:
-                    if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                    if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                         consistent_kwargs_dict['plot_tension_colour'] = \
                             sec_colour_raw[0].lower()[0]
                     else:
@@ -4670,20 +4506,17 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_total_alpha']:
-            try:
-                if not 0 <= float(temp_dict['plot_total_alpha']) <= 1:
-                    consistent_kwargs_dict['plot_total_alpha'] = 1
-                else:
-                    consistent_kwargs_dict['plot_total_alpha'] = \
-                        float(temp_dict['plot_total_alpha'])
-            except:
-                pass
+        if args.plot_total_alpha:
+            if not 0 <= args.plot_total_alpha <= 1:
+                consistent_kwargs_dict['plot_total_alpha'] = 1
+            else:
+                consistent_kwargs_dict['plot_total_alpha'] = \
+                    args.plot_total_alpha
 
-        if temp_dict['plot_show_1faultplane']:
+        if args.plot_show_1faultplane:
             consistent_kwargs_dict['plot_show_1faultplane'] = True
             try:
-                fp_args = temp_dict['plot_show_1faultplane']
+                fp_args = args.plot_show_1faultplane
 
                 if not int(fp_args[0]) in [1, 2]:
                     consistent_kwargs_dict['plot_show_FP_index'] = 1
@@ -4701,7 +4534,7 @@ def main():
                     sec_colour_raw = fp_args[2].split(',')
                     if len(sec_colour_raw) == 1:
                         sc = sec_colour_raw[0].lower()[0]
-                        if sc not in list('bgrcmykw'):
+                        if sc not in 'bgrcmykw':
                             raise
                         consistent_kwargs_dict['plot_faultplane_colour'] = \
                             sec_colour_raw[0].lower()[0]
@@ -4727,27 +4560,21 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_show_faultplanes']:
+        if args.plot_show_faultplanes:
             consistent_kwargs_dict['plot_show_faultplanes'] = True
             consistent_kwargs_dict['plot_show_1faultplane'] = False
 
-        if temp_dict['plot_dpi']:
-            try:
-                if 200 <= int(temp_dict['plot_dpi']) <= 2000:
-                    consistent_kwargs_dict['plot_dpi'] = \
-                        int(temp_dict['plot_dpi'])
-                else:
-                    raise
-            except:
-                pass
+        if args.plot_dpi:
+            if 200 <= args.plot_dpi <= 2000:
+                consistent_kwargs_dict['plot_dpi'] = args.plot_dpi
 
-        if temp_dict['plot_only_lines']:
+        if args.plot_only_lines:
             consistent_kwargs_dict['plot_fill_flag'] = False
 
-        if temp_dict['plot_outerline']:
+        if args.plot_outerline:
             consistent_kwargs_dict['plot_outerline'] = True
             try:
-                fp_args = temp_dict['plot_outerline']
+                fp_args = args.plot_outerline
                 if not 0 < float(fp_args[0]) <= 20:
                     consistent_kwargs_dict['plot_outerline_width'] = 2
                 else:
@@ -4756,7 +4583,7 @@ def main():
                 try:
                     sec_colour_raw = fp_args[1].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                        if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                             consistent_kwargs_dict['plot_outerline_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:
@@ -4783,10 +4610,10 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_nodalline']:
+        if args.plot_nodalline:
             consistent_kwargs_dict['plot_nodalline'] = True
             try:
-                fp_args = temp_dict['plot_nodalline']
+                fp_args = args.plot_nodalline
 
                 if not 0 < float(fp_args[0]) <= 20:
                     consistent_kwargs_dict['plot_nodalline_width'] = 2
@@ -4796,7 +4623,7 @@ def main():
                 try:
                     sec_colour_raw = fp_args[1].split(',')
                     if len(sec_colour_raw) == 1:
-                        if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
+                        if sec_colour_raw[0].lower()[0] in 'bgrcmykw':
                             consistent_kwargs_dict['plot_nodalline_colour'] = \
                                 sec_colour_raw[0].lower()[0]
                         else:
@@ -4822,10 +4649,10 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_show_princ_axes']:
+        if args.plot_show_princ_axes:
             consistent_kwargs_dict['plot_show_princ_axes'] = True
             try:
-                fp_args = temp_dict['plot_show_princ_axes']
+                fp_args = args.plot_show_princ_axes
 
                 if not 0 < float(fp_args[0]) <= 40:
                     consistent_kwargs_dict['plot_princ_axes_symsize'] = 10
@@ -4847,78 +4674,91 @@ def main():
             except:
                 pass
 
-        if temp_dict['plot_show_basis_axes']:
+        if args.plot_show_basis_axes:
             consistent_kwargs_dict['plot_show_basis_axes'] = True
 
-        if temp_dict['plot_input_system']:
-            lo_allowed_systems = ['XYZ', 'NED', 'USE', 'NWU']
-            try:
-                tpis = temp_dict['plot_input_system'][:3].upper()
-                if tpis in lo_allowed_systems:
-                    consistent_kwargs_dict['in_system'] = tpis
-                else:
-                    raise
-            except:
-                pass
+        consistent_kwargs_dict['in_system'] = args.plot_input_system
 
-        if temp_dict['plot_isotropic_part']:
+        if args.plot_isotropic_part:
             consistent_kwargs_dict['plot_isotropic_part'] = \
-                temp_dict['plot_isotropic_part']
+                args.plot_isotropic_part
 
         return consistent_kwargs_dict
 
-    def _build_save_dict(options, optparser):
-        """
-        """
-        options.plot_save_plot = True
-        consistent_kwargs_dict = _build_plot_dict(options, optparser)
-
-        return consistent_kwargs_dict
-
-    def _parse_arguments(main_call, its_arguments, optparser):
-        """
-        """
-        # todo:
-        # print '\n', main_call,its_arguments,'\n'
-        (options, args) = optparser.parse_args(its_arguments)
-
-        # todo
-        # check, if arguments do not start with "-" - if so, there is a lack of
-        # arguments for the previous option
-        for val2check in list(options.__dict__.values()):
-            if str(val2check).startswith('-'):
-                try:
-                    val2check_split = val2check.split(',')
-                    for ii in val2check_split:
-                        float(ii)
-                except:
-                    msg = '\n   ERROR - check carefully number of arguments '
-                    msg += 'for all options\n'
-                    sys.exit(msg)
-
-        if main_call == 'plot':
-            consistent_kwargs_dict = _build_plot_dict(options, optparser)
-        elif main_call == 'gmt':
-            consistent_kwargs_dict = _build_gmt_dict(options, optparser)
-        # convert
-        elif main_call == 'convert':
-            consistent_kwargs_dict = _build_convert_dict(options, optparser)
-        # decompose
-        elif main_call == 'decompose':
-            consistent_kwargs_dict = _build_decompose_dict(options, optparser)
-
-        return consistent_kwargs_dict
-
-    def _build_optparsers():
+    def _build_parsers():
         """
         build dictionary with 4 (5 incl. 'save') sets of options, belonging to
         the 4 (5) possible calls
         """
-        _do_parsers = {}
+        from argparse import (ArgumentParser,
+                              RawDescriptionHelpFormatter,
+                              RawTextHelpFormatter,
+                              SUPPRESS)
+        from obspy.core.util.base import _DeprecatedArgumentAction
 
-        from optparse import OptionParser, OptionGroup
+        parser = ArgumentParser(prog='obspy-mopad',
+                                formatter_class=RawDescriptionHelpFormatter,
+                                description="""
+###############################################################################
+################################     MoPaD     ################################
+################ Moment tensor Plotting and Decomposition tool ################
+###############################################################################
+
+Multi method tool for:
+
+- Plotting and saving of focal sphere diagrams ('Beachballs').
+
+- Decomposition and Conversion of seismic moment tensors.
+
+- Generating coordinates, describing a focal sphere diagram, to be
+  piped into GMT's psxy (Useful where psmeca or pscoupe fail.)
+
+For more help, please run ``%(prog)s {command} --help''.
+
+-------------------------------------------------------------------------------
+
+Example:
+
+To generate a beachball for a normal faulting mechanism (a snake's eye type):
+
+    %(prog)s plot 0,45,-90   or   %(prog)s plot p 0,1,-1,0,0,0
+            """)
+
+        parser.add_argument('-V', '--version', action='version',
+                            version='%(prog)s ' + __version__)
+
+        mechanism = ArgumentParser(add_help=False,
+                                   formatter_class=RawTextHelpFormatter)
+        mechanism.add_argument('mechanism', metavar='source-mechanism',
+                               help="""
+The 'source mechanism' as a comma-separated list of length:
+
+3:
+    strike, dip, rake;
+4:
+    strike, dip, rake, moment;
+6:
+    M11, M22, M33, M12, M13, M23;
+7:
+    M11, M22, M33, M12, M13, M23, moment;
+9:
+    full moment tensor
+
+(With all angles to be given in degrees)
+                            """)
+
+        subparsers = parser.add_subparsers(title='commands')
+
+        # Case-insensitive typing
+        class caps(str):
+            def __new__(self, content):
+                return str.__new__(self, content.upper())
+
+        # Possible basis systems
+        ALLOWED_BASES = ['NED', 'USE', 'XYZ', 'NWU']
 
         # gmt
+        help = "return the beachball as a string, to be piped into GMT's psxy"
         desc = """Tool providing strings to be piped into the 'psxy' from GMT.
 
         Either a string describing the fillable area (to be used with option
@@ -4926,66 +4766,73 @@ def main():
         axes are given.
         """
 
-        parser_gmt = OptionParser(usage="\nelk_mopad gmt M [options]",
-                                  description=desc)
+        parser_gmt = subparsers.add_parser('gmt', help=help, description=desc,
+                                           parents=[mechanism])
 
-        group_type = OptionGroup(parser_gmt, 'Output')
-        group_show = OptionGroup(parser_gmt, 'Appearance')
-        group_geo = OptionGroup(parser_gmt, 'Geometry')
+        group_type = parser_gmt.add_argument_group('Output')
+        group_show = parser_gmt.add_argument_group('Appearance')
+        group_geo = parser_gmt.add_argument_group('Geometry')
 
-        group_type.add_option(
-            '-t', '--type', type='string',
-            dest='GMT_string_type', action='store', default='fill',
-            help="choice of psxy data: area to fill (fill)), nodal lines " +
-            "(lines), or eigenvector positions (ev)", metavar='<type>')
-        group_show.add_option(
-            '-s', '--scaling', dest='GMT_scaling',
-            action='store', default='1', type='float',
-            metavar='<scaling factor>',
+        group_type.add_argument(
+            '-t', '--type', dest='GMT_string_type', metavar='<type>',
+            type=caps, default='FILL',
+            help='choice of psxy data: area to fill (fill), nodal lines '
+                 '(lines), or eigenvector positions (ev)')
+        group_show.add_argument(
+            '-s', '--scaling', dest='GMT_scaling', metavar='<scaling factor>',
+            type=float, default=1.0,
             help='spatial scaling of the beachball')
-        group_show.add_option(
-            '-r', '--colour1', dest='GMT_tension_colour',
-            type='int', action='store', metavar='<tension colour>',
-            default='1',
-            help="-Z option's key for the tension colour of the " +
-            "beachball - type: integer ")
-        group_show.add_option(
-            '-w', '--colour2', dest='GMT_pressure_colour',
-            type='int', action='store', metavar='<pressure colour>',
-            default='0',
-            help="-Z option's key for the pressure colour of the " +
-            "beachball - type: integer")
-        group_show.add_option(
-            '-D', '--faultplanes', dest='GMT_show_2FP2',
-            action='store_true', default=False,
+        group_show.add_argument(
+            '-r', '--color1', '--colour1', dest='GMT_tension_colour',
+            metavar='<tension colour>', type=int, default=1,
+            help="-Z option's key for the tension colour of the beachball - "
+                 'type: integer')
+        group_show.add_argument(
+            '-w', '--color2', '--colour2', dest='GMT_pressure_colour',
+            metavar='<pressure colour>', type=int, default=0,
+            help="-Z option's key for the pressure colour of the beachball - "
+                 'type: integer')
+        group_show.add_argument(
+            '-D', '--faultplanes', dest='GMT_show_2FP2', action='store_true',
             help='boolean key, if 2 faultplanes shall be shown')
-        group_show.add_option(
-            '-d', '--show_1fp', type='choice',
-            dest='GMT_show_1FP', choices=['1', '2'], metavar='<FP index>',
-            action='store', default=False,
-            help="integer key (1,2), what faultplane shall be " +
-            "shown [%default]")
-        group_geo.add_option(
-            '-V', '--viewpoint', action="store",
-            dest='plot_viewpoint', metavar='<lat,lon,azi>', default=None,
-            help='coordinates of  the viewpoint - 3-tuple of angles in degree')
-        group_geo.add_option(
-            '-p', '--projection', action="store",
-            dest='GMT_projection', metavar='<projection>', default=None,
-            help='projection  of  the sphere')
-        group_show.add_option(
-            '-I', '--show_isotropic_part',
-            dest='GMT_plot_isotropic_part', action='store_true', default=False,
-            help="key, if isotropic part shall be considered for " +
-            "plotting [%default]")
+        group_show.add_argument(
+            '-d', '--show-1fp', dest='GMT_show_1FP', metavar='<FP index>',
+            type=int, choices=[1, 2], default=False,
+            help='integer key (1,2), what faultplane shall be shown '
+                 '[%(default)s]')
+        group_geo.add_argument(
+            '-V', '--viewpoint', dest='plot_viewpoint',
+            metavar='<lat,lon,azi>',
+            help='coordinates of the viewpoint - 3-tuple of angles in degree')
+        group_geo.add_argument(
+            '-p', '--projection', dest='GMT_projection',
+            metavar='<projection>', type=caps,
+            help='projection of the sphere')
+        group_show.add_argument(
+            '-I', '--show-isotropic-part', dest='GMT_plot_isotropic_part',
+            action='store_true',
+            help='if isotropic part shall be considered for plotting '
+                 '[%(default)s]')
 
-        parser_gmt.add_option_group(group_type)
-        parser_gmt.add_option_group(group_show)
-        parser_gmt.add_option_group(group_geo)
+        # Deprecated arguments
 
-        _do_parsers['gmt'] = parser_gmt
+        action = _DeprecatedArgumentAction('--show_1fp', '--show-1fp')
+        group_show.add_argument(
+            '--show_1fp', dest='GMT_show_1FP', action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--show_isotropic_part',
+                                           '--show-isotropic-part',
+                                           real_action='store_true')
+        group_show.add_argument(
+            '--show_isotropic_part', dest='GMT_plot_isotropic_part', nargs=0,
+            action=action, help=SUPPRESS)
+
+        parser_gmt.set_defaults(call=_call_gmt, build=_build_gmt_dict)
 
         # convert
+        help = 'convert a mechanism to/in (strike,dip,slip-rake) from/to ' \
+               'matrix form *or* convert a matrix, vector, tuple into ' \
+               'different basis representations'
         desc = """Tool providing converted input.
 
         Choose between the conversion from/to matrix-moment-tensor
@@ -4993,180 +4840,214 @@ def main():
         moment tensor (-b), or the change of basis for a 3D vector
         (-v).
         """
-        parser_convert = OptionParser(
-            usage="\n\n  elk_mopad convert M [options]", description=desc)
+        parser_convert = subparsers.add_parser('convert', help=help,
+                                               description=desc,
+                                               parents=[mechanism])
 
-        group_type = OptionGroup(parser_convert, 'Type conversion')
-        group_basis = OptionGroup(parser_convert, 'M conversion')
-        group_vector = OptionGroup(parser_convert, 'Vector conversion')
-#        group_show               =  OptionGroup(parser_convert,'Appearance')
+        group_type = parser_convert.add_argument_group('Type conversion')
+        group_basis = parser_convert.add_argument_group('M conversion')
+        group_vector = parser_convert.add_argument_group('Vector conversion')
+#        group_show = parser_convert.add_argument_group('Appearance')
 
-        group_type.add_option(
-            '-t', '--type', action="store",
-            dest='type_conversion', default=False, type='string',
-            metavar='<output type>', nargs=1,
-            help="type conversion - convert to: strike,dip,rake (sdr) or " +
-            "Tensor (T) ")
-        group_basis.add_option(
-            '-b', '--basis', action="store",
-            dest='basis_conversion', default=False,
-            metavar='<input system> <output system>', type='string', nargs=2,
-            help="basis conversion for M - provide 2 arguments: input- " +
-            "and output basis (NED,USE,XYZ,NWU)")
-        group_vector.add_option(
-            '-v', '--vector', action="store",
-            dest='vector_conversion', metavar='<input system> <output system>',
-            type='string', default=False, nargs=2,
-            help="basis conversion for a vector - provide M as a 3Dvector " +
-            "and 2 option-arguments of -v: input- and output basis " +
-            "(NED,USE,XYZ,NWU)")
-        parser_convert.add_option(
-            '-y', '--fancy', action="store_true",
-            dest='fancy_conversion', default=False,
-            help='output in a stylish way  ')
+        group_type.add_argument(
+            '-t', '--type', dest='type_conversion',
+            type=caps, choices=['SDR', 'T'],
+            help='type conversion - convert to: strike,dip,rake (sdr) or '
+                 'Tensor (T)')
+        group_basis.add_argument(
+            '-b', '--basis', dest='basis_conversion',
+            type=caps, choices=ALLOWED_BASES, nargs=2,
+            help='basis conversion for M - provide 2 arguments: input and '
+                 'output bases')
+        group_vector.add_argument(
+            '-v', '--vector', dest='vector_conversion',
+            type=caps, choices=ALLOWED_BASES, nargs=2,
+            help='basis conversion for a vector - provide M as a 3Dvector '
+                 'and 2 option-arguments of -v: input and output bases')
+        parser_convert.add_argument(
+            '-y', '--fancy', dest='fancy_conversion', action='store_true',
+            help='output in a stylish way')
 
-        parser_convert.add_option_group(group_type)
-        parser_convert.add_option_group(group_basis)
-        parser_convert.add_option_group(group_vector)
-#        parser_convert.add_option_group(group_show)
-
-        _do_parsers['convert'] = parser_convert
+        parser_convert.set_defaults(call=_call_convert,
+                                    build=_build_convert_dict)
 
         # plot
-        desc_plot = """Plots a beachball diagram of the provided mechanism.
+        help = 'plot a beachball projection of the provided mechanism'
+        desc = """Plots a beachball diagram of the provided mechanism.
 
         Several styles and configurations are available. Also saving
         on the fly can be enabled.
         """
-        parser_plot = OptionParser(
-            usage="\n\n        elk_mopad plot M [options]",
-            description=desc_plot)
+        parser_plot = subparsers.add_parser('plot', help=help,
+                                            description=desc,
+                                            parents=[mechanism])
 
-        group_save = OptionGroup(parser_plot, 'Saving')
-        group_type = OptionGroup(parser_plot, 'Type of plot')
-        group_quality = OptionGroup(parser_plot, 'Quality')
-        group_colours = OptionGroup(parser_plot, 'Colours')
-        group_misc = OptionGroup(parser_plot, 'Miscellaneous')
-        group_dc = OptionGroup(parser_plot, 'Fault planes')
-        group_geo = OptionGroup(parser_plot, 'Geometry')
-        group_app = OptionGroup(parser_plot, 'Appearance')
+        group_save = parser_plot.add_argument_group('Saving')
+        group_type = parser_plot.add_argument_group('Type of plot')
+        group_quality = parser_plot.add_argument_group('Quality')
+        group_colours = parser_plot.add_argument_group('Colours')
+        group_misc = parser_plot.add_argument_group('Miscellaneous')
+        group_dc = parser_plot.add_argument_group('Fault planes')
+        group_geo = parser_plot.add_argument_group('Geometry')
+        group_app = parser_plot.add_argument_group('Appearance')
 
-        group_save.add_option(
-            '-f', '--output_file', action="store",
-            dest='plot_outfile', metavar='<filename>', default=None, nargs=1,
-            help='filename for saving ')
-        group_type.add_option(
-            '-P', '--pa_system', action="store_true",
-            dest='plot_pa_plot', default=False,
-            help='key, if principal axis system shall be plotted instead ')
-        group_type.add_option(
-            '-O', '--full_sphere', action="store_true",
-            dest='plot_full_sphere', default=False,
-            help='key, if full sphere shall be plotted instead ')
-        group_geo.add_option(
-            '-V', '--viewpoint', action="store",
-            dest='plot_viewpoint', metavar='<lat,lon,azi>', default=None,
-            help='coordinates of  the viewpoint - 3-tuple ')
-        group_geo.add_option(
-            '-p', '--projection', action="store",
-            dest='plot_projection', metavar='<projection>', default=None,
-            help='projection  of  the sphere ')
-        group_type.add_option(
-            '-U', '--upper', action="store_true",
-            dest='plot_show_upper_hemis', default=False,
-            help='key, if upper hemisphere shall be shown ')
-        group_quality.add_option(
-            '-N', '--points', action="store",
-            metavar='<no. of points>', dest='plot_n_points', type="int",
-            default=None,
-            help='minimum number of points, used for nodallines ')
-        group_app.add_option(
-            '-s', '--size', action="store", dest='plot_size',
-            metavar='<size in cm>', type="float", default=None,
+        group_save.add_argument(
+            '-f', '--output-file', dest='plot_outfile', metavar='<filename>',
+            help='filename for saving')
+        group_type.add_argument(
+            '-P', '--pa-system', dest='plot_pa_plot', action='store_true',
+            help='if principal axis system shall be plotted instead')
+        group_type.add_argument(
+            '-O', '--full-sphere', dest='plot_full_sphere',
+            action='store_true',
+            help='if full sphere shall be plotted instead')
+        group_geo.add_argument(
+            '-V', '--viewpoint', dest='plot_viewpoint',
+            metavar='<lat,lon,azi>',
+            help='coordinates of the viewpoint - 3-tuple')
+        group_geo.add_argument(
+            '-p', '--projection', dest='plot_projection',
+            metavar='<projection>', type=caps,
+            help='projection of the sphere')
+        group_type.add_argument(
+            '-U', '--upper', dest='plot_show_upper_hemis', action='store_true',
+            help='if upper hemisphere shall be shown ')
+        group_quality.add_argument(
+            '-N', '--points', dest='plot_n_points', metavar='<no. of points>',
+            type=int,
+            help='minimum number of points, used for nodallines')
+        group_app.add_argument(
+            '-s', '--size', dest='plot_size', metavar='<size in cm>',
+            type=float,
             help='size of plot in cm')
-        group_colours.add_option(
-            '-w', '--pressure_colour', action="store",
-            dest='plot_pressure_colour', metavar='<colour>', default=None,
-            help='colour of the tension area ')
-        group_colours.add_option(
-            '-r', '--tension_colour', action="store",
-            dest='plot_tension_colour', metavar='<colour>', default=None,
+        group_colours.add_argument(
+            '-w', '--pressure-color', '--pressure-colour',
+            dest='plot_pressure_colour', metavar='<colour>',
+            help='colour of the tension area')
+        group_colours.add_argument(
+            '-r', '--tension-color', '--tension-colour',
+            dest='plot_tension_colour', metavar='<colour>',
             help='colour of the pressure area ')
-        group_app.add_option(
-            '-a', '--alpha', action="store",
-            dest='plot_total_alpha', metavar='<alpha>', type='float',
-            default=None,
-            help="alpha value for the plot - float from 1=opaque to " +
-            "0=transparent ")
-        group_dc.add_option(
-            '-D', '--dc', action="store_true",
-            dest='plot_show_faultplanes', default=False,
-            help='key, if double couple faultplanes shall be plotted ')
-        group_dc.add_option(
-            '-d', '--show1fp', action="store",
-            metavar='<index> <linewidth> <colour> <alpha>',
-            dest='plot_show_1faultplane', default=None, nargs=4,
-            help="plot 1 faultplane - arguments are: index [1,2] of the " +
-            "resp. FP, linewidth(float), line colour(string or " +
-            "rgb-tuple), and alpha value (float between 0 and 1)  ")
-        group_misc.add_option(
-            '-e', '--eigenvectors', action="store",
-            dest='plot_show_princ_axes', metavar='<size> <linewidth> <alpha>',
-            default=None, nargs=3,
-            help="show eigenvectors - if used, provide 3 arguments: " +
-            "symbol size, symbol linewidth, and symbol alpha value ")
-        group_misc.add_option(
-            '-b', '--basis_vectors', action="store_true",
-            dest='plot_show_basis_axes', default=False,
+        group_app.add_argument(
+            '-a', '--alpha', dest='plot_total_alpha', metavar='<alpha>',
+            type=float,
+            help='alpha value for the plot - float from 1=opaque to '
+                 '0=transparent')
+        group_dc.add_argument(
+            '-D', '--dc', dest='plot_show_faultplanes', action='store_true',
+            help='if double couple faultplanes shall be plotted ')
+        group_dc.add_argument(
+            '-d', '--show-1fp', dest='plot_show_1faultplane', nargs=4,
+            metavar=('<index>', '<linewidth>', '<colour>', '<alpha>'),
+            help='plot 1 faultplane - arguments are: index [1,2] of the '
+                 'resp. FP, linewidth (float), line colour (string or '
+                 'rgb-tuple), and alpha value (float between 0 and 1)')
+        group_misc.add_argument(
+            '-e', '--eigenvectors', dest='plot_show_princ_axes',
+            metavar=('<size>', '<linewidth>', '<alpha>'), nargs=3,
+            help='show eigenvectors - if used, provide 3 arguments: symbol '
+                 'size, symbol linewidth, and symbol alpha value')
+        group_misc.add_argument(
+            '-b', '--basis-vectors', dest='plot_show_basis_axes',
+            action='store_true',
             help='show NED basis in plot')
-        group_app.add_option(
-            '-l', '--lines', action="store",
-            dest='plot_outerline', metavar='<linewidth> <colour> <alpha>',
-            nargs=3, default=None,
-            help="gives the style of the outer line - 3 arguments " +
-            "needed: linewidth(float),line colour(string or " +
-            "rgb-tuple), and alpha value (float between 0 and 1)   ")
-        group_app.add_option(
-            '-n', '--nodals', action="store",
-            dest='plot_nodalline', metavar='<linewidth> <colour> <alpha>',
-            default=None, nargs=3,
-            help="gives the style of the nodal lines - 3 arguments " +
-            "needed: linewidth(float),line colour(string or " +
-            "rgb-tuple), and alpha value (float between 0 and 1)   ")
-        group_quality.add_option(
-            '-q', '--quality', action="store",
-            dest='plot_dpi', metavar='<dpi>', type="int", default=None,
-            help="changes the quality for the plot in terms of dpi " +
-            "(minimum=200) ")
-        group_type.add_option(
-            '-L', '--lines_only', action="store_true",
-            dest='plot_only_lines', default=False,
-            help='key, if only lines are shown (no fill - so ' +
-            'overwrites "fill"-related options) ')
-        group_misc.add_option(
-            '-i', '--input_system', action="store",
-            dest='plot_input_system', metavar='<basis>', default=False,
-            help='if source mechanism is given as tensor in another ' +
-            'system than NED (USE, XYZ,NWU) ')
-        group_type.add_option(
-            '-I', '--show_isotropic_part',
-            dest='plot_isotropic_part', action='store_true', default=False,
-            help='key, if isotropic part shall be considered for ' +
-            'plotting [%default]')
+        group_app.add_argument(
+            '-l', '--lines', dest='plot_outerline',
+            metavar=('<linewidth>', '<colour>', '<alpha>'), nargs=3,
+            help='gives the style of the outer line - 3 arguments needed: '
+                 'linewidth (float), line colour (string or RGB-tuple), and '
+                 'alpha value (float between 0 and 1)')
+        group_app.add_argument(
+            '-n', '--nodals', dest='plot_nodalline',
+            metavar=('<linewidth>', '<colour>', '<alpha>'), nargs=3,
+            help='gives the style of the nodal lines - 3 arguments needed: '
+                 'linewidth (float), line colour (string or RGB-tuple), and '
+                 'alpha value (float between 0 and 1)')
+        group_quality.add_argument(
+            '-q', '--quality', dest='plot_dpi', metavar='<dpi>', type=int,
+            help='changes the quality for the plot in terms of dpi '
+                 '(minimum=200)')
+        group_type.add_argument(
+            '-L', '--lines-only', dest='plot_only_lines', action='store_true',
+            help='if only lines are shown (no fill - so overwrites '
+                 '"fill"-related options)')
+        group_misc.add_argument(
+            '-i', '--input-system', dest='plot_input_system',
+            type=caps, choices=ALLOWED_BASES, default='NED',
+            help='if source mechanism is given as tensor in a system other '
+                 'than NED')
+        group_type.add_argument(
+            '-I', '--show-isotropic-part', dest='plot_isotropic_part',
+            action='store_true',
+            help='if isotropic part shall be considered for plotting '
+                 '[%(default)s]')
 
-        parser_plot.add_option_group(group_save)
-        parser_plot.add_option_group(group_type)
-        parser_plot.add_option_group(group_quality)
-        parser_plot.add_option_group(group_colours)
-        parser_plot.add_option_group(group_misc)
-        parser_plot.add_option_group(group_dc)
-        parser_plot.add_option_group(group_geo)
-        parser_plot.add_option_group(group_app)
+        # Deprecated arguments
+        action = _DeprecatedArgumentAction('--basis_vectors',
+                                           '--basis-vectors',
+                                           real_action='store_true')
+        group_misc.add_argument(
+            '--basis_vectors', dest='plot_show_basis_axes', nargs=0,
+            action=action, help=SUPPRESS)
 
-        _do_parsers['plot'] = parser_plot
+        action = _DeprecatedArgumentAction('--full_sphere', '--full-sphere',
+                                           real_action='store_true')
+        group_misc.add_argument(
+            '--full_sphere', dest='plot_full_sphere', nargs=0,
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--input_system', '--input-system')
+        group_misc.add_argument(
+            '--input_system', dest='plot_input_system',
+            type=caps, choices=ALLOWED_BASES, default='NED',
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--lines_only', '--lines-only',
+                                           real_action='store_true')
+        group_misc.add_argument(
+            '--lines_only', dest='plot_only_lines', nargs=0,
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--output_file', '--output-file')
+        group_misc.add_argument(
+            '--output_file', dest='plot_outfile', action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--pa_system', '--pa-system',
+                                           real_action='store_true')
+        group_misc.add_argument(
+            '--pa_system', dest='plot_pa_plot', nargs=0,
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--pressure_colour',
+                                           '--pressure-colour')
+        group_misc.add_argument(
+            '--pressure_colour', dest='plot_pressure_colour',
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--show1fp', '--show-1fp',
+                                           real_action='store_true')
+        group_misc.add_argument(
+            '--show1fp', dest='plot_show_1faultplane', nargs=0,
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--show_isotropic_part',
+                                           '--show-isotropic-part',
+                                           real_action='store_true')
+        group_misc.add_argument(
+            '--show_isotropic_part', dest='plot_isotropic_part', nargs=0,
+            action=action, help=SUPPRESS)
+
+        action = _DeprecatedArgumentAction('--tension_colour',
+                                           '--tension-colour')
+        group_misc.add_argument(
+            '--tension_colour', dest='plot_tension_colour',
+            action=action, help=SUPPRESS)
+
+        parser_plot.set_defaults(call=_call_plot, build=_build_plot_dict)
 
         # decompose
-        desc_decomp = """Returns a decomposition of the input moment tensor.\n
+        help = 'decompose a given mechanism into its components'
+        desc = """Returns a decomposition of the input moment tensor.\n
 
                     Different decompositions are available (following Jost &
         Herrmann). Either the complete decomposition or only parts are
@@ -5174,130 +5055,146 @@ def main():
         'fancy' option is available for better human reading.
         """
 
-        parser_decompose = OptionParser(
-            usage="\n\n     elk_mopad decompose M [options]  ",
-            description=desc_decomp)
+        parser_decompose = subparsers.add_parser('decompose', help=help,
+                                                 description=desc,
+                                                 parents=[mechanism])
 
-        group_type = OptionGroup(parser_decompose, 'Type of decomposition')
-        group_part = OptionGroup(parser_decompose, 'Partial decomposition')
-        group_system = OptionGroup(parser_decompose, 'Basis systems')
+        group_type = parser_decompose.add_argument_group(
+            'Type of decomposition')
+        group_part = parser_decompose.add_argument_group(
+            'Partial decomposition')
+        group_system = parser_decompose.add_argument_group(
+            'Basis systems')
 
         helpstring11 = """
         Returns a list of the decomposition results.
 
         Order:
-        - 1 - basis of the provided input     (string)
-        - 2 - basis of  the representation    (string)
-        - 3 - chosen decomposition type      (integer)
+        1:
+            basis of the provided input     (string);
+        2:
+            basis of  the representation    (string);
+        3:
+            chosen decomposition type      (integer);
 
-        - 4 - full moment tensor              (matrix)
+        4:
+            full moment tensor              (matrix);
 
-        - 5 - isotropic part                  (matrix)
-        - 6 - isotropic percentage             (float)
-        - 7 - deviatoric part                 (matrix)
-        - 8 - deviatoric percentage            (float)
+        5:
+            isotropic part                  (matrix);
+        6:
+            isotropic percentage             (float);
+        7:
+            deviatoric part                 (matrix);
+        8:
+            deviatoric percentage            (float);
 
-        - 9 - DC part                         (matrix)
-        -10 - DC percentage                    (float)
-        -11 - DC2 part                        (matrix)
-        -12 - DC2 percentage                   (float)
-        -13 - DC3 part                        (matrix)
-        -14 - DC3 percentage                   (float)
+        9:
+            DC part                         (matrix);
+        10:
+            DC percentage                    (float);
+        11:
+            DC2 part                        (matrix);
+        12:
+            DC2 percentage                   (float);
+        13:
+            DC3 part                        (matrix);
+        14:
+            DC3 percentage                   (float);
 
-        -15 - CLVD part                       (matrix)
-        -16 - CLVD percentage                 (matrix)
+        15:
+            CLVD part                       (matrix);
+        16:
+            CLVD percentage                 (matrix);
 
-        -17 - seismic moment                   (float)
-        -18 - moment magnitude                 (float)
+        17:
+            seismic moment                   (float);
+        18:
+            moment magnitude                 (float);
 
-        -19 - eigenvectors                   (3-array)
-        -20 - eigenvalues                       (list)
-        -21 - p-axis                         (3-array)
-        -22 - neutral axis                   (3-array)
-        -23 - t-axis                         (3-array)
-        -24 - faultplanes       (list of two 3-arrays)
+        19:
+            eigenvectors                   (3-array);
+        20:
+            eigenvalues                       (list);
+        21:
+            p-axis                         (3-array);
+        22:
+            neutral axis                   (3-array);
+        23:
+            t-axis                         (3-array);
+        24:
+            faultplanes       (list of two 3-arrays).
 
 
         If option 'fancy' is set, only a small overview about geometry and
         strength is provided instead.
         """
-        group_part.add_option(
-            '-c', '--complete', action="store_true",
-            dest='decomp_out_complete', default=False, help=helpstring11)
-        parser_decompose.add_option(
-            '-y', '--fancy', action="store_true",
-            dest='decomp_out_fancy', default=False,
+        group_part.add_argument(
+            '-c', '--complete', dest='decomp_out_complete',
+            action='store_true', help=helpstring11)
+        parser_decompose.add_argument(
+            '-y', '--fancy', dest='decomp_out_fancy', action='store_true',
             help='key for a stylish output')
-        group_part.add_option(
-            '-p', '--partial', action="store",
-            dest='decomp_out_part', default=False,
+        group_part.add_argument(
+            '-p', '--partial', dest='decomp_out_part',
             metavar='<part1,part2,... >',
-            help='provide an argument, what part(s) shall be displayed ' +
-            '(if multiple, separate by commas): in, out, type, full, ' +
-            'iso, iso_perc, devi, devi_perc, dc, dc_perc, dc2, ' +
-            'dc2_perc, dc3, dc3_perc, clvd, clvd_perc, mom, mag, ' +
-            'eigvals, eigvecs, t, n, p, faultplanes')
-        group_system.add_option(
-            '-i', '--input_system', action="store",
-            dest='decomp_in_system', metavar='<basis>', default=False,
-            help='set to provide input in another system than NED ' +
-            '(XYZ,USE,NWU)  ')
-        group_system.add_option(
-            '-o', '--output_system', action="store",
-            dest='decomp_out_system', metavar='<basis>', default=False,
-            help='set to return output in anaother system than NED ' +
-            '(XYZ,USE,NWU) ')
-        group_type.add_option(
-            '-t', '--type', action="store",
-            dest='decomp_key', metavar='<decomposition key>', default=False,
-            type='int',
-            help='integer key to choose the type of decomposition - 20: ' +
-            'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs  ')
+            help='provide an argument, what part(s) shall be displayed (if '
+                 'multiple, separate by commas): in, out, type, full, iso, '
+                 'iso_perc, devi, devi_perc, dc, dc_perc, dc2, dc2_perc, dc3, '
+                 'dc3_perc, clvd, clvd_perc, mom, mag, eigvals, eigvecs, t, '
+                 'n, p, faultplanes')
+        group_system.add_argument(
+            '-i', '--input-system', dest='decomp_in_system',
+            type=caps, choices=ALLOWED_BASES, default='NED',
+            help='set to provide input in a system other than NED')
+        group_system.add_argument(
+            '-o', '--output-system', dest='decomp_out_system',
+            type=caps, choices=ALLOWED_BASES, default='NED',
+            help='set to return output in a system other than NED')
+        group_type.add_argument(
+            '-t', '--type', dest='decomp_key', metavar='<decomposition key>',
+            type=int, choices=[20, 21, 31], default=20,
+            help='integer key to choose the type of decomposition - 20: '
+                 'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs')
 
-        parser_decompose.add_option_group(group_type)
-        parser_decompose.add_option_group(group_part)
-        parser_decompose.add_option_group(group_system)
+        # Deprecated arguments
+        action = _DeprecatedArgumentAction('--input_system', '--input-system')
+        group_system.add_argument(
+            '--input_system', dest='decomp_in_system',
+            type=caps, choices=ALLOWED_BASES, default='NED',
+            action=action, help=SUPPRESS)
 
-        _do_parsers['decompose'] = parser_decompose
+        action = _DeprecatedArgumentAction('--output_system',
+                                           '--output-system')
+        group_system.add_argument(
+            '--output_system', dest='decomp_out_system',
+            type=caps, choices=ALLOWED_BASES, default='NED',
+            action=action, help=SUPPRESS)
 
-        return _do_parsers
+        parser_decompose.set_defaults(call=_call_decompose,
+                                      build=_build_decompose_dict)
+
+        return parser
+
+    parser = _build_parsers()
+    args = parser.parse_args(argv)
 
     try:
-        call = _which_call(sys.argv[1].lower()[0])
+        M_raw = [float(xx) for xx in args.mechanism.split(',')]
     except:
-        call = 'help'
-
-    if len(sys.argv) < 3:
-        call = 'help'
-
-    if call == 'help':
-        print(USAGE_STRING)
-        sys.exit()
-
-    try:
-        M_raw = [float(xx) for xx in sys.argv[2].split(',')]
-    except:
-        #        sys.exit('\n  ERROR - Provide valid source mechanism !!!\n')
-        #    if sys.argv[2].startswith('-'):
-        dummy_list = []
-        dummy_list.append(sys.argv[0])
-        dummy_list.append(sys.argv[1])
-        dummy_list.append('0,0,0')
-        dummy_list.append('-h')
-
-        sys.argv = dummy_list
-        M_raw = [float(xx) for xx in sys.argv[2].split(',')]
+        parser.error('invalid source mechanism')
 
     if not len(M_raw) in [3, 4, 6, 7, 9]:
-        print('\nERROR!! Provide proper source mechanism\n\n')
-        sys.exit()
+        parser.error('invalid source mechanism')
     if len(M_raw) in [4, 6, 7, 9] and len(np.array(M_raw).nonzero()[0]) == 0:
-        print('\nERROR!! Provide proper source mechanism\n\n')
-        sys.exit()
+        parser.error('invalid source mechanism')
 
-    aa = _handle_input(call, M_raw, sys.argv[3:], _build_optparsers()[call])
+    aa = _handle_input(M_raw, args)
     if aa is not None:
-        print(aa)
+        try:
+            print(aa)
+        except:
+            print(aa.encode("utf-8"))
 
 
 if __name__ == '__main__':

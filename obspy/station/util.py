@@ -181,6 +181,28 @@ class BaseNode(ComparingObject):
         return True
 
 
+class DataAvailability(ComparingObject):
+    """
+    A description of time series data availability. This information should
+    be considered transient and is primarily useful as a guide for
+    generating time series data requests. The information for a
+    DataAvailability (time) span may be specific to the time range used in a
+    request that resulted in the document or limited to the availability of
+    data within the request range. These details may or may not be
+    retained when synchronizing metadata between data centers.
+    """
+    def __init__(self, start, end):
+        self.start = UTCDateTime(start)
+        self.end = UTCDateTime(end)
+
+    def __str__(self):
+        return "Data Availability from %s to %s." % (str(self.start),
+                                                     str(self.end))
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
+
 class Equipment(ComparingObject):
     """
     An object containing a detailed description of an equipment.
@@ -213,8 +235,8 @@ class Equipment(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contain the same information/be derived from the
             same base instruments.
@@ -280,8 +302,8 @@ class Operator(ComparingObject):
     @agencies.setter
     def agencies(self, value):
         if not hasattr(value, "__iter__") or len(value) < 1:
-            msg = ("agencies needs to iterable, e.g. a list and contain at "
-                   "least one entry.")
+            msg = ("agencies needs to be iterable, e.g. a list, and contain "
+                   "at least one entry.")
             raise ValueError(msg)
         self._agencies = value
 
@@ -292,7 +314,7 @@ class Operator(ComparingObject):
     @contacts.setter
     def contacts(self, value):
         if not hasattr(value, "__iter__"):
-            msg = ("contacts needs to iterable, e.g. a list.")
+            msg = ("contacts needs to be iterable, e.g. a list.")
             raise ValueError(msg)
         self._contacts = value
 
@@ -546,6 +568,9 @@ class Site(ComparingObject):
             town=self.town, county=self.county, region=self.region,
             country=self.country)
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class Latitude(FloatWithUncertaintiesFixedUnit):

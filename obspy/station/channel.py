@@ -36,7 +36,7 @@ class Channel(BaseNode):
                  equipment=None, response=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type code: str
         :param code: The SEED channel code for this channel
@@ -121,6 +121,10 @@ class Channel(BaseNode):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`,
+            optional
+        :param data_availability: Information about time series availability
+            for the channel.
         """
         self.location_code = location_code
         self.latitude = latitude
@@ -146,6 +150,7 @@ class Channel(BaseNode):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
+        self.data_availability = data_availability
         super(Channel, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
@@ -155,33 +160,42 @@ class Channel(BaseNode):
     def __str__(self):
         ret = (
             "Channel '{id}', Location '{location}' {description}\n"
-            "\tTimerange: {start_date} - {end_date}\n"
+            "{availability}"
+            "\tTime range: {start_date} - {end_date}\n"
             "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
             "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
             "{azimuth}"
             "{dip}"
             "{channel_types}"
-            "\tSampling Rate: {sampling_rate:.2f} Hz\n"
-            "\tSensor: {sensor}\n"
+            "{sampling_rate}"
+            "{sensor}"
             "{response}")\
             .format(
                 id=self.code, location=self.location_code,
-                description="(%s)" % self.description
-                if self.description else "",
-                start_date=str(self.start_date),
-                end_date=str(self.end_date) if self.end_date else "--",
                 latitude=self.latitude, longitude=self.longitude,
                 elevation=self.elevation, depth=self.depth,
-                azimuth="\tAzimuth: %.2f degrees from north, clockwise\n" %
-                self.azimuth if self.azimuth is not None else "",
-                dip="\tDip: %.2f degrees down from horizontal\n" %
-                self.dip if self.dip is not None else "",
-                channel_types="\tChannel types: %s\n" % ", ".join(self.types)
-                    if self.types else "",
-                sampling_rate=self.sample_rate, sensor=self.sensor.type,
-                response="\tResponse information available"
-                    if self.response else "")
+                availability=("\t%s\n" % str(self.data_availability)
+                              if self.data_availability else ""),
+                description=("(%s)" % self.description
+                             if self.description else ""),
+                start_date=str(self.start_date) if self.start_date else "--",
+                end_date=str(self.end_date) if self.end_date else "--",
+                azimuth=("\tAzimuth: %.2f degrees from north, clockwise\n" %
+                         self.azimuth if self.azimuth is not None else ""),
+                dip=("\tDip: %.2f degrees down from horizontal\n" %
+                     self.dip if self.dip is not None else ""),
+                channel_types=("\tChannel types: %s\n" % ", ".join(self.types)
+                               if self.types else ""),
+                sampling_rate=("\tSampling Rate: %.2f Hz\n" %
+                               self.sample_rate if self.sample_rate else ""),
+                sensor=("\tSensor: %s\n" % self.sensor.type
+                        if self.sensor else ""),
+                response=("\tResponse information available"
+                          if self.response else ""))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def location_code(self):
@@ -324,7 +338,7 @@ class Channel(BaseNode):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option; image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

@@ -1,21 +1,27 @@
-import hcluster
-import matplotlib.pyplot as plt
-import pickle
+import io
 import urllib
 
-url = "http://examples.obspy.org/dissimilarities.pkl"
-dissimilarity = pickle.load(urllib.urlopen(url))
+import numpy as np
+import matplotlib.pyplot as plt
+
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
+
+url = "http://examples.obspy.org/dissimilarities.npz"
+with io.BytesIO(urllib.urlopen(url).read()) as fh:
+    with np.load(fh) as data:
+        dissimilarity = data['dissimilarity']
 
 plt.subplot(121)
 plt.imshow(1 - dissimilarity, interpolation="nearest")
 
-dissimilarity = hcluster.squareform(dissimilarity)
+dissimilarity = distance.squareform(dissimilarity)
 threshold = 0.3
-linkage = hcluster.linkage(dissimilarity, method="single")
-clusters = hcluster.fcluster(linkage, 0.3, criterion="distance")
+linkage = hierarchy.linkage(dissimilarity, method="single")
+clusters = hierarchy.fcluster(linkage, threshold, criterion="distance")
 
 plt.subplot(122)
-hcluster.dendrogram(linkage, color_threshold=0.3)
+hierarchy.dendrogram(linkage, color_threshold=0.3)
 plt.xlabel("Event number")
 plt.ylabel("Dissimilarity")
 plt.show()

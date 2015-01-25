@@ -6,6 +6,7 @@ The SacIO test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
@@ -43,7 +44,7 @@ class SacIOTestCase(unittest.TestCase):
                          -0.95105659961700439, -1.0, -0.95105630159378052,
                          -0.80901658535003662, -0.5877845287322998,
                          -0.30901604890823364, 1.1285198979749111e-06],
-                        dtype='<f4')
+                        dtype=native_str('<f4'))
         sacfile = os.path.join(self.path, 'test.sac')
         t = SacIO()
         t.ReadSacFile(sacfile)
@@ -167,7 +168,7 @@ class SacIOTestCase(unittest.TestCase):
             t.WriteSacBinary(tempfile)
             t2 = SacIO(tempfile)
         b = np.array([18486532.5788 / 1000., 65.654154562, 305.975459869],
-                     dtype='>f4')
+                     dtype=native_str('>f4'))
         self.assertEqual(t2.GetHvalue('dist'), b[0])
         self.assertEqual(t2.GetHvalue('az'), b[1])
         self.assertEqual(t2.GetHvalue('baz'), b[2])
@@ -188,7 +189,7 @@ class SacIOTestCase(unittest.TestCase):
     # def test_raiseOnGetDist(self):
     #     """
     #     Test case to check that SACError is raised if obspy.signal is not
-    #     installed. SACError must be raised as it is catched by various
+    #     installed. SACError must be raised as it is caught by various
     #     methods. The import of setuptools introduces a function
     #     findall, which recursively searches directories for pth files.
     #     Could not get obspy.signal out of the path so far...

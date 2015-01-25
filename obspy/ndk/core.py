@@ -208,8 +208,8 @@ def read_ndk(filename, *args, **kwargs):  # @UnusedVariable
             version=record["version_code"]
         )
 
-        # Use the ObsPy flinn engdahl region determinator as the region in
-        # the NDK files is oftentimes trimmed.
+        # Use the ObsPy Flinn Engdahl region determiner as the region in the
+        # NDK files is oftentimes trimmed.
         region = fe.get_region(record["centroid_longitude"],
                                record["centroid_latitude"])
 
@@ -586,23 +586,23 @@ def _read_lines(line1, line2, line3, line4, line5):
     rec["principal_axis"] = []
     for axis in zip(*[iter(principal_axis)] * 3):
         rec["principal_axis"].append({
-            # Again set the exponent directly do avoid even more rounding
+            # Again set the exponent directly to avoid even more rounding
             # errors.
             "length": "%sE%i" % (axis[0], exponent),
             "plunge": float(axis[1]),
             "azimuth": float(axis[2])
         })
 
-    nodal_planes = list(map(float, line5[57:].strip().split()))
+    nodal_planes = map(float, line5[57:].strip().split())
     rec["nodal_plane_1"] = {
-        "strike": nodal_planes[0],
-        "dip": nodal_planes[1],
-        "rake": nodal_planes[2]
+        "strike": next(nodal_planes),
+        "dip": next(nodal_planes),
+        "rake": next(nodal_planes)
     }
     rec["nodal_plane_2"] = {
-        "strike": nodal_planes[3],
-        "dip": nodal_planes[4],
-        "rake": nodal_planes[5]
+        "strike": next(nodal_planes),
+        "dip": next(nodal_planes),
+        "rake": next(nodal_planes)
     }
 
     return rec

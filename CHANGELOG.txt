@@ -1,41 +1,165 @@
 0.10.0:
- - general:
-   * support for Python 3.3 and 3.4
+ - General:
+   * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
    * More generic processing history for most Stream and Trace methods.
+   * Now requires NumPy >= 1.4.0
+   * Now requires SciPy >= 0.7.2
+   * Tested compatibility with most major Linux distributions still
+     receiving updates.
+   * The next major obspy release (0.11) will drop support for:
+     * Python < 2.7
+     * matplotlib < 1.1
+     * numpy < 1.6
+     * scipy < 0.10
+ - obspy.ah
+   * New submodule for reading the AH (Ad Hoc) waveform format
+ - obspy.arclink:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
+   * fixed a problem with UTCDateTime with timestamps of far future
+     dates (larger than 2038, often seen in StationXML end dates,
+     see #805)
    * Support for basic custom namespace tags in QuakeML I/O (see #454)
    * `interpolate()` method for Stream/Trace objects.
+   * Dictionary values added to an AttribDict will now be converted to an
+     AttribDict.
+   * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
+     provided by the future package.
+   * Removed 'type' argument from the Trace.integrate() method. Now always
+     performs a cumtrapz integration. The first value of an integrated trace
+     will now always be zero to avoid changes in the total length of the
+     time series. Furthermore no more options are allowed as they might mess
+     with the time of a trace.
+   * new plugins for NonLinLoc formats for readEvents() and
+     Catalog/Event.write() (see obspy.nlloc and #900)
+   * The wrap_long_string utility function is deprecated. Users may use the
+     textwrap module which provides similar functionality.
+   * new plugin for CNV event format (used by VELEST) for
+     Catalog/Event.write() (see obspy.cnv and #905)
+ - obspy.cnv:
+   * new plugin to write CNV event files (used by VELEST) from
+     Catalog/Event objects. (see #905)
+ - obspy.css:
+   * Support for little-endian binary and ASCII files (see #881).
+   * Support exporting Inventory objects to CSS relations.
  - obspy.fdsn:
    * WADL files are cached per Python process.
    * Bulk station downloading using POST requests.
+   * Support for FDSNWS 1.1, e.g. the `matchtimeseries` parameter for the
+     station service.
  - obspy.imaging:
    * Maintain beach ball aspect ratio through optional axes argument (see
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
- - obspy.kinemetrics:
-   * added support for Evt Kinemetrics data format.
+ - obspy.mseed:
+   * proper error reporting while reading
+   * `details=True` when reading will now write to
+     `Trace.stats.mseed.blkt1001.timing_quality` instead of
+     `Trace.stats.mseed.timing_quality`.
+   * The timing quality will now also be written to a file if it is set.
+   * Non-existing values when reading with `details=True` will now be set to
+     `False` instead of `-1`.
+   * New utility function `obspy.mseed.util.set_flags_in_fixed_header()`
+     giving the ability to overwrite flags in the fixed header of existing
+     MiniSEED files.
+   * The sequence number of the first record of each Trace can now be
+     specified when writing MiniSEED files.
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
+ - obspy.neries:
+   * The whole module is deprecated and will be removed with the next major
+     release. To access EMSC event data please use the obspy.fdsn client
+     (use `Client(base_url='NERIES', ...)`), for access to ORFEUS waveform
+     data please use the obspy.fdsn client (use
+     `Client(base_url='ORFEUS', ...)`) and for travel times please use
+     obspy.taup.
+ - obspy.nlloc:
+   * new plugins to write NonLinLoc Phase observations files from
+     Catalog/Event objects and to read NonLinLoc Hypocenter-Phase file into
+     Catalog/Event objects. (see #900)
+ - obspy.pdas:
+   * read support for PDAS waveform files
+ - obspy.seedlink:
+   * bugfix: INFO responses from the IRIS ringserver are now parsed
+     correctly (see #807)
+   * New submodule `easyseedlink` providing an easier way to create
+     SeedLink clients
+   * Fix MiniSEED record leak in packet parser (see #918)
+ - obspy.seishub:
+   * use specified timeout in all requests to server (see #786)
+   * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
+     from a seishub server of version 1.4.0 or higher.
  - obspy.signal:
    * Increased performance of PPSD plotting.
    * Interpolating methods. Wrappers around routines from scipy and a custom
      `weighted average slopes` method from Wiggins 1976.
+   * PPSD has new methods to extract mean and mode of the histogram by
+     frequency (see #804)
+   * PPSD: water level in instrument correction can now be specified by user
+     on PPSD initialization
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
-
-0.9.3:
- - obspy.core:
-   * fixed a problem with UTCDateTime with timestamps of far future
-     dates (larger than 2038, often seen in StationXML end dates,
-     see #805)
- - obspy.seedlink:
-   * bugfix: INFO responses from the IRIS ringserver are now parsed
-     correctly (see #807)
- - obspy.seishub:
-   * use specified timeout in all requests to server (see #786)
+   * read/write support for DataAvailability tags in StationXML files.
+   * write support for SACPZ ASCII representation of channel responses.
+ - obspy.xseed:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
+ - obspy.zmap:
+   * New module which adds ZMAP read/write support
+ - scripts:
+   * All scripts now require argparse instead of optparse.
+   * All scripts now accept -V or --version to print version information.
+   * obspy-dataless2xseed: -v and --version options are renamed to -x and
+     --xml-version to not conflict with above option.
+   * obspy-indexer: Options have been modified or amended slightly:
+     * --data is a new alias to -d.
+     * --db-uri is a new alias to -u.
+     * --log is a new alias to -l.
+     * --poll-interval is a new alias to -i.
+     * --recent is a new alias to -r.
+     * -a is a new alias to --all-files.
+     * -f is a new alias to --force-reindex.
+     * -H is a new alias to --host.
+     * -p is a new alias to --port.
+     * --check_duplicates is renamed to --check-duplicates.
+     * --drop_database is renamed to --drop-database.
+     * --mapping_file is renamed to --mapping-file.
+     * --run_once is renamed to --run-once.
+   * obspy-mopad: Options have been modified or amended slightly:
+     * convert subcommand:
+       * No changes.
+     * decompose subcommand:
+       * --input_system is renamed to --input-system.
+       * --output_system is renamed to --output-system.
+     * gmt subcommand:
+       * --show_1fp is renamed to --show-1fp.
+       * --show_isotropic_part is renamed to --show-isotropic-part.
+     * plot subcommand:
+       * --basis_vectors is renamed to --basis-vectors.
+       * --full_sphere is renamed to --full-sphere.
+       * --input_system is renamed to --input-system.
+       * --lines_only is renamed to --lines-only.
+       * --output_file is renamed to --output-file.
+       * --pa_system is renamed to --pa-system.
+       * --pressure_colour is renamed to --pressure-colour.
+       * --show1fp is renamed to --show-1fp.
+       * --show_isotropic_part is renamed to --show-isotropic-part.
+       * --tension_colour is renamed to --tension-colour.
+   * obspy-plot: --format option is accepted as an alias of -f.
+   * obspy-print: Options have been modified or amended slightly:
+     * --format is a new alias of -f.
+     * --nomerge is renamed to --no-merge.
+   * obspy-runtests: -a option is accepted as an alias of --all.
+   * obspy-scan: Options have been modified or amended slightly:
+     * --endtime is renamed to --end-time.
+     * --event-times is renamed to --event-time. --event-time may be specified
+       multiple times.
+     * --ids is renamed to --id. --id may be specified multiple times.
+     * --nox is renamed to --no-x.
+     * --nogaps is renamed to --no-gaps.
+     * --starttime is renamed to --start-time.
 
 0.9.2: (doi: 10.5281/zenodo.10648)
  - general:
@@ -180,6 +304,7 @@
      (signed 16bit/32bit integer)
  - obspy.segy:
    * fix a bug in plotting (see #689)
+   * Removed the SEG Y benchmark plots. Now part of obspy/apps.
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger

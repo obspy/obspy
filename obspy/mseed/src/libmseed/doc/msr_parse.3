@@ -45,9 +45,9 @@ is found the record length is determined by:
 
 1) Searching the buffer up to \fIrecbuflen\fP for a Blockette 1000.
 
-2) If no Blockette 1000 is found search at 256-byte offsets for the
-fixed section of the next header in the buffer, thereby implying the
-record length.
+2) If no Blockette 1000 is found search at MINRECLEN-byte offsets
+for the fixed section of the next header in the buffer, thereby
+implying the record length.
 
 .SH RETURN VALUES
 \fBmsr_parse\fP returns values:

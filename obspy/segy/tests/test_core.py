@@ -39,7 +39,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSEGY method.
         """
         # Test all files in the test directory.
-        for file in list(self.files.keys()):
+        for file in self.files.keys():
             file = os.path.join(self.path, file)
             self.assertEqual(isSEGY(file), True)
         # Also check all the other files in the test directory and they should
@@ -54,7 +54,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSU method.
         """
         # Test all SEG Y files in the test directory.
-        for file in list(self.files.keys()):
+        for file in self.files.keys():
             file = os.path.join(self.path, file)
             self.assertEqual(isSU(file), False)
         # Also check all the other files in the test directory and they should
@@ -103,8 +103,8 @@ class SEGYCoreTestCase(unittest.TestCase):
                          == b'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
-        # Autodection should also write the textual file header encoding to the
-        # stats dictionary.
+        # Autodetection should also write the textual file header encoding to
+        # the stats dictionary.
         st3 = readSEGY(file)
         self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')
@@ -168,10 +168,10 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = readSEGY(file)
         data = st[0].data
         # All working encodings with corresponding dtypes.
-        encodings = {1: 'float32',
-                     2: 'int32',
-                     3: 'int16',
-                     5: 'float32'}
+        encodings = {1: np.float32,
+                     2: np.int32,
+                     3: np.int16,
+                     5: np.float32}
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
@@ -182,7 +182,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                 # Read again and compare data.
                 this_stream = readSEGY(out_file)
                 # Both should now be equal. Usually converting from IBM to IEEE
-                # floating point numbers might result in small rouning errors
+                # floating point numbers might result in small rounding errors
                 # but in this case it seems to work. Might be different on
                 # different computers.
                 np.testing.assert_array_equal(this_data, this_stream[0].data)
@@ -196,7 +196,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         st = readSEGY(file)
         # Use float64 as the wrong encoding in every case.
-        st[0].data = np.require(st[0].data, 'float64')
+        st[0].data = np.require(st[0].data, np.float64)
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
@@ -442,7 +442,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         st = read()
         del st[1:]
-        st[0].data = np.require(st[0].data, 'float32')
+        st[0].data = np.require(st[0].data, np.float32)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             st.write(outfile, format='SU')

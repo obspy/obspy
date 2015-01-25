@@ -74,7 +74,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
 
     .. rubric:: Example
 
-    >>> tr1 = np.random.randn(10000).astype('float32')
+    >>> tr1 = np.random.randn(10000).astype(np.float32)
     >>> tr2 = tr1.copy()
     >>> a, b = xcorr(tr1, tr2, 1000)
     >>> a
@@ -97,15 +97,17 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
               "use shift_len/2 which we want to avoid."
         raise ValueError(msg)
     # be nice and adapt type if necessary
-    tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
-    tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
-    corp = np.empty(2 * shift_len + 1, dtype='float64', order='C')
+    tr1 = np.ascontiguousarray(tr1, np.float32)
+    tr2 = np.ascontiguousarray(tr2, np.float32)
+    corp = np.empty(2 * shift_len + 1, dtype=np.float64, order='C')
 
     shift = C.c_int()
     coe_p = C.c_double()
 
-    clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
-                      C.byref(shift), C.byref(coe_p))
+    res = clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
+                            C.byref(shift), C.byref(coe_p))
+    if res:
+        raise MemoryError
 
     if full_xcorr:
         return shift.value, coe_p.value, corp
@@ -156,9 +158,9 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
     ndat = len(streams[0].select(component=components[0])[0])
     if False in [len(st.select(component=component)[0]) == ndat
                  for st in streams for component in components]:
-            raise ValueError("All traces have to be the same length.")
+        raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
-    corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
+    corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
 
     for component in components:
         xx = xcorr(streams[0].select(component=component)[0],
@@ -286,6 +288,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
         warnings.warn(msg)
     samp_rate = trace1.stats.sampling_rate
+    # don't modify existing traces with filters
+    if filter:
+        trace1 = trace1.copy()
+        trace2 = trace2.copy()
     # check data, apply filter and take correct slice of traces
     slices = []
     for _i, (t, tr) in enumerate(((pick1, trace1), (pick2, trace2))):
@@ -309,7 +315,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
             warnings.warn(msg)
         # apply signal processing and take correct slice of data
         if filter:
-            tr.data = tr.data.astype("float64")
+            tr.data = tr.data.astype(np.float64)
             tr.detrend(type='demean')
             tr.data *= cosTaper(len(tr), 0.1)
             tr.filter(type=filter, **filter_options)

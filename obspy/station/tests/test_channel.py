@@ -16,24 +16,17 @@ from future.builtins import *  # NOQA
 import inspect
 from obspy.station import read_inventory
 import os
+from matplotlib import rcParams
 import numpy as np
 import unittest
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 import warnings
 
-# checking for matplotlib/basemap
-try:
-    from matplotlib import rcParams
-    import mpl_toolkits.basemap
-    # avoid flake8 complaining about unused import
-    mpl_toolkits.basemap
-    HAS_BASEMAP = True
-except ImportError:
-    HAS_BASEMAP = False
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
-class ChannelTest(unittest.TestCase):
+class ChannelTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.channel.Channel` class.
     """
@@ -48,22 +41,27 @@ class ChannelTest(unittest.TestCase):
     def tearDown(self):
         np.seterr(**self.nperr)
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
     def test_response_plot(self):
         """
         Tests the response plot.
         """
+        # Bug in matplotlib 1.4.0 - 1.4.2:
+        # See https://github.com/matplotlib/matplotlib/issues/4012
+        reltol = 1.0
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 4, 2]:
+            reltol = 2.0
+
         cha = read_inventory()[0][0][0]
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "channel_response.png") as ic:
+            with ImageComparison(self.image_dir, "channel_response.png",
+                                 reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 cha.plot(0.005, outfile=ic.name)
 
 
 def suite():
-    return unittest.makeSuite(ChannelTest, 'test')
+    return unittest.makeSuite(ChannelTestCase, 'test')
 
 
 if __name__ == '__main__':

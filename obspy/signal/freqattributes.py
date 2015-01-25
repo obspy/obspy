@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------
 # Filename: freqattributes.py
@@ -183,6 +182,9 @@ def bwith(data, fs, smoothie, fk):
     :return: **bwith[, dbwithd]** - Bandwidth, Time derivative of predominant
         period (windowed only).
     """
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
+
     nfft = util.nextpow2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
     bwith = np.zeros(data.shape[0])
@@ -236,6 +238,9 @@ def domperiod(data, fs, smoothie, fk):
     :return: **dperiod[, ddperiod]** - Predominant period, Time derivative of
         predominant period (windowed only).
     """
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
+
     nfft = 1024
     # nfft = util.nextpow2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
@@ -297,7 +302,7 @@ def logbankm(p, n, fs, w):
     b3 = int(np.floor(bl[2]))
     b1 = int(np.floor(bl[0])) + 1
     b4 = int(min(fn2, np.ceil(bl[3]))) - 1
-    pf = np.log(((np.arange(b1 - 1, b4 + 1, dtype='f8') / n) * fs) / (fl)) / lr
+    pf = np.log(np.arange(b1 - 1, b4 + 1, dtype=np.float64) / n * fs / fl) / lr
     fp = np.floor(pf)
     pm = pf - fp
     k2 = b2 - b1 + 1
@@ -308,7 +313,7 @@ def logbankm(p, n, fs, w):
     v = 2 * np.append([1 - pm[k2:k4 + 1]], [pm[1:k3 + 1]])
     mn = b1 + 1
     mx = b4 + 1
-    # x = np.array([[c],[r]], dtype=[('x', 'float'), ('y', 'float')])
+    # x = np.array([[c],[r]], dtype=[('x', np.float), ('y', np.float)])
     # ind=np.argsort(x, order=('x','y'))
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
@@ -339,6 +344,9 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     :param n: Number of data windows.
     :return: Cepstral coefficients.
     """
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
+
     dataT = np.transpose(data)
     nfft = util.nextpow2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)

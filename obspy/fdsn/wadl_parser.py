@@ -63,7 +63,7 @@ class WADLParser(object):
         # list of special cases for different WADLs is not a good solution.
         all_parameters = defaultdict(list)
 
-        # Group the parameters by the 'id' attribute of the greatparents tag.
+        # Group the parameters by the 'id' attribute of the grandparents tag.
         # The 'name' tag will always be 'GET' due to the construction of the
         # xpath expression.
         for param in parameters:
@@ -100,7 +100,7 @@ class WADLParser(object):
         # Raise a warning if some default parameters are not specified.
         missing_params = []
         for param in self._default_parameters:
-            if param not in list(self.parameters.keys()):
+            if param not in self.parameters.keys():
                 missing_params.append(param)
         if missing_params:
             msg = ("The '%s' service at '%s' cannot deal with the following "

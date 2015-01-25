@@ -8,9 +8,8 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.compatibility import mock
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.base import (NamedTemporaryFile, getSciPyVersion)
 from obspy.xseed import Parser
-from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import pickle
@@ -18,7 +17,7 @@ import unittest
 import warnings
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+SCIPY_VERSION = getSciPyVersion()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -33,19 +32,19 @@ class StreamTestCase(unittest.TestCase):
                   'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
                   'npts': 412, 'sampling_rate': 200.0,
                   'channel': 'EHE'}
-        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype('float64'),
+        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
-        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
+        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
+        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype(np.float64),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
         trace4 = Trace(
-            data=np.random.randint(0, 1000, 50668).astype('float64'),
+            data=np.random.randint(0, 1000, 50668).astype(np.float64),
             header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
@@ -53,7 +52,7 @@ class StreamTestCase(unittest.TestCase):
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
         trace = Trace(
-            data=np.random.randint(0, 1000, 12000).astype('float64'),
+            data=np.random.randint(0, 1000, 12000).astype(np.float64),
             header=header)
         self.gse2_stream = Stream(traces=[trace])
 
@@ -96,7 +95,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(st[0].data[0], 999)
         st[0] = stream[0]
         np.testing.assert_array_equal(stream[0].data[:10],
-                                      np.ones(10, dtype='int') * 999)
+                                      np.ones(10, dtype=np.int_) * 999)
 
     def test_getitem(self):
         """
@@ -781,18 +780,18 @@ class StreamTestCase(unittest.TestCase):
         Test the merge method of the Stream object.
         """
         # 1 - different dtype for the same channel should fail
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         st = Stream([tr1, tr2])
         self.assertRaises(Exception, st.merge)
         # 2 - different sampling rates for the different channels is ok
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         tr2.stats.channel = 'EHZ'
-        tr3 = Trace(data=np.zeros(5, dtype="int32"))
+        tr3 = Trace(data=np.zeros(5, dtype=np.int32))
         tr3.stats.channel = 'EHE'
-        tr4 = Trace(data=np.zeros(5, dtype="float32"))
+        tr4 = Trace(data=np.zeros(5, dtype=np.float32))
         tr4.stats.channel = 'EHZ'
         st = Stream([tr1, tr2, tr3, tr4])
         st.merge()
@@ -995,7 +994,7 @@ class StreamTestCase(unittest.TestCase):
     def test_bugfixMergeDropTraceIfAlreadyContained(self):
         """
         Trace data already existing in another trace and ending on the same
-        endtime was not correctly merged until now.
+        end time was not correctly merged until now.
         """
         trace1 = Trace(data=np.empty(10))
         trace2 = Trace(data=np.empty(2))
@@ -1060,7 +1059,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.delta, 60.0)
         self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
-        # endtime of last trace
+        # end time of last trace
         endtime = trace1.stats.starttime + \
             (4 * 1440 - 1) * trace1.stats.delta
         self.assertEqual(st[0].stats.endtime, endtime)
@@ -1103,8 +1102,8 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 1: 00000000
         #     Trace 2:     66666666
         #     1 + 2  : 000024666666 (interpolation_samples=2)
-        trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=6 * np.ones(8, dtype='int32'))
+        trace1 = Trace(data=np.zeros(8, dtype=np.int32))
+        trace2 = Trace(data=6 * np.ones(8, dtype=np.int32))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=2)
@@ -1115,8 +1114,8 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 1: 00000000
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
-        trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
+        trace1 = Trace(data=np.zeros(8, dtype=np.int32))
+        trace2 = Trace(data=5 * np.ones(8, dtype=np.int32))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=(-1))
@@ -1129,8 +1128,8 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 1: 00000000
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
-        trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
+        trace1 = Trace(data=np.zeros(8, dtype=np.int32))
+        trace2 = Trace(data=5 * np.ones(8, dtype=np.int32))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=5)
@@ -1493,7 +1492,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_trimConsistentStartEndtime(self):
         """
-        Test case for #127. It ensures that the sample start and entimes
+        Test case for #127. It ensures that the sample start and end times
         stay consistent after trimming.
         """
         data = np.zeros(10)
@@ -1514,7 +1513,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_trimConsistentStartEndtimePad(self):
         """
-        Test case for #127. It ensures that the sample start and entimes
+        Test case for #127. It ensures that the sample start and end times
         stay consistent after trimming. Padded version.
         """
         data = np.zeros(10)
@@ -1689,9 +1688,13 @@ class StreamTestCase(unittest.TestCase):
         """
         # 1 - default example
         # dtype
-        tr = read(dtype='int64')[0]
+        tr = read(dtype=np.int64)[0]
         self.assertEqual(tr.data.dtype, np.int64)
-        # start-/endtime
+        # dtype is string
+        tr2 = read(dtype='i8')[0]
+        self.assertEqual(tr2.data.dtype, np.int64)
+        self.assertEqual(tr, tr2)
+        # start/end time
         tr2 = read(starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
         self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
@@ -1702,9 +1705,9 @@ class StreamTestCase(unittest.TestCase):
 
         # 2 - via http
         # dtype
-        tr = read('http://examples.obspy.org/test.sac', dtype='int32')[0]
+        tr = read('http://examples.obspy.org/test.sac', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
-        # start-/endtime
+        # start/end time
         tr2 = read('http://examples.obspy.org/test.sac',
                    starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
@@ -1716,9 +1719,9 @@ class StreamTestCase(unittest.TestCase):
 
         # 3 - some example within obspy
         # dtype
-        tr = read('/path/to/slist_float.ascii', dtype='int32')[0]
+        tr = read('/path/to/slist_float.ascii', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
-        # start-/endtime
+        # start/end time
         tr2 = read('/path/to/slist_float.ascii',
                    starttime=tr.stats.starttime + 0.025,
                    endtime=tr.stats.endtime - 0.05)[0]
@@ -1739,7 +1742,7 @@ class StreamTestCase(unittest.TestCase):
         filename = path + os.sep + 'data' + os.sep + 'NOTEXISTING.*'
         self.assertRaises(Exception, read, filename)
 
-        # argument headonly should not be used with starttime, endtime or dtype
+        # argument headonly should not be used with start or end time or dtype
         with warnings.catch_warnings(record=True):
             # will usually warn only but here we force to raise an exception
             warnings.simplefilter('error', UserWarning)
@@ -1845,14 +1848,12 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.starttime += 1
         self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
         self.mseed_stream.plot(show=False)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
@@ -2138,16 +2139,17 @@ class StreamTestCase(unittest.TestCase):
                           "method": "weighted_average_slopes"},
                          patch.call_args[1])
 
-    def test_integratestream(self):
+    def test_integrate(self):
         """
-        Test integration on the stream and trace
+        Tests that the integrate command is called for all traces of a Stream
+        object.
         """
         st1 = read()
         st2 = read()
 
         for tr in st1:
-            tr.integrate(type='cumtrapz', initial=0)
-        st2.integrate(type='cumtrapz', initial=0)
+            tr.integrate()
+        st2.integrate()
         self.assertEqual(st1, st2)
 
 

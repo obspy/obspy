@@ -114,7 +114,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
             pathname_or_url.strip().startswith(b'<'):
         # XML string
         return _read(io.BytesIO(pathname_or_url), format, **kwargs)
-    elif "://" in pathname_or_url:
+    elif "://" in pathname_or_url[:10]:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
@@ -128,7 +128,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathnames = glob.glob(pathname)
         if not pathnames:
             # try to give more specific information why the stream is empty
-            if glob.has_magic(pathname) and not glob(pathname):
+            if glob.has_magic(pathname) and not glob.glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)
@@ -337,8 +337,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 error_key = key + "_errors"
                 if hasattr(self, error_key) and\
                    _bool(getattr(self, error_key)):
-                    err_items = list(getattr(self, error_key).items())
-                    err_items.sort()
+                    err_items = sorted(getattr(self, error_key).items())
                     repr_str += " [%s]" % ', '.join(
                         [str(k) + "=" + str(v) for k, v in err_items])
                 return repr_str
@@ -370,6 +369,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                         [element_str % (_i, len(getattr(self, _i)))
                          for _i in containers])
             return ret_str
+
+        def _repr_pretty_(self, p, cycle):
+            p.text(str(self))
 
         def copy(self):
             return copy.deepcopy(self)
@@ -415,7 +417,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             inheriting from AttribDict.
             """
             # Pass to the parent method if not a custom property.
-            if name not in list(self._property_dict.keys()):
+            if name not in self._property_dict.keys():
                 AttribDict.__setattr__(self, name, value)
                 return
             attrib_type = self._property_dict[name]
@@ -838,6 +840,9 @@ class ResourceIdentifier(object):
 
     def __str__(self):
         return self.id
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __repr__(self):
         return 'ResourceIdentifier(id="%s")' % self.id
@@ -2666,6 +2671,9 @@ class Event(__Event):
             self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __repr__(self):
         return super(Event, self).__str__(force_one_line=True)
 
@@ -2681,7 +2689,7 @@ class Event(__Event):
 
     def preferred_magnitude(self):
         """
-        Returns the preferred origin
+        Returns the preferred magnitude
         """
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
@@ -2691,13 +2699,33 @@ class Event(__Event):
 
     def preferred_focal_mechanism(self):
         """
-        Returns the preferred origin
+        Returns the preferred focal mechanism
         """
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
                 getReferredObject()
         except AttributeError:
             return None
+
+    def write(self, filename, format, **kwargs):
+        """
+        Saves event information into a file.
+
+        :type filename: str
+        :param filename: The name of the file to write.
+        :type format: str
+        :param format: The file format to use (e.g. ``"QUAKEML"``). See
+            :meth:`Catalog.write()` for a list of supported formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            plugin's writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy import readEvents
+        >>> event = readEvents()[0]  # doctest: +SKIP
+        >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
+        """
+        Catalog(events=[self]).write(filename, format, **kwargs)
 
 
 class Catalog(object):
@@ -2891,8 +2919,11 @@ class Catalog(object):
             out += "\n...\n"
             out += "\n".join([ev.short_str() for ev in self[-2:]])
             out += "\nTo see all events call " + \
-                   "'print CatalogObject.__str__(print_all=True)'"
+                   "'print(CatalogObject.__str__(print_all=True))'"
         return out
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(self.__str__(print_all=p.verbose))
 
     def append(self, event):
         """
@@ -2971,7 +3002,7 @@ class Catalog(object):
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
-        # unorderable types by checking first shortcut on positiv is None
+        # unorderable types by checking first shortcut on positive is None
         # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:
@@ -3112,7 +3143,7 @@ class Catalog(object):
         :param format: The file format to use (e.g. ``"QUAKEML"``). See the
             `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
-            waveform writer method.
+            plugin's writer method.
 
         .. rubric:: Example
 
@@ -3123,8 +3154,9 @@ class Catalog(object):
         Writing single events into files with meaningful filenames can be done
         e.g. using event.id
 
-        >>> for ev in catalog: #doctest: +SKIP
-        ...     ev.write(ev.id + ".xml", format="QUAKEML") #doctest: +SKIP
+        >>> for ev in catalog:  # doctest: +SKIP
+        ...     filename = str(ev.resource_id) + ".xml"
+        ...     ev.write(filename, format="QUAKEML") # doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 

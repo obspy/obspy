@@ -19,6 +19,7 @@ WAV bindings to ObsPy core module.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from obspy import Trace, Stream
 import numpy as np
@@ -29,9 +30,9 @@ import wave
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
 WIDTH2DTYPE = {
-    1: '<u1',  # unsigned char
-    2: '<i2',  # signed short int
-    4: '<i4',  # signed int (int32)
+    1: native_str('<u1'),  # unsigned char
+    2: native_str('<i2'),  # signed short int
+    4: native_str('<i4'),  # signed int (int32)
 }
 
 
@@ -96,7 +97,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
         header = {'sampling_rate': rate, 'npts': length}
         if headonly:
             return Stream([Trace(header=header)])
-        if width not in list(WIDTH2DTYPE.keys()):
+        if width not in WIDTH2DTYPE.keys():
             msg = "Unsupported Format Type, word width %dbytes" % width
             raise TypeError(msg)
         data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
@@ -134,7 +135,7 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=None,
     """
     i = 0
     base, ext = os.path.splitext(filename)
-    if width not in list(WIDTH2DTYPE.keys()) + [None]:
+    if width not in WIDTH2DTYPE.keys() and width is not None:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
         # try to autodetect width from data, see #791
@@ -158,8 +159,9 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=None,
             dtype = WIDTH2DTYPE[tr_width]
             if rescale:
                 # optimal scale, account for +/- and the zero
-                maxint = 2 ** (tr_width * 8 - 1) - 1
-                data = data.astype('f8')  # upcast for following rescaling
+                maxint = 2 ** (width * 8 - 1) - 1
+                # upcast for following rescaling
+                data = data.astype(np.float64)
                 data = data / abs(data).max() * maxint
             data = np.require(data, dtype=dtype)
             w.writeframes(data.tostring())
