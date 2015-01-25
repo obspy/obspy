@@ -1699,14 +1699,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return self.data.std()
 
+    @deprecated_keywords({'type': 'method'})
     @skipIfNoData
     @_add_processing_info
-    def differentiate(self, type='gradient', **options):
+    def differentiate(self, method='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
 
-        :type type: str, optional
-        :param type: Method to use for differentiation. Defaults to
+        :type method: str, optional
+        :param method: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
 
@@ -1727,7 +1728,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             hence has the same shape as the input array. (uses
             :func:`numpy.gradient`)
         """
-        type = type.lower()
+        method = method.lower()
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('differentiate', type)
         # differentiate

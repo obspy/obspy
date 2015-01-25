@@ -2204,12 +2204,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return [tr.max() for tr in self]
 
-    def differentiate(self, type='gradient'):
+    @deprecated_keywords({'type': 'method'})
+    def differentiate(self, method='gradient'):
         """
         Method to differentiate all traces with respect to time.
 
-        :type type: str, optional
-        :param type: Method to use for differentiation. Defaults to
+        :type method: str, optional
+        :param method: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
 
@@ -2231,7 +2232,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             :func:`numpy.gradient`)
         """
         for tr in self:
-            tr.differentiate(type=type)
+            tr.differentiate(method=method)
         return self
 
     @deprecated_keywords({'type': 'method'})

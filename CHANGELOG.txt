@@ -25,6 +25,7 @@
      AttribDict.
    * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
      provided by the future package.
+   * Renamed 'type' argument to 'method' in the Trace.differentiate() method.
    * Renamed 'type' argument to 'method' in the Trace.integrate() method.
      Additionally, several broken alternate methods have been removed.
    * new plugins for NonLinLoc formats for readEvents() and
