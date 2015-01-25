@@ -80,6 +80,8 @@
      Catalog/Event objects. (see #900)
  - obspy.pdas:
    * read support for PDAS waveform files
+ - obspy.sac:
+   * New `byteorder` option for writing sac files to disk.
  - obspy.seedlink:
    * bugfix: INFO responses from the IRIS ringserver are now parsed
      correctly (see #807)
