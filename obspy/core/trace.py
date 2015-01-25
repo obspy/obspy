@@ -17,8 +17,8 @@ from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
-from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
-    taper_API_change
+from obspy.core.util.decorator import deprecated_keywords, raiseIfMasked, \
+    skipIfNoData, taper_API_change
 from obspy.core import compatibility
 from obspy.core.util.misc import flatnotmaskedContiguous
 import math
@@ -1734,6 +1734,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = func(self.data, self.stats.delta, **options)
         return self
 
+    @deprecated_keywords({'type': 'method'})
     @skipIfNoData
     @_add_processing_info
     def integrate(self, method="cumtrapz", **options):
@@ -1763,12 +1764,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         method = method.lower()
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('integrate', method)
-
-        if "type" in options:
-            warnings.warn("The 'type' argument is no longer supported. It "
-                          "will be ignored. Use the 'method' argument.",
-                          DeprecationWarning)
-            del options["type"]
 
         self.data = func(data=self.data, dx=self.stats.delta, **options)
         return self

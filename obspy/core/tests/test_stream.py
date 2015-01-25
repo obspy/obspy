@@ -2152,6 +2152,19 @@ class StreamTestCase(unittest.TestCase):
         st2.integrate()
         self.assertEqual(st1, st2)
 
+    def test_integrate_args(self):
+        """
+        Tests that the integrate command is called for all traces of a Stream
+        object and options are passed along correctly.
+        """
+        st1 = read()
+        st2 = read()
+
+        for tr in st1:
+            tr.integrate(method='cumtrapz')
+        st2.integrate(method='cumtrapz')
+        self.assertEqual(st1, st2)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

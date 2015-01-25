@@ -21,7 +21,8 @@ from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.decorator import deprecated_keywords, \
+    map_example_filename
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
@@ -2233,13 +2234,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.differentiate(type=type)
         return self
 
-    def integrate(self, **options):
+    @deprecated_keywords({'type': 'method'})
+    def integrate(self, method='cumtrapz', **options):
         """
-        Integrate all traces with respect to time.
+        Method to integrate all traces with respect to time.
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.integrate` method of
         :class:`~obspy.core.trace.Trace`.
+
+        :type method: str, optional
+        :param type: Method to use for integration. Defaults to
+            ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
+            further details.
 
         .. note::
 
@@ -2251,7 +2258,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(**options)
+            tr.integrate(method=method, **options)
         return self
 
     @raiseIfMasked
