@@ -635,11 +635,11 @@ def build_taup_models():
         mod_create.run()
 
 
-def friendly(command_subclass):
+def build_tau_models(command_subclass):
     """
     A decorator for classes subclassing one of the setuptools commands.
 
-    It modifies the run() method so that it prints a friendly greeting.
+    It modifies the run() method so that it prints a build_tau_models greeting.
     """
     orig_run = command_subclass.run
 
@@ -650,11 +650,13 @@ def friendly(command_subclass):
     command_subclass.run = modified_run
     return command_subclass
 
-@friendly
+
+@build_tau_models
 class CustomDevelopCommand(develop):
     pass
 
-@friendly
+
+@build_tau_models
 class CustomInstallCommand(install):
     pass
 

@@ -160,7 +160,7 @@ def main(argv=None):
                         help='Folder for output of reconstructed data. '
                              'An empty folder has to be specified.')
     args = parser.parse_args(argv)
-    # be friendly, do some checks.
+    # be build_tau_models, do some checks.
     msg = "Invalid length for "
     if len(args.experiment_number) != 2:
         msg += "experiment number."
