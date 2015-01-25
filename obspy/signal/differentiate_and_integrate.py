@@ -27,7 +27,10 @@ def integrate_cumtrapz(data, dx, **kwargs):
     """
     # Integrate. Set first value to zero to avoid changing the total
     # length of the array.
-    return scipy.integrate.cumtrapz(data, dx=dx, initial=0)
+    # (manually adding the zero and not using `cumtrapz(..., initial=0)` is a
+    # backwards compatibility fix for scipy versions < 0.11.
+    ret = scipy.integrate.cumtrapz(data, dx=dx)
+    return np.concatenate([[0], ret])
 
 
 def integrate_spline(data, dx, k=3, **kwargs):

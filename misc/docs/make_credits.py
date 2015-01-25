@@ -26,7 +26,7 @@ libraries and applications, our build tools and our web sites.
 """)
 
 # add contributors
-filename = os.path.join('source', 'credits', 'CONTRIBUTORS.txt')
+filename = os.path.join(os.pardir, os.pardir, 'CONTRIBUTORS.txt')
 contributors = sorted(codecs.open(filename, 'r', 'utf-8').readlines())
 
 for item in contributors:

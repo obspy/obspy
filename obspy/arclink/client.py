@@ -21,6 +21,7 @@ from fnmatch import fnmatch
 import io
 from lxml import objectify, etree
 from telnetlib import Telnet
+from numpy import pi
 import os
 import time
 import warnings
@@ -833,6 +834,13 @@ class Client(object):
         paz = AttribDict()
         # instrument name
         paz['name'] = xml_doc.get('name', '')
+
+        # Response type: A=Laplace(rad/s), B=Analog(Hz), C, D
+        try:
+            paz['response_type'] = xml_doc.get('type')
+        except:
+            paz['response_type'] = None
+
         # normalization factor
         try:
             if xml_ns == _INVENTORY_NS_1_0:
@@ -1305,6 +1313,18 @@ class Client(object):
                             continue
                         # parse PAZ
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
+
+                        # convert from Hz (Analog) to rad/s (Laplace)
+                        if paz['response_type'] == "B":
+                            x2pi = lambda x: (x * 2 * pi)
+                            paz['poles'] = list(map(x2pi, paz['poles']))
+                            paz['zeros'] = list(map(x2pi, paz['zeros']))
+                            paz['normalization_factor'] = \
+                                paz['normalization_factor'] * (2 * pi) ** \
+                                (len(paz['poles']) - len(paz['zeros']))
+                            paz['gain'] = paz['normalization_factor']
+                            paz['response_type'] = "A"
+
                         # sensitivity
                         paz['sensitivity'] = temp['sensitivity']
                         paz['sensitivity_frequency'] = \

@@ -517,9 +517,10 @@ class Parser(object):
                     resp = blkt
                     label = 'transfer_function_types'
                 # Check if Laplace transform
-                if getattr(resp, label) != "A":
-                    msg = 'Only supporting Laplace transform response ' + \
-                          'type. Skipping other response information.'
+                if getattr(resp, label) not in ["A", "B"]:
+                    msg = 'Only supporting Laplace (rad/sec) or Analog (Hz)' + \
+                          'transform response type. ' + \
+                          'Skipping other response information.'
                     warnings.warn(msg, UserWarning)
                     continue
                 # A0_normalization_factor
@@ -540,6 +541,14 @@ class Parser(object):
                     except TypeError:
                         z = complex(resp.real_zero, resp.imaginary_zero)
                     data['zeros'].append(z)
+                # force conversion from Hz to Laplace
+                if getattr(resp, label) == "B":
+                    x2pi = lambda x: (x * 2 * np.pi)
+                    data['poles'] = list(map(x2pi, data['poles']))
+                    data['zeros'] = list(map(x2pi, data['zeros']))
+                    data['gain'] = resp.A0_normalization_factor * \
+                        (2 * np.pi) ** \
+                        (len(data['poles']) - len(data['zeros']))
         return data
 
     def getCoordinates(self, seed_id, datetime=None):

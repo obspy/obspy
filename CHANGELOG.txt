@@ -13,6 +13,8 @@
      * scipy < 0.10
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
+ - obspy.arclink:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
    * fixed a problem with UTCDateTime with timestamps of far future
      dates (larger than 2038, often seen in StationXML end dates,
@@ -32,6 +34,11 @@
      Catalog/Event.write() (see obspy.nlloc and #900)
    * The wrap_long_string utility function is deprecated. Users may use the
      textwrap module which provides similar functionality.
+   * new plugin for CNV event format (used by VELEST) for
+     Catalog/Event.write() (see obspy.cnv and #905)
+ - obspy.cnv:
+   * new plugin to write CNV event files (used by VELEST) from
+     Catalog/Event objects. (see #905)
  - obspy.css:
    * Support for little-endian binary and ASCII files (see #881).
    * Support exporting Inventory objects to CSS relations.
@@ -97,6 +104,8 @@
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
    * write support for SACPZ ASCII representation of channel responses.
+ - obspy.xseed:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.zmap:
    * New module which adds ZMAP read/write support
  - scripts:

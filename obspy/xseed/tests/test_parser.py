@@ -64,11 +64,6 @@ class ParserTestCase(unittest.TestCase):
                       'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
                       'zeros': []}
             self.assertEqual(paz, result)
-            # triggers a UserWarning but still returns some results
-            paz = parser.getPAZ("NZ.DCZ.10.HHZ", t)
-            result = {'sensitivity': 838861000.0, 'seismometer_gain': 2000.0,
-                      'digitizer_gain': 419430.0}
-            self.assertEqual(paz, result)
 
     def test_invalidStartHeader(self):
         """
@@ -644,17 +639,13 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'G.SPB.dataless')
         parser = Parser()
         parser.read(filename)
-        # 1 - G.SPB..BHZ - raises UserWarning - no Laplace transform
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error", UserWarning)
-            self.assertRaises(UserWarning, parser.getPAZ, 'G.SPB..BHZ')
+        # 1 - G.SPB..BHZ - no Laplace transform - works
+        parser.getPAZ('G.SPB..BHZ')
         # 2 - G.SPB.00.BHZ - raises exception because of multiple results
         self.assertRaises(SEEDParserException, parser.getPAZ, 'G.SPB.00.BHZ')
-        # 3 - G.SPB.00.BHZ with datetime - again no Laplace transform
+        # 3 - G.SPB.00.BHZ with datetime - no Laplace transform - works
         dt = UTCDateTime('2007-01-01')
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("error", UserWarning)
-            self.assertRaises(UserWarning, parser.getPAZ, 'G.SPB.00.BHZ', dt)
+        parser.getPAZ('G.SPB.00.BHZ', dt)
         # 4 - G.SPB.00.BHZ with later datetime works
         dt = UTCDateTime('2012-01-01')
         parser.getPAZ('G.SPB.00.BHZ', dt)
