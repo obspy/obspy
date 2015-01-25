@@ -1232,8 +1232,8 @@ class SeedLinkConnection(object):
         """
         sendStr = b"HELLO"
         logger.debug("sending: %s" % (sendStr.decode()))
-        bytes = sendStr + b"\r"
-        bytesread = self.sendData(bytes, self.sladdr,
+        bytes_ = sendStr + b"\r"
+        bytesread = self.sendData(bytes_, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
 
         # Parse the server ID and version from the returned string
@@ -1291,13 +1291,13 @@ class SeedLinkConnection(object):
         :raise IOException: if an I/O error occurs.
         """
         if self.checkVersion(2.92) >= 0:
-            bytes = b"INFO " + infoLevel.encode('ascii', 'strict') + b"\r"
+            bytes_ = b"INFO " + infoLevel.encode('ascii', 'strict') + b"\r"
             msg = "sending: requesting INFO level %s" % (infoLevel)
             if verb_level == 1:
                 logger.info(msg)
             else:
                 logger.debug(msg)
-            self.sendData(bytes, self.sladdr, 0)
+            self.sendData(bytes_, self.sladdr, 0)
         else:
             msg = "detected SeedLink version %s does not support INFO requests"
             raise SeedLinkException(msg % (self.server_version))
@@ -1367,9 +1367,9 @@ class SeedLinkConnection(object):
                 # Build SELECT command, send it and receive response
                 sendStr = b"SELECT " + selector
                 logger.debug("sending: %s" % (sendStr))
-                bytes = sendStr + b"\r"
+                bytes_ = sendStr + b"\r"
                 bytesread = None
-                bytesread = self.sendData(bytes, self.sladdr,
+                bytesread = self.sendData(bytes_, self.sladdr,
                                           SeedLinkConnection.DFT_READBUF_SIZE)
                 readStr = bytesread.decode()
 
@@ -1443,9 +1443,9 @@ class SeedLinkConnection(object):
 
         # Send action command and receive response
         logger.debug("sending: %s" % (sendStr))
-        bytes = sendStr + b"\r"
+        bytes_ = sendStr + b"\r"
         bytesread = None
-        bytesread = self.sendData(bytes, self.sladdr,
+        bytesread = self.sendData(bytes_, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
 
         # Check response to DATA/FETCH/TIME
@@ -1517,9 +1517,9 @@ class SeedLinkConnection(object):
             sendStr = ("STATION  " + curstream.station + " " +
                        curstream.net).encode('ascii', 'strict')
             logger.debug("sending: %s" % sendStr.decode())
-            bytes = sendStr + b"\r"
+            bytes_ = sendStr + b"\r"
             bytesread = None
-            bytesread = self.sendData(bytes, self.sladdr,
+            bytesread = self.sendData(bytes_, self.sladdr,
                                       SeedLinkConnection.DFT_READBUF_SIZE)
             readStr = bytesread
 
@@ -1553,8 +1553,8 @@ class SeedLinkConnection(object):
         # Issue END action command
         sendStr = b"END"
         logger.debug("sending: %s" % (sendStr.decode()))
-        bytes = sendStr + b"\r"
-        self.sendData(bytes, self.sladdr, 0)
+        bytes_ = sendStr + b"\r"
+        self.sendData(bytes_, self.sladdr, 0)
 
     def updateStream(self, slpacket):
         """

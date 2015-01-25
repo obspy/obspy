@@ -17,6 +17,7 @@ from future.builtins import *  # NOQA
 
 from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
+from obspy.core.util.decorator import deprecated_keywords
 from obspy.mseed.headers import clibmseed, HPTMODULUS, MSRecord
 from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray
 from obspy.seedlink.seedlinkexception import SeedLinkException
@@ -68,15 +69,16 @@ class SLPacket(object):
     ERRORSIGNATURE = b"ERROR\r\n"
     ENDSIGNATURE = b"END"
 
-    def __init__(self, bytes=None, offset=None):
-        if bytes is None or offset is None:
+    @deprecated_keywords({'bytes': 'data'})
+    def __init__(self, data=None, offset=None):
+        if data is None or offset is None:
             return
-        if len(bytes) - offset < self.SLHEADSIZE + self.SLRECSIZE:
+        if len(data) - offset < self.SLHEADSIZE + self.SLRECSIZE:
             msg = "not enough bytes in sub array to construct a new SLPacket"
             raise SeedLinkException(msg)
-        self.slhead = bytes[offset: offset + self.SLHEADSIZE]
-        self.msrecord = bytes[offset + self.SLHEADSIZE:
-                              offset + self.SLHEADSIZE + self.SLRECSIZE]
+        self.slhead = data[offset: offset + self.SLHEADSIZE]
+        self.msrecord = data[offset + self.SLHEADSIZE:
+                             offset + self.SLHEADSIZE + self.SLRECSIZE]
         self.trace = None
 
     def getSequenceNumber(self):
