@@ -48,7 +48,6 @@ from distutils.util import change_root
 from numpy.distutils.core import setup, DistutilsSetupError
 from numpy.distutils.command.build import build
 from numpy.distutils.command.install import install
-from numpy.distutils.command.develop import develop
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
@@ -527,6 +526,7 @@ def configuration(parent_package="", top_path=None):
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
+    build_taup_models()
     add_data_files(config)
 
     return config
@@ -635,32 +635,6 @@ def build_taup_models():
         mod_create.run()
 
 
-def build_tau_models(command_subclass):
-    """
-    A decorator for classes subclassing one of the setuptools commands.
-
-    It modifies the run() method so that it prints a build_tau_models greeting.
-    """
-    orig_run = command_subclass.run
-
-    def modified_run(self):
-        build_taup_models()
-        orig_run(self)
-
-    command_subclass.run = modified_run
-    return command_subclass
-
-
-@build_tau_models
-class CustomDevelopCommand(develop):
-    pass
-
-
-@build_tau_models
-class CustomInstallCommand(install):
-    pass
-
-
 def setupPackage():
     # setup package
     setup(
@@ -704,8 +678,6 @@ def setupPackage():
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
         cmdclass={
-            'install': CustomInstallCommand,
-            'develop': CustomDevelopCommand,
             'build_man': Help2ManBuild,
             'install_man': Help2ManInstall
         },
