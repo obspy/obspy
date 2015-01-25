@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 import inspect
 import os
 
@@ -161,3 +162,43 @@ def test_vs_java_ak135():
                                distance_in_degree=a['distance'],
                                phase_list=a["name"])[0]
         _assert_arrivals_equal(b, a)
+
+
+def test_pierce_all_phases():
+    filename = os.path.join(DATA, "java_taup_pierce_h10_deg35_ttall")
+    expected = collections.defaultdict(list)
+    with open(filename, "rt") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith(">"):
+                current_phase = line.replace(">", "").strip().split()[0]
+                continue
+            dist, depth, time = list(map(float, line.split()))
+            expected[current_phase].append((dist, depth, time))
+    expected_phases = sorted(set(expected.keys()))
+
+    m = TauPyModel(model="iasp91")
+    arrivals = m.get_pierce_points(source_depth_in_km=10.0,
+                                   distance_in_degree=35.0,
+                                   phase_list=["ttall"])
+
+    # Make sure the same stuff is available.
+    arrival_phases = sorted(set([_i.name for _i in arrivals]))
+    assert expected_phases == arrival_phases
+
+    actual = collections.defaultdict(list)
+    for arr in arrivals:
+        for p in arr.pierce:
+            actual[arr.name].append((
+                round(p.get_dist_deg(), 2),
+                round(p.depth, 1),
+                round(p.time, 1)))
+
+    assert sorted(actual.keys()) == sorted(expected.keys())
+
+    for key in actual.keys():
+        actual_values = sorted(actual[key])
+        expected_values = sorted(expected[key])
+        assert actual_values == expected_values
