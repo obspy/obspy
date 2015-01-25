@@ -13,6 +13,8 @@
      * scipy < 0.10
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
+ - obspy.arclink:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
    * fixed a problem with UTCDateTime with timestamps of far future
      dates (larger than 2038, often seen in StationXML end dates,
@@ -97,6 +99,8 @@
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
    * write support for SACPZ ASCII representation of channel responses.
+ - obspy.xseed:
+   * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.zmap:
    * New module which adds ZMAP read/write support
  - scripts:
