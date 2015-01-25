@@ -348,7 +348,7 @@ class Trace(object):
 
     def __str__(self, id_length=None):
         """
-        Returns short summary string of the current trace.
+        Return short summary string of the current trace.
 
         :rtype: str
         :return: Short summary string of the current trace containing the SEED
@@ -397,7 +397,7 @@ class Trace(object):
 
     def __len__(self):
         """
-        Returns number of data samples of the current trace.
+        Return number of data samples of the current trace.
 
         :rtype: int
         :return: Number of data samples.
@@ -435,7 +435,7 @@ class Trace(object):
 
     def __mul__(self, num):
         """
-        Creates a new Stream containing num copies of this trace.
+        Create a new Stream containing num copies of this trace.
 
         :type num: int
         :param num: Number of copies.
@@ -459,7 +459,7 @@ class Trace(object):
 
     def __div__(self, num):
         """
-        Splits Trace into new Stream containing num Traces of the same size.
+        Split Trace into new Stream containing num Traces of the same size.
 
         :type num: int
         :param num: Number of traces in returned Stream. Last trace may contain
@@ -506,7 +506,7 @@ class Trace(object):
 
     def __mod__(self, num):
         """
-        Splits Trace into new Stream containing Traces with num samples.
+        Split Trace into new Stream containing Traces with num samples.
 
         :type num: int
         :param num: Number of samples in each trace in returned Stream. Last
@@ -550,7 +550,7 @@ class Trace(object):
     def __add__(self, trace, method=0, interpolation_samples=0,
                 fill_value=None, sanity_checks=True):
         """
-        Adds another Trace object to current trace.
+        Add another Trace object to current trace.
 
         :type method: int, optional
         :param method: Method to handle overlaps of traces. Defaults to ``0``.
@@ -792,7 +792,7 @@ class Trace(object):
 
     def getId(self):
         """
-        Returns a SEED compatible identifier of the trace.
+        Return a SEED compatible identifier of the trace.
 
         :rtype: str
         :return: SEED identifier
@@ -816,7 +816,7 @@ class Trace(object):
 
     def plot(self, **kwargs):
         """
-        Creates a simple graph of the current trace.
+        Create a simple graph of the current trace.
 
         Various options are available to change the appearance of the waveform
         plot. Please see :meth:`~obspy.core.stream.Stream.plot` method for all
@@ -842,7 +842,7 @@ class Trace(object):
 
     def spectrogram(self, **kwargs):
         """
-        Creates a spectrogram plot of the trace.
+        Create a spectrogram plot of the trace.
 
         For details on kwargs that can be used to customize the spectrogram
         plot see :func:`~obspy.imaging.spectrogram.spectrogram`.
@@ -871,7 +871,7 @@ class Trace(object):
 
     def write(self, filename, format, **kwargs):
         """
-        Saves current trace into a file.
+        Save current trace into a file.
 
         :type filename: str
         :param filename: The name of the file to write.
@@ -895,7 +895,7 @@ class Trace(object):
     def _ltrim(self, starttime, pad=False, nearest_sample=True,
                fill_value=None):
         """
-        Cuts current trace to given start time. For more info see
+        Cut current trace to given start time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
 
         .. rubric:: Example
@@ -962,7 +962,7 @@ class Trace(object):
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):
         """
-        Cuts current trace to given end time. For more info see
+        Cut current trace to given end time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
 
         .. rubric:: Example
@@ -1023,7 +1023,7 @@ class Trace(object):
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
         """
-        Cuts current trace to given start and end time.
+        Cut current trace to given start and end time.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Specify the start time.
@@ -1089,7 +1089,7 @@ class Trace(object):
 
     def slice(self, starttime=None, endtime=None):
         """
-        Returns a new Trace object with data going from start to end time.
+        Return a new Trace object with data going from start to end time.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Specify the start time of slice.
@@ -1114,7 +1114,7 @@ class Trace(object):
 
     def verify(self):
         """
-        Verifies current trace object against available meta data.
+        Verify current trace object against available meta data.
 
         .. rubric:: Example
 
@@ -1293,7 +1293,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def filter(self, type, **options):
         """
-        Filters the data of the current trace.
+        Filter the data of the current trace.
 
         :type type: str
         :param type: String that specifies which filter is applied (e.g.
@@ -1365,7 +1365,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def trigger(self, type, **options):
         """
-        Runs a triggering algorithm on the data of the current trace.
+        Run a triggering algorithm on the data of the current trace.
 
         :param type: String that specifies which trigger is applied (e.g.
             ``'recstalta'``). See the `Supported Trigger`_ section below for
@@ -1704,7 +1704,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def differentiate(self, method='gradient', **options):
         """
-        Method to differentiate the trace with respect to time.
+        Differentiate the trace with respect to time.
 
         :type method: str, optional
         :param method: Method to use for differentiation. Defaults to
@@ -1774,7 +1774,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def detrend(self, type='simple', **options):
         """
-        Method to remove a linear trend from the trace.
+        Remove a linear trend from the trace.
 
         :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
@@ -1821,7 +1821,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
         """
-        Method to taper the trace.
+        Taper the trace.
 
         Optional (and sometimes necessary) options to the tapering function can
         be provided as kwargs. See respective function definitions in
@@ -1955,7 +1955,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def normalize(self, norm=None):
         """
-        Method to normalize the trace to its absolute maximum.
+        Normalize the trace to its absolute maximum.
 
         :type norm: ``None`` or float
         :param norm: If not ``None``, trace is normalized by dividing by
@@ -2047,7 +2047,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def _addProcessingInfo(self, info):
         """
-        Adds the given informational string to the `processing` field in the
+        Add the given informational string to the `processing` field in the
         trace's :class:`~obspy.core.trace.Stats` object.
         """
         proc = self.stats.setdefault('processing', [])
@@ -2056,7 +2056,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def split(self):
         """
-        Splits Trace object containing gaps using a NumPy masked array into
+        Split Trace object containing gaps using a NumPy masked array into
         several traces.
 
         :rtype: :class:`~obspy.core.stream.Stream`
@@ -2431,7 +2431,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
 def _data_sanity_checks(value):
     """
-    Checks if a given input is suitable to be used for Trace.data. Raises the
+    Check if a given input is suitable to be used for Trace.data. Raises the
     corresponding exception if it is not, otherwise silently passes.
     """
     if not isinstance(value, np.ndarray):
