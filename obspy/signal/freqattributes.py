@@ -182,6 +182,9 @@ def bwith(data, fs, smoothie, fk):
     :return: **bwith[, dbwithd]** - Bandwidth, Time derivative of predominant
         period (windowed only).
     """
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
+
     nfft = util.nextpow2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
     bwith = np.zeros(data.shape[0])
@@ -235,6 +238,9 @@ def domperiod(data, fs, smoothie, fk):
     :return: **dperiod[, ddperiod]** - Predominant period, Time derivative of
         predominant period (windowed only).
     """
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
+
     nfft = 1024
     # nfft = util.nextpow2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
@@ -338,6 +344,9 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     :param n: Number of data windows.
     :return: Cepstral coefficients.
     """
+    new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
+    data = np.require(data, dtype=new_dtype)
+
     dataT = np.transpose(data)
     nfft = util.nextpow2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)
