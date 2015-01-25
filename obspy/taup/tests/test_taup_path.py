@@ -5,10 +5,12 @@ This tests TauP_Path.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
-import sys
-import subprocess
+from future.builtins import *  # NOQA
+
+
 import os
+import subprocess
+import sys
 from unittest import TestCase
 
 from obspy.taup import TauPyModel

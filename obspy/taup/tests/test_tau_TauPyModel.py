@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
-from unittest import TestCase
+from future.builtins import *  # NOQA
 
-__author__ = 'nicolas'
 import os
+from unittest import TestCase
 
 
 class TestTauPyModel(TestCase):
@@ -19,5 +18,5 @@ class TestTauPyModel(TestCase):
             os.remove("ak135.taup")
         except FileNotFoundError:
             pass
-        ak135 = tau.TauPyModel("ak135", taup_model_path=".")
+        tau.TauPyModel("ak135", taup_model_path=".")
         os.remove("ak135.taup")

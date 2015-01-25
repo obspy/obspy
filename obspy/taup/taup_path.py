@@ -93,8 +93,9 @@ class TauP_Path(TauP_Pierce):
                 self.printDistRadius(calcDist, radiusOfEarth - calcDepth)
                 if calcTime >= self.maxPathTime:
                     break
-                if (j < len(currArrival.path) - 1 and currArrival.ray_param != 0
-                    and capjplus.get_dist_deg()
+                if (j < len(currArrival.path) - 1
+                        and currArrival.ray_param != 0
+                        and capjplus.get_dist_deg()
                         - capj.get_dist_deg() > self.maxPathInc):
                     # Interpolate to steps of at most maxPathInc degrees for
                     # path.

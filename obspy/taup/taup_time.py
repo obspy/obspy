@@ -116,8 +116,8 @@ class TauP_Time(object):
             splitNames = getPhaseNames(self.relativePhaseName)  # Static!
             for sName in splitNames:
                 relPhases.append(SeismicPhase(sName, self.tModDepth))
-            self.relativeArrival = SeismicPhase.get_earliest_arrival(relPhases,
-                                                                   degrees)
+            self.relativeArrival = SeismicPhase.get_earliest_arrival(
+                relPhases, degrees)
 
     def calcTime(self, degrees):
         """

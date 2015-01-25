@@ -10,7 +10,8 @@ if TauP_Time works well for a range of inputs, TauP_Pierce would too.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *
+from future.builtins import *  # NOQA
+
 import inspect
 import os
 import unittest

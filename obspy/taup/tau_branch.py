@@ -319,7 +319,8 @@ class TauBranch(object):
                 if sLayerNum <= botLayerNum:
                     sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
             if sLayerNum <= botLayerNum and not sLayer.hasZeroThickness():
-                turnDepth = sLayer.bullenDepthFor(ray_param, sMod.radiusOfEarth)
+                turnDepth = sLayer.bullenDepthFor(ray_param,
+                                                  sMod.radiusOfEarth)
                 turnSLayer = SlownessLayer(sLayer.topP, sLayer.topDepth,
                                            ray_param, turnDepth)
                 thePath[pathIndex] = turnSLayer.\
@@ -335,7 +336,8 @@ class TauBranch(object):
                 sLayerNum -= 1
                 sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
             if sLayer.botP < ray_param:
-                turnDepth = sLayer.bullenDepthFor(ray_param, sMod.radiusOfEarth)
+                turnDepth = sLayer.bullenDepthFor(ray_param,
+                                                  sMod.radiusOfEarth)
                 turnSLayer = SlownessLayer(sLayer.topP, sLayer.topDepth,
                                            ray_param, turnDepth)
                 thePath[pathIndex] = turnSLayer.\
