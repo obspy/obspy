@@ -8,7 +8,7 @@ import inspect
 import os
 import unittest
 
-from taupy.VelocityModel import VelocityModel
+from obspy.taup.velocity_model import VelocityModel
 
 # to get ./data:
 data_dir = os.path.join(os.path.dirname(os.path.abspath(

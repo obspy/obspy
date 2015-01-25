@@ -842,7 +842,7 @@ class SeismicPhase(object):
             else:
                 break
         # Here we use ray parameter and dist info stored within the
-        # SeismicPhase so we can use currArrival.rayParamIndex, which
+        # SeismicPhase so we can use currArrival.ray_param_index, which
         # may not correspond to rayNum (for tMod.rayParams).
         rayParamA = self.rayParams[currArrival.rayParamIndex]
         rayParamB = self.rayParams[currArrival.rayParamIndex + 1]

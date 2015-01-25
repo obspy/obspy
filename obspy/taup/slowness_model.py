@@ -1279,7 +1279,7 @@ class SlownessModel(object):
         SplitLayerInfo object with neededSplit=true if a layer was actually
         split, false otherwise, movedSample=true if a layer was very close, and
         so moving the layers depth is better than making a very thin layer,
-        rayParam= the new ray parameter, if the layer was split. The
+        ray_param= the new ray parameter, if the layer was split. The
         interpolation for splitting a layer is a Bullen p=Ar^B and so does not
         directly use information from the VelocityModel.
         """

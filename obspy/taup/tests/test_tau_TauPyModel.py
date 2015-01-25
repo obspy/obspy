@@ -14,7 +14,7 @@ class TestTauPyModel(TestCase):
         """
         See if the create model function in the tau interface runs smoothly.
         """
-        from taupy import tau
+        from obspy.taup import tau
         try:
             os.remove("ak135.taup")
         except FileNotFoundError:

@@ -10,7 +10,9 @@ import sys
 import subprocess
 import os
 from unittest import TestCase
-from taupy.TauP_Path import TauP_Path
+
+from obspy.taup import TauPyModel
+from obspy.taup.taup_path import TauP_Path
 
 
 class TestTauPPath(TestCase):
@@ -39,8 +41,7 @@ class TestTauPPath(TestCase):
         os.remove("data/tmp_tauppath_test_output")
 
     def test_script_output_h10_deg35_iasp91_with_tau_interface(self):
-        from taupy import tau
-        i91 = tau.TauPyModel("iasp91")
+        i91 = TauPyModel("iasp91")
 
         stdout = sys.stdout
         with open('data/tmp_tauppath_test_output', 'wt') as sys.stdout:

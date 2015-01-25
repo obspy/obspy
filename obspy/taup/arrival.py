@@ -7,13 +7,14 @@ from future.builtins import *  # NOQA
 from math import pi
 
 
-class Arrival:
+class Arrival(object):
     """
     Convenience class for storing the parameters associated with a phase
     arrival.
     """
-    def __init__(self, phase, time, dist, rayParam, rayParamIndex,
-                 name, puristName, sourceDepth, takeoffAngle, incidentAngle):
+    def __init__(self, phase, time, dist, ray_param, ray_param_index,
+                 name, purist_name, source_depth, takeoff_angle,
+                 incident_angle):
         # phase that generated this arrival
         self.phase = phase
         # travel time in seconds
@@ -21,16 +22,16 @@ class Arrival:
         # angular distance (great circle) in radians
         self.dist = dist
         # ray parameter in seconds per radians
-        self.rayParam = rayParam
-        self.rayParamIndex = rayParamIndex
+        self.ray_param = ray_param
+        self.ray_param_index = ray_param_index
         # phase name
         self.name = name
         # phase name changed for true depths
-        self.puristName = puristName
+        self.purist_name = purist_name
         # source depth in kilometers
-        self.sourceDepth = sourceDepth
-        self.incidentAngle = incidentAngle
-        self.takeoffAngle = takeoffAngle
+        self.source_depth = source_depth
+        self.incident_angle = incident_angle
+        self.takeoff_angle = takeoff_angle
         # pierce and path points
         self.pierce, self.path = [], []
 
@@ -39,11 +40,11 @@ class Arrival:
                                                      self.time)
 
     @property
-    def rayParam_sec_degree(self):
+    def ray_param_sec_degree(self):
         """
         Returns the ray parameter in seconds per degree.
         """
-        return self.rayParam * pi / 180.0
+        return self.ray_param * pi / 180.0
 
     @property
     def purist_distance(self):

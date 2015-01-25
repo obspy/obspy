@@ -102,7 +102,7 @@ class SlownessLayer:
                     tempDepth = radiusOfEarth - math.exp(
                         1.0 / B * math.log(np.divide(rayParam, A)))
                 # or equivalent (maybe better stability?):
-                # tempDepth = radiusOfEarth - math.pow(rayParam/A, 1/B)
+                # tempDepth = radiusOfEarth - math.pow(ray_param/A, 1/B)
                 # Check if slightly outside layer due to rounding or
                 # numerical instability:
                 if self.topDepth > tempDepth > self.topDepth - 0.000001:

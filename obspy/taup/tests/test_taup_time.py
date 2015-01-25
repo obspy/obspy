@@ -14,8 +14,8 @@ import unittest
 import sys
 import subprocess
 
-from taupy.tau import TauPyModel
-from taupy.TauP_Time import TauP_Time
+from obspy.taup import TauPyModel
+from obspy.taup.taup_time import TauP_Time
 
 # Most generic way to get the data folder path.
 DATA = os.path.join(os.path.dirname(os.path.abspath(
@@ -60,7 +60,7 @@ def compare_arrivals_with_taup_time_output(arrivals, filename):
             "depth": _i.sourceDepth,
             "phase_name": _i.phase.name,
             "time": _i.time,
-            "ray_param": _i.rayParam_sec_degree,
+            "ray_param": _i.ray_param_sec_degree,
             "takeoff": _i.takeoffAngle,
             "incident": _i.incidentAngle,
             "purist_distance": _i.get_dist_deg(),

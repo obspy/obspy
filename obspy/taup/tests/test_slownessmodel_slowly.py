@@ -6,8 +6,8 @@ from future.builtins import *
 
 import unittest
 from math import pi
-from taupy.VelocityModel import VelocityModel
-from taupy.SlownessModel import SlownessModel
+from obspy.taup.velocity_model import VelocityModel
+from obspy.taup.slowness_model import SlownessModel
 
 
 # noinspection PyPep8Naming

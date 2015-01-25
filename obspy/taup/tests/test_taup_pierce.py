@@ -15,7 +15,7 @@ import inspect
 import os
 import unittest
 
-from taupy.tau import TauPyModel
+from obspy.taup import TauPyModel
 
 # Most generic way to get the data folder path.
 DATA = os.path.join(os.path.dirname(os.path.abspath(

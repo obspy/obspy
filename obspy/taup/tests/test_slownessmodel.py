@@ -5,8 +5,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *
 import unittest
 
-from taupy.SlownessLayer import create_from_vlayer
-from taupy.VelocityLayer import VelocityLayer
+from obspy.taup.slowness_layer import create_from_vlayer
+from obspy.taup.velocity_layer import VelocityLayer
 
 
 class TestSlownessModel(unittest.TestCase):
