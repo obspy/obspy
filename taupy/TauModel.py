@@ -163,7 +163,7 @@ class TauModel(object):
 
     def writeModel(self, outfile):
         with open(outfile, 'w+b') as f:
-            pickle.dump(self, f, -1)
+            pickle.dump(self, f, protocol=2)
 
     def __str__(self):
         desc = "Delta tau for each slowness sample and layer.\n"
