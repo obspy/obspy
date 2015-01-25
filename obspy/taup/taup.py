@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-obspy.taup - Travel time calculation tool
+Wrapper around obspy.taup.tau.
+
+Still around for legacy reasons.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
