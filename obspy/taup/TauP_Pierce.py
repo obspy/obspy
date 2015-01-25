@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-from taupy.TauP_Time import TauP_Time
 from math import pi
+
+from .TauP_Time import TauP_Time
 
 
 class TauP_Pierce(TauP_Time):

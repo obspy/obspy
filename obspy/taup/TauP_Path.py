@@ -4,10 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-from taupy.TauP_Pierce import TauP_Pierce
-from taupy.helper_classes import TimeDist
-import numpy as np
 import math
+import numpy as np
+
+from .TauP_Pierce import TauP_Pierce
+from .helper_classes import TimeDist
 
 
 class TauP_Path(TauP_Pierce):

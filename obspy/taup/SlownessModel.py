@@ -3,15 +3,16 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
-from math import pi
-import math
-from decimal import *
-import numpy as np
-from taupy.VelocityLayer import VelocityLayer
-from taupy.SlownessLayer import SlownessLayer, create_from_vlayer
-from taupy.helper_classes import DepthRange, CriticalDepth, TimeDist, \
-    SlownessModelError, SplitLayerInfo
+
 from copy import deepcopy
+from decimal import *
+import math
+import numpy as np
+
+from .VelocityLayer import VelocityLayer
+from .SlownessLayer import SlownessLayer, create_from_vlayer
+from .helper_classes import DepthRange, CriticalDepth, TimeDist, \
+    SlownessModelError, SplitLayerInfo
 
 
 class SlownessModel(object):
@@ -45,7 +46,7 @@ class SlownessModel(object):
     PWAVE = True
 
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115,
-                 maxRangeInterval=2.5 * pi / 180, maxInterpError=0.05,
+                 maxRangeInterval=2.5 * math.pi / 180, maxInterpError=0.05,
                  allowInnerCoreS=True,
                  slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE):
 
@@ -1079,7 +1080,7 @@ class SlownessModel(object):
             if layerNum != self.getNumLayers(isPWave) - 1:
                 raise SlownessModelError("There are layers deeper than the "
                                          "centre of the Earth!")
-            timeDist.distRadian = pi / 2
+            timeDist.distRadian = math.pi / 2
             timeDist.time = sphericalLayer.topP
             if timeDist.distRadian < 0 \
                     or timeDist.time < 0 \

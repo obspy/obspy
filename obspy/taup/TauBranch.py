@@ -4,8 +4,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-from taupy.helper_classes import TauModelError, TimeDist, SlownessModelError
-from taupy.SlownessLayer import SlownessLayer
+from .helper_classes import TauModelError, TimeDist, SlownessModelError
+from .SlownessLayer import SlownessLayer
 
 
 class TauBranch(object):

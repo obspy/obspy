@@ -4,12 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-import os
-import inspect
 import argparse
-from taupy.VelocityModel import VelocityModel
-from taupy.SlownessModel import SlownessModel
-from taupy.TauModel import TauModel
+import os
+from .SlownessModel import SlownessModel
+from .TauModel import TauModel
+from .VelocityModel import VelocityModel
 
 
 class TauP_Create(object):

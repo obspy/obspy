@@ -20,7 +20,7 @@ __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe()))), "data")
 
 # Convenience imports.
-from obspy.taup.taup import getTravelTimes, travelTimePlot
+from .taup import getTravelTimes, travelTimePlot  # NOQA
 
 if __name__ == '__main__':
     import doctest

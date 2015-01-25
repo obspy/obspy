@@ -7,8 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-from taupy.header import TauPException
-# TauPException does nothing yet
+from .header import TauPException
 
 
 class VelocityLayer(object):

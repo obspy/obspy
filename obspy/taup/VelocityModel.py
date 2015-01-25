@@ -6,11 +6,12 @@ Package for storage and manipulation of seismic earth models.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
+
 import os
 import sys
 
-from taupy.header import TauPException
-from taupy.VelocityLayer import VelocityLayer
+from .header import TauPException
+from .VelocityLayer import VelocityLayer
 
 
 class VelocityModel(object):
@@ -295,7 +296,6 @@ class VelocityModel(object):
         if fileType.lower() == "nd":
             raise NotImplementedError(".nd files are not curently supported."
                                       "Sorry.")
-            #vMod = cls.readNDFile(filename)
         elif fileType.lower() == "tvel":
             vMod = cls.readTVelFile(filename)
         else:
@@ -349,7 +349,7 @@ class VelocityModel(object):
                 raise ValueError("Top density not specified.")
             topDensity = float(columns[3])
 
-                # Iterate over the rest of the file.
+            # Iterate over the rest of the file.
             for line in f:
                 line = line.partition('#')[0]
                 # needs the other comment options

@@ -4,12 +4,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-from taupy.helper_classes import SlownessModelError, TauModelError
-from taupy.TauBranch import TauBranch
+from copy import deepcopy
 from itertools import count
 from math import pi
 import pickle
-from copy import deepcopy
+
+from .helper_classes import SlownessModelError, TauModelError
+from .TauBranch import TauBranch
 
 
 class TauModel(object):

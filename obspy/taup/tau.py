@@ -36,7 +36,7 @@ class TauPyModel(object):
     """
     High level interface to TauPy.
     Example usage:
-    >>> from taupy import tau
+    >>> from obspy.taup import tau
     >>> i91 = tau.TauPyModel("iasp91")
     >>> tt = i91.get_travel_timess(10, 20, ["P, S"])
     """
@@ -49,7 +49,7 @@ class TauPyModel(object):
             filename in the case of custom models.
 
         Usage:
-        >>> from taupy import tau
+        >>> from obspy.taup import tau
         >>> i91 = tau.TauPyModel()
         >>> i91.get_travel_times(10, 20)[0].name
         'Pn'

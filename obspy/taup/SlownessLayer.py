@@ -5,13 +5,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *
 
 import math
-
 import numpy as np
 
-from taupy.helper_classes import TimeDist, SlownessModelError
+from .helper_classes import TimeDist, SlownessModelError
 
 
-# noinspection PyPep8Naming
 class SlownessLayer:
 
     def __init__(self, topP, topDepth, botP, botDepth):

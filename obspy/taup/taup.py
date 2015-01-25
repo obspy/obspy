@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 
-from taupy import tau
+from . import tau
 
 _MODEL_CACHE = {}
 

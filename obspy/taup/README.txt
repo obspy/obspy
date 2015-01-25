@@ -3,7 +3,7 @@ package obspy.taup
 
 Copyright
 ---------
-License unknown!
+GLPv3
 
 Copyright (c) 2011-2015 by:
     * The ObsPy Dev Team

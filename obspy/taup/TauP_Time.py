@@ -4,14 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-import os
-import inspect
 import argparse
 import math
 
-import taupy.TauModelLoader as TauModelLoader
-from taupy.helper_classes import TauModelError
-from taupy.SeismicPhase import SeismicPhase
+from .helper_classes import TauModelError
+from .SeismicPhase import SeismicPhase
 
 
 class TauP_Time(object):
@@ -41,8 +38,6 @@ class TauP_Time(object):
         # whether their value has been given on the cmd line.
         self.depth = depth
         self.degrees = degrees
-        #self.azimuth = None
-        #self.backAzimuth = None
         if coordinate_list is None:
             coordinate_list = [None, None, None, None]
         self.stationLat = coordinate_list[2]

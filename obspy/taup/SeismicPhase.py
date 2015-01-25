@@ -4,12 +4,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *
 
-from taupy.Arrival import Arrival
-from taupy.helper_classes import TauModelError, TimeDist
-import math
-import numpy as np
 from copy import deepcopy
 from itertools import count
+import math
+
+from .Arrival import Arrival
+from .helper_classes import TauModelError, TimeDist
 
 
 class SeismicPhase(object):

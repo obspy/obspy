@@ -36,6 +36,13 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
+try:
+    import future  # @UnusedImport # NOQA
+except:
+    msg = ("No module named future. Please install future first, it is needed "
+           "before installing ObsPy.")
+    raise ImportError(msg)
+
 from distutils.util import change_root
 
 from numpy.distutils.core import setup, DistutilsSetupError
@@ -601,11 +608,12 @@ class Help2ManInstall(install):
 
 def build_taup_models():
     """
-    Builds the taup models during install time. This is needed as the models are
-    pickled Python classes which are not compatible across Python versions.
+    Builds the obspy.tau models during install time. This is needed as the
+    models are pickled Python classes which are not compatible across Python
+    versions.
     """
-    taupy_path = os.path.join(ROOT, "taupy")
-    model_input = os.path.join(taupy_path, "data")
+    obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
+    model_input = os.path.join(obspy_taup_path, "data")
 
     sys.path.insert(0, ROOT)
     from taupy.TauP_Create import TauP_Create
