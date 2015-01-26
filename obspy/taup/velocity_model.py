@@ -10,7 +10,7 @@ from future.builtins import *  # NOQA
 import os
 import sys
 
-from .header import TauPException
+from . import TauPException
 from .velocity_layer import VelocityLayer
 
 
