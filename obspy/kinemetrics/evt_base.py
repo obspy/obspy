@@ -92,11 +92,11 @@ class EvtVirtual(object):
         :type offset: int
         :param offset : offset in the dictionary
         """
-        if not isinstance(val, list):
-            raise TypeError("setdico() expects a list")
+        if not isinstance(val, tuple):
+            raise TypeError("setdico() expects a tuple")
         for key in self.HEADER:
             index = self.HEADER[key][0] - offset
-            if index < len(val) and index >= 0:
+            if 0 <= index < len(val):
                 if self.HEADER[key][1] != "":
                     fct = self.HEADER[key][1][0]
                     param = self.HEADER[key][1][1]

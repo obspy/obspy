@@ -242,13 +242,13 @@ class EvtHeader(EvtVirtual):
 
     def analyse_header12(self, head_buff):
         val = unpack(self.endian+HEADER_STRUCT1, head_buff[0:0x7c])
-        self.setdico(list(val), 0)
+        self.setdico(val, 0)
         val = unpack(self.endian+HEADER_STRUCT2, head_buff[0x7c:0x22c])
-        self.setdico(list(val), 35)
+        self.setdico(val, 35)
         val = unpack(self.endian+HEADER_STRUCT3, head_buff[0x22c:0x2c8])
-        self.setdico(list(val), 107)
+        self.setdico(val, 107)
         val = unpack(self.endian+HEADER_STRUCT4, head_buff[0x2c8:0x658])
-        self.setdico(list(val), 140)
+        self.setdico(val, 140)
         # Those three do not do anything... (For futur extensions)
         # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
         # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
@@ -336,7 +336,7 @@ class EvtFrameHeader(EvtVirtual):
     def analyse_frame32(self, head_buff):
         self.numframe += 1
         val = unpack(self.endian+FRAME_STRUCT, head_buff)
-        self.setdico(list(val), 0)
+        self.setdico(val, 0)
         if not self.verify(verbose=False):
             raise EvtBadHeaderError("Bad Frame values")
 
@@ -396,7 +396,7 @@ class EvtTag(EvtVirtual):
             endian = b"<"
         else:
             raise EvtBadHeaderError
-        val = list(unpack(endian + b"cBBBLHHHH", mystr))
+        val = unpack(endian + b"cBBBLHHHH", mystr)
         self.setdico(val)
         self.endian = endian
         if not self.verify(verbose=False):
