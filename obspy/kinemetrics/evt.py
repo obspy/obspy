@@ -16,6 +16,7 @@ from struct import unpack
 import numpy as np
 
 from obspy import Trace, Stream
+from obspy.core.compatibility import frombuffer
 from obspy.kinemetrics.evt_base import EvtBadHeaderError, EvtEOFError, \
     EvtBadDataError, EvtVirtual
 
@@ -99,43 +100,44 @@ class Evt(object):
             is_fileobject = False
             file_pointer = open(filename_or_object, "rb")
 
-        self.e_tag.read(file_pointer)
-        endian = self.e_tag.endian
-        self.e_header.unsetdico()
-        self.e_header.read(file_pointer, self.e_tag.length, endian)
+        try:
+            self.e_tag.read(file_pointer)
+            endian = self.e_tag.endian
+            self.e_header.unsetdico()
+            self.e_header.read(file_pointer, self.e_tag.length, endian)
 
-        self.data = np.ndarray([self.e_header.nchannels, 0])
+            self.data = np.ndarray([self.e_header.nchannels, 0])
 
-        while True:
-            try:
-                self.e_tag.read(file_pointer)
-                retparam = self.e_frame.read(file_pointer,
-                                             self.e_tag.length, endian)
-                if self.samplingrate == 0:
-                    self.samplingrate = retparam[0]
-                elif self.samplingrate != retparam[0]:
-                    raise EvtBadHeaderError("Sampling rate not constant")
-                datal = self.e_data.read(file_pointer,
-                                         self.e_tag.datalength,
-                                         endian, retparam)
-                npdata = np.array(datal)
-                self.data = np.hstack((self.data, npdata))  # append data
-            except EvtEOFError:
-                break
+            while True:
+                try:
+                    self.e_tag.read(file_pointer)
+                    retparam = self.e_frame.read(file_pointer,
+                                                 self.e_tag.length, endian)
+                    if self.samplingrate == 0:
+                        self.samplingrate = retparam[0]
+                    elif self.samplingrate != retparam[0]:
+                        raise EvtBadHeaderError("Sampling rate not constant")
+                    data = self.e_data.read(file_pointer,
+                                            self.e_tag.datalength,
+                                            endian, retparam)
+                    self.data = np.hstack((self.data, data))
+                except EvtEOFError:
+                    break
+        finally:
+            if not is_fileobject:
+                file_pointer.close()
+
         if self.e_frame.count() != self.e_header.duration:
             raise EvtBadDataError("Bad number of blocks")
 
         if not raw:
             self.calibration()
-        if is_fileobject is False:
-            file_pointer.close()
 
         traces = []
         for i in range(self.e_header.nchannels):
             cur_trace = Trace(data=self.data[i])
             cur_trace.stats.channel = str(i)
-            cur_trace.stats.station = self.e_header.stnid.replace(b"\x00",
-                                                                  b"").decode()
+            cur_trace.stats.station = self.e_header.stnid
             cur_trace.stats.sampling_rate = float(self.samplingrate)
             cur_trace.stats.starttime = self.e_header.starttime
             cur_trace.stats.kinemetrics_evt = self.e_header.makeobspydico(i)
@@ -164,22 +166,23 @@ class EvtData(object):
         samplerate = param[0]
         numbyte = param[1]
         numchan = param[3]
-        num = (samplerate / 10) * numbyte * numchan
-        data = [[] for _ in range(numchan)]
+        num = (samplerate // 10) * numbyte * numchan
         if length != num:
             raise EvtBadDataError("Bad data length")
-        for j in range(samplerate // 10):
-            for k in range(numchan):
-                i = (j * numchan) + k
-                if numbyte == 2:
-                    val = unpack(b">i", buff[i * 2:(i * 2) + 2] + b'\0\0')[0] \
-                        >> 8
-                elif numbyte == 3:
+
+        if numbyte == 2:
+            data = frombuffer(buff, ">h").reshape((-1, numchan)).T
+        elif numbyte == 4:
+            data = frombuffer(buff, ">i").reshape((-1, numchan)).T
+        elif numbyte == 3:
+            data = np.empty((numchan, samplerate // 10))
+            for j in range(samplerate // 10):
+                for k in range(numchan):
+                    i = (j * numchan) + k
                     val = unpack(b">i", buff[i * 3:(i * 3) + 3] + b'\0')[0] \
                         >> 8
-                elif numbyte == 4:
-                    val = unpack(b">i", buff[i * 4:(i * 4) + 4])[0]
-                data[k].append(val)
+                    data[k, j] = val
+
         return data
 
 
@@ -208,10 +211,10 @@ class EvtHeader(EvtVirtual):
               'latitude': [121, ''],
               'longitude': [122, ''],
               'chan_id': [140, ['_arraynull', [12, 27, 140]]],
-              'chan_north': [143, ['_arraynull', [12, 27, 143]]],
-              'chan_east': [144, ['_arraynull', [12, 27, 144]]],
-              'chan_up': [145, ['_arraynull', [12, 27, 145]]],
-              'chan_azimuth': [147, ['_arraynull', [12, 27, 147]]],
+              'chan_north': [143, ['_array', [12, 27, 143]]],
+              'chan_east': [144, ['_array', [12, 27, 144]]],
+              'chan_up': [145, ['_array', [12, 27, 145]]],
+              'chan_azimuth': [147, ['_array', [12, 27, 147]]],
               'chan_gain': [150, ['_array', [12, 27, 150]]],
               'chan_fullscale': [157, ['_array', [12, 27, 157]]],
               'chan_sensitivity': [158, ['_array', [12, 27, 158]]],
@@ -229,7 +232,7 @@ class EvtHeader(EvtVirtual):
         read the Header of Evt file
         """
         buff = file_p.read(length)
-        self.endian = endian.encode()
+        self.endian = endian
         if length == 2040:  # File Header 12 channel
             self.analyse_header12(buff)
         elif length == 2736:  # File Header 18 channel
@@ -238,14 +241,14 @@ class EvtHeader(EvtVirtual):
             raise EvtBadHeaderError("Bad Header length " + length)
 
     def analyse_header12(self, head_buff):
-        val = unpack(self.endian+HEADER_STRUCT1, head_buff[0:0x7c])
-        self.setdico(list(val), 0)
-        val = unpack(self.endian+HEADER_STRUCT2, head_buff[0x7c:0x22c])
-        self.setdico(list(val), 35)
-        val = unpack(self.endian+HEADER_STRUCT3, head_buff[0x22c:0x2c8])
-        self.setdico(list(val), 107)
-        val = unpack(self.endian+HEADER_STRUCT4, head_buff[0x2c8:0x658])
-        self.setdico(list(val), 140)
+        val = unpack(self.endian + HEADER_STRUCT1, head_buff[0:0x7c])
+        self.setdico(val, 0)
+        val = unpack(self.endian + HEADER_STRUCT2, head_buff[0x7c:0x22c])
+        self.setdico(val, 35)
+        val = unpack(self.endian + HEADER_STRUCT3, head_buff[0x22c:0x2c8])
+        self.setdico(val, 107)
+        val = unpack(self.endian + HEADER_STRUCT4, head_buff[0x2c8:0x658])
+        self.setdico(val, 140)
         # Those three do not do anything... (For futur extensions)
         # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
         # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
@@ -333,7 +336,7 @@ class EvtFrameHeader(EvtVirtual):
     def analyse_frame32(self, head_buff):
         self.numframe += 1
         val = unpack(self.endian+FRAME_STRUCT, head_buff)
-        self.setdico(list(val), 0)
+        self.setdico(val, 0)
         if not self.verify(verbose=False):
             raise EvtBadHeaderError("Bad Frame values")
 
@@ -393,7 +396,7 @@ class EvtTag(EvtVirtual):
             endian = b"<"
         else:
             raise EvtBadHeaderError
-        val = list(unpack(endian + b"cBBBLHHHH", mystr))
+        val = unpack(endian + b"cBBBLHHHH", mystr)
         self.setdico(val)
         self.endian = endian
         if not self.verify(verbose=False):
@@ -404,7 +407,7 @@ class EvtTag(EvtVirtual):
             if verbose:
                 print("Type of Header ", self.type, " not known")
             return False
-        if (self.type == 1) and (self.length not in [2040, 2736]):
+        if self.type == 1 and self.length not in [2040, 2736]:
             if verbose:
                 print("Bad Header file length : ", self.length)
             return False

@@ -92,11 +92,11 @@ class EvtVirtual(object):
         :type offset: int
         :param offset : offset in the dictionary
         """
-        if not isinstance(val, list):
-            raise TypeError("setdico() expects a list")
+        if not isinstance(val, tuple):
+            raise TypeError("setdico() expects a tuple")
         for key in self.HEADER:
             index = self.HEADER[key][0] - offset
-            if index < len(val) and index >= 0:
+            if 0 <= index < len(val):
                 if self.HEADER[key][1] != "":
                     fct = self.HEADER[key][1][0]
                     param = self.HEADER[key][1][1]
@@ -130,15 +130,16 @@ class EvtVirtual(object):
         """
         frame_time = blocktime
         if param > 0:
-            frame_milli = val[param-offset]
+            frame_milli = val[param - offset]
         else:
             frame_milli = 0
         frame_time += 315532800  # diff between 1970/1/1 and 1980/1/1
-        time = UTCDateTime(frame_time) + frame_milli/1000.0
-        time.precison = 3
+        time = UTCDateTime(frame_time) + frame_milli / 1000.0
+        time.precision = 3
         return time
 
-    def _strnull(self, strn, unused_param, unused_val, unused_offset):
+    def _strnull(self, strn,
+                 unused_param=None, unused_val=None, unused_offset=None):
         """
         Change a C string (null terminated to Python string)
 
@@ -149,10 +150,7 @@ class EvtVirtual(object):
         :param offset: not used
         :rtype: str
         """
-        try:
-            return strn.rstrip("\0")
-        except AttributeError:
-            return strn
+        return strn.rstrip(b"\0").decode()
 
     def _array(self, unused_firstval, param, val, offset):
         """
@@ -172,7 +170,7 @@ class EvtVirtual(object):
         size_structure = param[1]
         index0 = param[2]
         for i in range(size_array):
-            ret.append(val[index0-offset+(i*size_structure)])
+            ret.append(val[index0 - offset + (i * size_structure)])
         return ret
 
     def _arraynull(self, unused_firstval, param, val, offset):
@@ -193,8 +191,7 @@ class EvtVirtual(object):
         size_structure = param[1]
         index0 = param[2]
         for i in range(size_array):
-            mystr = self._strnull(val[index0-offset+(i*size_structure)],
-                                  '', '', '')
+            mystr = self._strnull(val[index0 - offset + (i * size_structure)])
             ret.append(mystr)
         return ret
 

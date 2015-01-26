@@ -27,7 +27,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_is_evt(self):
         """
-        Test for the the is_evt() function.
+        Test for the is_evt() function.
         """
         valid_files = [os.path.join(self.path, "BI008_MEMA-04823.evt"),
                        os.path.join(self.path, "BX456_MOLA-02351.evt")]
@@ -56,7 +56,6 @@ class CoreTestCase(unittest.TestCase):
             if filename.endswith(".py"):
                 invalid_files.append(
                     os.path.abspath(os.path.join(py_dir, filename)))
-        self.assertTrue(len(invalid_files) > 0)
 
         for filename in valid_files:
             with open(filename, "rb") as fh:
@@ -88,7 +87,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
         self.assertEqual(st[2].stats.starttime,
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230*25)
+        self.assertEqual(len(st[0]), 230 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
@@ -137,7 +136,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
         self.assertEqual(st[2].stats.starttime,
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230*25)
+        self.assertEqual(len(st[0]), 230 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
@@ -166,7 +165,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
         self.assertEqual(st[5].stats.starttime,
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390*25)
+        self.assertEqual(len(st[0]), 390 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
@@ -186,7 +185,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
         self.assertEqual(st[2].stats.starttime,
                          UTCDateTime('2013-08-15T09:20:28.000000Z'))
-        self.assertEqual(len(st[0]), 230*25)
+        self.assertEqual(len(st[0]), 230 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MEMA')
@@ -212,7 +211,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
         self.assertEqual(st[5].stats.starttime,
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390*25)
+        self.assertEqual(len(st[0]), 390 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
@@ -265,7 +264,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
         self.assertEqual(st[5].stats.starttime,
                          UTCDateTime('2012-01-17T09:54:36.000000Z'))
-        self.assertEqual(len(st[0]), 390*25)
+        self.assertEqual(len(st[0]), 390 * 25)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 250.0)
         self.assertEqual(st[0].stats.channel, '0')
         self.assertEqual(st[0].stats.station, 'MOLA')
@@ -300,14 +299,9 @@ class CoreTestCase(unittest.TestCase):
                               -2.4424990639e-002])
         # Data values from Tsoft Program
 
-        lendata = len(data)
-        self.assertEqual(lendata, 5750)
-        for i in range(len(valuesdeb)):
-            self.assertAlmostEqual(valuesdeb[i], data[i], 8)
-        len_test_end = len(valuesend)
-        pos_test = lendata - len_test_end
-        for i in range(len_test_end):
-            self.assertAlmostEqual(valuesend[i], data[pos_test + i], 8)
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
 
     def verify_data_evt2(self, data):
         valuesdeb = np.array([-4.4351171702e-002, -4.4479820877e-002,
@@ -327,14 +321,9 @@ class CoreTestCase(unittest.TestCase):
         # Data values from Tsoft Program
         # length is 5750
 
-        lendata = len(data)
-        self.assertEqual(lendata, 5750)
-        for i in range(len(valuesdeb)):
-            self.assertAlmostEqual(valuesdeb[i], data[i], 8)
-        len_test_end = len(valuesend)
-        pos_test = lendata - len_test_end
-        for i in range(len_test_end):
-            self.assertAlmostEqual(valuesend[i], data[pos_test + i], 8)
+        self.assertEqual(len(data), 5750)
+        self.assertTrue(np.allclose(valuesdeb, data[:len(valuesdeb)]))
+        self.assertTrue(np.allclose(valuesend, data[-len(valuesend):]))
 
 
 def suite():
