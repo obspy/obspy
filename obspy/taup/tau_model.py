@@ -19,7 +19,7 @@ class TauModel(object):
     """
     # The following really need to be class attributes. For some reason.
 
-    # Depth for which tau model was constructed.
+    # Depth for which tau model as constructed.
     source_depth = 0.0
     radiusOfEarth = 6371.0
     # Branch with the source at its top.
@@ -223,7 +223,7 @@ class TauModel(object):
         located on a branch boundary.
          """
         # First check to see if depth happens to already be a branch
-        # boundary, then just return original tMod.
+        # boundary, then just return original model.
         for tb in self.tauBranches[0]:
             if tb.topDepth == depth or tb.botDepth == depth:
                 return deepcopy(self)

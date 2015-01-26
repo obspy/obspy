@@ -114,7 +114,7 @@ class TauP_Create(object):
         """
         try:
             self.tMod = self.createTauModel(self.vMod)
-            # this reassigns tMod! Used to be TauModel() class,
+            # this reassigns model! Used to be TauModel() class,
             # now it's an instance of it.
             if self.debug:
                 print("Done calculating Tau branches.")

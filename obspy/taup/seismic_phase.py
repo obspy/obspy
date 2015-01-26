@@ -165,7 +165,7 @@ class SeismicPhase(object):
             isPWave = False
         # First,  decide whether the ray is upgoing or downgoing from the
         # source. If it is up going then the first branch number would be
-        # tMod.sourceBranch-1 and downgoing would be tMod.sourceBranch.
+        # model.sourceBranch-1 and downgoing would be model.sourceBranch.
         if currLeg.startswith("s") or currLeg.startswith("S"):
             # Exclude S sources in fluids.
             sdep = tMod.source_depth
@@ -835,7 +835,7 @@ class SeismicPhase(object):
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, ie it is between rayNum and rayNum+1,
-        # We know that it must be <tMod.ray_param.length-1 since the last
+        # We know that it must be <model.ray_param.length-1 since the last
         # ray parameter sample is 0 in a spherical model.
         rayNum = 0
         for i, rp in enumerate(self.tMod.ray_params[:-1]):
@@ -845,7 +845,7 @@ class SeismicPhase(object):
                 break
         # Here we use ray parameter and dist info stored within the
         # SeismicPhase so we can use currArrival.ray_param_index, which
-        # may not correspond to rayNum (for tMod.ray_param).
+        # may not correspond to rayNum (for model.ray_param).
         ray_param_a = self.ray_param[currArrival.ray_param_index]
         ray_param_b = self.ray_param[currArrival.ray_param_index + 1]
         distA = self.dist[currArrival.ray_param_index]

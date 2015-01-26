@@ -17,16 +17,13 @@ class TauP_Time(object):
     between known slowness samples.
     """
     def __init__(self, model, phase_list, depth, degrees):
-        self.tMod = model
+        self.model = model
         # tModDepth will be depth-corrected if source depth is not 0.
-        self.tModDepth = self.tMod
-        self.modelName = self.tMod.sMod.vMod.modelName
+        self.tModDepth = self.model
+        self.modelName = self.model.sMod.vMod.modelName
 
-        # Allow phases originating in the core
-        self.expert = False
         # Names of phases to be used, e.g. PKIKP
-        self.phaseList = phase_list
-        self.phaseNames = []
+        self.phaseNames = parsePhaseList(phase_list)
         # List to hold the SeismicPhases for the phases named in phaseNames.
         self.phases = []
         # The following are 'initialised' for the purpose of checking later
@@ -34,16 +31,12 @@ class TauP_Time(object):
         self.depth = depth
         self.degrees = degrees
         self.arrivals = []
-        self.relativePhaseName = None
-        self.relativeArrival = None
 
-    def run(self, printOutput=False):
+    def run(self):
         """
         Do all the calculations and print the output if told to. The resulting
         arrival times will be in self.arrivals.
-        :param printOutput: Whether to print the output to stdout.
         """
-        self.phaseNames = parsePhaseList(self.phaseList)
         self.depthCorrect(self.depth)
         self.calculate(self.degrees)
 
@@ -53,13 +46,13 @@ class TauP_Time(object):
         corrected).
         """
         if self.tModDepth is None or self.tModDepth.source_depth != depth:
-            self.tModDepth = self.tMod.depthCorrect(depth)
+            self.tModDepth = self.model.depthCorrect(depth)
             # This is not recursion!
             self.arrivals = []
-            self.recalcPhases()
+            self.recalc_phases()
         self.source_depth = depth
 
-    def recalcPhases(self):
+    def recalc_phases(self):
         """
         Recalculates the given phases using a possibly new or changed tau
         model.
@@ -87,22 +80,17 @@ class TauP_Time(object):
             self.phases = newPhases
 
     def calculate(self, degrees):
-        """Calls the actual calculations of the arrival times."""
+        """
+        Calculate the arrival times.
+        """
         self.depthCorrect(self.source_depth)
         # Called before, but depthCorrect might have changed the phases.
-        self.recalcPhases()
-        self.calcTime(degrees)
-        if self.relativePhaseName is not None:
-            relPhases = []
-            splitNames = getPhaseNames(self.relativePhaseName)  # Static!
-            for sName in splitNames:
-                relPhases.append(SeismicPhase(sName, self.tModDepth))
-            self.relativeArrival = SeismicPhase.get_earliest_arrival(
-                relPhases, degrees)
+        self.recalc_phases()
+        self.calc_time(degrees)
 
-    def calcTime(self, degrees):
+    def calc_time(self, degrees):
         """
-        Calls the calcTime method of SeismicPhase to calculate arrival
+        Calls the calc_time method of SeismicPhase to calculate arrival
         times for every phase, each sorted by time.
         """
         self.degrees = degrees

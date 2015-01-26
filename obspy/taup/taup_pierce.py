@@ -33,7 +33,7 @@ class TauP_Pierce(TauP_Time):
         :param depth:
         :return:
         """
-        tModOrig = self.tMod
+        tModOrig = self.model
         mustRecalc = False
         # First check if tModDepth is correct as it is. Check to make sure
         # source depth is the same, and then check to make sure each addDepth
@@ -61,16 +61,16 @@ class TauP_Pierce(TauP_Time):
             self.tModDepth = None
             if self.addDepth is not None:
                 for addDepth in self.addDepth:
-                    self.tMod = self.tMod.splitBranch(addDepth)
+                    self.model = self.model.splitBranch(addDepth)
             TauP_Time.depthCorrect(self, depth)
-            self.tMod = tModOrig
+            self.model = tModOrig
 
     def calculate(self, degrees):
         """
         Call all the necessary calculations to obtain the pierce points.
         """
         self.depthCorrect(self.source_depth)
-        self.recalcPhases()
+        self.recalc_phases()
         self.arrivals = []
         self.calcPierce(degrees)
 
