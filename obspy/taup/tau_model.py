@@ -184,7 +184,7 @@ class TauModel(object):
         # Could implement the model validation; not critical right now
         return True
 
-    def depthCorrect(self, depth):
+    def depth_correct(self, depth):
         """
         Called in TauP_Time. Computes a new tau model for a source at depth
         using the previously computed branches for a surface source. No
