@@ -19,6 +19,9 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
 
 
 def _read_taup_output(filename):
+    """
+    Helper function reading a stdout capture of TauP.
+    """
     output = []
     with open(os.path.join(DATA, filename), "rt") as fh:
         while True:
@@ -47,6 +50,9 @@ def _read_taup_output(filename):
 
 
 def _compare_arrivals_with_file(arrivals, filename):
+    """
+    Helper function comparing arrivals against the phases stored in a file.
+    """
     arrivals = sorted(arrivals, key=lambda x: x.time)
     _expected_arrivals_unsorted = _read_taup_output(filename)
     expected_arrivals = sorted(_expected_arrivals_unsorted,
@@ -56,6 +62,10 @@ def _compare_arrivals_with_file(arrivals, filename):
 
 
 def _assert_arrivals_equal(arr, expected_arr):
+    """
+    Helper function comparing an arrival object and a dictionary of expected
+    arrivals.
+    """
     # Zero travel time result in the other parameters being undefined.
     if arr.time == 0.0:
         return
@@ -75,6 +85,9 @@ def _assert_arrivals_equal(arr, expected_arr):
 
 
 def test_p_iasp91_manual():
+    """
+    Manual test for P phase in IASP91.
+    """
     m = TauPyModel(model="iasp91")
     arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                   distance_in_degree=35.0, phase_list=["P"])
@@ -91,6 +104,9 @@ def test_p_iasp91_manual():
 
 
 def test_p_iasp91():
+    """
+    Test P phase arrival against TauP output in in model IASP91.
+    """
     m = TauPyModel(model="iasp91")
     arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                   distance_in_degree=35.0, phase_list=["P"])
@@ -98,6 +114,9 @@ def test_p_iasp91():
 
 
 def test_p_ak135():
+    """
+    Test P phase arrival against TauP output in in model AK135.
+    """
     m = TauPyModel(model="ak135")
     arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                   distance_in_degree=35.0, phase_list=["P"])
@@ -106,6 +125,10 @@ def test_p_ak135():
 
 
 def test_iasp91():
+    """
+    Test travel times for lots of phases against output from TauP in model
+    IASP91.
+    """
     m = TauPyModel(model="iasp91")
     arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                   distance_in_degree=35.0,
@@ -114,6 +137,10 @@ def test_iasp91():
 
 
 def test_ak135():
+    """
+    Test travel times for lots of phases against output from TauP in model
+    AK135.
+    """
     m = TauPyModel(model="ak135")
     arrivals = m.get_travel_times(source_depth_in_km=10.0,
                                   distance_in_degree=35.0,
@@ -123,6 +150,9 @@ def test_ak135():
 
 
 def test_pierce_p_iasp91():
+    """
+    Test single pierce point against output from TauP.
+    """
     m = TauPyModel(model="iasp91")
     arrivals = m.get_pierce_points(source_depth_in_km=10.0,
                                    distance_in_degree=35.0, phase_list=["P"])
@@ -151,7 +181,13 @@ def test_pierce_p_iasp91():
 
 
 def test_vs_java_iasp91():
-    # TODO: takes for ever and partially fails!!!
+    """
+    Tests the traveltime calculation against the output from TauP in the
+    file 'java_tauptime_testoutput'.
+
+    Essentially tests all kinds of depths and epicentral distances in the
+    model iasp91.
+    """
     m = TauPyModel(model="iasp91")
     filename = os.path.join(DATA, "java_tauptime_testoutput")
 
@@ -208,6 +244,9 @@ def test_vs_java_iasp91():
 
 
 def test_pierce_all_phases():
+    """
+    Tests pierce points against those calculated in TauP.
+    """
     filename = os.path.join(DATA, "java_taup_pierce_h10_deg35_ttall")
     expected = collections.defaultdict(list)
     with open(filename, "rt") as fh:
