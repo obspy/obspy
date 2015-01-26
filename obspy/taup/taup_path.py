@@ -28,7 +28,7 @@ class TauP_Path(TauP_Pierce):
         """
         Call all the necessary calculations to obtain the ray paths.
         """
-        self.depthCorrect(self.sourceDepth)
+        self.depthCorrect(self.source_depth)
         self.recalcPhases()
         self.arrivals = []
         self.calcPath(degrees)
