@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 
 import collections
 import inspect
+import numpy as np
 import os
 import unittest
 
@@ -285,6 +286,43 @@ class TauPyModelTestCase(unittest.TestCase):
             actual_values = sorted(actual[key])
             expected_values = sorted(expected[key])
             self.assertEqual(actual_values, expected_values)
+
+    def test_single_path(self):
+        """
+        Test the raypath for a single phase.
+        """
+        filename = os.path.join(DATA,
+                                "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
+        expected = []
+        with open(filename, "rt") as fh:
+            for line in fh:
+                line = line.strip()
+                if line.startswith(">"):
+                    continue
+                line = line.split()
+                expected.append(list(map(float, line)))
+
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_ray_paths(source_depth_in_km=10.0,
+                                   distance_in_degree=35.0, phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+
+        # Interpolate both paths to 100 samples and make sure they are
+        # approximately equal.
+        sample_points = np.linspace(0, 35, 100)
+
+        interpolated_expected = np.interp(
+            sample_points,
+            [_i[0] for _i in expected],
+            [_i[1] for _i in expected])
+
+        interpolated_actual = np.interp(
+            sample_points,
+            [round(_i.get_dist_deg(), 2) for _i in arrivals[0].path],
+            [round(6371 - _i.depth, 2) for _i in arrivals[0].path])
+
+        np.testing.assert_allclose(interpolated_actual,
+                                   interpolated_expected, rtol=1E-4)
 
 
 def suite():
