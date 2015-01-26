@@ -10,26 +10,22 @@ import unittest
 
 from obspy.taup.velocity_model import VelocityModel
 
-# to get ./data:
-data_dir = os.path.join(os.path.dirname(os.path.abspath(
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data")
 
 
-class TestVelocityModel(unittest.TestCase):
+class TauPyVelocityModelTestCase(unittest.TestCase):
     def test_read_velocity_model(self):
-        print("reading and checking the read iasp91.tvel")
-
         for i in range(0, 2):
             if i == 0:
                 # read ./data/iasp91.tvel
-                velocity_model = os.path.join(data_dir, "iasp91.tvel")
+                velocity_model = os.path.join(DATA_DIR, "iasp91.tvel")
             else:
-                velocity_model = os.path.join(data_dir,
+                velocity_model = os.path.join(DATA_DIR,
                                               "iasp91_w_comment.tvel")
 
             # test_file.tvel is shorter
             test2 = VelocityModel.readVelocityFile(velocity_model)
-            # print(test2)
 
             self.assertEqual(len(test2.layers), 129)
             self.assertEqual(len(test2), 129)
@@ -40,8 +36,6 @@ class TestVelocityModel(unittest.TestCase):
             self.assertEqual(test2.iocbDepth, 5153.9)
             self.assertEqual(test2.minRadius, 0.0)
             self.assertEqual(test2.maxRadius, 6371.0)
-            # self.assertEqual(test2.spherical,True)
-            # self.assertEqual(test2.modelName, "iasp91")
 
             self.assertEqual(test2.validate(), True)
 
@@ -58,13 +52,12 @@ class TestVelocityModel(unittest.TestCase):
             self.assertEqual(test2.evaluateBelow(2889.0, 'D'), 9.9145)
             self.assertEqual(test2.depthAtTop(50), 2393.5)
             self.assertEqual(test2.depthAtBottom(50), 2443.0)
-
             self.assertEqual(test2.fixDisconDepths(), False)
 
-            # breakpoint:
-            # from IPython.core.debugger import Tracer; Tracer(
-            # colors="Linux")()
+
+def suite():
+    return unittest.makeSuite(TauPyVelocityModelTestCase, 'test')
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(defaultTest='suite')

@@ -10,18 +10,7 @@ from obspy.taup.slowness_layer import create_from_vlayer
 from obspy.taup.velocity_layer import VelocityLayer
 
 
-class TestSlownessModel(unittest.TestCase):
-    """"
-    WARNING: The values I'm testing can't be right. Half of the methods
-    needed by createSample aren't implemented yet! However, as that is
-    needed in the constructor of the SlownessModel, the other methods can't
-    be tested independently of it. So I can test some (probably) always true
-    boundary, but the intermediate testing values should at some point,
-    as work progresses, start to throw errors. I could true unit tests,
-    but the effort doesn't seem worth it at the moment.
-    """
-
-    # noinspection PyCallByClass
+class TauPySlownessModelTestCase(unittest.TestCase):
     def test_slownesslayer(self):
         vLayer = VelocityLayer(1, 10, 31, 3, 5, 2, 4)
         a = create_from_vlayer(vLayer, True)
@@ -30,5 +19,10 @@ class TestSlownessModel(unittest.TestCase):
         b = create_from_vlayer(vLayer, False)
         self.assertEqual(b.topP, 3180.5)
 
+
+def suite():
+    return unittest.makeSuite(TauPySlownessModelTestCase, 'test')
+
+
 if __name__ == '__main__':
-    unittest.main(buffer=True)
+    unittest.main(defaultTest='suite')
