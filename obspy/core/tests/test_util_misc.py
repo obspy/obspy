@@ -7,7 +7,6 @@ from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import CatchOutput
 import os
-import platform
 import sys
 import tempfile
 import unittest
@@ -37,12 +36,8 @@ class UtilMiscTestCase(unittest.TestCase):
             os.system('echo "123" 1>&2')
             print("456", file=sys.stderr)
 
-        if platform.system() == "Windows":
-            self.assertEqual(out.stdout, b'"abc"\r\ndef\nghi\r\njkl\r\n')
-            self.assertEqual(out.stderr, b'"123" \r\n456\r\n')
-        else:
-            self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
-            self.assertEqual(out.stderr, b"123\n456\n")
+        self.assertEqual(out.stdout, b"abc\ndef\nghi\njkl\n")
+        self.assertEqual(out.stderr, b"123\n456\n")
 
     def test_CatchOutput_IO(self):
         """

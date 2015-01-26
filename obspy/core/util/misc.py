@@ -23,6 +23,7 @@ import tempfile
 import shutil
 import numpy as np
 import math
+import platform
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -433,6 +434,10 @@ def CatchOutput():
                 os.close(stderr_copy)
                 tmp_stderr.seek(0)
                 out.stderr = tmp_stderr.read()
+
+                if platform.system() == "Windows":
+                    out.stdout = out.stdout.replace(b'\r', b'')
+                    out.stderr = out.stderr.replace(b'\r', b'')
 
                 if raised:
                     raise SystemExit(out.stderr)

@@ -54,7 +54,7 @@ CALCULATED VALUES
 
 ''' % (self.test_file,)  # noqa
         self.assertEqual(expected.encode('utf-8'),
-                         out.stdout.replace(b'\r', b''))
+                         out.stdout)
 
     def test_second_record(self):
         with CatchOutput() as out:
@@ -94,7 +94,7 @@ CALCULATED VALUES
 
 ''' % (self.test_file,)  # noqa
         self.assertEqual(expected.encode('utf-8'),
-                         out.stdout.replace(b'\r', b''))
+                         out.stdout)
 
 
 def suite():

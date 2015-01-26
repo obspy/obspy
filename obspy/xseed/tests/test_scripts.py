@@ -40,7 +40,7 @@ class ScriptTestCase(unittest.TestCase):
 Parsing file %s
 ''' % (self.dataless_file,)
             self.assertEqual(expected.encode('utf-8'),
-                             out.stdout.replace(b'\r', b''))
+                             out.stdout)
 
             expected = ['RESP.BW.FURT..EHE',
                         'RESP.BW.FURT..EHN',
@@ -57,7 +57,7 @@ Parsing file %s
 Parsing file %s
 ''' % (self.dataless_file,)
             self.assertEqual(expected.encode('utf-8'),
-                             out.stdout.replace(b'\r', b''))
+                             out.stdout)
 
             self.assertTrue(os.path.exists('dataless.seed.BW_FURT.zip'))
 
@@ -82,7 +82,7 @@ Parsing file %s
 Parsing file %s
 ''' % (self.dataless_file,)
             self.assertEqual(expected.encode('utf-8'),
-                             out.stdout.replace(b'\r', b''))
+                             out.stdout)
 
             self.assertTrue(os.path.exists(self.xseed_name))
 
@@ -107,7 +107,7 @@ Parsing file %s
 Parsing file %s
 ''' % (dataless_multi_file,)
             self.assertEqual(expected.encode('utf-8'),
-                             out.stdout.replace(b'\r', b''))
+                             out.stdout)
 
             expected = ['CL.AIO.dataless.xml',
                         'CL.AIO.dataless.xml.1028697240.0.xml',
@@ -130,7 +130,7 @@ Parsing file %s
 Parsing file %s
 ''' % (self.xseed_file,)
             self.assertEqual(expected.encode('utf-8'),
-                             out.stdout.replace(b'\r', b''))
+                             out.stdout)
 
             with open(self.dataless_file, 'rb') as fh:
                 expected = fh.read()
