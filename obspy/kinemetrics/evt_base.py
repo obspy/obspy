@@ -135,7 +135,7 @@ class EvtVirtual(object):
             frame_milli = 0
         frame_time += 315532800  # diff between 1970/1/1 and 1980/1/1
         time = UTCDateTime(frame_time) + frame_milli/1000.0
-        time.precison = 3
+        time.precision = 3
         return time
 
     def _strnull(self, strn, unused_param, unused_val, unused_offset):
