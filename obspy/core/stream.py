@@ -830,7 +830,7 @@ class Stream(object):
                 nsamples += 1
             
             if return_indices:
-            gap_list.append([stats['network'], stats['station'],
+                gap_list.append([stats['network'], stats['station'],
                              stats['location'], stats['channel'],
                              stime, etime, delta, nsamples, _i, _i+1])
             else:
