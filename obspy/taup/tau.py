@@ -43,10 +43,10 @@ class TauPyModel(object):
         Usage:
         >>> from obspy.taup import tau
         >>> i91 = tau.TauPyModel()
-        >>> i91.get_travel_times(10, 20)[0].name
-        'Pn'
-        >>> i91.get_travel_times(10, 20)[0].time
-        15.60164282924581
+        >>> print(i91.get_travel_times(10, 20)[0].name)
+        Pn
+        >>> i91.get_travel_times(10, 20)[0].time  # doctest: +ELLIPSIS
+        15.6016...
         >>> len(i91.get_travel_times(100, 50, phase_list = ["P", "S"]))
         2
         """
