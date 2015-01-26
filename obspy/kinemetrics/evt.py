@@ -16,6 +16,7 @@ from struct import unpack
 import numpy as np
 
 from obspy import Trace, Stream
+from obspy.core.compatibility import frombuffer
 from obspy.kinemetrics.evt_base import EvtBadHeaderError, EvtEOFError, \
     EvtBadDataError, EvtVirtual
 
@@ -116,11 +117,10 @@ class Evt(object):
                         self.samplingrate = retparam[0]
                     elif self.samplingrate != retparam[0]:
                         raise EvtBadHeaderError("Sampling rate not constant")
-                    datal = self.e_data.read(file_pointer,
-                                             self.e_tag.datalength,
-                                             endian, retparam)
-                    npdata = np.array(datal)
-                    self.data = np.hstack((self.data, npdata))  # append data
+                    data = self.e_data.read(file_pointer,
+                                            self.e_tag.datalength,
+                                            endian, retparam)
+                    self.data = np.hstack((self.data, data))
                 except EvtEOFError:
                     break
         finally:
@@ -166,22 +166,23 @@ class EvtData(object):
         samplerate = param[0]
         numbyte = param[1]
         numchan = param[3]
-        num = (samplerate / 10) * numbyte * numchan
-        data = [[] for _ in range(numchan)]
+        num = (samplerate // 10) * numbyte * numchan
         if length != num:
             raise EvtBadDataError("Bad data length")
-        for j in range(samplerate // 10):
-            for k in range(numchan):
-                i = (j * numchan) + k
-                if numbyte == 2:
-                    val = unpack(b">i", buff[i * 2:(i * 2) + 2] + b'\0\0')[0] \
-                        >> 8
-                elif numbyte == 3:
+
+        if numbyte == 2:
+            data = frombuffer(buff, ">h").reshape((-1, numchan)).T
+        elif numbyte == 4:
+            data = frombuffer(buff, ">i").reshape((-1, numchan)).T
+        elif numbyte == 3:
+            data = np.empty((numchan, samplerate // 10))
+            for j in range(samplerate // 10):
+                for k in range(numchan):
+                    i = (j * numchan) + k
                     val = unpack(b">i", buff[i * 3:(i * 3) + 3] + b'\0')[0] \
                         >> 8
-                elif numbyte == 4:
-                    val = unpack(b">i", buff[i * 4:(i * 4) + 4])[0]
-                data[k].append(val)
+                    data[k, j] = val
+
         return data
 
 
