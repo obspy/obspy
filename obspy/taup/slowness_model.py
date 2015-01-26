@@ -708,8 +708,8 @@ class SlownessModel(object):
                         return currentNum
                     currentNum += 1
             else:
-                currentNum = int(decimal.Decimal(
-                    (tooSmallNum + tooLargeNum) / 2.0)
+                currentNum = int(decimal.Decimal(str(
+                    (tooSmallNum + tooLargeNum) / 2.0))
                     .to_integral_value(decimal.ROUND_HALF_EVEN))
             tempLayer = self.getSlownessLayer(currentNum, isPWave)
             if tempLayer.topDepth > depth:
