@@ -15,8 +15,9 @@ def load(model_name):
     Load a pickled model. It first tries to load a TauPy internal model with
     the given name. Otherwise it is treated as a filename.
     """
-    #
+    # Get the model filename in a unified manner.
     filename = _get_model_filename(model_name)
+    # If that file does not exist, just treat it as a filename.
     if not os.path.exists(filename):
         filename = model_name
 
