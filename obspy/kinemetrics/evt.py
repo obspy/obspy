@@ -241,13 +241,13 @@ class EvtHeader(EvtVirtual):
             raise EvtBadHeaderError("Bad Header length " + length)
 
     def analyse_header12(self, head_buff):
-        val = unpack(self.endian+HEADER_STRUCT1, head_buff[0:0x7c])
+        val = unpack(self.endian + HEADER_STRUCT1, head_buff[0:0x7c])
         self.setdico(val, 0)
-        val = unpack(self.endian+HEADER_STRUCT2, head_buff[0x7c:0x22c])
+        val = unpack(self.endian + HEADER_STRUCT2, head_buff[0x7c:0x22c])
         self.setdico(val, 35)
-        val = unpack(self.endian+HEADER_STRUCT3, head_buff[0x22c:0x2c8])
+        val = unpack(self.endian + HEADER_STRUCT3, head_buff[0x22c:0x2c8])
         self.setdico(val, 107)
-        val = unpack(self.endian+HEADER_STRUCT4, head_buff[0x2c8:0x658])
+        val = unpack(self.endian + HEADER_STRUCT4, head_buff[0x2c8:0x658])
         self.setdico(val, 140)
         # Those three do not do anything... (For futur extensions)
         # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
@@ -407,7 +407,7 @@ class EvtTag(EvtVirtual):
             if verbose:
                 print("Type of Header ", self.type, " not known")
             return False
-        if (self.type == 1) and (self.length not in [2040, 2736]):
+        if self.type == 1 and self.length not in [2040, 2736]:
             if verbose:
                 print("Bad Header file length : ", self.length)
             return False
