@@ -18,10 +18,9 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data", "TauP_test_data")
 
 
-def _read_taup_output(filename, pos):
+def _read_taup_output(filename):
     output = []
     with open(os.path.join(DATA, filename), "rt") as fh:
-        fh.seek(pos)
         while True:
             line = fh.readline().strip()
             if line.startswith("-----"):
@@ -44,13 +43,12 @@ def _read_taup_output(filename, pos):
                 "incident_angle": float(line[6]),
                 "purist_distance": float(line[7]),
                 "purist_name": line[8]})
-        pos = fh.tell()
-    return output, pos
+    return output
 
 
 def _compare_arrivals_with_file(arrivals, filename):
     arrivals = sorted(arrivals, key=lambda x: x.time)
-    _expected_arrivals_unsorted, pos = _read_taup_output(filename, pos=0)
+    _expected_arrivals_unsorted = _read_taup_output(filename)
     expected_arrivals = sorted(_expected_arrivals_unsorted,
                                key=lambda x: x["time"])
     for arr, expected_arr in zip(arrivals, expected_arrivals):
@@ -58,6 +56,9 @@ def _compare_arrivals_with_file(arrivals, filename):
 
 
 def _assert_arrivals_equal(arr, expected_arr):
+    # Zero travel time result in the other parameters being undefined.
+    if arr.time == 0.0:
+        return
     assert arr.get_modulo_dist_deg() == expected_arr["distance"]
     assert arr.source_depth == expected_arr["depth"]
     assert arr.name == expected_arr["name"]
@@ -152,23 +153,58 @@ def test_pierce_p_iasp91():
 def test_vs_java_iasp91():
     # TODO: takes for ever and partially fails!!!
     m = TauPyModel(model="iasp91")
-    filename = "java_tauptime_testoutput"
-    pos = 0
-    while True:
-        old_pos = pos
-        arr, pos = _read_taup_output(filename, pos)
-        if pos == old_pos:
-            break
-        for _, a in enumerate(arr):
-            b_l = m.get_travel_times(source_depth_in_km=a['depth'],
-                                     distance_in_degree=a['distance'],
-                                     phase_list=[a["name"]])
-            b = sorted(b_l, key=lambda x: abs(x.time - a['time']) +
-                       abs(x.ray_param_sec_degree - a['ray_param_sec_degree']))[0]
-            # non defined values
-            if b.time == 0.0:
+    filename = os.path.join(DATA, "java_tauptime_testoutput")
+
+    expected = collections.defaultdict(list)
+    all_phases = []
+
+    with open(filename, "rt") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("----"):
                 continue
-            _assert_arrivals_equal(b, a)
+            line = line.replace("=", "")
+            line = line.split()
+            try:
+                float(line[0])
+            except:
+                continue
+            expected[(float(line[0]), float(line[1]))].append({
+                "distance": float(line[0]),
+                "depth": float(line[1]),
+                "name": line[2],
+                "time": float(line[3]),
+                "ray_param_sec_degree": float(line[4]),
+                "takeoff_angle": float(line[5]),
+                "incident_angle": float(line[6]),
+                "purist_distance": float(line[7]),
+                "purist_name": line[8]})
+            all_phases.append(line[2])
+
+    all_phases = sorted(set(all_phases))
+
+    for key, value in expected.items():
+        expected[key] = sorted(value,
+                               key=lambda x: (x["time"],
+                                              x["ray_param_sec_degree"],
+                                              x["name"]))
+    actual_phases = []
+    for dist, depth in expected.keys():
+        tt = m.get_travel_times(source_depth_in_km=depth,
+                                distance_in_degree=dist,
+                                phase_list=all_phases)
+        tt = sorted(tt, key=lambda x: (
+            round(x.time, 2),
+            round(x.ray_param_sec_degree, 3),
+            x.name))
+        expected_arrivals = expected[(dist, depth)]
+
+        for actual_arrival, expected_arrival in zip(tt, expected_arrivals):
+            _assert_arrivals_equal(actual_arrival, expected_arrival)
+        for arr in tt:
+            actual_phases.append(arr.name)
+    actual_phases = sorted(set(actual_phases))
+    assert actual_phases == all_phases
 
 
 def test_pierce_all_phases():
