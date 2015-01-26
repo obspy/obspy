@@ -86,8 +86,8 @@ KEYWORDS = [
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
     'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
     'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
@@ -138,6 +138,7 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
+        'KINEMETRICS_EVT = obspy.kinemetrics.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
@@ -176,6 +177,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
+    ],
+    'obspy.plugin.waveform.KINEMETRICS_EVT': [
+        'isFormat = obspy.kinemetrics.core:is_evt',
+        'readFormat = obspy.kinemetrics.core:read_evt',
     ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',

@@ -13,6 +13,8 @@
      * scipy < 0.10
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
+ - obspy.kinemetrics
+   * New submodule for reading the Kinemetrics EVT waveform format
  - obspy.arclink:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
