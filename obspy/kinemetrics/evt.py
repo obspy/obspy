@@ -137,8 +137,7 @@ class Evt(object):
         for i in range(self.e_header.nchannels):
             cur_trace = Trace(data=self.data[i])
             cur_trace.stats.channel = str(i)
-            cur_trace.stats.station = self.e_header.stnid.replace(b"\x00",
-                                                                  b"").decode()
+            cur_trace.stats.station = self.e_header.stnid
             cur_trace.stats.sampling_rate = float(self.samplingrate)
             cur_trace.stats.starttime = self.e_header.starttime
             cur_trace.stats.kinemetrics_evt = self.e_header.makeobspydico(i)
