@@ -418,7 +418,7 @@ class Unpickler(object):
         obj.azimuth = self._xpath2obj('azimuth', element, float)
         obj.distance = self._xpath2obj('distance', element, float)
         obj.takeoff_angle, obj.takeoff_angle_errors = \
-            self._float_value(element, 'takeoff_angle')
+            self._float_value(element, 'takeoffAngle')
         obj.time_residual = self._xpath2obj('timeResidual', element, float)
         obj.horizontal_slowness_residual = \
             self._xpath2obj('horizontalSlownessResidual', element, float)
@@ -1210,7 +1210,7 @@ class Pickler(object):
         self._str(arrival.azimuth, element, 'azimuth')
         self._str(arrival.distance, element, 'distance')
         self._value(arrival.takeoff_angle, arrival.takeoff_angle_errors,
-                    element, 'takeoff_angle')
+                    element, 'takeoffAngle')
         self._str(arrival.time_residual, element, 'timeResidual')
         self._str(arrival.horizontal_slowness_residual, element,
                   'horizontalSlownessResidual')
