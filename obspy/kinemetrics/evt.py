@@ -232,7 +232,7 @@ class EvtHeader(EvtVirtual):
         read the Header of Evt file
         """
         buff = file_p.read(length)
-        self.endian = endian.encode()
+        self.endian = endian
         if length == 2040:  # File Header 12 channel
             self.analyse_header12(buff)
         elif length == 2736:  # File Header 18 channel
