@@ -71,7 +71,7 @@ class SeismicPhase(object):
         self.name = name
         # The source depth within the TauModel that was used to generate
         # this phase.
-        self.sourceDepth = tMod.sourceDepth
+        self.source_depth = tMod.source_depth
         # TauModel to generate phase for.
         self.tMod = tMod
         # Array of distances corresponding to the ray parameters stored in
@@ -168,7 +168,7 @@ class SeismicPhase(object):
         # tMod.sourceBranch-1 and downgoing would be tMod.sourceBranch.
         if currLeg.startswith("s") or currLeg.startswith("S"):
             # Exclude S sources in fluids.
-            sdep = tMod.sourceDepth
+            sdep = tMod.source_depth
             if tMod.cmbDepth < sdep < tMod.iocbDepth:
                 self.maxRayParam, self.minRayParam = -1, -1
                 return
@@ -791,7 +791,7 @@ class SeismicPhase(object):
                         continue
                     arrivals.append(self.linear_interp_arrival(
                         searchDist, rayNum, self.name, self.puristName,
-                        self.sourceDepth))
+                        self.source_depth))
             # Look for arrivals that are 2(n+1)Pi-radDist, i.e. rays that
             # have done more than one half lap plus some number of whole laps.
             searchDist = (n + 1) * 2 * math.pi - radDist
@@ -811,7 +811,7 @@ class SeismicPhase(object):
                             continue
                         arrivals.append(self.linear_interp_arrival(
                             searchDist, rayNum, self.name, self.puristName,
-                            self.sourceDepth))
+                            self.source_depth))
             n += 1
         # Perhaps these are sorted by time in the java code?
         return arrivals
@@ -853,7 +853,7 @@ class SeismicPhase(object):
         distRatio = (currArrival.dist - distA) / (distB - distA)
         distRayParam = distRatio * (ray_param_b - ray_param_a) + ray_param_a
         # First pierce point is always 0 distance at the source depth.
-        pierce = [TimeDist(distRayParam, 0, 0, self.tMod.sourceDepth)]
+        pierce = [TimeDist(distRayParam, 0, 0, self.tMod.source_depth)]
         branchDist = 0
         branchTime = 0
         # Loop from 0 but already done 0 [I just copy the comments, sorry!],
@@ -932,7 +932,7 @@ class SeismicPhase(object):
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
         tempTimeDist = [TimeDist(currArrival.ray_param,
-                                 0, 0, self.tMod.sourceDepth)]
+                                 0, 0, self.tMod.source_depth)]
         # pathList is a list of lists.
         pathList = [tempTimeDist]
         for i, branchNum, isPWave, isDownGoing in zip(count(), self.branchSeq,
@@ -978,7 +978,7 @@ class SeismicPhase(object):
             pathList.append(headTD)
         currArrival.path = []
         cumulative = TimeDist(currArrival.ray_param,
-                              0, 0, currArrival.sourceDepth)
+                              0, 0, currArrival.source_depth)
         for branchPath in pathList:
             for bp in branchPath:
                 cumulative.add(bp)
@@ -1024,7 +1024,7 @@ class SeismicPhase(object):
         return out
 
     def linear_interp_arrival(self, searchDist, rayNum, name, puristName,
-                              sourceDepth):
+                              source_depth):
         arrivalTime = ((searchDist - self.dist[rayNum]) /
                        (self.dist[rayNum + 1] - self.dist[rayNum])
                        * (self.time[rayNum + 1] - self.time[rayNum]) +
@@ -1040,20 +1040,20 @@ class SeismicPhase(object):
         else:
             vMod = self.tMod.sMod.vMod
             if self.downGoing[0]:
-                takeoffVelocity = vMod.evaluateBelow(sourceDepth, name[0])
+                takeoffVelocity = vMod.evaluateBelow(source_depth, name[0])
             else:
                 # Fake negative velocity so angle is negative in case of
                 # upgoing ray.
-                takeoffVelocity = -1 * vMod.evaluateAbove(sourceDepth, name[0])
+                takeoffVelocity = -1 * vMod.evaluateAbove(source_depth, name[0])
             takeoffAngle = (180 / math.pi) * math.asin(
                 takeoffVelocity * arrivalRayParam / (self.tMod.radiusOfEarth -
-                                                     self.sourceDepth))
+                                                     self.source_depth))
             lastLeg = self.legs[-2][0]  # very last item is "END"
             incidentAngle = (180 / math.pi) * math.asin(
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /
                 self.tMod.radiusOfEarth)
         return Arrival(self, arrivalTime, searchDist, arrivalRayParam, rayNum,
-                       name, puristName, sourceDepth, takeoffAngle,
+                       name, puristName, source_depth, takeoffAngle,
                        incidentAngle)
 
     @classmethod

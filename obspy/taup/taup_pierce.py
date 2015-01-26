@@ -38,7 +38,7 @@ class TauP_Pierce(TauP_Time):
         # First check if tModDepth is correct as it is. Check to make sure
         # source depth is the same, and then check to make sure each addDepth
         # is in the model.
-        if self.tModDepth.sourceDepth == depth:
+        if self.tModDepth.source_depth == depth:
             if self.addDepth:
                 branchDepths = self.tModDepth.getBranchDepths()
                 for addDepth in self.addDepth:
@@ -69,7 +69,7 @@ class TauP_Pierce(TauP_Time):
         """
         Call all the necessary calculations to obtain the pierce points.
         """
-        self.depthCorrect(self.sourceDepth)
+        self.depthCorrect(self.source_depth)
         self.recalcPhases()
         self.arrivals = []
         self.calcPierce(degrees)
@@ -122,7 +122,7 @@ class TauP_Pierce(TauP_Time):
         return ("> " + outName + " at "
                 + " {:.2f} seconds at ".format(currArrival.time)
                 + " {:.2f} degrees for a ".format(currArrival.get_dist_deg())
-                + " {} km deep source in the ".format(currArrival.sourceDepth)
+                + " {} km deep source in the ".format(currArrival.source_depth)
                 + " {} model with ray_param {:.3f} s/deg.".format(
                     self.modelName, currArrival.ray_param * pi / 180))
 

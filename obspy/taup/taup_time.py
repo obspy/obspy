@@ -71,12 +71,12 @@ class TauP_Time(object):
         Corrects the TauModel for the given source depth (if not already
         corrected).
         """
-        if self.tModDepth is None or self.tModDepth.sourceDepth != depth:
+        if self.tModDepth is None or self.tModDepth.source_depth != depth:
             self.tModDepth = self.tMod.depthCorrect(depth)
             # This is not recursion!
             self.arrivals = []
             self.recalcPhases()
-        self.sourceDepth = depth
+        self.source_depth = depth
 
     def recalcPhases(self):
         """
@@ -89,7 +89,7 @@ class TauP_Time(object):
             for phaseNum, seismicPhase in enumerate(self.phases):
                 if seismicPhase.name == tempPhaseName:
                     self.phases.pop(phaseNum)
-                    if (seismicPhase.sourceDepth == self.depth
+                    if (seismicPhase.source_depth == self.depth
                             and seismicPhase.tMod == self.tModDepth):
                         # OK so copy to newPhases:
                         newPhases.append(seismicPhase)
@@ -107,7 +107,7 @@ class TauP_Time(object):
 
     def calculate(self, degrees):
         """Calls the actual calculations of the arrival times."""
-        self.depthCorrect(self.sourceDepth)
+        self.depthCorrect(self.source_depth)
         # Called before, but depthCorrect might have changed the phases.
         self.recalcPhases()
         self.calcTime(degrees)

@@ -20,7 +20,7 @@ class TauModel(object):
     # The following really need to be class attributes. For some reason.
 
     # Depth for which tau model was constructed.
-    sourceDepth = 0.0
+    source_depth = 0.0
     radiusOfEarth = 6371.0
     # Branch with the source at its top.
     sourceBranch = 0
@@ -196,7 +196,7 @@ class TauModel(object):
         extremal point for each of these branches. Cf. Buland and Chapman p
         1290.
         """
-        if self.sourceDepth != 0:
+        if self.source_depth != 0:
             raise TauModelError("Can't depth correct a TauModel that is not "
                                 "originally for a surface source.")
         if depth > self.radiusOfEarth:
@@ -205,7 +205,7 @@ class TauModel(object):
         depthCorrected = self.loadFromDepthCache(depth)
         if depthCorrected is None:
             depthCorrected = self.splitBranch(depth)
-            depthCorrected.sourceDepth = depth
+            depthCorrected.source_depth = depth
             depthCorrected.sourceBranch = depthCorrected.findBranch(depth)
             depthCorrected.validate()
             # Put in cache somehow: self.depthCache.put(depthCorrected)
@@ -305,7 +305,7 @@ class TauModel(object):
         # We have split a branch so possibly sourceBranch, mohoBranch,
         # cmbBranch and iocbBranch are off by 1.
         outSourceBranch = self.sourceBranch
-        if self.sourceDepth > depth:
+        if self.source_depth > depth:
             outSourceBranch += 1
         outmohoBranch = self.mohoBranch
         if self.mohoDepth > depth:

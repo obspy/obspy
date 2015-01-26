@@ -15,20 +15,14 @@ class TauP_Path(TauP_Pierce):
     """
     Calcualate the ray paths for each phase, using TauP_Pierce and TauP_Time.
     """
-
-    def __init__(self,
-                 phase_list=None, modelName="iasp91", depth=0, degrees=None,
-                 coordinate_list=None, taup_model_path=None):
-        TauP_Pierce.__init__(self, coordinate_list=coordinate_list,
-                             taup_model_path=taup_model_path)
-        phase_list = phase_list if phase_list is not None else []
+    def __init__(self, model, phase_list, depth, degrees):
+        super().__init__(model=model, phase_list=phase_list, depth=depth,
+                         degrees=degrees)
         self.maxPathTime = 1e300
         self.maxPathInc = 1
         self.phaseList = phase_list
-        self.modelName = modelName
-        # This type conversion is important (somehow).
         self.depth = float(depth)
-        self.degrees = degrees
+        self.degrees = float(degrees)
 
     def calculate(self, degrees):
         """
