@@ -1,4 +1,8 @@
 0.10.0:
+ - Highlights:
+   * Python3 support
+   * anaconda support
+   * New formats: AH, CNV, NDK, Datamark, NLLOC, CNV, PDAS, ZMAP
  - General:
    * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
    * More generic processing history for most Stream and Trace methods.
@@ -110,6 +114,10 @@
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.zmap:
    * New module which adds ZMAP read/write support
+ - obspy.taup:
+   * replaced fortran implementation through much more powerfull python
+     port of java taup. This enabled us to drop all fortan code, which
+     simplifies releases and builds tremendously.
  - scripts:
    * All scripts now require argparse instead of optparse.
    * All scripts now accept -V or --version to print version information.
