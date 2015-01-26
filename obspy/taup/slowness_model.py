@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
 import decimal
 import math
 import numpy as np
@@ -1292,8 +1291,7 @@ class SlownessModel(object):
         elif abs(sLayer.topDepth - depth) < 0.000001:
             # Check for very thin layers, just move the layer to hit the
             # boundary.
-            outLayers = deepcopy(self.PLayers) \
-                if isPWave else deepcopy(self.SLayers)
+            outLayers = self.PLayers if isPWave else self.SLayers
             outLayers[layerNum] = SlownessLayer(sLayer.topP, depth,
                                                 sLayer.botP, sLayer.botDepth)
             sLayer = self.getSlownessLayer(layerNum - 1, isPWave)
@@ -1306,8 +1304,7 @@ class SlownessModel(object):
             return SplitLayerInfo(out, False, True, sLayer.botP)
         elif abs(depth - sLayer.botDepth) < 0.000001:
             # As above.
-            outLayers = deepcopy(self.PLayers) \
-                if isPWave else deepcopy(self.SLayers)
+            outLayers = self.PLayers if isPWave else self.SLayers
             outLayers[layerNum] = SlownessLayer(sLayer.topP, sLayer.topDepth,
                                                 sLayer.botP, depth)
             sLayer = self.getSlownessLayer(layerNum + 1, isPWave)
@@ -1323,14 +1320,13 @@ class SlownessModel(object):
             p = sLayer.evaluateAtBullen(depth, self.radiusOfEarth)
             topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, depth)
             botLayer = SlownessLayer(p, depth, sLayer.botP, sLayer.botDepth)
-            outLayers = deepcopy(self.PLayers) \
-                if isPWave else deepcopy(self.SLayers)
+            outLayers = self.PLayers if isPWave else self.SLayers
             # or del outLayers[layerNum] - which is faster?
             outLayers.pop(layerNum)
             outLayers.insert(layerNum, botLayer)
             outLayers.insert(layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
-            outCriticalDepths = deepcopy(self.criticalDepths)
+            outCriticalDepths = self.criticalDepths
             self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
             if isPWave:
                 outPLayers = outLayers
@@ -1342,7 +1338,7 @@ class SlownessModel(object):
                                                  topLayer, botLayer,
                                                  outCriticalDepths, True)
                 outSLayers = outLayers
-            out = deepcopy(self)
+            out = self
             out.criticalDepths = outCriticalDepths
             out.PLayers = outPLayers
             out.SLayers = outSLayers
@@ -1363,7 +1359,7 @@ class SlownessModel(object):
 
     def fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer,
                        newBotLayer, criticalDepths, isPWave):
-        out = deepcopy(otherLayers)
+        out = otherLayers
         # Make sure to keep sampling consistent. If in a fluid, both wave
         # types will share a single slowness layer.
         try:
