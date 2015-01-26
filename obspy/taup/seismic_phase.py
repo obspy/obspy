@@ -1044,7 +1044,8 @@ class SeismicPhase(object):
             else:
                 # Fake negative velocity so angle is negative in case of
                 # upgoing ray.
-                takeoffVelocity = -1 * vMod.evaluateAbove(source_depth, name[0])
+                takeoffVelocity = -1 * vMod.evaluateAbove(source_depth,
+                                                          name[0])
             takeoffAngle = (180 / math.pi) * math.asin(
                 takeoffVelocity * arrivalRayParam / (self.tMod.radiusOfEarth -
                                                      self.source_depth))
