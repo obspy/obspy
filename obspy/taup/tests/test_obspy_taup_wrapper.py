@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.taup test suite.
+Tests the wrapper of ObsPy around obspy.taup.TauPyModel.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -13,7 +13,7 @@ import unittest
 
 class ObsPyTauPWrapperTestCase(unittest.TestCase):
     """
-    Test suite for obspy.taup.
+    Test suite for the ObsPy TauPy wrapper.
     """
     def setUp(self):
         # directory where the test files are located
