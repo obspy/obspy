@@ -526,7 +526,6 @@ def configuration(parent_package="", top_path=None):
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
-    build_taup_models()
     add_data_files(config)
 
     return config
@@ -706,4 +705,7 @@ if __name__ == '__main__':
                 os.remove(filename)
             except:
                 pass
-    setupPackage()
+    else:
+        setupPackage()
+        # must be called after build - otherwise can't find shared libs
+        build_taup_models()
