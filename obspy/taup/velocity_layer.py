@@ -37,10 +37,6 @@ VelocityLayer = np.dtype([
 ])
 
 
-def thickness(layer):
-    return layer['botDepth'] - layer['topDepth']
-
-
 def evaluateVelocityAtBottom(layer, materialProperty):
     materialProperty = materialProperty.lower()
     if materialProperty == "p":
@@ -64,7 +60,7 @@ def evaluateVelocityAtTop(layer, materialProperty):
 
 
 def evaluateVelocityAt(layer, depth, materialProperty):
-    thick = thickness(layer)
+    thick = layer['botDepth'] - layer['topDepth']
     materialProperty = materialProperty.lower()
     if materialProperty == "p":
         slope = (layer['botPVelocity'] - layer['topPVelocity']) / thick

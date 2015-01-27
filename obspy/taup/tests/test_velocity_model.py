@@ -8,6 +8,8 @@ import inspect
 import os
 import unittest
 
+import numpy as np
+
 from obspy.taup.velocity_model import VelocityModel
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(
@@ -39,7 +41,7 @@ class TauPyVelocityModelTestCase(unittest.TestCase):
 
             self.assertEqual(test2.validate(), True)
 
-            self.assertEqual(
+            np.testing.assert_equal(
                 test2.getDisconDepths(),
                 [0.0, 20.0, 35.0, 210.0, 410.0, 660.0, 2889.0, 5153.9, 6371.0])
 
