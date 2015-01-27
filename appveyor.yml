@@ -1,0 +1,73 @@
+# AppVeyor.com is a Continuous Integration service to build and run tests under Windows
+
+environment:
+  global:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous-integration\\appveyor\\run_with_env.cmd"
+    PYTHON: "C:\\conda"
+    MINICONDA_VERSION: "3.7.0"
+
+  matrix:
+    - PYTHON_VERSION: "2.6"
+      PYTHON_ARCH: "32"
+      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp26-none-win32.whl"
+
+    - PYTHON_VERSION: "2.6"
+      PYTHON_ARCH: "64"
+      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp26-none-win_amd64.whl"
+
+    - PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "32"
+      BASEMAP: "conda install -q --yes basemap"
+
+    - PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+      BASEMAP: "conda install -q --yes basemap"
+
+    - PYTHON_VERSION: "3.3"
+      PYTHON_ARCH: "32"
+      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp33-none-win32.whl"
+
+    - PYTHON_VERSION: "3.3"
+      PYTHON_ARCH: "64"
+      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp33-none-win_amd64.whl"
+
+    - PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "32"
+      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp34-none-win32.whl"
+
+    - PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "64"
+      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp34-none-win_amd64.whl"
+
+
+platform:
+  - x64
+
+install:
+  # Install miniconda using a powershell script.
+  - "powershell ./continuous-integration/appveyor/install-miniconda.ps1"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  # Check that we have the expected version and architecture for Python
+  - "%CMD_IN_ENV% python --version"
+  # Install the build and runtime dependencies of the project.
+  - "conda update -q --yes conda"
+  # Create a conda environment using the astropy bonus packages
+  - "conda create -q --yes -n test python=%PYTHON_VERSION%"
+  - "activate test"
+  # Install default dependencies
+  - "conda install -q --yes pip numpy scipy matplotlib=1.3.1 lxml sqlalchemy flake8 mock"
+  # additional dependecies
+  - "pip install suds-jurko"
+  - "pip install -U future"
+  # install basemap package
+  - "%BASEMAP%"
+
+# Not a .NET project, we build SunPy in the install step instead
+build: false
+
+test_script:
+  - "%CMD_IN_ENV% python setup.py develop"
+  - "python -m obspy.core.scripts.runtests -n appveyor-ci -r"
