@@ -8,6 +8,7 @@ import math
 import numpy as np
 
 from .helper_classes import TimeDist, SlownessModelError
+from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
 
 
 class SlownessLayer:
@@ -208,14 +209,14 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
     """
     Compute the slowness layer from a velocity layer.
     """
-    topDepth = vLayer.topDepth
-    botDepth = vLayer.botDepth
+    topDepth = vLayer['topDepth']
+    botDepth = vLayer['botDepth']
     waveType = ('p' if isPWave else 's')
     if isSpherical:
         topP = (radiusOfEarth - topDepth) / \
-            vLayer.evaluateAtTop(waveType)
+            evaluateVelocityAtTop(vLayer, waveType)
         botP = (radiusOfEarth - botDepth) / \
-            vLayer.evaluateAtBottom(waveType)
+            evaluateVelocityAtBottom(vLayer, waveType)
     else:
         raise NotImplementedError("no flat models yet")
     return SlownessLayer(topP, topDepth, botP, botDepth)

@@ -8,7 +8,8 @@ import decimal
 import math
 import numpy as np
 
-from .velocity_layer import VelocityLayer
+from .velocity_layer import VelocityLayer, evaluateVelocityAtBottom, \
+    evaluateVelocityAtTop, DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS
 from .slowness_layer import SlownessLayer, create_from_vlayer
 from .helper_classes import DepthRange, CriticalDepth, TimeDist, \
     SlownessModelError, SplitLayerInfo
@@ -111,7 +112,7 @@ class SlownessModel(object):
                 "Error in velocity model (vMod.validate failed)!")
         if self.vMod.getNumLayers() == 0:
             raise SlownessModelError("velModel.getNumLayers()==0")
-        if self.vMod.layers[0].topSVelocity == 0:
+        if self.vMod.layers[0]['topSVelocity'] == 0:
             raise SlownessModelError(
                 "Unable to handle zero S velocity layers at surface. "
                 "This should be fixed at some point, but is a limitation of "
@@ -178,20 +179,22 @@ class SlownessModel(object):
         # Initialize the current velocity layer
         # to be zero thickness layer with values at the surface
         currVLayer = self.vMod.layers[0]
-        currVLayer = VelocityLayer(
-            0, currVLayer.topDepth, currVLayer.topDepth,
-            currVLayer.topPVelocity, currVLayer.topPVelocity,
-            currVLayer.topSVelocity, currVLayer.topSVelocity,
-            currVLayer.topDensity, currVLayer.topDensity, currVLayer.topQp,
-            currVLayer.topQp, currVLayer.topQs, currVLayer.topQs)
+        currVLayer = np.array([(
+            0, currVLayer['topDepth'], currVLayer['topDepth'],
+            currVLayer['topPVelocity'], currVLayer['topPVelocity'],
+            currVLayer['topSVelocity'], currVLayer['topSVelocity'],
+            currVLayer['topDensity'], currVLayer['topDensity'],
+            currVLayer['topQp'], currVLayer['topQp'],
+            currVLayer['topQs'], currVLayer['topQs'])],
+            dtype=VelocityLayer)
         currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
         currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
         # We know that the top is always a critical slowness so add 0
         self.criticalDepths.append(CriticalDepth(0, 0, 0, 0))
         # Check to see if starting in fluid zone.
-        if inFluidZone is False and currVLayer.topSVelocity == 0:
+        if inFluidZone is False and currVLayer['topSVelocity'] == 0:
             inFluidZone = True
-            fluidZone = DepthRange(topDepth=currVLayer.topDepth)
+            fluidZone = DepthRange(topDepth=currVLayer['topDepth'])
             currSLayer = currPLayer
         if minSSoFar > currSLayer.topP:
             minSSoFar = currSLayer.topP
@@ -210,15 +213,15 @@ class SlownessModel(object):
             # will break.
             currVLayer = layer
             # Check again if in fluid zone
-            if inFluidZone is False and currVLayer.topSVelocity == 0:
+            if inFluidZone is False and currVLayer['topSVelocity'] == 0:
                 inFluidZone = True
-                fluidZone = DepthRange(topDepth=currVLayer.topDepth)
+                fluidZone = DepthRange(topDepth=currVLayer['topDepth'])
             # If already in fluid zone, check if exited (java line 909)
-            if inFluidZone is True and currVLayer.topSVelocity != 0:
-                if prevVLayer.botDepth > self.vMod.iocbDepth:
+            if inFluidZone is True and currVLayer['topSVelocity'] != 0:
+                if prevVLayer['botDepth'] > self.vMod.iocbDepth:
                     belowOuterCore = True
                 inFluidZone = False
-                fluidZone.botDepth = prevVLayer.botDepth
+                fluidZone.botDepth = prevVLayer['botDepth']
                 self.fluidLayerDepths.append(fluidZone)
 
             currPLayer = create_from_vlayer(currVLayer,
@@ -368,10 +371,10 @@ class SlownessModel(object):
         # Check if the bottommost depth is contained within a high slowness
         # zone, might happen in a flat non-whole-earth model
         if inHighSlownessZoneS:
-            highSlownessZoneS.botDepth = currVLayer.botDepth
+            highSlownessZoneS.botDepth = currVLayer['botDepth']
             self.highSlownessLayerDepthsS.append(highSlownessZoneS)
         if inHighSlownessZoneP:
-            highSlownessZoneP.botDepth = currVLayer.botDepth
+            highSlownessZoneP.botDepth = currVLayer['botDepth']
             self.highSlownessLayerDepthsP.append(highSlownessZoneP)
 
         # Check if the bottommost depth is contained within a fluid zone, this
@@ -379,7 +382,7 @@ class SlownessModel(object):
         # in the outer core or if allowInnerCoreS == false and we want to use
         # the P velocity structure in the inner core.
         if inFluidZone:
-            fluidZone.botDepth = currVLayer.botDepth
+            fluidZone.botDepth = currVLayer['botDepth']
             self.fluidLayerDepths.append(fluidZone)
 
         if self.validate() is False:
@@ -444,7 +447,7 @@ class SlownessModel(object):
             topDepth = topCriticalLayer
             botDepth = botCriticalLayer
             topCriticalLayer = self.vMod.layerNumberBelow(topDepth)
-            if self.vMod.layers[topCriticalLayer].botDepth == topDepth:
+            if self.vMod.layers[topCriticalLayer]['botDepth'] == topDepth:
                 topCriticalLayer += 1
             botCriticalLayer = self.vMod.layerNumberAbove(botDepth)
 
@@ -453,16 +456,16 @@ class SlownessModel(object):
                 "findDepth: no layers to search (wrong layer num?)")
         for layerNum in range(topCriticalLayer, botCriticalLayer + 1):
             velLayer = self.vMod.layers[layerNum]
-            topVelocity = velLayer.evaluateAtTop(waveType)
-            botVelocity = velLayer.evaluateAtBottom(waveType)
-            topP = self.toSlowness(topVelocity, velLayer.topDepth)
-            botP = self.toSlowness(botVelocity, velLayer.botDepth)
+            topVelocity = evaluateVelocityAtTop(velLayer, waveType)
+            botVelocity = evaluateVelocityAtBottom(velLayer, waveType)
+            topP = self.toSlowness(topVelocity, velLayer['topDepth'])
+            botP = self.toSlowness(botVelocity, velLayer['botDepth'])
             # Check to see if we are within 'chatter level' (numerical
             # error) of the top or bottom and if so then return that depth.
             if abs(topP - p) < self.slowness_tolerance:
-                return velLayer.topDepth
+                return velLayer['topDepth']
             if abs(p - botP) < self.slowness_tolerance:
-                return velLayer.botDepth
+                return velLayer['botDepth']
 
             if (topP - p) * (p - botP) >= 0:
                 # Found layer containing p.
@@ -470,31 +473,32 @@ class SlownessModel(object):
                 # this interval. So slope is the slope for velocity versus
                 # depth.
                 slope = (botVelocity - topVelocity) / (
-                    velLayer.botDepth - velLayer.topDepth)
-                depth = self.interpolate(p, topVelocity, velLayer.topDepth,
+                    velLayer['botDepth'] - velLayer['topDepth'])
+                depth = self.interpolate(p, topVelocity, velLayer['topDepth'],
                                          slope)
                 return depth
             elif layerNum == topCriticalLayer \
                     and abs(p - topP) < self.slowness_tolerance:
                 # Check to see if p is just outside the topmost layer. If so
                 # then return the top depth.
-                return velLayer.topDepth
+                return velLayer['topDepth']
 
             # Is p a total reflection? botP is the slowness at the bottom
             # of the last velocity layer from the previous loop, set topP
             # to be the slowness at the top of the next layer.
             if layerNum < self.vMod.getNumLayers() - 1:
                 velLayer = self.vMod.layers[layerNum + 1]
-                topVelocity = velLayer.evaluateAtTop(waveType)
-                if isPWave is False and self.depthInFluid(velLayer.topDepth):
+                topVelocity = evaluateVelocityAtTop(velLayer, waveType)
+                if (isPWave is False and
+                        self.depthInFluid(velLayer['topDepth'])):
                     # Special case for S waves above a fluid. If top next
                     # layer is in a fluid then we should set topVelocity to
                     # be the P velocity at the top of the layer.
-                    topVelocity = velLayer.evaluateAtTop('P')
+                    topVelocity = evaluateVelocityAtTop(velLayer, 'P')
 
-                topP = self.toSlowness(topVelocity, velLayer.topDepth)
+                topP = self.toSlowness(topVelocity, velLayer['topDepth'])
                 if botP >= p >= topP:
-                    return velLayer.topDepth
+                    return velLayer['topDepth']
 
         # noinspection PyUnboundLocalVariable
         if abs(p - botP) < self.slowness_tolerance:
@@ -557,47 +561,52 @@ class SlownessModel(object):
         self.SLayers = []
         # to initialise prevVLayer
         origVLayer = self.vMod.layers[0]
-        origVLayer = VelocityLayer(
-            0, origVLayer.topDepth, origVLayer.topDepth,
-            origVLayer.topPVelocity, origVLayer.topPVelocity,
-            origVLayer.topSVelocity, origVLayer.topSVelocity,
-            origVLayer.topDensity, origVLayer.topDensity, origVLayer.topQp,
-            origVLayer.topQp, origVLayer.topQs, origVLayer.topQs)
+        origVLayer = np.array([(
+            0, origVLayer['topDepth'], origVLayer['topDepth'],
+            origVLayer['topPVelocity'], origVLayer['topPVelocity'],
+            origVLayer['topSVelocity'], origVLayer['topSVelocity'],
+            origVLayer['topDensity'], origVLayer['topDensity'],
+            origVLayer['topQp'], origVLayer['topQp'],
+            origVLayer['topQs'], origVLayer['topQs'])],
+            dtype=VelocityLayer)
         for layer in self.vMod.layers:
             prevVLayer = origVLayer
             origVLayer = layer
             # Check for first order discontinuity. However, we only
             # consider S discontinuities in the inner core if
             # allowInnerCoreS is true.
-            if prevVLayer.botPVelocity != origVLayer.topPVelocity \
-                    or(prevVLayer.botSVelocity != origVLayer.topSVelocity
+            if prevVLayer['botPVelocity'] != origVLayer['topPVelocity'] \
+                    or(prevVLayer['botSVelocity'] != origVLayer['topSVelocity']
                        and (self.allowInnerCoreS
-                            or origVLayer.topDepth < self.vMod.iocbDepth)):
+                            or origVLayer['topDepth'] < self.vMod.iocbDepth)):
                 # If we are going from a fluid to a solid or solid to
                 # fluid, ex core mantle or outer core to inner core then we
                 # need to use the P velocity for determining the S
                 # discontinuity.
-                if prevVLayer.botSVelocity == 0:
-                    topSVel = prevVLayer.botPVelocity
+                if prevVLayer['botSVelocity'] == 0:
+                    topSVel = prevVLayer['botPVelocity']
                 else:
-                    topSVel = prevVLayer.botSVelocity
-                if origVLayer.topSVelocity == 0:
-                    botSVel = origVLayer.topPVelocity
+                    topSVel = prevVLayer['botSVelocity']
+                if origVLayer['topSVelocity'] == 0:
+                    botSVel = origVLayer['topPVelocity']
                 else:
-                    botSVel = origVLayer.topSVelocity
+                    botSVel = origVLayer['topSVelocity']
                 # Add the zero thickness, but with nonzero slowness step,
                 # layer corresponding to the discontinuity.
-                currVLayer = VelocityLayer(
-                    layer.layer_number, prevVLayer.botDepth,
-                    prevVLayer.botDepth, prevVLayer.botPVelocity,
-                    origVLayer.topPVelocity, topSVel, botSVel)
+                currVLayer = np.array([(
+                    layer['layer_number'], prevVLayer['botDepth'],
+                    prevVLayer['botDepth'], prevVLayer['botPVelocity'],
+                    origVLayer['topPVelocity'], topSVel, botSVel,
+                    DEFAULT_DENSITY, DEFAULT_DENSITY,
+                    DEFAULT_QP, DEFAULT_QP, DEFAULT_QS, DEFAULT_QS)],
+                    dtype=VelocityLayer)
                 currPLayer = create_from_vlayer(currVLayer,
                                                 self.PWAVE)
                 self.PLayers.append(currPLayer)
-                if (prevVLayer.botSVelocity == 0
-                    and origVLayer.topSVelocity == 0) \
+                if (prevVLayer['botSVelocity'] == 0
+                    and origVLayer['topSVelocity'] == 0) \
                         or (self.allowInnerCoreS is False
-                            and currVLayer.topDepth >= self.vMod.iocbDepth):
+                            and currVLayer['topDepth'] >= self.vMod.iocbDepth):
                     currSLayer = currPLayer
                 else:
                     currSLayer = create_from_vlayer(currVLayer,
@@ -606,9 +615,9 @@ class SlownessModel(object):
             currPLayer = create_from_vlayer(origVLayer,
                                             self.PWAVE)
             self.PLayers.append(currPLayer)
-            if self.depthInFluid(origVLayer.topDepth) or (
+            if self.depthInFluid(origVLayer['topDepth']) or (
                     self.allowInnerCoreS is False
-                    and origVLayer.topDepth >= self.vMod.iocbDepth):
+                    and origVLayer['topDepth'] >= self.vMod.iocbDepth):
                 currSLayer = currPLayer
             else:
                 currSLayer = create_from_vlayer(origVLayer,

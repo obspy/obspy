@@ -75,8 +75,8 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertEqual(arr.get_modulo_dist_deg(), expected_arr["distance"])
         self.assertEqual(arr.source_depth, expected_arr["depth"])
         self.assertEqual(arr.name, expected_arr["name"])
-        self.assertEqual(round(arr.time, 2), round(expected_arr["time"], 2))
-        self.assertEqual(round(arr.ray_param_sec_degree, 3),
+        self.assertEqual(np.round(arr.time, 2), round(expected_arr["time"], 2))
+        self.assertEqual(np.round(arr.ray_param_sec_degree, 3),
                          round(expected_arr["ray_param_sec_degree"], 3))
         self.assertEqual(round(arr.takeoff_angle, 2),
                          round(expected_arr["takeoff_angle"], 2))
@@ -225,8 +225,8 @@ class TauPyModelTestCase(unittest.TestCase):
                                     distance_in_degree=dist,
                                     phase_list=all_phases)
             tt = sorted(tt, key=lambda x: (
-                round(x.time, 2),
-                round(x.ray_param_sec_degree, 3),
+                np.round(x.time, 2),
+                np.round(x.ray_param_sec_degree, 3),
                 x.name))
             expected_arrivals = expected[(dist, depth)]
 
@@ -269,7 +269,7 @@ class TauPyModelTestCase(unittest.TestCase):
             for p in arr.pierce:
                 actual[arr.name].append((
                     round(p.get_dist_deg(), 2),
-                    round(p.depth, 1),
+                    np.round(p.depth, 1),
                     round(p.time, 1)))
 
         self.assertEqual(sorted(actual.keys()), sorted(expected.keys()))
@@ -304,7 +304,7 @@ class TauPyModelTestCase(unittest.TestCase):
         interpolated_actual = np.interp(
             sample_points,
             [round(_i.get_dist_deg(), 2) for _i in arrivals[0].path],
-            [round(6371 - _i.depth, 2) for _i in arrivals[0].path])
+            [np.round(6371 - _i.depth, 2) for _i in arrivals[0].path])
 
         np.testing.assert_allclose(interpolated_actual,
                                    interpolated_expected, rtol=1E-4)
@@ -334,7 +334,7 @@ class TauPyModelTestCase(unittest.TestCase):
         interpolated_actual = np.interp(
             sample_points,
             [round(_i.get_dist_deg(), 2) for _i in arrivals[0].path],
-            [round(6371 - _i.depth, 2) for _i in arrivals[0].path])
+            [np.round(6371 - _i.depth, 2) for _i in arrivals[0].path])
 
         np.testing.assert_allclose(interpolated_actual,
                                    interpolated_expected, rtol=1E-4)
