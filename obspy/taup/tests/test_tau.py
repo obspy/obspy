@@ -75,8 +75,8 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertEqual(arr.get_modulo_dist_deg(), expected_arr["distance"])
         self.assertEqual(arr.source_depth, expected_arr["depth"])
         self.assertEqual(arr.name, expected_arr["name"])
-        self.assertEqual(np.round(arr.time, 2), round(expected_arr["time"], 2))
-        self.assertEqual(np.round(arr.ray_param_sec_degree, 3),
+        self.assertEqual(round(arr.time, 2), round(expected_arr["time"], 2))
+        self.assertEqual(round(arr.ray_param_sec_degree, 3),
                          round(expected_arr["ray_param_sec_degree"], 3))
         self.assertEqual(round(arr.takeoff_angle, 2),
                          round(expected_arr["takeoff_angle"], 2))
@@ -225,8 +225,8 @@ class TauPyModelTestCase(unittest.TestCase):
                                     distance_in_degree=dist,
                                     phase_list=all_phases)
             tt = sorted(tt, key=lambda x: (
-                np.round(x.time, 2),
-                np.round(x.ray_param_sec_degree, 3),
+                round(x.time, 2),
+                round(x.ray_param_sec_degree, 3),
                 x.name))
             expected_arrivals = expected[(dist, depth)]
 
@@ -269,7 +269,7 @@ class TauPyModelTestCase(unittest.TestCase):
             for p in arr.pierce:
                 actual[arr.name].append((
                     round(p.get_dist_deg(), 2),
-                    np.round(p.depth, 1),
+                    round(p.depth, 1),
                     round(p.time, 1)))
 
         self.assertEqual(sorted(actual.keys()), sorted(expected.keys()))

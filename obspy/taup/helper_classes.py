@@ -26,15 +26,26 @@ class TimeDist:
     deep copy.
     """
     def __init__(self, p=0, time=0, distRadian=0, depth=0):
+        # FIXME: Remove try/except once code correctly uses NumPy.
+
         # Careful: p must remain first element because of how class is called
         # e.g. in SlownessModel.approxDistance!
         self.p = p
-        self.depth = depth
-        self.time = time
+        try:
+            self.depth = depth[0]
+        except (IndexError, TypeError):
+            self.depth = depth
+        try:
+            self.time = time[0]
+        except (IndexError, TypeError):
+            self.time = time
         self.distRadian = distRadian
 
     def add(self, td):
-        self.time += td.time
+        try:
+            self.time += td.time[0]
+        except (IndexError, TypeError):
+            self.time += td.time
         self.distRadian += td.distRadian
 
     def get_dist_deg(self):

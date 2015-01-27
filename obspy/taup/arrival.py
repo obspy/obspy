@@ -15,14 +15,23 @@ class Arrival(object):
     def __init__(self, phase, time, dist, ray_param, ray_param_index,
                  name, purist_name, source_depth, takeoff_angle,
                  incident_angle):
+        # FIXME: Remove the try/except once the rest of the code correctly
+        # uses NumPy.
+
         # phase that generated this arrival
         self.phase = phase
         # travel time in seconds
-        self.time = time
+        try:
+            self.time = time[0]
+        except (IndexError, TypeError):
+            self.time = time
         # angular distance (great circle) in radians
         self.dist = dist
         # ray parameter in seconds per radians
-        self.ray_param = ray_param
+        try:
+            self.ray_param = ray_param[0]
+        except (IndexError, TypeError):
+            self.ray_param = ray_param
         self.ray_param_index = ray_param_index
         # phase name
         self.name = name

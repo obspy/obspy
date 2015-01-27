@@ -79,7 +79,7 @@ class TauModel(object):
         # model. We only need to find ray parameters for S waves since P
         # waves have been constructed to be a subset of the S samples.
         rayNum = 0
-        minPSoFar = self.sMod.SLayers[0].topP
+        minPSoFar = self.sMod.SLayers[0]['topP']
         tempRayParams = [0 for i in range(
             2 * self.sMod.getNumLayers(False) + len(self.sMod.criticalDepths))]
         # Make sure we get the top slowness of the very top layer
@@ -89,17 +89,17 @@ class TauModel(object):
             # Add the top if it is strictly less than the last sample added.
             # Note that this will not be added if the slowness is continuous
             #  across the layer boundary.
-            if currSLayer.topP < minPSoFar:
-                tempRayParams[rayNum] = currSLayer.topP
+            if currSLayer['topP'] < minPSoFar:
+                tempRayParams[rayNum] = currSLayer['topP']
                 rayNum += 1
-                minPSoFar = currSLayer.topP
-            if currSLayer.botP < minPSoFar:
+                minPSoFar = currSLayer['topP']
+            if currSLayer['botP'] < minPSoFar:
                 # Add the bottom if it is strictly less than the last sample
                 # added. This will always happen unless we are
-                # within a high slowness zone. if currSLayer.botP < minPSoFar:
-                tempRayParams[rayNum] = currSLayer.botP
+                # within a high slowness zone.
+                tempRayParams[rayNum] = currSLayer['botP']
                 rayNum += 1
-                minPSoFar = currSLayer.botP
+                minPSoFar = currSLayer['botP']
         # Copy tempRayParams to ray_param while chopping off trailing zeros
         # (from the initialisation), so the size is exactly right. NB
         # slicing doesn't really mean deep copy, but it works for a list of
@@ -109,7 +109,7 @@ class TauModel(object):
             print("Number of slowness samples for tau:" + str(rayNum))
         for waveNum, isPWave in enumerate([True, False]):
             # The minimum slowness seen so far.
-            minPSoFar = self.sMod.getSlownessLayer(0, isPWave).topP
+            minPSoFar = self.sMod.getSlownessLayer(0, isPWave)['topP']
             # for critNum, (topCritDepth, botCritDepth) in enumerate(zip(
             # self.sMod.criticalDepths[:-1], self.sMod.criticalDepths[1:])):
             # Faster:
@@ -133,11 +133,12 @@ class TauModel(object):
                                                        isPWave)
                 botSLayer = self.sMod.getSlownessLayer(botCritLayerNum,
                                                        isPWave)
-                minPSoFar = min(minPSoFar, min(topSLayer.topP, botSLayer.botP))
+                minPSoFar = min(minPSoFar,
+                                min(topSLayer['topP'], botSLayer['botP']))
                 botSLayer = self.sMod.getSlownessLayer(
                     self.sMod.layerNumberAbove(botCritDepth.depth, isPWave),
                     isPWave)
-                minPSoFar = min(minPSoFar, botSLayer.botP)
+                minPSoFar = min(minPSoFar, botSLayer['botP'])
         # Here we decide which branches are the closest to the Moho, CMB,
         # and IOCB by comparing the depth of the top of the branch with the
         # depths in the Velocity Model.
