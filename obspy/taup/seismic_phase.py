@@ -8,6 +8,8 @@ from copy import deepcopy
 from itertools import count
 import math
 
+import numpy as np
+
 from .arrival import Arrival
 from .helper_classes import TauModelError, TimeDist
 
@@ -884,7 +886,7 @@ class SeismicPhase(object):
                 distB = tauBranch.dist[rayNum + 1]
                 timeB = tauBranch.time[rayNum + 1]
             branchDist += distRatio * (distB - distA) + distA
-            prevBranchTime = branchTime
+            prevBranchTime = np.array(branchTime, copy=True)
             branchTime += distRatio * (timeB - timeA) + timeA
             if isDownGoing:
                 branchDepth = min(tauBranch.botDepth, turnDepth)
