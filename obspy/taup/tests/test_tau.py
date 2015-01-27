@@ -6,6 +6,7 @@ Tests the high level obspy.taup.tau interface.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import collections
 import inspect
@@ -28,30 +29,26 @@ class TauPyModelTestCase(unittest.TestCase):
         """
         Helper method reading a stdout capture of TauP.
         """
-        output = []
-        with open(os.path.join(DATA, filename), "rt") as fh:
+        with open(os.path.join(DATA, filename), "rb") as fh:
             while True:
                 line = fh.readline().strip()
-                if line.startswith("-----"):
+                if line.startswith(b"-----"):
                     break
-            while True:
-                line = fh.readline().strip()
-                if not line:
-                    break
-                line = line.replace("=", "").strip()
-                if not line:
-                    continue
-                line = line.split()
-                output.append({
-                    "distance": float(line[0]),
-                    "depth": float(line[1]),
-                    "name": line[2],
-                    "time": float(line[3]),
-                    "ray_param_sec_degree": float(line[4]),
-                    "takeoff_angle": float(line[5]),
-                    "incident_angle": float(line[6]),
-                    "purist_distance": float(line[7]),
-                    "purist_name": line[8]})
+
+            output = np.genfromtxt(
+                fh,
+                usecols=[0, 1, 2, 3, 4, 5, 6, 7, 9],
+                dtype=[(native_str('distance'), np.float_),
+                       (native_str('depth'), np.float_),
+                       (native_str('name'), (np.str_, 10)),
+                       (native_str('time'), np.float_),
+                       (native_str('ray_param_sec_degree'), np.float_),
+                       (native_str('takeoff_angle'), np.float_),
+                       (native_str('incident_angle'), np.float_),
+                       (native_str('purist_distance'), np.float_),
+                       (native_str('purist_name'), (np.str_, 10))])
+
+        output = np.atleast_1d(output)
         return output
 
     def _compare_arrivals_with_file(self, arrivals, filename):
@@ -59,9 +56,11 @@ class TauPyModelTestCase(unittest.TestCase):
         Helper method comparing arrivals against the phases stored in a file.
         """
         arrivals = sorted(arrivals, key=lambda x: x.time)
+
         _expected_arrivals_unsorted = self._read_taup_output(filename)
-        expected_arrivals = sorted(_expected_arrivals_unsorted,
-                                   key=lambda x: x["time"])
+        _index = _expected_arrivals_unsorted['time'].argsort()
+        expected_arrivals = _expected_arrivals_unsorted[_index]
+
         for arr, expected_arr in zip(arrivals, expected_arrivals):
             self._assert_arrivals_equal(arr, expected_arr)
 
@@ -166,22 +165,15 @@ class TauPyModelTestCase(unittest.TestCase):
         # Open test file.
         filename = os.path.join(DATA, "taup_pierce_-h_10_-ph_P_-deg_35")
 
-        expected = []
-        with open(filename, "rt") as fh:
-            fh.readline()
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                expected.append(list(map(float, line.split())))
+        expected = np.genfromtxt(filename, skip_header=1)
 
-        actual = []
-        for pierce in p_arr.pierce:
-            actual.append([round(pierce.get_dist_deg(), 2),
-                           round(pierce.depth, 1),
-                           round(pierce.time, 1)])
+        actual = np.empty((len(p_arr.pierce), 3))
+        for i, pierce in enumerate(p_arr.pierce):
+            actual[i, 0] = round(pierce.get_dist_deg(), 2)
+            actual[i, 1] = round(pierce.depth, 1)
+            actual[i, 2] = round(pierce.time, 1)
 
-        self.assertEqual(expected, actual)
+        np.testing.assert_equal(expected, actual)
 
     def test_vs_java_iasp91(self):
         """
@@ -257,7 +249,7 @@ class TauPyModelTestCase(unittest.TestCase):
                 if not line:
                     continue
                 if line.startswith(">"):
-                    current_phase = line.replace(">", "").strip().split()[0]
+                    current_phase = line[1:].strip().split()[0]
                     continue
                 dist, depth, time = list(map(float, line.split()))
                 expected[current_phase].append((dist, depth, time))
@@ -293,14 +285,7 @@ class TauPyModelTestCase(unittest.TestCase):
         """
         filename = os.path.join(DATA,
                                 "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
-        expected = []
-        with open(filename, "rt") as fh:
-            for line in fh:
-                line = line.strip()
-                if line.startswith(">"):
-                    continue
-                line = line.split()
-                expected.append(list(map(float, line)))
+        expected = np.genfromtxt(filename, comments='>')
 
         m = TauPyModel(model="iasp91")
         arrivals = m.get_ray_paths(source_depth_in_km=10.0,
@@ -313,8 +298,8 @@ class TauPyModelTestCase(unittest.TestCase):
 
         interpolated_expected = np.interp(
             sample_points,
-            [_i[0] for _i in expected],
-            [_i[1] for _i in expected])
+            expected[:, 0],
+            expected[:, 1])
 
         interpolated_actual = np.interp(
             sample_points,
@@ -330,14 +315,7 @@ class TauPyModelTestCase(unittest.TestCase):
         """
         filename = os.path.join(
             DATA, "taup_path_-o_stdout_-h_10_-ph_P_-deg_35_-mod_ak135")
-        expected = []
-        with open(filename, "rt") as fh:
-            for line in fh:
-                line = line.strip()
-                if line.startswith(">"):
-                    continue
-                line = line.split()
-                expected.append(list(map(float, line)))
+        expected = np.genfromtxt(filename, comments='>')
 
         m = TauPyModel(model="ak135")
         arrivals = m.get_ray_paths(source_depth_in_km=10.0,
@@ -350,8 +328,8 @@ class TauPyModelTestCase(unittest.TestCase):
 
         interpolated_expected = np.interp(
             sample_points,
-            [_i[0] for _i in expected],
-            [_i[1] for _i in expected])
+            expected[:, 0],
+            expected[:, 1])
 
         interpolated_actual = np.interp(
             sample_points,
