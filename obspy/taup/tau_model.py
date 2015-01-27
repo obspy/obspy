@@ -9,6 +9,8 @@ from itertools import count
 from math import pi
 import pickle
 
+import numpy as np
+
 from .helper_classes import SlownessModelError, TauModelError
 from .tau_branch import TauBranch
 
@@ -40,7 +42,7 @@ class TauModel(object):
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
-        self.ray_params = []
+        self.ray_params = np.empty(0)
         # 2D "array" (list of lists in Python) containing a TauBranch object
         # corresponding to each "branch" of the tau model, First list is P,
         # second is S. Branches correspond to depth regions between
@@ -80,8 +82,8 @@ class TauModel(object):
         # waves have been constructed to be a subset of the S samples.
         rayNum = 0
         minPSoFar = self.sMod.SLayers[0]['topP']
-        tempRayParams = [0 for i in range(
-            2 * self.sMod.getNumLayers(False) + len(self.sMod.criticalDepths))]
+        tempRayParams = np.empty(
+            2 * self.sMod.getNumLayers(False) + len(self.sMod.criticalDepths))
         # Make sure we get the top slowness of the very top layer
         tempRayParams[rayNum] = minPSoFar
         rayNum += 1
@@ -245,19 +247,24 @@ class TauModel(object):
                 # each.
                 newRayParam = splitInfo.ray_param
                 # Insert the new ray parameters into the ray_param array.
-                for index, trp, brp in zip(count(), oldRayParams[:-1],
-                                           oldRayParams[1:]):
-                    if trp < newRayParam < brp:
-                        outRayParams = oldRayParams[:index]
-                        outRayParams.append(newRayParam)
-                        outRayParams = outRayParams + oldRayParams[index:]
-                        if isPWave:
-                            indexP = index
-                            PWaveRayParam = newRayParam
-                        else:
-                            indexS = index
-                            SWaveRayParam = newRayParam
-                        break
+                above = oldRayParams[:-1]
+                below = oldRayParams[1:]
+                index = (above < newRayParam) & (newRayParam < below)
+                if np.any(index):
+                    index = np.where(index)[0][0]
+                    # FIXME: The original code uses oldRayParams, but that
+                    # seems like it would not work if you need to insert both
+                    # P and S waves. This part of the code doesn't seem to be
+                    # triggered, though.
+                    outRayParams = np.insert(oldRayParams, index, newRayParam)
+
+                    if isPWave:
+                        indexP = index
+                        PWaveRayParam = newRayParam
+                    else:
+                        indexS = index
+                        SWaveRayParam = newRayParam
+
         # Now add a sample to each branch above the depth, split the branch
         # containing the depth, and add a sample to each deeper branch.
         branchToSplit = self.findBranch(depth)
