@@ -61,5 +61,5 @@ install:
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% python setup.py install"
+  - "%CMD_IN_ENV% python setup.py develop"
   - "python -m obspy.core.scripts.runtests -n appveyor-ci -r"
