@@ -129,7 +129,7 @@ class SeismicPhase(object):
             # reflection depth.
             if currLeg[0] in "v^":
                 disconBranch = closest_branch_to_depth(tMod, currLeg[1])
-                legDepth = tMod.tauBranches[0][disconBranch].topDepth
+                legDepth = tMod.tauBranches[0, disconBranch].topDepth
                 puristName += currLeg[0]
                 puristName += str(legDepth)
             else:
@@ -137,7 +137,7 @@ class SeismicPhase(object):
                     float(currLeg)
                     # If it is indeed a number:
                     disconBranch = closest_branch_to_depth(tMod, currLeg)
-                    legDepth = tMod.tauBranches[0][disconBranch].topDepth
+                    legDepth = tMod.tauBranches[0, disconBranch].topDepth
                     puristName += str(legDepth)
                 except ValueError:
                     # If currLeg is just a string:
@@ -472,7 +472,7 @@ class SeismicPhase(object):
                             currLeg, nextLeg))
             elif currLeg in ("I", "J"):
                 self.add_to_branch(tMod, self.currBranch,
-                                   len(tMod.tauBranches[0]) - 1, isPWave,
+                                   tMod.tauBranches.shape[1] - 1, isPWave,
                                    self.TURN)
                 if nextLeg in ("I", "J"):
                     self.add_to_branch(tMod, self.currBranch, tMod.iocbBranch,
@@ -631,7 +631,7 @@ class SeismicPhase(object):
         self.time = [0 for i in range(len(self.ray_param))]
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
         timesBranches = [[0 for i in range(
-            len(tMod.tauBranches[0]))] for j in range(2)]
+            tMod.tauBranches.shape[1])] for j in range(2)]
         # Count how many times each branch appears in the path.
         # waveType is at least as long as branchSeq
         for wt, bs in zip(self.waveType, self.branchSeq):

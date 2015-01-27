@@ -43,14 +43,14 @@ class TauModel(object):
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
         self.ray_params = np.empty(0)
-        # 2D "array" (list of lists in Python) containing a TauBranch object
+        # 2D NumPy array containing a TauBranch object
         # corresponding to each "branch" of the tau model, First list is P,
         # second is S. Branches correspond to depth regions between
         # discontinuities or reversals in slowness gradient for a wave type.
         # Each branch contains time, distance, and tau increments for each ray
         # parameter in ray_param for the layer. Rays that turn above the branch
         # layer get 0 for time, distance, and tau increments.
-        self.tauBranches = [[], []]
+        self.tauBranches = np.empty((1, 0), dtype=TauBranch)
 
         self.sMod = sMod
         self.calcTauIncFrom()
@@ -73,10 +73,7 @@ class TauModel(object):
         # not in a high slowness zone, i.e. they are smaller than the
         # minimum ray parameter encountered so far.
         numBranches = len(self.sMod.criticalDepths) - 1
-        # Use list comprehension to get array to correct size. Initialise with
-        # TauBranches or the IDE gets mightily confused (may be slower):
-        self.tauBranches = [[TauBranch() for j in range(numBranches)]
-                            for i in range(2)]
+        self.tauBranches = np.empty((2, numBranches), dtype=TauBranch)
         # Here we find the list of ray parameters to be used for the tau
         # model. We only need to find ray parameters for S waves since P
         # waves have been constructed to be a subset of the S samples.
@@ -122,10 +119,10 @@ class TauModel(object):
                     if isPWave else topCritDepth.sLayerNum
                 botCritLayerNum = (botCritDepth.pLayerNum if isPWave
                                    else botCritDepth.sLayerNum) - 1
-                self.tauBranches[waveNum][critNum] = \
+                self.tauBranches[waveNum, critNum] = \
                     TauBranch(topCritDepth.depth, botCritDepth.depth, isPWave)
-                self.tauBranches[waveNum][critNum].DEBUG = self.debug
-                self.tauBranches[waveNum][critNum].createBranch(
+                self.tauBranches[waveNum, critNum].DEBUG = self.debug
+                self.tauBranches[waveNum, critNum].createBranch(
                     self.sMod, minPSoFar, self.ray_params)
                 # Update minPSoFar. Note that the new minPSoFar could be at
                 # the start of a discontinuity over a high slowness zone,
@@ -159,9 +156,9 @@ class TauModel(object):
                 self.iocbBranch = branchNum
                 bestIocb = abs(tBranch.topDepth - self.sMod.vMod.iocbDepth)
         # Now set mohoDepth etc. to the top of the branches we have decided on.
-        self.mohoDepth = self.tauBranches[0][self.mohoBranch].topDepth
-        self.cmbDepth = self.tauBranches[0][self.cmbBranch].topDepth
-        self.iocbDepth = self.tauBranches[0][self.iocbBranch].topDepth
+        self.mohoDepth = self.tauBranches[0, self.mohoBranch].topDepth
+        self.cmbDepth = self.tauBranches[0, self.cmbBranch].topDepth
+        self.iocbDepth = self.tauBranches[0, self.iocbBranch].topDepth
         if not self.validate():
             raise TauModelError("TauModel.calcTauIncFrom: Validation failed!")
 
@@ -268,47 +265,47 @@ class TauModel(object):
         # Now add a sample to each branch above the depth, split the branch
         # containing the depth, and add a sample to each deeper branch.
         branchToSplit = self.findBranch(depth)
-        newTauBranches = [[TauBranch() for j in range(
-            len(self.tauBranches[0]) + 1)] for i in range(2)]
+        newTauBranches = np.empty((2, self.tauBranches.shape[1] + 1),
+                                  dtype=TauBranch)
         for i in range(branchToSplit):
-            newTauBranches[0][i] = self.tauBranches[0][i]
-            newTauBranches[1][i] = self.tauBranches[1][i]
+            newTauBranches[0, i] = self.tauBranches[0, i]
+            newTauBranches[1, i] = self.tauBranches[1, i]
             # Add the new ray parameter(s) from splitting the S and/or P
             # wave slowness layer to both the P and S wave tau branches (if
             # splitting occurred).
             if indexS != -1:
-                newTauBranches[0][i].insert(SWaveRayParam, outSMod, indexS)
-                newTauBranches[1][i].insert(SWaveRayParam, outSMod, indexS)
+                newTauBranches[0, i].insert(SWaveRayParam, outSMod, indexS)
+                newTauBranches[1, i].insert(SWaveRayParam, outSMod, indexS)
             if indexP != -1:
-                newTauBranches[0][i].insert(PWaveRayParam, outSMod, indexP)
-                newTauBranches[1][i].insert(PWaveRayParam, outSMod, indexP)
+                newTauBranches[0, i].insert(PWaveRayParam, outSMod, indexP)
+                newTauBranches[1, i].insert(PWaveRayParam, outSMod, indexP)
         for pOrS in range(2):
             newTauBranches[pOrS][branchToSplit] = TauBranch(
-                self.tauBranches[pOrS][branchToSplit].topDepth, depth,
+                self.tauBranches[pOrS, branchToSplit].topDepth, depth,
                 pOrS == 0)
             newTauBranches[pOrS][branchToSplit].createBranch(
-                outSMod, self.tauBranches[pOrS][branchToSplit].maxRayParam,
+                outSMod, self.tauBranches[pOrS, branchToSplit].maxRayParam,
                 outRayParams)
             newTauBranches[pOrS][branchToSplit + 1] = \
-                self.tauBranches[pOrS][branchToSplit].difference(
-                    newTauBranches[pOrS][branchToSplit],
+                self.tauBranches[pOrS, branchToSplit].difference(
+                    newTauBranches[pOrS, branchToSplit],
                     indexP, indexS, outSMod,
-                    newTauBranches[pOrS][branchToSplit].minRayParam,
+                    newTauBranches[pOrS, branchToSplit].minRayParam,
                     outRayParams)
         for i in range(branchToSplit + 1, len(self.tauBranches[0])):
             for pOrS in range(2):
-                newTauBranches[pOrS][i + 1] = self.tauBranches[pOrS][i]
+                newTauBranches[pOrS, i + 1] = self.tauBranches[pOrS, i]
             if indexS != -1:
                 # Add the new ray parameter from splitting the S wave
                 # slownes layer to both the P and S wave tau branches.
                 for pOrS in range(2):
-                    newTauBranches[pOrS][i + 1].insert(SWaveRayParam, outSMod,
+                    newTauBranches[pOrS, i + 1].insert(SWaveRayParam, outSMod,
                                                        indexS)
             if indexP != -1:
                 # Add the new ray parameter from splitting the P wave
                 # slownes layer to both the P and S wave tau branches.
                 for pOrS in range(2):
-                    newTauBranches[pOrS][i + 1].insert(PWaveRayParam, outSMod,
+                    newTauBranches[pOrS, i + 1].insert(PWaveRayParam, outSMod,
                                                        indexS)
         # We have split a branch so possibly sourceBranch, mohoBranch,
         # cmbBranch and iocbBranch are off by 1.
@@ -348,16 +345,16 @@ class TauModel(object):
             if tb.topDepth <= depth < tb.botDepth:
                 return i
         # Check to see if depth is centre of the Earth.
-        if self.tauBranches[0][len(self.tauBranches[0]) - 1].botDepth == depth:
+        if self.tauBranches[0, -1].botDepth == depth:
             return len(self.tauBranches) - 1
         else:
             raise TauModelError("No TauBranch contains this depth.")
 
     def getTauBranch(self, branchNum, isPWave):
         if isPWave:
-            return self.tauBranches[0][branchNum]
+            return self.tauBranches[0, branchNum]
         else:
-            return self.tauBranches[1][branchNum]
+            return self.tauBranches[1, branchNum]
 
     def getBranchDepths(self):
         """
