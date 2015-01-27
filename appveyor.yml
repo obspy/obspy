@@ -12,35 +12,27 @@ environment:
   matrix:
     - PYTHON_VERSION: "2.6"
       PYTHON_ARCH: "32"
-      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp26-none-win32.whl"
 
     - PYTHON_VERSION: "2.6"
       PYTHON_ARCH: "64"
-      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp26-none-win_amd64.whl"
 
     - PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "32"
-      BASEMAP: "conda install -q --yes basemap"
 
     - PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
-      BASEMAP: "conda install -q --yes basemap"
 
     - PYTHON_VERSION: "3.3"
       PYTHON_ARCH: "32"
-      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp33-none-win32.whl"
 
     - PYTHON_VERSION: "3.3"
       PYTHON_ARCH: "64"
-      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp33-none-win_amd64.whl"
 
     - PYTHON_VERSION: "3.4"
       PYTHON_ARCH: "32"
-      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp34-none-win32.whl"
 
     - PYTHON_VERSION: "3.4"
       PYTHON_ARCH: "64"
-      BASEMAP: "pip install http://188.166.43.188/basemap-1.0.8-cp34-none-win_amd64.whl"
 
 
 platform:
@@ -63,11 +55,11 @@ install:
   - "pip install suds-jurko"
   - "pip install -U future"
   # install basemap package
-  - "%BASEMAP%"
+  - pip install --trusted-host 188.166.43.188 --use-wheel --no-index --find-links=http://188.166.43.188/ basemap
 
 # Not a .NET project, we build SunPy in the install step instead
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% python setup.py develop"
+  - "%CMD_IN_ENV% python setup.py install"
   - "python -m obspy.core.scripts.runtests -n appveyor-ci -r"
