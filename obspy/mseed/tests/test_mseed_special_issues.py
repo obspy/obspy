@@ -33,6 +33,17 @@ except:
     NO_NEGATIVE_TIMESTAMPS = True
 
 
+def _testFunction(filename):
+    """
+    Internal function used by MSEEDSpecialIssueTestCase.test_infinite_loop
+    """
+    try:
+        st = read(filename)  # noqa @UnusedVariable
+    except ValueError:
+        # Should occur with broken files
+        pass
+
+
 class MSEEDSpecialIssueTestCase(unittest.TestCase):
     """
     """
@@ -659,14 +670,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
 
-        def testFunction(filename):
-            try:
-                st = read(filename)  # noqa
-            except ValueError:
-                # Should occur with broken files
-                pass
-
-        process = multiprocessing.Process(target=testFunction,
+        process = multiprocessing.Process(target=_testFunction,
                                           args=(filename, ))
         process.start()
         process.join(5)
