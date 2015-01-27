@@ -205,7 +205,7 @@ class VelocityModel(object):
         # Iterate over all layers, comparing each to the previous one.
         currVelocityLayer = self.layers[0]
         prevVelocityLayer = np.array([(
-            0, currVelocityLayer['topDepth'], currVelocityLayer['topDepth'],
+            currVelocityLayer['topDepth'], currVelocityLayer['topDepth'],
             currVelocityLayer['topPVelocity'], currVelocityLayer['topPVelocity'],
             currVelocityLayer['topSVelocity'], currVelocityLayer['topSVelocity'],
             currVelocityLayer['topDensity'], currVelocityLayer['topDensity'],
@@ -329,7 +329,6 @@ class VelocityModel(object):
         Comments using # are also allowed.
         """
         layers = []
-        myLayerNumber = 0  # needed for calling the layer maker later
 
         # Read all lines in the file. Each Layer needs top and bottom values,
         # i.e. info from two lines.
@@ -384,7 +383,7 @@ class VelocityModel(object):
                                         "Stick to 4 columns.")
 
                 tempLayer = (
-                    myLayerNumber, topDepth, botDepth, topPVel, botPVel,
+                    topDepth, botDepth, topPVel, botPVel,
                     topSVel, botSVel, topDensity, botDensity,
                     topQp, botQp, topQs, botQs)
                 if topDepth != botDepth:
@@ -392,7 +391,6 @@ class VelocityModel(object):
                     # discontinuities
                     # are taken care of by storing top and bottom depths.
                     layers.append(tempLayer)
-                    myLayerNumber += 1
 
                 topDepth = botDepth
                 topPVel = botPVel

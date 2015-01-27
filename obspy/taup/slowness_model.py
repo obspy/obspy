@@ -180,7 +180,7 @@ class SlownessModel(object):
         # to be zero thickness layer with values at the surface
         currVLayer = self.vMod.layers[0]
         currVLayer = np.array([(
-            0, currVLayer['topDepth'], currVLayer['topDepth'],
+            currVLayer['topDepth'], currVLayer['topDepth'],
             currVLayer['topPVelocity'], currVLayer['topPVelocity'],
             currVLayer['topSVelocity'], currVLayer['topSVelocity'],
             currVLayer['topDensity'], currVLayer['topDensity'],
@@ -562,7 +562,7 @@ class SlownessModel(object):
         # to initialise prevVLayer
         origVLayer = self.vMod.layers[0]
         origVLayer = np.array([(
-            0, origVLayer['topDepth'], origVLayer['topDepth'],
+            origVLayer['topDepth'], origVLayer['topDepth'],
             origVLayer['topPVelocity'], origVLayer['topPVelocity'],
             origVLayer['topSVelocity'], origVLayer['topSVelocity'],
             origVLayer['topDensity'], origVLayer['topDensity'],
@@ -594,9 +594,9 @@ class SlownessModel(object):
                 # Add the zero thickness, but with nonzero slowness step,
                 # layer corresponding to the discontinuity.
                 currVLayer = np.array([(
-                    layer['layer_number'], prevVLayer['botDepth'],
-                    prevVLayer['botDepth'], prevVLayer['botPVelocity'],
-                    origVLayer['topPVelocity'], topSVel, botSVel,
+                    prevVLayer['botDepth'], prevVLayer['botDepth'],
+                    prevVLayer['botPVelocity'], origVLayer['topPVelocity'],
+                    topSVel, botSVel,
                     DEFAULT_DENSITY, DEFAULT_DENSITY,
                     DEFAULT_QP, DEFAULT_QP, DEFAULT_QS, DEFAULT_QS)],
                     dtype=VelocityLayer)

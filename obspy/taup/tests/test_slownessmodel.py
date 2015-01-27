@@ -15,7 +15,7 @@ from obspy.taup.velocity_layer import VelocityLayer, \
 
 class TauPySlownessModelTestCase(unittest.TestCase):
     def test_slownesslayer(self):
-        vLayer = np.array([(1, 10, 31, 3, 5, 2, 4,
+        vLayer = np.array([(10, 31, 3, 5, 2, 4,
                             DEFAULT_DENSITY, DEFAULT_DENSITY,
                             DEFAULT_QP, DEFAULT_QP,
                             DEFAULT_QS, DEFAULT_QS)],

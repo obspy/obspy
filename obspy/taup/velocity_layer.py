@@ -22,7 +22,6 @@ The VelocityLayer dtype stores and manipulates a single layer. An
 entire velocity model is implemented as an array of layers.
 """
 VelocityLayer = np.dtype([
-    (native_str('layer_number'), np.int_),
     (native_str('topDepth'), np.float_),
     (native_str('botDepth'), np.float_),
     (native_str('topPVelocity'), np.float_),
