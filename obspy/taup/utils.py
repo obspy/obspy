@@ -43,88 +43,33 @@ def get_phase_names(phase_name):
     """
     Called by parse_phase_list to replace e.g. ttall with the relevant phases.
     """
+    lphase = phase_name.lower()
     names = []
-    if(phase_name.lower() == "ttp"
-       or phase_name.lower() == "tts"
-       or phase_name.lower() == "ttbasic"
-       or phase_name.lower() == "tts+"
-       or phase_name.lower() == "ttp+"
-       or phase_name.lower() == "ttall"):
-        if(phase_name.lower() == "ttp"
-           or phase_name.lower() == "ttp+"
-           or phase_name.lower() == "ttbasic"
-           or phase_name.lower() == "ttall"):
-            names.append("p")
-            names.append("P")
-            names.append("Pn")
-            names.append("Pdiff")
-            names.append("PKP")
-            names.append("PKiKP")
-            names.append("PKIKP")
-        if(phase_name.lower() == "tts"
-           or phase_name.lower() == "tts+"
-           or phase_name.lower() == "ttbasic"
-           or phase_name.lower() == "ttall"):
-            names.append("s")
-            names.append("S")
-            names.append("Sn")
-            names.append("Sdiff")
-            names.append("SKS")
-            names.append("SKIKS")
-        if(phase_name.lower() == "ttp+"
-           or phase_name.lower() == "ttbasic"
-           or phase_name.lower() == "ttall"):
-            names.append("PcP")
-            names.append("pP")
-            names.append("pPdiff")
-            names.append("pPKP")
-            names.append("pPKIKP")
-            names.append("pPKiKP")
-            names.append("sP")
-            names.append("sPdiff")
-            names.append("sPKP")
-            names.append("sPKIKP")
-            names.append("sPKiKP")
-        if(phase_name.lower() == "tts+"
-           or phase_name.lower() == "ttbasic"
-           or phase_name.lower() == "ttall"):
-            names.append("sS")
-            names.append("sSdiff")
-            names.append("sSKS")
-            names.append("sSKIKS")
-            names.append("ScS")
-            names.append("pS")
-            names.append("pSdiff")
-            names.append("pSKS")
-            names.append("pSKIKS")
-        if(phase_name.lower() == "ttbasic"
-           or phase_name.lower() == "ttall"):
-            names.append("ScP")
-            names.append("SKP")
-            names.append("SKIKP")
-            names.append("PKKP")
-            names.append("PKIKKIKP")
-            names.append("SKKP")
-            names.append("SKIKKIKP")
-            names.append("PP")
-            names.append("PKPPKP")
-            names.append("PKIKPPKIKP")
-        if phase_name.lower() == "ttall":
-            names.append("SKiKP")
-            names.append("PP")
-            names.append("ScS")
-            names.append("PcS")
-            names.append("PKS")
-            names.append("PKIKS")
-            names.append("PKKS")
-            names.append("PKIKKIKS")
-            names.append("SKKS")
-            names.append("SKIKKIKS")
-            names.append("SKSSKS")
-            names.append("SKIKSSKIKS")
-            names.append("SS")
-            names.append("SP")
-            names.append("PS")
+    if lphase in ("ttp", "tts", "ttbasic", "tts+", "ttp+", "ttall"):
+        if lphase in ("ttp", "ttp+", "ttbasic", "ttall"):
+            names.extend(["p", "P", "Pn", "Pdiff", "PKP", "PKiKP", "PKIKP"])
+
+        if lphase in ("tts", "tts+", "ttbasic", "ttall"):
+            names.extend(["s", "S", "Sn", "Sdiff", "SKS", "SKIKS"])
+
+        if lphase in ("ttp+", "ttbasic", "ttall"):
+            names.extend(["PcP", "pP", "pPdiff", "pPKP", "pPKIKP", "pPKiKP",
+                          "sP", "sPdiff", "sPKP", "sPKIKP", "sPKiKP"])
+
+        if lphase in ("tts+", "ttbasic", "ttall"):
+            names.extend(["sS", "sSdiff", "sSKS", "sSKIKS", "ScS", "pS",
+                          "pSdiff", "pSKS", "pSKIKS"])
+
+        if lphase in ("ttbasic", "ttall"):
+            names.extend(["ScP", "SKP", "SKIKP", "PKKP", "PKIKKIKP", "SKKP",
+                          "SKIKKIKP", "PP", "PKPPKP", "PKIKPPKIKP"])
+
+        if lphase == "ttall":
+            names.extend(["SKiKP", "PP", "ScS", "PcS", "PKS", "PKIKS", "PKKS",
+                          "PKIKKIKS", "SKKS", "SKIKKIKS", "SKSSKS",
+                          "SKIKSSKIKS", "SS", "SP", "PS"])
+
     else:
         names.append(phase_name)
+
     return names
