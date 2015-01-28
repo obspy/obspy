@@ -395,35 +395,35 @@ class TauPyModelTestCase(unittest.TestCase):
             self.assertTrue(abs(arr.ray_param_sec_degree - value["ray_param"])
                             < 0.11)
 
-    def test_org_taup_ak135_P_deep(self):
+    def test_kennet_ak135_ttime_tables_P_deep(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_deep.txt", phases=["p", "Pdiff", "P"])
 
-    def test_org_taup_ak135_P_shallow(self):
+    def test_kennet_ak135_ttime_tables_P_shallow(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_shallow.txt", phases=["p", "Pdiff", "P"])
 
-    def test_org_taup_ak135_PcP(self):
+    def test_kennet_ak135_ttime_tables_PcP(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_PcP.txt", phases=["PcP"])
 
-    def test_org_taup_ak135_PKIKP(self):
+    def test_kennet_ak135_ttime_tables_PKIKP(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_PKIKP.txt", phases=["PKIKP"])
 
-    def test_org_taup_ak135_S_deep(self):
+    def test_kennet_ak135_ttime_tables_S_deep(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_deep.txt", phases=["s", "S", "Sdiff"])
 
-    def test_org_taup_ak135_S_shallow(self):
+    def test_kennet_ak135_ttime_tables_S_shallow(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_shallow.txt", phases=["s", "S", "Sdiff"])
 
-    def test_org_taup_ak135_ScP(self):
+    def test_kennet_ak135_ttime_tables_ScP(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_ScP.txt", phases=["ScP"])
 
-    def test_org_taup_ak135_ScS(self):
+    def test_kennet_ak135_ttime_tables_ScS(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_ScS.txt", phases=["ScS"])
 
