@@ -208,7 +208,7 @@ docset: html docset_after_html
 
 docset_after_html:
 	$(eval VERSION := $(shell head -3 $(BUILDDIR)/html/objects.inv | grep ' ObsPy Documentation ' | sed 's#.*(\(.*\)).*#\1#'))
-	cd $(BUILDDIR)/html && rm -rf icon.png && ln -s _static/obspy-logo_16x16.png icon.png
+	cd $(BUILDDIR)/html && rm -rf icon.png && ln -s _static/obspy-logo_32x32.png icon.png
 	rm -rf "$(BUILDDIR)/ObsPy $(VERSION).docset"
 	cd $(BUILDDIR) && doc2dash -n 'ObsPy $(VERSION)' -i html/icon.png html/
 	rm -f $(BUILDDIR)/html/icon.png
