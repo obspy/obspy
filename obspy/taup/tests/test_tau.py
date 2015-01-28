@@ -384,8 +384,6 @@ class TauPyModelTestCase(unittest.TestCase):
                 source_depth_in_km=value["depth"],
                 distance_in_degree=value["dist"],
                 phase_list=phases)
-            print("==============")
-            print(arrivals)
             # Currently the tests take very long thus some output is nice to
             # know that something is going on.
             arrivals = sorted(arrivals, key=lambda x: x.time)
