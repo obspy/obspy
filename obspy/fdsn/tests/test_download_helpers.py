@@ -792,6 +792,133 @@ class StationTestCase(unittest.TestCase):
                 self.assertEqual(p.call_args[0][0], filename)
                 self.assertEqual(exists_mock.call_args[0][0], filename)
 
+    def test_temporal_bounds(self):
+        """
+        Tests the temporal bounds property.
+        :return:
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.deepcopy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.deepcopy(time_intervals))
+        channels = [c1, c2]
+        station = Station(network="TA", station="A001", latitude=1,
+                          longitude=2, channels=channels)
+
+        self.assertEqual(station.temporal_bounds, (st, st + 10 * 60))
+
+    def test_sanitize_downloads(self):
+        """
+        Tests the sanitize_downloads() methods.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.deepcopy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.deepcopy(time_intervals))
+        channels = [c1, c2]
+        station = Station(network="TA", station="A001", latitude=1,
+                          longitude=2, channels=channels)
+
+        logger = mock.MagicMock()
+
+        with mock.patch("obspy.fdsn.download_helpers.utils.safe_delete") as p:
+            # By default, nothing will happen.
+            station.sanitize_downloads(logger)
+            self.assertEqual(p.call_count, 0)
+            p.reset_mock()
+
+            # The whole purpose of the method is to make sure that each
+            # MiniSEED files has a corresponding StationXML file. MiniSEED
+            # files that do not fulfill this requirement will be deleted.
+            # Fake it.
+            filename = "tmp/file.mseed"
+            c1.intervals[0].status = STATUS.DOWNLOADED
+            c1.intervals[0].filename = filename
+            c1.intervals[1].status = STATUS.DOWNLOADED
+            c1.intervals[1].filename = filename
+
+            # Right no channel has been marked missing, thus nothing should
+            # happen.
+            station.sanitize_downloads(logger)
+            self.assertEqual(p.call_count, 0)
+            p.reset_mock()
+
+            # Mark one as missing and the corresponding information should
+            # be deleted
+            station.miss_station_information[("", "BHZ")] = True
+            station.sanitize_downloads(logger)
+            self.assertEqual(p.call_count, 2)
+            # The status of the channel should be adjusted
+            self.assertEqual(c1.intervals[0].status, STATUS.DOWNLOAD_REJECTED)
+            self.assertEqual(c1.intervals[1].status, STATUS.DOWNLOAD_REJECTED)
+            p.reset_mock()
+
+    def test_prepare_mseed_download(self):
+        """
+        Tests the prepare_mseed download method.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.deepcopy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.deepcopy(time_intervals))
+        channels = [c1, c2]
+        all_tis = []
+        for chan in channels:
+            all_tis.extend(chan.intervals)
+        station = Station(network="TA", station="A001", latitude=1,
+                          longitude=2, channels=channels)
+
+        # Patch the os.makedirs() function as it might be called at various
+        # times.
+        with mock.patch("os.makedirs") as p:
+            # Now the output strongly depends on the `mseed_storage` keyword
+            # argument. If it always returns True, all channels should be
+            # ignored.
+            station.prepare_mseed_download(
+                mseed_storage=lambda *args, **kwargs: True)
+            self.assertEqual(p.call_count, 0)
+            for i in all_tis:
+                self.assertEqual(i.status, STATUS.IGNORE)
+            p.reset_mock()
+
+            # Now if we just pass a string, it will be interpreted as a
+            # foldername. It will naturally not exist, so all time intervals
+            # will be marked as needing a download.
+            with mock.patch("os.path.exists") as p_ex:
+                p_ex.return_value = False
+                station.prepare_mseed_download(
+                    mseed_storage="/some/super/random/FJSD34J0J/path")
+            # There are 20 time intervals.
+            self.assertEqual(p.call_count, 20)
+            # Once for each file, once for each folder.
+            self.assertEqual(p_ex.call_count, 40)
+            p.reset_mock()
+            for i in all_tis:
+                self.assertEqual(i.status, STATUS.NEEDS_DOWNLOADING)
+
+            # Last but not least, if the files already exist, they will be
+            # marked as that.
+            with mock.patch("os.path.exists") as p_ex:
+                p_ex.return_value = True
+                station.prepare_mseed_download(
+                    mseed_storage="/some/super/random/FJSD34J0J/path")
+            # No folder should be created.
+            self.assertEqual(p.call_count, 0)
+            # Once for each file.
+            self.assertEqual(p_ex.call_count, 20)
+            p.reset_mock()
+            for i in all_tis:
+                self.assertEqual(i.status, STATUS.EXISTS)
+
 
 def suite():
     testsuite = unittest.TestSuite()

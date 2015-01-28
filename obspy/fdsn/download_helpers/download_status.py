@@ -301,7 +301,7 @@ class Station(object):
         StationXML file.
 
         It will delete MiniSEED files but never a StationXML file. The logic
-        of the download helpers does not allow for a StationXML file with not
+        of the download helpers does not allow for a StationXML file with no
         data.
         """
         # All or nothing for each channel.
