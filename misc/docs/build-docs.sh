@@ -22,7 +22,7 @@ TGZ=$HOME/.backup/update-docs.tgz
 GITDIR=$BASEDIR/src/obspy
 PIDFILE=$BASEDIR/update-docs.pid
 DOCSNAME=obspy-${GITTARGET}-documentation
-DOCSETNAME="ObsPy ${GITTARGET}.docset"
+DOCSET="$DOCSBASEDIR/docsets/ObsPy ${GITTARGET}.docset"
 DOCSBASEDIR=$HOME/htdocs/docs
 DOCSDIR=$DOCSBASEDIR/$DOCSNAME
 
@@ -102,9 +102,9 @@ cp -a $GITDIR/misc/docs/build/html $DOCSDIR
 cp $GITDIR/misc/docs/build/linkcheck/output.txt $DOCSDIR/linkcheck.txt
 tar -czf ${DOCSNAME}.tgz ${DOCSDIR}
 # copy docset and rename
-rm -rf "$DOCSDIR/docsets/${DOCSETNAME}"
+rm -rf "${DOCSET}"
 cd $GITDIR/misc/docs/build/
-cp -a *.docset "$DOCSDIR/docsets/${DOCSETNAME}"
+cp -a *.docset "${DOCSET}"
 
 # report
 $BASEDIR/bin/obspy-runtests -x seishub -n sphinx -r --all
