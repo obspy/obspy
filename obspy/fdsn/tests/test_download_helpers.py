@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 import copy
 import os
 import unittest
@@ -918,6 +919,175 @@ class StationTestCase(unittest.TestCase):
             p.reset_mock()
             for i in all_tis:
                 self.assertEqual(i.status, STATUS.EXISTS)
+
+    def test_prepare_stationxml_download_simple_cases(self):
+        """
+        Tests the simple cases of the prepare_stationxml_download() method.
+        This method is crucial for everything to work thus it is tested
+        rather extensively.
+        """
+        def _create_station():
+            st = obspy.UTCDateTime(2015, 1, 1)
+            time_intervals = [
+                TimeInterval(st + _i * 60, st + (_i + 1) * 60)
+                for _i in range(10)]
+            c1 = Channel(location="", channel="BHZ",
+                         intervals=copy.deepcopy(time_intervals))
+            c2 = Channel(location="00", channel="EHE",
+                         intervals=copy.deepcopy(time_intervals))
+            channels = [c1, c2]
+            all_tis = []
+            for chan in channels:
+                all_tis.extend(chan.intervals)
+            station = Station(network="TA", station="A001", latitude=1,
+                              longitude=2, channels=channels)
+            return station
+
+        temporal_bounds = (obspy.UTCDateTime(2015, 1, 1),
+                           obspy.UTCDateTime(2015, 1, 1, 0, 10))
+
+        # Again mock the os.makedirs function as it is called quite a bit.
+        with mock.patch("os.makedirs") as p:
+
+            # No time interval has any data, thus no interval actually needs
+            # a station file. An interval only needs a station file if it
+            # either downloaded data or if the data already exists.
+            station = _create_station()
+            station.prepare_stationxml_download(stationxml_storage="random")
+            self.assertEqual(p.call_count, 0)
+            self.assertEqual(station.stationxml_status, STATUS.NONE)
+            self.assertEqual(station.want_station_information, {})
+            self.assertEqual(station.miss_station_information, {})
+            self.assertEqual(station.have_station_information, {})
+            p.reset_mock()
+
+            # Now the get_stationxml_filename() function will return a
+            # string and the filename does not yet exists. All time
+            # intervals require station information.
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            with mock.patch("os.path.exists") as exists_p:
+                exists_p.return_value = False
+                station.prepare_stationxml_download(
+                    stationxml_storage="random")
+            # Called twice, once for the directory, once for the file. Both
+            # return False as enforced with the mock.
+            self.assertEqual(exists_p.call_count, 2)
+            self.assertEqual(exists_p.call_args_list[0][0][0], "random")
+            self.assertEqual(exists_p.call_args_list[1][0][0],
+                             os.path.join("random", "TA.A001.xml"))
+            # Thus it should attempt to download everything
+            self.assertEqual(station.stationxml_filename,
+                             os.path.join("random", "TA.A001.xml"))
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
+                ("", "BHZ"): temporal_bounds,
+                ("00", "EHE"): temporal_bounds
+            })
+            p.reset_mock()
+
+            # Now it returns a filename, the filename exists, and it
+            # contains all necessary information.
+            ChannelAvailability = collections.namedtuple(
+                "ChannelAvailability",
+                ["network", "station", "location", "channel", "starttime",
+                 "endtime", "filename"])
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            with mock.patch("os.path.exists") as exists_p:
+                exists_p.return_value = True
+                with mock.patch("obspy.fdsn.download_helpers.utils."
+                                "get_stationxml_contents") as c_patch:
+                    c_patch.return_value = [
+                        ChannelAvailability("TA", "A001", "", "BHZ",
+                                            obspy.UTCDateTime(2013, 1, 1),
+                                            obspy.UTCDateTime(2016, 1, 1), ""),
+                        ChannelAvailability("TA", "A001", "00", "EHE",
+                                            obspy.UTCDateTime(2013, 1, 1),
+                                            obspy.UTCDateTime(2016, 1, 1), "")]
+                    station.prepare_stationxml_download(
+                        stationxml_storage="random")
+            # It then should not attempt to download anything as everything
+            # thats needed is already available.
+            self.assertEqual(station.stationxml_status, STATUS.EXISTS)
+            self.assertEqual(station.miss_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.have_station_information)
+            self.assertEqual(station.want_station_information, {
+                ("", "BHZ"): temporal_bounds,
+                ("00", "EHE"): temporal_bounds
+            })
+            p.reset_mock()
+
+            # The last option for the simple case is that the file exists,
+            # but it only contains part of the required information. In that
+            # case everything will be downloaded again.
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            with mock.patch("os.path.exists") as exists_p:
+                exists_p.return_value = True
+                with mock.patch("obspy.fdsn.download_helpers.utils."
+                                "get_stationxml_contents") as c_patch:
+                    c_patch.return_value = [
+                        ChannelAvailability("TA", "A001", "", "BHZ",
+                                            obspy.UTCDateTime(2013, 1, 1),
+                                            obspy.UTCDateTime(2016, 1, 1), "")]
+                    station.prepare_stationxml_download(
+                        stationxml_storage="random")
+            # It then should not attempt to download anything as everything
+            # thats needed is already available.
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
+                ("", "BHZ"): temporal_bounds,
+                ("00", "EHE"): temporal_bounds
+            })
+            p.reset_mock()
+
+            # Now a combination that barely lacks the required time range.
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            with mock.patch("os.path.exists") as exists_p:
+                exists_p.return_value = True
+                with mock.patch("obspy.fdsn.download_helpers.utils."
+                                "get_stationxml_contents") as c_patch:
+                    c_patch.return_value = [
+                        ChannelAvailability(
+                            "TA", "A001", "", "BHZ",
+                            obspy.UTCDateTime(2015, 1, 1),
+                            obspy.UTCDateTime(2015, 1, 1, 0, 9), ""),
+                        ChannelAvailability("TA", "A001", "00", "EHE",
+                                            obspy.UTCDateTime(2013, 1, 1),
+                                            obspy.UTCDateTime(2016, 1, 1), "")]
+                    station.prepare_stationxml_download(
+                        stationxml_storage="random")
+            # It then should not attempt to download anything as everything
+            # thats needed is already available.
+            self.assertEqual(STATUS.NEEDS_DOWNLOADING,
+                             station.stationxml_status)
+            self.assertEqual({}, station.have_station_information)
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
+                ("", "BHZ"): temporal_bounds,
+                ("00", "EHE"): temporal_bounds
+            })
+            p.reset_mock()
 
 
 def suite():

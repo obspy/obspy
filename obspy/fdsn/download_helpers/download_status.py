@@ -209,11 +209,17 @@ class Station(object):
             self.want_station_information[
                 (channel.location, channel.channel)] = channel.temporal_bounds
 
-        # Parse user passed information.
+        # No channel has any data, thus nothing will happen.
+        if not self.want_station_information:
+            self.stationxml_status = STATUS.NONE
+            return
+
+        # Only those channels that now actually want station information
+        # will be treated in the following.
         s, e = self.temporal_bounds
         storage = utils.get_stationxml_filename(
             stationxml_storage, self.network, self.station,
-            [(_i.location, _i.channel) for _i in self.channels],
+            list(self.want_station_information.keys()),
             starttime=s, endtime=e)
 
         # The simplest case. The function returns a string. Now two things
@@ -222,12 +228,13 @@ class Station(object):
             filename = storage
             self.stationxml_filename = filename
             # 1. The file does not yet exist. Thus all channels must be
-            # downloaded new.
+            # downloaded.
             if not os.path.exists(filename):
                 self.miss_station_information = \
                     copy.deepcopy(self.want_station_information)
                 self.have_station_information = {}
                 self.stationxml_status = STATUS.NEEDS_DOWNLOADING
+                return
             # 2. The file does exist. It will be parsed. If it contains ALL
             # necessary information, nothing will happen. Otherwise it will
             # be overwritten.
@@ -258,6 +265,7 @@ class Station(object):
                     copy.deepcopy(self.want_station_information)
                 self.have_station_information = {}
                 self.stationxml_status = STATUS.NEEDS_DOWNLOADING
+                return
         # The other possibility is that a dictionary is returned.
         else:
             # The types are already checked by the get_stationxml_filename()
