@@ -72,6 +72,10 @@ cd $GITDIR
 # export LDFLAGS="-lgcov"
 $BASEDIR/bin/python setup.py develop --verbose
 
+# keep some packages up to date
+$BASEDIR/bin/pip install --upgrade pip
+$BASEDIR/bin/pip install --upgrade --no-deps pep8 flake8
+
 # make docs
 cd $GITDIR/misc/docs
 make clean
