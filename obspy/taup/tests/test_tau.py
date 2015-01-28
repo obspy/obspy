@@ -373,13 +373,13 @@ class TauPyModelTestCase(unittest.TestCase):
         Helper function to compare against the AK135 traveltime tables of
         Kennet. This test is also done in the Java TauP version.
         """
-        values = self._read_ak135_test_files("ak135_P_deep.txt")
+        values = self._read_ak135_test_files(filename)
         m = TauPyModel(model="ak135")
         for value in values:
             arrivals = m.get_ray_paths(
                 source_depth_in_km=value["depth"],
                 distance_in_degree=value["dist"],
-                phase_list=["p", "Pdiff", "P"])
+                phase_list=phases)
             # Currently the tests take very long thus some output is nice to
             # know that something is going on.
             print("==============")
@@ -421,11 +421,11 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_kennet_ak135_ttime_tables_ScP(self):
         self._compare_against_ak135_tables_kennet(
-            "ak135_S_ScP.txt", phases=["ScP"])
+            "ak135_ScP.txt", phases=["ScP"])
 
     def test_kennet_ak135_ttime_tables_ScS(self):
         self._compare_against_ak135_tables_kennet(
-            "ak135_S_ScS.txt", phases=["ScS"])
+            "ak135_ScS.txt", phases=["ScS"])
 
 
 def suite():
