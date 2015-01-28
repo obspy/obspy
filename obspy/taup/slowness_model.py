@@ -819,19 +819,30 @@ class SlownessModel(object):
         """
         Checks to make sure that no slowness layer spans more than maxDeltaP.
         """
-        for layers in [self.SLayers, self.PLayers]:
-            for sLayer in layers:
-                if abs(sLayer['topP'] - sLayer['botP']) > self.maxDeltaP:
-                    numNewP = math.ceil(abs(sLayer['topP'] - sLayer['botP']) /
-                                        self.maxDeltaP)
-                    deltaP = (sLayer['topP'] - sLayer['botP']) / numNewP
-                    rayNum = 1
-                    while rayNum < numNewP:
-                        self.addSlowness(sLayer['topP'] + rayNum * deltaP,
-                                         self.PWAVE)
-                        self.addSlowness(sLayer['topP'] + rayNum * deltaP,
-                                         self.SWAVE)
-                        rayNum += 1
+        for wave in [self.SWAVE, self.PWAVE]:
+            # These might change with calls to addSlowness, so be sure we have
+            # the correct copy.
+            if wave == self.PWAVE:
+                layers = self.PLayers
+            else:
+                layers = self.SLayers
+
+            diff = layers['topP'] - layers['botP']
+            absdiff = np.abs(diff)
+
+            mask = absdiff > self.maxDeltaP
+            diff = diff[mask]
+            absdiff = absdiff[mask]
+            topP = layers['topP'][mask]
+
+            new_count = np.ceil(absdiff / self.maxDeltaP).astype(np.int_)
+            steps = diff / new_count
+
+            for start, Np, delta in zip(topP, new_count, steps):
+                for j in range(1, Np):
+                    newp = start + j * delta
+                    self.addSlowness(newp, self.PWAVE)
+                    self.addSlowness(newp, self.SWAVE)
 
     def depthIncCheck(self):
         """
