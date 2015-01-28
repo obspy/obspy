@@ -376,20 +376,20 @@ class TauPyModelTestCase(unittest.TestCase):
         values = self._read_ak135_test_files(filename)
         m = TauPyModel(model="ak135")
         for value in values:
-            arrivals = m.get_ray_paths(
-                source_depth_in_km=value["depth"],
-                distance_in_degree=value["dist"],
-                phase_list=phases)
-            # Currently the tests take very long thus some output is nice to
-            # know that something is going on.
-            print("==============")
-            print(arrivals)
-            arrivals = sorted(arrivals, key=lambda x: x.time)
-            arr = arrivals[0]
             # Parameters are not strictly defined for a non-existent travel
             # time.
             if value["time"] == 0.0:
                 continue
+            arrivals = m.get_ray_paths(
+                source_depth_in_km=value["depth"],
+                distance_in_degree=value["dist"],
+                phase_list=phases)
+            print("==============")
+            print(arrivals)
+            # Currently the tests take very long thus some output is nice to
+            # know that something is going on.
+            arrivals = sorted(arrivals, key=lambda x: x.time)
+            arr = arrivals[0]
             # These are the same tolerances as in the Java tests suite.
             self.assertTrue(abs(arr.time - value["time"]) < 0.07)
             self.assertTrue(abs(arr.ray_param_sec_degree - value["ray_param"])
