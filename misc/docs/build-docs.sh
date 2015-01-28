@@ -22,6 +22,7 @@ TGZ=$HOME/.backup/update-docs.tgz
 GITDIR=$BASEDIR/src/obspy
 PIDFILE=$BASEDIR/update-docs.pid
 DOCSNAME=obspy-${GITTARGET}-documentation
+DOCSETNAME="ObsPy ${GITTARGET}.docset"
 DOCSBASEDIR=$HOME/htdocs/docs
 DOCSDIR=$DOCSBASEDIR/$DOCSNAME
 
@@ -80,6 +81,7 @@ make pep8
 # - before latexpdf (otherwise .hires.png images are not built)
 # - after latexpdf (so that the tutorial pdf is included as downloadable file in html docs)
 make html
+make docset_after_html
 make latexpdf-png-images
 make html
 make linkcheck
@@ -95,6 +97,10 @@ rm -rf $DOCSDIR ${DOCSNAME}.tgz
 cp -a $GITDIR/misc/docs/build/html $DOCSDIR
 cp $GITDIR/misc/docs/build/linkcheck/output.txt $DOCSDIR/linkcheck.txt
 tar -czf ${DOCSNAME}.tgz ${DOCSDIR}
+# copy docset and rename
+rm -rf "$DOCSDIR/docsets/${DOCSETNAME}"
+cd $GITDIR/misc/docs/build/
+cp -a *.docset "$DOCSDIR/docsets/${DOCSETNAME}"
 
 # report
 $BASEDIR/bin/obspy-runtests -x seishub -n sphinx -r --all
