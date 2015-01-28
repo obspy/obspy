@@ -399,6 +399,34 @@ class TauPyModelTestCase(unittest.TestCase):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_deep.txt", phases=["p", "Pdiff", "P"])
 
+    def test_org_taup_ak135_P_shallow(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_P_shallow.txt", phases=["p", "Pdiff", "P"])
+
+    def test_org_taup_ak135_PcP(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_PcP.txt", phases=["PcP"])
+
+    def test_org_taup_ak135_PKIKP(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_PKIKP.txt", phases=["PKIKP"])
+
+    def test_org_taup_ak135_S_deep(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_S_deep.txt", phases=["s", "S", "Sdiff"])
+
+    def test_org_taup_ak135_S_shallow(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_S_shallow.txt", phases=["s", "S", "Sdiff"])
+
+    def test_org_taup_ak135_ScP(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_S_ScP.txt", phases=["ScP"])
+
+    def test_org_taup_ak135_ScS(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_S_ScS.txt", phases=["ScS"])
+
 
 def suite():
     return unittest.makeSuite(TauPyModelTestCase, 'test')
