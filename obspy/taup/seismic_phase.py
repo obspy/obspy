@@ -7,6 +7,7 @@ from future.builtins import *  # NOQA
 from copy import deepcopy
 from itertools import count
 import math
+import numpy as np
 
 from .arrival import Arrival
 from .helper_classes import TauModelError, TimeDist
@@ -1035,9 +1036,9 @@ class SeismicPhase(object):
                 # upgoing ray.
                 takeoffVelocity = -1 * vMod.evaluateAbove(source_depth,
                                                           name[0])
-            takeoffAngle = (180 / math.pi) * math.asin(
-                takeoffVelocity * arrivalRayParam / (self.tMod.radiusOfEarth -
-                                                     self.source_depth))
+            takeoffAngle = (180 / math.pi) * math.asin(np.clip(
+                takeoffVelocity * arrivalRayParam /
+                (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0))
             lastLeg = self.legs[-2][0]  # very last item is "END"
             incidentAngle = (180 / math.pi) * math.asin(
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /

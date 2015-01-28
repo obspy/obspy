@@ -339,6 +339,66 @@ class TauPyModelTestCase(unittest.TestCase):
         np.testing.assert_allclose(interpolated_actual,
                                    interpolated_expected, rtol=1E-4)
 
+    def _read_ak135_test_files(self, filename):
+        """
+        Helper function parsing the AK135 test data from the original TauP
+        test suite.
+        """
+        filename = os.path.join(DATA, filename)
+        values = []
+        with open(filename, "rt") as fh:
+            line = fh.readline()
+            line = line.strip().split()
+            depths = list(map(float, line))
+
+            while True:
+                time_line = fh.readline()
+                if not time_line:
+                    break
+                time = list(map(float, time_line.strip().split()))
+                ray_param = list(map(float, fh.readline().strip().split()))
+                dist = time[0]
+                for _i in range(len(ray_param)):
+                    time[_i] = time[2 * _i + 1] * 60.0 + time[2 * _i + 2]
+                    values.append({
+                        "depth": depths[_i],
+                        "dist": dist,
+                        "ray_param": ray_param[_i],
+                        "time": time[_i],
+                        })
+        return values
+
+    def _compare_against_ak135_tables_kennet(self, filename, phases):
+        """
+        Helper function to compare against the AK135 traveltime tables of
+        Kennet. This test is also done in the Java TauP version.
+        """
+        values = self._read_ak135_test_files("ak135_P_deep.txt")
+        m = TauPyModel(model="ak135")
+        for value in values:
+            arrivals = m.get_ray_paths(
+                source_depth_in_km=value["depth"],
+                distance_in_degree=value["dist"],
+                phase_list=["p", "Pdiff", "P"])
+            # Currently the tests take very long thus some output is nice to
+            # know that something is going on.
+            print("==============")
+            print(arrivals)
+            arrivals = sorted(arrivals, key=lambda x: x.time)
+            arr = arrivals[0]
+            # Parameters are not strictly defined for a non-existent travel
+            # time.
+            if value["time"] == 0.0:
+                continue
+            # These are the same tolerances as in the Java tests suite.
+            self.assertTrue(abs(arr.time - value["time"]) < 0.07)
+            self.assertTrue(abs(arr.ray_param_sec_degree - value["ray_param"])
+                            < 0.11)
+
+    def test_org_taup_ak135_P_deep(self):
+        self._compare_against_ak135_tables_kennet(
+            "ak135_P_deep.txt", phases=["p", "Pdiff", "P"])
+
 
 def suite():
     return unittest.makeSuite(TauPyModelTestCase, 'test')
