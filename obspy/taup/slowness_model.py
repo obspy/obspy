@@ -491,7 +491,7 @@ class SlownessModel(object):
                 velLayer = self.vMod.layers[layerNum + 1]
                 topVelocity = evaluateVelocityAtTop(velLayer, waveType)
                 if (isPWave is False and
-                        self.depthInFluid(velLayer['topDepth'])):
+                        np.any(self.depthInFluid(velLayer['topDepth']))):
                     # Special case for S waves above a fluid. If top next
                     # layer is in a fluid then we should set topVelocity to
                     # be the P velocity at the top of the layer.
@@ -527,7 +527,7 @@ class SlownessModel(object):
 
     def interpolate(self, p, topVelocity, topDepth, slope):
         denominator = p * slope + 1
-        if denominator == 0:
+        if np.any(denominator == 0):
             raise SlownessModelError(
                 "Negative velocity gradient that just balances the slowness "
                 "gradient of the spherical slowness, i.e. Earth flattening. "
@@ -545,10 +545,10 @@ class SlownessModel(object):
         DepthRange, just like in the java code, despite its claims to the
         contrary.
         """
+        ret = np.zeros_like(depth, dtype=np.bool_)
         for elem in self.fluidLayerDepths:
-            if elem.topDepth <= depth < elem.botDepth:
-                return True
-        return False
+            ret |= (elem.topDepth <= depth) & (depth < elem.botDepth)
+        return ret
 
     # noinspection PyCallByClass
     def coarseSample(self):
@@ -558,72 +558,70 @@ class SlownessModel(object):
         well as sampling each point specified within the VelocityModel. The
         P and S sampling will also be compatible.
         """
-        self.PLayers = []
-        self.SLayers = []
-        # to initialise prevVLayer
-        origVLayer = self.vMod.layers[0]
-        origVLayer = np.array([(
-            origVLayer['topDepth'], origVLayer['topDepth'],
-            origVLayer['topPVelocity'], origVLayer['topPVelocity'],
-            origVLayer['topSVelocity'], origVLayer['topSVelocity'],
-            origVLayer['topDensity'], origVLayer['topDensity'],
-            origVLayer['topQp'], origVLayer['topQp'],
-            origVLayer['topQs'], origVLayer['topQs'])],
-            dtype=VelocityLayer)
-        for layer in self.vMod.layers:
-            prevVLayer = origVLayer
-            origVLayer = layer
-            # Check for first order discontinuity. However, we only
-            # consider S discontinuities in the inner core if
-            # allowInnerCoreS is true.
-            if prevVLayer['botPVelocity'] != origVLayer['topPVelocity'] \
-                    or(prevVLayer['botSVelocity'] != origVLayer['topSVelocity']
-                       and (self.allowInnerCoreS
-                            or origVLayer['topDepth'] < self.vMod.iocbDepth)):
-                # If we are going from a fluid to a solid or solid to
-                # fluid, ex core mantle or outer core to inner core then we
-                # need to use the P velocity for determining the S
-                # discontinuity.
-                if prevVLayer['botSVelocity'] == 0:
-                    topSVel = prevVLayer['botPVelocity']
-                else:
-                    topSVel = prevVLayer['botSVelocity']
-                if origVLayer['topSVelocity'] == 0:
-                    botSVel = origVLayer['topPVelocity']
-                else:
-                    botSVel = origVLayer['topSVelocity']
-                # Add the zero thickness, but with nonzero slowness step,
-                # layer corresponding to the discontinuity.
-                currVLayer = np.array([(
-                    prevVLayer['botDepth'], prevVLayer['botDepth'],
-                    prevVLayer['botPVelocity'], origVLayer['topPVelocity'],
-                    topSVel, botSVel,
-                    DEFAULT_DENSITY, DEFAULT_DENSITY,
-                    DEFAULT_QP, DEFAULT_QP, DEFAULT_QS, DEFAULT_QS)],
-                    dtype=VelocityLayer)
-                currPLayer = create_from_vlayer(currVLayer,
-                                                self.PWAVE)
-                self.PLayers.append(currPLayer)
-                if (prevVLayer['botSVelocity'] == 0
-                    and origVLayer['topSVelocity'] == 0) \
-                        or (self.allowInnerCoreS is False
-                            and currVLayer['topDepth'] >= self.vMod.iocbDepth):
-                    currSLayer = currPLayer
-                else:
-                    currSLayer = create_from_vlayer(currVLayer,
-                                                    self.SWAVE)
-                self.SLayers.append(currSLayer)
-            currPLayer = create_from_vlayer(origVLayer,
-                                            self.PWAVE)
-            self.PLayers.append(currPLayer)
-            if self.depthInFluid(origVLayer['topDepth']) or (
-                    self.allowInnerCoreS is False
-                    and origVLayer['topDepth'] >= self.vMod.iocbDepth):
-                currSLayer = currPLayer
-            else:
-                currSLayer = create_from_vlayer(origVLayer,
-                                                self.SWAVE)
-            self.SLayers.append(currSLayer)
+
+        self.PLayers = create_from_vlayer(self.vMod.layers, self.PWAVE)
+
+        with np.errstate(divide='ignore'):
+            self.SLayers = create_from_vlayer(self.vMod.layers, self.SWAVE)
+        mask = self.depthInFluid(self.vMod.layers['topDepth'])
+        if not self.allowInnerCoreS:
+            mask |= self.vMod.layers['topDepth'] >= self.vMod.iocbDepth
+        self.SLayers[mask] = self.PLayers[mask]
+
+        # Check for first order discontinuity. However, we only consider
+        # S discontinuities in the inner core if allowInnerCoreS is true.
+        above = self.vMod.layers[:-1]
+        below = self.vMod.layers[1:]
+        mask = np.logical_or(
+            above['botPVelocity'] != below['topPVelocity'],
+            np.logical_and(
+                above['botSVelocity'] != below['topSVelocity'],
+                np.logical_or(
+                    self.allowInnerCoreS,
+                    below['topDepth'] < self.vMod.iocbDepth)))
+
+        index = np.where(mask)[0] + 1
+        above = above[mask]
+        below = below[mask]
+
+        # If we are going from a fluid to a solid or solid to fluid, e.g., core
+        # mantle or outer core to inner core then we need to use the P velocity
+        # for determining the S discontinuity.
+        topSVel = np.where(above['botSVelocity'] == 0,
+                           above['botPVelocity'],
+                           above['botSVelocity'])
+        botSVel = np.where(below['topSVelocity'] == 0,
+                           below['topPVelocity'],
+                           below['topSVelocity'])
+
+        # Add the layer, with zero thickness but nonzero slowness step,
+        # corresponding to the discontinuity.
+        currVLayer = np.empty_like(above, dtype=VelocityLayer)
+        currVLayer['topDepth'] = above['botDepth']
+        currVLayer['botDepth'] = above['botDepth']
+        currVLayer['topPVelocity'] = above['botPVelocity']
+        currVLayer['botPVelocity'] = below['topPVelocity']
+        currVLayer['topSVelocity'] = topSVel
+        currVLayer['botSVelocity'] = botSVel
+        currVLayer['topDensity'].fill(DEFAULT_DENSITY)
+        currVLayer['botDensity'].fill(DEFAULT_DENSITY)
+        currVLayer['topQp'].fill(DEFAULT_QP)
+        currVLayer['botQp'].fill(DEFAULT_QP)
+        currVLayer['topQs'].fill(DEFAULT_QS)
+        currVLayer['botQs'].fill(DEFAULT_QS)
+
+        currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
+        self.PLayers = np.insert(self.PLayers, index, currPLayer)
+
+        currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
+        mask2 = (above['botSVelocity'] == 0) & (below['topSVelocity'] == 0)
+        if not self.allowInnerCoreS:
+            mask2 |= currVLayer['topDepth'] >= self.vMod.iocbDepth
+        currSLayer = np.where(mask2,
+                              currPLayer,
+                              currSLayer)
+        self.SLayers = np.insert(self.SLayers, index, currSLayer)
+
         # Make sure that all high slowness layers are sampled exactly
         # at their bottom
         for highZone in self.highSlownessLayerDepthsS:
@@ -755,61 +753,67 @@ class SlownessModel(object):
             # values are modified in place!
             layers = self.PLayers
             otherLayers = self.SLayers
+            wave = 'P'
         else:
             layers = self.SLayers
             otherLayers = self.PLayers
-        for i, sLayer in enumerate(layers):
-            if sLayer['topDepth'] != sLayer['botDepth']:
-                topVelocity = self.vMod.evaluateBelow(
-                    sLayer['topDepth'], 'P' if isPWave else 'S')
-                botVelocity = self.vMod.evaluateAbove(
-                    sLayer['botDepth'], 'P' if isPWave else 'S')
-            else:
-                # If depths are the same only need topVelocity, and just
-                # to verify we are not in a fluid
-                topVelocity = self.vMod.evaluateAbove(
-                    sLayer['botDepth'], 'P' if isPWave else 'S')
-                botVelocity = self.vMod.evaluateBelow(
-                    sLayer['topDepth'], 'P' if isPWave else 'S')
-            # Don't need to check for S waves in a fluid or in inner core if
-            # allowInnerCoreS is False.
-            if not isPWave:
-                if self.allowInnerCoreS is False \
-                        and sLayer['botDepth'] > self.vMod.iocbDepth:
-                    break
-                elif topVelocity == 0:
-                    continue
-            if (sLayer['topP'] - p) * (p - sLayer['botP']) > 0:
-                botDepth = sLayer['botDepth']
-                if sLayer['botDepth'] != sLayer['topDepth']:
-                    # Not a zero thickness layer, so calculate the depth for
-                    #  the ray parameter.
-                    slope = (botVelocity - topVelocity) / \
-                        (sLayer['botDepth'] - sLayer['topDepth'])
-                    botDepth = self.interpolate(p, topVelocity,
-                                                sLayer['topDepth'], slope)
-                botLayer = np.array([(p, botDepth,
-                                      sLayer['botP'], sLayer['botDepth'])],
-                                    dtype=SlownessLayer)
-                topLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
-                                      p, botDepth)],
-                                    dtype=SlownessLayer)
-                # The list operations here should really be correct,
-                # after painstakingly working through Java and Python
-                # documentations and trying the behaviour of both.
-                layers.pop(i)
-                layers.insert(i, botLayer)
-                layers.insert(i, topLayer)
-                # To mimic the Java behaviour of returning -1 when item not
-                # in list.
-                try:
-                    otherIndex = otherLayers.index(sLayer)
-                except ValueError:
-                    otherIndex = -1
-                if otherIndex != -1:
-                    otherLayers.pop(otherIndex)
-                    otherLayers.insert(otherIndex, botLayer)
-                    otherLayers.insert(otherIndex, topLayer)
+            wave = 'S'
+
+        # If depths are the same only need topVelocity, and just to verify we
+        # are not in a fluid.
+        nonzero = layers['topDepth'] != layers['botDepth']
+        above = self.vMod.evaluateAbove(layers['botDepth'], wave)
+        below = self.vMod.evaluateBelow(layers['topDepth'], wave)
+        topVelocity = np.where(nonzero, below, above)
+        botVelocity = np.where(nonzero, above, below)
+
+        mask = ((layers['topP'] - p) * (p - layers['botP'])) > 0
+        # Don't need to check for S waves in a fluid or in inner core if
+        # allowInnerCoreS is False.
+        if not isPWave:
+            mask &= topVelocity != 0
+            if not self.allowInnerCoreS:
+                iocb_mask = layers['botDepth'] > self.vMod.iocbDepth
+                mask &= ~iocb_mask
+
+        index = np.where(mask)[0]
+
+        botDepth = np.copy(layers['botDepth'])
+        # Not a zero thickness layer, so calculate the depth for
+        # the ray parameter.
+        slope = ((botVelocity[nonzero] - topVelocity[nonzero]) /
+                 (layers['botDepth'][nonzero] - layers['topDepth'][nonzero]))
+        botDepth[nonzero] = self.interpolate(p, topVelocity[nonzero],
+                                             layers['topDepth'][nonzero],
+                                             slope)
+
+        botLayer = np.empty_like(index, dtype=SlownessLayer)
+        botLayer['topP'].fill(p)
+        botLayer['topDepth'] = botDepth[mask]
+        botLayer['botP'] = layers['botP'][mask]
+        botLayer['botDepth'] = layers['botDepth'][mask]
+
+        topLayer = np.empty_like(index, dtype=SlownessLayer)
+        topLayer['topP'] = layers['topP'][mask]
+        topLayer['topDepth'] = layers['topDepth'][mask]
+        topLayer['botP'].fill(p)
+        topLayer['botDepth'] = botDepth[mask]
+
+        otherIndex = np.where(otherLayers[np.newaxis, :] ==
+                              layers[mask, np.newaxis])
+        layers[index] = botLayer
+        layers = np.insert(layers, index, topLayer)
+        if len(otherIndex[0]):
+            otherLayers[otherIndex[1]] = botLayer[otherIndex[0]]
+            otherLayers = np.insert(otherLayers, otherIndex[1],
+                                    topLayer[otherIndex[0]])
+
+        if isPWave:
+            self.PLayers = layers
+            self.SLayers = otherLayers
+        else:
+            self.SLayers = layers
+            self.PLayers = otherLayers
 
     def ray_paramIncCheck(self):
         """

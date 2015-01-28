@@ -184,15 +184,15 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
     """
     Compute the slowness layer from a velocity layer.
     """
-    topDepth = vLayer['topDepth']
-    botDepth = vLayer['botDepth']
+    ret = np.empty_like(vLayer, dtype=SlownessLayer)
+    ret['topDepth'] = vLayer['topDepth']
+    ret['botDepth'] = vLayer['botDepth']
     waveType = ('p' if isPWave else 's')
     if isSpherical:
-        topP = (radiusOfEarth - topDepth) / \
+        ret['topP'] = (radiusOfEarth - ret['topDepth']) / \
             evaluateVelocityAtTop(vLayer, waveType)
-        botP = (radiusOfEarth - botDepth) / \
+        ret['botP'] = (radiusOfEarth - ret['botDepth']) / \
             evaluateVelocityAtBottom(vLayer, waveType)
     else:
         raise NotImplementedError("no flat models yet")
-    return np.array([(topP, topDepth, botP, botDepth)],
-                    dtype=SlownessLayer)
+    return ret

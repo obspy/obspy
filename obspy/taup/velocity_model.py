@@ -106,11 +106,14 @@ class VelocityModel(object):
 
         :returns: the layer number
         """
-        layer = np.where(np.logical_and(self.layers['topDepth'] < depth,
-                                        depth <= self.layers['botDepth']))[0]
-        try:
-            return layer[0]
-        except IndexError:
+        depth = np.atleast_1d(depth)
+        layer = np.logical_and(
+            self.layers['topDepth'][np.newaxis, :] < depth[:, np.newaxis],
+            depth[:, np.newaxis] <= self.layers['botDepth'][np.newaxis, :])
+        layer = np.where(layer)[-1]
+        if len(layer):
+            return layer
+        else:
             raise TauPException("No such layer.")
 
     def layerNumberBelow(self, depth):
@@ -120,11 +123,14 @@ class VelocityModel(object):
 
         :returns: the layer number
         """
-        layer = np.where(np.logical_and(self.layers['topDepth'] <= depth,
-                                        depth < self.layers['botDepth']))[0]
-        try:
-            return layer[0]
-        except IndexError:
+        depth = np.atleast_1d(depth)
+        layer = np.logical_and(
+            self.layers['topDepth'][np.newaxis, :] <= depth[:, np.newaxis],
+            depth[:, np.newaxis] < self.layers['botDepth'][np.newaxis, :])
+        layer = np.where(layer)[-1]
+        if len(layer):
+            return layer
+        else:
             raise TauPException("No such layer.")
 
     def evaluateAbove(self, depth, materialProperty):
