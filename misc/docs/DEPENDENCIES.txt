@@ -9,6 +9,8 @@ coverage==3.5
 pep8==0.6.1
 ## for 'make citations' only:
 pybtex>=0.16
+## for 'make docset' only:
+doc2dash
 
 # ObsPy Library
 ## obspy.*
