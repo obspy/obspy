@@ -125,13 +125,14 @@ class Station(object):
         """
         for chan in self.channels:
             for ti in chan.intervals:
-                if ti.status != STATUS.DOWNLOADED:
+                if ti.status != STATUS.DOWNLOADED or not ti.filename:
                     continue
                 if os.path.exists(ti.filename):
                     logger.info("Deleting MiniSEED file '%s'." % ti.filename)
                     utils.safe_delete(ti.filename)
 
         if self.stationxml_status == STATUS.DOWNLOADED and \
+                self.stationxml_filename and \
                 os.path.exists(self.stationxml_filename):
             logger.info("Deleting StationXMl file '%s'." %
                         self.stationxml_filename)
@@ -143,6 +144,9 @@ class Station(object):
 
     @stationxml_filename.setter
     def stationxml_filename(self, value):
+        """
+        Setter creating the directory for the file if does not already exist.
+        """
         self._stationxml_filename = value
         if not value:
             return

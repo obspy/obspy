@@ -731,6 +731,67 @@ class StationTestCase(unittest.TestCase):
         station.channels[0].intervals[0].status = STATUS.NONE
         self.assertFalse(station.has_existing_time_intervals)
 
+    def test_remove_files(self):
+        """
+        The remove files function removes all files of the station that have
+        been downloaded.
+
+        This test mocks the os.path.exists() function to always return True
+        and the utils.safe_delete() function to assure it has been called
+        when appropriate.
+        """
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60) for _i in range(10)]
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.deepcopy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.deepcopy(time_intervals))
+        channels = [c1, c2]
+        station = Station(network="TA", station="A001", latitude=1,
+                          longitude=2, channels=channels)
+
+        logger = mock.MagicMock()
+
+        with mock.patch("os.path.exists") as exists_mock:
+            exists_mock.return_value = True
+
+            with mock.patch("obspy.fdsn.download_helpers.utils.safe_delete") \
+                    as p:
+                # All status are NONE thus nothing should be deleted.
+                station.remove_files(logger)
+                self.assertEqual(p.call_count, 0)
+                self.assertEqual(exists_mock.call_count, 0)
+
+                # Set a random filename.
+                filename = "/tmp/random.xml"
+                station.stationxml_filename = filename
+                # The setter of the stationxml_filename attribute should
+                # check if the directory of the file already exists.
+                self.assertEqual(exists_mock.call_count, 1)
+                exists_mock.reset_mock()
+
+                # Set the status of the file to DOWNLOADED. It should now be
+                # downloaded.
+                station.stationxml_status = STATUS.DOWNLOADED
+                station.remove_files(logger)
+                self.assertEqual(p.call_count, 1)
+                self.assertEqual(p.call_args[0][0], filename)
+                self.assertEqual(exists_mock.call_args[0][0], filename)
+                exists_mock.reset_mock()
+                p.reset_mock()
+
+                # Now do the same with one of the time intervals.
+                filename = "/tmp/random.mseed"
+                station.stationxml_status = STATUS.NONE
+                c1.intervals[0].filename = filename
+                c1.intervals[0].status = STATUS.DOWNLOADED
+                station.remove_files(logger)
+                self.assertEqual(exists_mock.call_count, 1)
+                self.assertEqual(p.call_count, 1)
+                self.assertEqual(p.call_args[0][0], filename)
+                self.assertEqual(exists_mock.call_args[0][0], filename)
+
 
 def suite():
     testsuite = unittest.TestSuite()
