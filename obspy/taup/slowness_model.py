@@ -848,43 +848,43 @@ class SlownessModel(object):
         """
         Checks to make sure no slowness layer spans more than maxDepthInterval.
         """
-        for which_codeblock, layers in enumerate([self.SLayers, self.PLayers]):
-            for sLayer in layers:
-                if (sLayer['botDepth'] -
-                        sLayer['topDepth']) > self.maxDepthInterval:
-                    newNumDepths = math.ceil(
-                        (sLayer['botDepth'] - sLayer['topDepth']) /
-                        self.maxDepthInterval)
-                    deltaDepth = (sLayer['botDepth'] - sLayer['topDepth']) / \
-                        newNumDepths
-                    depthNum = 1
-                    while depthNum < newNumDepths:
-                        # Could do if layers == self.SLayers, but that would
-                        # be a bit heavy. In fact, any comparison here might
-                        #  be quite slow, I have a feeling this runs a lot... ?
-                        if which_codeblock == 0:
-                            velocity = self.vMod.evaluateAbove(
-                                sLayer['topDepth'] + depthNum * deltaDepth,
-                                'S')
-                            if velocity == 0 \
-                                    or (self.allowInnerCoreS is False
-                                        and sLayer['topDepth'] + depthNum *
-                                        deltaDepth >= self.vMod.iocbDepth):
-                                velocity = self.vMod.evaluateAbove(
-                                    sLayer['topDepth'] + depthNum * deltaDepth,
-                                    'P')
-                            p = self.toSlowness(
-                                velocity,
-                                sLayer['topDepth'] + depthNum * deltaDepth)
-                        else:
-                            p = self.toSlowness(
-                                self.vMod.evaluateAbove(
-                                    sLayer['topDepth'] + depthNum * deltaDepth,
-                                    'P'),
-                                sLayer['topDepth'] + depthNum * deltaDepth)
-                        self.addSlowness(p, self.PWAVE)
-                        self.addSlowness(p, self.SWAVE)
-                        depthNum += 1
+        for wave in [self.SWAVE, self.PWAVE]:
+            # These might change with calls to addSlowness, so be sure we have
+            # the correct copy.
+            if wave == self.PWAVE:
+                layers = self.PLayers
+            else:
+                layers = self.SLayers
+
+            diff = layers['botDepth'] - layers['topDepth']
+
+            mask = diff > self.maxDepthInterval
+            diff = diff[mask]
+            topDepth = layers['topDepth'][mask]
+
+            new_count = np.ceil(diff / self.maxDepthInterval).astype(np.int_)
+            steps = diff / new_count
+
+            for start, Nd, delta in zip(topDepth, new_count, steps):
+                new_depth = start + np.arange(1, Nd) * delta
+                if wave == self.SWAVE:
+                    velocity = self.vMod.evaluateAbove(new_depth, 'S')
+
+                    smask = velocity == 0
+                    if not self.allowInnerCoreS:
+                        smask |= new_depth >= self.vMod.iocbDepth
+                    velocity[smask] = self.vMod.evaluateAbove(new_depth[smask],
+                                                              'P')
+
+                    slowness = self.toSlowness(velocity, new_depth)
+                else:
+                    slowness = self.toSlowness(
+                        self.vMod.evaluateAbove(new_depth, 'P'),
+                        new_depth)
+
+                for p in slowness:
+                    self.addSlowness(p, self.PWAVE)
+                    self.addSlowness(p, self.SWAVE)
 
     def distanceCheck(self):
         """
