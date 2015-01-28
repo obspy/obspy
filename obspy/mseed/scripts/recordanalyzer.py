@@ -282,6 +282,9 @@ class RecordAnalyser(object):
         ret_val += '\tCorrected Starttime: %s\n' % self.corrected_starttime
         return ret_val
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 def main(argv=None):
     """

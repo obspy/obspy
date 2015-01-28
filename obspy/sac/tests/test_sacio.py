@@ -134,8 +134,7 @@ class SacIOTestCase(unittest.TestCase):
         tb = SacIO(tfileb)
         self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
-        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
-                         tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
+        self.assertEqual(tl.GetHvalue('delta'), tb.GetHvalue('delta'))
         np.testing.assert_array_equal(tl.seis, tb.seis)
 
     def test_swapbytes(self):
@@ -147,13 +146,23 @@ class SacIOTestCase(unittest.TestCase):
             tb = SacIO(tfileb)
             tb.swap_byte_order()
             tb.WriteSacBinary(tempfile)
-            tr1 = SacIO(tempfile)
+            t = SacIO(tempfile)
             tl = SacIO(tfilel)
-            np.testing.assert_array_equal(tl.seis, tr1.seis)
-            self.assertEqual(tl.GetHvalue('kevnm'), tr1.GetHvalue('kevnm'))
-            self.assertEqual(tl.GetHvalue('npts'), tr1.GetHvalue('npts'))
-            self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
-                             tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
+            self.assertEqual(t.GetHvalue('kevnm'), tl.GetHvalue('kevnm'))
+            self.assertEqual(t.GetHvalue('npts'), tl.GetHvalue('npts'))
+            self.assertEqual(t.GetHvalue('delta'), tl.GetHvalue('delta'))
+            np.testing.assert_array_equal(t.seis, tl.seis)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tl = SacIO(tfilel)
+            tl.swap_byte_order()
+            tl.WriteSacBinary(tempfile)
+            t = SacIO(tempfile)
+            tb = SacIO(tfileb)
+            self.assertEqual(t.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
+            self.assertEqual(t.GetHvalue('npts'), tb.GetHvalue('npts'))
+            self.assertEqual(t.GetHvalue('delta'), tb.GetHvalue('delta'))
+            np.testing.assert_array_equal(t.seis, tb.seis)
 
     def test_getdist(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')

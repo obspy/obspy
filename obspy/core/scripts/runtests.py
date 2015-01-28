@@ -105,7 +105,7 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future',
+                'suds', 'mpl_toolkits.basemap', 'mock', 'future',
                 "flake8", "pyflakes", "pyimgur"]
 
 PSTATS_HELP = """

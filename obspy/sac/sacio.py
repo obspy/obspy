@@ -2,10 +2,10 @@
 # ------------------------------------------------------------------
 # Filename: sacio.py
 #  Purpose: Read & Write Seismograms, Format SAC.
-#   Author: Yannik Behr, C. J. Ammon's
+#   Author: Yannik Behr, C. J. Ammon's, C. Satriano
 #    Email: yannik.behr@vuw.ac.nz
 #
-# Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
+# Copyright (C) 2008-2014 Yannik Behr, C. J. Ammon's, C. Satriano
 # ------------------------------------------------------------------
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -58,7 +58,7 @@ SAC_EXTRA = ('depmin', 'depmax', 'odelta', 'o', 'a', 't0', 't1', 't2', 't3',
              'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
              'kdatrd', 'kinst', 'cmpinc', 'xminimum', 'xmaximum', 'yminimum',
              'ymaximum', 'unused6', 'unused7', 'unused8', 'unused9',
-             'unused10', 'unused11', 'unused12')
+             'unused10', 'unused11', 'unused12', 'unused13')
 
 FDICT = {'delta': 0, 'depmin': 1, 'depmax': 2, 'scale': 3,
          'odelta': 4, 'b': 5, 'e': 6, 'o': 7, 'a': 8, 'int1': 9,
@@ -82,7 +82,7 @@ IDICT = {'nzyear': 0, 'nzjday': 1, 'nzhour': 2, 'nzmin': 3,
          'istreg': 20, 'ievreg': 21, 'ievtype': 22, 'iqual': 23,
          'isynth': 24, 'imagtyp': 25, 'imagsrc': 26,
          'leven': 35, 'lpspol': 36, 'lovrok': 37,
-         'lcalda': 38}
+         'lcalda': 38, 'unused13': 39}
 
 SDICT = {'kstnm': 0, 'kevnm': 1, 'khole': 2, 'ko': 3, 'ka': 4,
          'kt0': 5, 'kt1': 6, 'kt2': 7, 'kt3': 8, 'kt4': 9,
@@ -1176,7 +1176,10 @@ class SacIO(object):
         """
         If trace changed since read, adapt header values
         """
-        self.seis = np.require(self.seis, native_str('<f4'))
+        if self.byteorder == 'big':
+            self.seis = np.require(self.seis, native_str('>f4'))
+        else:
+            self.seis = np.require(self.seis, native_str('<f4'))
         self.SetHvalue('npts', self.seis.size)
         if self.seis.size == 0:
             return
@@ -1224,9 +1227,6 @@ class SacIO(object):
         """
         Swap byte order of SAC-file in memory.
 
-        Currently seems to work only for conversion from big-endian to
-        little-endian.
-
         :param: None
         :return: None
 
@@ -1235,15 +1235,14 @@ class SacIO(object):
         >>> t.swap_byte_order() # doctest: +SKIP
         """
         if self.byteorder == 'big':
-            bs = 'L'
+            bs = '<'
+            self.byteorder = 'little'
         elif self.byteorder == 'little':
-            bs = 'B'
-        self.seis.byteswap(True)
-        self.hf.byteswap(True)
-        self.hi.byteswap(True)
-        self.seis = self.seis.newbyteorder(bs)
-        self.hf = self.hf.newbyteorder(bs)
-        self.hi = self.hi.newbyteorder(bs)
+            bs = '>'
+            self.byteorder = 'big'
+        self.seis = self.seis.byteswap(True).newbyteorder(bs)
+        self.hf = self.hf.byteswap(True).newbyteorder(bs)
+        self.hi = self.hi.byteswap(True).newbyteorder(bs)
 
     def __getattr__(self, hname):
         """

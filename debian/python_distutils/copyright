@@ -31,14 +31,6 @@ Software Foundation; either version 3, or (at your option) any
 later version. A copy of this license is in the file
 /usr/share/common-licenses/LGPL-3
 
-The 'imaging' subpackage may be redistributed and/or modified under the terms
-of:
-
-The GNU General Public License, as published by the Free
-Software Foundation; either version 3, or (at your option) any
-later version.  A copy of this license is in the file
-/usr/share/common-licenses/GPL-3
-
 The 'taup' subpackage may be redistributed and/or modified under the following terms:
 
 Reply from Arthur Snoke regarding the question under what license "iapsei-tau"

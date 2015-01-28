@@ -30,7 +30,7 @@ import tempfile
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk', 'ah', 'zmap']
+                   'ndk', 'ah', 'zmap', 'nlloc', 'pdas', 'cnv', 'kinemetrics']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -39,8 +39,8 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH']
-EVENT_PREFERRED_ORDER = ['QUAKEML']
+                            'AH', 'PDAS', 'KINEMETRICS_EVT']
+EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -229,8 +229,8 @@ ENTRY_POINTS = {
     'filter': _getEntryPoints('obspy.plugin.filter'),
     'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
-    'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'interpolate': _getEntryPoints('obspy.plugin.interpolate'),
+    'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
@@ -303,7 +303,29 @@ def getMatplotlibVersion():
     try:
         import matplotlib
         version = matplotlib.__version__
-        version = version.split("~rc")[0]
+        version = version.split("rc")[0].strip("~")
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
+def getBasemapVersion():
+    """
+    Get basemap version information.
+
+    :returns: basemap version as a list of three integers or ``None`` if
+        basemap import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        from mpl_toolkits import basemap
+        version = basemap.__version__
+        version = version.split("rc")[0].strip("~")
         version = list(map(toIntOrZero, version.split(".")))
     except ImportError:
         version = None
@@ -401,13 +423,15 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
-    ======= ================= =======================================
-        Format  Required Module   _`Linked Function Call`
-        ======= ================= =======================================
-        JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
-        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
-        ZMAP    :mod:`obspy.zmap` :func:`obspy.zmap.core.writeZmap`
-        ======= ================= =======================================
+    ========= ================== ========================================
+        Format    Required Module    _`Linked Function Call`
+        ========= ================== ========================================
+        CNV       :mod:`obspy.cnv`   :func:`obspy.cnv.core.write_CNV`
+        JSON      :mod:`obspy.core`  :func:`obspy.core.json.core.writeJSON`
+        NLLOC_OBS :mod:`obspy.nlloc` :func:`obspy.nlloc.core.write_nlloc_obs`
+        QUAKEML   :mod:`obspy.core`  :func:`obspy.core.quakeml.writeQuakeML`
+        ZMAP      :mod:`obspy.zmap`  :func:`obspy.zmap.core.writeZmap`
+        ========= ================== ========================================
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").

@@ -158,7 +158,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
     ndat = len(streams[0].select(component=components[0])[0])
     if False in [len(st.select(component=component)[0]) == ndat
                  for st in streams for component in components]:
-            raise ValueError("All traces have to be the same length.")
+        raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
     corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
 

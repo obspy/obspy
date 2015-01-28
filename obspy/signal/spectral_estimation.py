@@ -39,35 +39,12 @@ MATPLOTLIB_VERSION = getMatplotlibVersion()
 dtiny = np.finfo(0.0).tiny
 
 
-if MATPLOTLIB_VERSION is None:
-    # if matplotlib is not present be silent about it and only raise the
-    # ImportError if matplotlib actually is used (currently in psd() and
-    # PPSD())
-    msg_matplotlib_ImportError = "Failed to import matplotlib. While this " \
-        "is no dependency of obspy.signal it is however necessary for a " \
-        "few routines. Please install matplotlib in order to be able " \
-        "to use e.g. psd() or PPSD()."
-    # set up two dummy functions. this makes it possible to make the docstring
-    # of psd() look like it should with two functions as default values for
-    # kwargs although matplotlib might not be present and the routines
-    # therefore not usable
-
-    def detrend_none():
-        pass
-
-    def window_hanning():
-        pass
-
-else:
-    # Import matplotlib routines. These are no official dependency of
-    # obspy.signal so an import error should really only be raised if any
-    # routine is used which relies on matplotlib (at the moment: psd, PPSD).
-    from matplotlib import mlab
-    import matplotlib.pyplot as plt
-    from matplotlib.dates import date2num
-    from matplotlib.ticker import FormatStrFormatter
-    from matplotlib.colors import LinearSegmentedColormap
-    from matplotlib.mlab import detrend_none, window_hanning
+from matplotlib import mlab
+import matplotlib.pyplot as plt
+from matplotlib.dates import date2num
+from matplotlib.ticker import FormatStrFormatter
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.mlab import detrend_none, window_hanning
 
 
 # build colormap as done in paper by mcnamara
@@ -128,12 +105,8 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
     """
-    # check if matplotlib is available, no official dependency for obspy.signal
-    if MATPLOTLIB_VERSION is None:
-        raise ImportError(msg_matplotlib_ImportError)
-
     # check matplotlib version
-    elif MATPLOTLIB_VERSION >= [0, 98, 4]:
+    if MATPLOTLIB_VERSION >= [0, 98, 4]:
         new_matplotlib = True
     else:
         new_matplotlib = False
@@ -296,7 +269,7 @@ class PPSD():
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5):
+                 ppsd_length=3600., overlap=0.5, water_level=600.0):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -354,12 +327,9 @@ class PPSD():
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
+        :type water_level: float, optional
+        :param water_level: Water level used in instrument correction.
         """
-        # check if matplotlib is available, no official dependency for
-        # obspy.signal
-        if MATPLOTLIB_VERSION is None:
-            raise ImportError(msg_matplotlib_ImportError)
-
         if paz is not None and parser is not None:
             msg = "Both paz and parser specified. Using parser object for " \
                   "metadata."
@@ -375,6 +345,7 @@ class PPSD():
         self.is_rotational_data = is_rotational_data
         self.ppsd_length = ppsd_length
         self.overlap = overlap
+        self.water_level = water_level
         # trace length for one segment
         self.len = int(self.sampling_rate * ppsd_length)
         # set paz either from kwarg or try to get it from stats
@@ -638,7 +609,8 @@ class PPSD():
             tr.data /= paz['sensitivity']
         else:
             tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                        paz_simulate=None, simulate_sensitivity=False)
+                        paz_simulate=None, simulate_sensitivity=False,
+                        water_level=self.water_level)
 
         # go to acceleration, do nothing for rotational data:
         if self.is_rotational_data:

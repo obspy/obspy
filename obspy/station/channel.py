@@ -163,35 +163,41 @@ class Channel(BaseNode):
         ret = (
             "Channel '{id}', Location '{location}' {description}\n"
             "{availability}"
-            "\tTimerange: {start_date} - {end_date}\n"
+            "\tTime range: {start_date} - {end_date}\n"
             "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
             "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
             "{azimuth}"
             "{dip}"
             "{channel_types}"
-            "\tSampling Rate: {sampling_rate:.2f} Hz\n"
-            "\tSensor: {sensor}\n"
+            "{sampling_rate}"
+            "{sensor}"
             "{response}")\
             .format(
                 id=self.code, location=self.location_code,
-                availability=("\t%s\n" % str(self.data_availability))
-                if self.data_availability else "",
-                description="(%s)" % self.description
-                if self.description else "",
-                start_date=str(self.start_date),
-                end_date=str(self.end_date) if self.end_date else "--",
                 latitude=self.latitude, longitude=self.longitude,
                 elevation=self.elevation, depth=self.depth,
-                azimuth="\tAzimuth: %.2f degrees from north, clockwise\n" %
-                self.azimuth if self.azimuth is not None else "",
-                dip="\tDip: %.2f degrees down from horizontal\n" %
-                self.dip if self.dip is not None else "",
-                channel_types="\tChannel types: %s\n" % ", ".join(self.types)
-                    if self.types else "",
-                sampling_rate=self.sample_rate, sensor=self.sensor.type,
-                response="\tResponse information available"
-                    if self.response else "")
+                availability=("\t%s\n" % str(self.data_availability)
+                              if self.data_availability else ""),
+                description=("(%s)" % self.description
+                             if self.description else ""),
+                start_date=str(self.start_date) if self.start_date else "--",
+                end_date=str(self.end_date) if self.end_date else "--",
+                azimuth=("\tAzimuth: %.2f degrees from north, clockwise\n" %
+                         self.azimuth if self.azimuth is not None else ""),
+                dip=("\tDip: %.2f degrees down from horizontal\n" %
+                     self.dip if self.dip is not None else ""),
+                channel_types=("\tChannel types: %s\n" % ", ".join(self.types)
+                               if self.types else ""),
+                sampling_rate=("\tSampling Rate: %.2f Hz\n" %
+                               self.sample_rate if self.sample_rate else ""),
+                sensor=("\tSensor: %s\n" % self.sensor.type
+                        if self.sensor else ""),
+                response=("\tResponse information available"
+                          if self.response else ""))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def location_code(self):

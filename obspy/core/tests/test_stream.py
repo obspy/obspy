@@ -8,10 +8,8 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.compatibility import mock
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import (NamedTemporaryFile, getMatplotlibVersion,
-                                  getSciPyVersion)
+from obspy.core.util.base import (NamedTemporaryFile, getSciPyVersion)
 from obspy.xseed import Parser
-from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import pickle
@@ -19,7 +17,6 @@ import unittest
 import warnings
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 SCIPY_VERSION = getSciPyVersion()
 
 
@@ -1851,14 +1848,12 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.starttime += 1
         self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
         self.mseed_stream.plot(show=False)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
@@ -2157,7 +2152,6 @@ class StreamTestCase(unittest.TestCase):
         st2.integrate()
         self.assertEqual(st1, st2)
 
-    @skipIf(SCIPY_VERSION < [0, 11, 0], 'SciPy is too old')
     def test_integrate_args(self):
         """
         Tests that the integrate command is called for all traces of a Stream
@@ -2167,8 +2161,8 @@ class StreamTestCase(unittest.TestCase):
         st2 = read()
 
         for tr in st1:
-            tr.integrate(type='cumtrapz', initial=0)
-        st2.integrate(type='cumtrapz', initial=0)
+            tr.integrate(method='cumtrapz')
+        st2.integrate(method='cumtrapz')
         self.assertEqual(st1, st2)
 
 

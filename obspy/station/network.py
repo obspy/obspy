@@ -83,19 +83,21 @@ class Network(BaseNode):
         ret = ("Network {id} {description}\n"
                "\tStation Count: {selected}/{total} (Selected/Total)\n"
                "\t{start_date} - {end_date}\n"
-               "\tAccess: {restricted} {alternate_code}{historical_code}\n")
+               "\tAccess: {restricted}\n"
+               "{alternate_code}"
+               "{historical_code}")
         ret = ret.format(
             id=self.code,
             description="(%s)" % self.description if self.description else "",
             selected=self.selected_number_of_stations,
             total=self.total_number_of_stations,
-            start_date=str(self.start_date),
-            end_date=str(self.end_date) if self.end_date else "",
-            restricted=self.restricted_status,
-            alternate_code="Alternate Code: %s " % self.alternate_code if
-            self.alternate_code else "",
-            historical_code="historical Code: %s " % self.historical_code if
-            self.historical_code else "")
+            start_date=str(self.start_date) if self.start_date else "--",
+            end_date=str(self.end_date) if self.end_date else "--",
+            restricted=self.restricted_status or "UNKNOWN",
+            alternate_code=("\tAlternate Code: %s\n" % self.alternate_code
+                            if self.alternate_code else ""),
+            historical_code=("\tHistorical Code: %s\n" % self.historical_code
+                             if self.historical_code else ""))
         contents = self.get_contents()
         ret += "\tContains:\n"
         ret += "\t\tStations (%i):\n" % len(contents["stations"])
@@ -106,6 +108,9 @@ class Network(BaseNode):
             contents["channels"]), initial_indent="\t\t\t",
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def get_contents(self):
         """
@@ -273,8 +278,8 @@ class Network(BaseNode):
         >>> print(net)  # doctest: +NORMALIZE_WHITESPACE
         Network GR (GRSN)
             Station Count: None/None (Selected/Total)
-            None -
-            Access: None
+            -- - --
+            Access: UNKNOWN
             Contains:
                 Stations (2):
                     GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)

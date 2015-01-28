@@ -16,6 +16,7 @@ from future.builtins import *  # NOQA
 import inspect
 import numpy as np
 from math import pi
+from matplotlib import rcParams
 from obspy import UTCDateTime
 from obspy.signal.invsim import evalresp
 from obspy.station import read_inventory
@@ -23,23 +24,15 @@ from obspy.xseed import Parser
 from obspy.station.response import _pitick2latex
 import os
 import unittest
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.core.util.misc import CatchOutput
 import warnings
 
-# checking for matplotlib/basemap
-try:
-    from matplotlib import rcParams
-    import mpl_toolkits.basemap
-    # avoid flake8 complaining about unused import
-    mpl_toolkits.basemap
-    HAS_BASEMAP = True
-except ImportError:
-    HAS_BASEMAP = False
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
-class ResponseTest(unittest.TestCase):
+class ResponseTestCase(unittest.TestCase):
     """
     Tests the for :class:`~obspy.station.response.Response` class.
     """
@@ -122,17 +115,21 @@ class ResponseTest(unittest.TestCase):
         self.assertEqual(_pitick2latex(300 * pi + 0.01), r'942.')
         self.assertEqual(_pitick2latex(3000 * pi + 0.01), r'9.42e+03')
 
-    @skipIf(not (HAS_COMPARE_IMAGE and HAS_BASEMAP),
-            'nose not installed, matplotlib too old or basemap not installed')
     def test_response_plot(self):
         """
         Tests the response plot.
         """
+        # Bug in matplotlib 1.4.0 - 1.4.2:
+        # See https://github.com/matplotlib/matplotlib/issues/4012
+        reltol = 1.0
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 4, 2]:
+            reltol = 2.0
+
         resp = read_inventory()[0][0][0].response
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            with ImageComparison(self.image_dir, "response_response.png") \
-                    as ic:
+            with ImageComparison(self.image_dir, "response_response.png",
+                                 reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 resp.plot(0.001, output="VEL", start_stage=1, end_stage=3,
                           outfile=ic.name)
@@ -164,7 +161,7 @@ class ResponseTest(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(ResponseTest, 'test')
+    return unittest.makeSuite(ResponseTestCase, 'test')
 
 
 if __name__ == '__main__':

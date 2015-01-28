@@ -86,26 +86,25 @@ KEYWORDS = [
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
-    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
-    'numpy>1.0.0',
+    'numpy>1.4.0',
     'scipy>=0.7.2',
     'matplotlib',
     'lxml',
     'sqlalchemy']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2',
-              'nose',
-              'pyimgur'],
+    'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],
     'neries': ['suds-jurko']}
 # PY2
@@ -139,9 +138,11 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
+        'KINEMETRICS_EVT = obspy.kinemetrics.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
+        'PDAS = obspy.pdas.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
         'Y = obspy.y.core',
@@ -177,6 +178,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
     ],
+    'obspy.plugin.waveform.KINEMETRICS_EVT': [
+        'isFormat = obspy.kinemetrics.core:is_evt',
+        'readFormat = obspy.kinemetrics.core:read_evt',
+    ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',
         'readFormat = obspy.gse2.core:readGSE1',
@@ -190,6 +195,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.mseed.core:isMSEED',
         'readFormat = obspy.mseed.core:readMSEED',
         'writeFormat = obspy.mseed.core:writeMSEED',
+    ],
+    'obspy.plugin.waveform.PDAS': [
+        'isFormat = obspy.pdas.core:isPDAS',
+        'readFormat = obspy.pdas.core:readPDAS',
     ],
     'obspy.plugin.waveform.SAC': [
         'isFormat = obspy.sac.core:isSAC',
@@ -247,7 +256,10 @@ ENTRY_POINTS = {
         'ZMAP = obspy.zmap.core',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
-        'NDK = obspy.ndk.core'
+        'NDK = obspy.ndk.core',
+        'NLLOC_HYP = obspy.nlloc.core',
+        'NLLOC_OBS = obspy.nlloc.core',
+        'CNV = obspy.cnv.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -266,9 +278,19 @@ ENTRY_POINTS = {
         'readFormat = obspy.zmap.core:readZmap',
         'writeFormat = obspy.zmap.core:writeZmap',
     ],
+    'obspy.plugin.event.CNV': [
+        'writeFormat = obspy.cnv.core:write_CNV',
+    ],
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.ndk.core:is_ndk',
         'readFormat = obspy.ndk.core:read_ndk',
+        ],
+    'obspy.plugin.event.NLLOC_HYP': [
+        'isFormat = obspy.nlloc.core:is_nlloc_hyp',
+        'readFormat = obspy.nlloc.core:read_nlloc_hyp',
+        ],
+    'obspy.plugin.event.NLLOC_OBS': [
+        'writeFormat = obspy.nlloc.core:write_nlloc_obs',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
@@ -300,6 +322,12 @@ ENTRY_POINTS = {
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
     ],
+    'obspy.plugin.integrate': [
+        'cumtrapz = '
+        'obspy.signal.differentiate_and_integrate:integrate_cumtrapz',
+        'spline = '
+        'obspy.signal.differentiate_and_integrate:integrate_spline',
+    ],
     'obspy.plugin.filter': [
         'bandpass = obspy.signal.filter:bandpass',
         'bandstop = obspy.signal.filter:bandstop',
@@ -308,12 +336,6 @@ ENTRY_POINTS = {
         'lowpassCheby2 = obspy.signal.filter:lowpassCheby2',
         'lowpassFIR = obspy.signal.filter:lowpassFIR',
         'remezFIR = obspy.signal.filter:remezFIR',
-    ],
-    'obspy.plugin.integrate': [
-        'trapz = scipy.integrate:trapz',
-        'cumtrapz = scipy.integrate:cumtrapz',
-        'simps = scipy.integrate:simps',
-        'romb = scipy.integrate:romb',
     ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',

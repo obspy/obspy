@@ -23,6 +23,7 @@ import tempfile
 import shutil
 import numpy as np
 import math
+import platform
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -288,6 +289,10 @@ def wrap_long_string(string, line_length=79, prefix="",
         line to be longer than the specified line length. If set to True,
         Long words will be force-hyphenated to fit the line.
 
+    .. deprecated:: 0.10.0
+        The wrap_long_string function is deprecated. Please use the textwrap
+        module from the standard library instead.
+
     .. rubric:: Examples
 
     >>> string = ("Retrieve an event based on the unique origin "
@@ -323,6 +328,11 @@ def wrap_long_string(string, line_length=79, prefix="",
                     ID numbers assigned by
                     the IRIS DMC
     """
+
+    warnings.warn('The wrap_long_string function is deprecated. Please use '
+                  'the textwrap module from the standard library instead.',
+                  DeprecationWarning)
+
     def text_width_for_prefix(line_length, prefix):
         text_width = line_length - len(prefix) - \
             (assumed_tab_width - 1) * prefix.count("\t")
@@ -374,9 +384,7 @@ def CatchOutput():
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Roughly based on: http://stackoverflow.com/a/17954769
-
-    This variant does not leak file descriptors.
+    Based on: http://bugs.python.org/msg184312
 
     >>> with CatchOutput() as out:  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
@@ -386,74 +394,53 @@ def CatchOutput():
     >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
-    stdout_file, stdout_filename = tempfile.mkstemp(prefix="obspy-")
-    stderr_file, stderr_filename = tempfile.mkstemp(prefix="obspy-")
 
-    try:
-        fd_stdout = sys.stdout.fileno()
-        fd_stderr = sys.stderr.fileno()
+    # Dummy class to transport the output.
+    class Output():
+        pass
+    out = Output()
+    out.stdout = ''
+    out.stderr = ''
 
-        # Dummy class to transport the output.
-        class Output():
-            pass
-        out = Output()
-        out.stdout = ""
-        out.stderr = ""
+    stdout_fd = sys.stdout.fileno()
+    stderr_fd = sys.stderr.fileno()
+    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
+        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
+            stdout_copy = os.dup(stdout_fd)
+            stderr_copy = os.dup(stderr_fd)
 
-        with os.fdopen(os.dup(sys.stdout.fileno()), "wb") as old_stdout:
-            with os.fdopen(os.dup(sys.stderr.fileno()), "wb") as old_stderr:
+            try:
                 sys.stdout.flush()
+                os.dup2(tmp_stdout.fileno(), stdout_fd)
+
                 sys.stderr.flush()
+                os.dup2(tmp_stderr.fileno(), stderr_fd)
 
-                os.dup2(stdout_file, fd_stdout)
-                os.dup2(stderr_file, fd_stderr)
+                raised = False
+                yield out
 
-                os.close(stdout_file)
-                os.close(stderr_file)
+            except SystemExit:
+                raised = True
 
-                try:
-                    raised = False
-                    yield out
-                except SystemExit:
-                    raised = True
-                finally:
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    os.fsync(sys.stdout.fileno())
-                    os.fsync(sys.stderr.fileno())
-                    sys.stdout = sys.__stdout__
-                    sys.stderr = sys.__stderr__
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    os.dup2(old_stdout.fileno(), sys.stdout.fileno())
-                    os.dup2(old_stderr.fileno(), sys.stderr.fileno())
+            finally:
+                sys.stdout.flush()
+                os.dup2(stdout_copy, stdout_fd)
+                os.close(stdout_copy)
+                tmp_stdout.seek(0)
+                out.stdout = tmp_stdout.read()
 
-                    with open(stdout_filename, "rb") as fh:
-                        out.stdout = fh.read()
-                    with open(stderr_filename, "rb") as fh:
-                        out.stderr = fh.read()
+                sys.stderr.flush()
+                os.dup2(stderr_copy, stderr_fd)
+                os.close(stderr_copy)
+                tmp_stderr.seek(0)
+                out.stderr = tmp_stderr.read()
 
-                    if raised:
-                        raise SystemExit(out.stderr)
+                if platform.system() == "Windows":
+                    out.stdout = out.stdout.replace(b'\r', b'')
+                    out.stderr = out.stderr.replace(b'\r', b'')
 
-    finally:
-        # Make sure to always close and remove the temporary files.
-        try:
-            os.close(stdout_file)
-        except:
-            pass
-        try:
-            os.close(stderr_file)
-        except:
-            pass
-        try:
-            os.remove(stdout_filename)
-        except OSError:
-            pass
-        try:
-            os.remove(stderr_filename)
-        except OSError:
-            pass
+                if raised:
+                    raise SystemExit(out.stderr)
 
 
 @contextmanager

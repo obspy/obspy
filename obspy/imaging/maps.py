@@ -25,7 +25,7 @@ import datetime
 import numpy as np
 import warnings
 from obspy import UTCDateTime
-from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.base import getMatplotlibVersion, getBasemapVersion
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -37,10 +37,17 @@ else:
     path_effect_kwargs = dict(
         path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
 
-try:
+
+BASEMAP_VERSION = getBasemapVersion()
+if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True
-except ImportError:
+    if BASEMAP_VERSION < [1, 0, 4]:
+        warnings.warn("All basemap version < 1.0.4 contain a serious bug "
+                      "when rendering countries and continents. ObsPy will "
+                      "still work but the maps might be wrong. Please update "
+                      "your basemap installation.")
+else:
     warnings.warn("basemap not installed.")
     HAS_BASEMAP = False
 
@@ -144,7 +151,6 @@ def plot_basemap(lons, lats, size, color, labels=None,
     if show_colorbar:
         map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
         cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
-        plt.sca(map_ax)
     else:
         ax_y0, ax_height = 0.05, 0.85
         if projection == "local":
@@ -153,11 +159,11 @@ def plot_basemap(lons, lats, size, color, labels=None,
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
     if projection == 'cyl':
-        bmap = Basemap(resolution=resolution)
+        bmap = Basemap(resolution=resolution, ax=map_ax)
     elif projection == 'ortho':
         bmap = Basemap(projection='ortho', resolution=resolution,
                        area_thresh=1000.0, lat_0=np.mean(lats),
-                       lon_0=np.mean(lons))
+                       lon_0=np.mean(lons), ax=map_ax)
     elif projection == 'local':
         if min(lons) < -150 and max(lons) > 150:
             max_lons = max(np.array(lons) % 360)
@@ -193,7 +199,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
 
         bmap = Basemap(projection='aeqd', resolution=resolution,
                        area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
-                       width=width, height=height)
+                       width=width, height=height, ax=map_ax)
         # not most elegant way to calculate some round lats/lons
 
         def linspace2(val1, val2, N):
@@ -215,9 +221,16 @@ def plot_basemap(lons, lats, size, color, labels=None,
 
         N1 = int(np.ceil(height / max(width, height) * 8))
         N2 = int(np.ceil(width / max(width, height) * 8))
-        bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                     lat_0 + height / 2 / deg2m_lat, N1),
-                           labels=[0, 1, 1, 0])
+        parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
+                              lat_0 + height / 2 / deg2m_lat, N1)
+
+        # Old basemap versions have problems with non-integer parallels.
+        try:
+            bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+        except KeyError:
+            parallels = sorted(list(set(map(int, parallels))))
+            bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+
         if min(lons) < -150 and max(lons) > 150:
             lon_0 %= 360
         meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
@@ -251,11 +264,11 @@ def plot_basemap(lons, lats, size, color, labels=None,
                 # large values if it cannot project a point.
                 if xpt > 1e25:
                     continue
-                plt.text(xpt, ypt, name, weight="heavy",
-                         color="k", zorder=100, **path_effect_kwargs)
+                map_ax.text(xpt, ypt, name, weight="heavy",
+                            color="k", zorder=100, **path_effect_kwargs)
         elif len(lons) == 1:
-            plt.text(x[0], y[0], labels[0], weight="heavy", color="k",
-                     **path_effect_kwargs)
+            map_ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
+                        **path_effect_kwargs)
 
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
                            zorder=10, cmap=colormap)
@@ -277,7 +290,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
             if datetimeplot:
                 locator = AutoDateLocator()
                 formatter = AutoDateFormatter(locator)
-                formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
+                # Compat with old matplotlib versions.
+                if hasattr(formatter, "scaled"):
+                    formatter.scaled[1 / (24. * 60.)] = '%H:%M:%S'
             else:
                 locator = None
                 formatter = None
@@ -285,9 +300,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
                       orientation='horizontal',
                       ticks=locator,
                       format=formatter)
-        #              format=formatter)
-        #              ticks=mpl.ticker.MaxNLocator(4))
-        cb.update_ticks()
+        # Compat with old matplotlib versions.
+        if hasattr(cb, "update_ticks"):
+            cb.update_ticks()
 
     if show:
         plt.show()

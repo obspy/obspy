@@ -370,6 +370,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                          for _i in containers])
             return ret_str
 
+        def _repr_pretty_(self, p, cycle):
+            p.text(str(self))
+
         def copy(self):
             return copy.deepcopy(self)
 
@@ -837,6 +840,9 @@ class ResourceIdentifier(object):
 
     def __str__(self):
         return self.id
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __repr__(self):
         return 'ResourceIdentifier(id="%s")' % self.id
@@ -2665,6 +2671,9 @@ class Event(__Event):
             self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __repr__(self):
         return super(Event, self).__str__(force_one_line=True)
 
@@ -2912,6 +2921,9 @@ class Catalog(object):
             out += "\nTo see all events call " + \
                    "'print(CatalogObject.__str__(print_all=True))'"
         return out
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(self.__str__(print_all=p.verbose))
 
     def append(self, event):
         """

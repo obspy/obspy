@@ -80,7 +80,7 @@ credits:
 assets:
 	@python make_assets.py
 
-html: assets
+html: assets credits
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
 	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

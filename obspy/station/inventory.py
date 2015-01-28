@@ -92,19 +92,14 @@ class Inventory(ComparingObject):
 
     def __add__(self, other):
         new = copy.deepcopy(self)
-        if isinstance(other, Inventory):
-            new.networks.extend(other.networks)
-        elif isinstance(other, Network):
-            new.networks.append(other)
-        else:
-            msg = ("Only Inventory and Network objects can be added to "
-                   "an Inventory.")
-            raise TypeError(msg)
+        new += other
         return new
 
     def __iadd__(self, other):
         if isinstance(other, Inventory):
             self.networks.extend(other.networks)
+            # This is a straight inventory merge.
+            self.__copy_inventory_metadata(other)
         elif isinstance(other, Network):
             self.networks.append(other)
         else:
@@ -115,6 +110,46 @@ class Inventory(ComparingObject):
 
     def __getitem__(self, index):
         return self.networks[index]
+
+    def __copy_inventory_metadata(self, other):
+        """
+        Will be called after two inventory objects have been merged. It
+        attempts to assure that inventory meta information is somewhat
+        correct after the merging.
+
+        The networks in other will have been moved to self.
+        """
+        # The creation time is naturally adjusted to the current time.
+        self.created = obspy.UTCDateTime()
+
+        # Merge the source.
+        srcs = [self.source, other.source]
+        srcs = [_i for _i in srcs if _i]
+        all_srcs = []
+        for src in srcs:
+            all_srcs.extend(src.split(","))
+        if all_srcs:
+            src = sorted(list(set(all_srcs)))
+            self.source = ",".join(src)
+        else:
+            self.source = None
+
+        # Do the same with the sender.
+        sndrs = [self.sender, other.sender]
+        sndrs = [_i for _i in sndrs if _i]
+        all_sndrs = []
+        for sndr in sndrs:
+            all_sndrs.extend(sndr.split(","))
+        if all_sndrs:
+            sndr = sorted(list(set(all_sndrs)))
+            self.sender = ",".join(sndr)
+        else:
+            self.sender = None
+
+        # The module and URI strings will be changed to ObsPy as it did the
+        # modification.
+        self.module = SOFTWARE_MODULE
+        self.module_uri = SOFTWARE_URI
 
     def get_contents(self):
         """
@@ -170,6 +205,9 @@ class Inventory(ComparingObject):
             ", ".join(contents["channels"]), initial_indent="\t\t\t",
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret_str
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def write(self, path_or_file_object, format, **kwargs):
         """

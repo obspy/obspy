@@ -902,6 +902,9 @@ class UTCDateTime(object):
         return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
                           (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __unicode__(self):
         """
         Returns ISO8601 unicode representation from current UTCDateTime object.

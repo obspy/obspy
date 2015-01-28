@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns:edb="http://erdbeben-in-bayern.de/xmlns/0.1" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:de.erdbeben-in-bayern/catalog/20141020150701">
+    <event publicID="smi:de.erdbeben-in-bayern/event/20141020150701">
+      <creationInfo>
+        <agencyID>Erdbebendienst Bayern</agencyID>
+        <agencyURI>smi:de.erdbeben-in-bayern/agency</agencyURI>
+        <author>megies</author>
+        <creationTime>2014-09-19T14:58:18.281839Z</creationTime>
+      </creationInfo>
+      <origin publicID="smi:de.erdbeben-in-bayern/origin/4a807db9-ef82-4158-9dd8-c8c53dfa8785">
+        <time>
+          <value>2010-05-27T16:56:24.612255Z</value>
+        </time>
+        <latitude>
+          <value>48.047093861</value>
+        </latitude>
+        <longitude>
+          <value>11.6454750445</value>
+        </longitude>
+        <depth>
+          <value>4581.543</value>
+          <uncertainty>537.835721094</uncertainty>
+        </depth>
+        <depthType>from location</depthType>
+        <methodID>smi:de.erdbeben-in-bayern/location_method/nlloc/3</methodID>
+        <earthModelID>smi:de.erdbeben-in-bayern/earth_model/UH</earthModelID>
+        <quality>
+          <usedPhaseCount>8</usedPhaseCount>
+          <standardError>0.018915</standardError>
+          <azimuthalGap>136.35</azimuthalGap>
+          <secondaryAzimuthalGap>212.05</secondaryAzimuthalGap>
+          <minimumDistance>0.0169036489048</minimumDistance>
+          <maximumDistance>0.0751742930387</maximumDistance>
+          <medianDistance>0.0308750597136</medianDistance>
+          <edb:usedPhaseCountP>4</edb:usedPhaseCountP>
+          <edb:usedPhaseCountS>4</edb:usedPhaseCountS>
+        </quality>
+        <originUncertainty>
+          <preferredDescription>uncertainty ellipse</preferredDescription>
+          <minHorizontalUncertainty>410.065487347</minHorizontalUncertainty>
+          <maxHorizontalUncertainty>530.632270451</maxHorizontalUncertainty>
+          <azimuthMaxHorizontalUncertainty>90.0</azimuthMaxHorizontalUncertainty>
+        </originUncertainty>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/c4c64ea8-ccba-4016-abd7-97e0fa46c7bf">
+          <pickID>smi:de.erdbeben-in-bayern/pick/b2b41e7c-5078-4db0-99f6-571e5a1c5022</pickID>
+          <phase>P</phase>
+          <azimuth>200.7</azimuth>
+          <distance>0.0169036489048</distance>
+          <takeoffAngle>
+            <value>152.6</value>
+          </takeoffAngle>
+          <timeResidual>-0.015</timeResidual>
+          <timeWeight>2.054</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/ce3aa378-f8d7-4be5-8e8f-243dd7559169">
+          <pickID>smi:de.erdbeben-in-bayern/pick/5f834f70-6b15-4878-bb8a-81c4e2a22caa</pickID>
+          <phase>S</phase>
+          <azimuth>200.6</azimuth>
+          <distance>0.0169036489048</distance>
+          <takeoffAngle>
+            <value>156.4</value>
+          </takeoffAngle>
+          <timeResidual>0.0191</timeResidual>
+          <timeWeight>0.4108</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/359f2cd9-a336-4837-9442-cea8cd30ef8f">
+          <pickID>smi:de.erdbeben-in-bayern/pick/3768fcbe-acc8-47c2-ac64-6e930770df10</pickID>
+          <phase>P</phase>
+          <azimuth>64.7</azimuth>
+          <distance>0.0267620123489</distance>
+          <takeoffAngle>
+            <value>139.3</value>
+          </takeoffAngle>
+          <timeResidual>0.0077</timeResidual>
+          <timeWeight>1.264</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/cf6a9c00-2dbe-4055-97ea-13cb8929ef3d">
+          <pickID>smi:de.erdbeben-in-bayern/pick/0483c0af-92b7-4d14-b7a1-e14f26129aab</pickID>
+          <phase>S</phase>
+          <azimuth>63.9</azimuth>
+          <distance>0.0267620123489</distance>
+          <takeoffAngle>
+            <value>144.4</value>
+          </takeoffAngle>
+          <timeResidual>0.0153</timeResidual>
+          <timeWeight>0.4108</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/743f19a2-8f57-4d11-8b3f-a2843f507943">
+          <pickID>smi:de.erdbeben-in-bayern/pick/04e5051d-498d-4948-ae55-db7e1d2bf66b</pickID>
+          <phase>P</phase>
+          <azimuth>348.8</azimuth>
+          <distance>0.0349881070783</distance>
+          <takeoffAngle>
+            <value>131.0</value>
+          </takeoffAngle>
+          <timeResidual>-0.0084</timeResidual>
+          <timeWeight>2.054</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/1441cd94-8246-49e1-b8c2-3236db327689">
+          <pickID>smi:de.erdbeben-in-bayern/pick/ed764a89-61e4-4717-9ae8-953490549285</pickID>
+          <phase>S</phase>
+          <azimuth>348.4</azimuth>
+          <distance>0.0349881070783</distance>
+          <takeoffAngle>
+            <value>137.7</value>
+          </takeoffAngle>
+          <timeResidual>0.0006</timeResidual>
+          <timeWeight>1.264</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/5cd71d5f-8541-4248-9af0-b041c109c933">
+          <pickID>smi:de.erdbeben-in-bayern/pick/c9db83ea-6012-44fe-a8a4-1c521194d90d</pickID>
+          <phase>P</phase>
+          <azimuth>258.3</azimuth>
+          <distance>0.0751742930387</distance>
+          <takeoffAngle>
+            <value>106.5</value>
+          </takeoffAngle>
+          <timeResidual>0.0665</timeResidual>
+          <timeWeight>0.4108</timeWeight>
+        </arrival>
+        <arrival publicID="smi:de.erdbeben-in-bayern/arrival/d2024932-1437-4623-ad37-192ef01d80ba">
+          <pickID>smi:de.erdbeben-in-bayern/pick/1503203a-b94a-49c6-ba9d-8dba240af30f</pickID>
+          <phase>S</phase>
+          <azimuth>258.1</azimuth>
+          <distance>0.0751742930387</distance>
+          <takeoffAngle>
+            <value>113.1</value>
+          </takeoffAngle>
+          <timeResidual>-0.0299</timeResidual>
+          <timeWeight>0.1315</timeWeight>
+        </arrival>
+      </origin>
+      <magnitude publicID="smi:de.erdbeben-in-bayern/magnitude/ce832e7e-0a8d-4d63-a099-7fc7cbe5a539">
+        <mag>
+          <value>0.930102570579</value>
+          <uncertainty>0.344895048037</uncertainty>
+          <confidenceLevel>68.3</confidenceLevel>
+        </mag>
+        <originID>smi:de.erdbeben-in-bayern/origin/4a807db9-ef82-4158-9dd8-c8c53dfa8785</originID>
+        <methodID>smi:de.erdbeben-in-bayern/magnitude_method/obspyck/2</methodID>
+        <stationCount>4</stationCount>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:de.erdbeben-in-bayern/station_magnitude/f66d04ca-cf3c-4722-93b3-a3791b8a9696</stationMagnitudeID>
+          <weight>0.25</weight>
+        </stationMagnitudeContribution>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:de.erdbeben-in-bayern/station_magnitude/fcd107e7-3fd8-482e-a37e-59881c7b8ff9</stationMagnitudeID>
+          <weight>0.25</weight>
+        </stationMagnitudeContribution>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:de.erdbeben-in-bayern/station_magnitude/ee76564c-e80f-4c90-bd98-63fdf13ab42d</stationMagnitudeID>
+          <weight>0.25</weight>
+        </stationMagnitudeContribution>
+        <stationMagnitudeContribution>
+          <stationMagnitudeID>smi:de.erdbeben-in-bayern/station_magnitude/ec2a22bb-7942-4393-95dc-1f932e71f4b6</stationMagnitudeID>
+          <weight>0.25</weight>
+        </stationMagnitudeContribution>
+      </magnitude>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/04e5051d-498d-4948-ae55-db7e1d2bf66b">
+        <time>
+          <value>2010-05-27T16:56:26.130000Z</value>
+          <uncertainty>0.01</uncertainty>
+        </time>
+        <waveformID channelCode="EHZ" locationCode="" networkCode="BW" stationCode="UH1"></waveformID>
+        <phaseHint>P</phaseHint>
+        <polarity>negative</polarity>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/ed764a89-61e4-4717-9ae8-953490549285">
+        <time>
+          <value>2010-05-27T16:56:27.460000Z</value>
+          <uncertainty>0.015</uncertainty>
+        </time>
+        <waveformID channelCode="EHN" locationCode="" networkCode="BW" stationCode="UH1"></waveformID>
+        <phaseHint>S</phaseHint>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/3768fcbe-acc8-47c2-ac64-6e930770df10">
+        <time>
+          <value>2010-05-27T16:56:26.039999Z</value>
+          <uncertainty>0.015</uncertainty>
+        </time>
+        <waveformID channelCode="EHZ" locationCode="" networkCode="BW" stationCode="UH2"></waveformID>
+        <phaseHint>P</phaseHint>
+        <polarity>positive</polarity>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/0483c0af-92b7-4d14-b7a1-e14f26129aab">
+        <time>
+          <value>2010-05-27T16:56:27.269999Z</value>
+          <uncertainty>0.03</uncertainty>
+        </time>
+        <waveformID channelCode="EHN" locationCode="" networkCode="BW" stationCode="UH2"></waveformID>
+        <phaseHint>S</phaseHint>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/b2b41e7c-5078-4db0-99f6-571e5a1c5022">
+        <time>
+          <value>2010-05-27T16:56:25.930000Z</value>
+          <uncertainty>0.01</uncertainty>
+        </time>
+        <waveformID channelCode="EHZ" locationCode="" networkCode="BW" stationCode="UH3"></waveformID>
+        <phaseHint>P</phaseHint>
+        <polarity>negative</polarity>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/5f834f70-6b15-4878-bb8a-81c4e2a22caa">
+        <time>
+          <value>2010-05-27T16:56:27.100000Z</value>
+          <uncertainty>0.03</uncertainty>
+        </time>
+        <waveformID channelCode="EHN" locationCode="" networkCode="BW" stationCode="UH3"></waveformID>
+        <phaseHint>S</phaseHint>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/c9db83ea-6012-44fe-a8a4-1c521194d90d">
+        <time>
+          <value>2010-05-27T16:56:26.925000Z</value>
+          <uncertainty>0.03</uncertainty>
+        </time>
+        <waveformID channelCode="EHZ" locationCode="" networkCode="BW" stationCode="UH4"></waveformID>
+        <phaseHint>P</phaseHint>
+        <polarity>positive</polarity>
+        <edb:weight>0</edb:weight>
+      </pick>
+      <pick publicID="smi:de.erdbeben-in-bayern/pick/1503203a-b94a-49c6-ba9d-8dba240af30f">
+        <time>
+          <value>2010-05-27T16:56:28.900000Z</value>
+          <uncertainty>0.055</uncertainty>
+        </time>
+        <waveformID channelCode="EHN" locationCode="" networkCode="BW" stationCode="UH4"></waveformID>
+        <phaseHint>S</phaseHint>
+        <edb:weight>1</edb:weight>
+      </pick>
+      <edb:public>false</edb:public>
+      <edb:evaluationMode>manual</edb:evaluationMode>
+    </event>
+  </eventParameters>
+</q:quakeml>
