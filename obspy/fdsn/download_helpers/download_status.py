@@ -193,7 +193,7 @@ class Station(object):
                            self.miss_station_information.keys()]),
             channels=channels)
 
-    def prepare_stationxml_download(self, stationxml_storage):
+    def prepare_stationxml_download(self, stationxml_storage, logger):
         """
         Figure out what to download.
 
@@ -272,8 +272,49 @@ class Station(object):
             # function.
             missing_channels = storage["missing_channels"]
             available_channels = storage["available_channels"]
-            filename = storage["filename"]
-            raise NotImplementedError
+
+            # Get the channels wanting station information and filter them.
+            channels_wanting_station_information = copy.deepcopy(
+                self.want_station_information
+            )
+
+            # Figure out what channels are missing and will be downloaded.
+            self.miss_station_information = {}
+            for channel in missing_channels:
+                if channel not in channels_wanting_station_information:
+                    continue
+                self.miss_station_information[channel] = \
+                    channels_wanting_station_information[channel]
+
+            # Same thing but with the already available channels.
+            self.have_station_information = {}
+            for channel in available_channels:
+                if channel not in channels_wanting_station_information:
+                    continue
+                self.have_station_information[channel] = \
+                    channels_wanting_station_information[channel]
+
+            self.stationxml_filename = storage["filename"]
+
+            # Raise a warning if something is missing, but do not raise an
+            # exception or halt the programm at this point.
+            have_channels = set(self.have_station_information.keys())
+            miss_channels = set(self.miss_station_information.keys())
+            want_channels = set(self.want_station_information.keys())
+            if have_channels.union(miss_channels) != want_channels:
+                logger.warning(
+                    "The custom `stationxml_storage` did not return "
+                    "information about channels %s" %
+                    str(want_channels.difference(have_channels.union(
+                        miss_channels))))
+
+            if self.miss_station_information:
+                self.stationxml_status = STATUS.NEEDS_DOWNLOADING
+            elif not self.miss_station_information and \
+                    self.have_station_information:
+                self.stationxml_status = STATUS.EXISTS
+            else:
+                self.stationxml_status = STATUS.IGNORE
 
     def prepare_mseed_download(self, mseed_storage):
         """

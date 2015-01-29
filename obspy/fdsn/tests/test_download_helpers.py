@@ -926,6 +926,8 @@ class StationTestCase(unittest.TestCase):
         This method is crucial for everything to work thus it is tested
         rather extensively.
         """
+        logger = mock.MagicMock()
+
         def _create_station():
             st = obspy.UTCDateTime(2015, 1, 1)
             time_intervals = [
@@ -953,7 +955,8 @@ class StationTestCase(unittest.TestCase):
             # a station file. An interval only needs a station file if it
             # either downloaded data or if the data already exists.
             station = _create_station()
-            station.prepare_stationxml_download(stationxml_storage="random")
+            station.prepare_stationxml_download(stationxml_storage="random",
+                                                logger=logger)
             self.assertEqual(p.call_count, 0)
             self.assertEqual(station.stationxml_status, STATUS.NONE)
             self.assertEqual(station.want_station_information, {})
@@ -971,7 +974,7 @@ class StationTestCase(unittest.TestCase):
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = False
                 station.prepare_stationxml_download(
-                    stationxml_storage="random")
+                    stationxml_storage="random", logger=logger)
             # Called twice, once for the directory, once for the file. Both
             # return False as enforced with the mock.
             self.assertEqual(exists_p.call_count, 2)
@@ -1014,7 +1017,7 @@ class StationTestCase(unittest.TestCase):
                                             obspy.UTCDateTime(2013, 1, 1),
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
-                        stationxml_storage="random")
+                        stationxml_storage="random", logger=logger)
             # It then should not attempt to download anything as everything
             # thats needed is already available.
             self.assertEqual(station.stationxml_status, STATUS.EXISTS)
@@ -1043,7 +1046,7 @@ class StationTestCase(unittest.TestCase):
                                             obspy.UTCDateTime(2013, 1, 1),
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
-                        stationxml_storage="random")
+                        stationxml_storage="random", logger=logger)
             # It then should not attempt to download anything as everything
             # thats needed is already available.
             self.assertEqual(station.stationxml_status,
@@ -1075,7 +1078,7 @@ class StationTestCase(unittest.TestCase):
                                             obspy.UTCDateTime(2013, 1, 1),
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
-                        stationxml_storage="random")
+                        stationxml_storage="random", logger=logger)
             # It then should not attempt to download anything as everything
             # thats needed is already available.
             self.assertEqual(STATUS.NEEDS_DOWNLOADING,
@@ -1088,6 +1091,166 @@ class StationTestCase(unittest.TestCase):
                 ("00", "EHE"): temporal_bounds
             })
             p.reset_mock()
+
+    def test_prepare_stationxml_download_dictionary_case(self):
+        """
+        Tests the case of the prepare_stationxml_download() method if the
+        get_stationxml_contents() method returns a dictionary.
+        """
+        logger = mock.MagicMock()
+        temporal_bounds = (obspy.UTCDateTime(2015, 1, 1),
+                           obspy.UTCDateTime(2015, 1, 1, 0, 10))
+
+        def _create_station():
+            st = obspy.UTCDateTime(2015, 1, 1)
+            time_intervals = [
+                TimeInterval(st + _i * 60, st + (_i + 1) * 60)
+                for _i in range(10)]
+            c1 = Channel(location="", channel="BHZ",
+                         intervals=copy.deepcopy(time_intervals))
+            c2 = Channel(location="00", channel="EHE",
+                         intervals=copy.deepcopy(time_intervals))
+            channels = [c1, c2]
+            all_tis = []
+            for chan in channels:
+                all_tis.extend(chan.intervals)
+            station = Station(network="TA", station="A001", latitude=1,
+                              longitude=2, channels=channels)
+            return station
+        # Again mock the os.makedirs function as it is called quite a bit.
+        with mock.patch("os.makedirs") as p:
+
+            # Case 1: All channels are missing and thus must be downloaded.
+            def stationxml_storage(network, station, channels, starttime,
+                                   endtime):
+                return {
+                    "missing_channels": channels[:],
+                    "available_channels": [],
+                    "filename": os.path.join("random", "TA.AA01_.xml")
+                }
+                pass
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            station.prepare_stationxml_download(
+                stationxml_storage=stationxml_storage, logger=logger)
+            # The directory should have been created if it does not exists.
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.miss_station_information)
+            self.assertEqual(station.want_station_information, {
+                ("", "BHZ"): temporal_bounds,
+                ("00", "EHE"): temporal_bounds
+            })
+            p.reset_mock()
+
+            # Case 2: All channels are existing and thus nothing happens.
+            def stationxml_storage(network, station, channels, starttime,
+                                   endtime):
+                return {
+                    "missing_channels": [],
+                    "available_channels": channels[:],
+                    "filename": os.path.join("random", "TA.AA01_.xml")
+                }
+                pass
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            station.prepare_stationxml_download(
+                stationxml_storage=stationxml_storage, logger=logger)
+            # The directory should have been created if it does not exists.
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.EXISTS)
+            self.assertEqual(station.miss_station_information, {})
+            self.assertEqual(station.want_station_information,
+                             station.have_station_information)
+            self.assertEqual(station.have_station_information, {
+                ("", "BHZ"): temporal_bounds,
+                ("00", "EHE"): temporal_bounds
+            })
+            p.reset_mock()
+
+            # Case 3: Mixed case.
+            def stationxml_storage(network, station, channels, starttime,
+                                   endtime):
+                return {
+                    "missing_channels":
+                        [_i for _i in channels if _i[0] == "00"],
+                    "available_channels":
+                        [_i for _i in channels if _i[0] == ""],
+                    "filename": os.path.join("random", "TA.AA01_.xml")
+                }
+                pass
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            station.prepare_stationxml_download(
+                stationxml_storage=stationxml_storage, logger=logger)
+            # The directory should have been created if it does not exists.
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.miss_station_information, {
+                ("00", "EHE"): temporal_bounds
+            })
+            self.assertEqual(station.have_station_information, {
+                ("", "BHZ"): temporal_bounds
+            })
+            self.assertEqual(station.want_station_information, {
+                ("00", "EHE"): temporal_bounds,
+                ("", "BHZ"): temporal_bounds
+            })
+            p.reset_mock()
+
+            # Case 4: The stationxml_storage() function does not return all
+            # required information. A warning should thus be raised.
+            logger.reset_mock()
+
+            def stationxml_storage(network, station, channels, starttime,
+                                   endtime):
+                return {
+                    "missing_channels":
+                        [_i for _i in channels if _i[0] == "00"],
+                    "available_channels": [],
+                    "filename": os.path.join("random", "TA.AA01_.xml")
+                }
+                pass
+            station = _create_station()
+            for cha in station.channels:
+                for ti in cha.intervals:
+                    ti.status = STATUS.DOWNLOADED
+            station.prepare_stationxml_download(
+                stationxml_storage=stationxml_storage, logger=logger)
+            # The directory should have been created if it does not exists.
+            self.assertEqual(p.call_count, 1)
+            self.assertEqual(p.call_args[0][0], "random")
+            self.assertEqual(station.stationxml_status,
+                             STATUS.NEEDS_DOWNLOADING)
+            self.assertEqual(station.miss_station_information, {
+                ("00", "EHE"): temporal_bounds
+            })
+            self.assertEqual(station.have_station_information, {})
+            self.assertEqual(station.want_station_information, {
+                ("00", "EHE"): temporal_bounds,
+                ("", "BHZ"): temporal_bounds
+            })
+            self.assertEqual(logger.method_calls[0][0], "warning")
+            self.assertTrue(
+                "did not return information about channels" in
+                logger.method_calls[0][1][0])
+            self.assertTrue(
+                "BHZ" in
+                logger.method_calls[0][1][0])
 
 
 def suite():
