@@ -1368,10 +1368,8 @@ class SlownessModel(object):
                                   sLayer['botP'], sLayer['botDepth'])],
                                 dtype=SlownessLayer)
             outLayers = self.PLayers if isPWave else self.SLayers
-            # or del outLayers[layerNum] - which is faster?
-            outLayers.pop(layerNum)
-            outLayers.insert(layerNum, botLayer)
-            outLayers.insert(layerNum, topLayer)
+            outLayers[layerNum] = botLayer
+            outLayers = np.insert(outLayers, layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
             outCriticalDepths = self.criticalDepths
             self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
@@ -1409,17 +1407,13 @@ class SlownessModel(object):
         out = otherLayers
         # Make sure to keep sampling consistent. If in a fluid, both wave
         # types will share a single slowness layer.
-        try:
-            otherIndex = otherLayers.index(changedLayer)
-            del out[otherIndex]
-            out.insert(otherIndex, newBotLayer)
-            out.insert(otherIndex, newTopLayer)
-        except ValueError:
-            # This will be raised by index if changedLayer can't be found,
-            # but must not break program flow. I.e. that's ok, no error
-            # should be raised, the try clause can be seen like an if.
-            pass
-        for otherLayerNum, sLayer in enumerate(out[:]):
+
+        otherIndex = np.where(otherLayers == changedLayer)
+        if len(otherIndex[0]):
+            out[otherIndex[0]] = newBotLayer
+            out = np.insert(out, otherIndex[0], newTopLayer)
+
+        for otherLayerNum, sLayer in enumerate(out.copy()):
             if (sLayer['topP'] - p) * (p - sLayer['botP']) > 0:
                 # Found a slowness layer with the other wave type that
                 # contains the new slowness sample.
@@ -1430,9 +1424,8 @@ class SlownessModel(object):
                 botLayer = np.array([(p, topLayer['botDepth'], sLayer['botP'],
                                       sLayer['botDepth'])],
                                     dtype=SlownessLayer)
-                del out[otherLayerNum]
-                out.insert(otherLayerNum, botLayer)
-                out.insert(otherLayerNum, topLayer)
+                out[otherLayerNum] = botLayer
+                out = np.insert(out, otherLayerNum, topLayer)
                 # Fix critical layers since we have added a slowness layer.
                 self.fixCriticalDepths(criticalDepths, otherLayerNum,
                                        not isPWave)
