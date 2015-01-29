@@ -127,8 +127,11 @@ class DownloadHelper(object):
         # really feasible as long as the availability queries are not
         # reliable for all endpoints.
         for client_name, client in self._initialized_clients.items():
-            station_count = sum([len(_i) for _i in
-                                 client_download_helpers.values()])
+            # Log some information about preexisting data.
+            station_count = sum([
+                len(_i) for _i in client_download_helpers.values()
+                if (_i.stationxml_status == STATUS.EXISTS) or
+                (_i.has_existing_or_downloaded_time_intervals)])
             logger.info("Total acquired or preexisting stations: %i" %
                         station_count)
 
