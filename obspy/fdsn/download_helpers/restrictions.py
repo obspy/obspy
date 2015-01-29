@@ -4,7 +4,7 @@
 Download restrictions.
 
 :copyright:
-    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
