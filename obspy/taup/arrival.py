@@ -92,6 +92,3 @@ class Arrival(object):
         if moduloDist > 180:
             moduloDist = 360 - moduloDist
         return moduloDist
-
-    def get_dist_deg(self):
-        return self.dist * 180 / pi

@@ -7,8 +7,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from math import pi
-
 import numpy as np
 
 
@@ -52,9 +50,6 @@ class TimeDist:
     def add(self, td):
         self.time += td.time
         self.distRadian += td.distRadian
-
-    def get_dist_deg(self):
-        return self.distRadian * 180 / pi
 
 
 class CriticalDepth:
