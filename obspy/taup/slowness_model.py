@@ -929,10 +929,9 @@ class SlownessModel(object):
                                   ">maxRangeInterval " +
                                   str(self.maxRangeInterval) + "), adding "
                                   "slowness. ")
-                        self.addSlowness((sLayer['topP'] + sLayer['botP']) / 2,
-                                         self.PWAVE)
-                        self.addSlowness((sLayer['topP'] + sLayer['botP']) / 2,
-                                         self.SWAVE)
+                        p = (sLayer['topP'] + sLayer['botP']) / 2
+                        self.addSlowness(p, self.PWAVE)
+                        self.addSlowness(p, self.SWAVE)
                         currTD = prevTD
                         prevTD = prevPrevTD
                     else:
@@ -970,18 +969,12 @@ class SlownessModel(object):
                                         np.array(splitTD.distRadian -
                                         prevTD.distRadian)) + prevTD.time))
                         if abs(diff) > self.maxInterpError:
-                            self.addSlowness((prevSLayer['topP']
-                                              + prevSLayer['botP']) / 2,
-                                             self.PWAVE)
-                            self.addSlowness((prevSLayer['topP']
-                                              + prevSLayer['botP']) / 2,
-                                             self.SWAVE)
-                            self.addSlowness((sLayer['topP'] +
-                                              sLayer['botP']) / 2,
-                                             self.PWAVE)
-                            self.addSlowness((sLayer['topP'] +
-                                              sLayer['botP']) / 2,
-                                             self.SWAVE)
+                            p1 = (prevSLayer['topP'] + prevSLayer['botP']) / 2
+                            p2 = (sLayer['topP'] + sLayer['botP']) / 2
+                            self.addSlowness(p1, self.PWAVE)
+                            self.addSlowness(p1, self.SWAVE)
+                            self.addSlowness(p2, self.PWAVE)
+                            self.addSlowness(p2, self.SWAVE)
                             currTD = prevPrevTD
                             isPrevOK = False
                             if j > 0:
