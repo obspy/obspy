@@ -171,7 +171,7 @@ class DownloadHelper(object):
             if helper.is_availability_reliable:
                 helper.filter_stations_based_on_minimum_distance(
                     existing_client_dl_helpers=existing_client_dl_helpers)
-                # Continue if there is not data left after the filtering.
+                # Continue if there is no data left after the filtering.
                 if not helper:
                     logger.info("Client '%s' - No new data available after "
                                 "discarding based on the minimal "
@@ -191,7 +191,7 @@ class DownloadHelper(object):
             helper.download_stationxml()
 
             # Sanitize the downloaded things if desired. Assures that all
-            # waveform data also has corresponding station information.
+            # waveform data also has the corresponding station information.
             if restrictions.sanitize:
                 helper.sanitize_downloads()
 

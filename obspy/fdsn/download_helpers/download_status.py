@@ -629,7 +629,7 @@ class ClientDownloadHelper(object):
             if self.restrictions.station_starttime:
                 s = self.restrictions.station_starttime
             if self.restrictions.station_endtime:
-                s = self.restrictions.station_endtime
+                e = self.restrictions.station_endtime
             bulk = [(station.network, station.station, channel.location,
                      channel.channel, s, e) for channel in station.channels]
             arguments.append((self.client, self.client_name, bulk,
