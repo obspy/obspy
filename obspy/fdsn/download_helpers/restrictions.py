@@ -72,10 +72,19 @@ class Restrictions(object):
     ...     minimum_interstation_distance_in_m=100.0)
 
 
-    :param starttime: The starttime of the data to be downloaded.
+    :param starttime: The start time of the data to be downloaded.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: The endtime of the data.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param station_starttime: The start time of the station files. If not
+        given, the ``starttime`` argument will be used. This is useful when
+        trying to incorporate multiple waveform datasets with a central
+        station file archive as stationxml files can be downloaded once and
+        for the whole time span.
+    :type station_starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param station_endtime: The endtime of the station files. Analogous to
+        the the ``station_starttime`` argument.
+    :type station_endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param chunklength_in_sec: The length of one chunk in seconds. If set,
         the time between ``starttime`` and ``endtime`` will be divided into
         segments of ``chunklength`` seconds. Useful for continuous data
@@ -118,7 +127,9 @@ class Restrictions(object):
     :type location_priorities: list of str
     """
 
-    def __init__(self, starttime, endtime, chunklength_in_sec=None,
+    def __init__(self, starttime, endtime,
+                 station_starttime=None, station_endtime=None,
+                 chunklength_in_sec=None,
                  network=None, station=None, location=None, channel=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
@@ -128,6 +139,14 @@ class Restrictions(object):
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
+        self.station_starttime = obspy.UTCDateTime(station_starttime)
+        self.station_endtime = obspy.UTCDateTime(station_endtime)
+        if self.station_starttime > self.starttime:
+            raise ValueError("The station start time must be smaller than the "
+                             "main start time.")
+        if self.station_endtime < self.endtime:
+            raise ValueError("The station end time must be larger than the "
+                             "main end time.")
         self.chunklength = chunklength_in_sec and float(chunklength_in_sec)
         self.network = network
         self.station = station
