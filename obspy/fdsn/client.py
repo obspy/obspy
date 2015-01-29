@@ -1492,10 +1492,9 @@ def download_url(url, timeout=10, headers={}, debug=False,
                   (e.code, str(e.reason), url, e.read())
             print(msg)
         return e.code, None
-    except Exception as e:
-        if debug is True:
-            print("Error while downloading: %s" % url)
-        return None, None
+    # All other errors have to be raised.
+    except Exception:
+        raise
 
     code = response.getcode()
 
