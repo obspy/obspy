@@ -644,21 +644,16 @@ class SlownessModel(object):
                 highSLayer = self.PLayers[sLayerNum]
             if highZone.ray_param != highSLayer['botP']:
                 self.addSlowness(highZone.ray_param, self.PWAVE)
-        # Make sure P and S are consistent
-        botP = -1
-        for layer in self.PLayers:
-            topP = layer['topP']
-            if topP != botP:
-                self.addSlowness(topP, self.SWAVE)
-            botP = layer['botP']
-            self.addSlowness(botP, self.SWAVE)
-        botP = -1
-        for layer in self.SLayers:
-            topP = layer['topP']
-            if topP != botP:
-                self.addSlowness(topP, self.PWAVE)
-            botP = layer['botP']
-            self.addSlowness(botP, self.PWAVE)
+
+        # Make sure P and S are consistent by adding discontinuities in one to
+        # the other.
+        uniq = np.unique(self.PLayers[['topP', 'botP']].view(np.float_))
+        for p in uniq:
+            self.addSlowness(p, self.SWAVE)
+
+        uniq = np.unique(self.SLayers[['topP', 'botP']].view(np.float_))
+        for p in uniq:
+            self.addSlowness(p, self.PWAVE)
 
     def layerNumberAbove(self, depth, isPWave):
         """
@@ -749,8 +744,8 @@ class SlownessModel(object):
         slowness!
         """
         if isPWave:
-            # NB Just like Java (fortunately) these are shallow copies --
-            # values are modified in place!
+            # NB Unlike Java (unfortunately) these are not modified in place!
+            # NumPy arrays cannot have values inserted in place.
             layers = self.PLayers
             otherLayers = self.SLayers
             wave = 'P'
