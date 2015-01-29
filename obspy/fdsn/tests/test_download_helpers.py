@@ -20,7 +20,7 @@ import unittest
 
 import obspy
 from obspy.core.compatibility import mock
-from obspy.fdsn.download_helpers import domain, Restrictions
+from obspy.fdsn.download_helpers import domain, Restrictions, DownloadHelper
 from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
     get_stationxml_filename, get_mseed_filename, \
     get_stationxml_contents
@@ -1210,6 +1210,30 @@ class StationTestCase(unittest.TestCase):
                 logger.method_calls[0][1][0])
 
 
+class DownloadHelperTestCase(unittest.TestCase):
+    """
+    Test cases for the DownloadHelper class.
+    """
+    @mock.patch("obspy.fdsn.download_helpers.download_helpers."
+                "DownloadHelper._initialize_clients")
+    def test_initialization(self, patch):
+        """
+        Tests the initialization of the DownloadHelper object.
+        """
+        d = DownloadHelper()
+        self.assertEqual(patch.call_count, 1)
+        self.assertEqual(
+            d.providers,
+            ("IRIS", "GEONET", "GFZ", "INGV", "NCEDC", "NERIES", "RESIF",
+             "SCEC", "USGS", "USP", "ORFEUS"))
+        patch.reset_mock()
+
+        d = DownloadHelper(providers=["A", "B", "IRIS"])
+        self.assertEqual(patch.call_count, 1)
+        self.assertEqual(d.providers, ("A", "B", "IRIS"))
+        patch.reset_mock()
+
+
 def suite():
     testsuite = unittest.TestSuite()
     testsuite.addTest(unittest.makeSuite(DomainTestCase, 'test'))
@@ -1217,6 +1241,7 @@ def suite():
     testsuite.addTest(unittest.makeSuite(TimeIntervalTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(ChannelTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(StationTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(DownloadHelperTestCase, 'test'))
     return testsuite
 
 

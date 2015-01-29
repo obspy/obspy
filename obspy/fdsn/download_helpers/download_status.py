@@ -598,7 +598,8 @@ class ClientDownloadHelper(object):
         """
         for station in self.stations.values():
             station.prepare_stationxml_download(
-                stationxml_storage=self.stationxml_storage)
+                stationxml_storage=self.stationxml_storage,
+                logger=self.logger)
 
     def download_stationxml(self, threads=3):
         """
@@ -851,7 +852,8 @@ class ClientDownloadHelper(object):
         for sta in self.stations.values():
             for cha in sta.channels:
                 for interval in cha.intervals:
-                    # The status of the intervals did not change!
+                    # The status of the interval should not have changed if
+                    # it did not require doenloading in the first place.
                     if interval.status != STATUS.NEEDS_DOWNLOADING:
                         continue
 
@@ -896,7 +898,7 @@ class ClientDownloadHelper(object):
                             len(st) > 1:
                         self.logger.info("File '%s' contains %i traces. Will "
                                          "be deleted." % (interval.filename,
-                                                          len(str)))
+                                                          len(st)))
                         utils.safe_delete(interval.filename)
                         discarded_bytes += size
                         interval.status = STATUS.DOWNLOAD_REJECTED
@@ -914,10 +916,10 @@ class ClientDownloadHelper(object):
                                 "%.2f ar required. File will be deleted." %
                                 (interval.filename, duration,
                                  expected_min_duration))
-                        utils.safe_delete(interval.filename)
-                        discarded_bytes += size
-                        interval.status = STATUS.DOWNLOAD_REJECTED
-                        continue
+                            utils.safe_delete(interval.filename)
+                            discarded_bytes += size
+                            interval.status = STATUS.DOWNLOAD_REJECTED
+                            continue
 
                     downloaded_bytes += size
                     interval.status = STATUS.DOWNLOADED

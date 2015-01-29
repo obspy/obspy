@@ -90,7 +90,7 @@ class DownloadHelper(object):
 
         # Initialize all clients.
         self._initialized_clients = OrderedDict()
-        self.__initialize_clients()
+        self._initialize_clients()
 
     def download(self, domain, restrictions, mseed_storage,
                  stationxml_storage, download_chunk_size_in_mb=20,
@@ -254,7 +254,7 @@ class DownloadHelper(object):
 
         return client_download_helpers
 
-    def __initialize_clients(self):
+    def _initialize_clients(self):
         """
         Initialize all clients.
         """
