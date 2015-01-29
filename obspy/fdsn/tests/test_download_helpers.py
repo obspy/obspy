@@ -103,10 +103,14 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Tests the channel priority filtering.
         """
-        c1 = Channel("", "BHE")
-        c2 = Channel("10", "SHE")
-        c3 = Channel("00", "BHZ")
-        c4 = Channel("", "HHE")
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60)
+            for _i in range(10)]
+        c1 = Channel("", "BHE", time_intervals)
+        c2 = Channel("10", "SHE", time_intervals)
+        c3 = Channel("00", "BHZ", time_intervals)
+        c4 = Channel("", "HHE", time_intervals)
         channels = [c1, c2, c3, c4]
 
         filtered_channels = filter_channel_priority(
@@ -155,10 +159,14 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Tests the channel priority filtering.
         """
-        c1 = Channel("", "BHE")
-        c2 = Channel("10", "SHE")
-        c3 = Channel("00", "BHZ")
-        c4 = Channel("", "HHE")
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 60, st + (_i + 1) * 60)
+            for _i in range(10)]
+        c1 = Channel("", "BHE", time_intervals)
+        c2 = Channel("10", "SHE", time_intervals)
+        c3 = Channel("00", "BHZ", time_intervals)
+        c4 = Channel("", "HHE", time_intervals)
         channels = [c1, c2, c3, c4]
 
         filtered_channels = filter_channel_priority(
@@ -193,7 +201,6 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=None)
         self.assertEqual(filtered_channels, channels)
-
 
     # def test_station_list_nearest_neighbour_filter(self):
     #     """
@@ -317,7 +324,8 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             Station("11", "11", 0, 0, 505, [], None),
             Station("11", "11", 0, 0, 1505, [], None),
         ]
-        new_list = filter_based_on_interstation_distance(list_one, list_two, 20)
+        new_list = filter_based_on_interstation_distance(list_one, list_two,
+                                                         20)
         self.assertEqual(new_list, list_one)
         new_list = filter_based_on_interstation_distance(list_one, list_two, 2)
         self.assertEqual(new_list, list_one + list_two)
@@ -466,58 +474,15 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         self.assertRaises(TypeError, get_mseed_filename, lambda x: 1,
                           "BW", "FURT", "", "BHE")
 
-    @mock.patch("os.makedirs")
-    def test_attach_miniseed_filenames(self, patch):
-        """
-        Tests the attach_miniseed_filenames function. Also serves as an
-        integration test for the get_mseed_filename() function.
-        """
-        channels = [Channel("", "BHE"), Channel("", "BHN"), Channel("", "BHZ")]
-        stations = [Station("BW", "ALTM", 0, 0, 0, channels=channels),
-                    Station("BW", "FURT", 0, 0, 0, channels=channels)]
-
-        # Simple folder setting.
-        new_stations = attach_miniseed_filenames(stations, "waveforms")
-        self.assertEqual(len(new_stations["stations_to_download"]), 2)
-        self.assertEqual(new_stations["existing_miniseed_filenames"], [])
-        self.assertEqual(new_stations["ignored_channel_count"], 0)
-        for stat in new_stations["stations_to_download"]:
-            self.assertEqual(
-                [_i.mseed_filename for _i in stat.channels],
-                ["waveforms/BW.FURT..BH%s.mseed" %
-                 _i for _i in ["E", "N", "Z"]])
-        # 6 channels thus 6 directories should have been created.
-        self.assertEqual(patch.call_count, 6)
-        patch.reset_mock()
-
-        # String template.
-        new_stations = attach_miniseed_filenames(
-            stations,  "A/{network}/{station}/{location}{channel}.mseed")
-        self.assertEqual(len(new_stations["stations_to_download"]), 2)
-        self.assertEqual(new_stations["existing_miniseed_filenames"], [])
-        self.assertEqual(new_stations["ignored_channel_count"], 0)
-        for stat in new_stations["stations_to_download"]:
-            self.assertEqual(
-                [_i.mseed_filename for _i in stat.channels],
-                ["A/BW/FURT/BH%s.mseed" %
-                 _i for _i in ["E", "N", "Z"]])
-        # Once again 6 channels.
-        self.assertEqual(patch.call_count, 6)
-        patch.reset_mock()
-
-        # A function returning just returning True should result in all
-        # channels being ignored.
-        def get_name(*args):
-            return True
-        new_stations = attach_miniseed_filenames(stations, get_name)
-        self.assertEqual(new_stations["stations_to_download"], [])
-        self.assertEqual(new_stations["existing_miniseed_filenames"], [])
-        self.assertEqual(new_stations["ignored_channel_count"], 6)
-
     def test_get_stationxml_contents(self):
         """
         Tests the fast get_stationxml_contents() function.
         """
+        ChannelAvailability = collections.namedtuple(
+            "ChannelAvailability",
+            ["network", "station", "location", "channel", "starttime",
+             "endtime", "filename"])
+
         filename = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(self.data))), "station", "tests", "data",
             "AU.MEEK.xml")
@@ -534,14 +499,6 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             [ChannelAvailability(net.code, sta.code, cha.location_code,
                                  cha.code, cha.start_date, cha.end_date,
                                  filename)])
-
-    def test_attach_stationxml_filenames(self):
-        """
-        Test the attaching of filenames to the stations objects.
-        """
-        channels = [Channel("", "BHE"), Channel("", "BHN"), Channel("", "BHZ")]
-        stations = [Station("BW", "ALTM", 0, 0, 0, channels=channels),
-                    Station("BW", "FURT", 0, 0, 0, channels=channels)]
 
     def test_restrictions_object(self):
         """
@@ -591,10 +548,10 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             filename=None, status=None)]
         c = Channel(location="", channel="BHE", intervals=intervals)
         self.assertEqual(str(c), (
-            "Channel(location='', channel=BHE, intervals=[\n"
+            "Channel '.BHE':\n"
             "\tTimeInterval(start=UTCDateTime(2012, 1, 1, 0, 0), "
-            "end=UTCDateTime(2012, 2, 1, 0, 0), filename=None, status=None)\n"
-            "])"))
+            "end=UTCDateTime(2012, 2, 1, 0, 0), filename=None, "
+            "status='none')"))
 
 
 class TimeIntervalTestCase(unittest.TestCase):

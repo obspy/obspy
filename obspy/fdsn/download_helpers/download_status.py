@@ -404,7 +404,7 @@ class Channel(object):
                 max([_i.end for _i in self.intervals]))
 
     def __str__(self):
-        return "Channel '{location}.{channel}:'\n\t{intervals}".format(
+        return "Channel '{location}.{channel}':\n\t{intervals}".format(
             location=self.location, channel=self.channel,
             intervals="\n\t".join([str(i) for i in self.intervals]))
 
