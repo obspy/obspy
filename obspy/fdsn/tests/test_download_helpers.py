@@ -538,6 +538,34 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             (start + 86400 * 20, start + 86400 * 30),
             (start + 86400 * 30, end)])
 
+        # No station start-and endtime by default
+        res = Restrictions(starttime=start, endtime=start + 10)
+        self.assertEqual(res.station_starttime, None)
+        self.assertEqual(res.station_endtime, None)
+
+        # One can only set one of the two.
+        res = Restrictions(starttime=start, endtime=start + 10,
+                           station_starttime=start - 10)
+        self.assertEqual(res.station_starttime, start - 10)
+        self.assertEqual(res.station_endtime, None)
+
+        res = Restrictions(starttime=start, endtime=start + 10,
+                           station_endtime=start + 20)
+        self.assertEqual(res.station_starttime, None)
+        self.assertEqual(res.station_endtime, start + 20)
+
+        # Will raise a ValueError if either within the time interval of the
+        # normal start- and endtime.
+        self.assertRaises(ValueError, Restrictions, starttime=start,
+                          endtime=start+10, station_starttime=start + 1)
+
+        self.assertRaises(ValueError, Restrictions, starttime=start,
+                          endtime=start+10, station_endtime=start + 9)
+
+        # Fine if they are equal with both.
+        Restrictions(starttime=start, endtime=start + 10,
+                     station_starttime=start, station_endtime=start + 10)
+
     def test_channel_str_representation(self):
         """
         Test the string representations of channel objects.

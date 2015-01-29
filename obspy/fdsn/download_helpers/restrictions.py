@@ -139,12 +139,14 @@ class Restrictions(object):
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
-        self.station_starttime = obspy.UTCDateTime(station_starttime)
-        self.station_endtime = obspy.UTCDateTime(station_endtime)
-        if self.station_starttime > self.starttime:
+        self.station_starttime = station_starttime and \
+            obspy.UTCDateTime(station_starttime)
+        self.station_endtime = station_endtime and \
+            obspy.UTCDateTime(station_endtime)
+        if self.station_starttime and self.station_starttime > self.starttime:
             raise ValueError("The station start time must be smaller than the "
                              "main start time.")
-        if self.station_endtime < self.endtime:
+        if self.station_endtime and self.station_endtime < self.endtime:
             raise ValueError("The station end time must be larger than the "
                              "main end time.")
         self.chunklength = chunklength_in_sec and float(chunklength_in_sec)
