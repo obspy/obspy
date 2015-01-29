@@ -74,11 +74,9 @@ class TauBranch(object):
 
         timeDist = [self.calcTimeDist(sMod, topLayerNum, botLayerNum, p)
                     for p in ray_params]
-        self.dist = [_t.distRadian for _t in timeDist]
-        self.time = [_t.time for _t in timeDist]
-        # This would maybe be easier using numpy arrays?
-        self.tau = [time - p * dist for (time, dist, p)
-                    in zip(self.time, self.dist, ray_params)]
+        self.dist = np.array([_t.distRadian for _t in timeDist])
+        self.time = np.array([_t.time for _t in timeDist])
+        self.tau = self.time - ray_params * self.dist
 
     def calcTimeDist(self, sMod, topLayerNum, botLayerNum, p):
         timeDist = TimeDist(p)
@@ -127,18 +125,19 @@ class TauBranch(object):
         self.tau[index] = td.time - ray_param * td.distRadian
 
     def shiftBranch(self, index):
-        newDist = self.dist[:index]
-        newDist.append(0)
-        newDist += self.dist[index:]
-        self.dist = newDist
-        newTime = self.time[:index]
-        newTime.append(0)
-        newTime += self.time[index:]
-        self.time = newTime
-        newTau = self.tau[:index]
-        newTau.append(0)
-        newTau += self.tau[index:]
-        self.tau = newTau
+        new_size = len(self.dist) + 1
+
+        self.dist.resize(new_size)
+        self.dist[index + 1:] = self.dist[index:-1]
+        self.dist[index] = 0
+
+        self.time.resize(new_size)
+        self.time[index + 1:] = self.time[index:-1]
+        self.time[index] = 0
+
+        self.tau.resize(new_size)
+        self.tau[index + 1:] = self.tau[index:-1]
+        self.tau[index] = 0
 
     def difference(self, topBranch, indexP, indexS, sMod, minPSoFar,
                    ray_params):
@@ -212,69 +211,61 @@ class TauBranch(object):
         else:
             # In case indexS==P then only need one.
             indexS = -1
-        # This looks silly, but makes filling these later on easier
-        botBranch.dist = [0 for i in range(arrayLength)]
-        botBranch.time = [0 for i in range(arrayLength)]
-        botBranch.tau = [0 for i in range(arrayLength)]
+
+        ddist = self.dist - topBranch.dist
+        dtime = self.time - topBranch.time
+        dtau = self.tau - topBranch.tau
         if indexP == -1:
             # Then both indices are -1 so no new ray parameters are added.
-            botBranch.dist = [a-b for a, b in zip(self.dist, topBranch.dist)]
-            botBranch.time = [a-b for a, b in zip(self.time, topBranch.time)]
-            botBranch.tau = [a-b for a, b in zip(self.tau, topBranch.tau)]
+            botBranch.dist = ddist
+            botBranch.time = dtime
+            botBranch.tau = dtau
         else:
+            botBranch.dist = np.empty(arrayLength)
+            botBranch.time = np.empty(arrayLength)
+            botBranch.tau = np.empty(arrayLength)
+
             if indexS == -1:
                 # Only indexP != -1.
-                # Slice to have the 'iteration' go only until indexP (zip
-                # ends with the shortest iterator).
-                botBranch.dist = [a-b for a, b in zip(self.dist[:indexP],
-                                                      topBranch.dist)]
-                botBranch.time = [a-b for a, b in zip(self.time[:indexP],
-                                                      topBranch.time)]
-                botBranch.tau = [a-b for a, b in zip(self.tau[:indexP],
-                                                     topBranch.tau)]
-                botBranch.dist.append(timeDistP.distRadian)
-                botBranch.time.append(timeDistP.time)
-                botBranch.tau.append(
-                    timeDistP.time - PRayParam * timeDistP.distRadian)
-                botBranch.dist[indexP:] = [a-b for a, b in zip(
-                    self.dist[indexP:], topBranch.dist[indexP+1:])]
-                botBranch.dist[indexP:] = [a-b for a, b in zip(
-                    self.dist[indexP:], topBranch.dist[indexP+1:])]
-                botBranch.dist[indexP:] = [a-b for a, b in zip(
-                    self.dist[indexP:], topBranch.dist[indexP+1:])]
+                botBranch.dist[:indexP] = ddist[:indexP]
+                botBranch.time[:indexP] = dtime[:indexP]
+                botBranch.tau[:indexP] = dtau[:indexP]
+
+                botBranch.dist[indexP] = timeDistP.distRadian
+                botBranch.time[indexP] = timeDistP.time
+                botBranch.tau[indexP] = (timeDistP.time -
+                                         PRayParam * timeDistP.distRadian)
+
+                botBranch.dist[indexP + 1:] = ddist[indexP:]
+                botBranch.time[indexP + 1:] = dtime[indexP:]
+                botBranch.tau[indexP + 1:] = dtau[indexP:]
+
             else:
                 # Both indexP and S are != -1 so have two new samples
-                # Note the following does the same (in the beginning) as the
-                # previous clause.
-                # I'm on the fence about which is better.
-                for i in range(indexS):
-                    botBranch.dist[i] = self.dist[i] - topBranch.dist[i]
-                    botBranch.time[i] = self.time[i] - topBranch.time[i]
-                    botBranch.tau[i] = self.tau[i] - topBranch.tau[i]
+                botBranch.dist[:indexS] = ddist[:indexS]
+                botBranch.time[:indexS] = dtime[:indexS]
+                botBranch.tau[:indexS] = dtau[:indexS]
+
                 botBranch.dist[indexS] = timeDistS.distRadian
                 botBranch.time[indexS] = timeDistS.time
-                botBranch.tau[indexS] = \
-                    timeDistS.time - SRayParam * timeDistS.distRadian
-                for i in range(indexS, indexP):
-                    botBranch.dist[i + 1] = \
-                        self.dist[i] - topBranch.dist[i + 1]
-                    botBranch.time[i + 1] = \
-                        self.time[i] - topBranch.time[i + 1]
-                    botBranch.tau[i + 1] = \
-                        self.tau[i] - topBranch.tau[i + 1]
+                botBranch.tau[indexS] = (timeDistS.time -
+                                         SRayParam * timeDistS.distRadian)
+
+                botBranch.dist[indexS + 1:indexP + 1] = ddist[indexS:indexP]
+                botBranch.time[indexS + 1:indexP + 1] = dtime[indexS:indexP]
+                botBranch.tau[indexS + 1:indexP + 1] = dtau[indexS:indexP]
+
                 # Put in at indexP+1 because we have already shifted by 1
                 # due to indexS.
                 botBranch.dist[indexP + 1] = timeDistP.distRadian
                 botBranch.time[indexP + 1] = timeDistP.time
-                botBranch.tau[indexP + 1] = \
-                    timeDistP.time - PRayParam * timeDistP.distRadian
-                for i in range(indexP, len(self.dist)):
-                    botBranch.dist[i + 2] = \
-                        self.dist[i] - topBranch.dist[i + 2]
-                    botBranch.time[i + 2] = \
-                        self.time[i] - topBranch.time[i + 2]
-                    botBranch.tau[i + 2] = \
-                        self.tau[i] - topBranch.tau[i + 2]
+                botBranch.tau[indexP + 1] = (timeDistP.time -
+                                             PRayParam * timeDistP.distRadian)
+
+                botBranch.dist[indexP + 2:] = ddist[indexP:]
+                botBranch.time[indexP + 2:] = dtime[indexP:]
+                botBranch.tau[indexP + 2:] = dtau[indexP:]
+
         return botBranch
 
     def path(self, ray_param, downgoing, sMod):
