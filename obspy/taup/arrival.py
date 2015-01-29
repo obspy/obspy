@@ -6,6 +6,8 @@ from future.builtins import *  # NOQA
 
 from math import pi
 
+import numpy as np
+
 
 class Arrival(object):
     """
@@ -21,16 +23,22 @@ class Arrival(object):
         # phase that generated this arrival
         self.phase = phase
         # travel time in seconds
-        try:
-            self.time = time[0]
-        except (IndexError, TypeError):
+        if isinstance(time, np.ndarray):
+            try:
+                self.time = time[0]
+            except IndexError:
+                self.time = time[()]
+        else:
             self.time = time
         # angular distance (great circle) in radians
         self.dist = dist
         # ray parameter in seconds per radians
-        try:
-            self.ray_param = ray_param[0]
-        except (IndexError, TypeError):
+        if isinstance(ray_param, np.ndarray):
+            try:
+                self.ray_param = ray_param[0]
+            except IndexError:
+                self.ray_param = ray_param[()]
+        else:
             self.ray_param = ray_param
         self.ray_param_index = ray_param_index
         # phase name

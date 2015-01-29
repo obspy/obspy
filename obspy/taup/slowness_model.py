@@ -439,6 +439,18 @@ class SlownessModel(object):
         # botP = 1.1e300
         waveType = 'P' if isPWave else 'S'
 
+        # Un-ndarray input.
+        if isinstance(topCriticalLayer, np.ndarray):
+            try:
+                topCriticalLayer = topCriticalLayer[0]
+            except IndexError:
+                topCriticalLayer = topCriticalLayer[()]
+        if isinstance(botCriticalLayer, np.ndarray):
+            try:
+                botCriticalLayer = botCriticalLayer[0]
+            except IndexError:
+                botCriticalLayer = botCriticalLayer[()]
+
         # top/botCriticalLayer are meant to be layer numbers. Some methods call
         # this one with the relevant depths instead, which will be a float. So
         # can check if that's the case and convert to layer numbers (Java
@@ -447,10 +459,10 @@ class SlownessModel(object):
                           int) or not isinstance(botCriticalLayer, int):
             topDepth = topCriticalLayer
             botDepth = botCriticalLayer
-            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)
+            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)[0]
             if self.vMod.layers[topCriticalLayer]['botDepth'] == topDepth:
                 topCriticalLayer += 1
-            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)
+            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)[0]
 
         if topCriticalLayer > botCriticalLayer:
             raise SlownessModelError(

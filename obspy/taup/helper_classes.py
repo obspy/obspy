@@ -9,6 +9,8 @@ from future.builtins import *  # NOQA
 
 from math import pi
 
+import numpy as np
+
 
 class SlownessModelError(Exception):
     pass
@@ -31,21 +33,24 @@ class TimeDist:
         # Careful: p must remain first element because of how class is called
         # e.g. in SlownessModel.approxDistance!
         self.p = p
-        try:
-            self.depth = depth[0]
-        except (IndexError, TypeError):
+        if isinstance(depth, np.ndarray):
+            try:
+                self.depth = depth[0]
+            except IndexError:
+                self.depth = depth[()]
+        else:
             self.depth = depth
-        try:
-            self.time = time[0]
-        except (IndexError, TypeError):
-            self.time = time
+        if isinstance(time, np.ndarray):
+            try:
+                self.time = time[0]
+            except IndexError:
+                self.time = time[()]
+        else:
+                self.time = time
         self.distRadian = distRadian
 
     def add(self, td):
-        try:
-            self.time += td.time[0]
-        except (IndexError, TypeError):
-            self.time += td.time
+        self.time += td.time
         self.distRadian += td.distRadian
 
     def get_dist_deg(self):
