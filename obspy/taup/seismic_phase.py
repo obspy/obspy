@@ -135,13 +135,14 @@ class SeismicPhase(object):
             else:
                 try:
                     float(currLeg)
+                except ValueError:
+                    # If currLeg is just a string:
+                    puristName += currLeg
+                else:
                     # If it is indeed a number:
                     disconBranch = closest_branch_to_depth(tMod, currLeg)
                     legDepth = tMod.tauBranches[0, disconBranch].topDepth
                     puristName += str(legDepth)
-                except ValueError:
-                    # If currLeg is just a string:
-                    puristName += currLeg
         return puristName
 
     def parse_name(self, tMod):
