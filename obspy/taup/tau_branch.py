@@ -74,7 +74,7 @@ class TauBranch(object):
 
         timeDist = [self.calcTimeDist(sMod, topLayerNum, botLayerNum, p)
                     for p in ray_params]
-        self.dist = np.array([_t.distRadian for _t in timeDist])
+        self.dist = np.array([_t.dist for _t in timeDist])
         self.time = np.array([_t.time for _t in timeDist])
         self.tau = self.time - ray_params * self.dist
 
@@ -117,12 +117,12 @@ class TauBranch(object):
                     break
                 else:
                     temptd = sMod.layerTimeDist(ray_param, i, self.isPWave)
-                    td.distRadian += temptd.distRadian
+                    td.dist += temptd.dist
                     td.time += temptd.time
         self.shiftBranch(index)
-        self.dist[index] = td.distRadian
+        self.dist[index] = td.dist
         self.time[index] = td.time
-        self.tau[index] = td.time - ray_param * td.distRadian
+        self.tau[index] = td.time - ray_param * td.dist
 
     def shiftBranch(self, index):
         new_size = len(self.dist) + 1
@@ -231,10 +231,10 @@ class TauBranch(object):
                 botBranch.time[:indexP] = dtime[:indexP]
                 botBranch.tau[:indexP] = dtau[:indexP]
 
-                botBranch.dist[indexP] = timeDistP.distRadian
+                botBranch.dist[indexP] = timeDistP.dist
                 botBranch.time[indexP] = timeDistP.time
                 botBranch.tau[indexP] = (timeDistP.time -
-                                         PRayParam * timeDistP.distRadian)
+                                         PRayParam * timeDistP.dist)
 
                 botBranch.dist[indexP + 1:] = ddist[indexP:]
                 botBranch.time[indexP + 1:] = dtime[indexP:]
@@ -246,10 +246,10 @@ class TauBranch(object):
                 botBranch.time[:indexS] = dtime[:indexS]
                 botBranch.tau[:indexS] = dtau[:indexS]
 
-                botBranch.dist[indexS] = timeDistS.distRadian
+                botBranch.dist[indexS] = timeDistS.dist
                 botBranch.time[indexS] = timeDistS.time
                 botBranch.tau[indexS] = (timeDistS.time -
-                                         SRayParam * timeDistS.distRadian)
+                                         SRayParam * timeDistS.dist)
 
                 botBranch.dist[indexS + 1:indexP + 1] = ddist[indexS:indexP]
                 botBranch.time[indexS + 1:indexP + 1] = dtime[indexS:indexP]
@@ -257,10 +257,10 @@ class TauBranch(object):
 
                 # Put in at indexP+1 because we have already shifted by 1
                 # due to indexS.
-                botBranch.dist[indexP + 1] = timeDistP.distRadian
+                botBranch.dist[indexP + 1] = timeDistP.dist
                 botBranch.time[indexP + 1] = timeDistP.time
                 botBranch.tau[indexP + 1] = (timeDistP.time -
-                                             PRayParam * timeDistP.distRadian)
+                                             PRayParam * timeDistP.dist)
 
                 botBranch.dist[indexP + 2:] = ddist[indexP:]
                 botBranch.time[indexP + 2:] = dtime[indexP:]

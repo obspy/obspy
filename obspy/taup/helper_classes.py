@@ -25,7 +25,7 @@ class TimeDist:
     Note it is 'cloneable' in Java, that just means you're allowed to make a
     deep copy.
     """
-    def __init__(self, p=0, time=0, distRadian=0, depth=0):
+    def __init__(self, p=0, time=0, dist=0, depth=0):
         # FIXME: Remove try/except once code correctly uses NumPy.
 
         # Careful: p must remain first element because of how class is called
@@ -45,11 +45,11 @@ class TimeDist:
                 self.time = time[()]
         else:
                 self.time = time
-        self.distRadian = distRadian
+        self.dist = dist
 
     def add(self, td):
         self.time += td.time
-        self.distRadian += td.distRadian
+        self.dist += td.dist
 
 
 class CriticalDepth:

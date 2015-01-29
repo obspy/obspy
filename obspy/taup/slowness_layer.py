@@ -30,7 +30,7 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     Here we use the Mohorovicic or Bullen law: p=A*r^B"""
     timedist = TimeDist(p)
     if layer['botDepth'] == layer['topDepth']:
-        timedist.distRadian = 0
+        timedist.dist = 0
         timedist.time = 0
         return timedist
     # Only do Bullen radial slowness if the layer is not too thin (e.g.
@@ -42,14 +42,14 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
         (radiusOfEarth - layer['botDepth']))
     sqrtTopTopMpp = math.sqrt(layer['topP'] * layer['topP'] - p * p)
     sqrtBotBotMpp = math.sqrt(layer['botP'] * layer['botP'] - p * p)
-    timedist.distRadian = (math.atan2(p, sqrtBotBotMpp) -
-                           math.atan2(p, sqrtTopTopMpp)) / B
+    timedist.dist = (math.atan2(p, sqrtBotBotMpp) -
+                     math.atan2(p, sqrtTopTopMpp)) / B
     timedist.time = (sqrtTopTopMpp - sqrtBotBotMpp) / B
-    if timedist.distRadian < 0 \
+    if timedist.dist < 0 \
             or timedist.time < 0 \
-            or math.isnan(timedist.distRadian) \
+            or math.isnan(timedist.dist) \
             or math.isnan(timedist.time):
-        raise SlownessModelError("timedist.time or .distRadian < 0 or Nan")
+        raise SlownessModelError("timedist.time or .dist < 0 or Nan")
     return timedist
 
 

@@ -935,7 +935,7 @@ class SeismicPhase(object):
             if tempTimeDist:
                 pathList.append(tempTimeDist)
                 for ttd in tempTimeDist:
-                    if ttd.distRadian < 0:
+                    if ttd.dist < 0:
                         raise RuntimeError("Path is backtracking, "
                                            "this is impossible.")
             # Special case for head and diffracted waves:
@@ -1006,12 +1006,12 @@ class SeismicPhase(object):
             # works in most cases, but may not for head/diffracted waves that
             # undergo a phase change, if that type of phase can even exist.
             out.append(TimeDist(td.p, td.time + j * refractTime / numFound,
-                                td.distRadian + j * refractDist / numFound,
+                                td.dist + j * refractDist / numFound,
                                 td.depth))
             if td.depth == headDepth:
                 j += 1
                 out.append(TimeDist(td.p, td.time + j * refractTime / numFound,
-                                    td.distRadian + j * refractDist / numFound,
+                                    td.dist + j * refractDist / numFound,
                                     td.depth))
         return out
 
