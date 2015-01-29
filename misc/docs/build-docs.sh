@@ -22,9 +22,11 @@ TGZ=$HOME/.backup/update-docs.tgz
 GITDIR=$BASEDIR/src/obspy
 PIDFILE=$BASEDIR/update-docs.pid
 DOCSNAME=obspy-${GITTARGET}-documentation
-DOCSET="$DOCSBASEDIR/docsets/ObsPy ${GITTARGET}.docset"
 DOCSBASEDIR=$HOME/htdocs/docs
 DOCSDIR=$DOCSBASEDIR/$DOCSNAME
+DOCSETDIR=$HOME/htdocs/docsets
+DOCSETNAME="ObsPy ${GITTARGET}.docset"
+DOCSET=$DOCSETDIR/$DOCSETNAME
 
 # clean directory
 rm -rf $BASEDIR
@@ -85,7 +87,7 @@ make pep8
 # - before latexpdf (otherwise .hires.png images are not built)
 # - after latexpdf (so that the tutorial pdf is included as downloadable file in html docs)
 make html
-make docset_after_html
+make docset_after_html DOCSETVERSION="$GITTARGET"
 make latexpdf-png-images
 make html
 make linkcheck
@@ -105,6 +107,15 @@ tar -czf ${DOCSNAME}.tgz ${DOCSDIR}
 rm -rf "${DOCSET}"
 cd $GITDIR/misc/docs/build/
 cp -a *.docset "${DOCSET}"
+if [ "$GITFORK" == "obspy" ] && [ "$GITTARGET" == "master" ]
+then
+    cd $DOCSETDIR
+    rm -f obspy-master.tgz
+    tar --exclude='.DS_Store' -cvzf obspy-master.tgz "$DOCSETNAME"
+    OBSPY_VERSION=`$BASEDIR/bin/python -c 'import obspy; print obspy.__version__'`
+    sed "s#<version>.*</version>#<version>${OBSPY_VERSION}</version>#" --in-place obspy-master.xml
+fi
+
 
 # report
 $BASEDIR/bin/obspy-runtests -x seishub -n sphinx -r --all
