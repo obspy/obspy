@@ -917,7 +917,7 @@ class ClientDownloadHelper(object):
                         if duration < expected_min_duration:
                             self.logger.info(
                                 "File '%s' has only %.2f seconds of data. "
-                                "%.2f ar required. File will be deleted." %
+                                "%.2f are required. File will be deleted." %
                                 (interval.filename, duration,
                                  expected_min_duration))
                             utils.safe_delete(interval.filename)
@@ -1132,6 +1132,6 @@ class ClientDownloadHelper(object):
                     latitude=station.latitude,
                     longitude=station.longitude,
                     channels=channels)
-        self.logger.info("Client '%s' - Found %i station (%i channels)." % (
+        self.logger.info("Client '%s' - Found %i stations (%i channels)." % (
             self.client_name, len(self.stations),
             sum([len(_i.channels) for _i in self.stations.values()])))
