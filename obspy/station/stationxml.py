@@ -64,7 +64,9 @@ def is_StationXML(path_or_file_object):
         root = xmldoc.getroot()
         if root.tag != "{http://www.fdsn.org/xml/station/1}FDSNStationXML":
             return False
-        if root.attrib["schemaVersion"] != SCHEMA_VERSION:
+        # Convert schema number to a float to have positive comparisons
+        # between, e.g "1" and "1.0".
+        if float(root.attrib["schemaVersion"]) != float(SCHEMA_VERSION):
             warnings.warn("The StationXML file has version %s, ObsPy can "
                           "deal with version %s. Proceed with caution." % (
                               root.attrib["schemaVersion"], SCHEMA_VERSION))
