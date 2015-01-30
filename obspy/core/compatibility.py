@@ -5,6 +5,7 @@ Py3k compatibility module
 from future.utils import PY2
 
 import inspect
+import io
 import numpy as np
 import sys
 
@@ -38,6 +39,46 @@ if PY2:
 else:
     def frombuffer(data, dtype):
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
+
+
+def is_text_buffer(obj):
+    """
+    Helper function determining if the passed object is an object that can
+    read and write text or not.
+
+    :param obj: The object to be tested.
+    :return: True/False
+    """
+    # Default open()'ed files and StringIO don't inherit from any of the io
+    # classes thus we only test the methods of the objects which in Python 2
+    # should be safe enough.
+    if PY2:
+        if hasattr(obj, "read") and hasattr(obj, "write") \
+                and hasattr(obj, "seek") and hasattr(obj, "tell"):
+            return True
+        return False
+
+    return isinstance(obj, io.TextIOBase)
+
+
+def is_bytes_buffer(obj):
+    """
+    Helper function determining if the passed object is an object that can
+    read and write bytes or not.
+
+    :param obj: The object to be tested.
+    :return: True/False
+    """
+    # Default open()'ed files and StringIO don't inherit from any of the io
+    # classes thus we only test the methods of the objects which in Python 2
+    # should be safe enough.
+    if PY2:
+        if hasattr(obj, "read") and hasattr(obj, "write") \
+                and hasattr(obj, "seek") and hasattr(obj, "tell"):
+            return True
+        return False
+
+    return isinstance(obj, io.BufferedIOBase)
 
 
 def round_away(number):
