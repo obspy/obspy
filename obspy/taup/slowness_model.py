@@ -980,7 +980,7 @@ class SlownessModel(object):
                                     ((splitTD['time'] - prevTD['time'])
                                      * ((currTD['dist']
                                         - prevTD['dist']) /
-                                        np.array(splitTD['dist'] -
+                                        (splitTD['dist'] -
                                         prevTD['dist'])) + prevTD['time']))
                         if abs(diff) > self.maxInterpError:
                             p1 = (prevSLayer['topP'] + prevSLayer['botP']) / 2

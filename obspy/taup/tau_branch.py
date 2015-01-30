@@ -112,8 +112,8 @@ class TauBranch(object):
                 or botSLayer['botDepth'] != self.botDepth:
             raise TauModelError(
                 "TauBranch depths not compatible with slowness sampling.")
-        td = np.zeros(1, dtype=TimeDist)
-        td['p'] = ray_param
+        new_dist = 0.0
+        new_time = 0.0
         if topSLayer['botP'] >= ray_param and topSLayer['topP'] >= ray_param:
             for i in range(botLayerNum + 1):
                 if sMod.getSlownessLayer(i, self.isPWave)['botP'] < ray_param:
@@ -121,12 +121,12 @@ class TauBranch(object):
                     break
                 else:
                     temptd = sMod.layerTimeDist(ray_param, i, self.isPWave)
-                    td['dist'] += temptd['dist']
-                    td['time'] += temptd['time']
+                    new_dist += temptd['dist']
+                    new_time += temptd['time']
         self.shiftBranch(index)
-        self.dist[index] = td['dist']
-        self.time[index] = td['time']
-        self.tau[index] = td['time'] - ray_param * td['dist']
+        self.dist[index] = new_dist
+        self.time[index] = new_time
+        self.tau[index] = new_time - ray_param * new_dist
 
     def shiftBranch(self, index):
         new_size = len(self.dist) + 1
