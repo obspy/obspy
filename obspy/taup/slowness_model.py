@@ -1083,31 +1083,31 @@ class SlownessModel(object):
         # occurs if the ray with the given spherical ray parameter cannot
         # propagate within this layer, or if the ray turns within this layer
         # but not at the bottom.
-        timeDist = np.zeros(1, dtype=TimeDist)
-        timeDist['p'] = sphericalRayParam
+        layerNum = np.atleast_1d(layerNum)
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
-        topRadius = self.radiusOfEarth - sphericalLayer['topDepth']
-        botRadius = self.radiusOfEarth - sphericalLayer['botDepth']
+
         # First make sure that a ray with this ray param can propagate
         # within this layer and doesn't turn in the middle of the layer. If
         # not, raise error.
-        if sphericalRayParam > max(sphericalLayer['topP'],
-                                   sphericalLayer['botP']):
+        if sphericalRayParam > max(np.max(sphericalLayer['topP']),
+                                   np.max(sphericalLayer['botP'])):
             raise SlownessModelError("Ray cannot propagate within this layer, "
                                      "given ray param too large.")
         if sphericalRayParam < 0:
             raise SlownessModelError("Ray parameter must not be negative!")
-        if sphericalRayParam > min(sphericalLayer['topP'],
-                                   sphericalLayer['botP']):
+        if sphericalRayParam > min(np.min(sphericalLayer['topP']),
+                                   np.min(sphericalLayer['botP'])):
             raise SlownessModelError("Ray turns in the middle of this layer! "
-                                     "layerNum = "+str(layerNum))
+                                     "layerNum = " + str(layerNum))
+
+        timeDist = np.zeros_like(layerNum, dtype=TimeDist)
+        timeDist['p'] = sphericalRayParam
+
         # Check to see if this layer has zero thickness, if so then it is
         # from a critically reflected slowness sample. That means just
         # return 0 for time and distance increments.
-        if sphericalLayer['topDepth'] == sphericalLayer['botDepth']:
-            timeDist['time'] = 0
-            timeDist['dist'] = 0
-            return timeDist
+        leftover = sphericalLayer['topDepth'] != sphericalLayer['botDepth']
+
         # Check to see if this layer contains the centre of the Earth. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
         # range and time increments using a constant velocity layer (sphere).
@@ -1121,20 +1121,16 @@ class SlownessModel(object):
         # increment for a ray of zero ray parameter passing half way through a
         # sphere of constant velocity is just the spherical slowness at the top
         # of the sphere. An amazingly simple result!
-        if sphericalRayParam == 0 \
-                and sphericalLayer['botDepth'] == self.radiusOfEarth:
-            if layerNum != self.getNumLayers(isPWave) - 1:
-                raise SlownessModelError("There are layers deeper than the "
-                                         "centre of the Earth!")
-            timeDist['dist'] = math.pi / 2
-            timeDist['time'] = sphericalLayer['topP']
-            if timeDist['dist'] < 0 \
-                    or timeDist['time'] < 0 \
-                    or math.isnan(timeDist['time']) \
-                    or math.isnan(timeDist['dist']):
-                raise SlownessModelError(
-                    "Centre of Earth timeDist < 0 or NaN.")
-            return timeDist
+        centre_layer = np.logical_and(leftover, np.logical_and(
+            sphericalRayParam == 0,
+            sphericalLayer['botDepth'] == self.radiusOfEarth))
+        leftover &= ~centre_layer
+        if np.any(layerNum[centre_layer] != self.getNumLayers(isPWave) - 1):
+            raise SlownessModelError("There are layers deeper than the "
+                                     "centre of the Earth!")
+        timeDist['dist'][centre_layer] = math.pi / 2
+        timeDist['time'][centre_layer] = sphericalLayer['topP'][centre_layer]
+
         # Now we check to see if this is a constant velocity layer and if so
         # than we can do a simple triangle calculation to get the range and
         # time increments. To get the time increment we first calculate the
@@ -1143,45 +1139,54 @@ class SlownessModel(object):
         # spherical Snell's Law. The time increment is just the path length
         # divided by the velocity. To get the distance we first find the
         # angular distance traveled, using the law of sines.
-        if abs(topRadius / sphericalLayer['topP'] -
-               botRadius / sphericalLayer['botP']) < self.slowness_tolerance:
-            vel = botRadius / sphericalLayer['botP']  # temp variable
-            # In cases of a ray turning at the bottom of the layer numerical
-            # round-off can cause botTerm to be very small (1e-9) but
-            # negative which causes the sqrt to raise an error. We check for
-            # values that are within the numerical chatter of zero and just
-            # set them to zero.
-            topTerm = topRadius * topRadius - sphericalRayParam * \
-                sphericalRayParam * vel * vel
-            if abs(topTerm) < self.slowness_tolerance:
-                topTerm = 0
-            if sphericalRayParam == sphericalLayer['botP']:
-                # In this case the ray turns at the bottom of this layer so
-                # sphericalRayParam*vel == botRadius, and botTerm should be
-                # zero. We check for this case specifically because
-                # numerical chatter can cause small round-off errors that
-                # lead to botTerm being negative, causing a sqrt error.
-                botTerm = 0
-            else:
-                botTerm = botRadius * botRadius - sphericalRayParam * \
-                    sphericalRayParam * vel * vel
+        topRadius = self.radiusOfEarth - sphericalLayer['topDepth']
+        botRadius = self.radiusOfEarth - sphericalLayer['botDepth']
+        vel = botRadius / sphericalLayer['botP']
+        constant_velocity = np.logical_and(
+            leftover,
+            np.abs(topRadius / sphericalLayer['topP'] -
+                   vel) < self.slowness_tolerance)
+        leftover &= ~constant_velocity
+        topRadius = topRadius[constant_velocity]
+        botRadius = botRadius[constant_velocity]
+        vel = vel[constant_velocity]
 
-            # Use b for temp storage of the length of the ray path.
-            b = math.sqrt(topTerm) - math.sqrt(botTerm)
-            timeDist['time'] = b / vel
-            timeDist['dist'] = math.asin(b * sphericalRayParam * vel /
-                                         (topRadius * botRadius))
-            if timeDist['dist'] < 0 \
-                    or timeDist['time'] < 0 \
-                    or math.isnan(timeDist['time']) \
-                    or math.isnan(timeDist['dist']):
-                raise SlownessModelError(
-                    "Constant velocity layer timeDist < 0 or NaN.")
-            return timeDist
+        # In cases of a ray turning at the bottom of the layer numerical
+        # round-off can cause botTerm to be very small (1e-9) but
+        # negative which causes the sqrt to raise an error. We check for
+        # values that are within the numerical chatter of zero and just
+        # set them to zero.
+        topTerm = topRadius**2 - (sphericalRayParam * vel)**2
+        topTerm[np.abs(topTerm) < self.slowness_tolerance] = 0
+
+        # In this case the ray turns at the bottom of this layer so
+        # sphericalRayParam*vel == botRadius, and botTerm should be
+        # zero. We check for this case specifically because
+        # numerical chatter can cause small round-off errors that
+        # lead to botTerm being negative, causing a sqrt error.
+        botTerm = np.zeros_like(topTerm)
+        mask = sphericalRayParam != sphericalLayer['botP'][constant_velocity]
+        botTerm[mask] = botRadius[mask]**2 - (sphericalRayParam * vel[mask])**2
+
+        b = np.sqrt(topTerm) - np.sqrt(botTerm)
+        timeDist['time'][constant_velocity] = b / vel
+        timeDist['dist'][constant_velocity] = np.arcsin(
+            b * sphericalRayParam * vel / (topRadius * botRadius))
+
         # If the layer is not a constant velocity layer or the centre of the
         #  Earth and p is not zero we have to do it the hard way:
-        return bullenRadialSlowness(sphericalLayer, sphericalRayParam,
-                                    self.radiusOfEarth)
+        timeDist[leftover] = bullenRadialSlowness(sphericalLayer[leftover],
+                                                  sphericalRayParam,
+                                                  self.radiusOfEarth)
+
+        if np.any(timeDist['dist'] < 0) \
+                or np.any(timeDist['time'] < 0) \
+                or np.any(np.isnan(timeDist['time'])) \
+                or np.any(np.isnan(timeDist['dist'])):
+            raise SlownessModelError(
+                "layertimeDist < 0 or NaN.")
+
+        return timeDist
 
     def fixCriticalPoints(self):
         """
