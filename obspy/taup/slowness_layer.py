@@ -28,30 +28,31 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     layer. Note that this gives 1/2 of the true range and time
     increments since there will be both an upgoing and a downgoing path.
     Here we use the Mohorovicic or Bullen law: p=A*r^B"""
-    timedist = np.zeros(1, dtype=TimeDist)
+    layer = np.atleast_1d(layer)
+    timedist = np.zeros_like(layer, dtype=TimeDist)
     timedist['p'] = p
-    if layer['botDepth'] == layer['topDepth']:
-        timedist['dist'] = 0
-        timedist['time'] = 0
-        return timedist
 
     # Only do Bullen radial slowness if the layer is not too thin (e.g.
     # 1 micron). In that case also just return 0.
-    if layer['botDepth'] - layer['topDepth'] < 0.000000001:
-        return timedist
+    mask = layer['botDepth'] - layer['topDepth'] >= 0.000000001
+    layer = layer[mask]
 
-    B = math.log(layer['topP'] / layer['botP']) / math.log(
-        (radiusOfEarth - layer['topDepth']) /
-        (radiusOfEarth - layer['botDepth']))
-    sqrtTopTopMpp = math.sqrt(layer['topP'] * layer['topP'] - p * p)
-    sqrtBotBotMpp = math.sqrt(layer['botP'] * layer['botP'] - p * p)
-    timedist['dist'] = (math.atan2(p, sqrtBotBotMpp) -
-                        math.atan2(p, sqrtTopTopMpp)) / B
-    timedist['time'] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
-    if timedist['dist'] < 0 \
-            or timedist['time'] < 0 \
-            or math.isnan(timedist['dist']) \
-            or math.isnan(timedist['time']):
+    B = (
+        np.log(layer['topP'] / layer['botP']) /
+        np.log(
+            (radiusOfEarth - layer['topDepth']) /
+            (radiusOfEarth - layer['botDepth'])
+        )
+    )
+    sqrtTopTopMpp = np.sqrt(layer['topP'] * layer['topP'] - p * p)
+    sqrtBotBotMpp = np.sqrt(layer['botP'] * layer['botP'] - p * p)
+    timedist['dist'][mask] = (np.arctan2(p, sqrtBotBotMpp) -
+                              np.arctan2(p, sqrtTopTopMpp)) / B
+    timedist['time'][mask] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
+    if np.any(timedist['dist'] < 0) \
+            or np.any(timedist['time'] < 0) \
+            or np.any(np.isnan(timedist['dist'])) \
+            or np.any(np.isnan(timedist['time'])):
         raise SlownessModelError("timedist.time or .dist < 0 or Nan")
     return timedist
 
