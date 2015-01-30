@@ -110,6 +110,9 @@ cp -a *.docset "${DOCSET}"
 if [ "$GITFORK" == "obspy" ] && [ "$GITTARGET" == "master" ]
 then
     cd $DOCSETDIR
+    # Add some lines to the CSS to make it more suitable for viewing in
+    # Dash/Zeal.
+    cat $GITDIR/misc/docs/docset_css_fixes.css >> "$DOCSETNAME/Contents/Resources/Documents/_static/css/custom.css"
     rm -f obspy-master.tgz
     tar --exclude='.DS_Store' -cvzf obspy-master.tgz "$DOCSETNAME"
     OBSPY_VERSION=`$BASEDIR/bin/python -c 'import obspy; print obspy.__version__'`

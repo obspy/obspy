@@ -1,0 +1,19 @@
+
+/* Leave newline at the top! */
+/* CSS changes to make the doc more readable inside Dash/Zeal */
+/* Will only be applied to the docset docs, not the normal ones */
+footer {
+    display: none;
+}
+
+nav {
+    display: none;
+}
+
+body {
+    padding-top: 0px;
+}
+
+.breadcrumb {
+    display: none;
+}
