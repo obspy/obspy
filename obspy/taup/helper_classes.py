@@ -6,6 +6,7 @@ Holds various helper classes to keep the file number manageable.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import numpy as np
 
@@ -18,38 +19,16 @@ class TauModelError(Exception):
     pass
 
 
-class TimeDist:
-    """
-    Holds the ray parameter, time and distance increments, and optionally a
-    depth, for a ray passing through some layer.
-    Note it is 'cloneable' in Java, that just means you're allowed to make a
-    deep copy.
-    """
-    def __init__(self, p=0, time=0, dist=0, depth=0):
-        # FIXME: Remove try/except once code correctly uses NumPy.
-
-        # Careful: p must remain first element because of how class is called
-        # e.g. in SlownessModel.approxDistance!
-        self.p = p
-        if isinstance(depth, np.ndarray):
-            try:
-                self.depth = depth[0]
-            except IndexError:
-                self.depth = depth[()]
-        else:
-            self.depth = depth
-        if isinstance(time, np.ndarray):
-            try:
-                self.time = time[0]
-            except IndexError:
-                self.time = time[()]
-        else:
-                self.time = time
-        self.dist = dist
-
-    def add(self, td):
-        self.time += td.time
-        self.dist += td.dist
+"""
+Holds the ray parameter, time and distance increments, and optionally a
+depth, for a ray passing through some layer.
+"""
+TimeDist = np.dtype([
+    (native_str('p'), np.float_),
+    (native_str('time'), np.float_),
+    (native_str('dist'), np.float_),
+    (native_str('depth'), np.float_),
+])
 
 
 class CriticalDepth:

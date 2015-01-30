@@ -932,7 +932,7 @@ class SlownessModel(object):
                                                  currWaveType)
                     isCurrOK = True
                     # Check for jump of too great distance
-                    if (abs(prevTD.dist - currTD.dist) >
+                    if (abs(prevTD['dist'] - currTD['dist']) >
                             self.maxRangeInterval and
                             abs(sLayer['topP'] - sLayer['botP']) >
                             2 * self.minDeltaP):
@@ -964,22 +964,24 @@ class SlownessModel(object):
                         justLayer = bullenRadialSlowness(splitLayer,
                                                          splitRayParam,
                                                          self.radiusOfEarth)
-                        splitTD = TimeDist(
-                            splitRayParam, allButLayer.time +
-                            2 * justLayer.time,
-                            allButLayer.dist + 2 * justLayer.dist)
+                        splitTD = np.array([(
+                            splitRayParam,
+                            allButLayer['time'] + 2 * justLayer['time'],
+                            allButLayer['dist'] + 2 * justLayer['dist'],
+                            0)],
+                            dtype=TimeDist)
                         # Python standard division is not IEEE compliant,
                         # as “The IEEE 754 standard specifies that every
                         # floating point arithmetic operation, including
                         # division by zero, has a well-defined result”.
                         # Use numpy's division instead by using np.array:
                         with np.errstate(divide='ignore', invalid='ignore'):
-                            diff = (currTD.time -
-                                    ((splitTD.time - prevTD.time)
-                                     * ((currTD.dist
-                                        - prevTD.dist) /
-                                        np.array(splitTD.dist -
-                                        prevTD.dist)) + prevTD.time))
+                            diff = (currTD['time'] -
+                                    ((splitTD['time'] - prevTD['time'])
+                                     * ((currTD['dist']
+                                        - prevTD['dist']) /
+                                        np.array(splitTD['dist'] -
+                                        prevTD['dist'])) + prevTD['time']))
                         if abs(diff) > self.maxInterpError:
                             p1 = (prevSLayer['topP'] + prevSLayer['botP']) / 2
                             p2 = (sLayer['topP'] + sLayer['botP']) / 2
@@ -1057,14 +1059,17 @@ class SlownessModel(object):
                 "than the given slownessTurnLayer!")
         if p < 0:
             raise SlownessModelError("Ray parameter must not be negative!")
-        td = TimeDist(p)
+        td = np.zeros(1, dtype=TimeDist)
+        td['p'] = p
         for layerNum in range(0, slownessTurnLayer + 1):
-            td.add(self.layerTimeDist(p, layerNum, isPWave))
+            temptd = self.layerTimeDist(p, layerNum, isPWave)
+            td['time'] += temptd['time']
+            td['dist'] += temptd['dist']
         # Return 2* distance and time because there is a downgoing as well
         # as an upgoing leg, which are equal since this is for a surface
         # source.
-        td.dist *= 2
-        td.time *= 2
+        td['dist'] *= 2
+        td['time'] *= 2
         return td
 
     def layerTimeDist(self, sphericalRayParam, layerNum, isPWave):
@@ -1078,7 +1083,8 @@ class SlownessModel(object):
         # occurs if the ray with the given spherical ray parameter cannot
         # propagate within this layer, or if the ray turns within this layer
         # but not at the bottom.
-        timeDist = TimeDist(sphericalRayParam)
+        timeDist = np.zeros(1, dtype=TimeDist)
+        timeDist['p'] = sphericalRayParam
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
         topRadius = self.radiusOfEarth - sphericalLayer['topDepth']
         botRadius = self.radiusOfEarth - sphericalLayer['botDepth']
@@ -1099,8 +1105,8 @@ class SlownessModel(object):
         # from a critically reflected slowness sample. That means just
         # return 0 for time and distance increments.
         if sphericalLayer['topDepth'] == sphericalLayer['botDepth']:
-            timeDist.time = 0
-            timeDist.dist = 0
+            timeDist['time'] = 0
+            timeDist['dist'] = 0
             return timeDist
         # Check to see if this layer contains the centre of the Earth. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
@@ -1120,12 +1126,12 @@ class SlownessModel(object):
             if layerNum != self.getNumLayers(isPWave) - 1:
                 raise SlownessModelError("There are layers deeper than the "
                                          "centre of the Earth!")
-            timeDist.dist = math.pi / 2
-            timeDist.time = sphericalLayer['topP']
-            if timeDist.dist < 0 \
-                    or timeDist.time < 0 \
-                    or math.isnan(timeDist.time) \
-                    or math.isnan(timeDist.dist):
+            timeDist['dist'] = math.pi / 2
+            timeDist['time'] = sphericalLayer['topP']
+            if timeDist['dist'] < 0 \
+                    or timeDist['time'] < 0 \
+                    or math.isnan(timeDist['time']) \
+                    or math.isnan(timeDist['dist']):
                 raise SlownessModelError(
                     "Centre of Earth timeDist < 0 or NaN.")
             return timeDist
@@ -1162,13 +1168,13 @@ class SlownessModel(object):
 
             # Use b for temp storage of the length of the ray path.
             b = math.sqrt(topTerm) - math.sqrt(botTerm)
-            timeDist.time = b / vel
-            timeDist.dist = math.asin(b * sphericalRayParam * vel /
-                                      (topRadius * botRadius))
-            if timeDist.dist < 0 \
-                    or timeDist.time < 0 \
-                    or math.isnan(timeDist.time) \
-                    or math.isnan(timeDist.dist):
+            timeDist['time'] = b / vel
+            timeDist['dist'] = math.asin(b * sphericalRayParam * vel /
+                                         (topRadius * botRadius))
+            if timeDist['dist'] < 0 \
+                    or timeDist['time'] < 0 \
+                    or math.isnan(timeDist['time']) \
+                    or math.isnan(timeDist['dist']):
                 raise SlownessModelError(
                     "Constant velocity layer timeDist < 0 or NaN.")
             return timeDist

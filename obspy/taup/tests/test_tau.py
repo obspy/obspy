@@ -169,9 +169,9 @@ class TauPyModelTestCase(unittest.TestCase):
 
         actual = np.empty((len(p_arr.pierce), 3))
         for i, pierce in enumerate(p_arr.pierce):
-            actual[i, 0] = round(np.degrees(pierce.dist), 2)
-            actual[i, 1] = round(pierce.depth, 1)
-            actual[i, 2] = round(pierce.time, 1)
+            actual[i, 0] = round(np.degrees(pierce['dist']), 2)
+            actual[i, 1] = round(pierce['depth'], 1)
+            actual[i, 2] = round(pierce['time'], 1)
 
         np.testing.assert_equal(expected, actual)
 
@@ -268,9 +268,9 @@ class TauPyModelTestCase(unittest.TestCase):
         for arr in arrivals:
             for p in arr.pierce:
                 actual[arr.name].append((
-                    round(np.degrees(p.dist), 2),
-                    round(p.depth, 1),
-                    round(p.time, 1)))
+                    round(np.degrees(p['dist']), 2),
+                    round(p['depth'], 1),
+                    round(p['time'], 1)))
 
         self.assertEqual(sorted(actual.keys()), sorted(expected.keys()))
 
@@ -303,8 +303,8 @@ class TauPyModelTestCase(unittest.TestCase):
 
         interpolated_actual = np.interp(
             sample_points,
-            [round(np.degrees(_i.dist), 2) for _i in arrivals[0].path],
-            [np.round(6371 - _i.depth, 2) for _i in arrivals[0].path])
+            [np.round(np.degrees(_i[0]['dist']), 2) for _i in arrivals[0].path],
+            [np.round(6371 - _i[0]['depth'], 2) for _i in arrivals[0].path])
 
         np.testing.assert_allclose(interpolated_actual,
                                    interpolated_expected, rtol=1E-4)
@@ -333,8 +333,8 @@ class TauPyModelTestCase(unittest.TestCase):
 
         interpolated_actual = np.interp(
             sample_points,
-            [round(np.degrees(_i.dist), 2) for _i in arrivals[0].path],
-            [np.round(6371 - _i.depth, 2) for _i in arrivals[0].path])
+            [np.round(np.degrees(_i[0]['dist']), 2) for _i in arrivals[0].path],
+            [np.round(6371 - _i[0]['depth'], 2) for _i in arrivals[0].path])
 
         np.testing.assert_allclose(interpolated_actual,
                                    interpolated_expected, rtol=1E-4)
