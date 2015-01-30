@@ -10,6 +10,7 @@ from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError
 import copy
+import io
 import numpy as np
 import os
 import unittest
@@ -477,6 +478,38 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
         self.assertEqual(tr.stats.sac.kstnm, 'CDV     ')
         self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+
+    def test_read_via_obspy_from_bytes_io(self):
+        """
+        Read sac files from a BytesIO object via ObsPy.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+
+            # Attempt to read from it.
+            tr = read(buf)[0]
+
+        # Open file normally and make sure the results are identical.
+        tr2 = read(self.file)[0]
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_write_via_obspy_to_bytes_io(self):
+        """
+        Read sac files from a BytesIO object via ObsPy.
+        """
+        tr = read(self.file)[0]
+        with io.BytesIO() as buf:
+            tr.write(buf, format="sac")
+            buf.seek(0, 0)
+            # Attempt to read from it.
+            tr2 = read(buf)[0]
+
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
 
 
 def suite():
