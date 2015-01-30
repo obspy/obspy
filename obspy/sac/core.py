@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import Trace, Stream
+from obspy.core.compatibility import is_bytes_buffer
 from obspy.sac.sacio import SacIO, _isText
 import os
 import struct
@@ -23,7 +24,7 @@ def isSAC(filename):
     """
     Checks whether a file is a SAC file or not.
 
-    :type filename: str
+    :type filename: str or file-like object
     :param filename: SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a SAC file.
@@ -32,58 +33,77 @@ def isSAC(filename):
 
     >>> isSAC('/path/to/test.sac')  #doctest: +SKIP
     """
+    if is_bytes_buffer(filename):
+        return _isSAC(filename)
+    else:
+        with open(filename, "rb") as fh:
+            return _isSAC(fh)
+
+
+def _isSAC(buf):
+    """
+    Checks whether a buffer contains a SAC file or not.
+
+    :type filename: file-like object or oben file.
+    :param filename: SAC file to be checked.
+    :rtype: bool
+    :return: ``True`` if a SAC file.
+    """
+    starting_pos = buf.tell()
     try:
-        with open(filename, 'rb') as f:
-            # read delta (first header float)
-            delta_bin = f.read(4)
-            delta = struct.unpack(native_str('<f'), delta_bin)[0]
-            # read nvhdr (70 header floats, 6 position in header integers)
-            f.seek(4 * 70 + 4 * 6)
-            nvhdr_bin = f.read(4)
-            nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
-            # read leven (70 header floats, 35 header integers, 0 position in
-            # header bool)
-            f.seek(4 * 70 + 4 * 35)
-            leven_bin = f.read(4)
-            leven = struct.unpack(native_str('<i'), leven_bin)[0]
-            # read lpspol (70 header floats, 35 header integers, 1 position in
-            # header bool)
-            f.seek(4 * 70 + 4 * 35 + 4 * 1)
-            lpspol_bin = f.read(4)
-            lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
-            # read lovrok (70 header floats, 35 header integers, 2 position in
-            # header bool)
-            f.seek(4 * 70 + 4 * 35 + 4 * 2)
-            lovrok_bin = f.read(4)
-            lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
-            # read lcalda (70 header floats, 35 header integers, 3 position in
-            # header bool)
-            f.seek(4 * 70 + 4 * 35 + 4 * 3)
-            lcalda_bin = f.read(4)
-            lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
-            # check if file is big-endian
-            if nvhdr < 0 or nvhdr > 20:
-                nvhdr = struct.unpack(native_str('>i'), nvhdr_bin)[0]
-                delta = struct.unpack(native_str('>f'), delta_bin)[0]
-                leven = struct.unpack(native_str('>i'), leven_bin)[0]
-                lpspol = struct.unpack(native_str('>i'), lpspol_bin)[0]
-                lovrok = struct.unpack(native_str('>i'), lovrok_bin)[0]
-                lcalda = struct.unpack(native_str('>i'), lcalda_bin)[0]
-            # check again nvhdr
-            if nvhdr < 1 or nvhdr > 20:
-                return False
-            if delta <= 0:
-                return False
-            if leven != 0 and leven != 1 and leven != -12345:
-                return False
-            if lpspol != 0 and lpspol != 1 and lpspol != -12345:
-                return False
-            if lovrok != 0 and lovrok != 1 and lovrok != -12345:
-                return False
-            if lcalda != 0 and lcalda != 1 and lcalda != -12345:
-                return False
+        # read delta (first header float)
+        delta_bin = buf.read(4)
+        delta = struct.unpack(native_str('<f'), delta_bin)[0]
+        # read nvhdr (70 header floats, 6 position in header integers)
+        buf.seek(4 * 70 + 4 * 6)
+        nvhdr_bin = buf.read(4)
+        nvhdr = struct.unpack(native_str('<i'), nvhdr_bin)[0]
+        # read leven (70 header floats, 35 header integers, 0 position in
+        # header bool)
+        buf.seek(4 * 70 + 4 * 35)
+        leven_bin = buf.read(4)
+        leven = struct.unpack(native_str('<i'), leven_bin)[0]
+        # read lpspol (70 header floats, 35 header integers, 1 position in
+        # header bool)
+        buf.seek(4 * 70 + 4 * 35 + 4 * 1)
+        lpspol_bin = buf.read(4)
+        lpspol = struct.unpack(native_str('<i'), lpspol_bin)[0]
+        # read lovrok (70 header floats, 35 header integers, 2 position in
+        # header bool)
+        buf.seek(4 * 70 + 4 * 35 + 4 * 2)
+        lovrok_bin = buf.read(4)
+        lovrok = struct.unpack(native_str('<i'), lovrok_bin)[0]
+        # read lcalda (70 header floats, 35 header integers, 3 position in
+        # header bool)
+        buf.seek(4 * 70 + 4 * 35 + 4 * 3)
+        lcalda_bin = buf.read(4)
+        lcalda = struct.unpack(native_str('<i'), lcalda_bin)[0]
+        # check if file is big-endian
+        if nvhdr < 0 or nvhdr > 20:
+            nvhdr = struct.unpack(native_str('>i'), nvhdr_bin)[0]
+            delta = struct.unpack(native_str('>f'), delta_bin)[0]
+            leven = struct.unpack(native_str('>i'), leven_bin)[0]
+            lpspol = struct.unpack(native_str('>i'), lpspol_bin)[0]
+            lovrok = struct.unpack(native_str('>i'), lovrok_bin)[0]
+            lcalda = struct.unpack(native_str('>i'), lcalda_bin)[0]
+        # check again nvhdr
+        if nvhdr < 1 or nvhdr > 20:
+            return False
+        if delta <= 0:
+            return False
+        if leven != 0 and leven != 1 and leven != -12345:
+            return False
+        if lpspol != 0 and lpspol != 1 and lpspol != -12345:
+            return False
+        if lovrok != 0 and lovrok != 1 and lovrok != -12345:
+            return False
+        if lcalda != 0 and lcalda != 1 and lcalda != -12345:
+            return False
     except:
         return False
+    finally:
+        # Reset buffer head position after reading.
+        buf.seek(starting_pos, 0)
     return True
 
 
