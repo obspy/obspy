@@ -352,14 +352,15 @@ class TauPyModelTestCase(unittest.TestCase):
             depths = list(map(float, line))
 
             while True:
-                time_line = fh.readline()
-                if not time_line:
+                line = fh.readline()
+                if not line:
                     break
-                time = list(map(float, time_line.strip().split()))
-                ray_param = list(map(float, fh.readline().strip().split()))
-                dist = time[0]
+                data = list(map(float, line.strip().split()))
+                dist = data[0]
+                time = data[1:-len(depths)]
+                ray_param = data[-len(depths):]
                 for _i in range(len(ray_param)):
-                    time[_i] = time[2 * _i + 1] * 60.0 + time[2 * _i + 2]
+                    time[_i] = time[2 * _i] * 60.0 + time[2 * _i + 1]
                     values.append({
                         "depth": depths[_i],
                         "dist": dist,
