@@ -1061,15 +1061,14 @@ class SlownessModel(object):
             raise SlownessModelError("Ray parameter must not be negative!")
         td = np.zeros(1, dtype=TimeDist)
         td['p'] = p
-        for layerNum in range(0, slownessTurnLayer + 1):
+        layerNum = np.arange(0, slownessTurnLayer + 1)
+        if len(layerNum):
             temptd = self.layerTimeDist(p, layerNum, isPWave)
-            td['time'] += temptd['time']
-            td['dist'] += temptd['dist']
-        # Return 2* distance and time because there is a downgoing as well
-        # as an upgoing leg, which are equal since this is for a surface
-        # source.
-        td['dist'] *= 2
-        td['time'] *= 2
+            # Return 2* distance and time because there is a downgoing as well
+            # as an upgoing leg, which are equal since this is for a surface
+            # source.
+            td['dist'] = 2 * np.sum(temptd['dist'])
+            td['time'] = 2 * np.sum(temptd['time'])
         return td
 
     def layerTimeDist(self, sphericalRayParam, layerNum, isPWave):

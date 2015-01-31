@@ -81,21 +81,24 @@ class TauBranch(object):
     def calcTimeDist(self, sMod, topLayerNum, botLayerNum, p):
         timeDist = np.zeros(1, dtype=TimeDist)
         timeDist['p'] = p
+
         if p <= self.maxRayParam:
-            layerNum = topLayerNum
+            layerNum = np.arange(topLayerNum, botLayerNum + 1)
             layer = sMod.getSlownessLayer(layerNum, self.isPWave)
-            while layerNum <= botLayerNum \
-                    and p <= layer['topP'] \
-                    and p <= layer['botP']:
+
+            mask = np.cumprod((p <= layer['topP']) & (p <= layer['botP']))
+            mask = mask.astype(np.bool_)
+            layer = layer[mask]
+            layerNum = layerNum[mask]
+            if len(layer):
                 temptd = sMod.layerTimeDist(p, layerNum, self.isPWave)
-                timeDist['dist'] += temptd['dist']
-                timeDist['time'] += temptd['time']
-                layerNum += 1
-                if layerNum <= botLayerNum:
-                    layer = sMod.getSlownessLayer(layerNum, self.isPWave)
-            if (layer['topP'] - p) * (p - layer['botP']) > 0:
-                raise SlownessModelError(
-                    "Ray turns in the middle of this layer!")
+                timeDist['dist'] = np.sum(temptd['dist'])
+                timeDist['time'] = np.sum(temptd['time'])
+
+                if (layer['topP'][-1] - p) * (p - layer['botP'][-1]) > 0:
+                    raise SlownessModelError(
+                        "Ray turns in the middle of this layer!")
+
         return timeDist
 
     def insert(self, ray_param, sMod, index):
@@ -112,17 +115,20 @@ class TauBranch(object):
                 or botSLayer['botDepth'] != self.botDepth:
             raise TauModelError(
                 "TauBranch depths not compatible with slowness sampling.")
+
         new_dist = 0.0
         new_time = 0.0
         if topSLayer['botP'] >= ray_param and topSLayer['topP'] >= ray_param:
-            for i in range(botLayerNum + 1):
-                if sMod.getSlownessLayer(i, self.isPWave)['botP'] < ray_param:
-                    # So we don't sum below the turning depth.
-                    break
-                else:
-                    temptd = sMod.layerTimeDist(ray_param, i, self.isPWave)
-                    new_dist += temptd['dist']
-                    new_time += temptd['time']
+            layerNum = np.arange(botLayerNum + 1)
+            layers = sMod.getSlownessLayer(layerNum, self.isPWave)
+            # So we don't sum below the turning depth.
+            mask = np.cumprod(layers['botP'] >= ray_param).astype(np.bool_)
+            layerNum = layerNum[mask]
+            if len(layerNum):
+                temptd = sMod.layerTimeDist(ray_param, layerNum, self.isPWave)
+                new_dist = np.sum(temptd['dist'])
+                new_time = np.sum(temptd['time'])
+
         self.shiftBranch(index)
         self.dist[index] = new_dist
         self.time[index] = new_time
@@ -283,6 +289,7 @@ class TauBranch(object):
         if ray_param > self.maxRayParam:
             return np.empty(0, dtype=TimeDist)
         assert ray_param >= 0
+
         try:
             topLayerNum = sMod.layerNumberBelow(self.topDepth, self.isPWave)
             botLayerNum = sMod.layerNumberAbove(self.botDepth, self.isPWave)
@@ -290,8 +297,10 @@ class TauBranch(object):
         except SlownessModelError:
             raise SlownessModelError("SlownessModel and TauModel are likely"
                                      "out of sync.")
+
         thePath = np.zeros(botLayerNum - topLayerNum + 1, dtype=TimeDist)
         pathIndex = 0
+
         # Check to make sure layers and branches are compatible.
         sLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
         if sLayer['topDepth'] != self.topDepth:
@@ -301,46 +310,63 @@ class TauBranch(object):
         if sLayer['botDepth'] != self.botDepth:
             raise SlownessModelError("Branch and slowness model are not in "
                                      "agreement.")
+
         # Downgoing branches:
         if downgoing:
-            sLayerNum = topLayerNum
+            sLayerNum = np.arange(topLayerNum, botLayerNum + 1)
             sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            while sLayer['botP'] >= ray_param and sLayerNum <= botLayerNum:
-                if sLayer['topDepth'] != sLayer['botDepth']:
-                    thePath[pathIndex] = sMod.layerTimeDist(ray_param,
-                                                            sLayerNum,
-                                                            self.isPWave)
-                    thePath[pathIndex]['depth'] = sLayer['botDepth']
-                    pathIndex += 1
-                sLayerNum += 1
-                if sLayerNum <= botLayerNum:
-                    sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            if (sLayerNum <= botLayerNum and
-                    sLayer['topDepth'] != sLayer['botDepth']):
-                turnDepth = bullenDepthFor(sLayer, ray_param,
-                                           sMod.radiusOfEarth)
-                turnSLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
-                                        ray_param, turnDepth)],
-                                      dtype=SlownessLayer)
-                thePath[pathIndex] = bullenRadialSlowness(
-                    turnSLayer,
+
+            mask = np.cumprod(sLayer['botP'] >= ray_param).astype(np.bool_)
+            mask &= sLayer['topDepth'] != sLayer['botDepth']
+            sLayerNum = sLayerNum[mask]
+            sLayer = sLayer[mask]
+
+            if len(sLayer):
+                pathIndexEnd = pathIndex + len(sLayer)
+                thePath[pathIndex:pathIndexEnd] = sMod.layerTimeDist(
                     ray_param,
-                    sMod.radiusOfEarth)
-                thePath[pathIndex]['depth'] = turnSLayer['botDepth']
-                pathIndex += 1
+                    sLayerNum,
+                    self.isPWave)
+                thePath[pathIndex:pathIndexEnd]['depth'] = sLayer['botDepth']
+                pathIndex = pathIndexEnd
+
+            # Apply Bullen laws on last element, if available.
+            if len(sLayerNum):
+                sLayerNum = sLayerNum[-1] + 1
+            else:
+                sLayerNum = topLayerNum
+            if sLayerNum <= botLayerNum:
+                sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+                if sLayer['topDepth'] != sLayer['botDepth']:
+                    turnDepth = bullenDepthFor(sLayer, ray_param,
+                                               sMod.radiusOfEarth)
+                    turnSLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
+                                            ray_param, turnDepth)],
+                                          dtype=SlownessLayer)
+                    thePath[pathIndex] = bullenRadialSlowness(
+                        turnSLayer,
+                        ray_param,
+                        sMod.radiusOfEarth)
+                    thePath[pathIndex]['depth'] = turnSLayer['botDepth']
+                    pathIndex += 1
+
         # Upgoing branches:
         else:
-            sLayerNum = botLayerNum
+            sLayerNum = np.arange(botLayerNum, topLayerNum - 1, -1)
             sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            while ((sLayer['topP'] <= ray_param or
-                    sLayer['topDepth'] == sLayer['botDepth']) and
-                   sLayerNum > topLayerNum):
-                sLayerNum -= 1
-                sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            if sLayer['botP'] < ray_param:
-                turnDepth = bullenDepthFor(sLayer, ray_param,
+
+            mask = np.logical_or(sLayer['topP'] <= ray_param,
+                                 sLayer['topDepth'] == sLayer['botDepth'])
+            mask = np.cumprod(mask).astype(np.bool_)
+            mask[-1] = False  # Always leave one element for Bullen.
+
+            # Apply Bullen laws on first available element, if possible.
+            first_unmasked = np.sum(mask)
+            sLayer2 = sLayer[first_unmasked]
+            if sLayer2['botP'] < ray_param:
+                turnDepth = bullenDepthFor(sLayer2, ray_param,
                                            sMod.radiusOfEarth)
-                turnSLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
+                turnSLayer = np.array([(sLayer2['topP'], sLayer2['topDepth'],
                                         ray_param, turnDepth)],
                                       dtype=SlownessLayer)
                 thePath[pathIndex] = bullenRadialSlowness(
@@ -349,18 +375,22 @@ class TauBranch(object):
                     sMod.radiusOfEarth)
                 thePath[pathIndex]['depth'] = turnSLayer['topDepth']
                 pathIndex += 1
-                sLayerNum -= 1
-                if sLayerNum >= topLayerNum:
-                    sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-            while sLayerNum >= topLayerNum:
-                if sLayer['topDepth'] != sLayer['botDepth']:
-                    thePath[pathIndex] = sMod.layerTimeDist(ray_param,
-                                                            sLayerNum,
-                                                            self.isPWave)
-                    thePath[pathIndex]['depth'] = sLayer['topDepth']
-                    pathIndex += 1
-                sLayerNum -= 1
-                if sLayerNum >= topLayerNum:
-                    sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+                mask[first_unmasked] = True
+
+            # Apply regular time/distance calculation on all unmasked and
+            # non-zero thickness layers.
+            mask = (~mask) & (sLayer['topDepth'] != sLayer['botDepth'])
+            sLayer = sLayer[mask]
+            sLayerNum = sLayerNum[mask]
+
+            if len(sLayer):
+                pathIndexEnd = pathIndex + len(sLayer)
+                thePath[pathIndex:pathIndexEnd] = sMod.layerTimeDist(
+                    ray_param,
+                    sLayerNum,
+                    self.isPWave)
+                thePath[pathIndex:pathIndexEnd]['depth'] = sLayer['topDepth']
+                pathIndex = pathIndexEnd
+
         tempPath = thePath[:pathIndex]
         return tempPath
