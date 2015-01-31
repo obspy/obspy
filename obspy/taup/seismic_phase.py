@@ -939,10 +939,10 @@ class SeismicPhase(object):
                 .path(currArrival.ray_param, isDownGoing, self.tMod.sMod)
             if len(tempTimeDist):
                 pathList.append(tempTimeDist)
-                for ttd in tempTimeDist:
-                    if ttd['dist'] < 0:
-                        raise RuntimeError("Path is backtracking, "
-                                           "this is impossible.")
+                if np.any(tempTimeDist['dist'] < 0):
+                    raise RuntimeError("Path is backtracking, "
+                                       "this is impossible.")
+
             # Special case for head and diffracted waves:
             if(branchNum == self.tMod.cmbBranch - 1
                and i < len(self.branchSeq) - 1
@@ -954,6 +954,7 @@ class SeismicPhase(object):
                     currArrival.dist - self.dist[0],
                     self.tMod.cmbDepth)], dtype=TimeDist)
                 pathList.append(diffTD)
+
             elif(branchNum == self.tMod.mohoBranch - 1
                  and i < len(self.branchSeq) - 1
                  and self.branchSeq[i + 1] == self.tMod.mohoBranch - 1
@@ -967,6 +968,7 @@ class SeismicPhase(object):
                     (currArrival.dist - self.dist[0]) / numFound,
                     self.tMod.mohoDepth)], dtype=TimeDist)
                 pathList.append(headTD)
+
         if "kmps" in self.name:
             # kmps phases have no branches, so need to end them at the arrival
             # distance.
@@ -974,15 +976,11 @@ class SeismicPhase(object):
                                 currArrival.dist * currArrival.ray_param,
                                 currArrival.dist, 0)], dtype=TimeDist)
             pathList.append(headTD)
-        currArrival.path = []
-        cumulative = np.array([(currArrival.ray_param, 0, 0,
-                                currArrival.source_depth)], dtype=TimeDist)
-        for branchPath in pathList:
-            for bp in branchPath:
-                cumulative['time'] += bp['time']
-                cumulative['dist'] += bp['dist']
-                cumulative['depth'] = bp['depth']
-                currArrival.path.append(deepcopy(cumulative))
+
+        currArrival.path = np.concatenate(pathList)
+        np.cumsum(currArrival.path['time'], out=currArrival.path['time'])
+        np.cumsum(currArrival.path['dist'], out=currArrival.path['dist'])
+
         return currArrival
 
     def handle_head_or_diffracted_wave(self, currArrival, orig):

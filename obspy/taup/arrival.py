@@ -50,7 +50,7 @@ class Arrival(object):
         self.incident_angle = incident_angle
         self.takeoff_angle = takeoff_angle
         # pierce and path points
-        self.pierce, self.path = [], []
+        self.pierce, self.path = [], None
 
     def __str__(self):
         return "%s phase arrival at %.3f seconds" % (self.phase.name,
