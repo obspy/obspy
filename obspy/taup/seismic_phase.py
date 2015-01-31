@@ -835,6 +835,7 @@ class SeismicPhase(object):
                 rayNum = i
             else:
                 break
+
         # Here we use ray parameter and dist info stored within the
         # SeismicPhase so we can use currArrival.ray_param_index, which
         # may not correspond to rayNum (for model.ray_param).
@@ -844,11 +845,15 @@ class SeismicPhase(object):
         distB = self.dist[currArrival.ray_param_index + 1]
         distRatio = (currArrival.dist - distA) / (distB - distA)
         distRayParam = distRatio * (ray_param_b - ray_param_a) + ray_param_a
+
+        # + 2 for first point and kmps, if it exists.
+        pierce = np.empty(len(self.branchSeq) + 2, dtype=TimeDist)
         # First pierce point is always 0 distance at the source depth.
-        pierce = np.array([(distRayParam, 0, 0, self.tMod.source_depth)],
-                          dtype=TimeDist)
+        pierce[0] = (distRayParam, 0, 0, self.tMod.source_depth)
+        index = 1
         branchDist = 0
         branchTime = 0
+
         # Loop from 0 but already done 0 [I just copy the comments, sorry!],
         # so the pierce point when the ray leaves branch i is stored in i + 1.
         # Use linear interpolation between rays that we know.
@@ -877,6 +882,7 @@ class SeismicPhase(object):
                                                          tauBranch.topDepth,
                                                          tauBranch.botDepth,
                                                          isPWave)
+
             if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
                 # Head waves and diffracted waves are a special case.
                 distA = tauBranch.dist[rayNum]
@@ -887,6 +893,7 @@ class SeismicPhase(object):
                 timeA = tauBranch.time[rayNum]
                 distB = tauBranch.dist[rayNum + 1]
                 timeB = tauBranch.time[rayNum + 1]
+
             branchDist += distRatio * (distB - distA) + distA
             prevBranchTime = np.array(branchTime, copy=True)
             branchTime += distRatio * (timeB - timeA) + timeA
@@ -894,21 +901,24 @@ class SeismicPhase(object):
                 branchDepth = min(tauBranch.botDepth, turnDepth)
             else:
                 branchDepth = min(tauBranch.topDepth, turnDepth)
+
             # Make sure ray actually propagates in this branch; leave a little
             # room for numerical chatter.
             if abs(prevBranchTime - branchTime) > 1e-10:
-                pierce = np.append(pierce,
-                                   np.array([(distRayParam, branchTime,
-                                              branchDist, branchDepth)],
-                                            dtype=TimeDist))
+                pierce[index] = (distRayParam, branchTime, branchDist,
+                                 branchDepth)
+                index += 1
+
         if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
-            pierce = self.handle_head_or_diffracted_wave(currArrival, pierce)
+            pierce, index = self.handle_head_or_diffracted_wave(currArrival,
+                                                                pierce,
+                                                                index)
         elif "kmps" in self.name:
-            pierce = np.append(pierce,
-                               np.array([(distRayParam, currArrival.time,
-                                          currArrival.dist, 0)],
-                                        dtype=TimeDist))
-        currArrival.pierce = pierce
+            pierce[index] = (distRayParam, currArrival.time, currArrival.dist,
+                             0)
+            index += 1
+
+        currArrival.pierce = pierce[:index]
         # The arrival is modified in place and must (?) thus be returned.
         return currArrival
 
@@ -983,7 +993,7 @@ class SeismicPhase(object):
 
         return currArrival
 
-    def handle_head_or_diffracted_wave(self, currArrival, orig):
+    def handle_head_or_diffracted_wave(self, currArrival, pierce, index):
         """
         Here we worry about the special case for head and diffracted
         waves. It is assumed that a phase can be a diffracted wave or a
@@ -996,31 +1006,33 @@ class SeismicPhase(object):
                 break
         else:
             raise TauModelError("No head/diff segment in" + str(self.name))
+
         if phaseSeg in ["Pn", "Sn"]:
             headDepth = self.tMod.mohoDepth
         else:
             headDepth = self.tMod.cmbDepth
+
         numFound = self.name.count(phaseSeg)
         refractDist = currArrival.dist - self.dist[0]
         refractTime = refractDist * currArrival.ray_param
-        out = []
-        j = 0
-        for td in orig:
-            # This is a little weird as we are not checking where we are in
-            # the phase name, but simply if the depth matches. This likely
-            # works in most cases, but may not for head/diffracted waves that
-            # undergo a phase change, if that type of phase can even exist.
-            out.append(np.array([(td['p'],
-                                  td['time'] + j * refractTime / numFound,
-                                  td['dist'] + j * refractDist / numFound,
-                                  td['depth'])], dtype=TimeDist))
-            if td['depth'] == headDepth:
-                j += 1
-                out.append(np.array([(td['p'],
-                                      td['time'] + j * refractTime / numFound,
-                                      td['dist'] + j * refractDist / numFound,
-                                      td['depth'])], dtype=TimeDist))
-        return out
+
+        # This is a little weird as we are not checking where we are in
+        # the phase name, but simply if the depth matches. This likely
+        # works in most cases, but may not for head/diffracted waves that
+        # undergo a phase change, if that type of phase can even exist.
+        mask = pierce['depth'][:index] == headDepth
+        adjust = np.cumsum(mask)
+        pierce['time'][:index] += adjust * refractTime / numFound
+        pierce['dist'][:index] += adjust * refractDist / numFound,
+
+        head_index = np.where(mask)[0]
+        if len(head_index):
+            head_index += 1
+            td = pierce[head_index]
+            pierce = np.insert(pierce, head_index, td)
+            index += len(head_index)
+
+        return pierce, index
 
     def linear_interp_arrival(self, searchDist, rayNum, name, puristName,
                               source_depth):
