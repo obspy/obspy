@@ -72,32 +72,35 @@ class TauBranch(object):
                                                        self.isPWave)
         self.minRayParam = sMod.getMinRayParam(self.botDepth, self.isPWave)
 
-        timeDist = [self.calcTimeDist(sMod, topLayerNum, botLayerNum, p)
-                    for p in ray_params]
-        self.dist = np.array([_t['dist'] for _t in timeDist])
-        self.time = np.array([_t['time'] for _t in timeDist])
+        timeDist = self.calcTimeDist(sMod, topLayerNum, botLayerNum,
+                                     ray_params)
+        self.dist = timeDist['dist']
+        self.time = timeDist['time']
         self.tau = self.time - ray_params * self.dist
 
-    def calcTimeDist(self, sMod, topLayerNum, botLayerNum, p):
-        timeDist = np.zeros(1, dtype=TimeDist)
-        timeDist['p'] = p
+    def calcTimeDist(self, sMod, topLayerNum, botLayerNum, ray_params):
+        timeDist = np.zeros_like(ray_params, dtype=TimeDist)
+        timeDist['p'] = ray_params
 
-        if p <= self.maxRayParam:
-            layerNum = np.arange(topLayerNum, botLayerNum + 1)
-            layer = sMod.getSlownessLayer(layerNum, self.isPWave)
+        layerNum = np.arange(topLayerNum, botLayerNum + 1)
+        layer = sMod.getSlownessLayer(layerNum, self.isPWave)
 
-            mask = np.cumprod((p <= layer['topP']) & (p <= layer['botP']))
-            mask = mask.astype(np.bool_)
-            layer = layer[mask]
-            layerNum = layerNum[mask]
-            if len(layer):
-                temptd = sMod.layerTimeDist(p, layerNum, self.isPWave)
-                timeDist['dist'] = np.sum(temptd['dist'])
-                timeDist['time'] = np.sum(temptd['time'])
+        for i, p in enumerate(ray_params):
+            if p <= self.maxRayParam:
+                mask = np.cumprod((p <= layer['topP']) & (p <= layer['botP']))
+                mask = mask.astype(np.bool_)
+                layerMask = layer[mask]
+                layerNumMask = layerNum[mask]
 
-                if (layer['topP'][-1] - p) * (p - layer['botP'][-1]) > 0:
-                    raise SlownessModelError(
-                        "Ray turns in the middle of this layer!")
+                if len(layerMask):
+                    temptd = sMod.layerTimeDist(p, layerNumMask, self.isPWave)
+                    timeDist['dist'][i] = np.sum(temptd['dist'])
+                    timeDist['time'][i] = np.sum(temptd['time'])
+
+                    if ((layerMask['topP'][-1] - p) *
+                        (p - layerMask['botP'][-1])) > 0:
+                        raise SlownessModelError(
+                            "Ray turns in the middle of this layer!")
 
         return timeDist
 
@@ -210,12 +213,12 @@ class TauBranch(object):
         arrayLength = len(self.dist)
         if indexP != -1:
             arrayLength += 1
-            PRayParam = ray_params[indexP]
+            PRayParam = ray_params[indexP:indexP + 1]
             timeDistP = botBranch.calcTimeDist(sMod, topLayerNum, botLayerNum,
                                                PRayParam)
         if indexS != -1 and indexS != indexP:
             arrayLength += 1
-            SRayParam = ray_params[indexS]
+            SRayParam = ray_params[indexS:indexS + 1]
             timeDistS = botBranch.calcTimeDist(sMod, topLayerNum, botLayerNum,
                                                SRayParam)
         else:
