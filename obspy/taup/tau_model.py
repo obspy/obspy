@@ -280,13 +280,13 @@ class TauModel(object):
                 newTauBranches[0, i].insert(PWaveRayParam, outSMod, indexP)
                 newTauBranches[1, i].insert(PWaveRayParam, outSMod, indexP)
         for pOrS in range(2):
-            newTauBranches[pOrS][branchToSplit] = TauBranch(
+            newTauBranches[pOrS, branchToSplit] = TauBranch(
                 self.tauBranches[pOrS, branchToSplit].topDepth, depth,
                 pOrS == 0)
-            newTauBranches[pOrS][branchToSplit].createBranch(
+            newTauBranches[pOrS, branchToSplit].createBranch(
                 outSMod, self.tauBranches[pOrS, branchToSplit].maxRayParam,
                 outRayParams)
-            newTauBranches[pOrS][branchToSplit + 1] = \
+            newTauBranches[pOrS, branchToSplit + 1] = \
                 self.tauBranches[pOrS, branchToSplit].difference(
                     newTauBranches[pOrS, branchToSplit],
                     indexP, indexS, outSMod,
