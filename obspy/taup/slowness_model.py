@@ -1139,11 +1139,12 @@ class SlownessModel(object):
         # angular distance traveled, using the law of sines.
         topRadius = self.radiusOfEarth - sphericalLayer['topDepth']
         botRadius = self.radiusOfEarth - sphericalLayer['botDepth']
-        vel = botRadius / sphericalLayer['botP']
-        constant_velocity = np.logical_and(
-            leftover,
-            np.abs(topRadius / sphericalLayer['topP'] -
-                   vel) < self.slowness_tolerance)
+        with np.errstate(invalid='ignore'):
+            vel = botRadius / sphericalLayer['botP']
+            constant_velocity = np.logical_and(
+                leftover,
+                np.abs(topRadius / sphericalLayer['topP'] -
+                       vel) < self.slowness_tolerance)
         leftover &= ~constant_velocity
         topRadius = topRadius[constant_velocity]
         botRadius = botRadius[constant_velocity]
