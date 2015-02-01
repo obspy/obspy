@@ -1082,7 +1082,6 @@ class SlownessModel(object):
         # occurs if the ray with the given spherical ray parameter cannot
         # propagate within this layer, or if the ray turns within this layer
         # but not at the bottom.
-        layerNum = np.atleast_1d(layerNum)
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
 
         # First make sure that a ray with this ray param can propagate

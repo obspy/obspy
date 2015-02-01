@@ -28,7 +28,6 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     layer. Note that this gives 1/2 of the true range and time
     increments since there will be both an upgoing and a downgoing path.
     Here we use the Mohorovicic or Bullen law: p=A*r^B"""
-    layer = np.atleast_1d(layer)
     timedist = np.zeros_like(layer, dtype=TimeDist)
     timedist['p'] = p
 
