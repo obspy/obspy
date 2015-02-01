@@ -91,16 +91,6 @@ class SeismicPhase(object):
         # Note that this depends upon both the earth model and the source
         # depth.
         self.branchSeq = []
-        # Temporary end action so we know what we did at the end of the last
-        # section of the branch sequence.
-        # Used in addToBranch() and  parseName().
-        # endAction
-        # Records the end action for the current leg. Will be one of
-        # SeismicPhase.TURN, SeismicPhase.TRANSDOWN, SeismicPhase.TRANSUP,
-        # SeismicPhase.REFLECTBOT, or SeismicPhase.REFLECTTOP.
-        # This allows a check to make sure the path is correct. Used in
-        # addToBranch() and parseName().
-        self.legAction = []
         # True if the current leg of the phase is down going. This allows a
         # check to make sure the path is correct.
         # Used in addToBranch() and parseName().
@@ -568,14 +558,12 @@ class SeismicPhase(object):
                 self.branchSeq.append(i)
                 self.downGoing.append(isDownGoing)
                 self.waveType.append(isPWave)
-                self.legAction.append(endAction)
         else:
             # Upgoing, so decrement i.
             for i in range(startBranch, endBranch - 1, -1):
                 self.branchSeq.append(i)
                 self.downGoing.append(isDownGoing)
                 self.waveType.append(isPWave)
-                self.legAction.append(endAction)
         self.currBranch = endBranch + endOffset
 
     def sum_branches(self, tMod):
