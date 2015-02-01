@@ -34,7 +34,7 @@ class TauModel(object):
     # included.
     noDisconDepths = []
 
-    def __init__(self, sMod, spherical=True, debug=False):
+    def __init__(self, sMod, spherical=True, debug=False, skip_calc=False):
         self.debug = debug
         self.radiusOfEarth = 6371.0
         # True if this is a spherical slowness model. False if flat.
@@ -42,7 +42,7 @@ class TauModel(object):
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
-        self.ray_params = np.empty(0)
+        self.ray_params = None
         # 2D NumPy array containing a TauBranch object
         # corresponding to each "branch" of the tau model, First list is P,
         # second is S. Branches correspond to depth regions between
@@ -50,10 +50,12 @@ class TauModel(object):
         # Each branch contains time, distance, and tau increments for each ray
         # parameter in ray_param for the layer. Rays that turn above the branch
         # layer get 0 for time, distance, and tau increments.
-        self.tauBranches = np.empty((1, 0), dtype=TauBranch)
+        self.tauBranches = None
 
         self.sMod = sMod
-        self.calcTauIncFrom()
+
+        if not skip_calc:
+            self.calcTauIncFrom()
 
     def calcTauIncFrom(self):
         """
@@ -323,15 +325,19 @@ class TauModel(object):
             outiocbBranch += 1
         # No overloaded constructors - so do it this way to bypass the
         # calcTauIncFrom in the __init__.
-        tMod = deepcopy(self)  # Objects apparently are shallowly copied...
+        tMod = TauModel(outSMod, spherical=self.spherical, debug=self.debug,
+                        skip_calc=True)
+        tMod.source_depth = self.source_depth
         tMod.sourceBranch = outSourceBranch
         tMod.mohoBranch = outmohoBranch
+        tMod.mohoDepth = self.mohoDepth
         tMod.cmbBranch = outcmbBranch
+        tMod.cmbDepth = self.cmbDepth
         tMod.iocbBranch = outiocbBranch
-        tMod.sMod = outSMod
+        tMod.iocbDepth = self.iocbDepth
         tMod.ray_params = outRayParams
         tMod.tauBranches = newTauBranches
-        tMod.noDisconDepths.append(depth)
+        tMod.noDisconDepths = self.noDisconDepths + [depth]
         if not tMod.validate():
             raise TauModelError("SplitBranch validation failed!")
         return tMod
