@@ -238,7 +238,7 @@ class PsdTestCase(unittest.TestCase):
             perGoodOBSPY = []
             pervalGoodOBSPY = []
 
-            #Get the values for the bands from the PPSD
+            # Get the values for the bands from the PPSD
             for idx, curper in enumerate(per):
                 if freslow[idxfre] < 1.0/curper < curfreUp:
                     perGoodOBSPY.append(1.0/curper)
@@ -251,9 +251,9 @@ class PsdTestCase(unittest.TestCase):
 
             # We will now read in line by line the IRIS file and save
             # a limited number of values
-            #Array of data values that will be within our frequency band
+            # Array of data values that will be within our frequency band
             goodlines = []
-            #Distinct frequency values that we will want
+            # Distinct frequency values that we will want
             freqdistinct = []
             for line in fh:
                 if "#" not in line:
