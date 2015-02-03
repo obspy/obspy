@@ -43,7 +43,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
                 item["take-off angle"] += 180.0
             self.assertEqual(int(item["take-off angle"]),
                              int(float(parts[2].strip())))
-            self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
+            self.assertAlmostEqual(float(item['dT/dD']),
+                                   float(parts[3].strip()),
+                                   1)
         # 2
         tt = getTravelTimes(delta=50.0, depth=300.0, model='ak135')[:17]
         lines = data[26:43]
@@ -58,7 +60,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
                 item["take-off angle"] += 180.0
             self.assertAlmostEqual(round(item['take-off angle']),
                                    round(float(parts[2].strip())), 1)
-            self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
+            self.assertAlmostEqual(float(item['dT/dD']),
+                                   float(parts[3].strip()),
+                                   1)
 
     def test_getTravelTimesIASP91(self):
         """
@@ -82,7 +86,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
                 item["take-off angle"] += 180.0
             self.assertAlmostEqual(round(item['take-off angle']),
                                    round(float(parts[2].strip())))
-            self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
+            self.assertAlmostEqual(float(item['dT/dD']),
+                                   float(parts[3].strip()),
+                                   1)
         # 2
         tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')[:19]
         lines = data[26:45]
@@ -97,7 +103,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
                 item["take-off angle"] += 180.0
             self.assertAlmostEqual(round(item['take-off angle']),
                                    round(float(parts[2].strip())), 1)
-            self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 1)
+            self.assertAlmostEqual(float(item['dT/dD']),
+                                   float(parts[3].strip()),
+                                   1)
 
     def test_issue_with_global_state(self):
         """

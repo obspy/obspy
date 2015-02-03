@@ -10,8 +10,11 @@ from future.builtins import *  # NOQA
 import os
 import sys
 
+import numpy as np
+
 from . import TauPException
-from .velocity_layer import VelocityLayer
+from .velocity_layer import DEFAULT_QP, DEFAULT_QS, VelocityLayer, \
+    evaluateVelocityAt
 
 
 class VelocityModel(object):
@@ -69,7 +72,8 @@ class VelocityModel(object):
         self.minRadius = minRadius
         self.maxRadius = maxRadius
         self.isSpherical = isSpherical
-        self.layers = layers if layers else []
+        self.layers = np.array(layers if layers is not None else [],
+                               dtype=VelocityLayer)
 
     def __len__(self):
         return len(self.layers)
@@ -79,14 +83,16 @@ class VelocityModel(object):
         """
         Returns the depths of discontinuities within the velocity model.
         """
-        discontinuities = [self.layers[0].topDepth]
-        for above_layer, below_layer in zip(self.layers[:-1],
-                                            self.layers[1:]):
-            if above_layer.botPVelocity != below_layer.topPVelocity or (
-                    above_layer.botSVelocity != below_layer.topSVelocity):
-                # Discontinuity found.
-                discontinuities.append(above_layer.botDepth)
-        discontinuities.append(self.layers[-1].botDepth)
+        above = self.layers[:-1]
+        below = self.layers[1:]
+        mask = np.logical_or(above['botPVelocity'] != below['topPVelocity'],
+                             above['botSVelocity'] != below['topSVelocity'])
+
+        discontinuities = np.empty(np.count_nonzero(mask) + 2)
+        discontinuities[0] = self.layers[0]['topDepth']
+        discontinuities[1:-1] = above[mask]['botDepth']
+        discontinuities[-1] = self.layers[-1]['botDepth']
+
         return discontinuities
 
     def getNumLayers(self):
@@ -100,10 +106,15 @@ class VelocityModel(object):
 
         :returns: the layer number
         """
-        for i, layer in enumerate(self.layers):
-            if layer.topDepth < depth <= layer.botDepth:
-                return i
-        raise TauPException("No such layer.")
+        depth = np.atleast_1d(depth)
+        layer = np.logical_and(
+            self.layers['topDepth'][np.newaxis, :] < depth[:, np.newaxis],
+            depth[:, np.newaxis] <= self.layers['botDepth'][np.newaxis, :])
+        layer = np.where(layer)[-1]
+        if len(layer):
+            return layer
+        else:
+            raise TauPException("No such layer.")
 
     def layerNumberBelow(self, depth):
         """
@@ -112,10 +123,15 @@ class VelocityModel(object):
 
         :returns: the layer number
         """
-        for i, layer in enumerate(self.layers):
-            if layer.topDepth <= depth < layer.botDepth:
-                return i
-        raise TauPException("No such layer.")
+        depth = np.atleast_1d(depth)
+        layer = np.logical_and(
+            self.layers['topDepth'][np.newaxis, :] <= depth[:, np.newaxis],
+            depth[:, np.newaxis] < self.layers['botDepth'][np.newaxis, :])
+        layer = np.where(layer)[-1]
+        if len(layer):
+            return layer
+        else:
+            raise TauPException("No such layer.")
 
     def evaluateAbove(self, depth, materialProperty):
 
@@ -125,7 +141,7 @@ class VelocityModel(object):
         :returns: the value of the given material property
         """
         layer = self.layers[self.layerNumberAbove(depth)]
-        return layer.evaluateAt(depth, materialProperty)
+        return evaluateVelocityAt(layer, depth, materialProperty)
 
     def evaluateBelow(self, depth, materialProperty):
         """Returns the value of the given material property, usually P or S
@@ -134,17 +150,17 @@ class VelocityModel(object):
         :returns: the value of the given material property
         """
         layer = self.layers[self.layerNumberBelow(depth)]
-        return layer.evaluateAt(depth, materialProperty)
+        return evaluateVelocityAt(layer, depth, materialProperty)
 
     def depthAtTop(self, layerNumber):
         """ returns the depth at the top of the given layer. """
         layer = self.layers[layerNumber]
-        return layer.topDepth
+        return layer['topDepth']
 
     def depthAtBottom(self, layerNumber):
         """ returns the depth at the bottom of the given layer. """
         layer = self.layers[layerNumber]
-        return layer.botDepth
+        return layer['botDepth']
 
     def validate(self):
         """
@@ -199,67 +215,84 @@ class VelocityModel(object):
                   str(self.minRadius), file=sys.stderr)
             return False
 
-        # Iterate over all layers, comparing each to the previous one.
-        currVelocityLayer = self.layers[0]
-        prevVelocityLayer = VelocityLayer(
-            0, currVelocityLayer.topDepth, currVelocityLayer.topDepth,
-            currVelocityLayer.topPVelocity, currVelocityLayer.topPVelocity,
-            currVelocityLayer.topSVelocity, currVelocityLayer.topSVelocity,
-            currVelocityLayer.topDensity, currVelocityLayer.topDensity)
-        for layerNum in range(0, self.getNumLayers()):
-            currVelocityLayer = self.layers[layerNum]
-            if prevVelocityLayer.botDepth != currVelocityLayer.topDepth:
-                # * There is a gap in the velocity model!
-                print("There is a gap in the velocity model between layers "
-                      + str((layerNum - 1)) + " and ", layerNum)
-                print("prevVelocityLayer=", prevVelocityLayer, file=sys.stderr)
-                print("currVelocityLayer=", currVelocityLayer, file=sys.stderr)
-                return False
-            if currVelocityLayer.botDepth == currVelocityLayer.topDepth:
-                #   more redundant comments in the original java
-                print("There is a zero thickness layer in the velocity model "
-                      "at layer " + str(layerNum), file=sys.stderr)
-                print("prevVelocityLayer=", prevVelocityLayer, file=sys.stderr)
-                print("currVelocityLayer=", currVelocityLayer, file=sys.stderr)
-                return False
-            if currVelocityLayer.topPVelocity <= 0.0 \
-                    or currVelocityLayer.botPVelocity <= 0.0:
-                print("There is a negative P velocity layer in the velocity "
-                      "model at layer ", layerNum, file=sys.stderr)
-                return False
-            if currVelocityLayer.topSVelocity < 0.0 \
-                    or currVelocityLayer.botSVelocity < 0.0:
-                print("There is a negative S velocity layer in the velocity "
-                      "model at layer " + str(layerNum), file=sys.stderr)
-                return False
-            if (currVelocityLayer.topPVelocity != 0.0
-                and currVelocityLayer.botPVelocity == 0.0) or (
-                currVelocityLayer.topPVelocity == 0.0
-                    and currVelocityLayer.botPVelocity != 0.0):
-                print("There is a layer that goes to zero P velocity (top "
-                      "or bottom) without a discontinuity in the velocity "
-                      "model at layerNum" + str(layerNum) +
-                      "\nThis would cause a divide by zero within this depth "
-                      "range. Try making the velocity small, followed by a "
-                      "discontinuity to zero velocity.", file=sys.stderr)
-                return False
-            if (currVelocityLayer.topSVelocity != 0.0
-                    and currVelocityLayer.botSVelocity == 0.0) or (
-                    currVelocityLayer.topSVelocity == 0.0
-                    and currVelocityLayer.botSVelocity != 0.0):
-                if currVelocityLayer.topDepth != 0:
-                    # This warning will always pop up for the top layer even
-                    #  in IASP91, therefore ignore it.
-                    print("There is a layer that goes to zero S velocity "
-                          "(top or bottom) without a discontinuity "
-                          "in the velocity model at layerNum "
-                          + str(layerNum) +
-                          "\nThis would cause a divide by zero within this "
-                          "depth range. Try making the velocity small, "
-                          "followed by a discontinuity to zero velocity.",
-                          file=sys.stderr)
-                return False
-            prevVelocityLayer = currVelocityLayer
+        # Check for gaps
+        gaps = self.layers[:-1]['botDepth'] != self.layers[1:]['topDepth']
+        gaps = np.where(gaps)[0]
+        if gaps:
+            print("There is a gap in the velocity model between layers "
+                  + gaps + " and ", gaps + 1, file=sys.stderr)
+            print(self.layers[gaps], file=sys.stderr)
+            return False
+
+        # Check for zero thickness
+        probs = self.layers['botDepth'] == self.layers['topDepth']
+        probs = np.where(probs)[0]
+        if probs:
+            #   more redundant comments in the original java
+            print("There is a zero thickness layer in the velocity model "
+                  "at layers " + probs, file=sys.stderr)
+            print(self.layers[probs], file=sys.stderr)
+            return False
+
+        # Check for negative P velocity
+        probs = np.logical_or(self.layers['topPVelocity'] <= 0.0,
+                              self.layers['botPVelocity'] <= 0.0)
+        probs = np.where(probs)[0]
+        if probs:
+            print("There is a negative P velocity layer in the velocity "
+                  "model at layer(s) ", probs, file=sys.stderr)
+            print(self.layers[probs], file=sys.stderr)
+            return False
+
+        # Check for negative S velocity
+        probs = np.logical_or(self.layers['topSVelocity'] < 0.0,
+                              self.layers['botSVelocity'] < 0.0)
+        probs = np.where(probs)[0]
+        if probs:
+            print("There is a negative S velocity layer in the velocity "
+                  "model at layer(s) " + probs, file=sys.stderr)
+            print(self.layers[probs], file=sys.stderr)
+            return False
+
+        # Check for zero P velocity
+        probs = np.logical_or(
+            np.logical_and(self.layers['topPVelocity'] != 0.0,
+                           self.layers['botPVelocity'] == 0.0),
+            np.logical_and(self.layers['topPVelocity'] == 0.0,
+                           self.layers['botPVelocity'] != 0.0))
+        probs = np.where(probs)[0]
+        if probs:
+            print("There is a layer that goes to zero P velocity (top "
+                  "or bottom) without a discontinuity in the velocity "
+                  "model at layer(s) " + probs +
+                  "\nThis would cause a divide by zero within this depth "
+                  "range. Try making the velocity small, followed by a "
+                  "discontinuity to zero velocity.", file=sys.stderr)
+            print(self.layers[probs], file=sys.stderr)
+            return False
+
+        # Check for negative S velocity
+        probs = np.logical_or(
+            np.logical_and(self.layers['topSVelocity'] != 0.0,
+                           self.layers['botSVelocity'] == 0.0),
+            np.logical_and(self.layers['topSVelocity'] == 0.0,
+                           self.layers['botSVelocity'] != 0.0))
+        # This warning will always pop up for the top layer even
+        #  in IASP91, therefore ignore it.
+        probs = np.logical_and(probs, self.layers['topDepth'] != 0)
+        probs = np.where(probs)[0]
+        if probs:
+            print("There is a layer that goes to zero S velocity "
+                  "(top or bottom) without a discontinuity "
+                  "in the velocity model at layer(s) "
+                  + probs +
+                  "\nThis would cause a divide by zero within this "
+                  "depth range. Try making the velocity small, "
+                  "followed by a discontinuity to zero velocity.",
+                  file=sys.stderr)
+            print(self.layers[probs], file=sys.stderr)
+            return False
+
         return True
 
     def __str__(self):
@@ -307,11 +340,13 @@ class VelocityModel(object):
     @classmethod
     def readTVelFile(cls, filename):
         """ This method reads in a velocity model from a "tvel" ASCII
-        text file. The name of the model file for model g"modelname"
+        text file. The name of the model file for model "modelname"
         should be "modelname.tvel".  The format of the file is:
-        comment line - generally info about the P velocity model
-        comment line - generally info about the S velocity model depth
-        pVel sVel Density depth pVel sVel Density
+
+            comment line - generally info about the P velocity model
+            comment line - generally info about the S velocity model
+            depth pVel sVel Density
+            depth pVel sVel Density
 
         The velocities are assumed to be linear between sample
         points. Because this type of model file doesn't give complete
@@ -321,73 +356,49 @@ class VelocityModel(object):
         meanDensity - 5517.0 G - 6.67e-11
         Comments using # are also allowed.
         """
-        layers = []
-        myLayerNumber = 0  # needed for calling the layer maker later
-
         # Read all lines in the file. Each Layer needs top and bottom values,
         # i.e. info from two lines.
-        with open(filename, 'rt') as f:
-            # skip first two lines as they should be the header
-            # (for line in itertools.islice(f, 2, None): also works,
-            # but less elegant)
-            f.readline()
-            f.readline()
-            # Read the first line to provide initial top values.
-            line = f.readline()
-            line = line.partition('#')[0]
-            line = line.rstrip()  # or just .strip()?'
-            columns = line.split()
-            topDepth = float(columns[0])
-            topPVel = float(columns[1])
-            topSVel = float(columns[2])
-            if topSVel > topPVel:
-                raise TauPException(
-                    "S velocity, ", topSVel, " at depth ", topDepth,
-                    " is greater than the P velocity, ", topPVel)
-            # if density is present,read it.
-            if len(columns) != 4:
-                raise ValueError("Top density not specified.")
-            topDensity = float(columns[3])
+        data = np.genfromtxt(filename, skip_header=2, comments='#')
 
-            # Iterate over the rest of the file.
-            for line in f:
-                line = line.partition('#')[0]
-                # needs the other comment options
-                line = line.rstrip()  # or just .strip()?'
-                columns = line.split()
-                botDepth = float(columns[0])
-                botPVel = float(columns[1])
-                botSVel = float(columns[2])
-                if botSVel > botPVel:
-                    raise TauPException(
-                        "S velocity, ", botSVel, " at depth ", botDepth,
-                        " is greater than the P velocity, ", botPVel)
-                # if density is present,read it.
-                if len(columns) != 4:
-                    raise ValueError("Bottom density not specified.")
-                botDensity = float(columns[3])
+        # Check if density is present.
+        if data.shape[1] < 4:
+            raise ValueError("Top density not specified.")
 
-                if len(columns) > 4:
-                    raise TauPException("Your file has too much information. "
-                                        "Stick to 4 columns.")
+        # Check that relative speed are sane.
+        mask = data[:, 2] > data[:, 1]
+        if np.any(mask):
+            raise TauPException(
+                "S velocity is greater than the P velocity\n" +
+                str(data[mask]))
 
-                tempLayer = VelocityLayer(
-                    myLayerNumber, topDepth, botDepth, topPVel, botPVel,
-                    topSVel, botSVel, topDensity, botDensity)
-                topDepth = botDepth
-                topPVel = botPVel
-                topSVel = botSVel
-                topDensity = botDensity
-                if tempLayer.topDepth != tempLayer.botDepth:
-                    # Don't use zero thickness layers, first order
-                    # discontinuities
-                    # are taken care of by storing top and bottom depths.
-                    layers.append(tempLayer)
-                    myLayerNumber += 1
-        radiusOfEarth = topDepth
-        maxRadius = topDepth
-        modelName = os.path.basename(filename)  # remove leading path
-        modelName = modelName[:-5]  # strip .tvel
+        layers = np.empty(data.shape[0] - 1, dtype=VelocityLayer)
+
+        layers['topDepth'] = data[:-1, 0]
+        layers['botDepth'] = data[1:, 0]
+
+        layers['topPVelocity'] = data[:-1, 1]
+        layers['botPVelocity'] = data[1:, 1]
+
+        layers['topSVelocity'] = data[:-1, 2]
+        layers['botSVelocity'] = data[1:, 2]
+
+        layers['topDensity'] = data[:-1, 3]
+        layers['botDensity'] = data[1:, 3]
+
+        # We do not at present support varying attenuation
+        layers['topQp'].fill(DEFAULT_QP)
+        layers['botQp'].fill(DEFAULT_QP)
+        layers['topQs'].fill(DEFAULT_QS)
+        layers['botQs'].fill(DEFAULT_QS)
+
+        # Don't use zero thickness layers; first order discontinuities are
+        # taken care of by storing top and bottom depths.
+        mask = layers['topDepth'] == layers['botDepth']
+        layers = layers[~mask]
+
+        radiusOfEarth = data[-1, 0]
+        maxRadius = data[-1, 0]
+        modelName = os.path.splitext(os.path.basename(filename))[0]
         # I assume that this is a whole earth model
         # so the maximum depth ==  maximum radius == earth radius.
         return VelocityModel(modelName, radiusOfEarth, cls.default_moho,
@@ -404,33 +415,45 @@ class VelocityModel(object):
         must be a fluid to solid boundary and deeper than 100km to avoid
         problems with shallower fluid layers, eg oceans.
         """
+        MOHO_MIN = 65.0
+        CMB_MIN = self.radiusOfEarth
+        IOCB_MIN = self.radiusOfEarth - 100.0
+
         changeMade = False
-        mohoMin = 65.0
-        cmbMin = self.radiusOfEarth
-        iocbMin = self.radiusOfEarth - 100.0
         tempMohoDepth = 0.0
         tempCmbDepth = self.radiusOfEarth
         tempIocbDepth = self.radiusOfEarth
-        layerNum = 0
-        while layerNum < self.getNumLayers() - 1:
-            aboveLayer = self.layers[layerNum]
-            belowLayer = self.layers[layerNum + 1]
-            # a discontinuity
-            if aboveLayer.botPVelocity != belowLayer.topPVelocity \
-                    or aboveLayer.botSVelocity != belowLayer.topSVelocity:
-                if abs(self.mohoDepth - aboveLayer.botDepth) < mohoMin:
-                    tempMohoDepth = aboveLayer.botDepth
-                    mohoMin = abs(self.mohoDepth - aboveLayer.botDepth)
-                if abs(self.cmbDepth - aboveLayer.botDepth) < cmbMin:
-                    tempCmbDepth = aboveLayer.botDepth
-                    cmbMin = abs(self.cmbDepth - aboveLayer.botDepth)
-                if aboveLayer.botSVelocity == 0.0 \
-                        and belowLayer.topSVelocity > 0.0 \
-                        and abs(self.iocbDepth - aboveLayer.botDepth) \
-                        < iocbMin:
-                    tempIocbDepth = aboveLayer.botDepth
-                    iocbMin = abs(self.iocbDepth - aboveLayer.botDepth)
-            layerNum += 1
+
+        above = self.layers[:-1]
+        below = self.layers[1:]
+        # Only look for discontinuities:
+        mask = np.logical_or(above['botPVelocity'] != below['topPVelocity'],
+                             above['botSVelocity'] != below['topSVelocity'])
+
+        # Find discontinuity closest to current Moho
+        moho_diff = np.abs(self.mohoDepth - above['botDepth'])
+        moho_diff[~mask] = MOHO_MIN
+        moho = np.argmin(moho_diff)
+        if moho_diff[moho] < MOHO_MIN:
+            tempMohoDepth = above[moho]['botDepth']
+
+        # Find discontinuity closest to current CMB
+        cmb_diff = np.abs(self.cmbDepth - above['botDepth'])
+        cmb_diff[~mask] = CMB_MIN
+        cmb = np.argmin(cmb_diff)
+        if cmb_diff[cmb] < CMB_MIN:
+            tempCmbDepth = above[cmb]['botDepth']
+
+        # Find discontinuity closest to current IOCB
+        iocb_diff = self.iocbDepth - above['botDepth']
+        iocb_diff[~mask] = IOCB_MIN
+        # IOCB must transition from S==0 to S!=0
+        iocb_diff[above['botSVelocity'] != 0.0] = IOCB_MIN
+        iocb_diff[below['topSVelocity'] <= 0.0] = IOCB_MIN
+        iocb = np.argmin(iocb_diff)
+        if iocb_diff[iocb] < IOCB_MIN:
+            tempIocbDepth = above[iocb]['botDepth']
+
         if self.mohoDepth != tempMohoDepth \
                 or self.cmbDepth != tempCmbDepth \
                 or self.iocbDepth != tempIocbDepth:
