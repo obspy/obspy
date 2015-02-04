@@ -660,8 +660,7 @@ class CoreTestCase(unittest.TestCase):
         Should raise a ValueError.
         """
         with io.StringIO() as buf:
-            with open(__file__, "rt") as fh:
-                buf.write(fh.read())
+            buf.write("abcdefghijklmnopqrstuvwxyz")
             buf.seek(0, 0)
             self.assertRaises(ValueError, isSAC, buf)
 
