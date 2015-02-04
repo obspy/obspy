@@ -720,6 +720,19 @@ class CoreTestCase(unittest.TestCase):
         with open(self.filexy, "rt") as fh:
             self.assertRaises(ValueError, isSACXY, fh)
 
+    def test_writing_to_file_like_objects_with_obspy(self):
+        """
+        Very simple test just executing a common operation and making sure
+        it does not fail.
+        """
+        st = read()[:1]
+
+        with io.BytesIO() as fh:
+            st.write(fh, format="sac")
+
+        with io.BytesIO() as fh:
+            st.write(fh, format="sacxy")
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
