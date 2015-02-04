@@ -2,10 +2,11 @@
 # ------------------------------------------------------------------
 # Filename: sacio.py
 #  Purpose: Read & Write Seismograms, Format SAC.
-#   Author: Yannik Behr, C. J. Ammon's, C. Satriano
+#   Author: Yannik Behr, C. J. Ammon's, C. Satriano, L. Krischer
 #    Email: yannik.behr@vuw.ac.nz
 #
-# Copyright (C) 2008-2014 Yannik Behr, C. J. Ammon's, C. Satriano
+# Copyright (C) 2008-2015 Yannik Behr, C. J. Ammon's, C. Satriano,
+#                         L. Krischer
 # ------------------------------------------------------------------
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -15,7 +16,6 @@ from future.utils import native_str
 from obspy import UTCDateTime, Trace
 from obspy.core.compatibility import frombuffer
 from obspy.core.util import gps2DistAzimuth, AttribDict
-from obspy.core import compatibility
 import numpy as np
 import time
 import warnings
@@ -108,35 +108,6 @@ class SacIOError(Exception):
     Raised if the given SAC file can't be read.
     """
     pass
-
-
-def _isText(filename, blocksize=512):
-    """
-    Check if it is a text or a binary file.
-    """
-    # This should  always be true if a file is a text-file and only true for a
-    # binary file in rare occasions (see Recipe 173220 found on
-    # http://code.activestate.com/)
-    text_characters = str("").join(list(map(chr, range(32, 127))) +
-                                   list("\n\r\t\b")).encode('ascii', 'ignore')
-    _null_trans = compatibility.maketrans(b"", b"")
-    with open(filename, 'rb') as fp:
-        s = fp.read(blocksize)
-    if b"\0" in s:
-        return False
-
-    if not s:  # Empty files are considered text
-        return True
-
-    # Get the non-text characters (maps a character to itself then
-    # use the 'remove' option to get rid of the text characters.)
-    t = s.translate(_null_trans, text_characters)
-
-    # If more than 30% non-text characters, then
-    # this is considered a binary file
-    if len(t) / len(s) > 0.30:
-        return 0
-    return True
 
 
 class SacIO(object):

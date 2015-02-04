@@ -727,7 +727,7 @@ class CoreTestCase(unittest.TestCase):
         """
         with io.StringIO() as buf:
             # Read file to BytesIO.
-            with open(self.filexy, "rb") as fh:
+            with open(self.filexy, "rt") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
             self.assertTrue(isSACXY(buf))
@@ -748,7 +748,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertTrue(isSACXY(fh))
 
         with open(__file__, "rb") as fh:
-            self.assertTrue(isSACXY(fh))
+            self.assertFalse(isSACXY(fh))
 
     def test_is_sacxy_open_file_text_mode(self):
         """
@@ -758,7 +758,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertTrue(isSACXY(fh))
 
         with open(__file__, "rt") as fh:
-            self.assertTrue(isSACXY(fh))
+            self.assertFalse(isSACXY(fh))
 
 
 def suite():

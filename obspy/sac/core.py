@@ -15,7 +15,7 @@ from future.utils import native_str
 
 from obspy import Trace, Stream
 from obspy.core.compatibility import is_bytes_buffer, is_text_buffer
-from obspy.sac.sacio import SacIO, _isText
+from obspy.sac.sacio import SacIO
 import os
 import struct
 
@@ -113,7 +113,7 @@ def isSACXY(filename):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
-    :type filename: str
+    :type filename: str or file-like object.
     :param filename: Alphanumeric SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.
@@ -122,27 +122,46 @@ def isSACXY(filename):
 
     >>> isSACXY('/path/to/testxy.sac')  #doctest: +SKIP
     """
+    if is_bytes_buffer(filename) or is_text_buffer(filename):
+        return _isSACXY(filename)
+    elif isinstance(filename, (str, bytes)):
+        with open(filename, "rt") as fh:
+            return _isSACXY(fh)
+    else:
+        raise ValueError("Cannot open '%s'." % filename)
+
+
+def _isSACXY(buf):
+    """
+    Checks whether a file is alphanumeric SAC file or not.
+
+    :type buf: file-like object oropen file
+    :param buf: Alphanumeric SAC file to be checked.
+    :rtype: bool
+    :return: ``True`` if a alphanumeric SAC file.
+    """
     # First find out if it is a text or a binary file. This should
     # always be true if a file is a text-file and only true for a
     # binary file in rare occasions (Recipe 173220 found on
     # http://code.activestate.com/
-    if not _isText(filename, blocksize=512):
-        return False
+    cur_pos = buf.tell()
     try:
-        with open(filename) as f:
+        try:
             hdcards = []
             # read in the header cards
             for _i in range(30):
-                hdcards.append(f.readline())
+                hdcards.append(buf.readline())
             npts = int(hdcards[15].split()[-1])
             # read in the seismogram
-            seis = f.read(-1).split()
-    except:
-        return False
-    # check that npts header value and seismogram length are consistent
-    if npts != len(seis):
-        return False
-    return True
+            seis = buf.read(-1).split()
+        except:
+            return False
+        # check that npts header value and seismogram length are consistent
+        if npts != len(seis):
+            return False
+        return True
+    finally:
+        buf.seek(cur_pos, 0)
 
 
 def readSACXY(filename, headonly=False, debug_headers=False,
