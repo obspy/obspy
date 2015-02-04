@@ -121,7 +121,7 @@ class TauP_Create(object):
 
             if not os.path.exists(os.path.dirname(self.output_filename)):
                 os.makedirs(os.path.dirname(self.output_filename))
-            self.tMod.writeModel(self.output_filename)
+            self.tMod.save(self.output_filename)
             if self.debug:
                 print("Done Saving " + self.output_filename)
         except IOError as e:

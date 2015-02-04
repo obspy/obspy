@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .tau_model_loader import load
+from .tau_model import TauModel
 from .taup_time import TauP_Time
 from .taup_pierce import TauP_Pierce
 from .taup_path import TauP_Path
@@ -51,7 +51,7 @@ class TauPyModel(object):
         2
         """
         self.verbose = verbose
-        self.model = load(model)
+        self.model = TauModel.fromfile(model)
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
                          phase_list=("ttall",)):
