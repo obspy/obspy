@@ -552,9 +552,9 @@ class SacIO(object):
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
-        ...     tr = SacIO('test.sac') # doctest: +SKIP
+        ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
-        ...     tr.WriteSacBinary('test2.sac') # doctest: +SKIP
+        ...     tr.WriteSacBinary(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'rb') as fh:
         ...     u = SacIO(fh) # doctest: +SKIP
         >>> u.SetHvalue('kevnm','hullahulla') # doctest: +SKIP
@@ -806,7 +806,7 @@ class SacIO(object):
         >>> with open('test2.sac', 'wb') as fh:
         ...     tr.WriteSacXY(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
-        ...     tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
+        ...     tr.IsValidXYSacFile(fh) # doctest: +SKIP
         True
         """
         # header

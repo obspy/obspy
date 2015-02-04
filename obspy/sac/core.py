@@ -253,8 +253,10 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
 
     :param stream: The ObsPy Stream object to write.
     :type stream: :class:`~obspy.core.stream.Stream`
-    :param filename: File or object to write to. If its not a filename,
-        it only supports writing Streams objects containing a single Trace.
+    :param filename: Name of file to write. In case an open file or
+        file-like object is passed, this function only supports writing
+        Stream objects containing a single Trace. This is a limitation of
+        the SAC file format. An exception will be raised in case its necessary.
     :type filename: str, open file, or file-like object
 
     .. rubric:: Example
@@ -400,8 +402,10 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
 
     :param stream: The ObsPy Stream object to write.
     :type stream: :class:`~obspy.core.stream.Stream`
-    :param filename: Name of file to write. If it is not a filename, it only
-        supports writing single Trace streams.
+    :param filename: Name of file to write. In case an open file or
+        file-like object is passed, this function only supports writing
+        Stream objects containing a single Trace. This is a limitation of
+        the SAC file format. An exception will be raised in case its necessary.
     :type filename: str, open file, or file-like object
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
