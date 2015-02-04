@@ -103,7 +103,8 @@ class SacIOTestCase(unittest.TestCase):
             tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
             with open(tfile, "rb") as fh:
                 t = SacIO(fh)
-            t.WriteSacXY(tempfile)
+            with open(tempfile, "wb") as fh:
+                t.WriteSacXY(fh)
             with open(tempfile, "rb") as fh:
                 d = SacIO(fh, alpha=True)
             e = SacIO()
@@ -129,7 +130,8 @@ class SacIOTestCase(unittest.TestCase):
             tempfile = tf.name
             with open(tfile, "rb") as fh:
                 t = SacIO(fh)
-            t.WriteSacXY(tempfile)
+            with open(tempfile, 'wb') as fh:
+                t.WriteSacXY(fh)
             with open(tempfile, "rb") as fh:
                 d = SacIO(fh, alpha=True)
             e = SacIO()

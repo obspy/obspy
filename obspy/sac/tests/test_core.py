@@ -605,20 +605,6 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
 
-    def test_readXYwriteXY_from_StringIO(self):
-        """
-        Reading/writing XY sac files from/to io.StringIO.
-        """
-        # Original.
-        st = readSACXY(self.filexy)
-
-        with io.StringIO() as fh:
-            writeSACXY(st, fh)
-            fh.seek(0, 0)
-            st2 = readSACXY(fh)
-
-        self.assertTrue(st == st2)
-
     def test_readXYwriteXY_from_BytesIO(self):
         """
         Reading/writing XY sac files from/to io.BytesIO. It's alphanumeric
@@ -631,22 +617,6 @@ class CoreTestCase(unittest.TestCase):
             writeSACXY(st, fh)
             fh.seek(0, 0)
             st2 = readSACXY(fh)
-
-        self.assertTrue(st == st2)
-
-    def test_readXYwriteXY_from_open_file_text_mode(self):
-        """
-        Reading/writing XY sac files to open files in text mode.
-        """
-        # Original.
-        st = readSACXY(self.filexy)
-
-        with NamedTemporaryFile() as tf:
-            with open(tf.name, "wt") as fh:
-                writeSACXY(st, fh)
-                fh.seek(0, 0)
-            with open(tf.name, "rt") as fh:
-                st2 = readSACXY(fh)
 
         self.assertTrue(st == st2)
 
@@ -721,24 +691,17 @@ class CoreTestCase(unittest.TestCase):
             buf.seek(0, 0)
             self.assertFalse(isSACXY(buf))
 
-    def test_is_sacxy_string_io(self):
+    def test_is_sacxy_string_io_raises(self):
         """
-        Tests the isSACXY function for StringIO objects.
+        Tests the isSACXY function for StringIO objects where it should
+        raise. I/O is binary only.
         """
         with io.StringIO() as buf:
             # Read file to BytesIO.
             with open(self.filexy, "rt") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(isSACXY(buf))
-
-        # Should naturally fail for other files.
-        with io.StringIO() as buf:
-            # Read file to BytesIO.
-            with open(__file__, "rt") as fh:
-                buf.write(fh.read())
-            buf.seek(0, 0)
-            self.assertFalse(isSACXY(buf))
+            self.assertRaises(ValueError, isSACXY, buf)
 
     def test_is_sacxy_open_file_binary_mode(self):
         """
@@ -750,15 +713,12 @@ class CoreTestCase(unittest.TestCase):
         with open(__file__, "rb") as fh:
             self.assertFalse(isSACXY(fh))
 
-    def test_is_sacxy_open_file_text_mode(self):
+    def test_is_sacxy_open_file_text_mode_fails(self):
         """
-        Tests the isSACXY function for open files in text mode.
+        Tests that the isSACXY function for open files in text mode fails.
         """
         with open(self.filexy, "rt") as fh:
-            self.assertTrue(isSACXY(fh))
-
-        with open(__file__, "rt") as fh:
-            self.assertFalse(isSACXY(fh))
+            self.assertRaises(ValueError, isSACXY, fh)
 
 
 def suite():

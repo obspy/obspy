@@ -794,48 +794,43 @@ class SacIO(object):
                 pass
         return
 
-    def WriteSacXY(self, ofname):
+    def WriteSacXY(self, fh):
         """
         Write SAC XY file (ascii)
 
-        :param f: filename (SAC ascii)
+        :param fh: open file or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.WriteSacXY('test2.sac') # doctest: +SKIP
-        >>> tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO(fh) # doctest: +SKIP
+        >>> with open('test2.sac', 'wb') as fh:
+        ...     tr.WriteSacXY(fh) # doctest: +SKIP
+        >>> with open('test2.sac', 'wb') as fh:
+        ...     tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
         True
         """
-        try:
-            f = open(ofname, 'wb')
-        except IOError:
-            raise SacIOError("Cannot open file: " + ofname)
         # header
         try:
-            np.savetxt(f, np.reshape(self.hf, (14, 5)),
+            np.savetxt(fh, np.reshape(self.hf, (14, 5)),
                        fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-            np.savetxt(f, np.reshape(self.hi, (8, 5)),
+            np.savetxt(fh, np.reshape(self.hi, (8, 5)),
                        fmt=native_str("%10d%10d%10d%10d%10d"))
             for i in range(0, 24, 3):
-                f.write(self.hs[i:i + 3].data)
-                f.write(b'\n')
-        except:
-            f.close()
-            raise SacIOError("Cannot write header values: " + ofname)
+                fh.write(self.hs[i:i + 3].data)
+                fh.write(b'\n')
+        except Exception as e:
+            raise SacIOError("Cannot write header values.", e)
         # traces
         npts = self.GetHvalue('npts')
         if npts == -12345 or npts == 0:
-            f.close()
             return
         try:
             rows = npts // 5
-            np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
+            np.savetxt(fh, np.reshape(self.seis[0:5 * rows], (rows, 5)),
                        fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-            np.savetxt(f, self.seis[5 * rows:], delimiter=b'\t')
-        except:
-            f.close()
-            raise SacIOError("Cannot write trace values: " + ofname)
-        f.close()
+            np.savetxt(fh, self.seis[5 * rows:], delimiter=b'\t')
+        except Exception as e:
+            raise SacIOError("Cannot write trace values.", e)
 
     def WriteSacBinary(self, fh):
         """

@@ -14,7 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import Trace, Stream
-from obspy.core.compatibility import is_bytes_buffer, is_text_buffer
+from obspy.core.compatibility import is_bytes_buffer
 from obspy.sac.sacio import SacIO
 import os
 import struct
@@ -122,10 +122,10 @@ def isSACXY(filename):
 
     >>> isSACXY('/path/to/testxy.sac')  #doctest: +SKIP
     """
-    if is_bytes_buffer(filename) or is_text_buffer(filename):
+    if is_bytes_buffer(filename):
         return _isSACXY(filename)
     elif isinstance(filename, (str, bytes)):
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             return _isSACXY(fh)
     else:
         raise ValueError("Cannot open '%s'." % filename)
@@ -193,8 +193,7 @@ def readSACXY(filename, headonly=False, debug_headers=False,
     >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
-    # Alphanumeric so bytes and text should both work.
-    if is_bytes_buffer(filename) or is_text_buffer(filename):
+    if is_bytes_buffer(filename):
         return _readSACXY(buf=filename, headonly=headonly,
                           debug_headers=debug_headers, **kwargs)
     else:
@@ -268,7 +267,7 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
     # SAC can only store one Trace per file.
-    if is_bytes_buffer(filename) or is_text_buffer(filename):
+    if is_bytes_buffer(filename):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object must only contain "
@@ -282,7 +281,7 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
         for i, trace in enumerate(stream):
             if len(stream) != 1:
                 filename = "%s%02d%s" % (base, i + 1, ext)
-            with open(filename, "wt") as fh:
+            with open(filename, "wb") as fh:
                 _writeSACXY(trace, fh, **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
