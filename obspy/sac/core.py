@@ -35,9 +35,11 @@ def isSAC(filename):
     """
     if is_bytes_buffer(filename):
         return _isSAC(filename)
-    else:
+    elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
             return _isSAC(fh)
+    else:
+        raise ValueError("Cannot open '%s'." % filename)
 
 
 def _isSAC(buf):
@@ -292,10 +294,12 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
     if is_bytes_buffer(filename):
         return _readSAC(buf=filename, headonly=headonly,
                         debug_headers=debug_headers, fsize=fsize, **kwargs)
-    else:
+    elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
             return _readSAC(buf=fh, headonly=headonly,
                             debug_headers=debug_headers, fsize=fsize, **kwargs)
+    else:
+        raise ValueError("Cannot open '%s'." % filename)
 
 
 def _readSAC(buf, headonly=False, debug_headers=False, fsize=True,
@@ -375,15 +379,17 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
                              "one Trace")
         _writeSAC(stream[0], filename, byteorder=byteorder, **kwargs)
         return
-
-    # Otherwise treat it as a filename
-    # Translate the common (renamed) entries
-    base, ext = os.path.splitext(filename)
-    for i, trace in enumerate(stream):
-        if len(stream) != 1:
-            filename = "%s%02d%s" % (base, i + 1, ext)
-        with open(filename, "wb") as fh:
-            _writeSAC(trace, fh, byteorder=byteorder, **kwargs)
+    elif isinstance(filename, (str, bytes)):
+        # Otherwise treat it as a filename
+        # Translate the common (renamed) entries
+        base, ext = os.path.splitext(filename)
+        for i, trace in enumerate(stream):
+            if len(stream) != 1:
+                filename = "%s%02d%s" % (base, i + 1, ext)
+            with open(filename, "wb") as fh:
+                _writeSAC(trace, fh, byteorder=byteorder, **kwargs)
+    else:
+        raise ValueError("Cannot open '%s'." % filename)
 
 
 def _writeSAC(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable

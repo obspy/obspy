@@ -561,6 +561,14 @@ class CoreTestCase(unittest.TestCase):
         with io.BytesIO() as fh:
             self.assertRaises(ValueError, st.write, fh, format="sac")
 
+    def test_writing_to_io_string_io_fails(self):
+        """
+        Writing to io.StringIO should fail on all platforms.
+        """
+        st = read()[:1]
+        with io.StringIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sac")
+
     def test_read_via_obspy_from_bytes_io(self):
         """
         Read sac files from a BytesIO object via ObsPy.
