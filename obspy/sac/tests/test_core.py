@@ -9,7 +9,7 @@ from future.builtins import *  # NOQA
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError
-from obspy.sac.core import readSAC
+from obspy.sac.core import readSAC, writeSAC
 import copy
 import io
 import numpy as np
@@ -501,6 +501,65 @@ class CoreTestCase(unittest.TestCase):
         tr2 = readSAC(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
+
+    def test_read_sac_from_open_file(self):
+        """
+        Tests reading from an open file.
+        """
+        with open(self.file, "rb") as fh:
+            # Attempt to read from it.
+            tr = readSAC(fh)[0]
+
+        # Open file normally and make sure the results are identical.
+        tr2 = readSAC(self.file)[0]
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_read_write_bytes_io(self):
+        """
+        Tests reading and writing to and from BytesIO.
+        """
+        st = readSAC(self.file)
+        with io.BytesIO() as buf:
+            writeSAC(st, buf)
+            buf.seek(0, 0)
+            # Attempt to read from it.
+            st2 = readSAC(buf)
+
+        tr = st[0]
+        tr2 = st2[0]
+        # depmen is different as it is actually calculated on the fly.
+        del tr.stats.sac.depmen
+        del tr2.stats.sac.depmen
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_read_write_open_file(self):
+        st = readSAC(self.file)
+
+        with NamedTemporaryFile() as tf_out:
+            with open(tf_out.name, "wb") as fh:
+                writeSAC(st, fh)
+
+            with open(tf_out.name, "rb") as fh:
+                st2 = readSAC(fh)
+
+        tr = st[0]
+        tr2 = st2[0]
+        # depmen is different as it is actually calculated on the fly.
+        del tr.stats.sac.depmen
+        del tr2.stats.sac.depmen
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_writing_to_obj_with_multiple_traces_fails(self):
+        """
+        Writing to a buf with multiple trace objects should fail. The SAC
+        format cannot deal with that.
+        """
+        st = read()
+        with io.BytesIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sac")
 
     def test_read_via_obspy_from_bytes_io(self):
         """
