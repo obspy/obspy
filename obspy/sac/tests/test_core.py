@@ -9,7 +9,7 @@ from future.builtins import *  # NOQA
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError
-from obspy.sac.core import readSAC, writeSAC
+from obspy.sac.core import readSAC, writeSAC, readSACXY, writeSACXY
 import copy
 import io
 import numpy as np
@@ -603,6 +603,67 @@ class CoreTestCase(unittest.TestCase):
         del tr2.stats.sac.depmen
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
+
+    def test_readXYwriteXY_from_StringIO(self):
+        """
+        Reading/writing XY sac files from/to io.StringIO.
+        """
+        # Original.
+        st = readSACXY(self.filexy)
+
+        with io.StringIO() as fh:
+            writeSACXY(st, fh)
+            fh.seek(0, 0)
+            st2 = readSACXY(fh)
+
+        self.assertTrue(st == st2)
+
+    def test_readXYwriteXY_from_BytesIO(self):
+        """
+        Reading/writing XY sac files from/to io.BytesIO. It's alphanumeric
+        so bytes should also do the trick.
+        """
+        # Original.
+        st = readSACXY(self.filexy)
+
+        with io.BytesIO() as fh:
+            writeSACXY(st, fh)
+            fh.seek(0, 0)
+            st2 = readSACXY(fh)
+
+        self.assertTrue(st == st2)
+
+    def test_readXYwriteXY_from_open_file_text_mode(self):
+        """
+        Reading/writing XY sac files to open files in text mode.
+        """
+        # Original.
+        st = readSACXY(self.filexy)
+
+        with NamedTemporaryFile() as tf:
+            with open(tf.name, "wt") as fh:
+                writeSACXY(st, fh)
+                fh.seek(0, 0)
+            with open(tf.name, "rt") as fh:
+                st2 = readSACXY(fh)
+
+        self.assertTrue(st == st2)
+
+    def test_readXYwriteXY_from_open_file_binary_mode(self):
+        """
+        Reading/writing XY sac files to open files in binary mode.
+        """
+        # Original.
+        st = readSACXY(self.filexy)
+
+        with NamedTemporaryFile() as tf:
+            with open(tf.name, "wb") as fh:
+                writeSACXY(st, fh)
+                fh.seek(0, 0)
+            with open(tf.name, "rb") as fh:
+                st2 = readSACXY(fh)
+
+        self.assertTrue(st == st2)
 
 
 def suite():

@@ -44,7 +44,7 @@ def isSAC(filename):
 
 def _isSAC(buf):
     """
-    Checks whether a file-like obejcts contains a SAC file or not.
+    Checks whether a file-like object contains a SAC file or not.
 
     :type buf: file-like object or open file.
     :param buf: SAC file to be checked.
