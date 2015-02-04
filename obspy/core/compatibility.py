@@ -49,10 +49,11 @@ def is_text_buffer(obj):
     :param obj: The object to be tested.
     :return: True/False
     """
-    # Default open()'ed files and StringIO don't inherit from any of the io
-    # classes thus we only test the methods of the objects which in Python 2
-    # should be safe enough.
-    if PY2:
+    # Default open()'ed files and StringIO (in Python 2) don't inherit from any
+    # of the io classes thus we only test the methods of the objects which
+    # in Python 2 should be safe enough.
+    if PY2 and not isinstance(obj, io.BufferedIOBase) and \
+            not isinstance(obj, io.TextIOBase):
         if hasattr(obj, "read") and hasattr(obj, "write") \
                 and hasattr(obj, "seek") and hasattr(obj, "tell"):
             return True
@@ -69,10 +70,11 @@ def is_bytes_buffer(obj):
     :param obj: The object to be tested.
     :return: True/False
     """
-    # Default open()'ed files and StringIO don't inherit from any of the io
-    # classes thus we only test the methods of the objects which in Python 2
-    # should be safe enough.
-    if PY2:
+    # Default open()'ed files and StringIO (in Python 2) don't inherit from any
+    # of the io classes thus we only test the methods of the objects which
+    # in Python 2 should be safe enough.
+    if PY2 and not isinstance(obj, io.BufferedIOBase) and \
+            not isinstance(obj, io.TextIOBase):
         if hasattr(obj, "read") and hasattr(obj, "write") \
                 and hasattr(obj, "seek") and hasattr(obj, "tell"):
             return True
