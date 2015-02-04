@@ -24,8 +24,8 @@ def isSAC(filename):
     """
     Checks whether a file is a SAC file or not.
 
-    :type filename: str or file-like object
     :param filename: SAC file to be checked.
+    :type filename: str, open file, or file-like object
     :rtype: bool
     :return: ``True`` if a SAC file.
 
@@ -46,8 +46,8 @@ def _isSAC(buf):
     """
     Checks whether a file-like object contains a SAC file or not.
 
-    :type buf: file-like object or open file.
     :param buf: SAC file to be checked.
+    :type buf: file-like object or open file.
     :rtype: bool
     :return: ``True`` if a SAC file.
     """
@@ -113,8 +113,8 @@ def isSACXY(filename):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
-    :type filename: str or file-like object.
     :param filename: Alphanumeric SAC file to be checked.
+    :type filename: str, open file, or file-like object
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.
 
@@ -135,15 +135,11 @@ def _isSACXY(buf):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
-    :type buf: file-like object oropen file
     :param buf: Alphanumeric SAC file to be checked.
+    :type buf: file-like object or open file
     :rtype: bool
     :return: ``True`` if a alphanumeric SAC file.
     """
-    # First find out if it is a text or a binary file. This should
-    # always be true if a file is a text-file and only true for a
-    # binary file in rare occasions (Recipe 173220 found on
-    # http://code.activestate.com/
     cur_pos = buf.tell()
     try:
         try:
@@ -173,18 +169,18 @@ def readSACXY(filename, headonly=False, debug_headers=False,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: filename of file-like object.
     :param filename: Alphanumeric SAC file to be read.
-    :type headonly: bool, optional
+    :type filename: str, open file, or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
-    :type debug_headers: bool, optional
+    :type headonly: bool
     :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
         'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
         'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
         :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
+    :type debug_headers: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -211,18 +207,18 @@ def _readSACXY(buf, headonly=False, debug_headers=False,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type buf: file or file-like object
     :param buf: Alphanumeric SAC file to be read.
-    :type headonly: bool, optional
+    :type buf: file or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
-    :type debug_headers: bool, optional
+    :type headonly: bool
     :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
         'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
         'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
         :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
+    :type debug_headers: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -255,10 +251,11 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
         the :meth:`~obspy.core.stream.Stream.write` method of an
         ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
-    :type filename: str
-    :param filename: Name of file to write.
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param filename: File or object to write to. If its not a filename,
+        it only supports writing Streams objects containing a single Trace.
+    :type filename: str, open file, or file-like object
 
     .. rubric:: Example
 
@@ -296,10 +293,10 @@ def _writeSACXY(trace, buf, **kwargs):  # @UnusedVariable
         the :meth:`~obspy.core.trace.Stream.write` method of an
         ObsPy :class:`~obspy.core.trace.Stream` object, call this instead.
 
-    :type trace: :class:`~obspy.core.trace.Trace`
     :param trace: The ObsPy Trace object to write.
-    :type filename: open file or file-like object
-    :param filename: Object to write to.
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param buf: Object to write to.
+    :type buf: file-like object
     """
     t = SacIO(trace)
     t.WriteSacXY(buf)
@@ -314,21 +311,21 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: filename, open file, or file-like object.
     :param filename: SAC file to be read.
-    :type headonly: bool, optional
+    :type filename: str, open file, or file-like object
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
-    :type debug_headers: bool, optional
+    :type headonly: bool
     :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
         'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
         'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
         :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
-    :type fsize: bool, optional
+    :type debug_headers: bool
     :param fsize: Check if file size is consistent with theoretical size
         from header. Defaults to ``True``.
+    :type fsize: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -358,21 +355,21 @@ def _readSAC(buf, headonly=False, debug_headers=False, fsize=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type buf: file or file-like object.
     :param buf: SAC file to be read.
-    :type headonly: bool, optional
+    :type buf: file or file-like object.
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
-    :type debug_headers: bool, optional
+    :type headonly: bool
     :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
         'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
         'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
         :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
-    :type fsize: bool, optional
+    :type debug_headers: bool
     :param fsize: Check if file size is consistent with theoretical size
         from header. Defaults to ``True``.
+    :type fsize: bool
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
@@ -401,15 +398,15 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
         the :meth:`~obspy.core.stream.Stream.write` method of an
         ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
-    :type filename: str or file-like object
+    :type stream: :class:`~obspy.core.stream.Stream`
     :param filename: Name of file to write. If it is not a filename, it only
         supports writing single Trace streams.
-    :type byteorder: int or str, optional
+    :type filename: str, open file, or file-like object
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
         Defaults to little endian.
+    :type byteorder: int or str
 
     .. rubric:: Example
 
@@ -448,14 +445,14 @@ def _writeSAC(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
         the :meth:`~obspy.core.stream.Stream.write` method of an
         ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    :type trace: :class:`~obspy.core.trace.Trace`
     :param trace: The ObsPy Trace object to write.
-    :type buf: open file or file-like object
+    :type trace: :class:`~obspy.core.trace.Trace`
     :param buf: Object to write to.
-    :type byteorder: int or str, optional
+    :type buf: open file or file-like object
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
         Defaults to little endian.
+    :type byteorder: int or str
     """
     if byteorder in ("<", 0, "0"):
         byteorder = 0
