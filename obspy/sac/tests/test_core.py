@@ -9,7 +9,8 @@ from future.builtins import *  # NOQA
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError
-from obspy.sac.core import readSAC, writeSAC, readSACXY, writeSACXY
+from obspy.sac.core import readSAC, writeSAC, readSACXY, writeSACXY, isSAC, \
+    isSACXY
 import copy
 import io
 import numpy as np
@@ -664,6 +665,100 @@ class CoreTestCase(unittest.TestCase):
                 st2 = readSACXY(fh)
 
         self.assertTrue(st == st2)
+
+    def test_is_sac_bytes_io(self):
+        """
+        Tests the isSAC function for BytesIO objects.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertTrue(isSAC(buf))
+
+        # Should naturally fail for an XY file.
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.filexy, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertFalse(isSAC(buf))
+
+    def test_is_sac_string_io_raises(self):
+        """
+        Should raise a ValueError.
+        """
+        with io.StringIO() as buf:
+            with open(__file__, "rt") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertRaises(ValueError, isSAC, buf)
+
+    def test_is_sac_open_file(self):
+        """
+        Tests the isSAC function for open files.
+        """
+        with open(self.file, "rb") as fh:
+            self.assertTrue(isSAC(fh))
+
+    def test_is_sacxy_bytes_io(self):
+        """
+        Tests the isSACXY function for BytesIO objects.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.filexy, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertTrue(isSACXY(buf))
+
+        # Should naturally fail for a normal sac file.
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertFalse(isSACXY(buf))
+
+    def test_is_sacxy_string_io(self):
+        """
+        Tests the isSACXY function for StringIO objects.
+        """
+        with io.StringIO() as buf:
+            # Read file to BytesIO.
+            with open(self.filexy, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertTrue(isSACXY(buf))
+
+        # Should naturally fail for other files.
+        with io.StringIO() as buf:
+            # Read file to BytesIO.
+            with open(__file__, "rt") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertFalse(isSACXY(buf))
+
+    def test_is_sacxy_open_file_binary_mode(self):
+        """
+        Tests the isSACXY function for open files in binary mode.
+        """
+        with open(self.filexy, "rb") as fh:
+            self.assertTrue(isSACXY(fh))
+
+        with open(__file__, "rb") as fh:
+            self.assertTrue(isSACXY(fh))
+
+    def test_is_sacxy_open_file_text_mode(self):
+        """
+        Tests the isSACXY function for open files in text mode.
+        """
+        with open(self.filexy, "rt") as fh:
+            self.assertTrue(isSACXY(fh))
+
+        with open(__file__, "rt") as fh:
+            self.assertTrue(isSACXY(fh))
 
 
 def suite():
