@@ -733,6 +733,15 @@ class CoreTestCase(unittest.TestCase):
         with io.BytesIO() as fh:
             st.write(fh, format="sacxy")
 
+        # Will fail if the stream contains more than one trace.
+        st = read()
+        self.assertTrue(len(st) > 1)
+        with io.BytesIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sac")
+
+        with io.BytesIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sacxy")
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
