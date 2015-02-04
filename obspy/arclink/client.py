@@ -97,7 +97,7 @@ class Client(object):
     * IPGP:  eida.ipgp.fr:18001
     * USP:   seisrequest.iag.usp.br:18001
     """
-    #: Delay in seconds between each status request
+    # : Delay in seconds between each status request
     status_delay = 0.5
 
     def __init__(self, host="webdc.eu", port=18002, user=None,
@@ -1307,7 +1307,7 @@ class Client(object):
 
         return data
 
-    def getNetworks(self, starttime, endtime):
+    def getNetworks(self, starttime, endtime, route=False):
         """
         Returns a dictionary of available networks within the given time span.
 
@@ -1320,11 +1320,13 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :return: Dictionary of network data.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing (default is ``False``).
         """
         return self.getInventory(network='*', starttime=starttime,
-                                 endtime=endtime, route=False)
+                                 endtime=endtime, route=route)
 
-    def getStations(self, starttime, endtime, network):
+    def getStations(self, starttime, endtime, network, route=True):
         """
         Returns a dictionary of available stations in the given network(s).
 
@@ -1339,9 +1341,12 @@ class Client(object):
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
         :return: Dictionary of station data.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing (default is ``True``).
+
         """
         data = self.getInventory(network=network, starttime=starttime,
-                                 endtime=endtime)
+                                 endtime=endtime, route=route)
         stations = [value for key, value in data.items()
                     if key.startswith(network + '.')
                     and "code" in value]
