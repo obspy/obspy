@@ -301,7 +301,7 @@ class TauBranch(object):
             raise SlownessModelError("SlownessModel and TauModel are likely"
                                      "out of sync.")
 
-        thePath = np.zeros(botLayerNum - topLayerNum + 1, dtype=TimeDist)
+        thePath = np.empty(botLayerNum - topLayerNum + 1, dtype=TimeDist)
         pathIndex = 0
 
         # Check to make sure layers and branches are compatible.

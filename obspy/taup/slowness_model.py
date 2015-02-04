@@ -1098,13 +1098,16 @@ class SlownessModel(object):
             raise SlownessModelError("Ray turns in the middle of this layer! "
                                      "layerNum = " + str(layerNum))
 
-        timeDist = np.zeros_like(layerNum, dtype=TimeDist)
+        timeDist = np.empty_like(layerNum, dtype=TimeDist)
         timeDist['p'] = sphericalRayParam
 
         # Check to see if this layer has zero thickness, if so then it is
         # from a critically reflected slowness sample. That means just
         # return 0 for time and distance increments.
-        leftover = sphericalLayer['topDepth'] != sphericalLayer['botDepth']
+        zero_thick = sphericalLayer['topDepth'] == sphericalLayer['botDepth']
+        leftover = ~zero_thick
+        timeDist['dist'][zero_thick] = 0
+        timeDist['time'][zero_thick] = 0
 
         # Check to see if this layer contains the centre of the Earth. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
@@ -1177,6 +1180,8 @@ class SlownessModel(object):
         timeDist[leftover] = bullenRadialSlowness(sphericalLayer[leftover],
                                                   sphericalRayParam,
                                                   self.radiusOfEarth)
+
+        timeDist['depth'].fill(0)
 
         if np.any(timeDist['dist'] < 0) \
                 or np.any(timeDist['time'] < 0) \

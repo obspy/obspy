@@ -28,12 +28,13 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     layer. Note that this gives 1/2 of the true range and time
     increments since there will be both an upgoing and a downgoing path.
     Here we use the Mohorovicic or Bullen law: p=A*r^B"""
-    timedist = np.zeros_like(layer, dtype=TimeDist)
+    timedist = np.empty_like(layer, dtype=TimeDist)
     timedist['p'] = p
 
     # Only do Bullen radial slowness if the layer is not too thin (e.g.
     # 1 micron). In that case also just return 0.
     mask = layer['botDepth'] - layer['topDepth'] >= 0.000000001
+    timedist[~mask] = (0, 0, 0, 0)
     layer = layer[mask]
 
     B = (
@@ -48,6 +49,7 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     timedist['dist'][mask] = (np.arctan2(p, sqrtBotBotMpp) -
                               np.arctan2(p, sqrtTopTopMpp)) / B
     timedist['time'][mask] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
+    timedist['depth'].fill(0)
     if np.any(timedist['dist'] < 0) \
             or np.any(timedist['time'] < 0) \
             or np.any(np.isnan(timedist['dist'])) \
