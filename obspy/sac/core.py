@@ -14,7 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from obspy import Trace, Stream
-from obspy.core.compatibility import is_bytes_buffer
+from obspy.core.compatibility import is_bytes_buffer, is_text_buffer
 from obspy.sac.sacio import SacIO, _isText
 import os
 import struct
@@ -152,8 +152,47 @@ def readSACXY(filename, headonly=False, debug_headers=False,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
+    :type filename: filename of file-like object.
     :param filename: Alphanumeric SAC file to be read.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :type debug_headers: bool, optional
+    :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
+        'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
+        'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
+        :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
+        values are not synchronized with the Stream object itself and won't
+        be used during writing of a SAC file! Defaults to ``False``.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
+
+    .. rubric:: Example
+
+    >>> from obspy import read # doctest: +SKIP
+    >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
+    """
+    # Alphanumeric so bytes and text should both work.
+    if is_bytes_buffer(filename) or is_text_buffer(filename):
+        return _readSACXY(buf=filename, headonly=headonly,
+                          debug_headers=debug_headers, **kwargs)
+    else:
+        with open(filename, "rb") as fh:
+            return _readSACXY(buf=fh, headonly=headonly,
+                              debug_headers=debug_headers, **kwargs)
+
+
+def _readSACXY(buf, headonly=False, debug_headers=False,
+               **kwargs):  # @UnusedVariable
+    """
+    Reads an alphanumeric SAC file and returns an ObsPy Stream object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :type buf: file or file-like object
+    :param buf: Alphanumeric SAC file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -174,9 +213,9 @@ def readSACXY(filename, headonly=False, debug_headers=False,
     """
     t = SacIO(debug_headers=debug_headers)
     if headonly:
-        t.ReadSacXYHeader(filename)
+        t.ReadSacXYHeader(buf)
     else:
-        t.ReadSacXY(filename)
+        t.ReadSacXY(buf)
     # assign all header entries to a new dictionary compatible with ObsPy
     header = t.get_obspy_header()
 
@@ -226,7 +265,7 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: str
+    :type filename: filename, open file, or file-like object.
     :param filename: SAC file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
@@ -249,12 +288,49 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
     >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/test.sac") # doctest: +SKIP
     """
+    # Only bytes buffers for binary SAC.
+    if is_bytes_buffer(filename):
+        return _readSAC(buf=filename, headonly=headonly,
+                        debug_headers=debug_headers, fsize=fsize, **kwargs)
+    else:
+        with open(filename, "rb") as fh:
+            return _readSAC(buf=fh, headonly=headonly,
+                            debug_headers=debug_headers, fsize=fsize, **kwargs)
+
+
+def _readSAC(buf, headonly=False, debug_headers=False, fsize=True,
+             **kwargs):  # @UnusedVariable
+    """
+    Reads an SAC file and returns an ObsPy Stream object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :type buf: file or file-like object.
+    :param buf: SAC file to be read.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :type debug_headers: bool, optional
+    :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
+        'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
+        'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
+        :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
+        values are not synchronized with the Stream object itself and won't
+        be used during writing of a SAC file! Defaults to ``False``.
+    :type fsize: bool, optional
+    :param fsize: Check if file size is consistent with theoretical size
+        from header. Defaults to ``True``.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
+    """
     # read SAC file
     t = SacIO(debug_headers=debug_headers)
     if headonly:
-        t.ReadSacHeader(filename)
+        t.ReadSacHeader(buf)
     else:
-        t.ReadSacFile(filename, fsize)
+        t.ReadSacFile(buf, fsize)
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = t.get_obspy_header()
 

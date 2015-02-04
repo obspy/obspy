@@ -9,6 +9,7 @@ from future.builtins import *  # NOQA
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, SacIOError
+from obspy.sac.core import readSAC
 import copy
 import io
 import numpy as np
@@ -238,7 +239,8 @@ class CoreTestCase(unittest.TestCase):
         # test that iztype 11 is read correctly
         sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
         tr = read(sod_file)[0]
-        sac = SacIO(sod_file)
+        with open(sod_file, "rb") as fh:
+            sac = SacIO(fh)
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
         t2 = sac.reftime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
@@ -246,7 +248,8 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tr.write(tempfile, format="SAC")
-            sac2 = SacIO(tempfile)
+            with open(tempfile, "rb") as fh:
+                sac2 = SacIO(fh)
         self.assertEqual(sac2.iztype, 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
@@ -296,7 +299,8 @@ class CoreTestCase(unittest.TestCase):
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.b, 10.0)
-        sac_ref_time = SacIO(self.file).reftime
+        with open(self.file, 'rb') as fh:
+            sac_ref_time = SacIO(fh).reftime
         self.assertEqual(sac_ref_time.timestamp, 269596800.0)
         # change b to undefined and write (same case as if b == 0.0)
         # now sac reference time and reftime of seismogram must be the
@@ -308,7 +312,8 @@ class CoreTestCase(unittest.TestCase):
             tr2 = read(tmpfile)[0]
             self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
             self.assertEqual(tr2.stats.sac.b, -12345.0)
-            sac_ref_time2 = SacIO(tmpfile).reftime
+            with open(tmpfile, "rb") as fh:
+                sac_ref_time2 = SacIO(fh).reftime
         self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
 
     def test_issue156(self):
@@ -478,6 +483,24 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
         self.assertEqual(tr.stats.sac.kstnm, 'CDV     ')
         self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+
+    def test_read_sac_from_bytes_io(self):
+        """
+        Tests reading from a BytesIO object.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+
+            # Attempt to read from it.
+            tr = readSAC(buf)[0]
+
+        # Open file normally and make sure the results are identical.
+        tr2 = read(self.file)[0]
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
 
     def test_read_via_obspy_from_bytes_io(self):
         """
