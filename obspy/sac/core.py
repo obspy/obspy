@@ -267,14 +267,43 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     >>> st = read()
     >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
-    # Translate the common (renamed) entries
-    base, ext = os.path.splitext(filename)
-    for i, trace in enumerate(stream):
-        t = SacIO(trace)
-        if len(stream) != 1:
-            filename = "%s%02d%s" % (base, i + 1, ext)
-        t.WriteSacXY(filename)
-    return
+    # SAC can only store one Trace per file.
+    if is_bytes_buffer(filename) or is_text_buffer(filename):
+        if len(stream) > 1:
+            raise ValueError("If writing to a file-like object in the SAC "
+                             "format, the Stream object must only contain "
+                             "one Trace")
+        _writeSACXY(stream[0], filename, **kwargs)
+        return
+    elif isinstance(filename, (str, bytes)):
+        # Otherwise treat it as a filename
+        # Translate the common (renamed) entries
+        base, ext = os.path.splitext(filename)
+        for i, trace in enumerate(stream):
+            if len(stream) != 1:
+                filename = "%s%02d%s" % (base, i + 1, ext)
+            with open(filename, "wt") as fh:
+                _writeSACXY(trace, fh, **kwargs)
+    else:
+        raise ValueError("Cannot open '%s'." % filename)
+
+
+def _writeSACXY(trace, buf, **kwargs):  # @UnusedVariable
+    """
+    Writes a single trace to alphanumeric SAC file.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.trace.Stream.write` method of an
+        ObsPy :class:`~obspy.core.trace.Stream` object, call this instead.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: The ObsPy Trace object to write.
+    :type filename: open file or file-like object
+    :param filename: Object to write to.
+    """
+    t = SacIO(trace)
+    t.WriteSacXY(buf)
 
 
 def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
