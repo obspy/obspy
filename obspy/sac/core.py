@@ -256,7 +256,8 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     :param filename: Name of file to write. In case an open file or
         file-like object is passed, this function only supports writing
         Stream objects containing a single Trace. This is a limitation of
-        the SAC file format. An exception will be raised in case its necessary.
+        the SAC file format. An exception will be raised in case it's
+        necessary.
     :type filename: str, open file, or file-like object
 
     .. rubric:: Example
@@ -405,7 +406,8 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     :param filename: Name of file to write. In case an open file or
         file-like object is passed, this function only supports writing
         Stream objects containing a single Trace. This is a limitation of
-        the SAC file format. An exception will be raised in case its necessary.
+        the SAC file format. An exception will be raised in case it's
+        necessary.
     :type filename: str, open file, or file-like object
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
