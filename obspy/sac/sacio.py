@@ -1455,6 +1455,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> from obspy import Trace
+    >>> import os
     >>> tr = Trace()
     >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
     ...                         'RESP.NZ.CRLZ.10.HHZ')
