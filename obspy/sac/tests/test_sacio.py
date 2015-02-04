@@ -69,7 +69,8 @@ class SacIOTestCase(unittest.TestCase):
             self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
             t.SetHvalue("kstnm", "spiff")
             self.assertEqual(t.GetHvalue('kstnm'), 'spiff   ')
-            t.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                t.WriteSacBinary(fh)
             self.assertEqual(os.stat(sacfile)[6], os.stat(tempfile)[6])
             self.assertEqual(os.path.exists(tempfile), True)
             with open(tempfile, "rb") as fh:
@@ -77,7 +78,9 @@ class SacIOTestCase(unittest.TestCase):
             self.assertEqual((t.hf is not None), True)
             t.SetHvalue("kstnm", "spoff")
             self.assertEqual(t.GetHvalue('kstnm'), 'spoff   ')
-            t.WriteSacHeader(tempfile)
+            # Open with modification!
+            with open(tempfile, "rb+") as fh:
+                t.WriteSacHeader(fh)
             t.SetHvalueInFile(tempfile, "kcmpnm", 'Z       ')
             self.assertEqual(t.GetHvalueFromFile(tempfile, "kcmpnm"),
                              'Z       ')
@@ -113,7 +116,8 @@ class SacIOTestCase(unittest.TestCase):
                 self.assertEqual(e.IsValidSacFile(fh), False)
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            d.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                d.WriteSacBinary(fh)
             size1 = os.stat(tempfile)[6]
             size2 = os.stat(tfile)[6]
         self.assertEqual(size1, size2)
@@ -164,7 +168,8 @@ class SacIOTestCase(unittest.TestCase):
             with open(tfileb, "rb") as fh:
                 tb = SacIO(fh)
             tb.swap_byte_order()
-            tb.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                tb.WriteSacBinary(fh)
             with open(tempfile, "rb") as fh:
                 t = SacIO(fh)
             with open(tfilel, "rb") as fh:
@@ -178,7 +183,8 @@ class SacIOTestCase(unittest.TestCase):
             with open(tfilel, "rb") as fh:
                 tl = SacIO(fh)
             tl.swap_byte_order()
-            tl.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                tl.WriteSacBinary(fh)
             with open(tempfile, "rb") as fh:
                 t = SacIO(fh)
             with open(tfileb, "rb") as fh:
@@ -199,7 +205,8 @@ class SacIOTestCase(unittest.TestCase):
             t.SetHvalue('stla', -41.2869)
             t.SetHvalue('stlo', 174.7746)
             t.SetHvalue('lcalda', 1)
-            t.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                t.WriteSacBinary(fh)
             with open(tempfile, "rb") as fh:
                 t2 = SacIO(fh)
         b = np.array([18486532.5788 / 1000., 65.654154562, 305.975459869],
@@ -366,9 +373,11 @@ class SacIOTestCase(unittest.TestCase):
             with open(tempfile, "rb") as fh:
                 trace = SacIO(fh)
             trace.SetHvalue('stel', 91.0)
-            trace.WriteSacHeader(tempfile)
+            # Open with modification!
+            with open(tempfile, "rb+") as fh:
+                trace.WriteSacHeader(fh)
             with open(tempfile, "rb") as fh:
-                trace = SacIO(fh)
+                SacIO(fh)
 
     def test_read_with_fsize(self):
         """

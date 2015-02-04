@@ -42,10 +42,10 @@ def isSAC(filename):
 
 def _isSAC(buf):
     """
-    Checks whether a buffer contains a SAC file or not.
+    Checks whether a file-like obejcts contains a SAC file or not.
 
-    :type filename: file-like object or oben file.
-    :param filename: SAC file to be checked.
+    :type buf: file-like object or open file.
+    :param buf: SAC file to be checked.
     :rtype: bool
     :return: ``True`` if a SAC file.
     """
@@ -288,7 +288,7 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
     >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/test.sac") # doctest: +SKIP
     """
-    # Only bytes buffers for binary SAC.
+    # Only byte buffers for binary SAC.
     if is_bytes_buffer(filename):
         return _readSAC(buf=filename, headonly=headonly,
                         debug_headers=debug_headers, fsize=fsize, **kwargs)
@@ -352,8 +352,9 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
 
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
-    :type filename: str
-    :param filename: Name of file to write.
+    :type filename: str or file-like object
+    :param filename: Name of file to write. If it is not a filename, it only
+        supports writing single Trace streams.
     :type byteorder: int or str, optional
     :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
         little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
@@ -365,6 +366,44 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     >>> st = read()
     >>> st.write("test.sac", format="SAC")  #doctest: +SKIP
     """
+    # Bytes buffer are ok, but only if the Stream object contains only one
+    # Trace. SAC can only store one Trace per file.
+    if is_bytes_buffer(filename):
+        if len(stream) > 1:
+            raise ValueError("If writing to a file-like object in the SAC "
+                             "format, the Stream object must only contain "
+                             "one Trace")
+        _writeSAC(stream[0], filename, byteorder=byteorder, **kwargs)
+        return
+
+    # Otherwise treat it as a filename
+    # Translate the common (renamed) entries
+    base, ext = os.path.splitext(filename)
+    for i, trace in enumerate(stream):
+        if len(stream) != 1:
+            filename = "%s%02d%s" % (base, i + 1, ext)
+        with open(filename, "wb") as fh:
+            _writeSAC(trace, fh, byteorder=byteorder, **kwargs)
+
+
+def _writeSAC(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
+    """
+    Writes a single trace to an open file or file-like object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: The ObsPy Trace object to write.
+    :type buf: open file or file-like object
+    :param buf: Object to write to.
+    :type byteorder: int or str, optional
+    :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+        little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
+        Defaults to little endian.
+    """
     if byteorder in ("<", 0, "0"):
         byteorder = 0
     elif byteorder in (">", 1, "1"):
@@ -372,15 +411,8 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     else:
         msg = "Invalid byte order. It must be either '<', '>', 0 or 1"
         raise ValueError(msg)
-
-    # Translate the common (renamed) entries
-    base, ext = os.path.splitext(filename)
-    for i, trace in enumerate(stream):
-        t = SacIO(trace)
-        if len(stream) != 1:
-            filename = "%s%02d%s" % (base, i + 1, ext)
-        if (byteorder == 1 and t.byteorder == 'little') or \
-           (byteorder == 0 and t.byteorder == 'big'):
-            t.swap_byte_order()
-        t.WriteSacBinary(filename)
-    return
+    t = SacIO(trace)
+    if (byteorder == 1 and t.byteorder == 'little') or \
+            (byteorder == 0 and t.byteorder == 'big'):
+        t.swap_byte_order()
+    t.WriteSacBinary(buf)

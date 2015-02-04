@@ -498,7 +498,7 @@ class CoreTestCase(unittest.TestCase):
             tr = readSAC(buf)[0]
 
         # Open file normally and make sure the results are identical.
-        tr2 = read(self.file)[0]
+        tr2 = readSAC(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
 
@@ -531,6 +531,9 @@ class CoreTestCase(unittest.TestCase):
             # Attempt to read from it.
             tr2 = read(buf)[0]
 
+        # depmen is different as it is actually calculated on the fly.
+        del tr.stats.sac.depmen
+        del tr2.stats.sac.depmen
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
 

@@ -17,7 +17,6 @@ from obspy.core.compatibility import frombuffer
 from obspy.core.util import gps2DistAzimuth, AttribDict
 from obspy.core import compatibility
 import numpy as np
-import os
 import time
 import warnings
 """
@@ -558,8 +557,6 @@ class SacIO(object):
                 self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
                 self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
-                cur_pos = fh.tell()
-                fh.seek(0, 0)
                 self.IsSACfile(fh)
                 self.byteorder = 'big'
             except SacError as e:
@@ -575,41 +572,34 @@ class SacIO(object):
             except SacError:
                 pass
 
-    def WriteSacHeader(self, fname):
+    def WriteSacHeader(self, fh):
         """
         Writes an updated header to an
         existing binary SAC-file.
 
-        :param f: filename (SAC binary).
+        :param fh: open file or file-like buffer
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
-        >>> u = SacIO('test2.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO('test.sac') # doctest: +SKIP
+        >>> with open('test2.sac', 'wb') as fh:
+        ...     tr.WriteSacBinary('test2.sac') # doctest: +SKIP
+        >>> with open('test2.sac', 'rb') as fh:
+        ...     u = SacIO(fh) # doctest: +SKIP
         >>> u.SetHvalue('kevnm','hullahulla') # doctest: +SKIP
-        >>> u.WriteSacHeader('test2.sac') # doctest: +SKIP
+        >>> with open('test2.sac', 'rb+') as fh:
+        ...     u.WriteSacHeader(fh) # doctest: +SKIP
         >>> u.GetHvalueFromFile('test2.sac',"kevnm") # doctest: +SKIP
         'hullahulla      '
         """
-        # --------------------------------------------------------------
-        # open the file
-        #
+        fh.seek(0, 0)  # set pointer to the file beginning
         try:
-            os.path.exists(fname)
-        except IOError:
-            warnings.warn("No such file: " + fname, category=Warning)
-        else:
-            f = open(fname, 'rb+')  # open file for modification
-            f.seek(0, 0)  # set pointer to the file beginning
-            try:
-                # write the header
-                f.write(self.hf.data)
-                f.write(self.hi.data)
-                f.write(self.hs.data)
-            except Exception as e:
-                f.close()
-                raise SacError("Cannot write header to file: " + fname, e)
-        f.close()
+            # write the header
+            fh.write(self.hf.data)
+            fh.write(self.hi.data)
+            fh.write(self.hs.data)
+        except Exception:
+            raise SacError("Cannot write header.")
 
     def ReadSacFile(self, fh, fsize=True):
         """
@@ -666,7 +656,7 @@ class SacIO(object):
         # --------------------------------------------------------------
         # you just have to know it's in the 10th place
         # actually, it's in the SAC manual
-        npts = self.hi[9]
+        npts = int(self.hi[9])
         if self.byteorder == 'big':
             self.seis = frombuffer(fh.read(npts * 4), dtype=native_str('>f4'))
         else:
@@ -876,34 +866,29 @@ class SacIO(object):
             raise SacIOError("Cannot write trace values: " + ofname)
         f.close()
 
-    def WriteSacBinary(self, ofname):
+    def WriteSacBinary(self, fh):
         """
         Write a SAC binary file using the head arrays and array seis.
 
-        :param f: filename (SAC binary).
+        :param fh: open file or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO(fh) # doctest: +SKIP
+        >>> wiht open('test2.sac', 'wb') as fh:
+        ...     tr.WriteSacBinary(fh) # doctest: +SKIP
         >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
         True
         """
         try:
-            f = open(ofname, 'wb+')
-        except IOError:
-            raise SacIOError("Cannot open file: " + ofname)
-        try:
             self._chck_header()
-            f.write(self.hf.data)
-            f.write(self.hi.data)
-            f.write(self.hs.data)
-            f.write(self.seis.data)
+            fh.write(self.hf.data)
+            fh.write(self.hi.data)
+            fh.write(self.hs.data)
+            fh.write(self.seis.data)
         except Exception as e:
-            f.close()
             msg = "Cannot write SAC-buffer to file: "
-            raise SacIOError(msg, ofname, e)
-
-        f.close()
+            raise SacIOError(msg, e)
 
     def PrintIValue(self, label='=', value=-12345):
         """
@@ -1026,8 +1011,7 @@ class SacIO(object):
         #
         with open(thePath, "rb") as fh:
             self.ReadSacHeader(fh)
-        #
-        return(self.GetHvalue(theItem))
+            return(self.GetHvalue(theItem))
 
     def SetHvalueInFile(self, thePath, theItem, theValue):
         """
@@ -1049,14 +1033,16 @@ class SacIO(object):
         >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
         'blub'
         """
-        #
-        #  Read in the Header
-        #
+        # Read the header.
         with open(thePath, "rb") as fh:
             self.ReadSacHeader(fh)
-        #
+
+        # Modify it.
         self.SetHvalue(theItem, theValue)
-        self.WriteSacHeader(thePath)
+
+        # Write it.
+        with open(thePath, "rb+") as fh:
+            self.WriteSacHeader(fh)
 
     def IsValidSacFile(self, thePath):
         """
