@@ -4,9 +4,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
 from itertools import count
 import math
+import numpy as np
+
 import numpy as np
 
 from .arrival import Arrival
@@ -77,12 +78,12 @@ class SeismicPhase(object):
         self.tMod = tMod
         # Array of distances corresponding to the ray parameters stored in
         # ray_param.
-        self.dist = []
+        self.dist = None
         # Array of times corresponding to the ray parameters stored in
         # ray_param.
-        self.time = []
+        self.time = None
         # Array of possible ray parameters for this phase.
-        self.ray_param = []
+        self.ray_param = None
         # The minimum distance that this phase can be theoretically observed.
         self.minDistance = 0.0
         # The maximum distance that this phase can be theoretically observed.
@@ -91,16 +92,6 @@ class SeismicPhase(object):
         # Note that this depends upon both the earth model and the source
         # depth.
         self.branchSeq = []
-        # Temporary end action so we know what we did at the end of the last
-        # section of the branch sequence.
-        # Used in addToBranch() and  parseName().
-        # endAction
-        # Records the end action for the current leg. Will be one of
-        # SeismicPhase.TURN, SeismicPhase.TRANSDOWN, SeismicPhase.TRANSUP,
-        # SeismicPhase.REFLECTBOT, or SeismicPhase.REFLECTTOP.
-        # This allows a check to make sure the path is correct. Used in
-        # addToBranch() and parseName().
-        self.legAction = []
         # True if the current leg of the phase is down going. This allows a
         # check to make sure the path is correct.
         # Used in addToBranch() and parseName().
@@ -128,19 +119,20 @@ class SeismicPhase(object):
             # reflection depth.
             if currLeg[0] in "v^":
                 disconBranch = closest_branch_to_depth(tMod, currLeg[1])
-                legDepth = tMod.tauBranches[0][disconBranch].topDepth
+                legDepth = tMod.tauBranches[0, disconBranch].topDepth
                 puristName += currLeg[0]
                 puristName += str(legDepth)
             else:
                 try:
                     float(currLeg)
-                    # If it is indeed a number:
-                    disconBranch = closest_branch_to_depth(tMod, currLeg)
-                    legDepth = tMod.tauBranches[0][disconBranch].topDepth
-                    puristName += str(legDepth)
                 except ValueError:
                     # If currLeg is just a string:
                     puristName += currLeg
+                else:
+                    # If it is indeed a number:
+                    disconBranch = closest_branch_to_depth(tMod, currLeg)
+                    legDepth = tMod.tauBranches[0, disconBranch].topDepth
+                    puristName += str(legDepth)
         return puristName
 
     def parse_name(self, tMod):
@@ -238,7 +230,7 @@ class SeismicPhase(object):
                 pass
             # Check to see if there has been a phase conversion.
             if len(self.branchSeq) > 0 and isPWavePrev != isPWave:
-                self.phase_conversion(tMod, int(self.branchSeq[-1]),
+                self.phase_conversion(tMod, self.branchSeq[-1],
                                       self.endAction, isPWavePrev)
             # Deal with p and s case first.
             if currLeg in ("p", "s", "k"):
@@ -471,7 +463,7 @@ class SeismicPhase(object):
                             currLeg, nextLeg))
             elif currLeg in ("I", "J"):
                 self.add_to_branch(tMod, self.currBranch,
-                                   len(tMod.tauBranches[0]) - 1, isPWave,
+                                   tMod.tauBranches.shape[1] - 1, isPWave,
                                    self.TURN)
                 if nextLeg in ("I", "J"):
                     self.add_to_branch(tMod, self.currBranch, tMod.iocbBranch,
@@ -567,70 +559,76 @@ class SeismicPhase(object):
                 self.branchSeq.append(i)
                 self.downGoing.append(isDownGoing)
                 self.waveType.append(isPWave)
-                self.legAction.append(endAction)
         else:
             # Upgoing, so decrement i.
             for i in range(startBranch, endBranch - 1, -1):
                 self.branchSeq.append(i)
                 self.downGoing.append(isDownGoing)
                 self.waveType.append(isPWave)
-                self.legAction.append(endAction)
         self.currBranch = endBranch + endOffset
 
     def sum_branches(self, tMod):
         """Sum the appropriate branches for this phase."""
         if self.maxRayParam < 0 or self.minRayParam > self.maxRayParam:
             # Phase has no arrivals, possibly due to source depth.
-            self.ray_param = []
+            self.ray_param = np.empty(0)
             self.minRayParam = -1
             self.maxRayParam = -1
-            self.dist = []
-            self.time = []
+            self.dist = np.empty(0)
+            self.time = np.empty(0)
             self.maxDistance = -1
             return
+
         # Special case for surface waves.
         if self.name.endswith("kmps"):
-            self.dist = [0, 0]
-            self.time = [0, 0]
-            self.ray_param = [0, 0]
+            self.dist = np.zeros(2)
+            self.time = np.zeros(2)
+            self.ray_param = np.empty(2)
+
             self.ray_param[0] = tMod.radiusOfEarth / float(self.name[:-4])
+
             self.dist[1] = 2 * math.pi
             self.time[1] = \
                 2 * math.pi * tMod.radiusOfEarth / float(self.name[:-4])
             self.ray_param[1] = self.ray_param[0]
+
             self.minDistance = 0
             self.maxDistance = 2 * math.pi
             self.downGoing.append(True)
             return
+
         # Find the ray parameter index that corresponds to the minRayParam
         # and maxRayParam.
-        for i, rp in enumerate(tMod.ray_params):
-            if rp >= self.minRayParam:
-                self.minRayParamIndex = i
-            if rp >= self.maxRayParam:
-                self.maxRayParamIndex = i
+        index = np.where(tMod.ray_params >= self.minRayParam)[0]
+        if len(index):
+            self.minRayParamIndex = index[-1]
+        index = np.where(tMod.ray_params >= self.maxRayParam)[0]
+        if len(index):
+            self.maxRayParamIndex = index[-1]
         if self.maxRayParamIndex == 0 \
                 and self.minRayParamIndex == len(tMod.ray_params) - 1:
             # All ray parameters are valid so just copy:
-            self.ray_param = deepcopy(tMod.ray_param)
+            self.ray_param = tMod.ray_param.copy()
         elif self.maxRayParamIndex == self.minRayParamIndex:
             # if "Sdiff" in self.name or "Pdiff" in self.name:
             # self.ray_param = [self.minRayParam, self.minRayParam]
             # elif "Pn" in self.name or "Sn" in self.name:
             # self.ray_param = [self.minRayParam, self.minRayParam]
             if self.name.endswith("kmps"):
-                self.ray_param = [0, self.maxRayParam]
+                self.ray_param = np.array([0, self.maxRayParam])
             else:
-                self.ray_param = [self.minRayParam, self.minRayParam]
+                self.ray_param = np.array([self.minRayParam, self.minRayParam])
         else:
             # Only a subset of the ray parameters is valid so use these.
-            self.ray_param = deepcopy(tMod.ray_params[
-                self.maxRayParamIndex:self.minRayParamIndex + 1])
-        self.dist = [0 for i in range(len(self.ray_param))]
-        self.time = [0 for i in range(len(self.ray_param))]
+            self.ray_param = \
+                tMod.ray_params[self.maxRayParamIndex:
+                                self.minRayParamIndex + 1].copy()
+
+        self.dist = np.zeros_like(self.ray_param)
+        self.time = np.zeros_like(self.ray_param)
+
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
-        timesBranches = [[0 for i in range(
-            len(tMod.tauBranches[0]))] for j in range(2)]
+        timesBranches = np.zeros((2, tMod.tauBranches.shape[1]))
         # Count how many times each branch appears in the path.
         # waveType is at least as long as branchSeq
         for wt, bs in zip(self.waveType, self.branchSeq):
@@ -638,20 +636,23 @@ class SeismicPhase(object):
                 timesBranches[0][bs] += 1
             else:
                 timesBranches[1][bs] += 1
+
         # Sum the branches with the appropriate multiplier.
-        for tb, tbs, taub, taubs in zip(timesBranches[0], timesBranches[1],
-                                        tMod.tauBranches[0],
-                                        tMod.tauBranches[1]):
+        size = self.minRayParamIndex - self.maxRayParamIndex + 1
+        index = slice(self.maxRayParamIndex, self.minRayParamIndex + 1)
+        for i in range(tMod.tauBranches.shape[1]):
+            tb = timesBranches[0, i]
+            tbs = timesBranches[1, i]
+            taub = tMod.tauBranches[0, i]
+            taubs = tMod.tauBranches[1, i]
+
             if tb != 0:
-                for i in range(self.maxRayParamIndex,
-                               self.minRayParamIndex + 1):
-                    self.dist[i - self.maxRayParamIndex] += tb * taub.dist[i]
-                    self.time[i - self.maxRayParamIndex] += tb * taub.time[i]
+                self.dist[:size] += tb * taub.dist[index]
+                self.time[:size] += tb * taub.time[index]
             if tbs != 0:
-                for i in range(self.maxRayParamIndex,
-                               self.minRayParamIndex + 1):
-                    self.dist[i - self.maxRayParamIndex] += tbs * taubs.dist[i]
-                    self.time[i - self.maxRayParamIndex] += tbs * taubs.time[i]
+                self.dist[:size] += tbs * taubs.dist[index]
+                self.time[:size] += tbs * taubs.time[index]
+
         if "Sdiff" in self.name or "Pdiff" in self.name:
             if tMod.sMod.depthInHighSlowness(tMod.cmbDepth - 1e-10,
                                              self.minRayParam,
@@ -660,23 +661,27 @@ class SeismicPhase(object):
                 self.minRayParam = -1
                 self.maxRayParam = -1
                 self.maxDistance = -1
-                self.time = []
-                self.dist = []
-                self.ray_param = []
+                self.time = np.empty(0)
+                self.dist = np.empty(0)
+                self.ray_param = np.empty(0)
                 return
             else:
                 self.dist[1] = \
                     self.dist[0] + self.maxDiffraction * math.pi / 180
                 self.time[1] = self.time[0] + \
                     self.maxDiffraction * math.pi / 180 * self.minRayParam
+
         elif "Pn" in self.name or "Sn" in self.name:
             self.dist[1] = self.dist[0] + self.maxRefraction * math.pi / 180
             self.time[1] = self.time[0] + self.maxRefraction * math.pi / 180
+
         elif self.maxRayParamIndex == self.minRayParamIndex:
             self.dist[1] = self.dist[0]
             self.time[1] = self.time[0]
-        self.minDistance = min(self.dist)
-        self.maxDistance = max(self.dist)
+
+        self.minDistance = np.min(self.dist)
+        self.maxDistance = np.max(self.dist)
+
         # Now check to see if our ray parameter range includes any ray
         # parameters that are associated with high slowness zones. If so,
         # then we will need to insert a "shadow zone" into our time and
@@ -706,14 +711,22 @@ class SeismicPhase(object):
                             foundOverlap = True
                             break
                     if foundOverlap:
-                        hszIndex = self.ray_param.index(hszi.ray_param)
-                        newdist = deepcopy(self.dist[:hszIndex])
-                        newtime = deepcopy(self.time[:hszIndex])
-                        new_ray_params = deepcopy(self.ray_param[:hszIndex])
-                        new_ray_params.append(hszi.ray_param)
+                        hszIndex = np.where(self.ray_param == hszi.ray_param)
+                        hszIndex = hszIndex[0][0]
+
+                        newlen = self.ray_param.shape[0] + 1
+                        new_ray_params = np.empty(newlen)
+                        newdist = np.empty(newlen)
+                        newtime = np.empty(newlen)
+
+                        new_ray_params[:hszIndex] = self.ray_param[:hszIndex]
+                        newdist[:hszIndex] = self.dist[:hszIndex]
+                        newtime[:hszIndex] = self.time[:hszIndex]
+
                         # Sum the branches with an appropriate multiplier.
-                        newdist.append(0)
-                        newtime.append(0)
+                        new_ray_params[hszIndex] = hszi.ray_param
+                        newdist[hszIndex] = 0
+                        newtime[hszIndex] = 0
                         for tb, tbs, taub, taubs in zip(timesBranches[0],
                                                         timesBranches[1],
                                                         tMod.tauBranches[0],
@@ -732,9 +745,12 @@ class SeismicPhase(object):
                                 newtime[hszIndex] += tbs * taubs.time[
                                     self.maxRayParamIndex + hszIndex -
                                     indexOffset]
-                        newdist += self.dist[hszIndex:]
-                        newtime += self.time[hszIndex:]
-                        new_ray_params += self.ray_param[hszIndex:]
+
+                        newdist[hszIndex + 1:] = self.dist[hszIndex:]
+                        newtime[hszIndex + 1:] = self.time[hszIndex:]
+                        new_ray_params[hszIndex + 1:] = \
+                            self.ray_param[hszIndex:]
+
                         indexOffset += 1
                         self.dist = newdist
                         self.time = newtime
@@ -833,6 +849,7 @@ class SeismicPhase(object):
                 rayNum = i
             else:
                 break
+
         # Here we use ray parameter and dist info stored within the
         # SeismicPhase so we can use currArrival.ray_param_index, which
         # may not correspond to rayNum (for model.ray_param).
@@ -842,10 +859,15 @@ class SeismicPhase(object):
         distB = self.dist[currArrival.ray_param_index + 1]
         distRatio = (currArrival.dist - distA) / (distB - distA)
         distRayParam = distRatio * (ray_param_b - ray_param_a) + ray_param_a
+
+        # + 2 for first point and kmps, if it exists.
+        pierce = np.empty(len(self.branchSeq) + 2, dtype=TimeDist)
         # First pierce point is always 0 distance at the source depth.
-        pierce = [TimeDist(distRayParam, 0, 0, self.tMod.source_depth)]
+        pierce[0] = (distRayParam, 0, 0, self.tMod.source_depth)
+        index = 1
         branchDist = 0
         branchTime = 0
+
         # Loop from 0 but already done 0 [I just copy the comments, sorry!],
         # so the pierce point when the ray leaves branch i is stored in i + 1.
         # Use linear interpolation between rays that we know.
@@ -874,6 +896,7 @@ class SeismicPhase(object):
                                                          tauBranch.topDepth,
                                                          tauBranch.botDepth,
                                                          isPWave)
+
             if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
                 # Head waves and diffracted waves are a special case.
                 distA = tauBranch.dist[rayNum]
@@ -884,24 +907,32 @@ class SeismicPhase(object):
                 timeA = tauBranch.time[rayNum]
                 distB = tauBranch.dist[rayNum + 1]
                 timeB = tauBranch.time[rayNum + 1]
+
             branchDist += distRatio * (distB - distA) + distA
-            prevBranchTime = branchTime
+            prevBranchTime = np.array(branchTime, copy=True)
             branchTime += distRatio * (timeB - timeA) + timeA
             if isDownGoing:
                 branchDepth = min(tauBranch.botDepth, turnDepth)
             else:
                 branchDepth = min(tauBranch.topDepth, turnDepth)
+
             # Make sure ray actually propagates in this branch; leave a little
             # room for numerical chatter.
             if abs(prevBranchTime - branchTime) > 1e-10:
-                pierce.append(TimeDist(distRayParam, branchTime, branchDist,
-                                       branchDepth))
+                pierce[index] = (distRayParam, branchTime, branchDist,
+                                 branchDepth)
+                index += 1
+
         if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
-            pierce = self.handle_head_or_diffracted_wave(currArrival, pierce)
+            pierce, index = self.handle_head_or_diffracted_wave(currArrival,
+                                                                pierce,
+                                                                index)
         elif "kmps" in self.name:
-            pierce.append(TimeDist(distRayParam, currArrival.time,
-                                   currArrival.dist, 0))
-        currArrival.pierce = pierce
+            pierce[index] = (distRayParam, currArrival.time, currArrival.dist,
+                             0)
+            index += 1
+
+        currArrival.pierce = pierce[:index]
         # The arrival is modified in place and must (?) thus be returned.
         return currArrival
 
@@ -921,8 +952,8 @@ class SeismicPhase(object):
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
-        tempTimeDist = [TimeDist(currArrival.ray_param,
-                                 0, 0, self.tMod.source_depth)]
+        tempTimeDist = np.array([(currArrival.ray_param, 0, 0,
+                                  self.tMod.source_depth)], dtype=TimeDist)
         # pathList is a list of lists.
         pathList = [tempTimeDist]
         for i, branchNum, isPWave, isDownGoing in zip(count(), self.branchSeq,
@@ -930,53 +961,53 @@ class SeismicPhase(object):
                                                       self.downGoing):
             tempTimeDist = self.tMod.getTauBranch(branchNum, isPWave)\
                 .path(currArrival.ray_param, isDownGoing, self.tMod.sMod)
-            if tempTimeDist:
+            if len(tempTimeDist):
                 pathList.append(tempTimeDist)
-                for ttd in tempTimeDist:
-                    if ttd.get_dist_deg() < 0:
-                        raise RuntimeError("Path is backtracking, "
-                                           "this is impossible.")
+                if np.any(tempTimeDist['dist'] < 0):
+                    raise RuntimeError("Path is backtracking, "
+                                       "this is impossible.")
+
             # Special case for head and diffracted waves:
             if(branchNum == self.tMod.cmbBranch - 1
                and i < len(self.branchSeq) - 1
                and self.branchSeq[i + 1] == self.tMod.cmbBranch - 1
                and ("Pdiff" in self.name or "Sdiff" in self.name)):
-                diffTD = [TimeDist(currArrival.ray_param,
-                                   (currArrival.dist - self.dist[0])
-                                   * currArrival.ray_param,
-                                   currArrival.dist - self.dist[0],
-                                   self.tMod.cmbDepth)]
+                diffTD = np.array([(
+                    currArrival.ray_param,
+                    (currArrival.dist - self.dist[0]) * currArrival.ray_param,
+                    currArrival.dist - self.dist[0],
+                    self.tMod.cmbDepth)], dtype=TimeDist)
                 pathList.append(diffTD)
+
             elif(branchNum == self.tMod.mohoBranch - 1
                  and i < len(self.branchSeq) - 1
                  and self.branchSeq[i + 1] == self.tMod.mohoBranch - 1
                  and ("Pn" in self.name or "Sn" in self.name)):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 numFound = max(self.name.count("Pn"), self.name.count("Sn"))
-                headTD = [TimeDist(currArrival.ray_param,
-                                   (currArrival.dist - self.dist[0]) / numFound
-                                   * currArrival.ray_param,
-                                   (currArrival.dist - self.dist[0])/numFound,
-                                   self.tMod.mohoDepth)]
+                headTD = np.array([(
+                    currArrival.ray_param,
+                    ((currArrival.dist - self.dist[0]) / numFound *
+                     currArrival.ray_param),
+                    (currArrival.dist - self.dist[0]) / numFound,
+                    self.tMod.mohoDepth)], dtype=TimeDist)
                 pathList.append(headTD)
+
         if "kmps" in self.name:
             # kmps phases have no branches, so need to end them at the arrival
             # distance.
-            headTD = [TimeDist(currArrival.ray_param,
-                               currArrival.dist * currArrival.ray_param,
-                               currArrival.dist, 0)]
+            headTD = np.array([(currArrival.ray_param,
+                                currArrival.dist * currArrival.ray_param,
+                                currArrival.dist, 0)], dtype=TimeDist)
             pathList.append(headTD)
-        currArrival.path = []
-        cumulative = TimeDist(currArrival.ray_param,
-                              0, 0, currArrival.source_depth)
-        for branchPath in pathList:
-            for bp in branchPath:
-                cumulative.add(bp)
-                cumulative.depth = bp.depth
-                currArrival.path.append(deepcopy(cumulative))
+
+        currArrival.path = np.concatenate(pathList)
+        np.cumsum(currArrival.path['time'], out=currArrival.path['time'])
+        np.cumsum(currArrival.path['dist'], out=currArrival.path['dist'])
+
         return currArrival
 
-    def handle_head_or_diffracted_wave(self, currArrival, orig):
+    def handle_head_or_diffracted_wave(self, currArrival, pierce, index):
         """
         Here we worry about the special case for head and diffracted
         waves. It is assumed that a phase can be a diffracted wave or a
@@ -989,29 +1020,33 @@ class SeismicPhase(object):
                 break
         else:
             raise TauModelError("No head/diff segment in" + str(self.name))
+
         if phaseSeg in ["Pn", "Sn"]:
             headDepth = self.tMod.mohoDepth
         else:
             headDepth = self.tMod.cmbDepth
+
         numFound = self.name.count(phaseSeg)
         refractDist = currArrival.dist - self.dist[0]
         refractTime = refractDist * currArrival.ray_param
-        out = []
-        j = 0
-        for td in orig:
-            # This is a little weird as we are not checking where we are in
-            # the phase name, but simply if the depth matches. This likely
-            # works in most cases, but may not for head/diffracted waves that
-            # undergo a phase change, if that type of phase can even exist.
-            out.append(TimeDist(td.p, td.time + j * refractTime / numFound,
-                                td.distRadian + j * refractDist / numFound,
-                                td.depth))
-            if td.depth == headDepth:
-                j += 1
-                out.append(TimeDist(td.p, td.time + j * refractTime / numFound,
-                                    td.distRadian + j * refractDist / numFound,
-                                    td.depth))
-        return out
+
+        # This is a little weird as we are not checking where we are in
+        # the phase name, but simply if the depth matches. This likely
+        # works in most cases, but may not for head/diffracted waves that
+        # undergo a phase change, if that type of phase can even exist.
+        mask = pierce['depth'][:index] == headDepth
+        adjust = np.cumsum(mask)
+        pierce['time'][:index] += adjust * refractTime / numFound
+        pierce['dist'][:index] += adjust * refractDist / numFound,
+
+        head_index = np.where(mask)[0]
+        if len(head_index):
+            head_index += 1
+            td = pierce[head_index]
+            pierce = np.insert(pierce, head_index, td)
+            index += len(head_index)
+
+        return pierce, index
 
     def linear_interp_arrival(self, searchDist, rayNum, name, puristName,
                               source_depth):

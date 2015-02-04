@@ -6,6 +6,8 @@ from future.builtins import *  # NOQA
 
 from math import pi
 
+import numpy as np
+
 
 class Arrival(object):
     """
@@ -15,14 +17,29 @@ class Arrival(object):
     def __init__(self, phase, time, dist, ray_param, ray_param_index,
                  name, purist_name, source_depth, takeoff_angle,
                  incident_angle):
+        # FIXME: Remove the try/except once the rest of the code correctly
+        # uses NumPy.
+
         # phase that generated this arrival
         self.phase = phase
         # travel time in seconds
-        self.time = time
+        if isinstance(time, np.ndarray):
+            try:
+                self.time = time[0]
+            except IndexError:
+                self.time = time[()]
+        else:
+            self.time = time
         # angular distance (great circle) in radians
         self.dist = dist
         # ray parameter in seconds per radians
-        self.ray_param = ray_param
+        if isinstance(ray_param, np.ndarray):
+            try:
+                self.ray_param = ray_param[0]
+            except IndexError:
+                self.ray_param = ray_param[()]
+        else:
+            self.ray_param = ray_param
         self.ray_param_index = ray_param_index
         # phase name
         self.name = name
@@ -33,7 +50,8 @@ class Arrival(object):
         self.incident_angle = incident_angle
         self.takeoff_angle = takeoff_angle
         # pierce and path points
-        self.pierce, self.path = [], []
+        self.pierce = None
+        self.path = None
 
     def __str__(self):
         return "%s phase arrival at %.3f seconds" % (self.phase.name,
@@ -75,6 +93,3 @@ class Arrival(object):
         if moduloDist > 180:
             moduloDist = 360 - moduloDist
         return moduloDist
-
-    def get_dist_deg(self):
-        return self.dist * 180 / pi

@@ -8,8 +8,10 @@ import decimal
 import math
 import numpy as np
 
-from .velocity_layer import VelocityLayer
-from .slowness_layer import SlownessLayer, create_from_vlayer
+from .velocity_layer import VelocityLayer, evaluateVelocityAtBottom, \
+    evaluateVelocityAtTop, DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS
+from .slowness_layer import SlownessLayer, bullenDepthFor, \
+    bullenRadialSlowness, create_from_vlayer, evaluateAtBullen
 from .helper_classes import DepthRange, CriticalDepth, TimeDist, \
     SlownessModelError, SplitLayerInfo
 
@@ -111,7 +113,7 @@ class SlownessModel(object):
                 "Error in velocity model (vMod.validate failed)!")
         if self.vMod.getNumLayers() == 0:
             raise SlownessModelError("velModel.getNumLayers()==0")
-        if self.vMod.layers[0].topSVelocity == 0:
+        if self.vMod.layers[0]['topSVelocity'] == 0:
             raise SlownessModelError(
                 "Unable to handle zero S velocity layers at surface. "
                 "This should be fixed at some point, but is a limitation of "
@@ -178,26 +180,28 @@ class SlownessModel(object):
         # Initialize the current velocity layer
         # to be zero thickness layer with values at the surface
         currVLayer = self.vMod.layers[0]
-        currVLayer = VelocityLayer(
-            0, currVLayer.topDepth, currVLayer.topDepth,
-            currVLayer.topPVelocity, currVLayer.topPVelocity,
-            currVLayer.topSVelocity, currVLayer.topSVelocity,
-            currVLayer.topDensity, currVLayer.topDensity, currVLayer.topQp,
-            currVLayer.topQp, currVLayer.topQs, currVLayer.topQs)
+        currVLayer = np.array([(
+            currVLayer['topDepth'], currVLayer['topDepth'],
+            currVLayer['topPVelocity'], currVLayer['topPVelocity'],
+            currVLayer['topSVelocity'], currVLayer['topSVelocity'],
+            currVLayer['topDensity'], currVLayer['topDensity'],
+            currVLayer['topQp'], currVLayer['topQp'],
+            currVLayer['topQs'], currVLayer['topQs'])],
+            dtype=VelocityLayer)
         currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
         currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
         # We know that the top is always a critical slowness so add 0
         self.criticalDepths.append(CriticalDepth(0, 0, 0, 0))
         # Check to see if starting in fluid zone.
-        if inFluidZone is False and currVLayer.topSVelocity == 0:
+        if inFluidZone is False and currVLayer['topSVelocity'] == 0:
             inFluidZone = True
-            fluidZone = DepthRange(topDepth=currVLayer.topDepth)
+            fluidZone = DepthRange(topDepth=currVLayer['topDepth'])
             currSLayer = currPLayer
-        if minSSoFar > currSLayer.topP:
-            minSSoFar = currSLayer.topP
+        if minSSoFar > currSLayer['topP']:
+            minSSoFar = currSLayer['topP']
         # P is not a typo, it represents slowness, not P-wave speed.
-        if minPSoFar > currPLayer.topP:
-            minPSoFar = currPLayer.topP
+        if minPSoFar > currPLayer['topP']:
+            minPSoFar = currPLayer['topP']
 
         for layerNum, layer in enumerate(self.vMod.layers):
             prevVLayer = currVLayer
@@ -210,15 +214,15 @@ class SlownessModel(object):
             # will break.
             currVLayer = layer
             # Check again if in fluid zone
-            if inFluidZone is False and currVLayer.topSVelocity == 0:
+            if inFluidZone is False and currVLayer['topSVelocity'] == 0:
                 inFluidZone = True
-                fluidZone = DepthRange(topDepth=currVLayer.topDepth)
+                fluidZone = DepthRange(topDepth=currVLayer['topDepth'])
             # If already in fluid zone, check if exited (java line 909)
-            if inFluidZone is True and currVLayer.topSVelocity != 0:
-                if prevVLayer.botDepth > self.vMod.iocbDepth:
+            if inFluidZone is True and currVLayer['topSVelocity'] != 0:
+                if prevVLayer['botDepth'] > self.vMod.iocbDepth:
                     belowOuterCore = True
                 inFluidZone = False
-                fluidZone.botDepth = prevVLayer.botDepth
+                fluidZone.botDepth = prevVLayer['botDepth']
                 self.fluidLayerDepths.append(fluidZone)
 
             currPLayer = create_from_vlayer(currVLayer,
@@ -233,92 +237,92 @@ class SlownessModel(object):
                 currSLayer = create_from_vlayer(currVLayer,
                                                 self.SWAVE)
 
-            if prevSLayer.botP != currSLayer.topP \
-                    or prevPLayer.botP != currPLayer.topP:
+            if prevSLayer['botP'] != currSLayer['topP'] \
+                    or prevPLayer['botP'] != currPLayer['topP']:
                 # a first order discontinuity
-                self.criticalDepths.append(CriticalDepth(currSLayer.topDepth,
-                                                         layerNum, -1, -1))
+                self.criticalDepths.append(
+                    CriticalDepth(currSLayer['topDepth'], layerNum, -1, -1))
                 if self.DEBUG:
                     print('First order discontinuity, depth ='
-                          + str(currSLayer.topDepth))
+                          + str(currSLayer['topDepth']))
                     print('between' + str(prevPLayer), str(currPLayer))
-                if inHighSlownessZoneS and currSLayer.topP < minSSoFar:
+                if inHighSlownessZoneS and currSLayer['topP'] < minSSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
                               + " of a high slowness zone.")
-                    highSlownessZoneS.botDepth = currSLayer.topDepth
+                    highSlownessZoneS['botDepth'] = currSLayer['topDepth']
                     self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                     inHighSlownessZoneS = False
-                if inHighSlownessZoneP and currPLayer.topP < minPSoFar:
+                if inHighSlownessZoneP and currPLayer['topP'] < minPSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
                               + " of a high slowness zone.")
-                    highSlownessZoneP.botDepth = currSLayer.topDepth
+                    highSlownessZoneP['botDepth'] = currSLayer['topDepth']
                     self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                     inHighSlownessZoneP = False
                 # Update minPSoFar and minSSoFar as all total reflections off
                 # of the top of the discontinuity are ok even though below the
                 # discontinuity could be the start of a high slowness zone.
-                if minPSoFar > currPLayer.topP:
-                    minPSoFar = currPLayer.topP
-                if minSSoFar > currSLayer.topP:
-                    minSSoFar = currSLayer.topP
+                if minPSoFar > currPLayer['topP']:
+                    minPSoFar = currPLayer['topP']
+                if minSSoFar > currSLayer['topP']:
+                    minSSoFar = currSLayer['topP']
 
                 if inHighSlownessZoneS is False and (
-                        prevSLayer.botP < currSLayer.topP or
-                        currSLayer.topP < currSLayer.botP):
+                        prevSLayer['botP'] < currSLayer['topP'] or
+                        currSLayer['topP'] < currSLayer['botP']):
                     # start of a high slowness zone S
                     if self.DEBUG:
                         print("Found S high slowness at first order "
                               + "discontinuity, layer = " + str(layerNum))
                     inHighSlownessZoneS = True
                     highSlownessZoneS = \
-                        DepthRange(topDepth=currSLayer.topDepth)
+                        DepthRange(topDepth=currSLayer['topDepth'])
                     highSlownessZoneS.ray_param = minSSoFar
                 if inHighSlownessZoneP is False and (
-                        prevPLayer.botP < currPLayer.topP or
-                        currPLayer.topP < currPLayer.botP):
+                        prevPLayer['botP'] < currPLayer['topP'] or
+                        currPLayer['topP'] < currPLayer['botP']):
                     # start of a high slowness zone P
                     if self.DEBUG:
                         print("Found P high slowness at first order "
                               + "discontinuity, layer = " + str(layerNum))
                     inHighSlownessZoneP = True
                     highSlownessZoneP = \
-                        DepthRange(topDepth=currPLayer.topDepth)
+                        DepthRange(topDepth=currPLayer['topDepth'])
                     highSlownessZoneP.ray_param = minPSoFar
 
-            elif ((prevSLayer.topP - prevSLayer.botP) *
-                  (prevSLayer.botP - currSLayer.botP) < 0) or (
-                      (prevPLayer.topP - prevPLayer.botP) *
-                      (prevPLayer.botP - currPLayer.botP)) < 0:
+            elif ((prevSLayer['topP'] - prevSLayer['botP']) *
+                  (prevSLayer['botP'] - currSLayer['botP']) < 0) or (
+                      (prevPLayer['topP'] - prevPLayer['botP']) *
+                      (prevPLayer['botP'] - currPLayer['botP'])) < 0:
                 # local slowness extrema, java l 1005
                 self.criticalDepths.append(
-                    CriticalDepth(currSLayer.topDepth, layerNum, -1, -1))
+                    CriticalDepth(currSLayer['topDepth'], layerNum, -1, -1))
                 if self.DEBUG:
                     print("local slowness extrema, depth=" +
-                          str(currSLayer.topDepth))
+                          str(currSLayer['topDepth']))
                 # here is line 1014 of the java src!
                 if inHighSlownessZoneP is False \
-                        and currPLayer.topP < currPLayer.botP:
+                        and currPLayer['topP'] < currPLayer['botP']:
                     if self.DEBUG:
                         print("start of a P high slowness zone, local "
                               "slowness extrema,minPSoFar= " + str(minPSoFar))
                     inHighSlownessZoneP = True
                     highSlownessZoneP = \
-                        DepthRange(topDepth=currPLayer.topDepth)
+                        DepthRange(topDepth=currPLayer['topDepth'])
                     highSlownessZoneP.ray_param = minPSoFar
                 if inHighSlownessZoneS is False \
-                        and currSLayer.topP < currSLayer.botP:
+                        and currSLayer['topP'] < currSLayer['botP']:
                     if self.DEBUG:
                         print("start of a S high slowness zone, local "
                               "slowness extrema, minSSoFar= "
                               + str(minSSoFar))
                     inHighSlownessZoneS = True
                     highSlownessZoneS = \
-                        DepthRange(topDepth=currSLayer.topDepth)
+                        DepthRange(topDepth=currSLayer['topDepth'])
                     highSlownessZoneS.ray_param = minSSoFar
 
-            if inHighSlownessZoneP and currPLayer.botP < minPSoFar:
+            if inHighSlownessZoneP and currPLayer['botP'] < minPSoFar:
                 # P: layer contains the bottom of a high slowness zone. java
                 #  l 1043
                 if self.DEBUG:
@@ -330,7 +334,7 @@ class SlownessModel(object):
                 self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                 inHighSlownessZoneP = False
 
-            if inHighSlownessZoneS and currSLayer.botP < minSSoFar:
+            if inHighSlownessZoneS and currSLayer['botP'] < minSSoFar:
                 # S: layer contains the bottom of a high slowness zone. java
                 #  l 1043
                 if self.DEBUG:
@@ -344,14 +348,14 @@ class SlownessModel(object):
                     minSSoFar, layerNum, layerNum, porS)
                 self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                 inHighSlownessZoneS = False
-            if minPSoFar > currPLayer.botP:
-                minPSoFar = currPLayer.botP
-            if minPSoFar > currPLayer.topP:
-                minPSoFar = currPLayer.topP
-            if minSSoFar > currSLayer.botP:
-                minSSoFar = currSLayer.botP
-            if minSSoFar > currSLayer.topP:
-                minSSoFar = currSLayer.topP
+            if minPSoFar > currPLayer['botP']:
+                minPSoFar = currPLayer['botP']
+            if minPSoFar > currPLayer['topP']:
+                minPSoFar = currPLayer['topP']
+            if minSSoFar > currSLayer['botP']:
+                minSSoFar = currSLayer['botP']
+            if minSSoFar > currSLayer['topP']:
+                minSSoFar = currSLayer['topP']
             if self.DEBUG and inHighSlownessZoneS:
                 print("In S high slowness zone, layerNum = " + str(layerNum)
                       + " minSSoFar=" + str(minSSoFar))
@@ -368,10 +372,10 @@ class SlownessModel(object):
         # Check if the bottommost depth is contained within a high slowness
         # zone, might happen in a flat non-whole-earth model
         if inHighSlownessZoneS:
-            highSlownessZoneS.botDepth = currVLayer.botDepth
+            highSlownessZoneS.botDepth = currVLayer['botDepth']
             self.highSlownessLayerDepthsS.append(highSlownessZoneS)
         if inHighSlownessZoneP:
-            highSlownessZoneP.botDepth = currVLayer.botDepth
+            highSlownessZoneP.botDepth = currVLayer['botDepth']
             self.highSlownessLayerDepthsP.append(highSlownessZoneP)
 
         # Check if the bottommost depth is contained within a fluid zone, this
@@ -379,7 +383,7 @@ class SlownessModel(object):
         # in the outer core or if allowInnerCoreS == false and we want to use
         # the P velocity structure in the inner core.
         if inFluidZone:
-            fluidZone.botDepth = currVLayer.botDepth
+            fluidZone['botDepth'] = currVLayer['botDepth']
             self.fluidLayerDepths.append(fluidZone)
 
         if self.validate() is False:
@@ -435,6 +439,18 @@ class SlownessModel(object):
         # botP = 1.1e300
         waveType = 'P' if isPWave else 'S'
 
+        # Un-ndarray input.
+        if isinstance(topCriticalLayer, np.ndarray):
+            try:
+                topCriticalLayer = topCriticalLayer[0]
+            except IndexError:
+                topCriticalLayer = topCriticalLayer[()]
+        if isinstance(botCriticalLayer, np.ndarray):
+            try:
+                botCriticalLayer = botCriticalLayer[0]
+            except IndexError:
+                botCriticalLayer = botCriticalLayer[()]
+
         # top/botCriticalLayer are meant to be layer numbers. Some methods call
         # this one with the relevant depths instead, which will be a float. So
         # can check if that's the case and convert to layer numbers (Java
@@ -443,26 +459,26 @@ class SlownessModel(object):
                           int) or not isinstance(botCriticalLayer, int):
             topDepth = topCriticalLayer
             botDepth = botCriticalLayer
-            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)
-            if self.vMod.layers[topCriticalLayer].botDepth == topDepth:
+            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)[0]
+            if self.vMod.layers[topCriticalLayer]['botDepth'] == topDepth:
                 topCriticalLayer += 1
-            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)
+            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)[0]
 
         if topCriticalLayer > botCriticalLayer:
             raise SlownessModelError(
                 "findDepth: no layers to search (wrong layer num?)")
         for layerNum in range(topCriticalLayer, botCriticalLayer + 1):
             velLayer = self.vMod.layers[layerNum]
-            topVelocity = velLayer.evaluateAtTop(waveType)
-            botVelocity = velLayer.evaluateAtBottom(waveType)
-            topP = self.toSlowness(topVelocity, velLayer.topDepth)
-            botP = self.toSlowness(botVelocity, velLayer.botDepth)
+            topVelocity = evaluateVelocityAtTop(velLayer, waveType)
+            botVelocity = evaluateVelocityAtBottom(velLayer, waveType)
+            topP = self.toSlowness(topVelocity, velLayer['topDepth'])
+            botP = self.toSlowness(botVelocity, velLayer['botDepth'])
             # Check to see if we are within 'chatter level' (numerical
             # error) of the top or bottom and if so then return that depth.
             if abs(topP - p) < self.slowness_tolerance:
-                return velLayer.topDepth
+                return velLayer['topDepth']
             if abs(p - botP) < self.slowness_tolerance:
-                return velLayer.botDepth
+                return velLayer['botDepth']
 
             if (topP - p) * (p - botP) >= 0:
                 # Found layer containing p.
@@ -470,31 +486,32 @@ class SlownessModel(object):
                 # this interval. So slope is the slope for velocity versus
                 # depth.
                 slope = (botVelocity - topVelocity) / (
-                    velLayer.botDepth - velLayer.topDepth)
-                depth = self.interpolate(p, topVelocity, velLayer.topDepth,
+                    velLayer['botDepth'] - velLayer['topDepth'])
+                depth = self.interpolate(p, topVelocity, velLayer['topDepth'],
                                          slope)
                 return depth
             elif layerNum == topCriticalLayer \
                     and abs(p - topP) < self.slowness_tolerance:
                 # Check to see if p is just outside the topmost layer. If so
                 # then return the top depth.
-                return velLayer.topDepth
+                return velLayer['topDepth']
 
             # Is p a total reflection? botP is the slowness at the bottom
             # of the last velocity layer from the previous loop, set topP
             # to be the slowness at the top of the next layer.
             if layerNum < self.vMod.getNumLayers() - 1:
                 velLayer = self.vMod.layers[layerNum + 1]
-                topVelocity = velLayer.evaluateAtTop(waveType)
-                if isPWave is False and self.depthInFluid(velLayer.topDepth):
+                topVelocity = evaluateVelocityAtTop(velLayer, waveType)
+                if (isPWave is False and
+                        np.any(self.depthInFluid(velLayer['topDepth']))):
                     # Special case for S waves above a fluid. If top next
                     # layer is in a fluid then we should set topVelocity to
                     # be the P velocity at the top of the layer.
-                    topVelocity = velLayer.evaluateAtTop('P')
+                    topVelocity = evaluateVelocityAtTop(velLayer, 'P')
 
-                topP = self.toSlowness(topVelocity, velLayer.topDepth)
+                topP = self.toSlowness(topVelocity, velLayer['topDepth'])
                 if botP >= p >= topP:
-                    return velLayer.topDepth
+                    return velLayer['topDepth']
 
         # noinspection PyUnboundLocalVariable
         if abs(p - botP) < self.slowness_tolerance:
@@ -522,7 +539,7 @@ class SlownessModel(object):
 
     def interpolate(self, p, topVelocity, topDepth, slope):
         denominator = p * slope + 1
-        if denominator == 0:
+        if np.any(denominator == 0):
             raise SlownessModelError(
                 "Negative velocity gradient that just balances the slowness "
                 "gradient of the spherical slowness, i.e. Earth flattening. "
@@ -540,10 +557,10 @@ class SlownessModel(object):
         DepthRange, just like in the java code, despite its claims to the
         contrary.
         """
+        ret = np.zeros_like(depth, dtype=np.bool_)
         for elem in self.fluidLayerDepths:
-            if elem.topDepth <= depth < elem.botDepth:
-                return True
-        return False
+            ret |= (elem.topDepth <= depth) & (depth < elem.botDepth)
+        return ret
 
     # noinspection PyCallByClass
     def coarseSample(self):
@@ -553,104 +570,102 @@ class SlownessModel(object):
         well as sampling each point specified within the VelocityModel. The
         P and S sampling will also be compatible.
         """
-        self.PLayers = []
-        self.SLayers = []
-        # to initialise prevVLayer
-        origVLayer = self.vMod.layers[0]
-        origVLayer = VelocityLayer(
-            0, origVLayer.topDepth, origVLayer.topDepth,
-            origVLayer.topPVelocity, origVLayer.topPVelocity,
-            origVLayer.topSVelocity, origVLayer.topSVelocity,
-            origVLayer.topDensity, origVLayer.topDensity, origVLayer.topQp,
-            origVLayer.topQp, origVLayer.topQs, origVLayer.topQs)
-        for layer in self.vMod.layers:
-            prevVLayer = origVLayer
-            origVLayer = layer
-            # Check for first order discontinuity. However, we only
-            # consider S discontinuities in the inner core if
-            # allowInnerCoreS is true.
-            if prevVLayer.botPVelocity != origVLayer.topPVelocity \
-                    or(prevVLayer.botSVelocity != origVLayer.topSVelocity
-                       and (self.allowInnerCoreS
-                            or origVLayer.topDepth < self.vMod.iocbDepth)):
-                # If we are going from a fluid to a solid or solid to
-                # fluid, ex core mantle or outer core to inner core then we
-                # need to use the P velocity for determining the S
-                # discontinuity.
-                if prevVLayer.botSVelocity == 0:
-                    topSVel = prevVLayer.botPVelocity
-                else:
-                    topSVel = prevVLayer.botSVelocity
-                if origVLayer.topSVelocity == 0:
-                    botSVel = origVLayer.topPVelocity
-                else:
-                    botSVel = origVLayer.topSVelocity
-                # Add the zero thickness, but with nonzero slowness step,
-                # layer corresponding to the discontinuity.
-                currVLayer = VelocityLayer(
-                    layer.layer_number, prevVLayer.botDepth,
-                    prevVLayer.botDepth, prevVLayer.botPVelocity,
-                    origVLayer.topPVelocity, topSVel, botSVel)
-                currPLayer = create_from_vlayer(currVLayer,
-                                                self.PWAVE)
-                self.PLayers.append(currPLayer)
-                if (prevVLayer.botSVelocity == 0
-                    and origVLayer.topSVelocity == 0) \
-                        or (self.allowInnerCoreS is False
-                            and currVLayer.topDepth >= self.vMod.iocbDepth):
-                    currSLayer = currPLayer
-                else:
-                    currSLayer = create_from_vlayer(currVLayer,
-                                                    self.SWAVE)
-                self.SLayers.append(currSLayer)
-            currPLayer = create_from_vlayer(origVLayer,
-                                            self.PWAVE)
-            self.PLayers.append(currPLayer)
-            if self.depthInFluid(origVLayer.topDepth) or (
-                    self.allowInnerCoreS is False
-                    and origVLayer.topDepth >= self.vMod.iocbDepth):
-                currSLayer = currPLayer
-            else:
-                currSLayer = create_from_vlayer(origVLayer,
-                                                self.SWAVE)
-            self.SLayers.append(currSLayer)
+
+        self.PLayers = create_from_vlayer(self.vMod.layers, self.PWAVE)
+
+        with np.errstate(divide='ignore'):
+            self.SLayers = create_from_vlayer(self.vMod.layers, self.SWAVE)
+        mask = self.depthInFluid(self.vMod.layers['topDepth'])
+        if not self.allowInnerCoreS:
+            mask |= self.vMod.layers['topDepth'] >= self.vMod.iocbDepth
+        self.SLayers[mask] = self.PLayers[mask]
+
+        # Check for first order discontinuity. However, we only consider
+        # S discontinuities in the inner core if allowInnerCoreS is true.
+        above = self.vMod.layers[:-1]
+        below = self.vMod.layers[1:]
+        mask = np.logical_or(
+            above['botPVelocity'] != below['topPVelocity'],
+            np.logical_and(
+                above['botSVelocity'] != below['topSVelocity'],
+                np.logical_or(
+                    self.allowInnerCoreS,
+                    below['topDepth'] < self.vMod.iocbDepth)))
+
+        index = np.where(mask)[0] + 1
+        above = above[mask]
+        below = below[mask]
+
+        # If we are going from a fluid to a solid or solid to fluid, e.g., core
+        # mantle or outer core to inner core then we need to use the P velocity
+        # for determining the S discontinuity.
+        topSVel = np.where(above['botSVelocity'] == 0,
+                           above['botPVelocity'],
+                           above['botSVelocity'])
+        botSVel = np.where(below['topSVelocity'] == 0,
+                           below['topPVelocity'],
+                           below['topSVelocity'])
+
+        # Add the layer, with zero thickness but nonzero slowness step,
+        # corresponding to the discontinuity.
+        currVLayer = np.empty_like(above, dtype=VelocityLayer)
+        currVLayer['topDepth'] = above['botDepth']
+        currVLayer['botDepth'] = above['botDepth']
+        currVLayer['topPVelocity'] = above['botPVelocity']
+        currVLayer['botPVelocity'] = below['topPVelocity']
+        currVLayer['topSVelocity'] = topSVel
+        currVLayer['botSVelocity'] = botSVel
+        currVLayer['topDensity'].fill(DEFAULT_DENSITY)
+        currVLayer['botDensity'].fill(DEFAULT_DENSITY)
+        currVLayer['topQp'].fill(DEFAULT_QP)
+        currVLayer['botQp'].fill(DEFAULT_QP)
+        currVLayer['topQs'].fill(DEFAULT_QS)
+        currVLayer['botQs'].fill(DEFAULT_QS)
+
+        currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
+        self.PLayers = np.insert(self.PLayers, index, currPLayer)
+
+        currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
+        mask2 = (above['botSVelocity'] == 0) & (below['topSVelocity'] == 0)
+        if not self.allowInnerCoreS:
+            mask2 |= currVLayer['topDepth'] >= self.vMod.iocbDepth
+        currSLayer = np.where(mask2,
+                              currPLayer,
+                              currSLayer)
+        self.SLayers = np.insert(self.SLayers, index, currSLayer)
+
         # Make sure that all high slowness layers are sampled exactly
         # at their bottom
         for highZone in self.highSlownessLayerDepthsS:
             sLayerNum = self.layerNumberAbove(highZone.botDepth, self.SWAVE)
             highSLayer = self.SLayers[sLayerNum]
-            while highSLayer.topDepth == highSLayer.botDepth and (
-                    (highSLayer.topP - highZone.ray_param) *
-                    (highZone.ray_param - highSLayer.botP) < 0):
+            while highSLayer['topDepth'] == highSLayer['botDepth'] and (
+                    (highSLayer['topP'] - highZone.ray_param) *
+                    (highZone.ray_param - highSLayer['botP']) < 0):
                 sLayerNum += 1
                 highSLayer = self.SLayers[sLayerNum]
-            if highZone.ray_param != highSLayer.botP:
+            if highZone.ray_param != highSLayer['botP']:
                 self.addSlowness(highZone.ray_param, self.SWAVE)
         for highZone in self.highSlownessLayerDepthsP:
             sLayerNum = self.layerNumberAbove(highZone.botDepth, self.PWAVE)
             highSLayer = self.PLayers[sLayerNum]
-            while highSLayer.topDepth == highSLayer.botDepth and (
-                    (highSLayer.topP - highZone.ray_param)
-                    * (highZone.ray_param - highSLayer.botP) < 0):
+            while highSLayer['topDepth'] == highSLayer['botDepth'] and (
+                    (highSLayer['topP'] - highZone.ray_param)
+                    * (highZone.ray_param - highSLayer['botP']) < 0):
                 sLayerNum += 1
                 highSLayer = self.PLayers[sLayerNum]
-            if highZone.ray_param != highSLayer.botP:
+            if highZone.ray_param != highSLayer['botP']:
                 self.addSlowness(highZone.ray_param, self.PWAVE)
-        # Make sure P and S are consistent
-        botP = -1
-        for layer in self.PLayers:
-            topP = layer.topP
-            if topP != botP:
-                self.addSlowness(topP, self.SWAVE)
-            botP = layer.botP
-            self.addSlowness(botP, self.SWAVE)
-        botP = -1
-        for layer in self.SLayers:
-            topP = layer.topP
-            if topP != botP:
-                self.addSlowness(topP, self.PWAVE)
-            botP = layer.botP
-            self.addSlowness(botP, self.PWAVE)
+
+        # Make sure P and S are consistent by adding discontinuities in one to
+        # the other.
+        uniq = np.unique(self.PLayers[['topP', 'botP']].view(np.float_))
+        for p in uniq:
+            self.addSlowness(p, self.SWAVE)
+
+        uniq = np.unique(self.SLayers[['topP', 'botP']].view(np.float_))
+        for p in uniq:
+            self.addSlowness(p, self.PWAVE)
 
     def layerNumberAbove(self, depth, isPWave):
         """
@@ -663,7 +678,7 @@ class SlownessModel(object):
         foundLayerNum = self.layerNumForDepth(depth, isPWave)
         tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
         # Check if given depth is on a boundary.
-        while tempLayer.topDepth == depth and foundLayerNum > 0:
+        while tempLayer['topDepth'] == depth and foundLayerNum > 0:
             foundLayerNum -= 1
             tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
         return foundLayerNum
@@ -682,7 +697,8 @@ class SlownessModel(object):
         else:
             layers = self.SLayers
         tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
-        while tempLayer.botDepth == depth and foundLayerNum < len(layers) - 1:
+        while (tempLayer['botDepth'] == depth and
+               foundLayerNum < len(layers) - 1):
             foundLayerNum += 1
             tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
         return foundLayerNum
@@ -693,7 +709,7 @@ class SlownessModel(object):
         else:
             layers = self.SLayers
         # check to make sure depth is within the range available
-        if depth < layers[0].topDepth or depth > layers[-1].botDepth:
+        if depth < layers[0]['topDepth'] or depth > layers[-1]['botDepth']:
             raise SlownessModelError("No layer contains this depth")
         tooSmallNum = 0
         tooLargeNum = len(layers) - 1
@@ -703,7 +719,7 @@ class SlownessModel(object):
                 currentNum = tooSmallNum
                 while currentNum <= tooLargeNum:
                     tempLayer = self.getSlownessLayer(currentNum, isPWave)
-                    if tempLayer.topDepth <= depth <= tempLayer.botDepth:
+                    if tempLayer['topDepth'] <= depth <= tempLayer['botDepth']:
                         return currentNum
                     currentNum += 1
             else:
@@ -711,9 +727,9 @@ class SlownessModel(object):
                     (tooSmallNum + tooLargeNum) / 2.0))
                     .to_integral_value(decimal.ROUND_HALF_EVEN))
             tempLayer = self.getSlownessLayer(currentNum, isPWave)
-            if tempLayer.topDepth > depth:
+            if tempLayer['topDepth'] > depth:
                 tooLargeNum = currentNum - 1
-            elif tempLayer.botDepth < depth:
+            elif tempLayer['botDepth'] < depth:
                 tooSmallNum = currentNum + 1
             else:
                 return currentNum
@@ -740,119 +756,142 @@ class SlownessModel(object):
         slowness!
         """
         if isPWave:
-            # NB Just like Java (fortunately) these are shallow copies --
-            # values are modified in place!
+            # NB Unlike Java (unfortunately) these are not modified in place!
+            # NumPy arrays cannot have values inserted in place.
             layers = self.PLayers
             otherLayers = self.SLayers
+            wave = 'P'
         else:
             layers = self.SLayers
             otherLayers = self.PLayers
-        for i, sLayer in enumerate(layers):
-            if sLayer.topDepth != sLayer.botDepth:
-                topVelocity = self.vMod.evaluateBelow(
-                    sLayer.topDepth, 'P' if isPWave else 'S')
-                botVelocity = self.vMod.evaluateAbove(
-                    sLayer.botDepth, 'P' if isPWave else 'S')
-            else:
-                # If depths are the same only need topVelocity, and just
-                # to verify we are not in a fluid
-                topVelocity = self.vMod.evaluateAbove(
-                    sLayer.botDepth, 'P' if isPWave else 'S')
-                botVelocity = self.vMod.evaluateBelow(
-                    sLayer.topDepth, 'P' if isPWave else 'S')
-            # Don't need to check for S waves in a fluid or in inner core if
-            # allowInnerCoreS is False.
-            if not isPWave:
-                if self.allowInnerCoreS is False \
-                        and sLayer.botDepth > self.vMod.iocbDepth:
-                    break
-                elif topVelocity == 0:
-                    continue
-            if (sLayer.topP - p) * (p - sLayer.botP) > 0:
-                botDepth = sLayer.botDepth
-                if sLayer.botDepth != sLayer.topDepth:
-                    # Not a zero thickness layer, so calculate the depth for
-                    #  the ray parameter.
-                    slope = (botVelocity - topVelocity) / \
-                        (sLayer.botDepth - sLayer.topDepth)
-                    botDepth = self.interpolate(p, topVelocity,
-                                                sLayer.topDepth, slope)
-                botLayer = SlownessLayer(p, botDepth, sLayer.botP,
-                                         sLayer.botDepth)
-                topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p,
-                                         botDepth)
-                # The list operations here should really be correct,
-                # after painstakingly working through Java and Python
-                # documentations and trying the behaviour of both.
-                layers.pop(i)
-                layers.insert(i, botLayer)
-                layers.insert(i, topLayer)
-                # To mimic the Java behaviour of returning -1 when item not
-                # in list.
-                try:
-                    otherIndex = otherLayers.index(sLayer)
-                except ValueError:
-                    otherIndex = -1
-                if otherIndex != -1:
-                    otherLayers.pop(otherIndex)
-                    otherLayers.insert(otherIndex, botLayer)
-                    otherLayers.insert(otherIndex, topLayer)
+            wave = 'S'
+
+        # If depths are the same only need topVelocity, and just to verify we
+        # are not in a fluid.
+        nonzero = layers['topDepth'] != layers['botDepth']
+        above = self.vMod.evaluateAbove(layers['botDepth'], wave)
+        below = self.vMod.evaluateBelow(layers['topDepth'], wave)
+        topVelocity = np.where(nonzero, below, above)
+        botVelocity = np.where(nonzero, above, below)
+
+        mask = ((layers['topP'] - p) * (p - layers['botP'])) > 0
+        # Don't need to check for S waves in a fluid or in inner core if
+        # allowInnerCoreS is False.
+        if not isPWave:
+            mask &= topVelocity != 0
+            if not self.allowInnerCoreS:
+                iocb_mask = layers['botDepth'] > self.vMod.iocbDepth
+                mask &= ~iocb_mask
+
+        index = np.where(mask)[0]
+
+        botDepth = np.copy(layers['botDepth'])
+        # Not a zero thickness layer, so calculate the depth for
+        # the ray parameter.
+        slope = ((botVelocity[nonzero] - topVelocity[nonzero]) /
+                 (layers['botDepth'][nonzero] - layers['topDepth'][nonzero]))
+        botDepth[nonzero] = self.interpolate(p, topVelocity[nonzero],
+                                             layers['topDepth'][nonzero],
+                                             slope)
+
+        botLayer = np.empty_like(index, dtype=SlownessLayer)
+        botLayer['topP'].fill(p)
+        botLayer['topDepth'] = botDepth[mask]
+        botLayer['botP'] = layers['botP'][mask]
+        botLayer['botDepth'] = layers['botDepth'][mask]
+
+        topLayer = np.empty_like(index, dtype=SlownessLayer)
+        topLayer['topP'] = layers['topP'][mask]
+        topLayer['topDepth'] = layers['topDepth'][mask]
+        topLayer['botP'].fill(p)
+        topLayer['botDepth'] = botDepth[mask]
+
+        otherIndex = np.where(otherLayers[np.newaxis, :] ==
+                              layers[mask, np.newaxis])
+        layers[index] = botLayer
+        layers = np.insert(layers, index, topLayer)
+        if len(otherIndex[0]):
+            otherLayers[otherIndex[1]] = botLayer[otherIndex[0]]
+            otherLayers = np.insert(otherLayers, otherIndex[1],
+                                    topLayer[otherIndex[0]])
+
+        if isPWave:
+            self.PLayers = layers
+            self.SLayers = otherLayers
+        else:
+            self.SLayers = layers
+            self.PLayers = otherLayers
 
     def ray_paramIncCheck(self):
         """
         Checks to make sure that no slowness layer spans more than maxDeltaP.
         """
-        for layers in [self.SLayers, self.PLayers]:
-            for sLayer in layers:
-                if abs(sLayer.topP - sLayer.botP) > self.maxDeltaP:
-                    numNewP = math.ceil(abs(sLayer.topP - sLayer.botP) /
-                                        self.maxDeltaP)
-                    deltaP = (sLayer.topP - sLayer.botP) / numNewP
-                    rayNum = 1
-                    while rayNum < numNewP:
-                        self.addSlowness(sLayer.topP + rayNum * deltaP,
-                                         self.PWAVE)
-                        self.addSlowness(sLayer.topP + rayNum * deltaP,
-                                         self.SWAVE)
-                        rayNum += 1
+        for wave in [self.SWAVE, self.PWAVE]:
+            # These might change with calls to addSlowness, so be sure we have
+            # the correct copy.
+            if wave == self.PWAVE:
+                layers = self.PLayers
+            else:
+                layers = self.SLayers
+
+            diff = layers['topP'] - layers['botP']
+            absdiff = np.abs(diff)
+
+            mask = absdiff > self.maxDeltaP
+            diff = diff[mask]
+            absdiff = absdiff[mask]
+            topP = layers['topP'][mask]
+
+            new_count = np.ceil(absdiff / self.maxDeltaP).astype(np.int_)
+            steps = diff / new_count
+
+            for start, Np, delta in zip(topP, new_count, steps):
+                for j in range(1, Np):
+                    newp = start + j * delta
+                    self.addSlowness(newp, self.PWAVE)
+                    self.addSlowness(newp, self.SWAVE)
 
     def depthIncCheck(self):
         """
         Checks to make sure no slowness layer spans more than maxDepthInterval.
         """
-        for which_codeblock, layers in enumerate([self.SLayers, self.PLayers]):
-            for sLayer in layers:
-                if (sLayer.botDepth - sLayer.topDepth) > self.maxDepthInterval:
-                    newNumDepths = math.ceil(
-                        (sLayer.botDepth - sLayer.topDepth) /
-                        self.maxDepthInterval)
-                    deltaDepth = (sLayer.botDepth - sLayer.topDepth) / \
-                        newNumDepths
-                    depthNum = 1
-                    while depthNum < newNumDepths:
-                        # Could do if layers == self.SLayers, but that would
-                        # be a bit heavy. In fact, any comparison here might
-                        #  be quite slow, I have a feeling this runs a lot... ?
-                        if which_codeblock == 0:
-                            velocity = self.vMod.evaluateAbove(
-                                sLayer.topDepth + depthNum * deltaDepth, 'S')
-                            if velocity == 0 \
-                                    or (self.allowInnerCoreS is False
-                                        and sLayer.topDepth + depthNum *
-                                        deltaDepth >= self.vMod.iocbDepth):
-                                velocity = self.vMod.evaluateAbove(
-                                    sLayer.topDepth + depthNum * deltaDepth,
-                                    'P')
-                            p = self.toSlowness(
-                                velocity,
-                                sLayer.topDepth + depthNum * deltaDepth)
-                        else:
-                            p = self.toSlowness(self.vMod.evaluateAbove(
-                                sLayer.topDepth + depthNum * deltaDepth, 'P'),
-                                sLayer.topDepth + depthNum * deltaDepth)
-                        self.addSlowness(p, self.PWAVE)
-                        self.addSlowness(p, self.SWAVE)
-                        depthNum += 1
+        for wave in [self.SWAVE, self.PWAVE]:
+            # These might change with calls to addSlowness, so be sure we have
+            # the correct copy.
+            if wave == self.PWAVE:
+                layers = self.PLayers
+            else:
+                layers = self.SLayers
+
+            diff = layers['botDepth'] - layers['topDepth']
+
+            mask = diff > self.maxDepthInterval
+            diff = diff[mask]
+            topDepth = layers['topDepth'][mask]
+
+            new_count = np.ceil(diff / self.maxDepthInterval).astype(np.int_)
+            steps = diff / new_count
+
+            for start, Nd, delta in zip(topDepth, new_count, steps):
+                new_depth = start + np.arange(1, Nd) * delta
+                if wave == self.SWAVE:
+                    velocity = self.vMod.evaluateAbove(new_depth, 'S')
+
+                    smask = velocity == 0
+                    if not self.allowInnerCoreS:
+                        smask |= new_depth >= self.vMod.iocbDepth
+                    velocity[smask] = self.vMod.evaluateAbove(new_depth[smask],
+                                                              'P')
+
+                    slowness = self.toSlowness(velocity, new_depth)
+                else:
+                    slowness = self.toSlowness(
+                        self.vMod.evaluateAbove(new_depth, 'P'),
+                        new_depth)
+
+                for p in slowness:
+                    self.addSlowness(p, self.PWAVE)
+                    self.addSlowness(p, self.SWAVE)
 
     def distanceCheck(self):
         """
@@ -871,9 +910,11 @@ class SlownessModel(object):
             while j < self.getNumLayers(currWaveType):
                 prevSLayer = sLayer
                 sLayer = self.getSlownessLayer(j, currWaveType)
-                if (self.depthInHighSlowness(sLayer.botDepth, sLayer.botP,
+                if (self.depthInHighSlowness(sLayer['botDepth'],
+                                             sLayer['botP'],
                                              currWaveType) is False
-                    and self.depthInHighSlowness(sLayer.topDepth, sLayer.topP,
+                    and self.depthInHighSlowness(sLayer['topDepth'],
+                                                 sLayer['topP'],
                                                  currWaveType) is False):
                     # Don't calculate prevTD if we can avoid it
                     if isCurrOK:
@@ -884,25 +925,25 @@ class SlownessModel(object):
                         prevTD = currTD
                         isPrevOK = True
                     else:
-                        prevTD = self.approxDistance(j - 1, sLayer.topP,
+                        prevTD = self.approxDistance(j - 1, sLayer['topP'],
                                                      currWaveType)
                         isPrevOK = True
-                    currTD = self.approxDistance(j, sLayer.botP, currWaveType)
+                    currTD = self.approxDistance(j, sLayer['botP'],
+                                                 currWaveType)
                     isCurrOK = True
                     # Check for jump of too great distance
-                    if (abs(prevTD.distRadian - currTD.distRadian) >
+                    if (abs(prevTD['dist'] - currTD['dist']) >
                             self.maxRangeInterval and
-                            abs(sLayer.topP - sLayer.botP) >
+                            abs(sLayer['topP'] - sLayer['botP']) >
                             2 * self.minDeltaP):
                         if self.DEBUG:
                             print("At " + str(j) + " Distance jump too great ("
                                   ">maxRangeInterval " +
                                   str(self.maxRangeInterval) + "), adding "
                                   "slowness. ")
-                        self.addSlowness((sLayer.topP + sLayer.botP) / 2,
-                                         self.PWAVE)
-                        self.addSlowness((sLayer.topP + sLayer.botP) / 2,
-                                         self.SWAVE)
+                        p = (sLayer['topP'] + sLayer['botP']) / 2
+                        self.addSlowness(p, self.PWAVE)
+                        self.addSlowness(p, self.SWAVE)
                         currTD = prevTD
                         prevTD = prevPrevTD
                     else:
@@ -912,42 +953,42 @@ class SlownessModel(object):
                         # the nice, if unintended, consequence of adding
                         # extra samples in the neighborhood of poorly
                         # sampled caustics.
-                        splitRayParam = (sLayer.topP + sLayer.botP) / 2
+                        splitRayParam = (sLayer['topP'] + sLayer['botP']) / 2
                         allButLayer = self.approxDistance(j-1, splitRayParam,
                                                           currWaveType)
-                        splitLayer = SlownessLayer(
-                            sLayer.topP, sLayer.topDepth, splitRayParam,
-                            sLayer.bullenDepthFor(splitRayParam,
-                                                  self.radiusOfEarth))
-                        justLayer = splitLayer.bullenRadialSlowness(
-                            splitRayParam, self.radiusOfEarth)
-                        splitTD = TimeDist(
-                            splitRayParam, allButLayer.time +
-                            2 * justLayer.time,
-                            allButLayer.distRadian + 2 * justLayer.distRadian)
+                        splitLayer = np.array([(
+                            sLayer['topP'], sLayer['topDepth'], splitRayParam,
+                            bullenDepthFor(sLayer, splitRayParam,
+                                           self.radiusOfEarth))],
+                            dtype=SlownessLayer)
+                        justLayer = bullenRadialSlowness(splitLayer,
+                                                         splitRayParam,
+                                                         self.radiusOfEarth)
+                        splitTD = np.array([(
+                            splitRayParam,
+                            allButLayer['time'] + 2 * justLayer['time'],
+                            allButLayer['dist'] + 2 * justLayer['dist'],
+                            0)],
+                            dtype=TimeDist)
                         # Python standard division is not IEEE compliant,
                         # as “The IEEE 754 standard specifies that every
                         # floating point arithmetic operation, including
                         # division by zero, has a well-defined result”.
                         # Use numpy's division instead by using np.array:
                         with np.errstate(divide='ignore', invalid='ignore'):
-                            diff = (currTD.time -
-                                    ((splitTD.time - prevTD.time)
-                                     * ((currTD.distRadian
-                                        - prevTD.distRadian) /
-                                        np.array(splitTD.distRadian -
-                                        prevTD.distRadian)) + prevTD.time))
+                            diff = (currTD['time'] -
+                                    ((splitTD['time'] - prevTD['time'])
+                                     * ((currTD['dist']
+                                        - prevTD['dist']) /
+                                        (splitTD['dist'] -
+                                        prevTD['dist'])) + prevTD['time']))
                         if abs(diff) > self.maxInterpError:
-                            self.addSlowness((prevSLayer.topP
-                                              + prevSLayer. botP) / 2,
-                                             self.PWAVE)
-                            self.addSlowness((prevSLayer.topP
-                                              + prevSLayer. botP) / 2,
-                                             self.SWAVE)
-                            self.addSlowness((sLayer.topP + sLayer.botP) / 2,
-                                             self.PWAVE)
-                            self.addSlowness((sLayer.topP + sLayer.botP) / 2,
-                                             self.SWAVE)
+                            p1 = (prevSLayer['topP'] + prevSLayer['botP']) / 2
+                            p2 = (sLayer['topP'] + sLayer['botP']) / 2
+                            self.addSlowness(p1, self.PWAVE)
+                            self.addSlowness(p1, self.SWAVE)
+                            self.addSlowness(p2, self.PWAVE)
+                            self.addSlowness(p2, self.SWAVE)
                             currTD = prevPrevTD
                             isPrevOK = False
                             if j > 0:
@@ -1018,14 +1059,16 @@ class SlownessModel(object):
                 "than the given slownessTurnLayer!")
         if p < 0:
             raise SlownessModelError("Ray parameter must not be negative!")
-        td = TimeDist(p)
-        for layerNum in range(0, slownessTurnLayer + 1):
-            td.add(self.layerTimeDist(p, layerNum, isPWave))
-        # Return 2* distance and time because there is a downgoing as well
-        # as an upgoing leg, which are equal since this is for a surface
-        # source.
-        td.distRadian *= 2
-        td.time *= 2
+        td = np.zeros(1, dtype=TimeDist)
+        td['p'] = p
+        layerNum = np.arange(0, slownessTurnLayer + 1)
+        if len(layerNum):
+            temptd = self.layerTimeDist(p, layerNum, isPWave)
+            # Return 2* distance and time because there is a downgoing as well
+            # as an upgoing leg, which are equal since this is for a surface
+            # source.
+            td['dist'] = 2 * np.sum(temptd['dist'])
+            td['time'] = 2 * np.sum(temptd['time'])
         return td
 
     def layerTimeDist(self, sphericalRayParam, layerNum, isPWave):
@@ -1039,28 +1082,30 @@ class SlownessModel(object):
         # occurs if the ray with the given spherical ray parameter cannot
         # propagate within this layer, or if the ray turns within this layer
         # but not at the bottom.
-        timeDist = TimeDist(sphericalRayParam)
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
-        topRadius = self.radiusOfEarth - sphericalLayer.topDepth
-        botRadius = self.radiusOfEarth - sphericalLayer.botDepth
+
         # First make sure that a ray with this ray param can propagate
         # within this layer and doesn't turn in the middle of the layer. If
         # not, raise error.
-        if sphericalRayParam > max(sphericalLayer.topP, sphericalLayer.botP):
+        if sphericalRayParam > max(np.max(sphericalLayer['topP']),
+                                   np.max(sphericalLayer['botP'])):
             raise SlownessModelError("Ray cannot propagate within this layer, "
                                      "given ray param too large.")
         if sphericalRayParam < 0:
             raise SlownessModelError("Ray parameter must not be negative!")
-        if sphericalRayParam > min(sphericalLayer.topP, sphericalLayer.botP):
+        if sphericalRayParam > min(np.min(sphericalLayer['topP']),
+                                   np.min(sphericalLayer['botP'])):
             raise SlownessModelError("Ray turns in the middle of this layer! "
-                                     "layerNum = "+str(layerNum))
+                                     "layerNum = " + str(layerNum))
+
+        timeDist = np.zeros_like(layerNum, dtype=TimeDist)
+        timeDist['p'] = sphericalRayParam
+
         # Check to see if this layer has zero thickness, if so then it is
         # from a critically reflected slowness sample. That means just
         # return 0 for time and distance increments.
-        if sphericalLayer.topDepth == sphericalLayer.botDepth:
-            timeDist.time = 0
-            timeDist.distRadian = 0
-            return timeDist
+        leftover = sphericalLayer['topDepth'] != sphericalLayer['botDepth']
+
         # Check to see if this layer contains the centre of the Earth. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
         # range and time increments using a constant velocity layer (sphere).
@@ -1074,20 +1119,16 @@ class SlownessModel(object):
         # increment for a ray of zero ray parameter passing half way through a
         # sphere of constant velocity is just the spherical slowness at the top
         # of the sphere. An amazingly simple result!
-        if sphericalRayParam == 0 \
-                and sphericalLayer.botDepth == self.radiusOfEarth:
-            if layerNum != self.getNumLayers(isPWave) - 1:
-                raise SlownessModelError("There are layers deeper than the "
-                                         "centre of the Earth!")
-            timeDist.distRadian = math.pi / 2
-            timeDist.time = sphericalLayer.topP
-            if timeDist.distRadian < 0 \
-                    or timeDist.time < 0 \
-                    or math.isnan(timeDist.time) \
-                    or math.isnan(timeDist.distRadian):
-                raise SlownessModelError(
-                    "Centre of Earth timeDist < 0 or NaN.")
-            return timeDist
+        centre_layer = np.logical_and(leftover, np.logical_and(
+            sphericalRayParam == 0,
+            sphericalLayer['botDepth'] == self.radiusOfEarth))
+        leftover &= ~centre_layer
+        if np.any(layerNum[centre_layer] != self.getNumLayers(isPWave) - 1):
+            raise SlownessModelError("There are layers deeper than the "
+                                     "centre of the Earth!")
+        timeDist['dist'][centre_layer] = math.pi / 2
+        timeDist['time'][centre_layer] = sphericalLayer['topP'][centre_layer]
+
         # Now we check to see if this is a constant velocity layer and if so
         # than we can do a simple triangle calculation to get the range and
         # time increments. To get the time increment we first calculate the
@@ -1096,45 +1137,55 @@ class SlownessModel(object):
         # spherical Snell's Law. The time increment is just the path length
         # divided by the velocity. To get the distance we first find the
         # angular distance traveled, using the law of sines.
-        if abs(topRadius / sphericalLayer.topP -
-               botRadius / sphericalLayer.botP) < self.slowness_tolerance:
-            vel = botRadius / sphericalLayer.botP  # temp variable
-            # In cases of a ray turning at the bottom of the layer numerical
-            # round-off can cause botTerm to be very small (1e-9) but
-            # negative which causes the sqrt to raise an error. We check for
-            # values that are within the numerical chatter of zero and just
-            # set them to zero.
-            topTerm = topRadius * topRadius - sphericalRayParam * \
-                sphericalRayParam * vel * vel
-            if abs(topTerm) < self.slowness_tolerance:
-                topTerm = 0
-            if sphericalRayParam == sphericalLayer.botP:
-                # In this case the ray turns at the bottom of this layer so
-                # sphericalRayParam*vel == botRadius, and botTerm should be
-                # zero. We check for this case specifically because
-                # numerical chatter can cause small round-off errors that
-                # lead to botTerm being negative, causing a sqrt error.
-                botTerm = 0
-            else:
-                botTerm = botRadius * botRadius - sphericalRayParam * \
-                    sphericalRayParam * vel * vel
+        topRadius = self.radiusOfEarth - sphericalLayer['topDepth']
+        botRadius = self.radiusOfEarth - sphericalLayer['botDepth']
+        with np.errstate(invalid='ignore'):
+            vel = botRadius / sphericalLayer['botP']
+            constant_velocity = np.logical_and(
+                leftover,
+                np.abs(topRadius / sphericalLayer['topP'] -
+                       vel) < self.slowness_tolerance)
+        leftover &= ~constant_velocity
+        topRadius = topRadius[constant_velocity]
+        botRadius = botRadius[constant_velocity]
+        vel = vel[constant_velocity]
 
-            # Use b for temp storage of the length of the ray path.
-            b = math.sqrt(topTerm) - math.sqrt(botTerm)
-            timeDist.time = b / vel
-            timeDist.distRadian = math.asin(b * sphericalRayParam * vel /
-                                            (topRadius * botRadius))
-            if timeDist.distRadian < 0 \
-                    or timeDist.time < 0 \
-                    or math.isnan(timeDist.time) \
-                    or math.isnan(timeDist.distRadian):
-                raise SlownessModelError(
-                    "Constant velocity layer timeDist < 0 or NaN.")
-            return timeDist
+        # In cases of a ray turning at the bottom of the layer numerical
+        # round-off can cause botTerm to be very small (1e-9) but
+        # negative which causes the sqrt to raise an error. We check for
+        # values that are within the numerical chatter of zero and just
+        # set them to zero.
+        topTerm = topRadius**2 - (sphericalRayParam * vel)**2
+        topTerm[np.abs(topTerm) < self.slowness_tolerance] = 0
+
+        # In this case the ray turns at the bottom of this layer so
+        # sphericalRayParam*vel == botRadius, and botTerm should be
+        # zero. We check for this case specifically because
+        # numerical chatter can cause small round-off errors that
+        # lead to botTerm being negative, causing a sqrt error.
+        botTerm = np.zeros_like(topTerm)
+        mask = sphericalRayParam != sphericalLayer['botP'][constant_velocity]
+        botTerm[mask] = botRadius[mask]**2 - (sphericalRayParam * vel[mask])**2
+
+        b = np.sqrt(topTerm) - np.sqrt(botTerm)
+        timeDist['time'][constant_velocity] = b / vel
+        timeDist['dist'][constant_velocity] = np.arcsin(
+            b * sphericalRayParam * vel / (topRadius * botRadius))
+
         # If the layer is not a constant velocity layer or the centre of the
         #  Earth and p is not zero we have to do it the hard way:
-        return sphericalLayer.bullenRadialSlowness(sphericalRayParam,
-                                                   self.radiusOfEarth)
+        timeDist[leftover] = bullenRadialSlowness(sphericalLayer[leftover],
+                                                  sphericalRayParam,
+                                                  self.radiusOfEarth)
+
+        if np.any(timeDist['dist'] < 0) \
+                or np.any(timeDist['time'] < 0) \
+                or np.any(np.isnan(timeDist['time'])) \
+                or np.any(np.isnan(timeDist['dist'])):
+            raise SlownessModelError(
+                "layertimeDist < 0 or NaN.")
+
+        return timeDist
 
     def fixCriticalPoints(self):
         """
@@ -1144,14 +1195,14 @@ class SlownessModel(object):
             cd.pLayerNum = self.layerNumberBelow(cd.depth, self.PWAVE)
             sLayer = self.getSlownessLayer(cd.pLayerNum, self. PWAVE)
             if cd.pLayerNum == len(self.PLayers) - 1 \
-                    and sLayer.botDepth == cd.depth:
+                    and sLayer['botDepth'] == cd.depth:
                 # We want the last critical point to be the bottom of the
                 # last layer.
                 cd.pLayerNum += 1
             cd.sLayerNum = self.layerNumberBelow(cd.depth, self.SWAVE)
             sLayer = self.getSlownessLayer(cd.sLayerNum, self.SWAVE)
             if cd.sLayerNum == len(self.SLayers) - 1 \
-                    and sLayer .botDepth == cd.depth:
+                    and sLayer['botDepth'] == cd.depth:
                 cd.sLayerNum += 1
 
     def validate(self):
@@ -1198,32 +1249,38 @@ class SlownessModel(object):
             prevDepth = 0
             if self.getNumLayers(isPWave) > 0:
                 sLayer = self.getSlownessLayer(0, isPWave)
-                prevBotP = sLayer.topP
+                prevBotP = sLayer['topP']
             else:
                 prevBotP = -1
             for sLayer in (self.PLayers if isPWave else self.SLayers):
-                if sLayer.validate() is False:
+                if math.isnan(sLayer['topP']) or math.isnan(sLayer['botP']):
+                    raise SlownessModelError("Slowness layer has NaN values.")
+                if sLayer['topP'] < 0 or sLayer['botP'] < 0:
                     raise SlownessModelError(
-                        "Validation of SlownessLayer failed!")
-                if sLayer.topDepth > prevDepth:
+                        "Slowness layer has negative slowness.")
+                if sLayer['topDepth'] > sLayer['botDepth']:
+                    raise SlownessModelError(
+                        "Slowness layer has negative thickness.")
+                if sLayer['topDepth'] > prevDepth:
                     raise SlownessModelError(
                         "Gap between slowness layers!")
-                if sLayer.topDepth < prevDepth:
+                if sLayer['topDepth'] < prevDepth:
                     raise SlownessModelError(
                         "Slowness layer overlaps previous!")
-                if sLayer.topP != prevBotP:
+                if sLayer['topP'] != prevBotP:
                     raise SlownessModelError(
                         "Slowness layer slowness does not agree with "
                         "previous layer (at same depth)!")
-                if math.isnan(sLayer.topDepth) or math.isnan(sLayer.botDepth):
+                if (math.isnan(sLayer['topDepth']) or
+                        math.isnan(sLayer['botDepth'])):
                     raise SlownessModelError(
                         "Slowness layer depth (top or btm) is NaN!")
-                if sLayer.botDepth > self.radiusOfEarth:
+                if sLayer['botDepth'] > self.radiusOfEarth:
                     raise SlownessModelError(
                         "Slowness layer has a depth larger than radius of the "
                         "Earth.")
-                prevBotP = sLayer.botP
-                prevDepth = sLayer.botDepth
+                prevBotP = sLayer['botP']
+                prevDepth = sLayer['botDepth']
         # Everything seems OK.
         return True
 
@@ -1237,22 +1294,23 @@ class SlownessModel(object):
         minPSoFar = 1e300
         if self.depthInHighSlowness(depth, 1e300, isPWave):
             for sLayer in (self.PLayers if isPWave else self.SLayers):
-                if sLayer.botDepth == depth:
-                    minPSoFar = min(minPSoFar, sLayer.botP)
+                if sLayer['botDepth'] == depth:
+                    minPSoFar = min(minPSoFar, sLayer['botP'])
                     return minPSoFar
-                elif sLayer.botDepth > depth:
-                    minPSoFar = min(minPSoFar, sLayer.evaluateAtBullen(
-                        depth, self.radiusOfEarth))
+                elif sLayer['botDepth'] > depth:
+                    minPSoFar = min(minPSoFar,
+                                    evaluateAtBullen(sLayer, depth,
+                                                     self.radiusOfEarth))
                     return minPSoFar
                 else:
-                    minPSoFar = min(minPSoFar, sLayer.botP)
+                    minPSoFar = min(minPSoFar, sLayer['botP'])
         else:
             sLayer = self.getSlownessLayer(
                 self.layerNumberAbove(depth, isPWave), isPWave)
-            if depth == sLayer.botDepth:
-                minPSoFar = sLayer.botP
+            if depth == sLayer['botDepth']:
+                minPSoFar = sLayer['botP']
             else:
-                minPSoFar = sLayer.evaluateAtBullen(depth, self.radiusOfEarth)
+                minPSoFar = evaluateAtBullen(sLayer, depth, self.radiusOfEarth)
         return minPSoFar
 
     def getMinRayParam(self, depth, isPWave):
@@ -1268,8 +1326,9 @@ class SlownessModel(object):
             self.layerNumberAbove(depth, isPWave), isPWave)
         sLayerBelow = self.getSlownessLayer(
             self.layerNumberBelow(depth, isPWave), isPWave)
-        if sLayerAbove.botDepth == depth:
-            minPSoFar = min(min(minPSoFar, sLayerAbove.botP), sLayerBelow.topP)
+        if sLayerAbove['botDepth'] == depth:
+            minPSoFar = min(minPSoFar, sLayerAbove['botP'],
+                            sLayerBelow['topP'])
         return minPSoFar
 
     def splitLayer(self, depth, isPWave):
@@ -1284,47 +1343,55 @@ class SlownessModel(object):
         """
         layerNum = self.layerNumberAbove(depth, isPWave)
         sLayer = self.getSlownessLayer(layerNum, isPWave)
-        if sLayer.topDepth == depth or sLayer.botDepth == depth:
+        if sLayer['topDepth'] == depth or sLayer['botDepth'] == depth:
             # Depth is already on a slowness layer boundary so no need to
             # split any slowness layers.
             return SplitLayerInfo(self, False, False, 0)
-        elif abs(sLayer.topDepth - depth) < 0.000001:
+        elif abs(sLayer['topDepth'] - depth) < 0.000001:
             # Check for very thin layers, just move the layer to hit the
             # boundary.
             outLayers = self.PLayers if isPWave else self.SLayers
-            outLayers[layerNum] = SlownessLayer(sLayer.topP, depth,
-                                                sLayer.botP, sLayer.botDepth)
+            outLayers[layerNum] = np.array([(sLayer['topP'], depth,
+                                             sLayer['botP'],
+                                             sLayer['botDepth'])],
+                                           dtype=SlownessLayer)
             sLayer = self.getSlownessLayer(layerNum - 1, isPWave)
-            outLayers[layerNum - 1] = SlownessLayer(sLayer.topP,
-                                                    sLayer.topDepth,
-                                                    sLayer.botP, depth)
+            outLayers[layerNum - 1] = np.array([(sLayer['topP'],
+                                                 sLayer['topDepth'],
+                                                 sLayer['botP'], depth)],
+                                               dtype=SlownessLayer)
             out = self
             out.PLayers = outLayers if isPWave else self.PLayers
             out.SLayers = outLayers if isPWave else self.SLayers
-            return SplitLayerInfo(out, False, True, sLayer.botP)
-        elif abs(depth - sLayer.botDepth) < 0.000001:
+            return SplitLayerInfo(out, False, True, sLayer['botP'])
+        elif abs(depth - sLayer['botDepth']) < 0.000001:
             # As above.
             outLayers = self.PLayers if isPWave else self.SLayers
-            outLayers[layerNum] = SlownessLayer(sLayer.topP, sLayer.topDepth,
-                                                sLayer.botP, depth)
+            outLayers[layerNum] = np.array([(sLayer['topP'],
+                                             sLayer['topDepth'],
+                                             sLayer['botP'], depth)],
+                                           dtype=SlownessLayer)
             sLayer = self.getSlownessLayer(layerNum + 1, isPWave)
-            outLayers[layerNum + 1] = SlownessLayer(sLayer.topP, depth,
-                                                    sLayer.botP,
-                                                    sLayer.botDepth)
+            outLayers[layerNum + 1] = np.array([(sLayer['topP'], depth,
+                                                 sLayer['botP'],
+                                                 sLayer['botDepth'])],
+                                               dtype=SlownessLayer)
             out = self
             out.PLayers = outLayers if isPWave else self.PLayers
             out.SLayers = outLayers if isPWave else self.SLayers
-            return SplitLayerInfo(out, False, True, sLayer.botP)
+            return SplitLayerInfo(out, False, True, sLayer['botP'])
         else:
             # Must split properly.
-            p = sLayer.evaluateAtBullen(depth, self.radiusOfEarth)
-            topLayer = SlownessLayer(sLayer.topP, sLayer.topDepth, p, depth)
-            botLayer = SlownessLayer(p, depth, sLayer.botP, sLayer.botDepth)
+            p = evaluateAtBullen(sLayer, depth, self.radiusOfEarth)
+            topLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
+                                  p, depth)],
+                                dtype=SlownessLayer)
+            botLayer = np.array([(p, depth,
+                                  sLayer['botP'], sLayer['botDepth'])],
+                                dtype=SlownessLayer)
             outLayers = self.PLayers if isPWave else self.SLayers
-            # or del outLayers[layerNum] - which is faster?
-            outLayers.pop(layerNum)
-            outLayers.insert(layerNum, botLayer)
-            outLayers.insert(layerNum, topLayer)
+            outLayers[layerNum] = botLayer
+            outLayers = np.insert(outLayers, layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
             outCriticalDepths = self.criticalDepths
             self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
@@ -1362,28 +1429,25 @@ class SlownessModel(object):
         out = otherLayers
         # Make sure to keep sampling consistent. If in a fluid, both wave
         # types will share a single slowness layer.
-        try:
-            otherIndex = otherLayers.index(changedLayer)
-            del out[otherIndex]
-            out.insert(otherIndex, newBotLayer)
-            out.insert(otherIndex, newTopLayer)
-        except ValueError:
-            # This will be raised by index if changedLayer can't be found,
-            # but must not break program flow. I.e. that's ok, no error
-            # should be raised, the try clause can be seen like an if.
-            pass
-        for otherLayerNum, sLayer in enumerate(out[:]):
-            if (sLayer.topP - p) * (p - sLayer.botP) > 0:
+
+        otherIndex = np.where(otherLayers == changedLayer)
+        if len(otherIndex[0]):
+            out[otherIndex[0]] = newBotLayer
+            out = np.insert(out, otherIndex[0], newTopLayer)
+
+        for otherLayerNum, sLayer in enumerate(out.copy()):
+            if (sLayer['topP'] - p) * (p - sLayer['botP']) > 0:
                 # Found a slowness layer with the other wave type that
                 # contains the new slowness sample.
-                topLayer = SlownessLayer(
-                    sLayer.topP, sLayer.topDepth, p,
-                    sLayer.bullenDepthFor(p, self.radiusOfEarth))
-                botLayer = SlownessLayer(p, topLayer.botDepth, sLayer.botP,
-                                         sLayer.botDepth)
-                del out[otherLayerNum]
-                out.insert(otherLayerNum, botLayer)
-                out.insert(otherLayerNum, topLayer)
+                topLayer = np.array([(sLayer['topP'], sLayer['topDepth'], p,
+                                     bullenDepthFor(sLayer, p,
+                                                    self.radiusOfEarth))],
+                                    dtype=SlownessLayer)
+                botLayer = np.array([(p, topLayer['botDepth'], sLayer['botP'],
+                                      sLayer['botDepth'])],
+                                    dtype=SlownessLayer)
+                out[otherLayerNum] = botLayer
+                out = np.insert(out, otherLayerNum, topLayer)
                 # Fix critical layers since we have added a slowness layer.
                 self.fixCriticalDepths(criticalDepths, otherLayerNum,
                                        not isPWave)
