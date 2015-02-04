@@ -270,8 +270,8 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     if is_bytes_buffer(filename):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
-                             "format, the Stream object must only contain "
-                             "one Trace")
+                             "format, the Stream object can only contain "
+                             "one Trace.")
         _writeSACXY(stream[0], filename, **kwargs)
         return
     elif isinstance(filename, (str, bytes)):
@@ -422,8 +422,8 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     if is_bytes_buffer(filename):
         if len(stream) > 1:
             raise ValueError("If writing to a file-like object in the SAC "
-                             "format, the Stream object must only contain "
-                             "one Trace")
+                             "format, the Stream object can only contain "
+                             "one Trace.")
         _writeSAC(stream[0], filename, byteorder=byteorder, **kwargs)
         return
     elif isinstance(filename, (str, bytes)):
