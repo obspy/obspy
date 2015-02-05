@@ -98,7 +98,7 @@ class TauBranch(object):
                     timeDist['time'][i] = np.sum(temptd['time'])
 
                     if ((layerMask['topP'][-1] - p) *
-                        (p - layerMask['botP'][-1])) > 0:
+                            (p - layerMask['botP'][-1])) > 0:
                         raise SlownessModelError(
                             "Ray turns in the middle of this layer!")
 

@@ -253,14 +253,14 @@ class SlownessModel(object):
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
                               + " of a high slowness zone.")
-                    highSlownessZoneS['botDepth'] = currSLayer['topDepth']
+                    highSlownessZoneS.botDepth = currSLayer['topDepth']
                     self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                     inHighSlownessZoneS = False
                 if inHighSlownessZoneP and currPLayer['topP'] < minPSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
                               + " of a high slowness zone.")
-                    highSlownessZoneP['botDepth'] = currSLayer['topDepth']
+                    highSlownessZoneP.botDepth = currSLayer['topDepth']
                     self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                     inHighSlownessZoneP = False
                 # Update minPSoFar and minSSoFar as all total reflections off
