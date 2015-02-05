@@ -8,6 +8,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+from collections import namedtuple
+
 import numpy as np
 
 
@@ -54,9 +56,7 @@ class DepthRange:
         self.ray_param = ray_param
 
 
-class SplitLayerInfo:
-    def __init__(self, sMod, neededSplit, movedSample, ray_param):
-        self.sMod = sMod
-        self.neededSplit = neededSplit
-        self.movedSample = movedSample
-        self.ray_param = ray_param
+SplitLayerInfo = namedtuple(
+    'SplitLayerInfo',
+    ['sMod', 'neededSplit', 'movedSample', 'ray_param']
+)
