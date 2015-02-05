@@ -20,6 +20,7 @@ from obspy.core.util.misc import toIntOrZero
 from pkg_resources import iter_entry_points, load_entry_point
 import doctest
 import inspect
+import io
 import numpy as np
 import os
 import sys
@@ -46,7 +47,7 @@ _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
-class NamedTemporaryFile(object):
+class NamedTemporaryFile(io.BufferedIOBase):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
@@ -81,13 +82,22 @@ class NamedTemporaryFile(object):
     >>> os.path.exists(tf.name)
     False
     """
-
     def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
         fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
         self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-    def __getattr__(self, attr):
-        return getattr(self._fileobj, attr)
+    def read(self, *args, **kwargs):
+        return self._fileobj.read(*args, **kwargs)
+
+    def write(self, *args, **kwargs):
+        return self._fileobj.write(*args, **kwargs)
+
+    def seek(self, *args, **kwargs):
+        self._fileobj.seek(*args, **kwargs)
+        return self._fileobj.tell()
+
+    def tell(self, *args, **kwargs):
+        return self._fileobj.tell(*args, **kwargs)
 
     def __enter__(self):
         return self
