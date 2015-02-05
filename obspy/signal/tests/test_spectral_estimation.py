@@ -213,11 +213,9 @@ class PsdTestCase(unittest.TestCase):
 
     def test_PPSD_w_IRIS(self):
         # Bands to be used this is the upper and lower frequency band pairs
-        fresup = [0.2, 0.1]
-        freslow = [0.1, 0.05]
+        fres = zip([0.1, 0.05], [0.2, 0.1])
 
-        file_dataANMO = os.path.join(
-            PATH, 'IUANMO.seed')
+        file_dataANMO = os.path.join(self.path, 'IUANMO.seed')
         # Read in ANMO data for one day
         st = read(file_dataANMO)
 
@@ -233,51 +231,35 @@ class PsdTestCase(unittest.TestCase):
         # Get the 50th percentile from the PPSD
         (per, perval) = ppsd.get_percentile(percentile=50)
 
+        # Read in the results obtained from a Mustang flat file
+        file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
+        freq, power, hits = np.genfromtxt(file_dataIRIS, comments='#',
+                                          delimiter=',', unpack=True)
+
         # For each frequency pair we want to compare the mean of the bands
-        for idxfre, curfreUp in enumerate(fresup):
-            perGoodOBSPY = []
+        for fre in fres:
             pervalGoodOBSPY = []
 
             # Get the values for the bands from the PPSD
-            for idx, curper in enumerate(per):
-                if freslow[idxfre] < 1.0/curper < curfreUp:
-                    perGoodOBSPY.append(1.0/curper)
-                    pervalGoodOBSPY.append(perval[idx])
+            perinv = 1 / per
+            mask = (fre[0] < perinv) & (perinv < fre[1])
+            pervalGoodOBSPY = perval[mask]
 
-            # Read in the results obtained from a Mustang flat file
-            file_dataIRIS = os.path.join(
-                PATH, 'IRISpdfExample')
-            fh = open(file_dataIRIS, 'r')
-
-            # We will now read in line by line the IRIS file and save
-            # a limited number of values
-            # Array of data values that will be within our frequency band
-            goodlines = []
-            # Distinct frequency values that we will want
-            freqdistinct = []
-            for line in fh:
-                if "#" not in line:
-                    freq, power, hits = line.split(",")
-                    # Now we look at values between 5 and 20 seconds period
-                    if freslow[idxfre] < float(freq) < curfreUp:
-                        goodlines.append(line)
-                        freqdistinct.append(float(freq))
-            fh.close()
-
+            # Now we sort out all of the data from the IRIS flat file
+            mask = (fre[0] < freq) & (freq < fre[1])
+            triples = list(zip(freq[mask], hits[mask], power[mask]))
             # We now have all of the frequency values of interest
             # We will get the distinct frequency values
-            freqdistinct = sorted(list(set(freqdistinct)), reverse=True)
-
+            freqdistinct = sorted(list(set(freq[mask])), reverse=True)
             percenlist = []
             # We will loop through the frequency values and compute a
             # 50th percentile
             for curfreq in freqdistinct:
-                tempvals = []
-                for curline in goodlines:
-                    if curfreq == float(curline.split(",")[0]):
-                        tempvals += int(curline.split(",")[2]) * \
-                            [int(curline.split(",")[1])]
-                percenlist.append(np.percentile(tempvals, 50))
+                tempvalslist = []
+                for triple in triples:
+                    if np.isclose(curfreq, triple[0], atol=1e-3, rtol=0.0):
+                        tempvalslist += [int(triple[2])] * int(triple[1])
+                percenlist.append(np.percentile(tempvalslist, 50))
             # Here is the actual test
             np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
                                        np.mean(percenlist), rtol=0.0, atol=1.0)
