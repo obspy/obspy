@@ -539,11 +539,9 @@ class CoreTestCase(unittest.TestCase):
         st = readSAC(self.file)
 
         with NamedTemporaryFile() as tf_out:
-            with open(tf_out.name, "wb") as fh:
-                writeSAC(st, fh)
-
-            with open(tf_out.name, "rb") as fh:
-                st2 = readSAC(fh)
+            writeSAC(st, tf_out)
+            tf_out.seek(0, 0)
+            st2 = readSAC(tf_out)
 
         tr = st[0]
         tr2 = st2[0]
@@ -628,11 +626,9 @@ class CoreTestCase(unittest.TestCase):
         st = readSACXY(self.filexy)
 
         with NamedTemporaryFile() as tf:
-            with open(tf.name, "wb") as fh:
-                writeSACXY(st, fh)
-                fh.seek(0, 0)
-            with open(tf.name, "rb") as fh:
-                st2 = readSACXY(fh)
+            writeSACXY(st, tf)
+            tf.seek(0, 0)
+            st2 = readSACXY(tf)
 
         self.assertTrue(st == st2)
 
