@@ -119,12 +119,13 @@ class TauModel(object):
             for critNum, topCritDepth, botCritDepth in zip(
                     count(), self.sMod.criticalDepths[:-1],
                     self.sMod.criticalDepths[1:]):
-                topCritLayerNum = topCritDepth.pLayerNum \
-                    if isPWave else topCritDepth.sLayerNum
-                botCritLayerNum = (botCritDepth.pLayerNum if isPWave
-                                   else botCritDepth.sLayerNum) - 1
+                topCritLayerNum = topCritDepth['pLayerNum'] \
+                    if isPWave else topCritDepth['sLayerNum']
+                botCritLayerNum = (botCritDepth['pLayerNum'] if isPWave
+                                   else botCritDepth['sLayerNum']) - 1
                 self.tauBranches[waveNum, critNum] = \
-                    TauBranch(topCritDepth.depth, botCritDepth.depth, isPWave)
+                    TauBranch(topCritDepth['depth'], botCritDepth['depth'],
+                              isPWave)
                 self.tauBranches[waveNum, critNum].DEBUG = self.debug
                 self.tauBranches[waveNum, critNum].createBranch(
                     self.sMod, minPSoFar, self.ray_params)
@@ -139,7 +140,7 @@ class TauModel(object):
                 minPSoFar = min(minPSoFar,
                                 min(topSLayer['topP'], botSLayer['botP']))
                 botSLayer = self.sMod.getSlownessLayer(
-                    self.sMod.layerNumberAbove(botCritDepth.depth, isPWave),
+                    self.sMod.layerNumberAbove(botCritDepth['depth'], isPWave),
                     isPWave)
                 minPSoFar = min(minPSoFar, botSLayer['botP'])
         # Here we decide which branches are the closest to the Moho, CMB,

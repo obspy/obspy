@@ -31,16 +31,16 @@ TimeDist = np.dtype([
 ])
 
 
-class CriticalDepth:
-    """
-    Utility class to keep track of critical points (discontinuities or
-    reversals in slowness gradient) within slowness and velocity models.
-    """
-    def __init__(self, depth, velLayerNum, pLayerNum, sLayerNum):
-        self.depth = depth
-        self.velLayerNum = velLayerNum
-        self.pLayerNum = pLayerNum
-        self.sLayerNum = sLayerNum
+"""
+Tracks critical points (discontinuities or reversals in slowness gradient)
+within slowness and velocity models.
+"""
+CriticalDepth = np.dtype([
+    (native_str('depth'), np.float_),
+    (native_str('velLayerNum'), np.int_),
+    (native_str('pLayerNum'), np.int_),
+    (native_str('sLayerNum'), np.int_),
+])
 
 
 class DepthRange:
