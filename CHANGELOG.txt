@@ -82,6 +82,8 @@
    * read support for PDAS waveform files
  - obspy.sac:
    * New `byteorder` option for writing sac files to disk.
+   * Can now read/write from/to file-like objects like io.BytesIO and open
+     files.
  - obspy.seedlink:
    * bugfix: INFO responses from the IRIS ringserver are now parsed
      correctly (see #807)
