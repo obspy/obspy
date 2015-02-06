@@ -76,11 +76,11 @@ class SlownessModel(object):
             + str(len(self.highSlownessLayerDepthsP))
             + "\n highSlownessLayerDepthsS.size()="
             + str(len(self.highSlownessLayerDepthsS))
-            + "\n criticalDepths.size()=" + str(len(self.criticalDepths))
+            + "\n criticalDepths.size()="
+            + (str(len(self.criticalDepths)) if self.criticalDepths else 'N/A')
             + "\n")
         desc += "**** Critical Depth Layers ************************\n"
-        for cd in self.criticalDepths:
-            desc += str(cd.velLayerNum) + " "
+        desc += str(self.criticalDepths)
         desc += "\n"
         desc += "\n**** Fluid Layer Depths ************************\n"
         for fl in self.fluidLayerDepths:
@@ -171,7 +171,9 @@ class SlownessModel(object):
         minSSoFar = 1.1e300
         # First remove any critical points previously stored
         # so these are effectively re-initialised... it's probably silly
-        self.criticalDepths = np.empty(0, dtype=CriticalDepth)
+        self.criticalDepths = np.empty(len(self.vMod.layers),
+                                       dtype=CriticalDepth)
+        cd_count = 0
         self.highSlownessLayerDepthsP = []  # lists of DepthRange
         self.highSlownessLayerDepthsS = []
         self.fluidLayerDepths = []
@@ -190,8 +192,8 @@ class SlownessModel(object):
         currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
         currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
         # We know that the top is always a critical slowness so add 0
-        self.criticalDepths = np.append(self.criticalDepths,
-                                        np.zeros(1, dtype=CriticalDepth))
+        self.criticalDepths[cd_count] = (0, 0, 0, 0)
+        cd_count += 1
         # Check to see if starting in fluid zone.
         if inFluidZone is False and currVLayer['topSVelocity'] == 0:
             inFluidZone = True
@@ -240,10 +242,12 @@ class SlownessModel(object):
             if prevSLayer['botP'] != currSLayer['topP'] \
                     or prevPLayer['botP'] != currPLayer['topP']:
                 # a first order discontinuity
-                self.criticalDepths = np.append(
-                    self.criticalDepths,
-                    np.array([(currSLayer['topDepth'], layerNum, -1, -1)],
-                             dtype=CriticalDepth))
+                self.criticalDepths[cd_count] = (
+                    currSLayer['topDepth'],
+                    layerNum,
+                    -1,
+                    -1)
+                cd_count += 1
                 if self.DEBUG:
                     print('First order discontinuity, depth ='
                           + str(currSLayer['topDepth']))
@@ -298,10 +302,12 @@ class SlownessModel(object):
                       (prevPLayer['topP'] - prevPLayer['botP']) *
                       (prevPLayer['botP'] - currPLayer['botP'])) < 0:
                 # local slowness extrema, java l 1005
-                self.criticalDepths = np.append(
-                    self.criticalDepths,
-                    np.array([(currSLayer['topDepth'], layerNum, -1, -1)],
-                             dtype=CriticalDepth))
+                self.criticalDepths[cd_count] = (
+                    currSLayer['topDepth'],
+                    layerNum,
+                    -1,
+                    -1)
+                cd_count += 1
                 if self.DEBUG:
                     print("local slowness extrema, depth=" +
                           str(currSLayer['topDepth']))
@@ -370,12 +376,11 @@ class SlownessModel(object):
         # We know that the bottommost depth is always a critical slowness,
         # so we add vMod.getNumLayers()
         # java line 1094
-        self.criticalDepths = np.append(self.criticalDepths,
-                                        np.array([(self.radiusOfEarth,
-                                                   self.vMod.getNumLayers(),
-                                                   -1,
-                                                   -1)],
-                                                 dtype=CriticalDepth))
+        self.criticalDepths[cd_count] = (self.radiusOfEarth,
+                                         self.vMod.getNumLayers(),
+                                         -1,
+                                         -1)
+        cd_count += 1
 
         # Check if the bottommost depth is contained within a high slowness
         # zone, might happen in a flat non-whole-earth model
@@ -393,6 +398,8 @@ class SlownessModel(object):
         if inFluidZone:
             fluidZone['botDepth'] = currVLayer['botDepth']
             self.fluidLayerDepths.append(fluidZone)
+
+        self.criticalDepths = self.criticalDepths[:cd_count]
 
         if self.validate() is False:
             raise SlownessModelError("Validation failed after findDepth")
@@ -1193,19 +1200,27 @@ class SlownessModel(object):
         """
         Resets the slowness layers that correspond to critical points.
         """
-        for cd in self.criticalDepths:
-            cd['pLayerNum'] = self.layerNumberBelow(cd['depth'], self.PWAVE)
-            sLayer = self.getSlownessLayer(cd['pLayerNum'], self. PWAVE)
-            if cd['pLayerNum'] == len(self.PLayers) - 1 \
-                    and sLayer['botDepth'] == cd['depth']:
-                # We want the last critical point to be the bottom of the
-                # last layer.
-                cd['pLayerNum'] += 1
-            cd['sLayerNum'] = self.layerNumberBelow(cd['depth'], self.SWAVE)
-            sLayer = self.getSlownessLayer(cd['sLayerNum'], self.SWAVE)
-            if cd['sLayerNum'] == len(self.SLayers) - 1 \
-                    and sLayer['botDepth'] == cd['depth']:
-                cd['sLayerNum'] += 1
+        self.criticalDepths['pLayerNum'] = self.layerNumberBelow(
+            self.criticalDepths['depth'],
+            self.PWAVE)
+        sLayer = self.getSlownessLayer(self.criticalDepths['pLayerNum'],
+                                       self.PWAVE)
+
+        # We want the last critical point to be the bottom of the last layer.
+        mask = ((self.criticalDepths['pLayerNum'] == len(self.PLayers) - 1) &
+                (sLayer['botDepth'] == self.criticalDepths['depth']))
+        self.criticalDepths['pLayerNum'][mask] += 1
+
+        self.criticalDepths['sLayerNum'] = self.layerNumberBelow(
+            self.criticalDepths['depth'],
+            self.SWAVE)
+        sLayer = self.getSlownessLayer(self.criticalDepths['sLayerNum'],
+                                       self.SWAVE)
+
+        # We want the last critical point to be the bottom of the last layer.
+        mask = ((self.criticalDepths['sLayerNum'] == len(self.SLayers) - 1) &
+                (sLayer['botDepth'] == self.criticalDepths['depth']))
+        self.criticalDepths['sLayerNum'][mask] += 1
 
     def validate(self):
         """
@@ -1415,16 +1430,10 @@ class SlownessModel(object):
 
     @staticmethod
     def fixCriticalDepths(criticalDepths, layerNum, isPWave):
-        for i, cd in enumerate(criticalDepths):
-            if (cd['pLayerNum'] if isPWave else cd['sLayerNum']) > layerNum:
-                if isPWave:
-                    criticalDepths[i] = (
-                        cd['depth'], cd['velLayerNum'], cd['pLayerNum'] + 1,
-                        cd['sLayerNum'])
-                else:
-                    criticalDepths[i] = (
-                        cd['depth'], cd['velLayerNum'], cd['pLayerNum'],
-                        cd['sLayerNum'] + 1)
+        name = 'pLayerNum' if isPWave else 'sLayerNum'
+
+        mask = criticalDepths[name] > layerNum
+        criticalDepths[name][mask] += 1
 
     def fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer,
                        newBotLayer, criticalDepths, isPWave):
