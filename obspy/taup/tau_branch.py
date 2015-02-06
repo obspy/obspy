@@ -85,12 +85,15 @@ class TauBranch(object):
         layerNum = np.arange(topLayerNum, botLayerNum + 1)
         layer = sMod.getSlownessLayer(layerNum, self.isPWave)
 
+        mask = np.cumprod(
+            (ray_params[:, np.newaxis] <= layer['topP'][np.newaxis, :]) &
+            (ray_params[:, np.newaxis] <= layer['botP'][np.newaxis, :]),
+            axis=1)
+        mask = mask.astype(np.bool_)
         for i, p in enumerate(ray_params):
             if p <= self.maxRayParam:
-                mask = np.cumprod((p <= layer['topP']) & (p <= layer['botP']))
-                mask = mask.astype(np.bool_)
-                layerMask = layer[mask]
-                layerNumMask = layerNum[mask]
+                layerMask = layer[mask[i]]
+                layerNumMask = layerNum[mask[i]]
 
                 if len(layerMask):
                     temptd = sMod.layerTimeDist(p, layerNumMask, self.isPWave)
