@@ -876,7 +876,7 @@ class Client(object):
         return paz
 
     def getPAZ(self, network, station, location, channel, starttime=None,
-               endtime=None, time=None, route=False):
+               endtime=None, time=None, route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -1307,7 +1307,7 @@ class Client(object):
 
         return data
 
-    def getNetworks(self, starttime, endtime, route=False):
+    def getNetworks(self, starttime, endtime, route=True):
         """
         Returns a dictionary of available networks within the given time span.
 
