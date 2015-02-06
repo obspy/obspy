@@ -435,7 +435,7 @@ class Client(object):
             inv = self.getInventory(network=network, station=station,
                                     location=location, channel=channel,
                                     starttime=starttime, endtime=endtime,
-                                    instruments=True, route=False)
+                                    instruments=True, route=route)
             netsta = '.'.join([network, station])
             coordinates = AttribDict()
             for key in ['latitude', 'longitude', 'elevation']:
