@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import decimal
 import math
 import numpy as np
 
@@ -684,12 +683,25 @@ class SlownessModel(object):
         thickness layers)layers. Error occurs if no layer in the slowness
         model contains the given depth.
         """
-        foundLayerNum = self.layerNumForDepth(depth, isPWave)
-        tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
-        # Check if given depth is on a boundary.
-        while tempLayer['topDepth'] == depth and foundLayerNum > 0:
-            foundLayerNum -= 1
-            tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
+        if isPWave:
+            layers = self.PLayers
+        else:
+            layers = self.SLayers
+
+        # Check to make sure depth is within the range available
+        if np.any(depth < layers[0]['topDepth']) or \
+                np.any(depth > layers[-1]['botDepth']):
+            raise SlownessModelError("No layer contains this depth")
+
+        foundLayerNum = np.searchsorted(layers['topDepth'], depth)
+
+        mask = foundLayerNum != 0
+        if np.isscalar(foundLayerNum):
+            if mask:
+                foundLayerNum -= 1
+        else:
+            foundLayerNum[mask] -= 1
+
         return foundLayerNum
 
     def layerNumberBelow(self, depth, isPWave):
@@ -700,51 +712,27 @@ class SlownessModel(object):
         layers) layers. Error occurs if no layer in the slowness model
         contains the given depth.
         """
-        foundLayerNum = self.layerNumForDepth(depth, isPWave)
         if isPWave:
             layers = self.PLayers
         else:
             layers = self.SLayers
-        tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
-        while (tempLayer['botDepth'] == depth and
-               foundLayerNum < len(layers) - 1):
-            foundLayerNum += 1
-            tempLayer = self.getSlownessLayer(foundLayerNum, isPWave)
-        return foundLayerNum
 
-    def layerNumForDepth(self, depth, isPWave):
-        if isPWave:
-            layers = self.PLayers
-        else:
-            layers = self.SLayers
-        # check to make sure depth is within the range available
-        if depth < layers[0]['topDepth'] or depth > layers[-1]['botDepth']:
+        # Check to make sure depth is within the range available
+        if np.any(depth < layers[0]['topDepth']) or \
+                np.any(depth > layers[-1]['botDepth']):
             raise SlownessModelError("No layer contains this depth")
-        tooSmallNum = 0
-        tooLargeNum = len(layers) - 1
-        while True:
-            if tooLargeNum - tooSmallNum < 3:
-                #  "end of Newton, just check" (what?)
-                currentNum = tooSmallNum
-                while currentNum <= tooLargeNum:
-                    tempLayer = self.getSlownessLayer(currentNum, isPWave)
-                    if tempLayer['topDepth'] <= depth <= tempLayer['botDepth']:
-                        return currentNum
-                    currentNum += 1
-            else:
-                currentNum = int(decimal.Decimal(str(
-                    (tooSmallNum + tooLargeNum) / 2.0))
-                    .to_integral_value(decimal.ROUND_HALF_EVEN))
-            tempLayer = self.getSlownessLayer(currentNum, isPWave)
-            if tempLayer['topDepth'] > depth:
-                tooLargeNum = currentNum - 1
-            elif tempLayer['botDepth'] < depth:
-                tooSmallNum = currentNum + 1
-            else:
-                return currentNum
-            if tooSmallNum > tooLargeNum:
-                raise ArithmeticError("tooSmallNum: " + str(tooSmallNum) +
-                                      " >= tooLargeNum: " + str(tooLargeNum))
+
+        foundLayerNum = np.searchsorted(layers['botDepth'], depth,
+                                        side='right')
+
+        mask = foundLayerNum == layers.shape[0]
+        if np.isscalar(foundLayerNum):
+            if mask:
+                foundLayerNum -= 1
+        else:
+            foundLayerNum[mask] -= 1
+
+        return foundLayerNum
 
     def getSlownessLayer(self, layerNum, isPWave):
         """
