@@ -6,7 +6,6 @@ from future.builtins import *  # NOQA
 
 from itertools import count
 import math
-import numpy as np
 
 import numpy as np
 
