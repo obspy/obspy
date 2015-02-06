@@ -75,15 +75,15 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertEqual(arr.get_modulo_dist_deg(), expected_arr["distance"])
         self.assertEqual(arr.source_depth, expected_arr["depth"])
         self.assertEqual(arr.name, expected_arr["name"])
-        self.assertEqual(round(arr.time, 2), round(expected_arr["time"], 2))
-        self.assertEqual(round(arr.ray_param_sec_degree, 3),
-                         round(expected_arr["ray_param_sec_degree"], 3))
-        self.assertEqual(round(arr.takeoff_angle, 2),
-                         round(expected_arr["takeoff_angle"], 2))
-        self.assertEqual(round(arr.incident_angle, 2),
-                         round(expected_arr["incident_angle"], 2))
-        self.assertEqual(round(arr.purist_distance, 2),
-                         round(expected_arr["purist_distance"], 2))
+        self.assertAlmostEqual(arr.time, expected_arr["time"], 2)
+        self.assertAlmostEqual(arr.ray_param_sec_degree,
+                               expected_arr["ray_param_sec_degree"], 3)
+        self.assertAlmostEqual(arr.takeoff_angle,
+                               expected_arr["takeoff_angle"], 2)
+        self.assertAlmostEqual(arr.incident_angle,
+                               expected_arr["incident_angle"], 2)
+        self.assertAlmostEqual(arr.purist_distance,
+                               expected_arr["purist_distance"], 2)
         self.assertEqual(arr.purist_name, expected_arr["purist_name"])
 
     def test_p_iasp91_manual(self):
@@ -98,11 +98,11 @@ class TauPyModelTestCase(unittest.TestCase):
         p_arrival = arrivals[0]
 
         self.assertEqual(p_arrival.name, "P")
-        self.assertEqual(round(p_arrival.time, 2), 412.43)
-        self.assertEqual(round(p_arrival.ray_param_sec_degree, 3), 8.612)
-        self.assertEqual(round(p_arrival.takeoff_angle, 2), 26.74)
-        self.assertEqual(round(p_arrival.incident_angle, 2), 26.69)
-        self.assertEqual(round(p_arrival.purist_distance, 2), 35.00)
+        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
     def test_p_iasp91(self):
