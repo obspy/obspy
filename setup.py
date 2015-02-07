@@ -705,6 +705,11 @@ if __name__ == '__main__':
                 os.remove(filename)
             except:
                 pass
+        path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
+        try:
+            shutil.rmtree(path)
+        except:
+            pass
     else:
         if '--skip-build' not in sys.argv and '--dry-run' not in sys.argv:
             build_taup_models()
