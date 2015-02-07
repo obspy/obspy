@@ -4,6 +4,7 @@ python:
   - 2.7
   - 3.3
   - 3.4
+sudo: false
 before_install:
   - lsb_release -a # get info on the operating system
   - pip install --upgrade pip
