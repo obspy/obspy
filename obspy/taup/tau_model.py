@@ -3,12 +3,13 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2, native_str
 
 from copy import deepcopy
 from itertools import count
 from math import pi
 import os
-import pickle
+from future.moves import pickle
 
 import numpy as np
 
@@ -179,8 +180,27 @@ class TauModel(object):
         if not os.path.exists(filename):
             filename = model_name
 
+        def map_path(mod_name, kls_name):
+            if mod_name.startswith('taup'):
+                mod = __import__('obspy.%s' % (mod_name, ),
+                                 fromlist=[mod_name])
+                return getattr(mod, kls_name)
+            else:
+                fromlist = native_str(mod_name.split('.')[-1])
+                mod = __import__(mod_name, fromlist=[fromlist])
+                return getattr(mod, kls_name)
+
         with open(filename, 'rb') as f:
-            return pickle.load(f)
+            if PY2:
+                unpickler = pickle.Unpickler(f)
+                unpickler.find_global = map_path
+            else:
+                class RenamingUnpickler(pickle.Unpickler):
+                    def find_class(self, module, name):
+                        return map_path(module, name)
+                unpickler = RenamingUnpickler(f)
+
+            return unpickler.load()
 
     def save(self, outfile):
         with open(outfile, 'w+b') as f:

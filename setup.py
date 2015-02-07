@@ -612,12 +612,12 @@ def build_taup_models():
     models are pickled Python classes which are not compatible across Python
     versions.
     """
-    obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
-    model_input = os.path.join(obspy_taup_path, "data")
+    obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
+    model_input = os.path.join(obspy_taup_path, "taup", "data")
 
-    sys.path.insert(0, os.path.join(SETUP_DIRECTORY))
-    from obspy.taup.taup_create import TauP_Create
-    from obspy.taup.utils import _get_model_filename
+    sys.path.insert(0, obspy_taup_path)
+    from taup.taup_create import TauP_Create
+    from taup.utils import _get_model_filename
 
     for model in glob.glob(os.path.join(model_input, "*.tvel")):
         output_filename = _get_model_filename(model)
@@ -706,6 +706,6 @@ if __name__ == '__main__':
             except:
                 pass
     else:
+        if '--skip-build' not in sys.argv and '--dry-run' not in sys.argv:
+            build_taup_models()
         setupPackage()
-        # must be called after build - otherwise can't find shared libs
-        build_taup_models()
