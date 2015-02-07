@@ -12,6 +12,7 @@ import collections
 import inspect
 import numpy as np
 import os
+import sys
 import unittest
 
 from obspy.taup import TauPyModel
@@ -387,6 +388,8 @@ class TauPyModelTestCase(unittest.TestCase):
                 phase_list=phases)
             # Currently the tests take very long thus some output is nice to
             # know that something is going on.
+            sys.stdout.write('.')
+            sys.stdout.flush()
             arrivals = sorted(arrivals, key=lambda x: x.time)
             arr = arrivals[0]
             # These are the same tolerances as in the Java tests suite.
