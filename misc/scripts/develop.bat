@@ -49,10 +49,6 @@ REM
 echo Check for MinGW executables
 <nul (set/p z="* gcc: ")
 WHERE /F gcc.exe
-<nul (set/p z="* gfortran (32bit): ")
-WHERE /F gfortran.exe
-<nul (set/p z="* gfortran (64bit): ")
-WHERE /F x86_64-w64-mingw32-gfortran.exe
 
 echo.
 

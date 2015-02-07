@@ -6,8 +6,6 @@ python:
   - 3.4
 before_install:
   - lsb_release -a # get info on the operating system
-  - sudo apt-get update
-  - sudo apt-get install -qq gfortran proj-data
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install wheel
