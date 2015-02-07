@@ -107,9 +107,7 @@ class SlownessModel(object):
         reconstructed from the theta function.
         """
         # Some checks on the velocity model
-        if self.vMod.validate() is False:
-            raise SlownessModelError(
-                "Error in velocity model (vMod.validate failed)!")
+        self.vMod.validate()
         if self.vMod.getNumLayers() == 0:
             raise SlownessModelError("velModel.getNumLayers()==0")
         if self.vMod.layers[0]['topSVelocity'] == 0:
@@ -128,8 +126,8 @@ class SlownessModel(object):
         if self.DEBUG:
             print("coarseSample")
         self.coarseSample()
-        if self.DEBUG and self.validate() is False:
-            raise (SlownessModelError('validate failed after coarseSample'))
+        if self.DEBUG:
+            self.validate()
         if self.DEBUG:
             print("ray_paramCheck")
         self.ray_paramIncCheck()
@@ -143,11 +141,9 @@ class SlownessModel(object):
             print("fixCriticalPoints")
         self.fixCriticalPoints()
 
-        if self.validate() is True:
-            if self.DEBUG:
-                print("createSample seems to be done successfully.")
-        else:
-            raise SlownessModelError('SlownessModel.validate failed!')
+        self.validate()
+        if self.DEBUG:
+            print("createSample seems to be done successfully.")
 
     def findCriticalPoints(self):
         """ Finds all critical points within a velocity model.
@@ -401,8 +397,7 @@ class SlownessModel(object):
 
         self.criticalDepths = self.criticalDepths[:cd_count]
 
-        if self.validate() is False:
-            raise SlownessModelError("Validation failed after findDepth")
+        self.validate()
 
     def getNumLayers(self, isPWave):
         """

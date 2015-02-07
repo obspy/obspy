@@ -71,8 +71,7 @@ class TauModel(object):
             raise SlownessModelError(
                 "Can't calculate tauInc when getNumLayers() = 0. I need more "
                 "slowness samples.")
-        if not self.sMod.validate():
-            raise SlownessModelError("Validation of SlownessModel failed")
+        self.sMod.validate()
         # Create an array holding the ray parameter that we will use for
         # constructing the tau splines. Only store ray parameters that are
         # not in a high slowness zone, i.e. they are smaller than the
@@ -165,8 +164,7 @@ class TauModel(object):
         self.mohoDepth = self.tauBranches[0, self.mohoBranch].topDepth
         self.cmbDepth = self.tauBranches[0, self.cmbBranch].topDepth
         self.iocbDepth = self.tauBranches[0, self.iocbBranch].topDepth
-        if not self.validate():
-            raise TauModelError("TauModel.calcTauIncFrom: Validation failed!")
+        self.validate()
 
     @staticmethod
     def fromfile(model_name):
@@ -376,8 +374,7 @@ class TauModel(object):
         tMod.ray_params = outRayParams
         tMod.tauBranches = newTauBranches
         tMod.noDisconDepths = self.noDisconDepths + [depth]
-        if not tMod.validate():
-            raise TauModelError("SplitBranch validation failed!")
+        tMod.validate()
         return tMod
 
     def findBranch(self, depth):

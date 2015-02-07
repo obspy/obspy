@@ -8,7 +8,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import os
-import sys
 
 import numpy as np
 
@@ -166,93 +165,87 @@ class VelocityModel(object):
         """
         Performs internal consistency checks on the velocity model.
         """
-        # /* is radiusOfEarth positive? */
+        # Is radiusOfEarth positive?
         if self.radiusOfEarth <= 0.0:
-            print("Radius of earth is not positive. radiusOfEarth = "
-                  + str(self.radiusOfEarth), file=sys.stderr)
-            return False
-        # /* is mohoDepth non-negative? */
+            raise ValueError("Radius of earth is not positive: %f" % (
+                self.radiusOfEarth, ))
+
+        # Is mohoDepth non-negative?
         if self.mohoDepth < 0.0:
-            print("mohoDepth is not non-negative. mohoDepth = " +
-                  str(self.mohoDepth), file=sys.stderr)
-            return False
-        # /* is cmbDepth >= mohoDepth? */
+            raise ValueError("mohoDepth is not non-negative: %f" % (
+                self.mohoDepth, ))
+
+        # Is cmbDepth >= mohoDepth?
         if self.cmbDepth < self.mohoDepth:
-            print("cmbDepth < mohoDepth. cmbDepth = " +
-                  str(self.cmbDepth) + " mohoDepth = " +
-                  str(self.mohoDepth), file=sys.stderr)
-            return False
-        # /* is cmbDepth positive? */
+            raise ValueError("cmbDepth (%f) < mohoDepth (%f)" % (
+                self.cmbDepth,
+                self.mohoDepth))
+
+        # Is cmbDepth positive?
         if self.cmbDepth <= 0.0:
-            print("cmbDepth is not positive. cmbDepth = " +
-                  str(self.cmbDepth), file=sys.stderr)
-            return False
-        # /* is iocbDepth >= cmbDepth? */
+            raise ValueError("cmbDepth is not positive: %f" % (
+                self.cmbDepth, ))
+
+        # Is iocbDepth >= cmbDepth?
         if self.iocbDepth < self.cmbDepth:
-            print("iocbDepth < cmbDepth. iocbDepth = " +
-                  str(self.iocbDepth) + " cmbDepth = " + str(self.cmbDepth),
-                  file=sys.stderr)
-            return False
-        # /* is iocbDepth positive? */
+            raise ValueError("iocbDepth (%f) < cmbDepth (%f)" % (
+                self.iocbDepth,
+                self.cmbDepth))
+
+        # Is iocbDepth positive?
         if self.iocbDepth <= 0.0:
-            print("iocbDepth is not positive. iocbDepth = " +
-                  str(self.iocbDepth), file=sys.stderr)
-            return False
-        # /* is minRadius non-negative? */
+            raise ValueError("iocbDepth is not positive: %f" % (
+                self.iocbDepth, ))
+
+        # Is minRadius non-negative?
         if self.minRadius < 0.0:
-            print("minRadius is not non-negative. minRadius = " +
-                  str(self.minRadius), file=sys.stderr)
-            return False
-        # /* is maxRadius positive? */
+            raise ValueError("minRadius is not non-negative: %f " % (
+                self.minRadius, ))
+
+        # Is maxRadius non-negative?
         if self.maxRadius <= 0.0:
-            print("maxRadius is not positive. maxRadius = " +
-                  str(self.maxRadius), file=sys.stderr)
-            return False
-        # /* is maxRadius > minRadius? */
+            raise ValueError("maxRadius is not positive: %f" % (
+                self.maxRadius, ))
+
+        # Is maxRadius > minRadius?
         if self.maxRadius <= self.minRadius:
-            print("maxRadius <= minRadius. maxRadius = " +
-                  str(self.maxRadius) + " minRadius = " +
-                  str(self.minRadius), file=sys.stderr)
-            return False
+            raise ValueError("maxRadius (%f) <= minRadius (%f)" % (
+                self.maxRadius,
+                self.minRadius))
 
         # Check for gaps
         gaps = self.layers[:-1]['botDepth'] != self.layers[1:]['topDepth']
         gaps = np.where(gaps)[0]
         if gaps:
-            print("There is a gap in the velocity model between layers "
-                  + gaps + " and ", gaps + 1, file=sys.stderr)
-            print(self.layers[gaps], file=sys.stderr)
-            return False
+            msg = ("There is a gap in the velocity model between layer(s) %s "
+                   "and %s.\n%s" % (gaps, gaps + 1, self.layers[gaps]))
+            raise ValueError(msg)
 
         # Check for zero thickness
         probs = self.layers['botDepth'] == self.layers['topDepth']
         probs = np.where(probs)[0]
         if probs:
-            #   more redundant comments in the original java
-            print("There is a zero thickness layer in the velocity model "
-                  "at layers " + probs, file=sys.stderr)
-            print(self.layers[probs], file=sys.stderr)
-            return False
+            msg = ("There is a zero thickness layer in the velocity model at "
+                   "layer(s) %s\n%s" % (probs, self.layers[probs]))
+            raise ValueError(msg)
 
         # Check for negative P velocity
         probs = np.logical_or(self.layers['topPVelocity'] <= 0.0,
                               self.layers['botPVelocity'] <= 0.0)
         probs = np.where(probs)[0]
         if probs:
-            print("There is a negative P velocity layer in the velocity "
-                  "model at layer(s) ", probs, file=sys.stderr)
-            print(self.layers[probs], file=sys.stderr)
-            return False
+            msg = ("There is a negative P velocity layer in the velocity "
+                   "model at layer(s) %s\n%s" % (probs, self.layers[probs]))
+            raise ValueError(msg)
 
         # Check for negative S velocity
         probs = np.logical_or(self.layers['topSVelocity'] < 0.0,
                               self.layers['botSVelocity'] < 0.0)
         probs = np.where(probs)[0]
         if probs:
-            print("There is a negative S velocity layer in the velocity "
-                  "model at layer(s) " + probs, file=sys.stderr)
-            print(self.layers[probs], file=sys.stderr)
-            return False
+            msg = ("There is a negative S velocity layer in the velocity "
+                   "model at layer(s) %s\n%s" % (probs, self.layers[probs]))
+            raise ValueError(msg)
 
         # Check for zero P velocity
         probs = np.logical_or(
@@ -262,14 +255,12 @@ class VelocityModel(object):
                            self.layers['botPVelocity'] != 0.0))
         probs = np.where(probs)[0]
         if probs:
-            print("There is a layer that goes to zero P velocity (top "
-                  "or bottom) without a discontinuity in the velocity "
-                  "model at layer(s) " + probs +
-                  "\nThis would cause a divide by zero within this depth "
-                  "range. Try making the velocity small, followed by a "
-                  "discontinuity to zero velocity.", file=sys.stderr)
-            print(self.layers[probs], file=sys.stderr)
-            return False
+            msg = ("There is a layer that goes to zero P velocity (top or "
+                   "bottom) without a discontinuity in the velocity model at "
+                   "layer(s) %s\nThis would cause a divide by zero within "
+                   "this depth range. Try making the velocity small, followed "
+                   "by a discontinuity to zero velocity.\n%s")
+            raise ValueError(msg % (probs, self.layers[probs]))
 
         # Check for negative S velocity
         probs = np.logical_or(
@@ -282,16 +273,12 @@ class VelocityModel(object):
         probs = np.logical_and(probs, self.layers['topDepth'] != 0)
         probs = np.where(probs)[0]
         if probs:
-            print("There is a layer that goes to zero S velocity "
-                  "(top or bottom) without a discontinuity "
-                  "in the velocity model at layer(s) "
-                  + probs +
-                  "\nThis would cause a divide by zero within this "
-                  "depth range. Try making the velocity small, "
-                  "followed by a discontinuity to zero velocity.",
-                  file=sys.stderr)
-            print(self.layers[probs], file=sys.stderr)
-            return False
+            msg = ("There is a layer that goes to zero S velocity (top or "
+                   "bottom) without a discontinuity in the velocity model at "
+                   "layer(s) %s\nThis would cause a divide by zero within "
+                   "this depth range. Try making the velocity small, followed "
+                   "by a discontinuity to zero velocity.\n%s")
+            raise ValueError(msg % (probs, self.layers[probs]))
 
         return True
 
