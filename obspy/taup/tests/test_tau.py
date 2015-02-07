@@ -167,13 +167,12 @@ class TauPyModelTestCase(unittest.TestCase):
 
         expected = np.genfromtxt(filename, skip_header=1)
 
-        actual = np.empty((len(p_arr.pierce), 3))
-        for i, pierce in enumerate(p_arr.pierce):
-            actual[i, 0] = round(np.degrees(pierce['dist']), 2)
-            actual[i, 1] = round(pierce['depth'], 1)
-            actual[i, 2] = round(pierce['time'], 1)
-
-        np.testing.assert_equal(expected, actual)
+        np.testing.assert_almost_equal(expected[:, 0],
+                                       np.degrees(p_arr.pierce['dist']), 2)
+        np.testing.assert_almost_equal(expected[:, 1],
+                                       p_arr.pierce['depth'], 1)
+        np.testing.assert_almost_equal(expected[:, 2],
+                                       p_arr.pierce['time'], 1)
 
     def test_vs_java_iasp91(self):
         """
@@ -345,28 +344,29 @@ class TauPyModelTestCase(unittest.TestCase):
         test suite.
         """
         filename = os.path.join(DATA, filename)
-        values = []
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             line = fh.readline()
             line = line.strip().split()
             depths = list(map(float, line))
 
-            while True:
-                line = fh.readline()
-                if not line:
-                    break
-                data = list(map(float, line.strip().split()))
-                dist = data[0]
-                time = data[1:-len(depths)]
-                ray_param = data[-len(depths):]
-                for _i in range(len(ray_param)):
-                    time[_i] = time[2 * _i] * 60.0 + time[2 * _i + 1]
-                    values.append({
-                        "depth": depths[_i],
-                        "dist": dist,
-                        "ray_param": ray_param[_i],
-                        "time": time[_i],
-                        })
+            data = np.genfromtxt(fh)
+
+        dist = data[:, 0]
+        time = data[:, 1:-len(depths)]
+        ray_param = data[:, -len(depths):]
+        time = time[:, ::2] * 60.0 + time[:, 1::2]
+
+        values = np.empty(np.size(ray_param),
+                          dtype=[(native_str('depth'), np.float_),
+                                 (native_str('dist'), np.float_),
+                                 (native_str('ray_param'), np.float_),
+                                 (native_str('time'), np.float_)])
+
+        values['depth'] = np.tile(depths, len(dist))
+        values['dist'] = np.repeat(dist, len(depths))
+        values['ray_param'] = ray_param.flat
+        values['time'] = time.flat
+
         return values
 
     def _compare_against_ak135_tables_kennet(self, filename, phases):
