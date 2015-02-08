@@ -8,7 +8,9 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
+
 import numpy as np
+
 from obspy.core.util.libnames import _load_CDLL
 
 

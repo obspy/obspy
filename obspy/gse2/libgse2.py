@@ -28,12 +28,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import UTCDateTime
-from obspy.core.util.libnames import _load_CDLL
 import ctypes as C
 import doctest
-import numpy as np
 import warnings
+
+import numpy as np
+
+from obspy import UTCDateTime
+from obspy.core.util.libnames import _load_CDLL
+
 
 # Import shared libgse2
 clibgse2 = _load_CDLL("gse2")

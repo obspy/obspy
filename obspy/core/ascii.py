@@ -35,12 +35,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
+
+import numpy as np
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
-
-import io
-import numpy as np
 
 
 HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"

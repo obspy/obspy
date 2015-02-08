@@ -20,10 +20,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from operator import itemgetter
-from scipy import fftpack, signal, sparse
-from obspy.signal.invsim import seisSim, cornFreq2Paz
+
 import numpy as np
+from scipy import fftpack, signal, sparse
+
 from obspy.signal import util
+from obspy.signal.invsim import cornFreq2Paz, seisSim
 
 
 def mper(data, win, Nfft, n1=0, n2=0):

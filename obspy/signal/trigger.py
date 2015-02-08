@@ -29,13 +29,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import warnings
 import ctypes as C
+import warnings
 from collections import deque
+
 import numpy as np
+
 from obspy import UTCDateTime
-from obspy.signal.headers import clibsignal, head_stalta_t
 from obspy.signal.cross_correlation import templatesMaxSimilarity
+from obspy.signal.headers import clibsignal, head_stalta_t
 
 
 def recSTALTA(a, nsta, nlta):

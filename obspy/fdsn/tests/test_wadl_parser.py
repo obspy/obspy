@@ -13,12 +13,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime
-
-from obspy.fdsn.wadl_parser import WADLParser
 import os
 import unittest
 import warnings
+
+from obspy import UTCDateTime
+from obspy.fdsn.wadl_parser import WADLParser
 
 
 class WADLParserTestCase(unittest.TestCase):

@@ -6,12 +6,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import unittest
+
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skip_on_network_error
 from obspy.earthworm import Client
-import unittest
 
 
 class ClientTestCase(unittest.TestCase):

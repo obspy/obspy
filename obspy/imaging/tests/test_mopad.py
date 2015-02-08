@@ -6,11 +6,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.testing import ImageComparison
-from obspy.imaging.mopad_wrapper import Beach
-import matplotlib.pyplot as plt
 import os
 import unittest
+
+import matplotlib.pyplot as plt
+
+from obspy.core.util.testing import ImageComparison
+from obspy.imaging.mopad_wrapper import Beach
 
 
 class MopadTestCase(unittest.TestCase):

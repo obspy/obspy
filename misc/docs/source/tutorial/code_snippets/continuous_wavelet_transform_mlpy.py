@@ -1,7 +1,10 @@
-import matplotlib.pyplot as plt
-from obspy.core import read
 import numpy as np
+import matplotlib.pyplot as plt
+
 import mlpy
+
+from obspy.core import read
+
 
 tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
 

@@ -3,18 +3,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
-from obspy import UTCDateTime, Stream, Trace, read
-from obspy.core.compatibility import mock
-from obspy.core.stream import writePickle, readPickle, isPickle
-from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import (NamedTemporaryFile, getSciPyVersion)
-from obspy.xseed import Parser
-import numpy as np
 import os
 import pickle
 import unittest
 import warnings
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.core.compatibility import mock
+from obspy.core.stream import isPickle, readPickle, writePickle
+from obspy.core.util.attribdict import AttribDict
+from obspy.core.util.base import NamedTemporaryFile, getSciPyVersion
+from obspy.xseed import Parser
 
 
 SCIPY_VERSION = getSciPyVersion()

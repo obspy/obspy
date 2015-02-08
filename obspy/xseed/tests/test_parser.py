@@ -12,14 +12,14 @@ import warnings
 import numpy as np
 from lxml import etree
 
-from obspy import read, UTCDateTime
+from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
-from obspy.xseed.utils import compareSEED, SEEDParserException
+from obspy.xseed.utils import SEEDParserException, compareSEED
 
 
 class ParserTestCase(unittest.TestCase):

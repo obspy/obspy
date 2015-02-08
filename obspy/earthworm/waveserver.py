@@ -12,11 +12,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from obspy import Trace, UTCDateTime, Stream
-from obspy.core import Stats
-import struct
 import socket
+import struct
+
 import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 
 
 RETURNFLAG_KEY = {

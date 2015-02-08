@@ -10,6 +10,7 @@ from future.builtins import *  # NOQA
 import io
 import os
 import unittest
+
 import numpy as np
 
 from obspy import read

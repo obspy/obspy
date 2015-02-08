@@ -11,15 +11,16 @@ import warnings
 
 from lxml import etree
 
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
-    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
-    Pick
-from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
+from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
+                              MomentTensor, Origin, Pick, ResourceIdentifier,
+                              Tensor, WaveformStreamID, readEvents)
+from obspy.core.quakeml import Pickler, readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import compare_xml_strings
+
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False

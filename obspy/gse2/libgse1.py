@@ -20,10 +20,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import doctest
+
+import numpy as np
+
 from obspy import UTCDateTime
 from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum
-import doctest
-import numpy as np
 
 
 def read(fh, verify_chksum=True):

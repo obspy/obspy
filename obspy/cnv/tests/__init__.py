@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import unittest
+
 from obspy.core.util import add_doctests, add_unittests
 
 

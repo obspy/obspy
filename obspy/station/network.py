@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.station.util import BaseNode
-from obspy.station.station import Station
+import copy
+import fnmatch
 import textwrap
 import warnings
-import fnmatch
-import copy
+
+from obspy.station.station import Station
+from obspy.station.util import BaseNode
 
 
 class Network(BaseNode):

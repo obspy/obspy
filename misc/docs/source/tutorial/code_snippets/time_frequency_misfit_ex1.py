@@ -1,5 +1,7 @@
 import numpy as np
+
 from obspy.signal.tf_misfit import plotTfr
+
 
 # general constants
 tmax = 6.

@@ -13,13 +13,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import os
+
+from sqlalchemy import and_, create_engine, func, or_
+from sqlalchemy.orm import sessionmaker
+
 from obspy.core.preview import mergePreviews
 from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.db.db import WaveformPath, WaveformChannel, WaveformFile, Base
-from sqlalchemy import create_engine, func, or_, and_
-from sqlalchemy.orm import sessionmaker
-import os
+from obspy.db.db import Base, WaveformChannel, WaveformFile, WaveformPath
 
 
 class Client(object):

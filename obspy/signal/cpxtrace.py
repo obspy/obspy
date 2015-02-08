@@ -19,9 +19,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import numpy as np
 from scipy import signal
 from scipy.integrate import cumtrapz
-import numpy as np
+
 from . import util
 
 

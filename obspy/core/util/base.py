@@ -11,20 +11,23 @@ Base utilities and constants for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    from collections import OrderedDict
+from future.utils import native_str
 
-from obspy.core.util.misc import toIntOrZero
-from pkg_resources import iter_entry_points, load_entry_point
 import doctest
 import inspect
 import io
-import numpy as np
 import os
 import sys
 import tempfile
+
+with standard_library.hooks():
+    from collections import OrderedDict
+
+from pkg_resources import iter_entry_points, load_entry_point
+import numpy as np
+
+from obspy.core.util.misc import toIntOrZero
 
 
 # defining ObsPy modules currently used by runtests and the path function

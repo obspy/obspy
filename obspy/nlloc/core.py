@@ -13,11 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from math import sqrt
 import warnings
-from obspy import UTCDateTime, Catalog, __version__
-from obspy.core.event import Event, Origin, OriginQuality, OriginUncertainty, \
-    Pick, Arrival, WaveformStreamID, CreationInfo, Comment
+from math import sqrt
+
+from obspy import Catalog, UTCDateTime, __version__
+from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
+                              OriginQuality, OriginUncertainty, Pick,
+                              WaveformStreamID)
 from obspy.core.util.geodetics import kilometer2degrees
 
 

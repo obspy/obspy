@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 from obspy.core import read
 from obspy.signal.tf_misfit import cwt
+
 
 st = read()
 tr = st[0]

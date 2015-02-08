@@ -12,13 +12,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from struct import unpack
+
+import numpy as np
+
 from obspy import Stream
 from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from struct import unpack
-import numpy as np
 
 
 def __parseTag(fh):

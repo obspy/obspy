@@ -3,10 +3,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import sys
+
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, Loop
 from obspy.xseed.utils import Blockette34Lookup, formatRESP
-import sys
 
 
 class Blockette062(Blockette):

@@ -18,18 +18,18 @@
     :license: BSD, see LICENSE for details.
 """
 
+import optparse
 import os
+import pydoc
 import re
 import sys
-import pydoc
-import optparse
 
 from jinja2 import FileSystemLoader, TemplateNotFound
 from jinja2.sandbox import SandboxedEnvironment
-
-from autosummary import import_by_name, get_documenter
 from sphinx.jinja2glue import BuiltinTemplateLoader
 from sphinx.util.osutil import ensuredir
+
+from autosummary import get_documenter, import_by_name
 
 
 def main(argv=sys.argv):

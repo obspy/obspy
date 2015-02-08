@@ -69,11 +69,13 @@ from future.builtins import *  # NOQA
 
 import io
 import math
-import numpy as np
 import os
 import os.path
 import sys
 import warnings
+
+import numpy as np
+
 from obspy import __version__
 
 

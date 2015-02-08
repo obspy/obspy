@@ -6,17 +6,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.misc import CatchOutput
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
-from obspy.core.util.decorator import skip
-from obspy.imaging.scripts.mopad import main as obspy_mopad
+import io
+import os
+import unittest
+from itertools import product, zip_longest
 
 import numpy as np
 
-import io
-from itertools import product, zip_longest
-import os
-import unittest
+from obspy.core.util.decorator import skip
+from obspy.core.util.misc import CatchOutput
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
+from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 
 class MopadTestCase(unittest.TestCase):

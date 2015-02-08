@@ -13,13 +13,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from struct import unpack
+
 import numpy as np
 
-from obspy import Trace, Stream
+from obspy import Stream, Trace
 from obspy.core.compatibility import frombuffer
-from obspy.kinemetrics.evt_base import EvtBadHeaderError, EvtEOFError, \
-    EvtBadDataError, EvtVirtual
-
+from obspy.kinemetrics.evt_base import (EvtBadDataError, EvtBadHeaderError,
+                                        EvtEOFError, EvtVirtual)
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
     " - New Etna and old Etna" + \

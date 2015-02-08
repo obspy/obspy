@@ -1,8 +1,10 @@
-from obspy.fdsn import Client as FDSN_Client
-from obspy.iris import Client as OldIris_Client
+import matplotlib.pyplot as plt
+
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-import matplotlib.pyplot as plt
+from obspy.fdsn import Client as FDSN_Client
+from obspy.iris import Client as OldIris_Client
+
 
 # MW 7.1 Darfield earthquake, New Zealand
 t1 = UTCDateTime("2010-09-3T16:30:00.000")

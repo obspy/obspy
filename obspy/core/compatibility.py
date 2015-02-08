@@ -6,9 +6,9 @@ from future.utils import PY2
 
 import inspect
 import io
-import numpy as np
 import sys
 
+import numpy as np
 
 # optional dependencies
 try:

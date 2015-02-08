@@ -22,10 +22,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import warnings
+
 import numpy as np
 from scipy.fftpack import hilbert
-from scipy.signal import iirfilter, lfilter, remez, convolve, get_window, \
-    cheby2, cheb2ord
+from scipy.signal import (cheb2ord, cheby2, convolve, get_window, iirfilter,
+                          lfilter, remez)
 
 
 def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):

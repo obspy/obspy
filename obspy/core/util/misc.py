@@ -12,18 +12,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from contextlib import contextmanager
-import os
-import sys
 import inspect
-from subprocess import Popen, PIPE
-import warnings
 import itertools
-import tempfile
-import shutil
-import numpy as np
 import math
+import os
 import platform
+import shutil
+import sys
+import tempfile
+import warnings
+from contextlib import contextmanager
+from subprocess import PIPE, Popen
+
+import numpy as np
 
 
 # The following dictionary maps the first character of the channel_id to the

@@ -16,15 +16,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime
-from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
-    DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
-
-from collections import defaultdict
 import io
-from lxml import etree
 import warnings
+from collections import defaultdict
+
+from lxml import etree
+
+from obspy import UTCDateTime
+from obspy.fdsn.header import (DEFAULT_DATASELECT_PARAMETERS,
+                               DEFAULT_EVENT_PARAMETERS,
+                               DEFAULT_STATION_PARAMETERS, DEFAULT_TYPES,
+                               WADL_PARAMETERS_NOT_TO_BE_PARSED)
 
 
 class WADLParser(object):

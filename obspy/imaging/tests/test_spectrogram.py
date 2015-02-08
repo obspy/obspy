@@ -6,13 +6,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.testing import ImageComparison
-from obspy.imaging import spectrogram
-import numpy as np
 import os
 import unittest
 import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util.testing import ImageComparison
+from obspy.imaging import spectrogram
 
 
 class SpectrogramTestCase(unittest.TestCase):

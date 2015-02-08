@@ -13,18 +13,20 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from copy import deepcopy, copy
+import functools
+import math
+import warnings
+from copy import copy, deepcopy
+
+import numpy as np
+
+from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
-from obspy.core.util.decorator import deprecated_keywords, raiseIfMasked, \
-    skipIfNoData, taper_API_change
-from obspy.core import compatibility
+from obspy.core.util.decorator import (deprecated_keywords, raiseIfMasked,
+                                       skipIfNoData, taper_API_change)
 from obspy.core.util.misc import flatnotmaskedContiguous
-import math
-import numpy as np
-import warnings
-import functools
 
 
 class Stats(AttribDict):

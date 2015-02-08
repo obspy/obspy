@@ -3,26 +3,28 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
-from datetime import datetime
-from struct import pack, unpack
 
-from obspy import UTCDateTime
-from obspy.mseed import util
-from obspy.mseed.headers import FIXED_HEADER_ACTIVITY_FLAGS, \
-    FIXED_HEADER_DATA_QUAL_FLAGS, FIXED_HEADER_IO_CLOCK_FLAGS
-from obspy.mseed.core import readMSEED
-from obspy.core.util import NamedTemporaryFile
-from obspy.core import Stream, Trace
-from obspy.mseed.util import set_flags_in_fixed_headers
-
+import copy
 import io
-import numpy as np
 import os
 import random
 import sys
 import unittest
 import warnings
-import copy
+from datetime import datetime
+from struct import pack, unpack
+
+import numpy as np
+
+from obspy import UTCDateTime
+from obspy.core import Stream, Trace
+from obspy.core.util import NamedTemporaryFile
+from obspy.mseed import util
+from obspy.mseed.core import readMSEED
+from obspy.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
+                                 FIXED_HEADER_DATA_QUAL_FLAGS,
+                                 FIXED_HEADER_IO_CLOCK_FLAGS)
+from obspy.mseed.util import set_flags_in_fixed_headers
 
 
 class MSEEDUtilTestCase(unittest.TestCase):

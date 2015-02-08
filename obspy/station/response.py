@@ -13,18 +13,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import warnings
 import ctypes as C
-import numpy as np
-from math import pi
-from copy import deepcopy
+import warnings
 from collections import defaultdict
+from copy import deepcopy
+from math import pi
 
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
-from obspy.core.util.base import getMatplotlibVersion
-from obspy.station.util import Frequency, Angle
+import numpy as np
+
+from obspy.core.util.base import ComparingObject, getMatplotlibVersion
+from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+                                         FloatWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.util import Angle, Frequency
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

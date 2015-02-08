@@ -1,6 +1,9 @@
 from __future__ import print_function
-from obspy.core import read
+
 from math import log10
+
+from obspy.core import read
+
 
 st = read("../data/LKBD_WA_CUT.MSEED")
 

@@ -17,7 +17,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from obspy.pdas.core import readPDAS, isPDAS
+from obspy.pdas.core import isPDAS, readPDAS
 
 
 if __name__ == '__main__':

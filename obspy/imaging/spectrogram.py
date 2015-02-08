@@ -20,12 +20,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import math as M
+
+import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
+
 from obspy.core.util import getMatplotlibVersion
-import math as M
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

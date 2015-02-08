@@ -4,22 +4,23 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import UTCDateTime, Stream, Trace, read
-from obspy.core import AttribDict
-from obspy.core.util import NamedTemporaryFile, CatchOutput
-from obspy.mseed import util
-from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
-from obspy.mseed.headers import clibmseed, ENCODINGS
-from obspy.mseed.msstruct import _MSStruct
-
 import copy
 import io
-import numpy as np
 import os
 import unittest
 import warnings
 from datetime import datetime
 from struct import unpack
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.core import AttribDict
+from obspy.core.util import CatchOutput, NamedTemporaryFile
+from obspy.mseed import util
+from obspy.mseed.core import isMSEED, readMSEED, writeMSEED
+from obspy.mseed.headers import ENCODINGS, clibmseed
+from obspy.mseed.msstruct import _MSStruct
 
 
 class MSEEDReadingAndWritingTestCase(unittest.TestCase):

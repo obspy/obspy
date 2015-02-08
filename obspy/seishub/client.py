@@ -11,24 +11,27 @@ SeisHub database client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
+from future.utils import PY2, native_str
 
-from datetime import datetime
-from lxml import objectify
-from lxml.etree import Element, SubElement, tostring
-from math import log
-from obspy import UTCDateTime, Catalog, readEvents
-from obspy.core.util import guessDelta
-from obspy.xseed import Parser
+import functools
 import os
 import pickle
 import time
 import warnings
-import functools
+from datetime import datetime
+from math import log
+
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
+from lxml import objectify
+from lxml.etree import Element, SubElement, tostring
+
+from obspy import Catalog, UTCDateTime, readEvents
+from obspy.core.util import guessDelta
+from obspy.xseed import Parser
 
 
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]

@@ -7,11 +7,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import polarization, util
-from scipy import signal
-import numpy as np
-from os.path import join, dirname
 import unittest
+from os.path import dirname, join
+
+import numpy as np
+from scipy import signal
+
+from obspy.signal import polarization, util
 
 
 class PolarizationTestCase(unittest.TestCase):

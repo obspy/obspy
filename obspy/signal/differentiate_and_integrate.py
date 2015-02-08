@@ -14,8 +14,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import numpy as np
-import scipy.interpolate
 import scipy.integrate
+import scipy.interpolate
 
 
 def integrate_cumtrapz(data, dx, **kwargs):

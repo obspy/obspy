@@ -3,11 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import unittest
 import os
+import unittest
+
 import numpy as np
+
 from obspy import Stream, UTCDateTime
-from obspy.pdas import readPDAS, isPDAS
+from obspy.pdas import isPDAS, readPDAS
 
 
 class PDASTestCase(unittest.TestCase):

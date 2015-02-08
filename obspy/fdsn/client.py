@@ -12,29 +12,31 @@ FDSN Web service client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
 from future import standard_library
+from future.utils import PY2, native_str
+
+import collections
+import copy
+import io
+import os
+import textwrap
+import threading
+import warnings
+
 with standard_library.hooks():
     import queue
     import urllib.parse
     import urllib.request
     from collections import OrderedDict
 
-import copy
+from lxml import etree
+
 import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.fdsn.header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
+                               PARAMETER_ALIASES, URL_MAPPINGS,
+                               WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException)
 from obspy.fdsn.wadl_parser import WADLParser
-from obspy.fdsn.header import DEFAULT_USER_AGENT, \
-    URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
-
-import collections
-import io
-from lxml import etree
-import textwrap
-import threading
-import warnings
-import os
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}

@@ -28,12 +28,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from matplotlib import patches, transforms
 import matplotlib.collections as mpl_collections
+from matplotlib import patches, transforms
+
+from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
 from obspy.imaging.scripts.mopad import epsilon
-from obspy.imaging.beachball import xy2patch
 
 
 # seems the base system we (gmt) are using is called "USE" in mopad

@@ -135,6 +135,7 @@ from future.utils import PY2, native_str
 from .client import Client  # NOQA
 from .header import URL_MAPPINGS  # NOQA
 
+
 # insert supported URL mapping list dynamically in docstring
 # we need an if clause because add_doctests() executes the file once again
 if r"%s" in Client.__init__.__doc__:

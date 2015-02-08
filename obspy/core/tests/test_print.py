@@ -4,10 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.scripts.print import main as obspy_print
-from obspy.core.util.misc import CatchOutput
 import os
 import unittest
+
+from obspy.core.scripts.print import main as obspy_print
+from obspy.core.util.misc import CatchOutput
 
 
 class PrintTestCase(unittest.TestCase):

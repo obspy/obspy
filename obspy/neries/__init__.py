@@ -78,9 +78,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from .client import Client  # NOQA
-
 import warnings
+
+from .client import Client  # NOQA
 
 msg = ("The obspy.neries module is deprecated and will be removed with the "
        "next major release. To access EMSC event data please use the "

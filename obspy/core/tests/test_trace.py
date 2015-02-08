@@ -3,17 +3,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import math
+import os
+import unittest
+import warnings
 from copy import deepcopy
-from obspy import UTCDateTime, Trace, read, Stream, __version__
+
+import numpy as np
+import numpy.ma as ma
+
+from obspy import Stream, Trace, UTCDateTime, __version__, read
 from obspy.core import Stats
 from obspy.core.compatibility import mock
 from obspy.xseed import Parser
-import math
-import numpy as np
-import numpy.ma as ma
-import unittest
-import warnings
-import os
 
 
 class TraceTestCase(unittest.TestCase):

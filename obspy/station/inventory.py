@@ -13,18 +13,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from pkg_resources import load_entry_point
-import obspy
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
-from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
-from obspy.station.network import Network
-import textwrap
-import warnings
 import copy
 import fnmatch
+import textwrap
+import warnings
+
+from pkg_resources import load_entry_point
 import numpy as np
+
+import obspy
+from obspy.core.util.base import ENTRY_POINTS, ComparingObject, _readFromPlugin
+from obspy.core.util.decorator import map_example_filename
+from obspy.station.network import Network
+from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 
 
 def _createExampleInventory():

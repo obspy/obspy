@@ -5,23 +5,24 @@ The InvSim test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.utils import native_str
 from future.builtins import *  # NOQA
+from future.utils import native_str
+
+import ctypes as C
+import gzip
+import io
+import os
+import unittest
+
+import numpy as np
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
 from obspy.sac import attach_paz
-from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
-from obspy.signal.invsim import cosTaper
 from obspy.signal.headers import clibevresp
+from obspy.signal.invsim import cosTaper, estimateMagnitude, evalresp, seisSim
 
-import io
-import gzip
-import numpy as np
-import os
-import unittest
-import ctypes as C
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one

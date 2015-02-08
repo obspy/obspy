@@ -15,20 +15,23 @@ from future.builtins import *  # NOQA
 
 import inspect
 import io
-from lxml import etree
 import math
 import os
 import warnings
 
+from lxml import etree
+
 import obspy
-from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
-    ClockDrift, SampleRate, Frequency, Angle
-from obspy.station.response import PolesZerosResponseStage, \
-    CoefficientsTypeResponseStage, ResponseListResponseStage, \
-    FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
-    CoefficientWithUncertainties, ResponseStage
-from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    ComplexWithUncertainties
+from obspy.core.util.obspy_types import (ComplexWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.response import (CoefficientsTypeResponseStage,
+                                    CoefficientWithUncertainties,
+                                    FilterCoefficient, FIRResponseStage,
+                                    PolesZerosResponseStage,
+                                    PolynomialResponseStage,
+                                    ResponseListResponseStage, ResponseStage)
+from obspy.station.util import (Angle, Azimuth, ClockDrift, Dip, Distance,
+                                Frequency, Latitude, Longitude, SampleRate)
 
 
 # Define some constants for writing StationXML files.

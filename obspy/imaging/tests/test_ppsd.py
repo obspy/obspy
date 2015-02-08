@@ -6,12 +6,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.testing import ImageComparison
-from obspy.signal.tests.test_spectral_estimation import _get_ppsd
-from copy import deepcopy
 import os
 import unittest
+from copy import deepcopy
+
 import matplotlib.pyplot as plt
+
+from obspy.core.util.testing import ImageComparison
+from obspy.signal.tests.test_spectral_estimation import _get_ppsd
 
 
 ppsd = _get_ppsd()

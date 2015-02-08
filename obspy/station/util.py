@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import re
+
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    FloatWithUncertaintiesFixedUnit
-import re
-import copy
+from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit,
+                                         FloatWithUncertaintiesFixedUnit)
 
 
 class BaseNode(ComparingObject):

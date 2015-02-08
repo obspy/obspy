@@ -11,24 +11,25 @@ Testing utilities for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str, PY2
+from future.utils import PY2, native_str
 
-from obspy.core.util.misc import get_untracked_files_from_git, CatchOutput
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-
-import fnmatch
-import inspect
-import os
-import io
-import numpy as np
-import re
 import difflib
-import glob
-import unittest
 import doctest
+import fnmatch
+import glob
+import inspect
+import io
+import os
+import re
 import shutil
+import unittest
 import warnings
+
 from lxml import etree
+import numpy as np
+
+from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

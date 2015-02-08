@@ -4,13 +4,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.xseed import DEFAULT_XSEED_VERSION, utils
-from obspy.xseed.fields import Integer, Loop
-
 import io
-from lxml.etree import Element
 import os
 import warnings
+
+from lxml.etree import Element
+
+from obspy.xseed import DEFAULT_XSEED_VERSION, utils
+from obspy.xseed.fields import Integer, Loop
 
 
 class BlocketteLengthException(Exception):

@@ -6,20 +6,22 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import native_str
+
+import ctypes as C
+import os
+import warnings
 from struct import pack
 
-from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
-    SAMPLETYPE, DATATYPES, UNSUPPORTED_ENCODINGS, \
-    VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
-    VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS, blkt_100_s
-from obspy.mseed import util
+import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-import ctypes as C
-import numpy as np
-import os
-import warnings
+from obspy.mseed import util
+from obspy.mseed.headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS,
+                                 SAMPLETYPE, SEED_CONTROL_HEADERS,
+                                 UNSUPPORTED_ENCODINGS, VALID_CONTROL_HEADERS,
+                                 VALID_RECORD_LENGTHS, Selections, SelectTime,
+                                 blkt_100_s, blkt_1001_s, clibmseed)
 
 
 class InternalMSEEDReadingError(Exception):

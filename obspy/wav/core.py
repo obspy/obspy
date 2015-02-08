@@ -21,10 +21,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import Trace, Stream
-import numpy as np
 import os
 import wave
+
+import numpy as np
+
+from obspy import Stream, Trace
 
 
 # WAVE data format is unsigned char up to 8bit, and signed int

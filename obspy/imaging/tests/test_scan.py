@@ -6,14 +6,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import shutil
+import unittest
+from os.path import abspath, dirname, join, pardir
+
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
-from os.path import dirname, abspath, join, pardir
-import shutil
-import os
-import unittest
 
 
 class ScanTestCase(unittest.TestCase):

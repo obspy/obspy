@@ -14,13 +14,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
-from obspy.station import read_inventory
 import os
-from matplotlib import rcParams
-import numpy as np
 import unittest
-from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 import warnings
+
+import numpy as np
+from matplotlib import rcParams
+
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.station import read_inventory
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

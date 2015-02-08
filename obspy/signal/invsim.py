@@ -24,17 +24,19 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import ctypes as C
+import math as M
+import os
+import warnings
+
+import numpy as np
+import scipy.signal
+
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.signal import util
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
 from obspy.signal.util import _npts2nfft
-import ctypes as C
-import math as M
-import numpy as np
-import os
-import scipy.signal
-from obspy.signal import util
-import warnings
 
 
 # Sensitivity is 2080 according to:

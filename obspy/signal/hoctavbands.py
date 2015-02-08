@@ -19,8 +19,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from scipy import fftpack
 import numpy as np
+from scipy import fftpack
+
 from . import util
 
 

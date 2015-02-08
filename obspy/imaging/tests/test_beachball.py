@@ -6,13 +6,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.testing import ImageComparison
-from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
-    MomentTensor, MT2Plane, MT2Axes, Beach
-import matplotlib.pyplot as plt
 import os
 import unittest
+
+import matplotlib.pyplot as plt
+
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.testing import ImageComparison
+from obspy.imaging.beachball import (TDL, AuxPlane, Beach, Beachball,
+                                     MomentTensor, MT2Axes, MT2Plane,
+                                     StrikeDip)
 
 
 class BeachballTestCase(unittest.TestCase):

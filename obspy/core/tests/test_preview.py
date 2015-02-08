@@ -3,10 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import unittest
+
+import numpy as np
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.preview import createPreview, mergePreviews, resamplePreview
-import numpy as np
-import unittest
 
 
 class UtilTestCase(unittest.TestCase):

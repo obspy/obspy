@@ -4,13 +4,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import io
+import sys
+
+from lxml.etree import Element, SubElement
+
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
-from obspy.xseed.utils import setXPath, getXPath
-
-import io
-from lxml.etree import Element, SubElement
-import sys
+from obspy.xseed.utils import getXPath, setXPath
 
 
 class Blockette060(Blockette):
