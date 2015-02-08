@@ -33,12 +33,6 @@ from obspy.core.util import getMatplotlibVersion
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
 
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
-
-dtiny = np.finfo(0.0).tiny
-
-
 from matplotlib import mlab
 import matplotlib.pyplot as plt
 from matplotlib.dates import date2num
@@ -46,6 +40,10 @@ from matplotlib.ticker import FormatStrFormatter
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.mlab import detrend_none, window_hanning
 
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
+
+dtiny = np.finfo(0.0).tiny
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0, 1.0, 1.0),

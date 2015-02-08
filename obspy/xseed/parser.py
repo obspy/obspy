@@ -518,8 +518,8 @@ class Parser(object):
                     label = 'transfer_function_types'
                 # Check if Laplace transform
                 if getattr(resp, label) not in ["A", "B"]:
-                    msg = 'Only supporting Laplace (rad/sec) or Analog (Hz)' + \
-                          'transform response type. ' + \
+                    msg = 'Only the Laplace (rad/sec) or Analog (Hz) ' + \
+                          'transform response types are supported. ' + \
                           'Skipping other response information.'
                     warnings.warn(msg, UserWarning)
                     continue
