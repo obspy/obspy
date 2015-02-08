@@ -11,6 +11,7 @@ from obspy.signal.tests.test_spectral_estimation import _get_ppsd
 from copy import deepcopy
 import os
 import unittest
+import matplotlib.pyplot as plt
 
 
 ppsd = _get_ppsd()
@@ -34,11 +35,10 @@ class PPSDTestCase(unittest.TestCase):
                 show_percentiles=True, percentiles=[75, 90],
                 show_noise_models=True, grid=True, max_percentage=50,
                 period_lim=(0.02, 100), show_mode=True, show_mean=True)
-            from matplotlib.pyplot import gcf, draw
-            fig = gcf()
+            fig = plt.gcf()
             ax = fig.axes[0]
             ax.set_ylim(-160, -130)
-            draw()
+            plt.draw()
             fig.savefig(ic.name)
 
 
