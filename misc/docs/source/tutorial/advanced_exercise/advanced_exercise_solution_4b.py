@@ -3,7 +3,7 @@ from obspy.core import UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.arclink import Client
 from math import log10
-from numpy import median
+import numpy as np
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
           'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}
@@ -41,5 +41,5 @@ for station in stations:
     print(station, ml)
     mags.append(ml)
 
-net_mag = median(mags)
+net_mag = np.median(mags)
 print("Network magnitude:", net_mag)

@@ -22,7 +22,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import warnings
-from numpy import array, where, fft
+import numpy as np
 from scipy.fftpack import hilbert
 from scipy.signal import iirfilter, lfilter, remez, convolve, get_window, \
     cheby2, cheb2ord
@@ -267,8 +267,8 @@ def remezFIR(data, freqmin, freqmax, df):
     flt = freqmin - 0.1 * freqmin
     fut = freqmax + 0.1 * freqmax
     # bandpass between freqmin and freqmax
-    filt = remez(50, array([0, flt, freqmin, freqmax, fut, df / 2 - 1]),
-                 array([0, 1, 0]), Hz=df)
+    filt = remez(50, np.array([0, flt, freqmin, freqmax, fut, df / 2 - 1]),
+                 np.array([0, 1, 0]), Hz=df)
     return convolve(filt, data)
 
 
@@ -303,14 +303,14 @@ def lowpassFIR(data, freq, df, winlen=2048):
     #
     # winlen = 2**11 #2**10 = 1024; 2**11 = 2048; 2**12 = 4096
     # give frequency bins in Hz and sample spacing
-    w = fft.fftfreq(winlen, 1 / float(df))
+    w = np.fft.fftfreq(winlen, 1 / float(df))
     # cutoff is low-pass filter
-    myfilter = where((abs(w) < freq), 1., 0.)
+    myfilter = np.where((abs(w) < freq), 1., 0.)
     # ideal filter
-    h = fft.ifft(myfilter)
+    h = np.fft.ifft(myfilter)
     beta = 11.7
     # beta implies Kaiser
-    myh = fft.fftshift(h) * get_window(beta, winlen)
+    myh = np.fft.fftshift(h) * get_window(beta, winlen)
     return convolve(abs(myh), data)[winlen / 2:-winlen / 2]
 
 
@@ -333,7 +333,7 @@ def integerDecimation(data, decimation_factor):
         raise TypeError(msg)
 
     # reshape and only use every decimation_factor-th sample
-    data = array(data[::decimation_factor])
+    data = np.array(data[::decimation_factor])
     return data
 
 

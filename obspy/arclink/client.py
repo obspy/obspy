@@ -21,7 +21,7 @@ from fnmatch import fnmatch
 import io
 from lxml import objectify, etree
 from telnetlib import Telnet
-from numpy import pi
+import numpy as np
 import os
 import time
 import warnings
@@ -1318,12 +1318,12 @@ class Client(object):
                         if paz['response_type'] == "B":
 
                             def x2pi(x):
-                                return x * 2 * pi
+                                return x * 2 * np.pi
 
                             paz['poles'] = list(map(x2pi, paz['poles']))
                             paz['zeros'] = list(map(x2pi, paz['zeros']))
                             paz['normalization_factor'] = \
-                                paz['normalization_factor'] * (2 * pi) ** \
+                                paz['normalization_factor'] * (2 * np.pi) ** \
                                 (len(paz['poles']) - len(paz['zeros']))
                             paz['gain'] = paz['normalization_factor']
                             paz['response_type'] = "A"

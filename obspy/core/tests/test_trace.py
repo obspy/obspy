@@ -4,13 +4,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from copy import deepcopy
-from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream, __version__
 from obspy.core import Stats
 from obspy.core.compatibility import mock
 from obspy.xseed import Parser
 import math
 import numpy as np
+import numpy.ma as ma
 import unittest
 import warnings
 import os
@@ -377,8 +377,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(trace), 3000)
         self.assertEqual(trace[0], 0)
         self.assertEqual(trace[999], 999)
-        self.assertTrue(is_masked(trace[1000]))
-        self.assertTrue(is_masked(trace[1999]))
+        self.assertTrue(ma.is_masked(trace[1000]))
+        self.assertTrue(ma.is_masked(trace[1999]))
         self.assertEqual(trace[2000], 999)
         self.assertEqual(trace[2999], 0)
         # verify

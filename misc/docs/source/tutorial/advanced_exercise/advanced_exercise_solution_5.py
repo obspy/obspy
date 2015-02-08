@@ -4,7 +4,7 @@ from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.arclink import Client
 from obspy.signal import coincidenceTrigger
 from math import log10
-from numpy import median
+import numpy as np
 
 client = Client(user="sed-workshop@obspy.org")
 
@@ -83,5 +83,5 @@ for trig in triglist:
         print(station, ml)
         mags.append(ml)
 
-    net_mag = median(mags)
+    net_mag = np.median(mags)
     print("Network magnitude:", net_mag)
