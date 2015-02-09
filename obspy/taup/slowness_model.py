@@ -1059,7 +1059,7 @@ class SlownessModel(object):
             td['dist'] = 2 * np.sum(dist)
         return td
 
-    def layerTimeDist(self, sphericalRayParam, layerNum, isPWave):
+    def layerTimeDist(self, sphericalRayParam, layerNum, isPWave, check=True):
         # Calculates the time and distance increments accumulated by a ray of
         # spherical ray parameter p when passing through layer layerNum.
         # Note that this gives 1/2 of the true range and time increments
@@ -1075,14 +1075,14 @@ class SlownessModel(object):
         # First make sure that a ray with this ray param can propagate
         # within this layer and doesn't turn in the middle of the layer. If
         # not, raise error.
-        if sphericalRayParam > max(np.max(sphericalLayer['topP']),
-                                   np.max(sphericalLayer['botP'])):
+        if check and sphericalRayParam > max(np.max(sphericalLayer['topP']),
+                                             np.max(sphericalLayer['botP'])):
             raise SlownessModelError("Ray cannot propagate within this layer, "
                                      "given ray param too large.")
-        if sphericalRayParam < 0:
+        if np.any(sphericalRayParam < 0):
             raise SlownessModelError("Ray parameter must not be negative!")
-        if sphericalRayParam > min(np.min(sphericalLayer['topP']),
-                                   np.min(sphericalLayer['botP'])):
+        if check and sphericalRayParam > min(np.min(sphericalLayer['topP']),
+                                             np.min(sphericalLayer['botP'])):
             raise SlownessModelError("Ray turns in the middle of this layer! "
                                      "layerNum = " + str(layerNum))
 
@@ -1168,10 +1168,11 @@ class SlownessModel(object):
         time[leftover], dist[leftover] = bullenRadialSlowness(
             sphericalLayer[leftover],
             sphericalRayParam,
-            self.radiusOfEarth)
+            self.radiusOfEarth,
+            check=check)
 
-        if np.any(time < 0) or np.any(np.isnan(time)) or \
-                np.any(dist < 0) or np.any(np.isnan(dist)):
+        if check and (np.any(time < 0) or np.any(np.isnan(time)) or
+                      np.any(dist < 0) or np.any(np.isnan(dist))):
             raise SlownessModelError(
                 "layer time|dist < 0 or NaN.")
 

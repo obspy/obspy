@@ -21,7 +21,7 @@ SlownessLayer = np.dtype([
 ])
 
 
-def bullenRadialSlowness(layer, p, radiusOfEarth):
+def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     """
     Calculates the time and distance (in radians) increments accumulated
     by a ray of spherical ray parameter p when passing through this
@@ -72,9 +72,11 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     dist[mask] = (np.arctan2(p, sqrtBotBotMpp) -
                   np.arctan2(p, sqrtTopTopMpp)) / B
     time[mask] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
-    if np.any(time < 0) or np.any(np.isnan(time)) or \
-            np.any(dist < 0) or np.any(np.isnan(dist)):
+
+    if check and (np.any(time < 0) or np.any(np.isnan(time)) or
+                  np.any(dist < 0) or np.any(np.isnan(dist))):
         raise SlownessModelError("timedist.time or .dist < 0 or Nan")
+
     return time, dist
 
 
