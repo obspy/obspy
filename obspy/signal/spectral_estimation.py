@@ -32,6 +32,7 @@ from obspy import Trace, Stream
 from obspy.core.util import getMatplotlibVersion
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
+from obspy.signal.invsim import pazToFreqResp
 
 from matplotlib import mlab
 import matplotlib.pyplot as plt
@@ -602,32 +603,40 @@ class PPSD():
         # mcnamara apply the correction at the end in freq-domain,
         # does it make a difference?
         # probably should be done earlier on bigger chunk of data?!
-        if self.is_rotational_data:
-            # in case of rotational data just remove sensitivity
-            tr.data /= paz['sensitivity']
-        else:
-            tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                        paz_simulate=None, simulate_sensitivity=False,
-                        water_level=self.water_level)
-
-        # go to acceleration, do nothing for rotational data:
-        if self.is_rotational_data:
-            pass
-        else:
-            tr.data = np.gradient(tr.data, self.delta)
+        # Yes, you should avoid removing the response until after you
+        # have estimated the spectra to avoid elevated lp noise
 
         # use our own wrapper for mlab.psd to have consistent results on all
         # matplotlib versions
         spec, _freq = psd(tr.data, self.nfft, self.sampling_rate,
                           detrend=mlab.detrend_linear, window=fft_taper,
                           noverlap=self.nlap)
-
         # leave out first entry (offset)
         spec = spec[1:]
 
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
 
+        # Here we remove the response using the same conventions
+        # since the power is squared we want to square the sensitivity
+        # we can also convert to acceleration if we have non-rotational data
+        if self.is_rotational_data:
+            # in case of rotational data just remove sensitivity
+            spec /= paz['sensitivity']**2
+        else:
+            # Get the complex response from the pole/zero model
+            resp = pazToFreqResp(paz['poles'], paz['zeros'],
+                                 paz['gain']*paz['sensitivity'],
+                                 self.sampling_rate, nfft=self.nfft)
+            resp = resp[1:]
+            resp = resp[::-1]
+            # Now get the amplitude response (squared)
+            respamp = np.absolute(resp * np.conjugate(resp))
+            # Make omega with the same conventions as spec
+            w = 2.0 * math.pi * _freq[1:]
+            w = w[::-1]
+            # Here we do the response removal
+            spec = (w**2) * spec / respamp
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny

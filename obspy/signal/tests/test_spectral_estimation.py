@@ -7,7 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, Stream, UTCDateTime
+from obspy import Trace, Stream, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
@@ -204,6 +204,59 @@ class PsdTestCase(unittest.TestCase):
                                           binning['spec_bins'])
             np.testing.assert_array_equal(ppsd_loaded.period_bins,
                                           binning['period_bins'])
+
+    def test_PPSD_w_IRIS(self):
+        # Bands to be used this is the upper and lower frequency band pairs
+        fres = zip([0.1, 0.05], [0.2, 0.1])
+
+        file_dataANMO = os.path.join(self.path, 'IUANMO.seed')
+        # Read in ANMO data for one day
+        st = read(file_dataANMO)
+
+        # Use a canned ANMO response which will stay static
+        paz = {'gain': 86298.5, 'zeros': [0, 0],
+               'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
+                         -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
+
+        # Make an empty PPSD and add the data
+        ppsd = PPSD(st[0].stats, paz)
+        ppsd.add(st)
+
+        # Get the 50th percentile from the PPSD
+        (per, perval) = ppsd.get_percentile(percentile=50)
+
+        # Read in the results obtained from a Mustang flat file
+        file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
+        freq, power, hits = np.genfromtxt(file_dataIRIS, comments='#',
+                                          delimiter=',', unpack=True)
+
+        # For each frequency pair we want to compare the mean of the bands
+        for fre in fres:
+            pervalGoodOBSPY = []
+
+            # Get the values for the bands from the PPSD
+            perinv = 1 / per
+            mask = (fre[0] < perinv) & (perinv < fre[1])
+            pervalGoodOBSPY = perval[mask]
+
+            # Now we sort out all of the data from the IRIS flat file
+            mask = (fre[0] < freq) & (freq < fre[1])
+            triples = list(zip(freq[mask], hits[mask], power[mask]))
+            # We now have all of the frequency values of interest
+            # We will get the distinct frequency values
+            freqdistinct = sorted(list(set(freq[mask])), reverse=True)
+            percenlist = []
+            # We will loop through the frequency values and compute a
+            # 50th percentile
+            for curfreq in freqdistinct:
+                tempvalslist = []
+                for triple in triples:
+                    if np.isclose(curfreq, triple[0], atol=1e-3, rtol=0.0):
+                        tempvalslist += [int(triple[2])] * int(triple[1])
+                percenlist.append(np.percentile(tempvalslist, 50))
+            # Here is the actual test
+            np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
+                                       np.mean(percenlist), rtol=0.0, atol=1.0)
 
 
 def suite():
