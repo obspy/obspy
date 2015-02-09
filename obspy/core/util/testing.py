@@ -516,6 +516,15 @@ else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
 
+# List of flake8 error codes to ignore. Keep it as small as possible - there
+# usually is little reason to fight flake8.
+FLAKE8_IGNORE_CODES = [
+    # E402 module level import not at top of file
+    # This is really annoying when using the standard library import hooks
+    # from the future package.
+    "E402"
+]
+
 
 def check_flake8():
     if not HAS_FLAKE8:
@@ -560,7 +569,8 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    flake8_style.options.ignore = tuple(set(flake8_style.options.ignore))
+    flake8_style.options.ignore = tuple(set(
+        flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
 
     with CatchOutput() as out:
         files = [native_str(f) for f in files]
