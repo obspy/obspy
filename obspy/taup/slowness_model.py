@@ -948,13 +948,14 @@ class SlownessModel(object):
                             bullenDepthFor(sLayer, splitRayParam,
                                            self.radiusOfEarth))],
                             dtype=SlownessLayer)
-                        justLayer = bullenRadialSlowness(splitLayer,
-                                                         splitRayParam,
-                                                         self.radiusOfEarth)
+                        justLayerTime, justLayerDist = bullenRadialSlowness(
+                            splitLayer,
+                            splitRayParam,
+                            self.radiusOfEarth)
                         splitTD = np.array([(
                             splitRayParam,
-                            allButLayer['time'] + 2 * justLayer['time'],
-                            allButLayer['dist'] + 2 * justLayer['dist'],
+                            allButLayer['time'] + 2 * justLayerTime,
+                            allButLayer['dist'] + 2 * justLayerDist,
                             0)],
                             dtype=TimeDist)
                         # Python standard division is not IEEE compliant,
@@ -1050,12 +1051,12 @@ class SlownessModel(object):
         td['p'] = p
         layerNum = np.arange(0, slownessTurnLayer + 1)
         if len(layerNum):
-            temptd = self.layerTimeDist(p, layerNum, isPWave)
+            time, dist = self.layerTimeDist(p, layerNum, isPWave)
             # Return 2* distance and time because there is a downgoing as well
             # as an upgoing leg, which are equal since this is for a surface
             # source.
-            td['dist'] = 2 * np.sum(temptd['dist'])
-            td['time'] = 2 * np.sum(temptd['time'])
+            td['time'] = 2 * np.sum(time)
+            td['dist'] = 2 * np.sum(dist)
         return td
 
     def layerTimeDist(self, sphericalRayParam, layerNum, isPWave):
@@ -1085,16 +1086,16 @@ class SlownessModel(object):
             raise SlownessModelError("Ray turns in the middle of this layer! "
                                      "layerNum = " + str(layerNum))
 
-        timeDist = np.empty_like(layerNum, dtype=TimeDist)
-        timeDist['p'] = sphericalRayParam
+        time = np.empty_like(layerNum, dtype=np.float_)
+        dist = np.empty_like(layerNum, dtype=np.float_)
 
         # Check to see if this layer has zero thickness, if so then it is
         # from a critically reflected slowness sample. That means just
         # return 0 for time and distance increments.
         zero_thick = sphericalLayer['topDepth'] == sphericalLayer['botDepth']
         leftover = ~zero_thick
-        timeDist['dist'][zero_thick] = 0
-        timeDist['time'][zero_thick] = 0
+        time[zero_thick] = 0
+        dist[zero_thick] = 0
 
         # Check to see if this layer contains the centre of the Earth. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
@@ -1116,8 +1117,8 @@ class SlownessModel(object):
         if np.any(layerNum[centre_layer] != self.getNumLayers(isPWave) - 1):
             raise SlownessModelError("There are layers deeper than the "
                                      "centre of the Earth!")
-        timeDist['dist'][centre_layer] = math.pi / 2
-        timeDist['time'][centre_layer] = sphericalLayer['topP'][centre_layer]
+        time[centre_layer] = sphericalLayer['topP'][centre_layer]
+        dist[centre_layer] = math.pi / 2
 
         # Now we check to see if this is a constant velocity layer and if so
         # than we can do a simple triangle calculation to get the range and
@@ -1158,26 +1159,23 @@ class SlownessModel(object):
         botTerm[mask] = botRadius[mask]**2 - (sphericalRayParam * vel[mask])**2
 
         b = np.sqrt(topTerm) - np.sqrt(botTerm)
-        timeDist['time'][constant_velocity] = b / vel
-        timeDist['dist'][constant_velocity] = np.arcsin(
+        time[constant_velocity] = b / vel
+        dist[constant_velocity] = np.arcsin(
             b * sphericalRayParam * vel / (topRadius * botRadius))
 
         # If the layer is not a constant velocity layer or the centre of the
         #  Earth and p is not zero we have to do it the hard way:
-        timeDist[leftover] = bullenRadialSlowness(sphericalLayer[leftover],
-                                                  sphericalRayParam,
-                                                  self.radiusOfEarth)
+        time[leftover], dist[leftover] = bullenRadialSlowness(
+            sphericalLayer[leftover],
+            sphericalRayParam,
+            self.radiusOfEarth)
 
-        timeDist['depth'].fill(0)
-
-        if np.any(timeDist['dist'] < 0) \
-                or np.any(timeDist['time'] < 0) \
-                or np.any(np.isnan(timeDist['time'])) \
-                or np.any(np.isnan(timeDist['dist'])):
+        if np.any(time < 0) or np.any(np.isnan(time)) or \
+                np.any(dist < 0) or np.any(np.isnan(dist)):
             raise SlownessModelError(
-                "layertimeDist < 0 or NaN.")
+                "layer time|dist < 0 or NaN.")
 
-        return timeDist
+        return time, dist
 
     def fixCriticalPoints(self):
         """

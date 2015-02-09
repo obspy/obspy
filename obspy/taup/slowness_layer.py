@@ -9,7 +9,7 @@ import math
 
 import numpy as np
 
-from .helper_classes import TimeDist, SlownessModelError
+from .helper_classes import SlownessModelError
 from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
 
 
@@ -28,13 +28,14 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     layer. Note that this gives 1/2 of the true range and time
     increments since there will be both an upgoing and a downgoing path.
     Here we use the Mohorovicic or Bullen law: p=A*r^B"""
-    timedist = np.empty_like(layer, dtype=TimeDist)
-    timedist['p'] = p
+    time = np.empty_like(layer, dtype=np.float_)
+    dist = np.empty_like(layer, dtype=np.float_)
 
     # Only do Bullen radial slowness if the layer is not too thin (e.g.
     # 1 micron). In that case also just return 0.
     mask = layer['botDepth'] - layer['topDepth'] >= 0.000000001
-    timedist[~mask] = (0, 0, 0, 0)
+    time[~mask].fill(0)
+    dist[~mask].fill(0)
     layer = layer[mask]
 
     B = (
@@ -46,16 +47,13 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     )
     sqrtTopTopMpp = np.sqrt(layer['topP'] * layer['topP'] - p * p)
     sqrtBotBotMpp = np.sqrt(layer['botP'] * layer['botP'] - p * p)
-    timedist['dist'][mask] = (np.arctan2(p, sqrtBotBotMpp) -
-                              np.arctan2(p, sqrtTopTopMpp)) / B
-    timedist['time'][mask] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
-    timedist['depth'].fill(0)
-    if np.any(timedist['dist'] < 0) \
-            or np.any(timedist['time'] < 0) \
-            or np.any(np.isnan(timedist['dist'])) \
-            or np.any(np.isnan(timedist['time'])):
+    dist[mask] = (np.arctan2(p, sqrtBotBotMpp) -
+                  np.arctan2(p, sqrtTopTopMpp)) / B
+    time[mask] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
+    if np.any(time < 0) or np.any(np.isnan(time)) or \
+            np.any(dist < 0) or np.any(np.isnan(dist)):
         raise SlownessModelError("timedist.time or .dist < 0 or Nan")
-    return timedist
+    return time, dist
 
 
 def bullenDepthFor(layer, ray_param, radiusOfEarth):
