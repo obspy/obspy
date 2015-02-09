@@ -936,7 +936,7 @@ class Trace(object):
         if delta > 0 or pad:
             self.stats.starttime += delta * self.stats.delta
         if delta == 0 or (delta < 0 and not pad):
-            return
+            return self
         elif delta < 0 and pad:
             try:
                 gap = createEmptyDataChunk(abs(delta), self.data.dtype,
@@ -947,10 +947,10 @@ class Trace(object):
                 raise Exception("Time offset between starttime and "
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((gap, self.data))
-            return
+            return self
         elif starttime > self.stats.endtime:
             self.data = np.empty(0, dtype=org_dtype)
-            return
+            return self
         elif delta > 0:
             try:
                 self.data = self.data[delta:]
@@ -995,7 +995,7 @@ class Trace(object):
             delta = int(math.floor(round((endtime - self.stats.endtime) *
                                    self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
-            return
+            return self
         if delta > 0 and pad:
             try:
                 gap = createEmptyDataChunk(delta, self.data.dtype, fill_value)
@@ -1005,12 +1005,12 @@ class Trace(object):
                 raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((self.data, gap))
-            return
+            return self
         elif endtime < self.stats.starttime:
             self.stats.starttime = self.stats.endtime + \
                 delta * self.stats.delta
             self.data = np.empty(0, dtype=org_dtype)
-            return
+            return self
         # cut from right
         delta = abs(delta)
         total = len(self.data) - delta
