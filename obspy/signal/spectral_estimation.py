@@ -617,7 +617,7 @@ class PPSD():
             # Get the complex response from the pole/zero model
             resp = pazToFreqResp(paz['poles'], paz['zeros'],
                                  paz['gain']*paz['sensitivity'],
-                                 self.sampling_rate, nfft=self.nfft)
+                                 self.delta, nfft=self.nfft)
             resp = resp[1:]
             resp = resp[::-1]
             # Now get the amplitude response (squared)
