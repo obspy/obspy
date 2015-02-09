@@ -1,6 +1,9 @@
 from __future__ import print_function
+
 import numpy as np
-from obspy.core import read, Trace, Stream, UTCDateTime
+
+from obspy.core import Stream, Trace, UTCDateTime, read
+
 
 weather = """
 00.0000 0.0 ??? 4.7 97.7 1015.0 0.0 010308 000000

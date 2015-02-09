@@ -15,8 +15,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 from fnmatch import fnmatch
+
 from obspy import Stream, UTCDateTime
-from obspy.earthworm.waveserver import readWaveServerV, getMenu
+from obspy.earthworm.waveserver import getMenu, readWaveServerV
 
 
 class Client(object):

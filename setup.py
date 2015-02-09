@@ -36,21 +36,20 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
+import fnmatch
+import glob
+import inspect
+import os
+import platform
+import sys
 from distutils.util import change_root
 
-from numpy.distutils.core import setup, DistutilsSetupError
+from numpy.distutils.core import DistutilsSetupError, setup
+from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
 from numpy.distutils.command.install import install
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
-from numpy.distutils.ccompiler import get_default_compiler
-
-import glob
-import inspect
-import fnmatch
-import os
-import platform
-import sys
 
 
 # Directory of the current file in the (hopefully) most reliable way

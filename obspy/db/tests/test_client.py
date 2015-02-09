@@ -3,14 +3,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import unittest
+
+import numpy as np
+
 from obspy.core.preview import createPreview
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.db.client import Client
-from obspy.db.db import WaveformPath, WaveformFile, WaveformChannel
-import numpy as np
-import os
-import unittest
+from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
 
 
 class ClientTestCase(unittest.TestCase):

@@ -6,16 +6,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, read, UTCDateTime
-from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, SacIOError
-from obspy.sac.core import readSAC, writeSAC, readSACXY, writeSACXY, isSAC, \
-    isSACXY
 import copy
 import io
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.core.util import NamedTemporaryFile
+from obspy.sac import SacError, SacIO, SacIOError
+from obspy.sac.core import (isSAC, isSACXY, readSAC, readSACXY, writeSAC,
+                            writeSACXY)
 
 
 class CoreTestCase(unittest.TestCase):

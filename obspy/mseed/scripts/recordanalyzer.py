@@ -21,16 +21,17 @@ A command-line tool to analyze Mini-SEED records.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
+from future.utils import native_str
+
+from argparse import ArgumentParser
+from copy import deepcopy
+from struct import unpack
+
 with standard_library.hooks():
     from collections import OrderedDict
 
-from copy import deepcopy
-from obspy import UTCDateTime
-from obspy import __version__
-from argparse import ArgumentParser
-from struct import unpack
+from obspy import UTCDateTime, __version__
 
 
 class RecordAnalyser(object):

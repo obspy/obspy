@@ -6,17 +6,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import io
+import operator
+import unittest
+import warnings
+
+import numpy as np
+
 from obspy import read
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict
-
-import io
-import numpy as np
-import operator
-import unittest
-import warnings
+from obspy.core.util import AttribDict, NamedTemporaryFile
 
 
 class ClientTestCase(unittest.TestCase):

@@ -1,8 +1,11 @@
 from __future__ import print_function
-from obspy.core import read, UTCDateTime
+
+from math import log10
+
+from obspy.core import UTCDateTime, read
 from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.xseed import Parser
-from math import log10
+
 
 st = read("../data/LKBD.MSEED")
 

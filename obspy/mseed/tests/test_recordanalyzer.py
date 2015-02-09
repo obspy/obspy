@@ -4,10 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
-from obspy.core.util.misc import CatchOutput
 import os
 import unittest
+
+from obspy.core.util.misc import CatchOutput
+from obspy.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
 class RecordAnalyserTestCase(unittest.TestCase):

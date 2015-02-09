@@ -13,21 +13,21 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import readEvents, UTCDateTime, read, read_inventory
-from obspy.fdsn import Client
-from obspy.fdsn.client import build_url, parse_simple_xml
-from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.compatibility import mock
-from obspy.station import Response
-
-from difflib import Differ
 import io
 import os
 import re
 import sys
 import unittest
 import warnings
+from difflib import Differ
+
+from obspy import UTCDateTime, read, read_inventory, readEvents
+from obspy.core.compatibility import mock
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.fdsn import Client
+from obspy.fdsn.client import build_url, parse_simple_xml
+from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.station import Response
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())

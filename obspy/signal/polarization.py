@@ -19,8 +19,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from scipy import signal
 import numpy as np
+from scipy import signal
 
 
 def eigval(datax, datay, dataz, fk, normf=1):

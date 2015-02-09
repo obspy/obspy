@@ -7,12 +7,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
-    tfpg, teg, feg, fpg, tpg, tfeg, tpm
-from scipy.signal import hilbert
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+from scipy.signal import hilbert
+
+from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
+                                    tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
 
 
 class TfTestCase(unittest.TestCase):

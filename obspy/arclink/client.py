@@ -13,18 +13,20 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from obspy import read, UTCDateTime
-from obspy.core.util import AttribDict, complexifyString
-from obspy.core.util.decorator import deprecated_keywords
-
-from fnmatch import fnmatch
 import io
-from lxml import objectify, etree
-from telnetlib import Telnet
-from numpy import pi
 import os
 import time
 import warnings
+from fnmatch import fnmatch
+from telnetlib import Telnet
+
+from lxml import etree, objectify
+import numpy as np
+
+from obspy import UTCDateTime, read
+from obspy.core.util import AttribDict, complexifyString
+from obspy.core.util.decorator import deprecated_keywords
+
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
 MAX_REQUESTS = 50
@@ -1318,12 +1320,12 @@ class Client(object):
                         if paz['response_type'] == "B":
 
                             def x2pi(x):
-                                return x * 2 * pi
+                                return x * 2 * np.pi
 
                             paz['poles'] = list(map(x2pi, paz['poles']))
                             paz['zeros'] = list(map(x2pi, paz['zeros']))
                             paz['normalization_factor'] = \
-                                paz['normalization_factor'] * (2 * pi) ** \
+                                paz['normalization_factor'] * (2 * np.pi) ** \
                                 (len(paz['poles']) - len(paz['zeros']))
                             paz['gain'] = paz['normalization_factor']
                             paz['response_type'] = "A"

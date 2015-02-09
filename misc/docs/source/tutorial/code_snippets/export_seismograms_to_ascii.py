@@ -2,9 +2,13 @@
 USAGE: export_seismograms_to_ascii.py in_file out_file calibration
 """
 from __future__ import print_function
-from obspy.core import read
-import numpy as np
+
 import sys
+
+import numpy as np
+
+from obspy.core import read
+
 
 try:
     in_file = sys.argv[1]

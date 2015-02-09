@@ -9,7 +9,9 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
+
 import numpy as np
+
 from obspy import read
 from obspy.signal.calibration import relcalstack
 

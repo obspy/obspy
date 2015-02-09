@@ -8,17 +8,6 @@
 # Copyright (C) 2008-2015 Yannik Behr, C. J. Ammon's, C. Satriano,
 #                         L. Krischer
 # ------------------------------------------------------------------
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-from obspy import UTCDateTime, Trace
-from obspy.core.compatibility import frombuffer
-from obspy.core.util import gps2DistAzimuth, AttribDict
-import numpy as np
-import time
-import warnings
 """
 Low-level module internally used for handling SAC files
 
@@ -30,6 +19,20 @@ An object-oriented version of C. J. Ammon's SAC I/O module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
+import time
+import warnings
+
+import numpy as np
+
+from obspy import Trace, UTCDateTime
+from obspy.core.compatibility import frombuffer
+from obspy.core.util import AttribDict, gps2DistAzimuth
 
 
 # we put here everything but the time, they are going to stats.starttime
@@ -843,6 +846,7 @@ class SacIO(object):
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> wiht open('test2.sac', 'wb') as fh:
         ...     tr.WriteSacBinary(fh) # doctest: +SKIP
+        >>> import os
         >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
         True
         """

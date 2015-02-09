@@ -3,13 +3,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
-from obspy.core.util import AttribDict
 import copy
 import pickle
 import unittest
 import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
+from obspy.core.util import AttribDict
 
 
 class StatsTestCase(unittest.TestCase):

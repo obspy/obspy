@@ -10,7 +10,7 @@ import os
 
 import numpy as np
 
-from obspy import UTCDateTime, Trace, Stream
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import frombuffer
 
 

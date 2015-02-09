@@ -3,13 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.zmap import core as zmap
-from obspy.core.event import readEvents
-from obspy.core.util import NamedTemporaryFile
-from obspy.core.utcdatetime import UTCDateTime
-
-import unittest
 import os
+import unittest
+
+from obspy.core.event import readEvents
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import NamedTemporaryFile
+from obspy.zmap import core as zmap
 
 
 _STD_ZMAP_FIELDS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',

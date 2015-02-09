@@ -8,13 +8,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import Trace, read
-from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, SacIOError, attach_paz, attach_resp
 import io
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy import Trace, read
+from obspy.core.util import NamedTemporaryFile
+from obspy.sac import SacError, SacIO, SacIOError, attach_paz, attach_resp
 
 
 class SacIOTestCase(unittest.TestCase):

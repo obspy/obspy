@@ -21,24 +21,25 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import os
-import warnings
-import pickle
-import math
 import bisect
 import bz2
+import math
+import os
+import pickle
+import warnings
+
 import numpy as np
-from obspy import Trace, Stream
+import matplotlib.pyplot as plt
+from matplotlib import mlab
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.dates import date2num
+from matplotlib.mlab import detrend_none, window_hanning
+from matplotlib.ticker import FormatStrFormatter
+
+from obspy import Stream, Trace
 from obspy.core.util import getMatplotlibVersion
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
-
-from matplotlib import mlab
-import matplotlib.pyplot as plt
-from matplotlib.dates import date2num
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.mlab import detrend_none, window_hanning
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

@@ -20,12 +20,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
-from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.slpacket import SLPacket
 import logging
 import sys
 import traceback
+
+from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
+from obspy.seedlink.seedlinkexception import SeedLinkException
+from obspy.seedlink.slpacket import SLPacket
 
 
 USAGE = """

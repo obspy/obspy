@@ -16,9 +16,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
+
 from obspy.core import UTCDateTime
-from obspy.core.event import Catalog, Origin, Event, Magnitude, \
-    OriginUncertainty
+from obspy.core.event import (Catalog, Event, Magnitude, Origin,
+                              OriginUncertainty)
 from obspy.core.util.decorator import map_example_filename
 
 

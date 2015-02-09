@@ -14,10 +14,12 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from copy import copy
+
+import numpy as np
+
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-import numpy as np
 
 
 def createPreview(trace, delta=60):

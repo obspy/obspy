@@ -13,8 +13,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
-import numpy as np
 import warnings
+
+import numpy as np
 
 
 def calcVincentyInverse(lat1, lon1, lat2, lon2):

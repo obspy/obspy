@@ -6,9 +6,10 @@ USAGE: make_assets.py [-f] [-c]
 from __future__ import print_function, unicode_literals
 from future.builtins import *  # @UnusedWildImport
 from future.moves.urllib import request
-import sys
+
 import os
 import shutil
+import sys
 
 
 CDN_URL = 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/'

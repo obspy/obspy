@@ -17,21 +17,23 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, OriginUncertainty, OriginQuality, \
-    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
-    Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, \
-    ResourceIdentifier, Amplitude, QuantityError
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.geodetics import FlinnEngdahl
-from obspy.core.util.decorator import map_example_filename
-
-from datetime import timedelta
 import io
-import string as s
 import math
+import string as s
+from datetime import timedelta
+
 import numpy as np
+
+from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
+                              ConfidenceEllipsoid, CreationInfo, DataUsed,
+                              Event, EventDescription, FocalMechanism,
+                              Magnitude, MomentTensor, NodalPlane, NodalPlanes,
+                              Origin, OriginQuality, OriginUncertainty, Pick,
+                              PrincipalAxes, QuantityError, ResourceIdentifier,
+                              StationMagnitude, Tensor, WaveformStreamID)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.geodetics import FlinnEngdahl
 
 
 # ResourceIdentifier prefix used throughout this code

@@ -1,6 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+
 from obspy.signal.array_analysis import array_transff_wavenumber
+
 
 # generate array coordinates
 coords = np.array([[10., 60., 0.], [200., 50., 0.], [-120., 170., 0.],

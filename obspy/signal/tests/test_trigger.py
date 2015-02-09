@@ -6,16 +6,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from ctypes import ArgumentError
-from obspy import read, Stream, UTCDateTime
-from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
-    coincidenceTrigger, arPick, classicSTALTA, classicSTALTAPy
-from obspy.signal.util import clibsignal
 import gzip
-import numpy as np
 import os
 import unittest
 import warnings
+from ctypes import ArgumentError
+
+import numpy as np
+
+from obspy import Stream, UTCDateTime, read
+from obspy.signal import (arPick, classicSTALTA, classicSTALTAPy,
+                          coincidenceTrigger, pkBaer, recSTALTA, recSTALTAPy,
+                          triggerOnset)
+from obspy.signal.util import clibsignal
 
 
 class TriggerTestCase(unittest.TestCase):

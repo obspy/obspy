@@ -7,9 +7,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.segy import pack, unpack
-
 import numpy as np
+
+from obspy.segy import pack, unpack
 
 
 # The format of the 400 byte long binary file header.

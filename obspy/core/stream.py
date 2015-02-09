@@ -11,29 +11,32 @@ Module for handling ObsPy Stream objects.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
+from future.utils import native_str
+
+import copy
+import fnmatch
+import math
+import os
+import pickle
+import warnings
+from glob import glob, has_magic
+
 with standard_library.hooks():
     import urllib.request
 
-from glob import glob, has_magic
+from pkg_resources import load_entry_point
+import numpy as np
+
 from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated_keywords, \
-    map_example_filename
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
-    _getFunctionFromEntryPoint
-from obspy.core.util.decorator import uncompressFile, raiseIfMasked
-from pkg_resources import load_entry_point
-import pickle
-import copy
-import fnmatch
-import math
-import numpy as np
-import os
-import warnings
+from obspy.core.util.base import (ENTRY_POINTS, _getFunctionFromEntryPoint,
+                                  _readFromPlugin)
+from obspy.core.util.decorator import (deprecated_keywords,
+                                       map_example_filename, raiseIfMasked,
+                                       uncompressFile)
 
 
 @map_example_filename("pathname_or_url")

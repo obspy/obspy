@@ -13,9 +13,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import struct
+import sys
 from datetime import datetime
+
 
 # read header (assume CSS2.8)
 try:

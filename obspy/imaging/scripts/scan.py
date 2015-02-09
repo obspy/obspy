@@ -32,13 +32,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import os
+import sys
 import warnings
-from obspy import __version__, read, UTCDateTime
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, SUPPRESS
+from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
+
 import numpy as np
+
+from obspy import UTCDateTime, __version__, read
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
 
 
 def compressStartend(x, stop_iteration):

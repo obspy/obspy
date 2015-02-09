@@ -14,19 +14,21 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
-import numpy as np
-from math import pi
-from matplotlib import rcParams
-from obspy import UTCDateTime
-from obspy.signal.invsim import evalresp
-from obspy.station import read_inventory
-from obspy.xseed import Parser
-from obspy.station.response import _pitick2latex
 import os
 import unittest
-from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
-from obspy.core.util.misc import CatchOutput
 import warnings
+from math import pi
+
+import numpy as np
+from matplotlib import rcParams
+
+from obspy import UTCDateTime
+from obspy.core.util.misc import CatchOutput
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.signal.invsim import evalresp
+from obspy.station import read_inventory
+from obspy.station.response import _pitick2latex
+from obspy.xseed import Parser
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

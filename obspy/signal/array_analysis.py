@@ -23,12 +23,14 @@ from future.builtins import *  # NOQA
 
 import math
 import warnings
+
 import numpy as np
-from obspy.signal.util import utlGeoKm, nextpow2
-from obspy.signal.headers import clibsignal
-from obspy.core import Stream
 from scipy.integrate import cumtrapz
+
+from obspy.core import Stream
+from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosTaper
+from obspy.signal.util import nextpow2, utlGeoKm
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,

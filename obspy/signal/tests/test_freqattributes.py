@@ -7,12 +7,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import freqattributes, util
-from scipy import signal
-from math import pi
-import numpy as np
 import os
 import unittest
+from math import pi
+
+import numpy as np
+from scipy import signal
+
+from obspy.signal import freqattributes, util
 
 
 # only tests for windowed data are implemented currently

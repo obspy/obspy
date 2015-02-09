@@ -14,21 +14,23 @@ The format is an ASCII format but will internally handled by unicode routines.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-
 from future import standard_library
-with standard_library.hooks():
-    import itertools
 
 import math
 import re
 import traceback
-import warnings
 import uuid
+import warnings
+
+with standard_library.hooks():
+    import itertools
 
 from obspy import UTCDateTime
-from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, Comment, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, SourceTimeFunction
+from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
+                              Event, EventDescription, FocalMechanism,
+                              Magnitude, MomentTensor, NodalPlane, NodalPlanes,
+                              Origin, PrincipalAxes, SourceTimeFunction,
+                              Tensor)
 from obspy.core.util.geodetics import FlinnEngdahl
 
 

@@ -4,6 +4,7 @@ from future.builtins import *  # NOQA
 
 from obspy.core.util import Enum
 
+
 OriginUncertaintyDescription = Enum([
     "horizontal uncertainty",
     "uncertainty ellipse",

@@ -15,8 +15,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import numpy as np
 import sys
+
+import numpy as np
+
 
 LOG2 = 0.3010299956639812
 # Get the system byte order.

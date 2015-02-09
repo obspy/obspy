@@ -26,9 +26,12 @@ from future.builtins import *  # NOQA
 
 import math
 import sys
+
 import numpy as np
+
 from obspy.core.trace import Trace, UTCDateTime
 from obspy.realtime.rtmemory import RtMemory
+
 
 _PI = math.pi
 _TWO_PI = 2.0 * math.pi

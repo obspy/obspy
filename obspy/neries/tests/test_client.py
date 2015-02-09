@@ -6,10 +6,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import unittest
+
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.neries import Client
-import unittest
 
 
 class ClientTestCase(unittest.TestCase):

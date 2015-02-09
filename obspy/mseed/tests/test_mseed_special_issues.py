@@ -4,7 +4,18 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import UTCDateTime, Stream, Trace, read
+import ctypes as C
+import io
+import multiprocessing
+import os
+import random
+import sys
+import unittest
+import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
@@ -13,16 +24,6 @@ from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
-
-import ctypes as C
-import io
-import multiprocessing
-import numpy as np
-import os
-import random
-import sys
-import unittest
-import warnings
 
 
 # some Python version don't support negative timestamps

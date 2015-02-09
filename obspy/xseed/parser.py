@@ -11,10 +11,8 @@ Main module containing XML-SEED parser.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.request  # @UnresolvedImport
+from future.utils import native_str
 
 import copy
 import datetime
@@ -24,14 +22,18 @@ import os
 import warnings
 import zipfile
 
-from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+with standard_library.hooks():
+    import urllib.request  # @UnresolvedImport
+
+from lxml.etree import parse as xmlparse
+from lxml.etree import Element, SubElement, tostring
 import numpy as np
 
-from obspy import Trace, Stream, __version__
+from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
 from obspy.xseed import DEFAULT_XSEED_VERSION, blockette
-from obspy.xseed.utils import SEEDParserException, toTag, IGNORE_ATTR
+from obspy.xseed.utils import IGNORE_ATTR, SEEDParserException, toTag
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'

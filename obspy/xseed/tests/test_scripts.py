@@ -4,16 +4,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import unittest
+import zipfile
+
+from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
+from obspy.xseed.parser import Parser
 from obspy.xseed.scripts.dataless2resp import main as obspy_dataless2resp
 from obspy.xseed.scripts.dataless2xseed import main as obspy_dataless2xseed
 from obspy.xseed.scripts.xseed2dataless import main as obspy_xseed2dataless
-from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED
-from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
-import zipfile
-import os
-import unittest
 
 
 class ScriptTestCase(unittest.TestCase):

@@ -1,7 +1,9 @@
-from obspy.core import read, UTCDateTime, AttribDict
+import matplotlib.pyplot as plt
+
+from obspy.core import AttribDict, UTCDateTime, read
 from obspy.signal import cornFreq2Paz
 from obspy.signal.array_analysis import array_processing
-import matplotlib.pyplot as plt
+
 
 # Load data
 st = read("http://examples.obspy.org/agfa.mseed")

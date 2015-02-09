@@ -13,11 +13,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import Trace, Stream
-from obspy.core.compatibility import is_bytes_buffer
-from obspy.sac.sacio import SacIO
 import os
 import struct
+
+from obspy import Stream, Trace
+from obspy.core.compatibility import is_bytes_buffer
+from obspy.sac.sacio import SacIO
 
 
 def isSAC(filename):

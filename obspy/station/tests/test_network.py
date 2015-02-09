@@ -13,16 +13,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import unittest
 import os
+import unittest
 import warnings
+
 import numpy as np
 
-from obspy.station import Network, Station, Channel, Response
 from obspy import UTCDateTime, read_inventory
 from obspy.core.util.base import getBasemapVersion
-from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.station import Channel, Network, Response, Station
 
 # checking for matplotlib/basemap
 try:
@@ -33,6 +34,7 @@ try:
     HAS_BASEMAP = True
 except ImportError:
     HAS_BASEMAP = False
+
 
 BASEMAP_VERSION = getBasemapVersion()
 MATPLOTLIB_VERSION = getMatplotlibVersion()

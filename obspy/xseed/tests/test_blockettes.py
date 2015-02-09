@@ -11,7 +11,7 @@ from glob import iglob
 
 from lxml import etree
 
-from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
+from obspy.xseed.blockette import Blockette050, Blockette054, Blockette060
 from obspy.xseed.blockette.blockette import BlocketteLengthException
 from obspy.xseed.fields import SEEDTypeException
 

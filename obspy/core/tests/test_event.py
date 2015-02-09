@@ -4,17 +4,18 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
-from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
-    Origin, CreationInfo, ResourceIdentifier, Comment, Pick
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import getBasemapVersion
-from obspy.core.util.testing import ImageComparison
-from obspy.core.util.decorator import skipIf
 import os
 import sys
 import unittest
 import warnings
 
+from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
+                              Pick, ResourceIdentifier, WaveformStreamID,
+                              readEvents)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import getBasemapVersion
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison
 
 BASEMAP_VERSION = getBasemapVersion()
 if BASEMAP_VERSION:
