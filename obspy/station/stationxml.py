@@ -92,7 +92,8 @@ def read_StationXML(path_or_file_object):
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
 
-    _ns = lambda tagname: "{%s}%s" % (namespace, tagname)
+    def _ns(tagname):
+        return "{%s}%s" % (namespace, tagname)
 
     # Source and Created field must exist in a StationXML.
     source = root.find(_ns("Source")).text

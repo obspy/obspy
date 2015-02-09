@@ -363,7 +363,10 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
-    fmt = lambda s: native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+
+    def fmt(s):
+        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+
     if endian is None:
         try:
             endian = ">"

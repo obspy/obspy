@@ -93,7 +93,9 @@ class GSEUtiError(Exception):
 #  9.49e-02   1.000    M24  -1.0 -0.0
 # 0123456789012345678901234567890123456789012345678901234567890123456789
 # 70        80        90        100
-_str = lambda s: s.strip()
+def _str(s):
+    return s.strip()
+
 GSE2_FIELDS = [
     # local used date fields
     ('year', 5, 9, int),

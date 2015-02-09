@@ -1316,7 +1316,10 @@ class Client(object):
 
                         # convert from Hz (Analog) to rad/s (Laplace)
                         if paz['response_type'] == "B":
-                            x2pi = lambda x: (x * 2 * pi)
+
+                            def x2pi(x):
+                                return x * 2 * pi
+
                             paz['poles'] = list(map(x2pi, paz['poles']))
                             paz['zeros'] = list(map(x2pi, paz['zeros']))
                             paz['normalization_factor'] = \

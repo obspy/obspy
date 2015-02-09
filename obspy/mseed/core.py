@@ -265,9 +265,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     offset = 0
     # 0 to 9 are defined in a row in the ASCII charset.
     min_ascii = ord('0')
+
     # Small function to check whether an array of ASCII values contains only
     # digits.
-    isdigit = lambda x: True if (x - min_ascii).max() <= 9 else False
+    def isdigit(x):
+        return True if (x - min_ascii).max() <= 9 else False
+
     while True:
         # This should never happen
         if (isdigit(bfrNp[offset:offset + 6]) is False) or \

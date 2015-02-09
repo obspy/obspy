@@ -314,9 +314,11 @@ class Parser(object):
         volume, abbreviations, stations = self._createBlockettes11and12()
         # Delete Blockette 11 again.
         self._deleteBlockettes11and12()
+
         # Finally write the actual SEED String.
-        fmt_seed = lambda cnt, i: \
-            ('%06i' % cnt).encode('ascii', 'strict') + i
+        def fmt_seed(cnt, i):
+            return ('%06i' % cnt).encode('ascii', 'strict') + i
+
         for _i in volume:
             seed_string += fmt_seed(cur_count, _i)
             cur_count += 1
@@ -543,7 +545,9 @@ class Parser(object):
                     data['zeros'].append(z)
                 # force conversion from Hz to Laplace
                 if getattr(resp, label) == "B":
-                    x2pi = lambda x: (x * 2 * np.pi)
+                    def x2pi(x):
+                        return x * 2 * np.pi
+
                     data['poles'] = list(map(x2pi, data['poles']))
                     data['zeros'] = list(map(x2pi, data['zeros']))
                     data['gain'] = resp.A0_normalization_factor * \
