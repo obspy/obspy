@@ -10,8 +10,6 @@ from future.utils import native_str
 
 import numpy as np
 
-from . import TauPException
-
 
 DEFAULT_DENSITY = 2.6
 DEFAULT_QP = 1000.0
@@ -45,7 +43,7 @@ def evaluateVelocityAtBottom(layer, materialProperty):
         return layer['botSVelocity']
     elif materialProperty in "rd":
         return layer['botDensity']
-    raise TauPException("Unknown material property, use p, s, or d.")
+    raise ValueError("Unknown material property, use p, s, or d.")
 
 
 def evaluateVelocityAtTop(layer, materialProperty):
@@ -56,7 +54,7 @@ def evaluateVelocityAtTop(layer, materialProperty):
         return layer['topSVelocity']
     elif materialProperty in "rd":
         return layer['topDensity']
-    raise TauPException("Unknown material property, use p, s, or d.")
+    raise ValueError("Unknown material property, use p, s, or d.")
 
 
 def evaluateVelocityAt(layer, depth, materialProperty):
@@ -71,4 +69,4 @@ def evaluateVelocityAt(layer, depth, materialProperty):
     elif materialProperty in "rd":
         slope = (layer['botDensity'] - layer['topDensity']) / thick
         return slope * (depth - layer['topDepth']) + layer['topDensity']
-    raise TauPException("Unknown material property, use p, s, or d.")
+    raise ValueError("Unknown material property, use p, s, or d.")

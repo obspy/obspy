@@ -15,11 +15,6 @@ from future.builtins import *  # NOQA
 import inspect
 import os
 
-
-class TauPException(Exception):
-    pass
-
-
 # Most generic way to get the data directory.
 __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe()))), "data")

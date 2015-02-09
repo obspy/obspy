@@ -11,7 +11,6 @@ import os
 
 import numpy as np
 
-from . import TauPException
 from .velocity_layer import DEFAULT_QP, DEFAULT_QS, VelocityLayer, \
     evaluateVelocityAt
 
@@ -113,7 +112,7 @@ class VelocityModel(object):
         if len(layer):
             return layer
         else:
-            raise TauPException("No such layer.")
+            raise LookupError("No such layer.")
 
     def layerNumberBelow(self, depth):
         """
@@ -130,7 +129,7 @@ class VelocityModel(object):
         if len(layer):
             return layer
         else:
-            raise TauPException("No such layer.")
+            raise LookupError("No such layer.")
 
     def evaluateAbove(self, depth, materialProperty):
 
@@ -308,18 +307,18 @@ class VelocityModel(object):
         elif filename.endswith(".tvel"):
             fileType = ".tvel"
         else:
-            raise TauPException("File type could not be determined, please "
-                                "rename your file to end with .tvel or .nd")
+            raise ValueError("File type could not be determined, please "
+                             "rename your file to end with .tvel or .nd")
         fileType = fileType[1:]
 
         # the actual reading of the velocity file
         if fileType.lower() == "nd":
-            raise NotImplementedError(".nd files are not curently supported."
+            raise NotImplementedError(".nd files are not curently supported. "
                                       "Sorry.")
         elif fileType.lower() == "tvel":
             vMod = cls.readTVelFile(filename)
         else:
-            raise TauPException("File type invalid")
+            raise ValueError("File type invalid")
 
         vMod.fixDisconDepths()
         return vMod
@@ -354,7 +353,7 @@ class VelocityModel(object):
         # Check that relative speed are sane.
         mask = data[:, 2] > data[:, 1]
         if np.any(mask):
-            raise TauPException(
+            raise ValueError(
                 "S velocity is greater than the P velocity\n" +
                 str(data[mask]))
 
