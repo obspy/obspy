@@ -65,14 +65,22 @@ def call_git_describe(abbrev=4):
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
 
         p.stderr.close()
-        line = p.stdout.readline().decode()
+        line = p.stdout.readline().decode().strip()
         p.stdout.close()
 
         # (this line prevents official releases)
         # should work again now, see #482 and obspy/obspy@b437f31
         if "-" not in line and "." not in line:
-            line = "0.0.0-g%s" % line
-        return line.strip()
+            version = "0.0.0.dev0+g%s" % line
+        else:
+            parts = line.split('-')
+            version = parts[0]
+            try:
+                version += '.dev' + parts[1]
+                version += '+' + '-'.join(parts[2:])
+            except IndexError:
+                pass
+        return version
     except:
         return None
 
@@ -105,7 +113,7 @@ def get_git_version(abbrev=4):
 
     # If we still don't have anything, that's an error.
     if version is None:
-        return '0.0.0-tar/zipball'
+        return '0.0.0+tar/zipball'
 
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
