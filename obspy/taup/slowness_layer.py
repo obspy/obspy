@@ -28,15 +28,37 @@ def bullenRadialSlowness(layer, p, radiusOfEarth):
     layer. Note that this gives 1/2 of the true range and time
     increments since there will be both an upgoing and a downgoing path.
     Here we use the Mohorovicic or Bullen law: p=A*r^B"""
-    time = np.empty_like(layer, dtype=np.float_)
-    dist = np.empty_like(layer, dtype=np.float_)
+    ldim = np.ndim(layer)
+    pdim = np.ndim(p)
+    if ldim == 1 and pdim == 0:
+        time = np.empty_like(layer, dtype=np.float_)
+        dist = np.empty_like(layer, dtype=np.float_)
+    elif ldim == 0 and pdim == 1:
+        time = np.empty_like(p, dtype=np.float_)
+        dist = np.empty_like(p, dtype=np.float_)
+    elif ldim == pdim and (ldim == 0 or layer.shape == p.shape):
+        time = np.empty_like(layer, dtype=np.float_)
+        dist = np.empty_like(layer, dtype=np.float_)
+    else:
+        raise TypeError('Either layer or p must be 0D, or they must have '
+                        'the same shape.')
 
     # Only do Bullen radial slowness if the layer is not too thin (e.g.
     # 1 micron). In that case also just return 0.
     mask = layer['botDepth'] - layer['topDepth'] >= 0.000000001
+    if ldim == 0:
+        if mask:
+            mask = np.ones_like(time, dtype=np.bool_)
+        else:
+            time.fill(0)
+            dist.fill(0)
+            return time, dist
+
     time[~mask].fill(0)
     dist[~mask].fill(0)
     layer = layer[mask]
+    if pdim:
+        p = p[mask]
 
     B = (
         np.log(layer['topP'] / layer['botP']) /
