@@ -6,9 +6,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.taup.taup import getTravelTimes
 import os
 import unittest
+
+from obspy.taup.taup import getTravelTimes
 
 
 class ObsPyTauPWrapperTestCase(unittest.TestCase):

@@ -5,14 +5,17 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
+
 import numpy as np
 
-from .velocity_layer import VelocityLayer, evaluateVelocityAtBottom, \
-    evaluateVelocityAtTop, DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS
-from .slowness_layer import SlownessLayer, bullenDepthFor, \
-    bullenRadialSlowness, create_from_vlayer, evaluateAtBullen
-from .helper_classes import DepthRange, CriticalDepth, TimeDist, \
-    SlownessModelError, SplitLayerInfo
+from .helper_classes import (CriticalDepth, DepthRange, SlownessModelError,
+                             SplitLayerInfo, TimeDist)
+from .slowness_layer import (SlownessLayer, bullenDepthFor,
+                             bullenRadialSlowness, create_from_vlayer,
+                             evaluateAtBullen)
+from .velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
+                             VelocityLayer, evaluateVelocityAtBottom,
+                             evaluateVelocityAtTop)
 
 
 class SlownessModel(object):

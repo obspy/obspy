@@ -15,13 +15,15 @@ from future.builtins import *  # NOQA
 import inspect
 import os
 
+# Convenience imports.
+from .tau import TauPyModel  # NOQA
+from .taup import getTravelTimes, travelTimePlot  # NOQA
+
+
 # Most generic way to get the data directory.
 __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe()))), "data")
 
-# Convenience imports.
-from .taup import getTravelTimes, travelTimePlot  # NOQA
-from .tau import TauPyModel  # NOQA
 
 if __name__ == '__main__':
     import doctest

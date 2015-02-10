@@ -5,10 +5,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from .tau_model import TauModel
-from .taup_time import TauP_Time
-from .taup_pierce import TauP_Pierce
-from .taup_path import TauP_Path
 from .taup_create import TauP_Create
+from .taup_path import TauP_Path
+from .taup_pierce import TauP_Pierce
+from .taup_time import TauP_Time
 
 
 class Arrivals(list):

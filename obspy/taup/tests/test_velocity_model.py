@@ -12,7 +12,9 @@ import numpy as np
 
 from obspy.taup.velocity_model import VelocityModel
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(
+
+# Most generic way to get the data folder path.
+DATA = os.path.join(os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe()))), "data")
 
 
@@ -21,10 +23,9 @@ class TauPyVelocityModelTestCase(unittest.TestCase):
         for i in range(0, 2):
             if i == 0:
                 # read ./data/iasp91.tvel
-                velocity_model = os.path.join(DATA_DIR, "iasp91.tvel")
+                velocity_model = os.path.join(DATA, "iasp91.tvel")
             else:
-                velocity_model = os.path.join(DATA_DIR,
-                                              "iasp91_w_comment.tvel")
+                velocity_model = os.path.join(DATA, "iasp91_w_comment.tvel")
 
             # test_file.tvel is shorter
             test2 = VelocityModel.readVelocityFile(velocity_model)

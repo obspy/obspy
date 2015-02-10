@@ -11,8 +11,8 @@ import os
 
 import numpy as np
 
-from .velocity_layer import DEFAULT_QP, DEFAULT_QS, VelocityLayer, \
-    evaluateVelocityAt
+from .velocity_layer import (DEFAULT_QP, DEFAULT_QS, VelocityLayer,
+                             evaluateVelocityAt)
 
 
 class VelocityModel(object):

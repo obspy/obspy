@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 
-from .helper_classes import TauModelError, TimeDist, SlownessModelError
+from .helper_classes import SlownessModelError, TauModelError, TimeDist
 from .slowness_layer import SlownessLayer, bullenDepthFor, bullenRadialSlowness
 
 

@@ -6,6 +6,7 @@ from future.builtins import *  # NOQA
 
 import argparse
 import os
+
 from .slowness_model import SlownessModel
 from .tau_model import TauModel
 from .velocity_model import VelocityModel

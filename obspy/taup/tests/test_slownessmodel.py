@@ -9,8 +9,8 @@ import unittest
 import numpy as np
 
 from obspy.taup.slowness_layer import create_from_vlayer
-from obspy.taup.velocity_layer import VelocityLayer, \
-    DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS
+from obspy.taup.velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
+                                       VelocityLayer)
 
 
 class TauPySlownessModelTestCase(unittest.TestCase):

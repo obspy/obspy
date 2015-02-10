@@ -10,12 +10,14 @@ from future.utils import native_str
 
 import collections
 import inspect
-import numpy as np
 import os
 import sys
 import unittest
 
+import numpy as np
+
 from obspy.taup import TauPyModel
+
 
 # Most generic way to get the data folder path.
 DATA = os.path.join(os.path.dirname(os.path.abspath(
