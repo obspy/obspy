@@ -9,8 +9,8 @@ from future.utils import native_str
 
 import ctypes as C
 import numpy as np
-from obspy.core.util.libnames import _load_CDLL
 
+from obspy.core.util.libnames import _load_CDLL
 from .helper_classes import SlownessLayer, TimeDist
 
 
@@ -43,7 +43,7 @@ clibtau.tau_branch_calc_time_dist_inner_loop.argtypes = [
     # max ray param
     C.c_double
 ]
-clibtau.tau_branch_calc_time_dist_inner_loop.restype = C.c_void_p
+clibtau.tau_branch_calc_time_dist_inner_loop.restype = None
 
 
 clibtau.seismic_phase_calc_time_inner_loop.argtypes = [
@@ -87,4 +87,4 @@ clibtau.bullen_radial_slowness_inner_loop.argtypes = [
     # max_i
     C.c_int
 ]
-clibtau.bullen_radial_slowness_inner_loop.restype = C.c_void_p
+clibtau.bullen_radial_slowness_inner_loop.restype = None
