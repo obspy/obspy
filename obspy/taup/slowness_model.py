@@ -42,8 +42,8 @@ class SlownessModel(object):
     # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
     # DepthRange objects, containing the top depth and bottom depth.
     fluidLayerDepths = []
-    PLayers = []
-    SLayers = []
+    PLayers = None
+    SLayers = None
     # For methods that have an isPWave parameter
     SWAVE = False
     PWAVE = True
@@ -1278,42 +1278,44 @@ class SlownessModel(object):
                 raise SlownessModelError("Fluid zone overlaps previous zone.")
             prevDepth = fluidZone.botDepth
         # Check for inconsistencies in slowness layers.
-        for isPWave in [self.PWAVE, self.SWAVE]:
-            prevDepth = 0
-            if self.getNumLayers(isPWave) > 0:
-                sLayer = self.getSlownessLayer(0, isPWave)
-                prevBotP = sLayer['topP']
-            else:
-                prevBotP = -1
-            for sLayer in (self.PLayers if isPWave else self.SLayers):
-                if math.isnan(sLayer['topP']) or math.isnan(sLayer['botP']):
-                    raise SlownessModelError("Slowness layer has NaN values.")
-                if sLayer['topP'] < 0 or sLayer['botP'] < 0:
-                    raise SlownessModelError(
-                        "Slowness layer has negative slowness.")
-                if sLayer['topDepth'] > sLayer['botDepth']:
-                    raise SlownessModelError(
-                        "Slowness layer has negative thickness.")
-                if sLayer['topDepth'] > prevDepth:
-                    raise SlownessModelError(
-                        "Gap between slowness layers!")
-                if sLayer['topDepth'] < prevDepth:
-                    raise SlownessModelError(
-                        "Slowness layer overlaps previous!")
-                if sLayer['topP'] != prevBotP:
-                    raise SlownessModelError(
-                        "Slowness layer slowness does not agree with "
-                        "previous layer (at same depth)!")
-                if (math.isnan(sLayer['topDepth']) or
-                        math.isnan(sLayer['botDepth'])):
-                    raise SlownessModelError(
-                        "Slowness layer depth (top or btm) is NaN!")
-                if sLayer['botDepth'] > self.radiusOfEarth:
-                    raise SlownessModelError(
-                        "Slowness layer has a depth larger than radius of the "
-                        "Earth.")
-                prevBotP = sLayer['botP']
-                prevDepth = sLayer['botDepth']
+        for layers in [self.PLayers, self.SLayers]:
+            if layers is None:
+                continue
+
+            if np.any(np.isnan(layers['topP']) | np.isnan(layers['botP'])):
+                raise SlownessModelError("Slowness layer has NaN values.")
+            if np.any((layers['topP'] < 0) | (layers['botP'] < 0)):
+                raise SlownessModelError(
+                    "Slowness layer has negative slowness.")
+            if np.any(layers['topP'][1:] != layers['botP'][:-1]):
+                raise SlownessModelError(
+                    "Slowness layer slowness does not agree with "
+                    "previous layer (at same depth)!")
+
+            if np.any(layers['topDepth'] > layers['botDepth']):
+                raise SlownessModelError(
+                    "Slowness layer has negative thickness.")
+
+            if layers['topDepth'][0] > 0:
+                raise SlownessModelError("Gap between slowness layers!")
+            if np.any(layers['topDepth'][1:] > layers['botDepth'][:-1]):
+                raise SlownessModelError("Gap between slowness layers!")
+
+            if layers['topDepth'][0] < 0:
+                raise SlownessModelError("Slowness layer overlaps previous!")
+            if np.any(layers['topDepth'][1:] < layers['botDepth'][:-1]):
+                raise SlownessModelError("Slowness layer overlaps previous!")
+
+            if np.any(np.isnan(layers['topDepth']) |
+                      np.isnan(layers['botDepth'])):
+                raise SlownessModelError(
+                    "Slowness layer depth (top or bottom) is NaN!")
+
+            if np.any(layers['botDepth'] > self.radiusOfEarth):
+                raise SlownessModelError(
+                    "Slowness layer has a depth larger than radius of the "
+                    "Earth.")
+
         # Everything seems OK.
         return True
 
