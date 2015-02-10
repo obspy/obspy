@@ -14,8 +14,7 @@
 #define PI 3.141592653589793
 
 // Simple macros for easy array access.
-//
-// Be a careful as these naturally apply to all function in this module.
+// Be careful as these naturally apply to all function in this module.
 #define RAY_PARAMS(I, J) ray_params[(I) * max_j + (J)]
 #define MASK(I, J) mask[(I) * max_j + (J)]
 #define MASK(I, J) mask[(I) * max_j + (J)]
