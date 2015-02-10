@@ -11,7 +11,6 @@ from future.utils import native_str
 import collections
 import inspect
 import os
-import sys
 import unittest
 
 import numpy as np
@@ -388,10 +387,6 @@ class TauPyModelTestCase(unittest.TestCase):
                 source_depth_in_km=value["depth"],
                 distance_in_degree=value["dist"],
                 phase_list=phases)
-            # Currently the tests take very long thus some output is nice to
-            # know that something is going on.
-            sys.stdout.write('.')
-            sys.stdout.flush()
             arrivals = sorted(arrivals, key=lambda x: x.time)
             arr = arrivals[0]
             # These are the same tolerances as in the Java tests suite.
