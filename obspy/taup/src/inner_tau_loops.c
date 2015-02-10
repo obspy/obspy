@@ -22,7 +22,21 @@
 #define TIME(I, J) time[(I) * max_j + (J)]
 #define DIST(I, J) dist[(I) * max_j + (J)]
 #define TIME_DIST(I, J) time_dist[(I) * 4 + (J)]
+// Record array...change here if it changes on the Python side.
+enum {
+    TD_P,
+    TD_TIME,
+    TD_DIST,
+    TD_DEPTH
+};
 #define LAYER(I, J) layer[(I) * 4 + (J)]
+// Record array...change here if it changes on the Python side.
+enum {
+    SL_TOP_P,
+    SL_TOP_DEPTH,
+    SL_BOT_P,
+    SL_BOT_DEPTH
+};
 
 
 /*
@@ -70,10 +84,8 @@ void tau_branch_calc_time_dist_inner_loop(
             dist_sum += DIST(i, j);
         }
 
-        // Record array. Change here if record array on the Python side
-        // changes!
-        TIME_DIST(i, 1) = time_sum;
-        TIME_DIST(i, 2) = dist_sum;
+        TIME_DIST(i, TD_TIME) = time_sum;
+        TIME_DIST(i, TD_DIST) = dist_sum;
     }
     return;
 }
@@ -161,16 +173,16 @@ void bullen_radial_slowness_inner_loop(
     double B, sqrt_top, sqrt_bot;
 
     for (i=0; i<max_i; i++) {
-        // Record array...change here if it changes on the Python side.
-        if ((LAYER(i, 3) - LAYER(i, 1)) < 0.0000000001) {
+        if ((LAYER(i, SL_BOT_DEPTH) - LAYER(i, SL_TOP_DEPTH)) < 0.0000000001) {
             continue;
         }
 
-        B = log(LAYER(i, 0) / LAYER(i, 2)) /
-            log((radius - LAYER(i, 1)) / (radius - LAYER(i, 3)));
+        B = log(LAYER(i, SL_TOP_P) / LAYER(i, SL_BOT_P)) /
+            log((radius - LAYER(i, SL_TOP_DEPTH)) /
+                (radius - LAYER(i, SL_BOT_DEPTH)));
 
-        sqrt_top = sqrt(pow(LAYER(i, 0), 2.0) - pow(p[i], 2));
-        sqrt_bot = sqrt(pow(LAYER(i, 2), 2.0) - pow(p[i], 2));
+        sqrt_top = sqrt(pow(LAYER(i, SL_TOP_P), 2) - pow(p[i], 2));
+        sqrt_bot = sqrt(pow(LAYER(i, SL_BOT_P), 2) - pow(p[i], 2));
 
         dist[i] = (atan2(p[i], sqrt_bot) - atan2(p[i], sqrt_top)) / B;
         time[i] = (sqrt_top - sqrt_bot) / B;
