@@ -10,6 +10,7 @@
 # Copyright (C) 2010 M. Beyreuther, J. Wassermann, M. Ohrnberger
 #---------------------------------------------------------------------*/
 #include <stdlib.h>
+#define _USE_MATH_DEFINES  // for Visual Studio
 #include <math.h>
 #include "platform.h"
 
