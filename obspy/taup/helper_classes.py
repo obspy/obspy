@@ -21,6 +21,14 @@ class TauModelError(Exception):
     pass
 
 
+SlownessLayer = np.dtype([
+    (native_str('topP'), np.float_),
+    (native_str('topDepth'), np.float_),
+    (native_str('botP'), np.float_),
+    (native_str('botDepth'), np.float_),
+    ])
+
+
 """
 Holds the ray parameter, time and distance increments, and optionally a
 depth, for a ray passing through some layer.

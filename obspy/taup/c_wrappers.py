@@ -11,8 +11,7 @@ import ctypes as C
 import numpy as np
 from obspy.core.util.libnames import _load_CDLL
 
-from .slowness_layer import SlownessLayer
-from .helper_classes import TimeDist
+from .helper_classes import SlownessLayer, TimeDist
 
 
 clibtau = _load_CDLL("tau")
@@ -68,3 +67,24 @@ clibtau.seismic_phase_calc_time_inner_loop.argtypes = [
     C.c_int
 ]
 clibtau.seismic_phase_calc_time_inner_loop.restype = C.c_int
+
+
+clibtau.bullen_radial_slowness_inner_loop.argtypes = [
+    # layer, record array, 64bit floats. 2D array in memory
+    np.ctypeslib.ndpointer(dtype=SlownessLayer, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # p
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # time
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # dist
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # radius
+    C.c_double,
+    # max_i
+    C.c_int
+]
+clibtau.bullen_radial_slowness_inner_loop.restype = C.c_void_p

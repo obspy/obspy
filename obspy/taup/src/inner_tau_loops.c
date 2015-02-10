@@ -6,6 +6,24 @@
 #   Author: Lion Krischer
 # Copyright (C) 2015 L. Krischer
 #---------------------------------------------------------------------*/
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+
+
+#define PI 3.141592653589793
+
+// Simple macros for easy array access.
+//
+// Be a careful as these naturally apply to all function in this module.
+#define RAY_PARAMS(I, J) ray_params[(I) * max_j + (J)]
+#define MASK(I, J) mask[(I) * max_j + (J)]
+#define MASK(I, J) mask[(I) * max_j + (J)]
+#define TIME(I, J) time[(I) * max_j + (J)]
+#define DIST(I, J) dist[(I) * max_j + (J)]
+#define TIME_DIST(I, J) time_dist[(I) * 4 + (J)]
+#define LAYER(I, J) layer[(I) * 4 + (J)]
+
 
 /*
 Original Python version:
@@ -25,21 +43,6 @@ for i, p in enumerate(ray_params[:, 0]):
                 raise SlownessModelError(
                     "Ray turns in the middle of this layer!")
 */
-
-#include <math.h>
-#include <stdbool.h>
-
-
-#define PI 3.141592653589793
-
-// Simple macros for easy array access.
-#define RAY_PARAMS(I, J) ray_params[(I) * max_j + (J)]
-#define MASK(I, J) mask[(I) * max_j + (J)]
-#define MASK(I, J) mask[(I) * max_j + (J)]
-#define TIME(I, J) time[(I) * max_j + (J)]
-#define DIST(I, J) dist[(I) * max_j + (J)]
-#define TIME_DIST(I, J) time_dist[(I) * 4 + (J)]
-
 void tau_branch_calc_time_dist_inner_loop(
     double *ray_params, bool *mask, double *time, double *dist,
     double *layer, double *time_dist, int max_i, int max_j,
@@ -208,4 +211,32 @@ int seismic_phase_calc_time_inner_loop(
         n += 1;
     }
     return r;
+}
+
+
+void bullen_radial_slowness_inner_loop(
+        double *layer,
+        double *p,
+        double *time,
+        double *dist,
+        double radius,
+        int max_i) {
+    int i;
+    double B, sqrt_top, sqrt_bot;
+
+    for (i=0; i<max_i; i++) {
+        // Record array...change here if it changes on the Python side.
+        if ((LAYER(i, 3) - LAYER(i, 1)) < 0.0000000001) {
+            continue;
+        }
+
+        B = log(LAYER(i, 0) / LAYER(i, 2)) /
+            log((radius - LAYER(i, 1)) / (radius - LAYER(i, 3)));
+
+        sqrt_top = sqrt(pow(LAYER(i, 0), 2.0) - pow(p[i], 2));
+        sqrt_bot = sqrt(pow(LAYER(i, 2), 2.0) - pow(p[i], 2));
+
+        dist[i] = (atan2(p[i], sqrt_bot) - atan2(p[i], sqrt_top)) / B;
+        time[i] = (sqrt_top - sqrt_bot) / B;
+    }
 }

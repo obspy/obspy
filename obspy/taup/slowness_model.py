@@ -8,9 +8,9 @@ import math
 
 import numpy as np
 
-from .helper_classes import (CriticalDepth, DepthRange, SlownessModelError,
-                             SplitLayerInfo, TimeDist)
-from .slowness_layer import (SlownessLayer, bullenDepthFor,
+from .helper_classes import (CriticalDepth, DepthRange, SlownessLayer,
+                             SlownessModelError, SplitLayerInfo, TimeDist)
+from .slowness_layer import (bullenDepthFor,
                              bullenRadialSlowness, create_from_vlayer,
                              evaluateAtBullen)
 from .velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,

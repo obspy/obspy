@@ -9,16 +9,9 @@ import math
 
 import numpy as np
 
-from .helper_classes import SlownessModelError
+from .c_wrappers import clibtau
+from .helper_classes import SlownessLayer, SlownessModelError
 from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
-
-
-SlownessLayer = np.dtype([
-    (native_str('topP'), np.float_),
-    (native_str('topDepth'), np.float_),
-    (native_str('botP'), np.float_),
-    (native_str('botDepth'), np.float_),
-])
 
 
 def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
@@ -31,47 +24,24 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     ldim = np.ndim(layer)
     pdim = np.ndim(p)
     if ldim == 1 and pdim == 0:
-        time = np.empty_like(layer, dtype=np.float_)
-        dist = np.empty_like(layer, dtype=np.float_)
+        time = np.zeros_like(layer, dtype=np.float_)
+        dist = np.zeros_like(layer, dtype=np.float_)
     elif ldim == 0 and pdim == 1:
-        time = np.empty_like(p, dtype=np.float_)
-        dist = np.empty_like(p, dtype=np.float_)
+        time = np.zeros_like(p, dtype=np.float_)
+        dist = np.zeros_like(p, dtype=np.float_)
     elif ldim == pdim and (ldim == 0 or layer.shape == p.shape):
-        time = np.empty_like(layer, dtype=np.float_)
-        dist = np.empty_like(layer, dtype=np.float_)
+        time = np.zeros_like(layer, dtype=np.float_)
+        dist = np.zeros_like(layer, dtype=np.float_)
     else:
         raise TypeError('Either layer or p must be 0D, or they must have '
                         'the same shape.')
 
-    # Only do Bullen radial slowness if the layer is not too thin (e.g.
-    # 1 micron). In that case also just return 0.
-    mask = layer['botDepth'] - layer['topDepth'] >= 0.000000001
-    if ldim == 0:
-        if mask:
-            mask = np.ones_like(time, dtype=np.bool_)
-        else:
-            time.fill(0)
-            dist.fill(0)
-            return time, dist
+    length = len(time)
+    if isinstance(p, np.float_):
+        p = np.array([p] * length, dtype=np.float_)
 
-    time[~mask] = 0
-    dist[~mask] = 0
-    layer = layer[mask]
-    if pdim:
-        p = p[mask]
-
-    B = (
-        np.log(layer['topP'] / layer['botP']) /
-        np.log(
-            (radiusOfEarth - layer['topDepth']) /
-            (radiusOfEarth - layer['botDepth'])
-        )
-    )
-    sqrtTopTopMpp = np.sqrt(layer['topP'] * layer['topP'] - p * p)
-    sqrtBotBotMpp = np.sqrt(layer['botP'] * layer['botP'] - p * p)
-    dist[mask] = (np.arctan2(p, sqrtBotBotMpp) -
-                  np.arctan2(p, sqrtTopTopMpp)) / B
-    time[mask] = (sqrtTopTopMpp - sqrtBotBotMpp) / B
+    clibtau.bullen_radial_slowness_inner_loop(
+        layer, p, time, dist, radiusOfEarth, length)
 
     if check and (np.any(time < 0) or np.any(np.isnan(time)) or
                   np.any(dist < 0) or np.any(np.isnan(dist))):
