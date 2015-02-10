@@ -13,7 +13,7 @@ the blasting of the AGFA skyscraper in Munich. We execute
   prewhitening is disabled.
 * ``semb_thres`` and ``vel_thres`` are set to infinitesimally small numbers
   and must not be changed.
-* The ``timestamp`` will be written in ``'mlabdays'``, which can be read
+* The ``timestamp`` will be written in ``'mlabday'``, which can be read
   directly by our plotting routine.
 * ``stime`` and ``etime`` have to be given in the UTCDateTime format.
 
