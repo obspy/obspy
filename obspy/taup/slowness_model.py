@@ -1086,13 +1086,34 @@ class SlownessModel(object):
             raise SlownessModelError("Ray turns in the middle of this layer! "
                                      "layerNum = " + str(layerNum))
 
-        time = np.empty_like(layerNum, dtype=np.float_)
-        dist = np.empty_like(layerNum, dtype=np.float_)
+        pdim = np.ndim(sphericalRayParam)
+        ldim = np.ndim(layerNum)
+        if ldim == 1 and pdim == 0:
+            time = np.empty_like(layerNum, dtype=np.float_)
+            dist = np.empty_like(layerNum, dtype=np.float_)
+        elif ldim == 0 and pdim == 1:
+            time = np.empty_like(sphericalRayParam, dtype=np.float_)
+            dist = np.empty_like(sphericalRayParam, dtype=np.float_)
+        elif ldim == pdim and (ldim == 0 or
+                               layerNum.shape == sphericalRayParam.shape):
+            time = np.empty_like(layerNum, dtype=np.float_)
+            dist = np.empty_like(layerNum, dtype=np.float_)
+        else:
+            raise TypeError('Either sphericalRayParam or layerNum must be 0D, '
+                            'or they must have the same shape.')
 
         # Check to see if this layer has zero thickness, if so then it is
         # from a critically reflected slowness sample. That means just
         # return 0 for time and distance increments.
         zero_thick = sphericalLayer['topDepth'] == sphericalLayer['botDepth']
+        if ldim == 0:
+            if zero_thick:
+                time.fill(0)
+                dist.fill(0)
+                return time, dist
+            else:
+                zero_thick = np.zeros_like(time, dtype=np.bool_)
+
         leftover = ~zero_thick
         time[zero_thick] = 0
         dist[zero_thick] = 0
@@ -1140,13 +1161,17 @@ class SlownessModel(object):
         topRadius = topRadius[constant_velocity]
         botRadius = botRadius[constant_velocity]
         vel = vel[constant_velocity]
+        if pdim:
+            ray_param_const_velocity = sphericalRayParam[constant_velocity]
+        else:
+            ray_param_const_velocity = sphericalRayParam
 
         # In cases of a ray turning at the bottom of the layer numerical
         # round-off can cause botTerm to be very small (1e-9) but
         # negative which causes the sqrt to raise an error. We check for
         # values that are within the numerical chatter of zero and just
         # set them to zero.
-        topTerm = topRadius**2 - (sphericalRayParam * vel)**2
+        topTerm = topRadius**2 - (ray_param_const_velocity * vel)**2
         topTerm[np.abs(topTerm) < self.slowness_tolerance] = 0
 
         # In this case the ray turns at the bottom of this layer so
@@ -1155,19 +1180,25 @@ class SlownessModel(object):
         # numerical chatter can cause small round-off errors that
         # lead to botTerm being negative, causing a sqrt error.
         botTerm = np.zeros_like(topTerm)
-        mask = sphericalRayParam != sphericalLayer['botP'][constant_velocity]
-        botTerm[mask] = botRadius[mask]**2 - (sphericalRayParam * vel[mask])**2
+        mask = (ray_param_const_velocity !=
+                sphericalLayer['botP'][constant_velocity])
+        if pdim:
+            botTerm[mask] = botRadius[mask]**2 - (
+                ray_param_const_velocity[mask] * vel[mask])**2
+        else:
+            botTerm[mask] = botRadius[mask]**2 - (
+                ray_param_const_velocity * vel[mask])**2
 
         b = np.sqrt(topTerm) - np.sqrt(botTerm)
         time[constant_velocity] = b / vel
         dist[constant_velocity] = np.arcsin(
-            b * sphericalRayParam * vel / (topRadius * botRadius))
+            b * ray_param_const_velocity * vel / (topRadius * botRadius))
 
         # If the layer is not a constant velocity layer or the centre of the
         #  Earth and p is not zero we have to do it the hard way:
         time[leftover], dist[leftover] = bullenRadialSlowness(
-            sphericalLayer[leftover],
-            sphericalRayParam,
+            sphericalLayer[leftover] if ldim else sphericalLayer,
+            sphericalRayParam[leftover] if pdim else sphericalRayParam,
             self.radiusOfEarth,
             check=check)
 
