@@ -12,6 +12,8 @@ import numpy as np
 from .arrival import Arrival
 from .helper_classes import TauModelError, TimeDist
 
+from .c_wrappers import clibtau
+
 
 class SeismicPhase(object):
     """
@@ -758,67 +760,28 @@ class SeismicPhase(object):
     def calc_time(self, degrees):
         """
         Calculates arrival times for this phase, sorted by time.
-        :param degrees:
-        :return arrivals:
         """
-        # Degrees must be positive and between 0 and 180
-        tempDeg = abs(degrees)
-        # Don't just use modulo, as 180 would be equal to 0.
-        while tempDeg > 360:
-            tempDeg -= 360
-        if tempDeg > 180:
-            tempDeg = 360 - tempDeg
-        radDist = tempDeg * math.pi / 180
+        # 10 should be enough. This is only for one phase.
+        r_dist = np.empty(10, dtype=np.float64)
+        r_ray_num = np.empty(10, dtype=np.int32)
+
+        # This saves around 17% runtime when calculating arrival times which
+        # is probably the major use case.
+        count = clibtau.seismic_phase_calc_time_inner_loop(
+            float(degrees),
+            self.maxDistance,
+            self.dist,
+            self.ray_param,
+            r_dist,
+            r_ray_num,
+            len(self.dist)
+        )
+
         arrivals = []
-        # Search all distances 2n*PI+radDist and 2(n+1)*PI-radDist that are
-        # less than the maximum distance for this phase. This ensures that
-        # we get the time for phases that accumulate more than 180 degrees
-        # of distance, for instance PKKKKP might wrap all of the way around.
-        # A special case exists at 180, so we skip the second case if
-        # tempDeg==180.
-        n = 0
-        while n * 2 * math.pi + radDist <= self.maxDistance:
-            # Look for arrivals that are radDist + 2nPi, i.e. rays that have
-            # done more than n laps.
-            searchDist = n * 2 * math.pi + radDist
-            for rayNum in range(len(self.dist) - 1):
-                if searchDist == self.dist[rayNum + 1] and \
-                        rayNum + 1 != len(self.dist) - 1:
-                    # So we don't get 2 arrivals for the same ray.
-                    continue
-                elif (self.dist[rayNum] - searchDist) * (
-                        searchDist - self.dist[rayNum + 1]) >= 0:
-                    # Look for distances that bracket the search distance.
-                    if self.ray_param[rayNum] == self.ray_param[rayNum + 1] \
-                            and len(self.ray_param) > 2:
-                        # Here we have a shadow zone, so itis not really an
-                        # arrival.
-                        continue
-                    arrivals.append(self.linear_interp_arrival(
-                        searchDist, rayNum, self.name, self.puristName,
-                        self.source_depth))
-            # Look for arrivals that are 2(n+1)Pi-radDist, i.e. rays that
-            # have done more than one half lap plus some number of whole laps.
-            searchDist = (n + 1) * 2 * math.pi - radDist
-            if tempDeg != 180:
-                for rayNum in range(len(self.dist) - 1):
-                    if searchDist == self.dist[rayNum + 1] \
-                            and rayNum + 1 != len(self.dist) - 1:
-                        # So we don't get 2 arrivals for the same ray.
-                        continue
-                    elif (self.dist[rayNum] - searchDist) * (
-                            searchDist - self.dist[rayNum + 1]) >= 0:
-                        if self.ray_param[rayNum] == \
-                                self.ray_param[rayNum + 1] \
-                                and len(self.ray_param) > 2:
-                            # Here we have a shadow zone, so it is not really
-                            # an arrival.
-                            continue
-                        arrivals.append(self.linear_interp_arrival(
-                            searchDist, rayNum, self.name, self.puristName,
-                            self.source_depth))
-            n += 1
-        # Perhaps these are sorted by time in the java code?
+        for _i in range(count):
+            arrivals.append(self.linear_interp_arrival(
+                r_dist[_i], r_ray_num[_i], self.name, self.puristName,
+                self.source_depth))
         return arrivals
 
     def calc_pierce(self, degrees):

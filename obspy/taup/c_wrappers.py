@@ -17,6 +17,7 @@ from .helper_classes import TimeDist
 
 clibtau = _load_CDLL("tau")
 
+
 clibtau.tau_branch_calc_time_dist_inner_loop.argtypes = [
     # ray_params
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=2,
@@ -44,3 +45,26 @@ clibtau.tau_branch_calc_time_dist_inner_loop.argtypes = [
     C.c_double
 ]
 clibtau.tau_branch_calc_time_dist_inner_loop.restype = C.c_void_p
+
+
+clibtau.seismic_phase_calc_time_inner_loop.argtypes = [
+    # degree
+    C.c_double,
+    # max_distance
+    C.c_double,
+    # dist
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # ray_param
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # search_dist_results
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # ray_num_results
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # count
+    C.c_int
+]
+clibtau.seismic_phase_calc_time_inner_loop.restype = C.c_int
