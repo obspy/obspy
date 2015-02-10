@@ -1016,8 +1016,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     if timestamp == 'julsec':
         pass
     elif timestamp == 'mlabday':
-        # 719162 == hours between 1970 and 0001
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
+        # 719163 == days between 1970 and 0001 + 1
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719163
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)

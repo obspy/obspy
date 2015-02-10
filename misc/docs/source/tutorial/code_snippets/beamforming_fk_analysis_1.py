@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 from obspy.core import AttribDict, UTCDateTime, read
 from obspy.signal import cornFreq2Paz
@@ -90,7 +91,9 @@ for i, lab in enumerate(labels):
     ax.set_xlim(out[0, 0], out[-1, 0])
     ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
 
-
+locator = mdates.AutoDateLocator()
+ax.xaxis.set_major_locator(locator)
+ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(locator))
 fig.autofmt_xdate()
 fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
 plt.show()
