@@ -43,10 +43,12 @@ except:
            "before installing ObsPy.")
     raise ImportError(msg)
 
+from distutils.dep_util import newer
 from distutils.util import change_root
 
 from numpy.distutils.core import setup, DistutilsSetupError
 from numpy.distutils.command.build import build
+from numpy.distutils.command.build_ext import build_ext
 from numpy.distutils.command.install import install
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
@@ -617,32 +619,49 @@ class Help2ManInstall(install):
         self.copy_tree(srcdir, mandir)
 
 
-def build_taup_models():
-    """
-    Builds the obspy.taup models during install time. This is needed as the
-    models are pickled Python classes which are not compatible across Python
-    versions.
-    """
-    obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
-    model_input = os.path.join(obspy_taup_path, "taup", "data")
+class BuildExtAndTauPy(build_ext):
+    def build_taup_models(self):
+        """
+        Builds the obspy.taup models during install time. This is needed as the
+        models are pickled Python classes which are not compatible across
+        Python versions.
+        """
+        obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
+        model_input = os.path.join(obspy_taup_path, "taup", "data")
 
-    sys.path.insert(0, obspy_taup_path)
-    from taup.taup_create import TauP_Create
-    from taup.utils import _get_model_filename
+        sys.path.insert(0, obspy_taup_path)
+        from taup.taup_create import TauP_Create
+        from taup.utils import _get_model_filename
 
-    for model in glob.glob(os.path.join(model_input, "*.tvel")):
-        output_filename = _get_model_filename(model)
-        if os.path.exists(output_filename):
-            print("obspy.taup model '%s' already exists. To rebuild, please "
-                  "delete the existing version." % output_filename)
-            sys.stdout.flush()
-            continue
-        print("Building obspy.taup model for '%s' ..." % model)
-        sys.stdout.flush()
-        mod_create = TauP_Create(input_filename=model,
-                                 output_filename=output_filename)
-        mod_create.loadVMod()
-        mod_create.run()
+        model_path = os.path.join('obspy', 'taup', 'data', 'models')
+        for path, files in self.distribution.data_files:
+            if path == model_path:
+                dist_models = files
+                break
+        else:
+            dist_models = []
+            self.distribution.data_files.append((model_path, dist_models))
+
+        for model in glob.glob(os.path.join(model_input, "*.tvel")):
+            output_filename = _get_model_filename(model)
+            dist_models.append(os.path.relpath(output_filename,
+                                               SETUP_DIRECTORY))
+
+            if not newer(model, output_filename) and not self.force:
+                print("obspy.taup model '%s' already exists. To rebuild, "
+                      "please delete the existing version or build with "
+                      "--force." % (output_filename, ))
+                continue
+            print("Building obspy.taup model for '%s' ..." % (model, ))
+            if not self.dry_run:
+                mod_create = TauP_Create(input_filename=model,
+                                         output_filename=output_filename)
+                mod_create.loadVMod()
+                mod_create.run()
+
+    def run(self):
+        build_ext.run(self)
+        self.build_taup_models()
 
 
 def setupPackage():
@@ -688,6 +707,7 @@ def setupPackage():
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
         cmdclass={
+            'build_ext': BuildExtAndTauPy,
             'build_man': Help2ManBuild,
             'install_man': Help2ManInstall
         },
@@ -722,6 +742,4 @@ if __name__ == '__main__':
         except:
             pass
     else:
-        if '--skip-build' not in sys.argv and '--dry-run' not in sys.argv:
-            build_taup_models()
         setupPackage()
