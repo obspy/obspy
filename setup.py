@@ -526,6 +526,17 @@ def configuration(parent_package="", top_path=None):
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
+    # TAU
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
+    files = [os.path.join(path, "inner_tau_loops.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
+    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
+                         files, **kwargs)
+
     add_data_files(config)
 
     return config
