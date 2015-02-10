@@ -6,12 +6,14 @@
 #   Author: Lion Krischer
 # Copyright (C) 2015 L. Krischer
 #---------------------------------------------------------------------*/
+#define _USE_MATH_DEFINES  // for Visual Studio
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 
-
-#define PI 3.141592653589793
+#ifndef M_PI
+#define M_PI 3.141592653589793
+#endif
 
 // Simple macros for easy array access.
 // Be careful as these naturally apply to all function in this module.
@@ -99,10 +101,10 @@ int seismic_phase_calc_time_inner_loop(
         temp_deg = 360.0 - temp_deg;
     }
 
-    rad_dist = temp_deg * PI / 180.0;
+    rad_dist = temp_deg * M_PI / 180.0;
 
-    while (n * 2.0 * PI + rad_dist <= max_distance) {
-        search_dist = n * 2 * PI + rad_dist;
+    while (n * 2.0 * M_PI + rad_dist <= max_distance) {
+        search_dist = n * 2 * M_PI + rad_dist;
 
         for (ray_num=0; ray_num < (count - 1); ray_num++) {
             if ((search_dist == dist[ray_num + 1]) &&
@@ -121,7 +123,7 @@ int seismic_phase_calc_time_inner_loop(
             }
         }
 
-        search_dist = (n + 1) * 2.0 * PI - rad_dist;
+        search_dist = (n + 1) * 2.0 * M_PI - rad_dist;
         if (temp_deg != 180.0) {
 
             for (ray_num=0; ray_num < (count - 1); ray_num++) {
