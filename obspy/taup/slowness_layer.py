@@ -54,8 +54,8 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
             dist.fill(0)
             return time, dist
 
-    time[~mask].fill(0)
-    dist[~mask].fill(0)
+    time[~mask] = 0
+    dist[~mask] = 0
     layer = layer[mask]
     if pdim:
         p = p[mask]
