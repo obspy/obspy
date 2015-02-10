@@ -107,20 +107,6 @@ class TauBranch(object):
             ray_params, mask, time, dist, layer, timeDist, ray_params.shape[0],
             ray_params.shape[1], self.maxRayParam)
 
-        # for i, p in enumerate(ray_params[:, 0]):
-        #     if p <= self.maxRayParam:
-        #         m = mask[i]
-        #         layerMask = layer[m]
-        #
-        #         if len(layerMask):
-        #             timeDist['time'][i] = np.sum(time[i][m])
-        #             timeDist['dist'][i] = np.sum(dist[i][m])
-        #
-        #             if ((layerMask['topP'][-1] - p) *
-        #                     (p - layerMask['botP'][-1])) > 0:
-        #                 raise SlownessModelError(
-        #                     "Ray turns in the middle of this layer!")
-
         return timeDist
 
     def insert(self, ray_param, sMod, index):
