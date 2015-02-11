@@ -43,13 +43,23 @@ except:
            "before installing ObsPy.")
     raise ImportError(msg)
 
+import sys
+if sys.version_info[0] == 2:
+    try:
+        from mock import patch  # PY2
+    except:
+        msg = ("No module named mock. Please install mock first, it is needed "
+               "before installing ObsPy.")
+        raise ImportError(msg)
+else:
+    from unittest.mock import patch
+
 import ctypes
 import fnmatch
 import glob
 import inspect
 import os
 import platform
-import sys
 from distutils.dep_util import newer
 from distutils.util import change_root
 
@@ -118,7 +128,7 @@ EXTRAS_REQUIRE = {
     'neries': ['suds-jurko']}
 # PY2
 if sys.version_info[0] == 2:
-    EXTRAS_REQUIRE['tests'].append('mock')
+    INSTALL_REQUIRES.append('mock')
 # Add argparse for Python 2.6. stdlib package for Python >= 2.7
 if sys.version_info[:2] == (2, 6):
     INSTALL_REQUIRES.append('argparse')
@@ -648,7 +658,6 @@ class BuildExtAndTauPy(build_ext):
                                'obspy', 'lib', libname)
         taulib = ctypes.CDLL(libpath)
 
-        from mock import patch
         sys.path.insert(0, obspy_taup_path)
         with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
             from taup.taup_create import TauP_Create
