@@ -22,7 +22,7 @@ clibtau.tau_branch_calc_time_dist_inner_loop.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=2,
                            flags=native_str('C_CONTIGUOUS')),
     # mask
-    np.ctypeslib.ndpointer(dtype=np.bool, ndim=2,
+    np.ctypeslib.ndpointer(dtype=np.bool_, ndim=2,
                            flags=native_str('C_CONTIGUOUS')),
     # time
     np.ctypeslib.ndpointer(dtype=np.float64, ndim=2,
