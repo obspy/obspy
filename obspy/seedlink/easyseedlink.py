@@ -59,11 +59,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import urlparse
+
 import lxml
 
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
-from obspy.seedlink.slpacket import SLPacket
 from obspy.seedlink.client.slstate import SLState
+from obspy.seedlink.slpacket import SLPacket
 
 
 class EasySeedLinkClientException(Exception):

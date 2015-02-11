@@ -1,6 +1,8 @@
-from obspy.core import read
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+
+from obspy.core import read
+
 
 # Read in all files starting with dis.
 st = read("http://examples.obspy.org/dis.G.SCZ.__.BHE")

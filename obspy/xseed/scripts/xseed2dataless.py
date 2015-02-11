@@ -7,12 +7,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from glob import glob
-from obspy import __version__
-from obspy.xseed.parser import Parser
-from argparse import ArgumentParser
 import os
 import sys
+from argparse import ArgumentParser
+from glob import glob
+
+from obspy import __version__
+from obspy.xseed.parser import Parser
 
 
 def xseed2dataless(filename, options):

@@ -14,16 +14,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
-    BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
-    TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
-from obspy.segy.util import unpack_header_value
-from obspy.segy.unpack import OnTheFlyDataUnpacker
-
 import io
-import numpy as np
 import os
 from struct import pack, unpack
+
+import numpy as np
+
+from obspy.segy.header import (BINARY_FILE_HEADER_FORMAT,
+                               DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
+                               DATA_SAMPLE_FORMAT_SAMPLE_SIZE,
+                               DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, ENDIAN,
+                               TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
+from obspy.segy.unpack import OnTheFlyDataUnpacker
+from obspy.segy.util import unpack_header_value
 
 
 class SEGYError(Exception):

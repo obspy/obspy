@@ -11,28 +11,32 @@ Module for handling ObsPy Stream objects.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
+from future.utils import native_str
+
+import copy
+import fnmatch
+import math
+import os
+import pickle
+import warnings
+from glob import glob, has_magic
+
 with standard_library.hooks():
     import urllib.request
 
-from glob import glob, has_magic
+from pkg_resources import load_entry_point
+import numpy as np
+
 from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
-    _getFunctionFromEntryPoint
-from obspy.core.util.decorator import uncompressFile, raiseIfMasked
-from pkg_resources import load_entry_point
-import pickle
-import copy
-import fnmatch
-import math
-import numpy as np
-import os
-import warnings
+from obspy.core.util.base import (ENTRY_POINTS, _getFunctionFromEntryPoint,
+                                  _readFromPlugin)
+from obspy.core.util.decorator import (deprecated_keywords,
+                                       map_example_filename, raiseIfMasked,
+                                       uncompressFile)
 
 
 @map_example_filename("pathname_or_url")
@@ -265,7 +269,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 @uncompressFile
 def _read(filename, format=None, headonly=False, **kwargs):
     """
-    Reads a single file into a ObsPy Stream object.
+    Read a single file into a ObsPy Stream object.
     """
     stream, format = _readFromPlugin('waveform', filename, format=format,
                                      headonly=headonly, **kwargs)
@@ -358,7 +362,7 @@ class Stream(object):
 
     def __add__(self, other):
         """
-        Method to add two streams or a stream with a single trace.
+        Add two streams or a stream with a single trace.
 
         :type other: :class:`~obspy.core.stream.Stream` or
             :class:`~obspy.core.trace.Trace`
@@ -396,7 +400,7 @@ class Stream(object):
 
     def __iadd__(self, other):
         """
-        Method to add two streams with self += other.
+        Add two streams with self += other.
 
         It will extend the current Stream object with the traces of the given
         Stream. Traces will not be copied but references to the original traces
@@ -429,7 +433,7 @@ class Stream(object):
 
     def __mul__(self, num):
         """
-        Creates a new Stream containing num copies of this stream.
+        Create a new Stream containing num copies of this stream.
 
         :rtype num: int
         :param num: Number of copies.
@@ -504,7 +508,7 @@ class Stream(object):
 
     def __len__(self):
         """
-        Returns the number of Traces in the Stream object.
+        Return the number of Traces in the Stream object.
 
         .. rubric:: Example
 
@@ -518,7 +522,7 @@ class Stream(object):
 
     def __str__(self, extended=False):
         """
-        Returns short summary string of the current stream.
+        Return short summary string of the current stream.
 
         It will contain the number of Traces in the Stream and the return value
         of each Trace's :meth:`~obspy.core.trace.Trace.__str__` method.
@@ -667,7 +671,7 @@ class Stream(object):
 
     def append(self, trace):
         """
-        Appends a single Trace object to the current Stream object.
+        Append a single Trace object to the current Stream object.
 
         :param trace: :class:`~obspy.core.stream.Trace` object.
 
@@ -695,7 +699,7 @@ class Stream(object):
 
     def extend(self, trace_list):
         """
-        Extends the current Stream object with a list of Trace objects.
+        Extend the current Stream object with a list of Trace objects.
 
         :param trace_list: list of :class:`~obspy.core.trace.Trace` objects or
             :class:`~obspy.core.stream.Stream`.
@@ -734,7 +738,7 @@ class Stream(object):
 
     def getGaps(self, min_gap=None, max_gap=None):
         """
-        Returns a list of all trace gaps/overlaps of the Stream object.
+        Determine all trace gaps/overlaps of the Stream object.
 
         :param min_gap: All gaps smaller than this value will be omitted. The
             value is assumed to be in seconds. Defaults to None.
@@ -827,7 +831,7 @@ class Stream(object):
 
     def insert(self, position, object):
         """
-        Inserts either a single Trace or a list of Traces before index.
+        Insert either a single Trace or a list of Traces before index.
 
         :param position: The Trace will be inserted at position.
         :param object: Single Trace object or list of Trace objects.
@@ -852,7 +856,7 @@ class Stream(object):
 
     def plot(self, *args, **kwargs):
         """
-        Creates a waveform plot of the current ObsPy Stream object.
+        Create a waveform plot of the current ObsPy Stream object.
 
         :param outfile: Output file string. Also used to automatically
             determine the output format. Supported file formats depend on your
@@ -1127,7 +1131,7 @@ class Stream(object):
 
     def spectrogram(self, **kwargs):
         """
-        Creates a spectrogram plot for each trace in the stream.
+        Create a spectrogram plot for each trace in the stream.
 
         For details on kwargs that can be used to customize the spectrogram
         plot see :func:`obspy.imaging.spectrogram.spectrogram`.
@@ -1153,9 +1157,10 @@ class Stream(object):
 
     def pop(self, index=(-1)):
         """
-        Removes the Trace object specified by index from the Stream object and
-        returns it. If no index is given it will remove the last Trace.
-        Passes on the pop() to self.traces.
+        Remove and return the Trace object specified by index from the Stream.
+
+        If no index is given, remove the last Trace. Passes on the pop() to
+        self.traces.
 
         :param index: Index of the Trace object to be returned and removed.
         :returns: Removed Trace.
@@ -1254,7 +1259,7 @@ class Stream(object):
 
     def remove(self, trace):
         """
-        Removes the first occurrence of the specified Trace object in the
+        Remove the first occurrence of the specified Trace object in the
         Stream object. Passes on the remove() call to self.traces.
 
         :param trace: Trace object to be removed from Stream.
@@ -1283,7 +1288,7 @@ class Stream(object):
 
     def reverse(self):
         """
-        Reverses the Traces of the Stream object in place.
+        Reverse the Traces of the Stream object in place.
 
         .. rubric:: Example
 
@@ -1308,7 +1313,7 @@ class Stream(object):
     def sort(self, keys=['network', 'station', 'location', 'channel',
                          'starttime', 'endtime'], reverse=False):
         """
-        Method to sort the traces in the Stream object.
+        Sort the traces in the Stream object.
 
         The traces will be sorted according to the keys list. It will be sorted
         by the first item first, then by the second and so on. It will always
@@ -1356,7 +1361,7 @@ class Stream(object):
 
     def write(self, filename, format, **kwargs):
         """
-        Saves stream into a file.
+        Save stream into a file.
 
         :type filename: str
         :param filename: The name of the file to write.
@@ -1414,7 +1419,7 @@ class Stream(object):
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
         """
-        Cuts all traces of this Stream object to given start and end time.
+        Cut all traces of this Stream object to given start and end time.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Specify the start time.
@@ -1489,7 +1494,7 @@ class Stream(object):
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
-        Cuts all traces of this Stream object to given start time.
+        Cut all traces of this Stream object to given start time.
         For more info see :meth:`~obspy.core.trace.Trace._ltrim`.
         """
         for trace in self.traces:
@@ -1501,7 +1506,7 @@ class Stream(object):
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
-        Cuts all traces of this Stream object to given end time.
+        Cut all traces of this Stream object to given end time.
         For more info see :meth:`~obspy.core.trace.Trace._rtrim`.
         """
         for trace in self.traces:
@@ -1512,7 +1517,7 @@ class Stream(object):
 
     def cutout(self, starttime, endtime):
         """
-        Cuts the given time range out of all traces of this Stream object.
+        Cut the given time range out of all traces of this Stream object.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start of time span to remove from stream.
@@ -1547,7 +1552,7 @@ class Stream(object):
 
     def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
         """
-        Returns new Stream object cut to the given start and end time.
+        Return new Stream object cut to the given start and end time.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Specify the start time of all traces.
@@ -1594,7 +1599,7 @@ class Stream(object):
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None):
         """
-        Returns new Stream object only with these traces that match the given
+        Return new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with ``channel="EHZ"``).
 
         .. rubric:: Examples
@@ -1686,7 +1691,7 @@ class Stream(object):
 
     def verify(self):
         """
-        Verifies all traces of current Stream against available meta data.
+        Verify all traces of current Stream against available meta data.
 
         .. rubric:: Example
 
@@ -1735,7 +1740,7 @@ class Stream(object):
 
     def merge(self, method=0, fill_value=None, interpolation_samples=0):
         """
-        Merges ObsPy Trace objects with same IDs.
+        Merge ObsPy Trace objects with same IDs.
 
         :type method: int, optional
         :param method: Methodology to handle overlaps of traces. Defaults
@@ -1924,7 +1929,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def filter(self, type, **options):
         """
-        Filters the data of all traces in the Stream.
+        Filter the data of all traces in the Stream.
 
         :type type: str
         :param type: String that specifies which filter is applied (e.g.
@@ -1988,7 +1993,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def trigger(self, type, **options):
         """
-        Runs a triggering algorithm on all traces in the stream.
+        Run a triggering algorithm on all traces in the stream.
 
         :param type: String that specifies which trigger is applied (e.g.
             ``'recstalta'``). See the `Supported Trigger`_ section below for
@@ -2186,8 +2191,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def max(self):
         """
-        Method to get the values of the absolute maximum amplitudes of all
-        traces in the stream. See :meth:`~obspy.core.trace.Trace.max`.
+        Get the values of the absolute maximum amplitudes of all traces in the
+        stream. See :meth:`~obspy.core.trace.Trace.max`.
 
         :return: List of values of absolute maxima of all traces
 
@@ -2203,12 +2208,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return [tr.max() for tr in self]
 
-    def differentiate(self, type='gradient'):
+    @deprecated_keywords({'type': 'method'})
+    def differentiate(self, method='gradient'):
         """
-        Method to differentiate all traces with respect to time.
+        Differentiate all traces with respect to time.
 
-        :type type: str, optional
-        :param type: Method to use for differentiation. Defaults to
+        :type method: str, optional
+        :param method: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
 
@@ -2230,16 +2236,22 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             :func:`numpy.gradient`)
         """
         for tr in self:
-            tr.differentiate(type=type)
+            tr.differentiate(method=method)
         return self
 
-    def integrate(self, **options):
+    @deprecated_keywords({'type': 'method'})
+    def integrate(self, method='cumtrapz', **options):
         """
         Integrate all traces with respect to time.
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.integrate` method of
         :class:`~obspy.core.trace.Trace`.
+
+        :type method: str, optional
+        :param type: Method to use for integration. Defaults to
+            ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
+            further details.
 
         .. note::
 
@@ -2251,13 +2263,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.integrate(**options)
+            tr.integrate(method=method, **options)
         return self
 
     @raiseIfMasked
     def detrend(self, type='simple'):
         """
-        Method to remove a linear trend from all traces.
+        Remove a linear trend from all traces.
 
         :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
@@ -2291,7 +2303,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def taper(self, *args, **kwargs):
         """
-        Method to taper all Traces in Stream.
+        Taper all Traces in Stream.
 
         For details see the corresponding :meth:`~obspy.core.trace.Trace.taper`
         method of :class:`~obspy.core.trace.Trace`.
@@ -2309,7 +2321,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def interpolate(self, *args, **kwargs):
         """
-        Method to interpolate all Traces in a Stream.
+        Interpolate all Traces in a Stream.
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.interpolate` method of
@@ -2352,11 +2364,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def std(self):
         """
-        Method to get the standard deviations of amplitudes in all trace in the
-        stream.
+        Calculate standard deviations of all Traces in the Stream.
 
         Standard deviations are calculated by NumPy method
-        :meth:`~numpy.ndarray.std` on ``trace.data`` of every trace in the
+        :meth:`~numpy.ndarray.std` on ``trace.data`` for every trace in the
         stream.
 
         :return: List of standard deviations of all traces.
@@ -2374,7 +2385,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def normalize(self, global_max=False):
         """
-        Normalizes all trace in the stream.
+        Normalize all Traces in the Stream.
 
         By default all traces are normalized separately to their respective
         absolute maximum. By setting ``global_max=True`` all traces get
@@ -2449,7 +2460,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def rotate(self, method, back_azimuth=None, inclination=None):
         """
-        Convenience method for rotating stream objects.
+        Rotate stream objects.
 
         :type method: str
         :param method: Determines the rotation method.
@@ -2565,7 +2576,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def copy(self):
         """
-        Returns a deepcopy of the Stream object.
+        Return a deepcopy of the Stream object.
 
         :rtype: :class:`~obspy.core.stream.Stream`
         :return: Copy of current stream.
@@ -2602,7 +2613,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def clear(self):
         """
-        Clear trace list (convenient method).
+        Clear trace list (convenience method).
 
         Replaces Stream's trace list by an empty one creating an empty
         Stream object. Useful if there are references to the current
@@ -2739,7 +2750,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def split(self):
         """
-        Splits any trace containing gaps into contiguous unmasked traces.
+        Split any trace containing gaps into contiguous unmasked traces.
 
         :rtype: :class:`obspy.core.stream.Stream`
         :returns: Returns a new stream object containing only contiguous
@@ -2800,7 +2811,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
     def remove_response(self, *args, **kwargs):
         """
-        Method to deconvolve instrument response for all Traces in Stream.
+        Deconvolve instrument response for all Traces in Stream.
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.remove_response` method of
@@ -2844,7 +2855,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
 def isPickle(filename):  # @UnusedVariable
     """
-    Checks whether a file is a pickled ObsPy Stream file.
+    Check whether a file is a pickled ObsPy Stream file.
 
     :type filename: str
     :param filename: Name of the pickled ObsPy Stream file to be checked.
@@ -2872,7 +2883,7 @@ def isPickle(filename):  # @UnusedVariable
 
 def readPickle(filename, **kwargs):  # @UnusedVariable
     """
-    Reads and returns Stream from pickled ObsPy Stream file.
+    Read and return Stream from pickled ObsPy Stream file.
 
     .. warning::
         This function should NOT be called directly, it registers via the
@@ -2892,7 +2903,7 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
 
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     """
-    Writes a Python pickle of current stream.
+    Write a Python pickle of current stream.
 
     .. note::
         Writing into PICKLE format allows to store additional attributes

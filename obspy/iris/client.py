@@ -11,18 +11,19 @@ IRIS Web service client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
-
-from obspy import UTCDateTime, read, Stream, __version__
-from obspy.core.util import NamedTemporaryFile, loadtxt
+from future.utils import native_str
 
 import io
 import json
 import platform
+
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
+from obspy import Stream, UTCDateTime, __version__, read
+from obspy.core.util import NamedTemporaryFile, loadtxt
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,

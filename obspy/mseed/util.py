@@ -7,20 +7,25 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
-    ENDIAN, ENCODINGS, UNSUPPORTED_ENCODINGS, FIXED_HEADER_ACTIVITY_FLAGS, \
-    FIXED_HEADER_DATA_QUAL_FLAGS, FIXED_HEADER_IO_CLOCK_FLAGS
+import collections
+import ctypes as C
+import math
+import os
+import sys
+import warnings
+from datetime import datetime
+from struct import pack, unpack
+
+import numpy as np
+
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
-from struct import pack, unpack
-import sys
-import ctypes as C
-import numpy as np
-import math
-import warnings
-import os
-from datetime import datetime
-import collections
+from obspy.mseed.headers import (ENCODINGS, ENDIAN,
+                                 FIXED_HEADER_ACTIVITY_FLAGS,
+                                 FIXED_HEADER_DATA_QUAL_FLAGS,
+                                 FIXED_HEADER_IO_CLOCK_FLAGS, FRAME,
+                                 HPTMODULUS, SAMPLESIZES,
+                                 UNSUPPORTED_ENCODINGS, clibmseed)
 
 
 def getStartAndEndTime(file_or_file_object):
@@ -363,7 +368,10 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
-    fmt = lambda s: native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+
+    def fmt(s):
+        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+
     if endian is None:
         try:
             endian = ">"

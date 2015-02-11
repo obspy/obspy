@@ -3,17 +3,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import math
+import os
+import unittest
+import warnings
 from copy import deepcopy
-from numpy.ma import is_masked
-from obspy import UTCDateTime, Trace, read, Stream, __version__
+
+import numpy as np
+import numpy.ma as ma
+
+from obspy import Stream, Trace, UTCDateTime, __version__, read
 from obspy.core import Stats
 from obspy.core.compatibility import mock
 from obspy.xseed import Parser
-import math
-import numpy as np
-import unittest
-import warnings
-import os
 
 
 class TraceTestCase(unittest.TestCase):
@@ -377,8 +379,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(trace), 3000)
         self.assertEqual(trace[0], 0)
         self.assertEqual(trace[999], 999)
-        self.assertTrue(is_masked(trace[1000]))
-        self.assertTrue(is_masked(trace[1999]))
+        self.assertTrue(ma.is_masked(trace[1000]))
+        self.assertTrue(ma.is_masked(trace[1999]))
         self.assertEqual(trace[2000], 999)
         self.assertEqual(trace[2999], 0)
         # verify
@@ -1199,7 +1201,7 @@ class TraceTestCase(unittest.TestCase):
         data = 0.1 * t + 1.
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.differentiate(type='gradient')
+        tr.differentiate(method='gradient')
         np.testing.assert_array_almost_equal(tr.data, np.ones(11) * 0.1)
 
     def test_integrate(self):

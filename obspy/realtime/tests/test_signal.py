@@ -6,12 +6,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import unittest
+
+import numpy as np
+
 from obspy import read
 from obspy.core.stream import Stream
 from obspy.realtime import RtTrace, signal
-import numpy as np
-import os
-import unittest
 
 
 # some debug flags

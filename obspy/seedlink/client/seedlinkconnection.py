@@ -15,16 +15,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
+import logging
+import select
+import socket
+import time
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.seedlink.client.slnetstation import SLNetStation
 from obspy.seedlink.client.slstate import SLState
 from obspy.seedlink.seedlinkexception import SeedLinkException
 from obspy.seedlink.slpacket import SLPacket
-import select
-import socket
-import time
-import logging
-import io
 
 
 # default logger

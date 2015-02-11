@@ -20,12 +20,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import numpy as np
+
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
+from obspy.gse2.paz import readPaz
 from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
-from obspy.gse2.paz import readPaz
-import numpy as np
 
 
 def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,

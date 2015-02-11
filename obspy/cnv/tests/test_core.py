@@ -4,12 +4,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import os
 import inspect
+import os
 import unittest
+
 from obspy import readEvents
-from obspy.core.util import NamedTemporaryFile
 from obspy.cnv.core import write_CNV
+from obspy.core.util import NamedTemporaryFile
 
 
 class CNVTestCase(unittest.TestCase):

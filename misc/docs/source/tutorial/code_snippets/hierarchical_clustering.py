@@ -3,9 +3,9 @@ import urllib
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
+
 
 url = "http://examples.obspy.org/dissimilarities.npz"
 with io.BytesIO(urllib.urlopen(url).read()) as fh:

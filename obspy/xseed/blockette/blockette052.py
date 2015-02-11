@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, VariableString, FixedString, Float
+from obspy.xseed.fields import FixedString, Float, Integer, VariableString
 
 
 class Blockette052(Blockette):

@@ -15,20 +15,23 @@ from future.builtins import *  # NOQA
 
 import inspect
 import io
-from lxml import etree
 import math
 import os
 import warnings
 
+from lxml import etree
+
 import obspy
-from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
-    ClockDrift, SampleRate, Frequency, Angle
-from obspy.station.response import PolesZerosResponseStage, \
-    CoefficientsTypeResponseStage, ResponseListResponseStage, \
-    FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
-    CoefficientWithUncertainties, ResponseStage
-from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    ComplexWithUncertainties
+from obspy.core.util.obspy_types import (ComplexWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.response import (CoefficientsTypeResponseStage,
+                                    CoefficientWithUncertainties,
+                                    FilterCoefficient, FIRResponseStage,
+                                    PolesZerosResponseStage,
+                                    PolynomialResponseStage,
+                                    ResponseListResponseStage, ResponseStage)
+from obspy.station.util import (Angle, Azimuth, ClockDrift, Dip, Distance,
+                                Frequency, Latitude, Longitude, SampleRate)
 
 
 # Define some constants for writing StationXML files.
@@ -92,7 +95,8 @@ def read_StationXML(path_or_file_object):
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
 
-    _ns = lambda tagname: "{%s}%s" % (namespace, tagname)
+    def _ns(tagname):
+        return "{%s}%s" % (namespace, tagname)
 
     # Source and Created field must exist in a StationXML.
     source = root.find(_ns("Source")).text

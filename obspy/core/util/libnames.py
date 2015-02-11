@@ -11,11 +11,11 @@ Library name handling for ObsPy.
 # NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
 # installation time)
 import ctypes
-from distutils import sysconfig
 import os
 import platform
 import re
 import warnings
+from distutils import sysconfig
 
 
 def cleanse_pymodule_filename(filename):

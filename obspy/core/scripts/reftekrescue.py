@@ -41,13 +41,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import __version__
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
-import warnings
-import mmap
 import contextlib
+import mmap
 import os
-from binascii import b2a_hex, a2b_hex
+import warnings
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from binascii import a2b_hex, b2a_hex
+
+from obspy import __version__
+
 
 # The REFTEK documentation defines other packets too, but these seem to be the
 # only ones appearing in normal acquisition.

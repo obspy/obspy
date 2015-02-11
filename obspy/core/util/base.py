@@ -11,26 +11,30 @@ Base utilities and constants for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    from collections import OrderedDict
+from future.utils import native_str
 
-from obspy.core.util.misc import toIntOrZero
-from pkg_resources import iter_entry_points, load_entry_point
 import doctest
 import inspect
-import numpy as np
+import io
 import os
 import sys
 import tempfile
+
+with standard_library.hooks():
+    from collections import OrderedDict
+
+from pkg_resources import iter_entry_points, load_entry_point
+import numpy as np
+
+from obspy.core.util.misc import toIntOrZero
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk', 'ah', 'zmap', 'nlloc', 'pdas', 'cnv']
+                   'ndk', 'ah', 'zmap', 'nlloc', 'pdas', 'cnv', 'kinemetrics']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -39,14 +43,14 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH', 'PDAS']
+                            'AH', 'PDAS', 'KINEMETRICS_EVT']
 EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
-class NamedTemporaryFile(object):
+class NamedTemporaryFile(io.BufferedIOBase):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
@@ -81,13 +85,22 @@ class NamedTemporaryFile(object):
     >>> os.path.exists(tf.name)
     False
     """
-
     def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
         fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
         self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-    def __getattr__(self, attr):
-        return getattr(self._fileobj, attr)
+    def read(self, *args, **kwargs):
+        return self._fileobj.read(*args, **kwargs)
+
+    def write(self, *args, **kwargs):
+        return self._fileobj.write(*args, **kwargs)
+
+    def seek(self, *args, **kwargs):
+        self._fileobj.seek(*args, **kwargs)
+        return self._fileobj.tell()
+
+    def tell(self, *args, **kwargs):
+        return self._fileobj.tell(*args, **kwargs)
 
     def __enter__(self):
         return self

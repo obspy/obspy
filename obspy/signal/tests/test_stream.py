@@ -3,11 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
-from obspy import UTCDateTime, Stream, Trace, read
-import numpy as np
 import unittest
-from obspy.signal import bandpass, bandstop, lowpass, highpass
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.signal import bandpass, bandstop, highpass, lowpass
 
 
 class StreamTestCase(unittest.TestCase):

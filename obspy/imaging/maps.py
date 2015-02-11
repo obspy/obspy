@@ -13,20 +13,20 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
-from matplotlib.colorbar import Colorbar
-from matplotlib.cm import ScalarMappable
-from matplotlib.ticker import FormatStrFormatter, FuncFormatter, Formatter, \
-    MaxNLocator
-from matplotlib.dates import date2num, AutoDateLocator, \
-    AutoDateFormatter
 import datetime
-import numpy as np
 import warnings
-from obspy import UTCDateTime
-from obspy.core.util.base import getMatplotlibVersion, getBasemapVersion
 
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colorbar import Colorbar
+from matplotlib.colors import Normalize
+from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
+from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
+                               MaxNLocator)
+
+from obspy import UTCDateTime
+from obspy.core.util.base import getBasemapVersion, getMatplotlibVersion
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
@@ -36,7 +36,6 @@ else:
     import matplotlib.patheffects as PathEffects
     path_effect_kwargs = dict(
         path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
-
 
 BASEMAP_VERSION = getBasemapVersion()
 if BASEMAP_VERSION:

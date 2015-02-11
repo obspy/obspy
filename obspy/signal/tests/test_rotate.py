@@ -7,12 +7,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
-    rotate_LQT_ZNE
-import numpy as np
-import os
 import gzip
+import os
 import unittest
+
+import numpy as np
+
+from obspy.signal import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
+                          rotate_ZNE_LQT)
 
 
 class RotateTestCase(unittest.TestCase):

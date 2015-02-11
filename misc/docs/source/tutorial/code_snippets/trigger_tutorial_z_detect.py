@@ -1,5 +1,6 @@
 from obspy.core import read
-from obspy.signal.trigger import zDetect, plotTrigger
+from obspy.signal.trigger import plotTrigger, zDetect
+
 
 trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
 df = trace.stats.sampling_rate

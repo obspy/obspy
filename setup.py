@@ -43,24 +43,23 @@ except:
            "before installing ObsPy.")
     raise ImportError(msg)
 
+import ctypes
+import fnmatch
+import glob
+import inspect
+import os
+import platform
+import sys
 from distutils.dep_util import newer
 from distutils.util import change_root
 
-from numpy.distutils.core import setup, DistutilsSetupError
+from numpy.distutils.core import DistutilsSetupError, setup
+from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
 from numpy.distutils.command.build_ext import build_ext
 from numpy.distutils.command.install import install
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
-from numpy.distutils.ccompiler import get_default_compiler
-
-import ctypes
-import glob
-import inspect
-import fnmatch
-import os
-import platform
-import sys
 
 
 # Directory of the current file in the (hopefully) most reliable way
@@ -96,8 +95,8 @@ KEYWORDS = [
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
     'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
     'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
@@ -148,6 +147,7 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
+        'KINEMETRICS_EVT = obspy.kinemetrics.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
@@ -186,6 +186,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
+    ],
+    'obspy.plugin.waveform.KINEMETRICS_EVT': [
+        'isFormat = obspy.kinemetrics.core:is_evt',
+        'readFormat = obspy.kinemetrics.core:read_evt',
     ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',

@@ -14,19 +14,21 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
-import numpy as np
-from math import pi
-from matplotlib import rcParams
-from obspy import UTCDateTime
-from obspy.signal.invsim import evalresp
-from obspy.station import read_inventory
-from obspy.xseed import Parser
-from obspy.station.response import _pitick2latex
 import os
 import unittest
-from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
-from obspy.core.util.misc import CatchOutput
 import warnings
+from math import pi
+
+import numpy as np
+from matplotlib import rcParams
+
+from obspy import UTCDateTime
+from obspy.core.util.misc import CatchOutput
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.signal.invsim import evalresp
+from obspy.station import read_inventory
+from obspy.station.response import _pitick2latex
+from obspy.xseed import Parser
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -119,10 +121,10 @@ class ResponseTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        # Bug in matplotlib 1.4.0 - 1.4.2:
+        # Bug in matplotlib 1.4.0 - 1.4.x:
         # See https://github.com/matplotlib/matplotlib/issues/4012
         reltol = 1.0
-        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 4, 2]:
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 5, 0]:
             reltol = 2.0
 
         resp = read_inventory()[0][0][0].response

@@ -28,21 +28,24 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 from future import standard_library
-with standard_library.hooks():
-    import http.server
 
-from obspy import __version__
-from obspy.db.db import Base
-from obspy.db.indexer import worker, WaveformFileCrawler
-from obspy.db.util import parseMappingData
-from obspy.core.util.base import _DeprecatedArgumentAction
-from argparse import ArgumentParser, SUPPRESS
-from sqlalchemy import create_engine
-from sqlalchemy.orm.session import sessionmaker
 import logging
 import multiprocessing
 import select
 import sys
+from argparse import SUPPRESS, ArgumentParser
+
+with standard_library.hooks():
+    import http.server
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm.session import sessionmaker
+
+from obspy import __version__
+from obspy.core.util.base import _DeprecatedArgumentAction
+from obspy.db.db import Base
+from obspy.db.indexer import WaveformFileCrawler, worker
+from obspy.db.util import parseMappingData
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):

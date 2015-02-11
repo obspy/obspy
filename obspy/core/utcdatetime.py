@@ -14,8 +14,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import datetime
-import time
 import math
+import time
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)

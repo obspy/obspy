@@ -21,21 +21,22 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from obspy import UTCDateTime, Stream, Trace
-from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
-    locations2degrees
-from obspy.core.util.decorator import deprecated_keywords
-
+import io
+import warnings
 from copy import copy
 from datetime import datetime
-import io
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
-import matplotlib.patches as patches
+
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.path import Path
 import scipy.signal as signal
-import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.preview import mergePreviews
+from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
+                             locations2degrees)
+from obspy.core.util.decorator import deprecated_keywords
 
 
 class WaveformPlotting(object):

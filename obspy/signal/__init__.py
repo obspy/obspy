@@ -192,24 +192,25 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal.filter import bandpass, bandstop, lowpass, highpass, \
-    remezFIR, lowpassFIR, envelope, integerDecimation
-from obspy.signal.rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
-    rotate_LQT_ZNE
-from obspy.signal.invsim import cosTaper, cornFreq2Paz, pazToFreqResp, \
-    seisSim, specInv, estimateMagnitude
-from obspy.signal.cpxtrace import normEnvelope, centroid, instFreq, instBwith
-from obspy.signal.util import utlGeoKm, utlLonLat
+from obspy.signal.cpxtrace import centroid, instBwith, instFreq, normEnvelope
 from obspy.signal.cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
-from obspy.signal.freqattributes import cfrequency, bwith, domperiod, logcep
+from obspy.signal.filter import (bandpass, bandstop, envelope, highpass,
+                                 integerDecimation, lowpass, lowpassFIR,
+                                 remezFIR)
+from obspy.signal.freqattributes import bwith, cfrequency, domperiod, logcep
 from obspy.signal.hoctavbands import sonogram
-from obspy.signal.polarization import eigval
-from obspy.signal.spectral_estimation import psd, PPSD
+from obspy.signal.invsim import (cornFreq2Paz, cosTaper, estimateMagnitude,
+                                 pazToFreqResp, seisSim, specInv)
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothing
-from obspy.signal.trigger import recSTALTA, recSTALTAPy, carlSTATrig, \
-    classicSTALTA, delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
-    coincidenceTrigger, classicSTALTAPy
-
+from obspy.signal.polarization import eigval
+from obspy.signal.rotate import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
+                                 rotate_ZNE_LQT)
+from obspy.signal.spectral_estimation import PPSD, psd
+from obspy.signal.trigger import (arPick, carlSTATrig, classicSTALTA,
+                                  classicSTALTAPy, coincidenceTrigger,
+                                  delayedSTALTA, pkBaer, recSTALTA,
+                                  recSTALTAPy, triggerOnset, zDetect)
+from obspy.signal.util import utlGeoKm, utlLonLat
 
 if __name__ == '__main__':
     import doctest

@@ -6,18 +6,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import unittest
+from struct import unpack
+
 import numpy as np
+
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.segy.core import isSEGY, readSEGY, writeSEGY, SEGYCoreWritingError
-from obspy.segy.core import SEGYSampleIntervalError
-from obspy.segy.core import isSU, readSU, writeSU
-from obspy.segy.segy import SEGYError
+from obspy.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
+                             isSEGY, isSU, readSEGY, readSU, writeSEGY,
+                             writeSU)
 from obspy.segy.segy import readSEGY as readSEGYInternal
-from obspy.segy.tests.header import FILES, DTYPES
-import os
-from struct import unpack
-import unittest
+from obspy.segy.segy import SEGYError
+from obspy.segy.tests.header import DTYPES, FILES
 
 
 class SEGYCoreTestCase(unittest.TestCase):

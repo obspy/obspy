@@ -7,13 +7,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import bandpass, lowpass, highpass
-from obspy.signal.filter import envelope, lowpassCheby2
+import gzip
 import os
 import unittest
-import gzip
+
 import numpy as np
 import scipy.signal as sg
+
+from obspy.signal import bandpass, highpass, lowpass
+from obspy.signal.filter import envelope, lowpassCheby2
 
 
 class FilterTestCase(unittest.TestCase):

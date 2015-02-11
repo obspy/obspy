@@ -3,14 +3,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from ctypes import CDLL
-from ctypes.util import find_library
-from obspy.core.util.misc import CatchOutput
 import os
 import platform
 import sys
 import tempfile
 import unittest
+from ctypes import CDLL
+from ctypes.util import find_library
+
+from obspy.core.util.misc import CatchOutput
 
 
 class UtilMiscTestCase(unittest.TestCase):

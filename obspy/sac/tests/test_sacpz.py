@@ -6,8 +6,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import unittest
 import os
+import unittest
+
 from obspy import read_inventory
 from obspy.core.util import NamedTemporaryFile
 

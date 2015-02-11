@@ -28,6 +28,7 @@ The functionality is provided through the following packages:
    obspy.css
    obspy.datamark
    obspy.gse2
+   obspy.kinemetrics
    obspy.mseed
    obspy.pdas
    obspy.sac

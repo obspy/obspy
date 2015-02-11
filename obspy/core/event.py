@@ -22,36 +22,40 @@ format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.request
+from future.utils import native_str
 
-from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
-    EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
-    EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
-    AmplitudeCategory, AmplitudeUnit, DataUsedWaveType, MTInversionType, \
-    SourceTimeFunctionType, MomentTensorCategory
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import uncompressFile, _readFromPlugin, \
-    NamedTemporaryFile, AttribDict
-from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import deprecated_keywords, deprecated
-
-
-import io
-from pkg_resources import load_entry_point
-from uuid import uuid4
-from copy import deepcopy
 import collections
 import copy
 import glob
 import inspect
+import io
 import os
 import re
 import warnings
 import weakref
+from copy import deepcopy
+from uuid import uuid4
+
+with standard_library.hooks():
+    import urllib.request
+
+from pkg_resources import load_entry_point
+
+from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
+                                     DataUsedWaveType, EvaluationMode,
+                                     EvaluationStatus, EventDescriptionType,
+                                     EventType, EventTypeCertainty,
+                                     MomentTensorCategory, MTInversionType,
+                                     OriginDepthType, OriginType,
+                                     OriginUncertaintyDescription, PickOnset,
+                                     PickPolarity, SourceTimeFunctionType)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import (AttribDict, NamedTemporaryFile, _readFromPlugin,
+                             uncompressFile)
+from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util.decorator import (deprecated, deprecated_keywords,
+                                       map_example_filename)
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']

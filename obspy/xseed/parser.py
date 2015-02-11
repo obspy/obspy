@@ -11,10 +11,8 @@ Main module containing XML-SEED parser.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.request  # @UnresolvedImport
+from future.utils import native_str
 
 import copy
 import datetime
@@ -24,14 +22,18 @@ import os
 import warnings
 import zipfile
 
-from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+with standard_library.hooks():
+    import urllib.request  # @UnresolvedImport
+
+from lxml.etree import parse as xmlparse
+from lxml.etree import Element, SubElement, tostring
 import numpy as np
 
-from obspy import Trace, Stream, __version__
+from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
 from obspy.xseed import DEFAULT_XSEED_VERSION, blockette
-from obspy.xseed.utils import SEEDParserException, toTag, IGNORE_ATTR
+from obspy.xseed.utils import IGNORE_ATTR, SEEDParserException, toTag
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -314,9 +316,11 @@ class Parser(object):
         volume, abbreviations, stations = self._createBlockettes11and12()
         # Delete Blockette 11 again.
         self._deleteBlockettes11and12()
+
         # Finally write the actual SEED String.
-        fmt_seed = lambda cnt, i: \
-            ('%06i' % cnt).encode('ascii', 'strict') + i
+        def fmt_seed(cnt, i):
+            return ('%06i' % cnt).encode('ascii', 'strict') + i
+
         for _i in volume:
             seed_string += fmt_seed(cur_count, _i)
             cur_count += 1
@@ -518,8 +522,8 @@ class Parser(object):
                     label = 'transfer_function_types'
                 # Check if Laplace transform
                 if getattr(resp, label) not in ["A", "B"]:
-                    msg = 'Only supporting Laplace (rad/sec) or Analog (Hz)' + \
-                          'transform response type. ' + \
+                    msg = 'Only the Laplace (rad/sec) or Analog (Hz) ' + \
+                          'transform response types are supported. ' + \
                           'Skipping other response information.'
                     warnings.warn(msg, UserWarning)
                     continue
@@ -543,7 +547,9 @@ class Parser(object):
                     data['zeros'].append(z)
                 # force conversion from Hz to Laplace
                 if getattr(resp, label) == "B":
-                    x2pi = lambda x: (x * 2 * np.pi)
+                    def x2pi(x):
+                        return x * 2 * np.pi
+
                     data['poles'] = list(map(x2pi, data['poles']))
                     data['zeros'] = list(map(x2pi, data['zeros']))
                     data['gain'] = resp.A0_normalization_factor * \

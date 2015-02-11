@@ -7,14 +7,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import read
-from obspy.core import UTCDateTime, Trace, Stream
-from obspy.core.util import NamedTemporaryFile
-from obspy.css.core import readCSS, isCSS
-import os
 import gzip
-import numpy as np
+import os
 import unittest
+
+import numpy as np
+
+from obspy import read
+from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core.util import NamedTemporaryFile
+from obspy.css.core import isCSS, readCSS
 
 
 class CoreTestCase(unittest.TestCase):

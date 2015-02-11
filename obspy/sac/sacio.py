@@ -2,24 +2,12 @@
 # ------------------------------------------------------------------
 # Filename: sacio.py
 #  Purpose: Read & Write Seismograms, Format SAC.
-#   Author: Yannik Behr, C. J. Ammon's, C. Satriano
+#   Author: Yannik Behr, C. J. Ammon's, C. Satriano, L. Krischer
 #    Email: yannik.behr@vuw.ac.nz
 #
-# Copyright (C) 2008-2014 Yannik Behr, C. J. Ammon's, C. Satriano
+# Copyright (C) 2008-2015 Yannik Behr, C. J. Ammon's, C. Satriano,
+#                         L. Krischer
 # ------------------------------------------------------------------
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
-
-from obspy import UTCDateTime, Trace
-from obspy.core.compatibility import frombuffer
-from obspy.core.util import gps2DistAzimuth, AttribDict
-from obspy.core import compatibility
-import numpy as np
-import os
-import time
-import warnings
 """
 Low-level module internally used for handling SAC files
 
@@ -31,6 +19,20 @@ An object-oriented version of C. J. Ammon's SAC I/O module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
+import time
+import warnings
+
+import numpy as np
+
+from obspy import Trace, UTCDateTime
+from obspy.core.compatibility import frombuffer
+from obspy.core.util import AttribDict, gps2DistAzimuth
 
 
 # we put here everything but the time, they are going to stats.starttime
@@ -109,35 +111,6 @@ class SacIOError(Exception):
     Raised if the given SAC file can't be read.
     """
     pass
-
-
-def _isText(filename, blocksize=512):
-    """
-    Check if it is a text or a binary file.
-    """
-    # This should  always be true if a file is a text-file and only true for a
-    # binary file in rare occasions (see Recipe 173220 found on
-    # http://code.activestate.com/)
-    text_characters = str("").join(list(map(chr, range(32, 127))) +
-                                   list("\n\r\t\b")).encode('ascii', 'ignore')
-    _null_trans = compatibility.maketrans(b"", b"")
-    with open(filename, 'rb') as fp:
-        s = fp.read(blocksize)
-    if b"\0" in s:
-        return False
-
-    if not s:  # Empty files are considered text
-        return True
-
-    # Get the non-text characters (maps a character to itself then
-    # use the 'remove' option to get rid of the text characters.)
-    t = s.translate(_null_trans, text_characters)
-
-    # If more than 30% non-text characters, then
-    # this is considered a binary file
-    if len(t) / len(s) > 0.30:
-        return 0
-    return True
 
 
 class SacIO(object):
@@ -489,12 +462,13 @@ class SacIO(object):
         else:
             raise SacError("Cannot find header entry for: " + item)
 
-    def IsSACfile(self, name, fsize=True, lenchk=False):
+    def IsSACfile(self, fh, fsize=True, lenchk=False):
         """
         Test for a valid SAC file using arrays.
-
-        :param f: filename (Sac binary).
         """
+        cur_pos = fh.tell()
+        length = fh.seek(0, 2)
+        fh.seek(cur_pos, 0)
         try:
             npts = self.GetHvalue('npts')
         except:
@@ -503,13 +477,12 @@ class SacIO(object):
             raise SacError("Number of points in header and " +
                            "length of trace inconsistent!")
         if fsize:
-            st = os.stat(name)  # file's size = st[6]
-            sizecheck = st[6] - (632 + 4 * int(npts))
+            sizecheck = length - (632 + 4 * int(npts))
             # size check info
             if sizecheck != 0:
-                msg = "File-size and theoretical size are inconsistent: %s\n" \
+                msg = "File-size and theoretical size are inconsistent.\n" \
                       "Check that headers are consistent with time series."
-                raise SacError(msg % name)
+                raise SacError(msg)
         # get the SAC file version number
         version = self.GetHvalue('nvhdr')
         if version < 0 or version > 20:
@@ -517,26 +490,22 @@ class SacIO(object):
         if self.GetHvalue('delta') <= 0:
             raise SacError("Delta < 0 is not a valid header entry!")
 
-    def ReadSacHeader(self, fname):
+    def ReadSacHeader(self, fh):
         """
         Reads only the header portion of a binary SAC-file.
 
-        :param f: filename (SAC binary).
+        :param fh: file or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
-        >>> tr.ReadSacHeader('test.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr.ReadSacHeader(fh) # doctest: +SKIP
 
         This is equivalent to:
 
-        >>> tr = SacIO('test.sac', headonly=True)  # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO(fh, headonly=True)  # doctest: +SKIP
         """
-        # check if file exists
-        try:
-            # open the file
-            f = open(fname, 'rb')
-        except IOError:
-            raise SacIOError("No such file: " + fname)
         # --------------------------------------------------------------
         # parse the header
         #
@@ -544,30 +513,28 @@ class SacIO(object):
         #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = frombuffer(f.read(4 * 70), dtype=native_str('<f4'))
-        self.hi = frombuffer(f.read(4 * 40), dtype=native_str('<i4'))
+        self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('<f4'))
+        self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('<i4'))
         # read in the char values
-        self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
+        self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
-            f.close()
             raise SacIOError("Cannot read all header values")
         try:
-            self.IsSACfile(fname)
+            self.IsSACfile(fh)
         except SacError as e:
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
-                f.seek(0, 0)
-                self.hf = frombuffer(f.read(4 * 70), dtype=native_str('>f4'))
-                self.hi = frombuffer(f.read(4 * 40), dtype=native_str('>i4'))
+                fh.seek(0, 0)
+                self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('>f4'))
+                self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
-                self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
-                self.IsSACfile(fname)
+                self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
+                self.IsSACfile(fh)
                 self.byteorder = 'big'
             except SacError as e:
                 self.hf = self.hi = self.hs = None
-                f.close()
                 raise SacError(e)
         try:
             self._get_date()
@@ -578,66 +545,55 @@ class SacIO(object):
                 self._get_dist()
             except SacError:
                 pass
-        f.close()
 
-    def WriteSacHeader(self, fname):
+    def WriteSacHeader(self, fh):
         """
         Writes an updated header to an
         existing binary SAC-file.
 
-        :param f: filename (SAC binary).
+        :param fh: open file or file-like buffer
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
-        >>> u = SacIO('test2.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO(fh) # doctest: +SKIP
+        >>> with open('test2.sac', 'wb') as fh:
+        ...     tr.WriteSacBinary(fh) # doctest: +SKIP
+        >>> with open('test2.sac', 'rb') as fh:
+        ...     u = SacIO(fh) # doctest: +SKIP
         >>> u.SetHvalue('kevnm','hullahulla') # doctest: +SKIP
-        >>> u.WriteSacHeader('test2.sac') # doctest: +SKIP
+        >>> with open('test2.sac', 'rb+') as fh:
+        ...     u.WriteSacHeader(fh) # doctest: +SKIP
         >>> u.GetHvalueFromFile('test2.sac',"kevnm") # doctest: +SKIP
         'hullahulla      '
         """
-        # --------------------------------------------------------------
-        # open the file
-        #
+        fh.seek(0, 0)  # set pointer to the file beginning
         try:
-            os.path.exists(fname)
-        except IOError:
-            warnings.warn("No such file: " + fname, category=Warning)
-        else:
-            f = open(fname, 'rb+')  # open file for modification
-            f.seek(0, 0)  # set pointer to the file beginning
-            try:
-                # write the header
-                f.write(self.hf.data)
-                f.write(self.hi.data)
-                f.write(self.hs.data)
-            except Exception as e:
-                f.close()
-                raise SacError("Cannot write header to file: " + fname, e)
-        f.close()
+            # write the header
+            fh.write(self.hf.data)
+            fh.write(self.hi.data)
+            fh.write(self.hs.data)
+        except Exception:
+            raise SacError("Cannot write header.")
 
-    def ReadSacFile(self, fname, fsize=True):
+    def ReadSacFile(self, fh, fsize=True):
         """
         Read read in the header and data in a SAC file
 
         The header is split into three arrays - floats, ints, and strings and
         the data points are returned in the array seis
 
-        :param f: filename (SAC binary)
+        :param fh: file or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
-        >>> tr.ReadSacFile('test.sac') # doctest: +SKIP
+        >>> with open('test.sac') as fh:
+        ...     tr.ReadSacFile(fh)  # doctest: +SKIP
 
         This is equivalent to:
 
-        >>> tr = SacIO('test.sac')  # doctest: +SKIP
+        >>> with open('test.sac') as fh:
+        ...     tr = SacIO(fh)  # doctest: +SKIP
         """
-        try:
-            # open the file
-            f = open(fname, 'rb')
-        except IOError:
-            raise SacIOError("No such file: " + fname)
         # --------------------------------------------------------------
         # parse the header
         #
@@ -645,44 +601,42 @@ class SacIO(object):
         #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = frombuffer(f.read(4 * 70), dtype=native_str('<f4'))
-        self.hi = frombuffer(f.read(4 * 40), dtype=native_str('<i4'))
+        self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('<f4'))
+        self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('<i4'))
         # read in the char values
-        self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
+        self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
-            f.close()
+            fh.close()
             raise SacIOError("Cannot read all header values")
         # only continue if it is a SAC file
         try:
-            self.IsSACfile(fname, fsize)
+            self.IsSACfile(fh, fsize)
         except SacError:
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
-                f.seek(0, 0)
-                self.hf = frombuffer(f.read(4 * 70), dtype=native_str('>f4'))
-                self.hi = frombuffer(f.read(4 * 40), dtype=native_str('>i4'))
+                fh.seek(0, 0)
+                self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('>f4'))
+                self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
-                self.hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
-                self.IsSACfile(fname, fsize)
+                self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
+                self.IsSACfile(fh, fsize)
                 self.byteorder = 'big'
             except SacError as e:
-                f.close()
                 raise SacError(e)
         # --------------------------------------------------------------
         # read in the seismogram points
         # --------------------------------------------------------------
         # you just have to know it's in the 10th place
         # actually, it's in the SAC manual
-        npts = self.hi[9]
+        npts = int(self.hi[9])
         if self.byteorder == 'big':
-            self.seis = frombuffer(f.read(npts * 4), dtype=native_str('>f4'))
+            self.seis = frombuffer(fh.read(npts * 4), dtype=native_str('>f4'))
         else:
-            self.seis = frombuffer(f.read(npts * 4), dtype=native_str('<f4'))
+            self.seis = frombuffer(fh.read(npts * 4), dtype=native_str('<f4'))
         if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
-            f.close()
             raise SacIOError("Cannot read all data points")
         try:
             self._get_date()
@@ -693,13 +647,12 @@ class SacIO(object):
                 self._get_dist()
             except SacError:
                 pass
-        f.close()
 
-    def ReadSacXY(self, fname):
+    def ReadSacXY(self, fh):
         """
         Read SAC XY files (ascii)
 
-        :param f: filename (SAC ascii).
+        :param f: File or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
@@ -714,15 +667,11 @@ class SacIO(object):
         Reading only the header portion of alphanumeric SAC-files is currently
         not supported.
         """
-        # open the file
-        try:
-            with open(fname, 'rb') as fh:
-                data = fh.read()
-        except IOError:
-            raise SacIOError("No such file: " + fname)
+        data = bytes(fh.read())
+
         data = [_i.rstrip(b"\n\r") for _i in data.splitlines(True)]
         if len(data) < 14 + 8 + 8:
-            raise SacIOError("%s is not a valid SAC file:" % fname)
+            raise SacIOError("Not a valid SAC file.")
 
         # --------------------------------------------------------------
         # parse the header
@@ -760,11 +709,11 @@ class SacIO(object):
             except SacError:
                 pass
 
-    def ReadSacXYHeader(self, fname):
+    def ReadSacXYHeader(self, fh):
         """
         Read SAC XY files (ascii)
 
-        :param f: filename (SAC ascii).
+        :param fh: open file or file like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
@@ -779,15 +728,11 @@ class SacIO(object):
         Reading only the header portion of alphanumeric SAC-files is currently
         not supported.
         """
-        # open the file
-        try:
-            with open(fname, 'rb') as fh:
-                data = fh.read()
-        except IOError:
-            raise SacIOError("No such file: " + fname)
+        data = bytes(fh.read())
+
         data = [_i.rstrip(b"\n\r") for _i in data.splitlines(True)]
         if len(data) < 14 + 8 + 8:
-            raise SacIOError("%s is not a valid SAC file:" % fname)
+            raise SacIOError("Not a valid SAC file")
 
         # --------------------------------------------------------------
         # parse the header
@@ -811,7 +756,7 @@ class SacIO(object):
             self.hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'),
                                              count=3)
         try:
-            self.IsSACfile(fname, fsize=False)
+            self.IsSACfile(fh, fsize=False)
         except SacError as e:
             raise SacError(e)
         try:
@@ -852,77 +797,68 @@ class SacIO(object):
                 pass
         return
 
-    def WriteSacXY(self, ofname):
+    def WriteSacXY(self, fh):
         """
         Write SAC XY file (ascii)
 
-        :param f: filename (SAC ascii)
+        :param fh: open file or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.WriteSacXY('test2.sac') # doctest: +SKIP
-        >>> tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO(fh) # doctest: +SKIP
+        >>> with open('test2.sac', 'wb') as fh:
+        ...     tr.WriteSacXY(fh) # doctest: +SKIP
+        >>> with open('test2.sac', 'wb') as fh:
+        ...     tr.IsValidXYSacFile(fh) # doctest: +SKIP
         True
         """
-        try:
-            f = open(ofname, 'wb')
-        except IOError:
-            raise SacIOError("Cannot open file: " + ofname)
         # header
         try:
-            np.savetxt(f, np.reshape(self.hf, (14, 5)),
+            np.savetxt(fh, np.reshape(self.hf, (14, 5)),
                        fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-            np.savetxt(f, np.reshape(self.hi, (8, 5)),
+            np.savetxt(fh, np.reshape(self.hi, (8, 5)),
                        fmt=native_str("%10d%10d%10d%10d%10d"))
             for i in range(0, 24, 3):
-                f.write(self.hs[i:i + 3].data)
-                f.write(b'\n')
-        except:
-            f.close()
-            raise SacIOError("Cannot write header values: " + ofname)
+                fh.write(self.hs[i:i + 3].data)
+                fh.write(b'\n')
+        except Exception as e:
+            raise SacIOError("Cannot write header values.", e)
         # traces
         npts = self.GetHvalue('npts')
         if npts == -12345 or npts == 0:
-            f.close()
             return
         try:
             rows = npts // 5
-            np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
+            np.savetxt(fh, np.reshape(self.seis[0:5 * rows], (rows, 5)),
                        fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-            np.savetxt(f, self.seis[5 * rows:], delimiter=b'\t')
-        except:
-            f.close()
-            raise SacIOError("Cannot write trace values: " + ofname)
-        f.close()
+            np.savetxt(fh, self.seis[5 * rows:], delimiter=b'\t')
+        except Exception as e:
+            raise SacIOError("Cannot write trace values.", e)
 
-    def WriteSacBinary(self, ofname):
+    def WriteSacBinary(self, fh):
         """
         Write a SAC binary file using the head arrays and array seis.
 
-        :param f: filename (SAC binary).
+        :param fh: open file or file-like object.
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
+        >>> with open('test.sac', 'rb') as fh:
+        ...     tr = SacIO(fh) # doctest: +SKIP
+        >>> wiht open('test2.sac', 'wb') as fh:
+        ...     tr.WriteSacBinary(fh) # doctest: +SKIP
+        >>> import os
         >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
         True
         """
         try:
-            f = open(ofname, 'wb+')
-        except IOError:
-            raise SacIOError("Cannot open file: " + ofname)
-        try:
             self._chck_header()
-            f.write(self.hf.data)
-            f.write(self.hi.data)
-            f.write(self.hs.data)
-            f.write(self.seis.data)
+            fh.write(self.hf.data)
+            fh.write(self.hi.data)
+            fh.write(self.hs.data)
+            fh.write(self.seis.data)
         except Exception as e:
-            f.close()
             msg = "Cannot write SAC-buffer to file: "
-            raise SacIOError(msg, ofname, e)
-
-        f.close()
+            raise SacIOError(msg, e)
 
     def PrintIValue(self, label='=', value=-12345):
         """
@@ -1043,9 +979,9 @@ class SacIO(object):
         #
         #  Read in the Header
         #
-        self.ReadSacHeader(thePath)
-        #
-        return(self.GetHvalue(theItem))
+        with open(thePath, "rb") as fh:
+            self.ReadSacHeader(fh)
+            return(self.GetHvalue(theItem))
 
     def SetHvalueInFile(self, thePath, theItem, theValue):
         """
@@ -1067,13 +1003,16 @@ class SacIO(object):
         >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
         'blub'
         """
-        #
-        #  Read in the Header
-        #
-        self.ReadSacHeader(thePath)
-        #
+        # Read the header.
+        with open(thePath, "rb") as fh:
+            self.ReadSacHeader(fh)
+
+        # Modify it.
         self.SetHvalue(theItem, theValue)
-        self.WriteSacHeader(thePath)
+
+        # Write it.
+        with open(thePath, "rb+") as fh:
+            self.WriteSacHeader(fh)
 
     def IsValidSacFile(self, thePath):
         """
@@ -1100,11 +1039,11 @@ class SacIO(object):
         else:
             return True
 
-    def IsValidXYSacFile(self, filename):
+    def IsValidXYSacFile(self, fh):
         """
         Quick test for a valid SAC ascii file.
 
-        :param file: filename (SAC ascii)
+        :param file: file or file-like object.
         :rtype: boolean (True or False)
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
@@ -1113,16 +1052,10 @@ class SacIO(object):
         >>> SacIO().IsValidXYSacFile('test.sac') # doctest: +SKIP
         False
         """
-        #
-        #  Read in the Header
-        #
-        if _isText(filename):
-            try:
-                self.ReadSacXY(filename)
-            except:
-                return False
+        try:
+            self.ReadSacXY(fh)
             return True
-        else:
+        except:
             return False
 
     def _get_date(self):
@@ -1492,6 +1425,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> from obspy import Trace
+    >>> import os
     >>> tr = Trace()
     >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
     ...                         'RESP.NZ.CRLZ.10.HHZ')

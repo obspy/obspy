@@ -8,7 +8,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import unittest
+
 import numpy as np
+
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 

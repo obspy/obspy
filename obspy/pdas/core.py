@@ -13,7 +13,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from obspy.core import UTCDateTime, Stream, Trace
+
+from obspy.core import Stream, Trace, UTCDateTime
 
 
 def isPDAS(filename):

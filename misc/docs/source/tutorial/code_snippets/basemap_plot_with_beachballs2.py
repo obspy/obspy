@@ -1,7 +1,9 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+
 from obspy.imaging.beachball import Beach
+
 
 m = Basemap(projection='cyl', lon_0=142.36929, lat_0=38.3215,
             resolution='c')

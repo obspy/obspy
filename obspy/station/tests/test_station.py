@@ -13,13 +13,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.station import read_inventory
 import os
-from matplotlib import rcParams
-import numpy as np
 import unittest
 import warnings
+
+import numpy as np
+from matplotlib import rcParams
+
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.station import read_inventory
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -41,10 +43,10 @@ class StationTestCase(unittest.TestCase):
         """
         Tests the response plot.
         """
-        # Bug in matplotlib 1.4.0 - 1.4.2:
+        # Bug in matplotlib 1.4.0 - 1.4.x:
         # See https://github.com/matplotlib/matplotlib/issues/4012
         reltol = 1.0
-        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 4, 2]:
+        if [1, 4, 0] <= MATPLOTLIB_VERSION <= [1, 5, 0]:
             reltol = 2.0
 
         sta = read_inventory()[0][0]

@@ -4,14 +4,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import inspect
 import os
 import re
-import inspect
 import unittest
-from obspy import readEvents, UTCDateTime
-from obspy.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
-from obspy.core.util import getExampleFile, NamedTemporaryFile
+
+from obspy import UTCDateTime, readEvents
+from obspy.core.util import NamedTemporaryFile, getExampleFile
 from obspy.core.util.testing import compare_xml_strings, remove_unique_IDs
+from obspy.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
 
 
 def _mock_coordinate_converter(x, y, z):

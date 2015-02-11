@@ -30,9 +30,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
-import matplotlib.pyplot as plt
-from matplotlib import patches, collections, transforms, path as mplpath
+
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import path as mplpath
+from matplotlib import collections, patches, transforms
 
 
 D2R = np.pi / 180

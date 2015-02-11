@@ -28,12 +28,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import UTCDateTime
-from obspy.core.util.libnames import _load_CDLL
 import ctypes as C
 import doctest
-import numpy as np
 import warnings
+
+import numpy as np
+
+from obspy import UTCDateTime
+from obspy.core.util.libnames import _load_CDLL
+
 
 # Import shared libgse2
 clibgse2 = _load_CDLL("gse2")
@@ -93,7 +96,9 @@ class GSEUtiError(Exception):
 #  9.49e-02   1.000    M24  -1.0 -0.0
 # 0123456789012345678901234567890123456789012345678901234567890123456789
 # 70        80        90        100
-_str = lambda s: s.strip()
+def _str(s):
+    return s.strip()
+
 GSE2_FIELDS = [
     # local used date fields
     ('year', 5, 9, int),

@@ -12,17 +12,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from contextlib import contextmanager
-import os
-import sys
 import inspect
-from subprocess import Popen, PIPE
-import warnings
 import itertools
-import tempfile
-import shutil
-import numpy as np
 import math
+import os
+import platform
+import shutil
+import sys
+import tempfile
+import warnings
+from contextlib import contextmanager
+from subprocess import PIPE, Popen
+
+import numpy as np
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -433,6 +435,10 @@ def CatchOutput():
                 os.close(stderr_copy)
                 tmp_stderr.seek(0)
                 out.stderr = tmp_stderr.read()
+
+                if platform.system() == "Windows":
+                    out.stdout = out.stdout.replace(b'\r', b'')
+                    out.stderr = out.stderr.replace(b'\r', b'')
 
                 if raised:
                     raise SystemExit(out.stderr)

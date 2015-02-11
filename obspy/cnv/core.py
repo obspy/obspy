@@ -12,8 +12,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from bisect import bisect_right
 import warnings
+from bisect import bisect_right
 
 
 def write_CNV(catalog, filename, phase_mapping=None, ifx_list=None,

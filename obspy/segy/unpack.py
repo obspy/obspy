@@ -16,13 +16,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import ctypes as C
+import os
+import sys
+import warnings
+
+import numpy as np
+
 from obspy.segy.util import clibsegy
 
-import ctypes as C
-import numpy as np
-import sys
-import os
-import warnings
 
 # Get the system byte order.
 BYTEORDER = sys.byteorder

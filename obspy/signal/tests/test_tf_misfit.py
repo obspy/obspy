@@ -7,12 +7,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
-    tfpg, teg, feg, fpg, tpg, tfeg, tpm
-from scipy.signal import hilbert
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+from scipy.signal import hilbert
+
+from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
+                                    tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
 
 
 class TfTestCase(unittest.TestCase):
@@ -43,10 +45,12 @@ class TfTestCase(unittest.TestCase):
         t = np.linspace(0., tmax, npts)
         f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-        H = lambda t: (np.sign(t) + 1) / 2
+        def H(t):
+            return (np.sign(t) + 1) / 2
 
-        S1 = lambda t: A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
-            np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
+        def S1(t):
+            return A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
+                np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         # generate analytical signal (hilbert transform) and add phase shift
         s1h = hilbert(S1(t))
@@ -54,8 +58,9 @@ class TfTestCase(unittest.TestCase):
             np.abs(s1h) * np.exp(np.angle(s1h) * 1j + ps * np.pi * 1j))
 
         # signal with amplitude error
-        S1a = lambda t: A1a * (t - t1) * np.exp(-2 * (t - t1)) * \
-            np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
+        def S1a(t):
+            return A1a * (t - t1) * np.exp(-2 * (t - t1)) * \
+                np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         self.S1 = S1
         self.s1p = s1p

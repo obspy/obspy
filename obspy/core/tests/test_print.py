@@ -4,10 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.scripts.print import main as obspy_print
-from obspy.core.util.misc import CatchOutput
 import os
 import unittest
+
+from obspy.core.scripts.print import main as obspy_print
+from obspy.core.util.misc import CatchOutput
 
 
 class PrintTestCase(unittest.TestCase):
@@ -23,7 +24,7 @@ class PrintTestCase(unittest.TestCase):
             '''1 Trace(s) in Stream:
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 '''.encode('utf-8'),  # noqa
-            out.stdout.replace(b'\r', b'')
+            out.stdout
         )
 
     def test_print_nomerge(self):
@@ -35,7 +36,7 @@ XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
 '''.encode('utf-8'),  # noqa
-            out.stdout.replace(b'\r', b'')
+            out.stdout
         )
 
 

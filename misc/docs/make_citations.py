@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from pybtex.database.input import bibtex
-from pybtex.style.names.lastfirst import NameStyle
-from pybtex.style.template import sentence, field, optional, words, node, join
 import glob
 import os
+
+from pybtex.database.input import bibtex
+from pybtex.style.names.lastfirst import NameStyle
+from pybtex.style.template import field, join, node, optional, sentence, words
 
 
 REPLACE_TOKEN = [

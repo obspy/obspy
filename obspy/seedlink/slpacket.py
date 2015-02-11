@@ -15,14 +15,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import ctypes as C
+
+import numpy as np
+
 from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.mseed.headers import clibmseed, HPTMODULUS
+from obspy.mseed.headers import HPTMODULUS, clibmseed
 from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray
 from obspy.seedlink.seedlinkexception import SeedLinkException
-import ctypes as C
-import numpy as np
 
 
 class SLPacket(object):

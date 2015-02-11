@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import json
+
 from obspy.core.json import Default
 
 

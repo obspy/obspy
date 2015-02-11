@@ -17,6 +17,8 @@
      * scipy < 0.10
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
+ - obspy.kinemetrics
+   * New submodule for reading the Kinemetrics EVT waveform format
  - obspy.arclink:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
@@ -29,11 +31,9 @@
      AttribDict.
    * Removed custom OrderedDict backport for Python 2.6. Now relies on the one
      provided by the future package.
-   * Removed 'type' argument from the Trace.integrate() method. Now always
-     performs a cumtrapz integration. The first value of an integrated trace
-     will now always be zero to avoid changes in the total length of the
-     time series. Furthermore no more options are allowed as they might mess
-     with the time of a trace.
+   * Renamed 'type' argument to 'method' in the Trace.differentiate() method.
+   * Renamed 'type' argument to 'method' in the Trace.integrate() method.
+     Additionally, several broken alternate methods have been removed.
    * new plugins for NonLinLoc formats for readEvents() and
      Catalog/Event.write() (see obspy.nlloc and #900)
    * The wrap_long_string utility function is deprecated. Users may use the
@@ -86,6 +86,8 @@
    * read support for PDAS waveform files
  - obspy.sac:
    * New `byteorder` option for writing sac files to disk.
+   * Can now read/write from/to file-like objects like io.BytesIO and open
+     files.
  - obspy.seedlink:
    * bugfix: INFO responses from the IRIS ringserver are now parsed
      correctly (see #807)

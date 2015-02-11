@@ -21,13 +21,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import warnings
-import numpy as np
 import ctypes as C
+import warnings
+
+import numpy as np
 import scipy
-from obspy import Trace, Stream
+
+from obspy import Stream, Trace
 from obspy.signal.headers import clibsignal
-from obspy.signal import cosTaper
+from obspy.signal.invsim import cosTaper
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):

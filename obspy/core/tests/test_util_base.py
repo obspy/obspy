@@ -3,14 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core.util.testing import ImageComparison, \
-    ImageComparisonException
-from obspy.core.util.decorator import skipIf
 import os
-import unittest
 import shutil
+import unittest
 
+from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 # checking for matplotlib
 try:

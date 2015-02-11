@@ -3,8 +3,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-# Echo client program
 import socket
+
 
 HOST = 'geofon.gfz-potsdam.de'    # The remote host
 PORT = 18000              # The remote port

@@ -13,15 +13,17 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util import getExampleFile
-import numpy as np
 import functools
+import inspect
 import os
+import socket
 import unittest
 import warnings
-import inspect
-import socket
+
+import numpy as np
+
+from obspy.core.util import getExampleFile
+from obspy.core.util.base import NamedTemporaryFile
 
 
 def deprecated(warning_msg=None):

@@ -3,19 +3,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, read
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
-
 import io
-from pkg_resources import load_entry_point
-import numpy as np
 import os
 import threading
 import time
 import unittest
 import warnings
 from copy import deepcopy
+
+from pkg_resources import load_entry_point
+import numpy as np
+
+from obspy import Trace, read
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 
 
 class WaveformPluginsTestCase(unittest.TestCase):

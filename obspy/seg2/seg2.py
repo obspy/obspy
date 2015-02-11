@@ -15,12 +15,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2
 
-from copy import deepcopy
-import numpy as np
-from struct import unpack
 import warnings
+from copy import deepcopy
+from struct import unpack
 
-from obspy import Trace, Stream, UTCDateTime
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from obspy.seg2.header import MONTHS
 

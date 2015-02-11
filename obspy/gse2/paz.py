@@ -25,7 +25,9 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import doctest
+
 import numpy as np
+
 from obspy.core import AttribDict
 
 

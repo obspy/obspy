@@ -7,11 +7,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import read, Stream
-from obspy import __version__
-from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.base import _DeprecatedArgumentAction
-from argparse import ArgumentParser, SUPPRESS
+from argparse import SUPPRESS, ArgumentParser
+
+from obspy import Stream, __version__, read
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
 
 
 def main(argv=None):
