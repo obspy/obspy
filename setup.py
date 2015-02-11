@@ -54,6 +54,7 @@ from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
 
+import ctypes
 import glob
 import inspect
 import fnmatch
@@ -629,10 +630,6 @@ class BuildExtAndTauPy(build_ext):
         obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
         model_input = os.path.join(obspy_taup_path, "taup", "data")
 
-        sys.path.insert(0, obspy_taup_path)
-        from taup.taup_create import TauP_Create
-        from taup.utils import _get_model_filename
-
         model_path = os.path.join('obspy', 'taup', 'data', 'models')
         for path, files in self.distribution.data_files:
             if path == model_path:
@@ -641,6 +638,17 @@ class BuildExtAndTauPy(build_ext):
         else:
             dist_models = []
             self.distribution.data_files.append((model_path, dist_models))
+
+        libname = _get_lib_name('tau', add_extension_suffix=True)
+        libpath = os.path.join(os.curdir if self.inplace else self.build_lib,
+                               'obspy', 'lib', libname)
+        taulib = ctypes.CDLL(libpath)
+
+        from mock import patch
+        sys.path.insert(0, obspy_taup_path)
+        with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+            from taup.taup_create import TauP_Create
+            from taup.utils import _get_model_filename
 
         for model in glob.glob(os.path.join(model_input, "*.tvel")):
             output_filename = _get_model_filename(model)
@@ -651,8 +659,10 @@ class BuildExtAndTauPy(build_ext):
                 print("obspy.taup model '%s' already exists. To rebuild, "
                       "please delete the existing version or build with "
                       "--force." % (output_filename, ))
+                sys.stdout.flush()
                 continue
             print("Building obspy.taup model for '%s' ..." % (model, ))
+            sys.stdout.flush()
             if not self.dry_run:
                 mod_create = TauP_Create(input_filename=model,
                                          output_filename=output_filename)
