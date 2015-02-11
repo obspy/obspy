@@ -6,10 +6,8 @@
 #   Author: Lion Krischer
 # Copyright (C) 2015 L. Krischer
 #---------------------------------------------------------------------*/
-#include <Python.h>
 #define _USE_MATH_DEFINES  // for Visual Studio
 #include <math.h>
-#include <numpy/npy_common.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -58,12 +56,12 @@ for i, p in enumerate(ray_params[:, 0]):
                     "Ray turns in the middle of this layer!")
 */
 void tau_branch_calc_time_dist_inner_loop(
-    double *ray_params, npy_bool *mask, double *time, double *dist,
+    double *ray_params, int *mask, double *time, double *dist,
     double *layer, double *time_dist, int max_i, int max_j,
     double max_ray_param) {
 
     int i, j;
-    npy_bool m;
+    int m;
     double p, time_sum, dist_sum;
 
     for (i=0; i < max_i; i++) {
@@ -77,7 +75,7 @@ void tau_branch_calc_time_dist_inner_loop(
 
         for (j=0; j < max_j; j++) {
             m = MASK(i, j);
-            if (!m) {
+            if (m == 0) {
                 continue;
             }
             time_sum += TIME(i, j);

@@ -102,7 +102,7 @@ class TauBranch(object):
             (ray_params <= layer['topP'][np.newaxis, :]) &
             (ray_params <= layer['botP'][np.newaxis, :]),
             axis=1)
-        mask = mask.astype(np.bool_)
+        mask = mask.astype(np.int32)
 
         clibtau.tau_branch_calc_time_dist_inner_loop(
             ray_params, mask, time, dist, layer, timeDist, ray_params.shape[0],
