@@ -22,6 +22,7 @@ class RecordAnalyserTestCase(unittest.TestCase):
             obspy_recordanalyzer([self.test_file])
 
         expected = '''FILE: %s
+Record Number: 0
 Record Offset: 0 byte
 Header Endianness: Big Endian
 
@@ -62,6 +63,7 @@ CALCULATED VALUES
             obspy_recordanalyzer(['-n', '1', self.test_file])
 
         expected = '''FILE: %s
+Record Number: 1
 Record Offset: 4096 byte
 Header Endianness: Big Endian
 
