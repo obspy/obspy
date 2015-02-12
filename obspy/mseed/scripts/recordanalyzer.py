@@ -363,10 +363,23 @@ def main(argv=None):
                         version='%(prog)s ' + __version__)
     parser.add_argument('-n', default=0, type=int,
                         help='show info about N-th record (default: 0)')
+    parser.add_argument('-a', '--all', dest="all",
+                        default=False, action="store_true",
+                        help=('show info for *all* records '
+                              '(option "-n" has no effect in this case)'))
     parser.add_argument('filename', help='file to analyze')
     args = parser.parse_args(argv)
 
     rec = RecordAnalyser(args.filename)
+    # read all records
+    if args.all:
+        while True:
+            print(rec)
+            try:
+                next(rec)
+            except StopIteration:
+                sys.exit(0)
+    # read single specified record
     try:
         rec.goto(args.n)
     except StopIteration as e:

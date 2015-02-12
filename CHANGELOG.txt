@@ -65,10 +65,13 @@
      MiniSEED files.
    * The sequence number of the first record of each Trace can now be
      specified when writing MiniSEED files.
-   * Fixed a bug in `obspy-mseed-recordanalyzer`: When specifying an
-     out-of-bounds record number, information about the last record in
-     the file was displayed (see #957). Now a proper error message is
-     shown and the command line script exits with non-zero exit code.
+   * `obspy-mseed-recordanalyzer`:
+       - Bugfix: when specifying an out-of-bounds record number, information
+         about the last record in the file was displayed (see #957). Now a
+         proper error message is shown and the command line script exits
+         with non-zero exit code.
+       - Faster reading of a single record header
+       - Added option "-a" to print information of all records
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:
