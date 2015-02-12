@@ -667,14 +667,13 @@ class SeismicPhase(object):
                 self.ray_param = np.empty(0)
                 return
             else:
-                self.dist[1] = \
-                    self.dist[0] + self.maxDiffraction * math.pi / 180
+                self.dist[1] = self.dist[0] + np.radians(self.maxDiffraction)
                 self.time[1] = self.time[0] + \
-                    self.maxDiffraction * math.pi / 180 * self.minRayParam
+                    np.radians(self.maxDiffraction) * self.minRayParam
 
         elif "Pn" in self.name or "Sn" in self.name:
-            self.dist[1] = self.dist[0] + self.maxRefraction * math.pi / 180
-            self.time[1] = self.time[0] + self.maxRefraction * math.pi / 180
+            self.dist[1] = self.dist[0] + np.radians(self.maxRefraction)
+            self.time[1] = self.time[0] + np.radians(self.maxRefraction)
 
         elif self.maxRayParamIndex == self.minRayParamIndex:
             self.dist[1] = self.dist[0]
@@ -1033,13 +1032,13 @@ class SeismicPhase(object):
                 # upgoing ray.
                 takeoffVelocity = -1 * vMod.evaluateAbove(source_depth,
                                                           name[0])
-            takeoffAngle = (180 / math.pi) * math.asin(np.clip(
+            takeoffAngle = np.degrees(math.asin(np.clip(
                 takeoffVelocity * arrivalRayParam /
-                (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0))
+                (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0)))
             lastLeg = self.legs[-2][0]  # very last item is "END"
-            incidentAngle = (180 / math.pi) * math.asin(
+            incidentAngle = np.degrees(math.asin(
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /
-                self.tMod.radiusOfEarth)
+                self.tMod.radiusOfEarth))
         return Arrival(self, arrivalTime, searchDist, arrivalRayParam, rayNum,
                        name, puristName, source_depth, takeoffAngle,
                        incidentAngle)
