@@ -97,6 +97,23 @@ class RecordAnalyser(object):
             msg = "IOError while trying to read record number %i: %s"
             raise StopIteration(msg % (self.record_number, str(e)))
 
+    def goto(self, record_number):
+        """
+        Jumps to the specified record and parses its header.
+
+        :type record_number: int
+        :param record_number: Record number to jump to (first record has record
+            number 0).
+        """
+        self.record_number = record_number
+        self.record_offset = (
+            record_number * 2 ** self.blockettes[1000]['Data Record Length'])
+        try:
+            self._parseHeader()
+        except IOError as e:
+            msg = "IOError while trying to read record number %i: %s"
+            raise StopIteration(msg % (self.record_number, str(e)))
+
     def _parseHeader(self):
         """
         Makes all necessary calls to parse the header.
@@ -350,14 +367,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     rec = RecordAnalyser(args.filename)
-    i = 0
-    while i < args.n:
-        i += 1
-        try:
-            next(rec)
-        except StopIteration as e:
-            print(str(e))
-            sys.exit(1)
+    try:
+        rec.goto(args.n)
+    except StopIteration as e:
+        print(str(e))
+        sys.exit(1)
     print(rec)
 
 
