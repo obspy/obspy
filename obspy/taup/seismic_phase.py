@@ -673,7 +673,8 @@ class SeismicPhase(object):
 
         elif "Pn" in self.name or "Sn" in self.name:
             self.dist[1] = self.dist[0] + np.radians(self.maxRefraction)
-            self.time[1] = self.time[0] + np.radians(self.maxRefraction)
+            self.time[1] = (self.time[0] +
+                            np.radians(self.maxRefraction) * self.minRayParam)
 
         elif self.maxRayParamIndex == self.minRayParamIndex:
             self.dist[1] = self.dist[0]
@@ -998,7 +999,7 @@ class SeismicPhase(object):
         mask = pierce['depth'][:index] == headDepth
         adjust = np.cumsum(mask)
         pierce['time'][:index] += adjust * refractTime / numFound
-        pierce['dist'][:index] += adjust * refractDist / numFound,
+        pierce['dist'][:index] += adjust * refractDist / numFound
 
         head_index = np.where(mask)[0]
         if len(head_index):
