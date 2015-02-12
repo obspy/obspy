@@ -66,6 +66,7 @@ class RecordAnalyser(object):
         self.record_number = 0
         # Parse the header.
         self._parseHeader()
+        self.did_goto = False
 
     def __eq__(self, other):
         """
@@ -113,6 +114,7 @@ class RecordAnalyser(object):
         except IOError as e:
             msg = "IOError while trying to read record number %i: %s"
             raise StopIteration(msg % (self.record_number, str(e)))
+        self.did_goto = True
 
     def _parseHeader(self):
         """
@@ -326,10 +328,16 @@ class RecordAnalyser(object):
             endian = 'Little Endian'
         else:
             endian = 'Big Endian'
-        ret_val = ('FILE: %s\nRecord Number: %i\n' +
+        if self.did_goto:
+            goto_info = (" (records were skipped, number is wrong in case "
+                         "of differing record sizes)")
+        else:
+            goto_info = ""
+        ret_val = ('FILE: %s\nRecord Number: %i%s\n' +
                    'Record Offset: %i byte\n' +
                    'Header Endianness: %s\n\n') % \
-                  (filename, self.record_number, self.record_offset, endian)
+                  (filename, self.record_number, goto_info, self.record_offset,
+                   endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
@@ -367,6 +375,11 @@ def main(argv=None):
                         default=False, action="store_true",
                         help=('show info for *all* records '
                               '(option "-n" has no effect in this case)'))
+    parser.add_argument('-f', '--fast', dest="fast",
+                        default=False, action="store_true",
+                        help=('Jump to specified record number. Warning: '
+                              'This assumes that all records have the same '
+                              'size as the first one.'))
     parser.add_argument('filename', help='file to analyze')
     args = parser.parse_args(argv)
 
@@ -380,11 +393,21 @@ def main(argv=None):
             except StopIteration:
                 sys.exit(0)
     # read single specified record
-    try:
-        rec.goto(args.n)
-    except StopIteration as e:
-        print(str(e))
-        sys.exit(1)
+    if args.fast:
+        try:
+            rec.goto(args.n)
+        except StopIteration as e:
+            print(str(e))
+            sys.exit(1)
+    else:
+        i = 0
+        while i < args.n:
+            i += 1
+            try:
+                next(rec)
+            except StopIteration as e:
+                print(str(e))
+                sys.exit(1)
     print(rec)
 
 
