@@ -309,13 +309,13 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         Tests writing a QuakeML document.
         """
         with NamedTemporaryFile() as tf:
-            tmpfile = tf.name
-            writeQuakeML(self.catalog, tmpfile, validate=IS_RECENT_LXML)
+            writeQuakeML(self.catalog, tf, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
+            tf.seek(0)
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
-                catalog2 = readQuakeML(tmpfile)
+                catalog2 = readQuakeML(tf)
         self.assertTrue(len(catalog2), 1)
 
     def test_readEvents(self):
