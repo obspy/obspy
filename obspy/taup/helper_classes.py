@@ -26,7 +26,7 @@ SlownessLayer = np.dtype([
     (native_str('topDepth'), np.float_),
     (native_str('botP'), np.float_),
     (native_str('botDepth'), np.float_),
-    ])
+])
 
 
 """

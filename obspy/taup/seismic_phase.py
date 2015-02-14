@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import math
 from itertools import count
+import math
+import re
 
 import numpy as np
 
@@ -1072,6 +1073,31 @@ def closest_branch_to_depth(tMod, depthString):
     return disconBranch
 
 
+def self_tokenizer(scanner, token):
+    return token
+
+
+def wrong_phase(scanner, token):
+    raise ValueError("Invalid phase name: %s cannot be followed by %s in %s" %
+                     (token[0], token[1], token))
+
+
+tokenizer = re.Scanner([
+    # Surface wave phase velocity "phases"
+    (r"\.?\d+\.?\d*kmps", self_tokenizer),
+    # Composite legs.
+    (r"Pn|Sn|Pg|Sg|Pb|Sb|Pdiff|Sdiff", self_tokenizer),
+    # Reflections.
+    (r"([\^v])([mci]|\.?\d+\.?\d*)", self_tokenizer),
+    # Invalid phases.
+    (r"[PS][ps]", wrong_phase),
+    # Single legs.
+    (r"[KkIiJpsmcPpSs]", self_tokenizer),
+    # Single numerical value
+    (r"\.?\d+\.?\d*", self_tokenizer)
+])
+
+
 def leg_puller(name):
     """
     Tokenizes a phase name into legs, ie PcS becomes 'P'+'c'+'S' while p^410P
@@ -1081,70 +1107,8 @@ def leg_puller(name):
     instance PIP generates an exception but ^410 doesn't. It also appends
     "END" as the last leg.
     """
-    # Java static method, so I think that means making it a function.
-    # or @classmethod? But it doesn't need the class.
-    offset = 0
-    legs = []
-    # Special case for surface wave velocity.
-    if name.endswith("kmps"):
-        legs.append(name)
-    else:
-        while offset < len(name):
-            nchar = name[offset]
-            # Do the easy ones, i.e. K, k, I, i, J, p, s, m, c:
-            if nchar in "KkIiJpsmc":
-                legs.append(nchar)
-                offset += 1
-            elif nchar in "PS":
-                # Now it gets complicated, first see if the next char is
-                # part of a different leg or if it's the end.
-                if (offset + 1 == len(name) or
-                        name[offset + 1] in "PSKmc^v" or
-                        name[offset + 1].isdigit()):
-                    legs.append(nchar)
-                    offset += 1
-                elif name[offset + 1] in "ps":
-                    raise TauModelError(
-                        "Invalid phase name: \n {} cannot be followed by {} "
-                        "in {}.".format(nchar, name[offset + 1], name))
-                elif name[offset + 1] in "gbn":
-                    # The leg is not described by one letter, check for two:
-                    legs.append(name[offset:offset + 2])
-                    offset += 2
-                elif len(name) >= offset + 5 \
-                        and name[offset:offset + 5] in ("Sdiff", "Pdiff"):
-                    legs.append(name[offset:offset + 5])
-                    offset += 5
-                else:
-                    raise TauModelError("Invalid phase name: \n "
-                                        "{nchar} in {name}".format(**locals()))
-            elif nchar in "^v":
-                # Top side or bottom side reflections, check for standard
-                # boundaries and then check for numerical ones.
-                if name[offset + 1] in "mci":
-                    legs.append(name[offset:offset + 2])
-                    offset += 2
-                elif name[offset + 1].isdigit() or name[offset + 1] == ".":
-                    numString = name[offset]
-                    offset += 1
-                    while name[offset + 1].isdigit() or \
-                            name[offset + 1] == ".":
-                        numString += name[offset]
-                        offset += 1
-                    legs.append(numString)
-                else:
-                    raise TauModelError("Invalid phase name {nchar} in {name}."
-                                        .format(**locals()))
-            elif nchar.isdigit() or nchar == ".":
-                numString = name[offset]
-                offset += 1
-                while name[offset + 1].isdigit() or name[offset + 1] == ".":
-                    numString += name[offset]
-                    offset += 1
-                legs.append(numString)
-            else:
-                raise TauModelError(
-                    "Invalid phase name {nchar} in {name}.".format(**locals()))
-    legs.append("END")
-    # phaseValidate(legs)
-    return legs
+    results, remainder = tokenizer.scan(name)
+    if remainder:
+        raise ValueError("Invalid phase name: %s could not be parsed in %s"
+                         % (str(remainder), name))
+    return results + ["END"]

@@ -944,7 +944,7 @@ class SlownessModel(object):
                         # extra samples in the neighborhood of poorly
                         # sampled caustics.
                         splitRayParam = (sLayer['topP'] + sLayer['botP']) / 2
-                        allButLayer = self.approxDistance(j-1, splitRayParam,
+                        allButLayer = self.approxDistance(j - 1, splitRayParam,
                                                           currWaveType)
                         splitLayer = np.array([(
                             sLayer['topP'], sLayer['topDepth'], splitRayParam,
