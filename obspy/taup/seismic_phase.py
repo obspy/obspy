@@ -1092,7 +1092,7 @@ tokenizer = re.Scanner([
     # Invalid phases.
     (r"[PS][ps]", wrong_phase),
     # Single legs.
-    (r"[KkIiJpsmcPpSs]", self_tokenizer),
+    (r"[KkIiJmcPpSs]", self_tokenizer),
     # Single numerical value
     (r"\.?\d+\.?\d*", self_tokenizer)
 ])
