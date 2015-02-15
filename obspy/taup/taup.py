@@ -9,6 +9,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import numpy as np
+import warnings
 
 from . import tau
 
@@ -47,12 +48,17 @@ def getTravelTimes(delta, depth, model='iasp91', phase_list=["ttall"]):
 
     .. versionchanged:: 0.10.0
 
+        Deprecated.
+
         The backend is no longer the Fortran iasp-tau program but a Python
         port of the Java TauP library. A consequence of this is that the
         ``"dT/dh"`` and ``"d2T/dD2"`` values are no longer returned.
 
         Furthermore this function now has a ``phase_list`` keyword argument.
     """
+    warnings.warn("The getTravelTimes() function is deprecated. Please use "
+                  "the obspy.taup.TauPyModel class directly.",
+                  DeprecationWarning)
     model = model.lower()
 
     # Cache models.
@@ -107,7 +113,14 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         from obspy.taup.taup import travelTimePlot
         travelTimePlot(min_degree=0, max_degree=50, phases=['P', 'S', 'PP'],
                        depth=120, model='iasp91')
+
+    .. versionchanged:: 0.10.0
+
+        Deprecated.
     """
+    warnings.warn("The travelTimePlot() function is deprecated. Please use "
+                  "the obspy.taup.TauPyModel class directly.",
+                  DeprecationWarning)
     import matplotlib.pylab as plt
 
     data = {}
