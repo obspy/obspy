@@ -1174,7 +1174,7 @@ class SlownessModel(object):
         # negative which causes the sqrt to raise an error. We check for
         # values that are within the numerical chatter of zero and just
         # set them to zero.
-        topTerm = topRadius**2 - (ray_param_const_velocity * vel)**2
+        topTerm = topRadius ** 2 - (ray_param_const_velocity * vel) ** 2
         topTerm[np.abs(topTerm) < self.slowness_tolerance] = 0
 
         # In this case the ray turns at the bottom of this layer so
@@ -1186,11 +1186,11 @@ class SlownessModel(object):
         mask = (ray_param_const_velocity !=
                 sphericalLayer['botP'][constant_velocity])
         if pdim:
-            botTerm[mask] = botRadius[mask]**2 - (
-                ray_param_const_velocity[mask] * vel[mask])**2
+            botTerm[mask] = botRadius[mask] ** 2 - (
+                ray_param_const_velocity[mask] * vel[mask]) ** 2
         else:
-            botTerm[mask] = botRadius[mask]**2 - (
-                ray_param_const_velocity * vel[mask])**2
+            botTerm[mask] = botRadius[mask] ** 2 - (
+                ray_param_const_velocity * vel[mask]) ** 2
 
         b = np.sqrt(topTerm) - np.sqrt(botTerm)
         time[constant_velocity] = b / vel
