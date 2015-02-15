@@ -20,6 +20,7 @@ import io
 import os
 import sys
 import tempfile
+import time
 
 with standard_library.hooks():
     from collections import OrderedDict
