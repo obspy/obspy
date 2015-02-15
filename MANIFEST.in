@@ -48,8 +48,9 @@ recursive-include obspy/core/tests/images *.png
 # Geodetics data
 graft obspy/core/util/geodetics/data
 
-# Taup tables
-graft obspy/taup/tables
+# obspy.taup data
+graft obspy/taup/data
+graft obspy/taup/data/models
 
 # Needed for the XSD validation
 include obspy/station/docs/Variations-FDSNSXML-SEED.txt

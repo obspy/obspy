@@ -40,7 +40,7 @@ echo " * The current development versions of all ObsPy modules (optional)\n"
 echo "For further help see\nhttp://obspy.org/wiki/InstallingDependenciesMac\n"
 
 
-echo "Make sure XCode, gfortran and pkg-config are installed. Continue? (Y/N)"
+echo "Make sure XCode and pkg-config are installed. Continue? (Y/N)"
     while true; do
 	read answer
         case $answer in

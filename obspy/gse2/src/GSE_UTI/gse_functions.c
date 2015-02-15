@@ -4,7 +4,8 @@
 #include <string.h>
 #include "gse_header.h"
 #include "gse_types.h"
-#define     MODULO_VALUE 100000000
+
+#define MODULO_VALUE 100000000
 
 /*********************************************************************
   Function: check_sum

@@ -107,7 +107,15 @@ class NamedTemporaryFile(io.BufferedIOBase):
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
         self.close()
-        os.remove(self.name)
+        for _ in range(10):
+            try:
+                os.remove(self.name)
+                break
+            except WindowsError as e:
+                werr = e
+                time.sleep(0.1)
+        else:
+            raise werr
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):

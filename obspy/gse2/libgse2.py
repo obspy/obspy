@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2012 Moritz Beyreuther
 # ---------------------------------------------------------------------
 """
-Lowlevel module internally used for handling GSE2 files
+Lowlevel module internally used for handling GSE2 files.
 
 Python wrappers for gse_functions - The GSE2 library of Stefan Stange.
 Currently CM6 compressed GSE2 files are supported, this should be

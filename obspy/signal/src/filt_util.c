@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define _USE_MATH_DEFINES  // for Visual Studio
 #include <math.h>
 #include <time.h>
 

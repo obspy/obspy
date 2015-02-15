@@ -36,17 +36,37 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
+try:
+    import future  # @UnusedImport # NOQA
+except:
+    msg = ("No module named future. Please install future first, it is needed "
+           "before installing ObsPy.")
+    raise ImportError(msg)
+
+import sys
+if sys.version_info[0] == 2:
+    try:
+        from mock import patch  # PY2
+    except:
+        msg = ("No module named mock. Please install mock first, it is needed "
+               "before installing ObsPy.")
+        raise ImportError(msg)
+else:
+    from unittest.mock import patch
+
+import ctypes
 import fnmatch
 import glob
 import inspect
 import os
 import platform
-import sys
+from distutils.dep_util import newer
 from distutils.util import change_root
 
 from numpy.distutils.core import DistutilsSetupError, setup
 from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
+from numpy.distutils.command.build_ext import build_ext
 from numpy.distutils.command.install import install
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
@@ -84,7 +104,7 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
-    'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
+    'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
     'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
@@ -108,7 +128,7 @@ EXTRAS_REQUIRE = {
     'neries': ['suds-jurko']}
 # PY2
 if sys.version_info[0] == 2:
-    EXTRAS_REQUIRE['tests'].append('mock')
+    INSTALL_REQUIRES.append('mock')
 # Add argparse for Python 2.6. stdlib package for Python >= 2.7
 if sys.version_info[:2] == (2, 6):
     INSTALL_REQUIRES.append('argparse')
@@ -413,27 +433,6 @@ if IS_MSVC:
     from distutils.command.build_ext import build_ext
     build_ext.get_export_symbols = _get_export_symbols
 
-    # tau shared library has to be compiled with gfortran directly
-    def link(self, _target_desc, objects, output_filename,
-             *args, **kwargs):  # @UnusedVariable
-        # check if 'tau' library is linked
-        if 'tau' not in output_filename:
-            # otherwise just use the original link method
-            return self.original_link(_target_desc, objects, output_filename,
-                                      *args, **kwargs)
-        if '32' in platform.architecture()[0]:
-            taupargs = ["-m32"]
-        else:
-            taupargs = ["-m64"]
-        # ignoring all f2py objects
-        objects = objects[2:]
-        self.spawn(['gfortran.exe'] +
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] +
-                   taupargs + objects + ["-o", output_filename])
-
-    MSVCCompiler.original_link = MSVCCompiler.link
-    MSVCCompiler.link = link
-
 
 # helper function for collecting export symbols from .def files
 def export_symbols(*path):
@@ -466,7 +465,7 @@ def add_features():
 
 def configuration(parent_package="", top_path=None):
     """
-    Config function mainly used to compile C and Fortran code.
+    Config function mainly used to compile C code.
     """
     config = Configuration("", parent_package, top_path)
 
@@ -544,30 +543,16 @@ def configuration(parent_package="", top_path=None):
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
-    # TAUP
+    # TAU
     path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau", add_extension_suffix=False)
-    files = glob.glob(os.path.join(path, "*.f"))
+    files = [os.path.join(path, "inner_tau_loops.c")]
     # compiler specific options
-    kwargs = {'libraries': []}
-    # XXX: The build subdirectory is difficult to determine if installed
-    # via pypi or other means. I could not find a reliable way of doing it.
-    new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
-    interface_file = os.path.join(path, "_libtau.pyf")
-    with open(interface_file, "r") as open_file:
-        interface_file = open_file.read()
-    # In the original .pyf file the library is called _libtau.
-    interface_file = interface_file.replace("_libtau", libname)
-    if not os.path.exists("build"):
-        os.mkdir("build")
-    with open(new_interface_path, "w") as open_file:
-        open_file.write(interface_file)
-    files.insert(0, new_interface_path)
-    # we do not need this when linking with gcc, only when linking with
-    # gfortran the option -lgcov is required
-    if os.environ.get('OBSPY_C_COVERAGE', ""):
-        kwargs['libraries'].append('gcov')
-    config.add_extension(libname, files, **kwargs)
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
+    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
+                         files, **kwargs)
 
     add_data_files(config)
 
@@ -649,6 +634,59 @@ class Help2ManInstall(install):
         self.copy_tree(srcdir, mandir)
 
 
+class BuildExtAndTauPy(build_ext):
+    def build_taup_models(self):
+        """
+        Builds the obspy.taup models during install time. This is needed as the
+        models are pickled Python classes which are not compatible across
+        Python versions.
+        """
+        obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
+        model_input = os.path.join(obspy_taup_path, "taup", "data")
+
+        model_path = os.path.join('obspy', 'taup', 'data', 'models')
+        for path, files in self.distribution.data_files:
+            if path == model_path:
+                dist_models = files
+                break
+        else:
+            dist_models = []
+            self.distribution.data_files.append((model_path, dist_models))
+
+        libname = _get_lib_name('tau', add_extension_suffix=True)
+        libpath = os.path.join(os.curdir if self.inplace else self.build_lib,
+                               'obspy', 'lib', libname)
+        taulib = ctypes.CDLL(libpath)
+
+        sys.path.insert(0, obspy_taup_path)
+        with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+            from taup.taup_create import TauP_Create
+            from taup.utils import _get_model_filename
+
+        for model in glob.glob(os.path.join(model_input, "*.tvel")):
+            output_filename = _get_model_filename(model)
+            dist_models.append(os.path.relpath(output_filename,
+                                               SETUP_DIRECTORY))
+
+            if not newer(model, output_filename) and not self.force:
+                print("obspy.taup model '%s' already exists. To rebuild, "
+                      "please delete the existing version or build with "
+                      "--force." % (output_filename, ))
+                sys.stdout.flush()
+                continue
+            print("Building obspy.taup model for '%s' ..." % (model, ))
+            sys.stdout.flush()
+            if not self.dry_run:
+                mod_create = TauP_Create(input_filename=model,
+                                         output_filename=output_filename)
+                mod_create.loadVMod()
+                mod_create.run()
+
+    def run(self):
+        build_ext.run(self)
+        self.build_taup_models()
+
+
 def setupPackage():
     # setup package
     setup(
@@ -691,7 +729,11 @@ def setupPackage():
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
-        cmdclass={'build_man': Help2ManBuild, 'install_man': Help2ManInstall},
+        cmdclass={
+            'build_ext': BuildExtAndTauPy,
+            'build_man': Help2ManBuild,
+            'install_man': Help2ManInstall
+        },
         configuration=configuration)
 
 
@@ -717,4 +759,10 @@ if __name__ == '__main__':
                 os.remove(filename)
             except:
                 pass
-    setupPackage()
+        path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
+        try:
+            shutil.rmtree(path)
+        except:
+            pass
+    else:
+        setupPackage()
