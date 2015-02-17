@@ -190,7 +190,7 @@ class TauPyModel(object):
                         model=self.model, distance=distance_in_degree)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
-                      phase_list=("ttall,")):
+                      phase_list=("ttall",)):
         """
         Returns ray paths of every given phase.
 
