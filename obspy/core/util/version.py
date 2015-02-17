@@ -109,13 +109,12 @@ def call_git_describe(abbrev=4):
     # (this line prevents official releases)
     # should work again now, see #482 and obspy/obspy@b437f31
     if "-" not in line and "." not in line:
-        version = "0.0.0.dev0+.g%s" % line
+        version = "0.0.0.dev+.g%s" % line
     else:
-        parts = line.split('-')
+        parts = line.split('-', 1)
         version = parts[0]
         try:
-            version += '.dev' + parts[1]
-            version += '+' + '-'.join(parts[2:])
+            version += '.dev+' + parts[1]
             if remote_tracking_branch is not None:
                 version += "." + remote_tracking_branch
         # IndexError means we are at a release version tag cleanly,
