@@ -5,14 +5,15 @@ This package was debianized by the ObsPy Development Team. The source for
 this release was taken from:
 git://github.com/obspy/obspy.git
 
-Program Copyright (C) 2009-2012 The ObsPy Development Team <devs@obspy.org>,
+Program Copyright (C) 2009-2015 The ObsPy Development Team <devs@obspy.org>,
 Thomas Lecocq (datamark), Adolfo Inza (datamark), Philippe Lesage (datamark),
-Anthony Lomax (realtime, seedlink), Marcus Walther (css), David Ketchum (neic).
+Anthony Lomax (realtime, seedlink), Marcus Walther (css),
+David Ketchum (neic), and other contributors (see README.txt of submodules
+and repository history at https://github.com/obspy/obspy).
 
 The underlying C code in 'gse2' subpackage was written Stefan Stange.
 The underlying C code in 'mseed' subpackage was written Chad Trabant.
 Some C parts in 'signal' subpackage were written by Joachim Wassermann.
-The fortran parts in 'taup' subpackage were written by Engdahl, Buland and Kennett.
 
 Development of 'realtime' and 'seedlink' subpackages has been supported by the
 NERA project ["Network of European Research Infrastructures for Earthquake Risk
@@ -23,24 +24,10 @@ mining".
 
 Copyright:
 
-This program is free software. Most parts may be redistributed and/or modified
+This program is free software. It can be redistributed and/or modified
 under the terms of:
 
 The GNU Lesser General Public License, as published by the Free
 Software Foundation; either version 3, or (at your option) any
 later version. A copy of this license is in the file
 /usr/share/common-licenses/LGPL-3
-
-The 'taup' subpackage may be redistributed and/or modified under the following terms:
-
-Reply from Arthur Snoke regarding the question under what license "iapsei-tau"
-(http://www.iris.edu/pub/programs/iaspei-tau/) is available:
-I am far from expert on licensing details.
-Beginning in 1992 the software was accessible without qualification from USGS
-Web sites (Buland and Engdahl were USGS), and I think that it is still available
-from Brian Kennett's ANU Web site.  The only changes I have made were inspired
-and/or cleared by the original authors.
-It has been used in many packages, and I do not recall licensing even being
-mentioned.
-I hope this helps.
-Arthur
