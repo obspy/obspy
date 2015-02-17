@@ -83,7 +83,7 @@ def call_git_describe(abbrev=4):
         p.stdout.close()
         remote_info = [line_ for line_ in remote_info
                        if line_.startswith('*')][0]
-        remote_info = re.sub(r".*? \[(.*?)\] .*", r"\1", remote_info)
+        remote_info = re.sub(r".*? \[([^ :]*).*?\] .*", r"\1", remote_info)
         remote, branch = remote_info.split("/")
         # find out real name of remote
         p = Popen(['git', 'remote', '-v'],
@@ -102,7 +102,8 @@ def call_git_describe(abbrev=4):
         else:
             remote = None
         if remote is not None:
-            remote_tracking_branch = "%s/%s" % (remote, branch)
+            remote_tracking_branch = re.sub(r'[^A-Za-z0-9._-]', r'_',
+                                            '%s-%s' % (remote, branch))
     except (OSError, ValueError):
         pass
 
@@ -116,7 +117,7 @@ def call_git_describe(abbrev=4):
         try:
             version += '.dev+' + parts[1]
             if remote_tracking_branch is not None:
-                version += "." + remote_tracking_branch
+                version += '-' + remote_tracking_branch
         # IndexError means we are at a release version tag cleanly,
         # add nothing additional
         except IndexError:
@@ -152,7 +153,7 @@ def get_git_version(abbrev=4):
 
     # If we still don't have anything, that's an error.
     if version is None:
-        return '0.0.0+tar/zipball'
+        return '0.0.0+archive'
 
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
