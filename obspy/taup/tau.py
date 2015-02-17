@@ -55,7 +55,7 @@ class Arrivals(list):
     def __repr__(self):
         return "[%s]" % (", ".join([repr(_i) for _i in self]))
 
-    def plot(self, plot_type="spherical", plot_all=False):
+    def plot(self, plot_type="spherical", plot_all=False, ax=None, show=True):
         """
         Plot the raypaths if any.
 
@@ -67,6 +67,12 @@ class Arrivals(list):
             distance are plotted and rays arriving at 360 - x degrees are
             not shown.
         :type plot_all: bool
+        :param ax: Axes to plot to. If not given, a new figure with axes
+            will be created. Must be a polar axes for the spherical plot and
+            a regular one for the normal plot.
+        :type ax: :class:`matplotlib.axes.Axes`
+        :param show: Show the plot at the end or not.
+        :type show: bool
         """
         arrivals = []
         for _i in self:
@@ -82,7 +88,9 @@ class Arrivals(list):
                              "paths.")
         discons = self.model.sMod.vMod.getDisconDepths()
         if plot_type == "spherical":
-            ax = plt.subplot(111, polar=True)
+            if not ax:
+                plt.figure(figsize=(10, 10))
+                ax = plt.subplot(111, polar=True)
             ax.set_theta_zero_location('N')
             ax.set_theta_direction(-1)
             ax.set_xticks([])
@@ -100,23 +108,28 @@ class Arrivals(list):
             ax.set_rmin(0.0)
             plt.legend(loc="upper left")
         elif plot_type == "cartesian":
-            plt.gca().invert_yaxis()
+            if not ax:
+                plt.figure(figsize=(12, 8))
+                ax = plt.gca()
+            ax.invert_yaxis()
             for _i, ray in enumerate(arrivals):
-                plt.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
-                         color=COLORS[_i % len(COLORS)], label=ray.name,
-                         lw=1.5)
-            plt.ylabel("Depth [km]")
-            plt.legend()
-            plt.xlabel("Distance [deg]")
-            x = plt.xlim()
-            y = plt.ylim()
+                ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
+                        color=COLORS[_i % len(COLORS)], label=ray.name,
+                        lw=1.5)
+            ax.set_ylabel("Depth [km]")
+            ax.legend()
+            ax.set_xlabel("Distance [deg]")
+            x = ax.get_xlim()
+            y = ax.get_ylim()
             for depth in discons:
                 if not (y[1] <= depth <= y[0]):
                     continue
-                plt.hlines(depth, x[0], x[1], color="0.5", zorder=-1)
+                ax.hlines(depth, x[0], x[1], color="0.5", zorder=-1)
         else:
             raise NotImplementedError
-        plt.show()
+        if show:
+            plt.show()
+        return ax
 
 
 class TauPyModel(object):
