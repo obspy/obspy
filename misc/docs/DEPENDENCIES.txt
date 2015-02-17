@@ -30,6 +30,6 @@ sqlalchemy
 
 # Tutorial
 https://github.com/obspy/wheelhouse/raw/master/basemap-1.0.7-cp27-none-linux_x86_64.whl
-http://downloads.sourceforge.net/project/mlpy/mlpy%203.5.0/mlpy-3.5.0.tar.gz
+https://github.com/obspy/wheelhouse/raw/master/mlpy-3.5.0-cp27-none-linux_x86_64.whl
 ## doctests only:
 pyproj
