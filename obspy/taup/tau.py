@@ -58,9 +58,9 @@ class Arrivals(list):
     def __repr__(self):
         return "[%s]" % (", ".join([repr(_i) for _i in self]))
 
-    def plot(self, plot_type="spherical", plot_all=False, ax=None, show=True):
+    def plot(self, plot_type="spherical", plot_all=True, ax=None, show=True):
         """
-        Plot the raypaths if any.
+        Plot the ray paths if any have been calculated.
 
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
             A spherical plot is always global whereas a cartesian one can
