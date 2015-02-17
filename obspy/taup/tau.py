@@ -149,10 +149,18 @@ class Arrivals(list):
             ax.set_ylabel("Depth [km]")
             ax.legend(fontsize="small", loc="lower left")
             ax.set_xlabel("Distance [deg]")
+            # Pretty station marker.
+            ms = 14
+            station_marker_transform = matplotlib.transforms.offset_copy(
+                ax.transData,
+                fig=ax.get_figure(),
+                y=ms / 2.0,
+                units="points")
             ax.plot([self.distance], [0.0],
                     marker=(3, 0, 180), color="#C95241",
-                    markersize=14, zorder=10, markeredgewidth=1.5,
-                    markeredgecolor="0.3", clip_on=False)
+                    markersize=ms, zorder=10, markeredgewidth=1.5,
+                    markeredgecolor="0.3", clip_on=False,
+                    transform=station_marker_transform)
             # Pretty earthquake marker.
             ax.plot([0], [arrivals[0].source_depth],
                     marker="*", color="#FEF215", markersize=20, zorder=10,
