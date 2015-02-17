@@ -147,8 +147,19 @@ class Arrivals(list):
                         color=COLORS[_i % len(COLORS)], label=ray.name,
                         lw=2.0)
             ax.set_ylabel("Depth [km]")
-            ax.legend(fontsize="small")
+            ax.legend(fontsize="small", loc="lower left")
             ax.set_xlabel("Distance [deg]")
+            ax.plot([self.distance], [0.0],
+                    marker=(3, 0, 180), color="#C95241",
+                    markersize=14, zorder=10, markeredgewidth=1.5,
+                    markeredgecolor="0.3", clip_on=False)
+            # Pretty earthquake marker.
+            ax.plot([0], [arrivals[0].source_depth],
+                    marker="*", color="#FEF215", markersize=20, zorder=10,
+                    markeredgewidth=1.5, markeredgecolor="0.3", clip_on=False)
+            x = ax.get_xlim()
+            x_range = x[1] - x[0]
+            ax.set_xlim(x[0] - x_range * 0.1, x[1] + x_range * 0.1)
             x = ax.get_xlim()
             y = ax.get_ylim()
             for depth in discons:
