@@ -70,12 +70,15 @@ class Arrivals(list):
             distance are plotted and rays arriving at 360 - x degrees are
             not shown.
         :type plot_all: bool
-        :param ax: Axes to plot to. If not given, a new figure with axes
+        :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
-            a regular one for the normal plot.
+            a regular one for the cartesian plot.
         :type ax: :class:`matplotlib.axes.Axes`
-        :param show: Show the plot at the end or not.
+        :param show: Show the plot.
         :type show: bool
+
+        :returns: The (possibly created) axes instance.
+        :rtype: :class:`matplotlib.axes.Axes`
         """
         arrivals = []
         for _i in self:
