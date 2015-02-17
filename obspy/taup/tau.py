@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -78,10 +79,13 @@ class Arrivals(list):
         for _i in self:
             if _i.path is None:
                 continue
-            if plot_all is False:
-                dist = np.rad2deg(_i.dist)
-                if (dist - self.distance) / dist > 1E-5:
+            dist = np.rad2deg(_i.dist)
+            if (dist - self.distance) / dist > 1E-5:
+                if plot_all is False:
                     continue
+                _i = copy.deepcopy(_i)
+                # Mirror on axis.
+                _i.path["dist"] = -1.0 * _i.path["dist"]
             arrivals.append(_i)
         if not arrivals:
             raise ValueError("Can only plot arrivals with calculated ray "
@@ -106,7 +110,7 @@ class Arrivals(list):
             ax.yaxis.set_major_formatter(plt.NullFormatter())
             ax.set_rmax(6371.0)
             ax.set_rmin(0.0)
-            plt.legend(loc="upper left")
+            plt.legend(loc="upper left", fontsize="small")
         elif plot_type == "cartesian":
             if not ax:
                 plt.figure(figsize=(12, 8))
@@ -117,7 +121,7 @@ class Arrivals(list):
                         color=COLORS[_i % len(COLORS)], label=ray.name,
                         lw=1.5)
             ax.set_ylabel("Depth [km]")
-            ax.legend()
+            ax.legend(fontsize="small")
             ax.set_xlabel("Distance [deg]")
             x = ax.get_xlim()
             y = ax.get_ylim()
