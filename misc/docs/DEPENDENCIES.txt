@@ -29,7 +29,7 @@ suds
 sqlalchemy
 
 # Tutorial
-basemap
+$ pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master basemap==1.0.7
 mlpy
 ## doctests only:
 pyproj
