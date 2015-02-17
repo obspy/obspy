@@ -64,24 +64,24 @@ class SlownessModel(object):
         self.createSample()
 
     def __str__(self):
-        desc = (
-            "radiusOfEarth=" + str(self.radiusOfEarth) + "\n maxDeltaP="
-            + str(self.maxDeltaP)
-            + "\n minDeltaP=" + str(self.minDeltaP) + "\n maxDepthInterval="
-            + str(self.maxDepthInterval) + "\n maxRangeInterval="
-            + str(self.maxRangeInterval)
-            + "\n allowInnerCoreS=" + str(self.allowInnerCoreS)
-            + "\n slownessTolerance=" + str(self.slowness_tolerance)
-            + "\n getNumLayers('P')=" + str(self.getNumLayers(self.PWAVE))
-            + "\n getNumLayers('S')=" + str(self.getNumLayers(self.SWAVE))
-            + "\n fluidLayerDepths.size()=" + str(len(self.fluidLayerDepths))
-            + "\n highSlownessLayerDepthsP.size()="
-            + str(len(self.highSlownessLayerDepthsP))
-            + "\n highSlownessLayerDepthsS.size()="
-            + str(len(self.highSlownessLayerDepthsS))
-            + "\n criticalDepths.size()="
-            + (str(len(self.criticalDepths)) if self.criticalDepths else 'N/A')
-            + "\n")
+        desc = "".join([
+            "radiusOfEarth=", str(self.radiusOfEarth), "\n maxDeltaP=",
+            str(self.maxDeltaP),
+            "\n minDeltaP=", str(self.minDeltaP), "\n maxDepthInterval=",
+            str(self.maxDepthInterval), "\n maxRangeInterval=",
+            str(self.maxRangeInterval),
+            "\n allowInnerCoreS=", str(self.allowInnerCoreS),
+            "\n slownessTolerance=", str(self.slowness_tolerance),
+            "\n getNumLayers('P')=", str(self.getNumLayers(self.PWAVE)),
+            "\n getNumLayers('S')=", str(self.getNumLayers(self.SWAVE)),
+            "\n fluidLayerDepths.size()=", str(len(self.fluidLayerDepths)),
+            "\n highSlownessLayerDepthsP.size()=",
+            str(len(self.highSlownessLayerDepthsP)),
+            "\n highSlownessLayerDepthsS.size()=",
+            str(len(self.highSlownessLayerDepthsS)),
+            "\n criticalDepths.size()=",
+            (str(len(self.criticalDepths)) if self.criticalDepths else 'N/A'),
+            "\n"])
         desc += "**** Critical Depth Layers ************************\n"
         desc += str(self.criticalDepths)
         desc += "\n"
@@ -248,20 +248,20 @@ class SlownessModel(object):
                     -1)
                 cd_count += 1
                 if self.DEBUG:
-                    print('First order discontinuity, depth ='
-                          + str(currSLayer['topDepth']))
+                    print('First order discontinuity, depth =' +
+                          str(currSLayer['topDepth']))
                     print('between' + str(prevPLayer), str(currPLayer))
                 if inHighSlownessZoneS and currSLayer['topP'] < minSSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
-                              + " of a high slowness zone.")
+                              " of a high slowness zone.")
                     highSlownessZoneS.botDepth = currSLayer['topDepth']
                     self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                     inHighSlownessZoneS = False
                 if inHighSlownessZoneP and currPLayer['topP'] < minPSoFar:
                     if self.DEBUG:
                         print("Top of current layer is the bottom"
-                              + " of a high slowness zone.")
+                              " of a high slowness zone.")
                     highSlownessZoneP.botDepth = currSLayer['topDepth']
                     self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                     inHighSlownessZoneP = False
@@ -278,8 +278,8 @@ class SlownessModel(object):
                         currSLayer['topP'] < currSLayer['botP']):
                     # start of a high slowness zone S
                     if self.DEBUG:
-                        print("Found S high slowness at first order "
-                              + "discontinuity, layer = " + str(layerNum))
+                        print("Found S high slowness at first order " +
+                              "discontinuity, layer = " + str(layerNum))
                     inHighSlownessZoneS = True
                     highSlownessZoneS = \
                         DepthRange(topDepth=currSLayer['topDepth'])
@@ -289,8 +289,8 @@ class SlownessModel(object):
                         currPLayer['topP'] < currPLayer['botP']):
                     # start of a high slowness zone P
                     if self.DEBUG:
-                        print("Found P high slowness at first order "
-                              + "discontinuity, layer = " + str(layerNum))
+                        print("Found P high slowness at first order " +
+                              "discontinuity, layer = " + str(layerNum))
                     inHighSlownessZoneP = True
                     highSlownessZoneP = \
                         DepthRange(topDepth=currPLayer['topDepth'])
@@ -324,8 +324,8 @@ class SlownessModel(object):
                         and currSLayer['topP'] < currSLayer['botP']:
                     if self.DEBUG:
                         print("start of a S high slowness zone, local "
-                              "slowness extrema, minSSoFar= "
-                              + str(minSSoFar))
+                              "slowness extrema, minSSoFar= " +
+                              str(minSSoFar))
                     inHighSlownessZoneS = True
                     highSlownessZoneS = \
                         DepthRange(topDepth=currSLayer['topDepth'])
@@ -335,8 +335,8 @@ class SlownessModel(object):
                 # P: layer contains the bottom of a high slowness zone. java
                 #  l 1043
                 if self.DEBUG:
-                    print("layer contains the bottom of a P "
-                          + "high slowness zone. minPSoFar=" + str(minPSoFar),
+                    print("layer contains the bottom of a P " +
+                          "high slowness zone. minPSoFar=" + str(minPSoFar),
                           currPLayer)
                 highSlownessZoneP.botDepth = self.findDepth(
                     minPSoFar, layerNum, layerNum, self.PWAVE)
@@ -347,8 +347,8 @@ class SlownessModel(object):
                 # S: layer contains the bottom of a high slowness zone. java
                 #  l 1043
                 if self.DEBUG:
-                    print("layer contains the bottom of a S "
-                          + "high slowness zone. minSSoFar=" + str(minSSoFar),
+                    print("layer contains the bottom of a S " +
+                          "high slowness zone. minSSoFar=" + str(minSSoFar),
                           currSLayer)
                 # in fluid layers we want to check PWAVE structure
                 # when looking for S wave critical points
@@ -366,11 +366,11 @@ class SlownessModel(object):
             if minSSoFar > currSLayer['topP']:
                 minSSoFar = currSLayer['topP']
             if self.DEBUG and inHighSlownessZoneS:
-                print("In S high slowness zone, layerNum = " + str(layerNum)
-                      + " minSSoFar=" + str(minSSoFar))
+                print("In S high slowness zone, layerNum = " + str(layerNum) +
+                      " minSSoFar=" + str(minSSoFar))
             if self.DEBUG and inHighSlownessZoneP:
-                print("In P high slowness zone, layerNum = " + str(layerNum)
-                      + " minPSoFar=" + str(minPSoFar))
+                print("In P high slowness zone, layerNum = " + str(layerNum) +
+                      " minPSoFar=" + str(minPSoFar))
 
         # We know that the bottommost depth is always a critical slowness,
         # so we add vMod.getNumLayers()
@@ -526,9 +526,9 @@ class SlownessModel(object):
 
         raise SlownessModelError(
             "slowness p=" + str(p) +
-            "is not contained within the specified layers."
-            + " topCriticalLayer=" + str(topCriticalLayer)
-            + " botCriticalLayer=" + str(botCriticalLayer))
+            "is not contained within the specified layers." +
+            " topCriticalLayer=" + str(topCriticalLayer) +
+            " botCriticalLayer=" + str(botCriticalLayer))
 
     def toSlowness(self, velocity, depth):
         if velocity == 0:
@@ -651,8 +651,8 @@ class SlownessModel(object):
             sLayerNum = self.layerNumberAbove(highZone.botDepth, self.PWAVE)
             highSLayer = self.PLayers[sLayerNum]
             while highSLayer['topDepth'] == highSLayer['botDepth'] and (
-                    (highSLayer['topP'] - highZone.ray_param)
-                    * (highZone.ray_param - highSLayer['botP']) < 0):
+                    (highSLayer['topP'] - highZone.ray_param) *
+                    (highZone.ray_param - highSLayer['botP']) < 0):
                 sLayerNum += 1
                 highSLayer = self.PLayers[sLayerNum]
             if highZone.ray_param != highSLayer['botP']:
@@ -902,10 +902,10 @@ class SlownessModel(object):
                 sLayer = self.getSlownessLayer(j, currWaveType)
                 if (self.depthInHighSlowness(sLayer['botDepth'],
                                              sLayer['botP'],
-                                             currWaveType) is False
-                    and self.depthInHighSlowness(sLayer['topDepth'],
-                                                 sLayer['topP'],
-                                                 currWaveType) is False):
+                                             currWaveType) is False and
+                    self.depthInHighSlowness(sLayer['topDepth'],
+                                             sLayer['topP'],
+                                             currWaveType) is False):
                     # Don't calculate prevTD if we can avoid it
                     if isCurrOK:
                         if isPrevOK:
@@ -968,11 +968,11 @@ class SlownessModel(object):
                         # Use numpy's division instead by using np.array:
                         with np.errstate(divide='ignore', invalid='ignore'):
                             diff = (currTD['time'] -
-                                    ((splitTD['time'] - prevTD['time'])
-                                     * ((currTD['dist']
-                                        - prevTD['dist']) /
+                                    ((splitTD['time'] - prevTD['time']) *
+                                     ((currTD['dist'] -
+                                       prevTD['dist']) /
                                         (splitTD['dist'] -
-                                        prevTD['dist'])) + prevTD['time']))
+                                         prevTD['dist'])) + prevTD['time']))
                         if abs(diff) > self.maxInterpError:
                             p1 = (prevSLayer['topP'] + prevSLayer['botP']) / 2
                             p2 = (sLayer['topP'] + sLayer['botP']) / 2
@@ -1032,8 +1032,8 @@ class SlownessModel(object):
         for tempRange in highSlownessLayerDepths:
             if tempRange.topDepth <= depth <= tempRange.botDepth:
                 if ray_param > tempRange.ray_param \
-                        or (ray_param == tempRange.ray_param
-                            and depth == tempRange.topDepth):
+                        or (ray_param == tempRange.ray_param and
+                            depth == tempRange.topDepth):
                     return True
         return False
 

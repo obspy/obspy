@@ -67,8 +67,8 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
             return layer['botDepth']
         if layer['botP'] != 0 and layer['botDepth'] != radiusOfEarth:
             B = np.divide(math.log(layer['topP'] / layer['botP']),
-                          math.log((radiusOfEarth - layer['topDepth'])
-                          / (radiusOfEarth - layer['botDepth'])))
+                          math.log((radiusOfEarth - layer['topDepth']) /
+                          (radiusOfEarth - layer['botDepth'])))
             # This is a cludge but it's needed to mimic the Java behaviour.
             try:
                 denom = math.pow((radiusOfEarth - layer['topDepth']), B)
@@ -115,8 +115,8 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
             # Special case for the centre of the Earth, since Ar^B might
             #  blow up at r = 0.
             if layer['topP'] != layer['botP']:
-                return (layer['botDepth'] + (ray_param - layer['botP'])
-                        * (layer['topDepth'] - layer['botDepth']) /
+                return (layer['botDepth'] + (ray_param - layer['botP']) *
+                        (layer['topDepth'] - layer['botDepth']) /
                         (layer['topP'] - layer['botP']))
             else:
                 # weird case, return botDepth??

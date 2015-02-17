@@ -628,8 +628,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             continue
         if trigger_type is not None:
             tr.trigger(trigger_type, **options)
-        kwargs['max_len'] = int(max_trigger_length * tr.stats.sampling_rate
-                                + 0.5)
+        kwargs['max_len'] = int(
+            max_trigger_length * tr.stats.sampling_rate + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
             try:

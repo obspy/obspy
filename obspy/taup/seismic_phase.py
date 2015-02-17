@@ -257,8 +257,8 @@ class SeismicPhase(object):
                     disconBranch = tMod.cmbBranch if nextLeg == "K" else 0
                     self.add_to_branch(
                         tMod, self.currBranch, disconBranch, isPWave,
-                        (self.TRANSUP if currLeg == "k"
-                         and nextLeg != "K" else self.REFLECTTOP))
+                        (self.TRANSUP if currLeg == "k" and
+                         nextLeg != "K" else self.REFLECTTOP))
                 elif isNextLegDepth:
                     disconBranch = closest_branch_to_depth(tMod, nextLeg)
                     self.add_to_branch(tMod, self.currBranch, disconBranch,
@@ -303,10 +303,10 @@ class SeismicPhase(object):
                                            isPWave, self.REFLECTTOP)
                     elif ((prevLeg[0] == "v" and
                             disconBranch < closest_branch_to_depth(
-                                tMod, prevLeg[1])
-                           or (prevLeg == "m" and
-                               disconBranch < tMod.mohoBranch)
-                           or (prevLeg == "c" and
+                                tMod, prevLeg[1]) or
+                           (prevLeg == "m" and
+                               disconBranch < tMod.mohoBranch) or
+                           (prevLeg == "c" and
                                disconBranch < tMod.cmbBranch))):
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, self.REFLECTTOP)
@@ -381,8 +381,8 @@ class SeismicPhase(object):
                     # thinking we are turning, but then make maxRayParam
                     # equal to minRayParam, which is the deepest turning ray.
                     if (self.maxRayParam >= tMod.getTauBranch(
-                            tMod.cmbBranch - 1, isPWave).minTurnRayParam
-                            >= self.minRayParam):
+                            tMod.cmbBranch - 1, isPWave).minTurnRayParam >=
+                            self.minRayParam):
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.cmbBranch - 1, isPWave,
                                            self.TURN)
@@ -415,8 +415,8 @@ class SeismicPhase(object):
                         # make the minRayParam equal to maxRayParam,
                         # which is the head wave ray.
                         if (self.maxRayParam >= tMod.getTauBranch(
-                                tMod.mohoBranch, isPWave).maxRayParam
-                                >= self.minRayParam):
+                                tMod.mohoBranch, isPWave).maxRayParam >=
+                                self.minRayParam):
                             self.add_to_branch(tMod, self.currBranch,
                                                tMod.mohoBranch, isPWave,
                                                self.TURN)
@@ -473,8 +473,8 @@ class SeismicPhase(object):
                 elif nextLeg == "K":
                     self.add_to_branch(tMod, self.currBranch, tMod.iocbBranch,
                                        isPWave, self.TRANSUP)
-            elif (currLeg in ("m", "c", "i")
-                  or currLeg[0] in "^v" or isLegDepth):
+            elif (currLeg in ("m", "c", "i") or
+                  currLeg[0] in "^v" or isLegDepth):
                 pass
             else:
                 raise TauModelError(
@@ -704,12 +704,12 @@ class SeismicPhase(object):
                     for legNum in range(len(self.branchSeq)):
                         # Check for downgoing legs that cross the high
                         # slowness zone with the same wave type.
-                        if (self.branchSeq[legNum] == branchNum
-                                and self.waveType[legNum] == isPwave
-                                and self.downGoing[legNum] is True
-                                and self.branchSeq[legNum - 1] == branchNum - 1
-                                and self.waveType[legNum - 1] == isPwave
-                                and self.downGoing[legNum - 1] is True):
+                        if (self.branchSeq[legNum] == branchNum and
+                                self.waveType[legNum] == isPwave and
+                                self.downGoing[legNum] is True and
+                                self.branchSeq[legNum - 1] == branchNum - 1 and
+                                self.waveType[legNum - 1] == isPwave and
+                                self.downGoing[legNum - 1] is True):
                             foundOverlap = True
                             break
                     if foundOverlap:
@@ -931,10 +931,10 @@ class SeismicPhase(object):
                                        "this is impossible.")
 
             # Special case for head and diffracted waves:
-            if(branchNum == self.tMod.cmbBranch - 1
-               and i < len(self.branchSeq) - 1
-               and self.branchSeq[i + 1] == self.tMod.cmbBranch - 1
-               and ("Pdiff" in self.name or "Sdiff" in self.name)):
+            if(branchNum == self.tMod.cmbBranch - 1 and
+               i < len(self.branchSeq) - 1 and
+               self.branchSeq[i + 1] == self.tMod.cmbBranch - 1 and
+               ("Pdiff" in self.name or "Sdiff" in self.name)):
                 diffTD = np.array([(
                     currArrival.ray_param,
                     (currArrival.dist - self.dist[0]) * currArrival.ray_param,
@@ -942,10 +942,10 @@ class SeismicPhase(object):
                     self.tMod.cmbDepth)], dtype=TimeDist)
                 pathList.append(diffTD)
 
-            elif(branchNum == self.tMod.mohoBranch - 1
-                 and i < len(self.branchSeq) - 1
-                 and self.branchSeq[i + 1] == self.tMod.mohoBranch - 1
-                 and ("Pn" in self.name or "Sn" in self.name)):
+            elif(branchNum == self.tMod.mohoBranch - 1 and
+                 i < len(self.branchSeq) - 1 and
+                 self.branchSeq[i + 1] == self.tMod.mohoBranch - 1 and
+                 ("Pn" in self.name or "Sn" in self.name)):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 numFound = max(self.name.count("Pn"), self.name.count("Sn"))
                 headTD = np.array([(
@@ -1014,13 +1014,13 @@ class SeismicPhase(object):
     def linear_interp_arrival(self, searchDist, rayNum, name, puristName,
                               source_depth):
         arrivalTime = ((searchDist - self.dist[rayNum]) /
-                       (self.dist[rayNum + 1] - self.dist[rayNum])
-                       * (self.time[rayNum + 1] - self.time[rayNum]) +
+                       (self.dist[rayNum + 1] - self.dist[rayNum]) *
+                       (self.time[rayNum + 1] - self.time[rayNum]) +
                        self.time[rayNum])
         arrivalRayParam = ((searchDist - self.dist[rayNum + 1]) *
                            (self.ray_param[rayNum] -
-                            self.ray_param[rayNum + 1])
-                           / (self.dist[rayNum] - self.dist[rayNum + 1]) +
+                            self.ray_param[rayNum + 1]) /
+                           (self.dist[rayNum] - self.dist[rayNum + 1]) +
                            self.ray_param[rayNum + 1])
         if name.endswith("kmps"):
             takeoffAngle = 0
