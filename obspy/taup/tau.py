@@ -113,6 +113,9 @@ class Arrivals(list):
             ax.set_yticks(radius - discons)
             ax.xaxis.set_major_formatter(plt.NullFormatter())
             ax.yaxis.set_major_formatter(plt.NullFormatter())
+            ax.plot([0], [radius - arrivals[0].source_depth],
+                    marker="*", color="#FEF215", markersize=20, zorder=10,
+                    markeredgewidth=1.5, markeredgecolor="0.3")
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
             plt.legend(loc="upper left", fontsize="small")
