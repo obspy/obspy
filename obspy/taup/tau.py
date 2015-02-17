@@ -113,9 +113,23 @@ class Arrivals(list):
             ax.set_yticks(radius - discons)
             ax.xaxis.set_major_formatter(plt.NullFormatter())
             ax.yaxis.set_major_formatter(plt.NullFormatter())
+            # Pretty earthquake marker.
             ax.plot([0], [radius - arrivals[0].source_depth],
                     marker="*", color="#FEF215", markersize=20, zorder=10,
-                    markeredgewidth=1.5, markeredgecolor="0.3")
+                    markeredgewidth=1.5, markeredgecolor="0.3", clip_on=False)
+            # Pretty station marker.
+            ms = 14
+            station_marker_transform = matplotlib.transforms.offset_copy(
+                ax.transData,
+                fig=ax.get_figure(),
+                x=np.sin(np.deg2rad(self.distance)) * ms / 2.0,
+                y=np.cos(np.deg2rad(self.distance)) * ms / 2.0,
+                units="points")
+            ax.plot([np.deg2rad(self.distance)], [radius],
+                    marker=(3, 0, 180.0 - self.distance), color="#C95241",
+                    markersize=ms, zorder=10, markeredgewidth=1.5,
+                    markeredgecolor="0.3", clip_on=False,
+                    transform=station_marker_transform)
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
             plt.legend(loc="upper left", fontsize="small")
