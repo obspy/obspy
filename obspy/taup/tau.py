@@ -102,19 +102,18 @@ class Arrivals(list):
             ax.set_xticks([])
             ax.set_yticks([])
             intp = matplotlib.cbook.simple_linear_interpolation
+            radius = self.model.radiusOfEarth
             for _i, ray in enumerate(arrivals):
                 # Requires interpolation otherwise diffracted phases look
                 # funny.
                 ax.plot(intp(ray.path["dist"], 100),
-                        6371.0 - intp(ray.path["depth"], 100),
+                        radius - intp(ray.path["depth"], 100),
                         color=COLORS[_i % len(COLORS)], label=ray.name,
-                        lw=1.5)
-            ax.set_xticks(np.pi / 180.0 * np.linspace(180, -180, 8,
-                                                      endpoint=False))
-            ax.set_yticks(6371 - discons)
+                        lw=2.0)
+            ax.set_yticks(radius - discons)
             ax.xaxis.set_major_formatter(plt.NullFormatter())
             ax.yaxis.set_major_formatter(plt.NullFormatter())
-            ax.set_rmax(6371.0)
+            ax.set_rmax(radius)
             ax.set_rmin(0.0)
             plt.legend(loc="upper left", fontsize="small")
         elif plot_type == "cartesian":
@@ -125,7 +124,7 @@ class Arrivals(list):
             for _i, ray in enumerate(arrivals):
                 ax.plot(np.rad2deg(ray.path["dist"]), ray.path["depth"],
                         color=COLORS[_i % len(COLORS)], label=ray.name,
-                        lw=1.5)
+                        lw=2.0)
             ax.set_ylabel("Depth [km]")
             ax.legend(fontsize="small")
             ax.set_xlabel("Distance [deg]")
