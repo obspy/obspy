@@ -3,6 +3,9 @@
 
 # General
 sphinx>=1.1
+
+sphinx-bootstrap-theme
+
 ## for 'make coverage' only:
 coverage==3.5
 ## for 'make pep8' only:
@@ -14,6 +17,8 @@ doc2dash
 
 # ObsPy Library
 ## obspy.*
+future
+
 lxml
 numpy
 scipy
