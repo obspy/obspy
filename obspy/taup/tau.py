@@ -5,6 +5,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
+
+import matplotlib.cbook
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -99,8 +101,12 @@ class Arrivals(list):
             ax.set_theta_direction(-1)
             ax.set_xticks([])
             ax.set_yticks([])
+            intp = matplotlib.cbook.simple_linear_interpolation
             for _i, ray in enumerate(arrivals):
-                ax.plot(ray.path["dist"], 6371.0 - ray.path["depth"],
+                # Requires interpolation otherwise diffracted phases look
+                # funny.
+                ax.plot(intp(ray.path["dist"], 100),
+                        6371.0 - intp(ray.path["depth"], 100),
                         color=COLORS[_i % len(COLORS)], label=ray.name,
                         lw=1.5)
             ax.set_xticks(np.pi / 180.0 * np.linspace(180, -180, 8,
