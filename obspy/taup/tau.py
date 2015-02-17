@@ -84,13 +84,13 @@ class Arrivals(list):
         for _i in self:
             if _i.path is None:
                 continue
-            dist = _i.purist_distance
+            dist = _i.purist_distance % 360.0
             if abs(dist - self.distance) / dist > 1E-5:
                 if plot_all is False:
                     continue
-                _i = copy.deepcopy(_i)
                 # Mirror on axis.
-                _i.path["dist"] = -1.0 * _i.path["dist"]
+                _i = copy.deepcopy(_i)
+                _i.path["dist"] *= -1.0
             arrivals.append(_i)
         if not arrivals:
             raise ValueError("Can only plot arrivals with calculated ray "

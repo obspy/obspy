@@ -42,6 +42,16 @@ class TauPyPlottingTestCase(unittest.TestCase):
                                                     plot_all=False, show=False)
             plt.savefig(ic.name)
 
+    def test_spherical_more_then_360_degrees(self):
+        """
+        Test a plot where rays travel more than 360.0 degrees.
+        """
+        with ImageComparison(self.image_dir,
+                             "spherical_more_then_360.png") as ic:
+            self.model.get_ray_paths(0, 10, phase_list=["PPPPPP"]).plot(
+                plot_type="spherical", plot_all=True, show=False)
+            plt.savefig(ic.name)
+
     def test_spherical_diff_phases(self):
         with ImageComparison(self.image_dir,
                              "spherical_diff_phases.png") as ic:
