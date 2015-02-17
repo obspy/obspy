@@ -93,16 +93,16 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = readSEGY(file, textual_header_encoding='EBCDIC')
-        self.assertTrue(st1.stats.textual_file_header[3:21]
-                        == b'CLIENT: LITHOPROBE')
+        self.assertTrue(st1.stats.textual_file_header[3:21] ==
+                        b'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
         self.assertEqual(st1.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = readSEGY(file, textual_header_encoding='ascii')
-        self.assertFalse(st2.stats.textual_file_header[3:21]
-                         == b'CLIENT: LITHOPROBE')
+        self.assertFalse(st2.stats.textual_file_header[3:21] ==
+                         b'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
         # Autodetection should also write the textual file header encoding to

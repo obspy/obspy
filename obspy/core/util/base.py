@@ -20,6 +20,7 @@ import io
 import os
 import sys
 import tempfile
+import time
 
 with standard_library.hooks():
     from collections import OrderedDict
@@ -106,7 +107,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-        self.close()
+        self._fileobj.close()
         for _ in range(10):
             try:
                 os.remove(self.name)

@@ -171,12 +171,12 @@ class Network(BaseNode):
             responses = []
         else:
             channels = [cha for sta in self.stations for cha in sta.channels
-                        if sta.code == station
-                        and cha.code == channel
-                        and cha.location_code == location
-                        and (cha.start_date is None
-                             or cha.start_date <= datetime)
-                        and (cha.end_date is None or cha.end_date >= datetime)]
+                        if sta.code == station and
+                        cha.code == channel and
+                        cha.location_code == location and
+                        (cha.start_date is None or
+                         cha.start_date <= datetime) and
+                        (cha.end_date is None or cha.end_date >= datetime)]
             responses = [cha.response for cha in channels
                          if cha.response is not None]
         if len(responses) > 1:

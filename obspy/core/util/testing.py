@@ -408,7 +408,7 @@ class ImageComparison(NamedTemporaryFile):
         # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
-            self.close()
+            self._fileobj.close()
             plt.close()
             if self.keep_output:
                 if not (self.keep_only_failed and not failed):

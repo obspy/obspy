@@ -828,8 +828,8 @@ class WaveformPlotting(object):
                 (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
-                labels = [self.tick_format % (self.starttime
-                                              + _i * interval).timestamp
+                labels = [self.tick_format % (self.starttime +
+                                              _i * interval).timestamp
                           for _i in range(self.number_of_ticks)]
             else:
                 labels = [(self.starttime + _i *
@@ -1298,9 +1298,9 @@ class WaveformPlotting(object):
         for _tr in range(self._tr_num):
             # Scale, normalize and shift traces by offset
             # for plotting
-            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr]
-                    * (1. / self._sect_scale)
-                    + self._tr_offsets_norm[_tr],
+            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr] *
+                    (1. / self._sect_scale) +
+                    self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
         return ax
 

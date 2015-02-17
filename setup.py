@@ -89,8 +89,9 @@ DOCSTRING = __doc__.split("\n")
 
 # check for MSVC
 if platform.system() == "Windows" and (
-        'msvc' in sys.argv or '-c' not in sys.argv and get_default_compiler()
-        == 'msvc'):
+        'msvc' in sys.argv or
+        '-c' not in sys.argv and
+        get_default_compiler() == 'msvc'):
     IS_MSVC = True
 else:
     IS_MSVC = False

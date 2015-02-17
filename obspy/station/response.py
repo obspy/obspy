@@ -1216,8 +1216,8 @@ class Response(ComparingObject):
         # detect sampling rate from response stages
         if sampling_rate is None:
             for stage in self.response_stages[::-1]:
-                if (stage.decimation_input_sample_rate is not None
-                        and stage.decimation_factor is not None):
+                if (stage.decimation_input_sample_rate is not None and
+                        stage.decimation_factor is not None):
                     sampling_rate = (stage.decimation_input_sample_rate /
                                      stage.decimation_factor)
                     break

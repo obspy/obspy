@@ -209,12 +209,12 @@ class TauModel(object):
         for j, ray_param in enumerate(self.ray_params):
             for i, tb in enumerate(self.tauBranches[0]):
                 desc += (
-                    " i " + str(i) + " j " + str(j) + " ray_param "
-                    + str(ray_param)
-                    + " tau " + str(tb.tau[j]) + " time "
-                    + str(tb.time[j]) + " dist "
-                    + str(tb.dist[j]) + " degrees "
-                    + str(tb.dist[j] * 180 / pi) + "\n")
+                    " i " + str(i) + " j " + str(j) + " ray_param " +
+                    str(ray_param) +
+                    " tau " + str(tb.tau[j]) + " time " +
+                    str(tb.time[j]) + " dist " +
+                    str(tb.dist[j]) + " degrees " +
+                    str(tb.dist[j] * 180 / pi) + "\n")
             desc += "\n"
         return desc
 

@@ -391,8 +391,8 @@ class TauPyModelTestCase(unittest.TestCase):
             arr = arrivals[0]
             # These are the same tolerances as in the Java tests suite.
             self.assertTrue(abs(arr.time - value["time"]) < 0.07)
-            self.assertTrue(abs(arr.ray_param_sec_degree - value["ray_param"])
-                            < 0.11)
+            self.assertTrue(abs(arr.ray_param_sec_degree -
+                                value["ray_param"]) < 0.11)
 
     def test_kennet_ak135_ttime_tables_P_deep(self):
         self._compare_against_ak135_tables_kennet(

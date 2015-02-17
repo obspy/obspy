@@ -62,8 +62,8 @@ class TauBranch(object):
                 self.botDepth = botSLayer['botDepth']
             else:
                 raise TauModelError("createBranch: TauBranch not compatible "
-                                    "with slowness sampling at topDepth"
-                                    + str(self.topDepth))
+                                    "with slowness sampling at topDepth" +
+                                    str(self.topDepth))
         # Here we set minTurnRayParam to be the ray parameter that turns within
         # the layer, not including total reflections off of the bottom.
         # maxRayParam is the largest ray parameter that can penetrate this

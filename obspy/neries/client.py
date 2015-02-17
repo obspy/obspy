@@ -569,8 +569,8 @@ class Client(object):
             break
         # keep only request ids which are fulfilled and have 'status = OK'
         request_ids = [r._Id for r in response.RoutedRequest
-                       if 'Status: OK' in r.StatusDescription
-                       and r.Fulfillment == 100]
+                       if 'Status: OK' in r.StatusDescription and
+                       r.Fulfillment == 100]
         if not request_ids:
             return
         # retrieve download URLs using request ids

@@ -84,8 +84,8 @@ def process_autosummary_toc(app, doctree):
         crawled[node] = True
         for j, subnode in enumerate(node):
             try:
-                if (isinstance(subnode, autosummary_toc)
-                    and isinstance(subnode[0], addnodes.toctree)):
+                if (isinstance(subnode, autosummary_toc) and
+                        isinstance(subnode[0], addnodes.toctree)):
                     env.note_toctree(env.docname, subnode[0])
                     continue
             except IndexError:

@@ -432,8 +432,8 @@ def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
     new_sample = np.zeros(np.size(sample), sample.dtype)
 
     ioffset_pick = int(round(
-                       (ref_time - trace.stats.starttime)
-                       * trace.stats.sampling_rate))
+                       (ref_time - trace.stats.starttime) *
+                       trace.stats.sampling_rate))
     ioffset_mwp_min = ioffset_pick
 
     # set reference amplitude

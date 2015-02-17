@@ -581,7 +581,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 timing_quality = int(timing_quality)
                 if timing_quality < 0 or timing_quality > 100:
                     raise ValueError("Timing quality out of range. It must be "
-                                     + "between 0 and 100.")
+                                     "between 0 and 100.")
             except ValueError:
                 msg = "Invalid timing quality in Stream[%i].stats." % _i + \
                     "mseed.timing_quality. It must be an integer ranging" + \
