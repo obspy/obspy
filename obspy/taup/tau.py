@@ -81,8 +81,8 @@ class Arrivals(list):
         for _i in self:
             if _i.path is None:
                 continue
-            dist = np.rad2deg(_i.dist)
-            if (dist - self.distance) / dist > 1E-5:
+            dist = _i.purist_distance
+            if abs(dist - self.distance) / dist > 1E-5:
                 if plot_all is False:
                     continue
                 _i = copy.deepcopy(_i)
@@ -132,7 +132,11 @@ class Arrivals(list):
                     transform=station_marker_transform)
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
-            plt.legend(loc="upper left", fontsize="small")
+            if 0 <= self.distance <= 180.0:
+                loc = "upper left"
+            else:
+                loc = "upper right"
+            plt.legend(loc=loc, fontsize="small")
         elif plot_type == "cartesian":
             if not ax:
                 plt.figure(figsize=(12, 8))
