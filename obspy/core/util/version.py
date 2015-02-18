@@ -155,12 +155,33 @@ def get_git_version(abbrev=4):
     if version is None:
         return '0.0.0+archive'
 
+    # pip uses its normalized version number (strict PEP440) instead of our
+    # original version number, so we bow to pip and use the normalized version
+    # number internally, too, to avoid discrepancies.
+    version = _normalize_version(version)
+
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
     if version != release_version:
         write_release_version(version)
 
     # Finally, return the current version.
+    return version
+
+
+def _normalize_version(version):
+    """
+    Normalize version number string to adhere with PEP440 strictly.
+    """
+    # only adapt local version part right
+    version = re.match(r'(.*?\+)(.*)', version)
+    # no upper case letters
+    local_version = version.group(2).lower()
+    # only alphanumeric and "." in local part
+    local_version = re.sub(r'[^A-Za-z0-9.]', r'.', local_version)
+    version = version.group(1) + local_version
+    # make sure there's a "0" after ".dev"
+    version = re.sub(r'\.dev\+', r'.dev0+', version)
     return version
 
 
