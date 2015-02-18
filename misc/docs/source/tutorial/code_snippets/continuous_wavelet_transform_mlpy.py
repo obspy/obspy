@@ -21,10 +21,18 @@ fig = plt.figure()
 ax1 = fig.add_axes([0.1, 0.75, 0.7, 0.2])
 ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.60])
 ax3 = fig.add_axes([0.83, 0.1, 0.03, 0.6])
+
 t = np.arange(tr.stats.npts) / tr.stats.sampling_rate
 ax1.plot(t, tr.data, 'k')
+
 img = ax2.imshow(np.abs(spec), extent=[t[0], t[-1], freq[-1], freq[0]],
                  aspect='auto', interpolation="nearest")
-ax2.set_yscale('log')
+# Hackish way to overlay a logarithmic scale over a linearly scaled image.
+twin_ax = ax2.twinx()
+twin_ax.set_yscale('log')
+twin_ax.set_xlim(t[0], t[-1])
+twin_ax.set_ylim(freq[-1], freq[0])
+
 fig.colorbar(img, cax=ax3)
+
 plt.show()
