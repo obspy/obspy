@@ -588,40 +588,53 @@ def set_flags_in_fixed_headers(filename, flags):
     Updates a given MiniSEED file with some fixed header flags.
 
     :type filename: string
-    :param filename: name of the MiniSEED file to be changed
+    :param filename: Name of the MiniSEED file to be changed
     :type flags: dict
-    :param flags: the flags to update in the MiniSEED file
+    :param flags: The flags to update in the MiniSEED file
 
-    Flags are stored as a nested dictionary:
+        Flags are stored as a nested dictionary::
 
-    .. code-block:: python
+            { trace_id:
+                { flag_group:
+                    { flag_name: flag_value,
+                                 ...
+                    },
+                    ...
+                },
+                ...
+            }
 
-        { trace_id: { flag_group : { flag_name : flag_value, ... }, ...}, ...}
+        with:
 
-    with:
+        * ``trace_id``
+            A string identifying the trace. A string looking like
+            ``NETWORK.STATION.LOCATION.CHANNEL`` is expected, the values will
+            be compared to those found in the fixed header of every record. An
+            empty field will be interpreted  as "every possible value", so
+            ``"..."`` will apply to every single trace in the file. Padding
+            spaces are ignored.
+        * ``flag_group``
+            Which flag group is to be changed. One of ``'activity_flags'``,
+            ``'io_clock_flags'``, ``'data_qual_flags'`` is expected. Invalid
+            flag groups raise a ``ValueError``.
+        * ``flag_name``
+            The name of the flag. Possible values are matched with
+            ``obspy.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS``,
+            ``FIXED_HEADER_IO_CLOCK_FLAGS`` or ``FIXED_HEADER_DATA_QUAL_FLAGS``
+            depending on the flag_group. Invalid flags raise a ``ValueError``.
+        * ``flag_value``
+            The value you want for this flag. Expected value is a bool (always
+            ``True``/``False``) or a dict to store the moments and durations
+            when this flag is ``True``. Expected syntax for this dict is
+            accurately described in ``obspy.mseed.util._checkFlagValue``.
 
-    * ``trace_id``: a string identifying the trace. A string looking like
-      ``NETWORK.STATION.LOCATION.CHANNEL`` is expected, the values will be
-      compared to those found in the fixed header of every record. An empty
-      field will be interpreted  as "every possible value", so ``"..."`` will
-      apply to every single trace in the file. Padding spaces are ignored.
-    * ``flag_group``: which flag group is to be changed. One of
-      ``'activity_flags'``, ``'io_clock_flags'``, ``'data_qual_flags'`` is
-      expected. Invalid flag groups raise a ValueError.
-    * ``flag_name``: the name of the flag. Possible values are matched with
-      ``obspy.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS``,
-      ``FIXED_HEADER_IO_CLOCK_FLAGS`` or ``FIXED_HEADER_DATA_QUAL_FLAGS``
-      depending on the flag_group. Invalid flags raise a ValueError.
-    * ``flag_value``: the value you want for this flag. Expected value is a
-      bool (always True/False) or a dict to store the moments and durations
-      when this flag is True. Expected syntax for this dict is accurately
-      described in ``obspy.mseed.util._checkFlagValue``.
+    :raises IOError: if the file is not a MiniSEED file
+    :raises ValueError: if one of the flag group, flag name or flag value is
+        incorrect
 
-    Example: to add a *Calibration Signals Presents* flag (which belongs to the
+    Example: to add a *Calibration Signals Present* flag (which belongs to the
     Activity Flags section of the fixed header) to every record, flags should
-    be:
-
-    .. code-block:: python
+    be::
 
         { "..." : { "activity_flags" : { "calib_signal" : True }}}
 
@@ -629,9 +642,7 @@ def set_flags_in_fixed_headers(filename, flags):
     Activity Flags section of the fixed header) from 2009/12/23 06:00:00 to
     2009/12/23 06:30:00, from 2009/12/24 10:00:00 to 2009/12/24 10:30:00 and
     at precise times 2009/12/26 18:00:00 and 2009/12/26 18:04:00,
-    flags should be:
-
-    .. code-block:: python
+    flags should be::
 
         date1 = UTCDateTime("2009-12-23T06:00:00.0")
         date2 = UTCDateTime("2009-12-23T06:30:00.0")
@@ -645,9 +656,7 @@ def set_flags_in_fixed_headers(filename, flags):
                     {"INSTANT" : [date5, date6],
                     "DURATION" : [(date1, date2), (date3, date4)]}}}}
 
-    Alternative way to mark duration:
-
-    .. code-block:: python
+    Alternative way to mark duration::
 
         { "..." :
             { "activity_flags" :
@@ -655,8 +664,6 @@ def set_flags_in_fixed_headers(filename, flags):
                     { "INSTANT" : [date5, date6],
                       "DURATION" : [date1, date2, date3, date4]}}}}
 
-    :raises: IOError is raised if the file is not a MiniSEED file. ValueError
-    is raised if one of the flag group, flag name or flag value is incorrect.
     """
 
     # import has to be here to break import loop
