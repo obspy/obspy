@@ -19,7 +19,7 @@ freq = (omega0 + np.sqrt(2.0 + omega0 ** 2)) / (4 * np.pi * scales[1:])
 
 fig = plt.figure()
 ax1 = fig.add_axes([0.1, 0.75, 0.7, 0.2])
-ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.60])
+ax2 = fig.add_axes([0.1, 0.1, 0.7, 0.60], sharex=ax1)
 ax3 = fig.add_axes([0.83, 0.1, 0.03, 0.6])
 
 t = np.arange(tr.stats.npts) / tr.stats.sampling_rate
@@ -32,6 +32,8 @@ twin_ax = ax2.twinx()
 twin_ax.set_yscale('log')
 twin_ax.set_xlim(t[0], t[-1])
 twin_ax.set_ylim(freq[-1], freq[0])
+ax2.tick_params(which='both', labelleft=False, left=False)
+twin_ax.tick_params(which='both', labelleft=True, left=True, labelright=False)
 
 fig.colorbar(img, cax=ax3)
 
