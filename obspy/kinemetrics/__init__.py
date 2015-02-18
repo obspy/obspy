@@ -43,7 +43,7 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
 .. code-block:: python
 
     >>> stats_evt = st[0].stats.pop('kinemetrics_evt')
-    >>> print(st[0].stats)
+    >>> print(st[0].stats)  # doctest: +NORMALIZE_WHITESPACE
              network:
              station: MEMA
             location:
@@ -72,10 +72,10 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     chan_sensitivity 2.5
     chan_sensorgain 1
     chan_up 0
-    comment MEMBACHPARAMETERS FAC+EEP/v3.02
+    comment MEMBACH
     duration 230
     elevation 298
-    gpslastlock 2013-08-15T09:19:20.000000Z
+    gpslastlock 2013-08-15T09:19:20.000Z
     gpsstatus Present ON
     installedchan 4
     instrument New Etna
@@ -86,10 +86,10 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     nscans 6
     samplebytes 3
     serialnumber 4823
-    starttime 2013-08-15T09:20:28.000000Z
+    starttime 2013-08-15T09:20:28.000Z
     stnid MEMA
     temperature 76
-    triggertime 2013-08-15T09:20:34.600000Z
+    triggertime 2013-08-15T09:20:34.600Z
 
 The actual data is stored as :class:`numpy.ndarray` in the ``data`` attribute
 of each trace.
