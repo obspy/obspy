@@ -127,7 +127,7 @@ Gallery
     :alt: Time Frequency Misfit
 
 .. gallery-plot:: tutorial/code_snippets/travel_time_plot.py
-    :target: tutorial/code_snippets/travel_time_plot.html
+    :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
 
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py

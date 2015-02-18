@@ -1,6 +1,9 @@
-================
+========================
+Travel Time Calculations
+========================
+
 Travel Time Plot
-================
+----------------
 
 The following lines show how to create a simple travel time plot for a given
 distance range, selected phases and the ``iasp91`` velocity model using the
