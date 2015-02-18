@@ -117,7 +117,7 @@ def call_git_describe(abbrev=4):
         try:
             version += '.dev+' + parts[1]
             if remote_tracking_branch is not None:
-                version += '-' + remote_tracking_branch
+                version += '.' + remote_tracking_branch
         # IndexError means we are at a release version tag cleanly,
         # add nothing additional
         except IndexError:
