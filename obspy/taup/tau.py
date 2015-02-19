@@ -58,7 +58,8 @@ class Arrivals(list):
     def __repr__(self):
         return "[%s]" % (", ".join([repr(_i) for _i in self]))
 
-    def plot(self, plot_type="spherical", plot_all=True, ax=None, show=True):
+    def plot(self, plot_type="spherical", plot_all=True, legend=True,
+             ax=None, show=True):
         """
         Plot the ray paths if any have been calculated.
 
@@ -70,6 +71,10 @@ class Arrivals(list):
             distance are plotted and rays arriving at 360 - x degrees are
             not shown.
         :type plot_all: bool
+        :param legend: If boolean, specify whether or not to show the legend
+            (at the default location.) If a str, specify the location of the
+            legend.
+        :type legend: bool or str
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the cartesian plot.
@@ -146,11 +151,16 @@ class Arrivals(list):
 
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
-            if 0 <= self.distance <= 180.0:
-                loc = "upper left"
-            else:
-                loc = "upper right"
-            plt.legend(loc=loc, fontsize="small")
+            if legend:
+                if isinstance(legend, bool):
+                    if 0 <= self.distance <= 180.0:
+                        loc = "upper left"
+                    else:
+                        loc = "upper right"
+                else:
+                    loc = legend
+                plt.legend(loc=loc, fontsize="small")
+
         elif plot_type == "cartesian":
             if not ax:
                 plt.figure(figsize=(12, 8))
@@ -161,7 +171,12 @@ class Arrivals(list):
                         color=COLORS[_i % len(COLORS)], label=ray.name,
                         lw=2.0)
             ax.set_ylabel("Depth [km]")
-            ax.legend(fontsize="small", loc="lower left")
+            if legend:
+                if isinstance(legend, bool):
+                    loc = "lower left"
+                else:
+                    loc = legend
+                ax.legend(fontsize="small", loc=loc)
             ax.set_xlabel("Distance [deg]")
             # Pretty station marker.
             ms = 14
