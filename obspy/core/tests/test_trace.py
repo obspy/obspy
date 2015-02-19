@@ -6,7 +6,6 @@ from future.builtins import *  # NOQA
 import math
 import os
 import unittest
-import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -1568,43 +1567,6 @@ class TraceTestCase(unittest.TestCase):
         tr.differentiate()
         tr.integrate()
         tr.taper()
-
-    def test_taper_backwards_compatibility(self):
-        """
-        Test that old style .taper() calls get emulated correctly.
-        """
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('ignore', DeprecationWarning)
-            tr = Trace(np.ones(10))
-
-            tr1 = tr.copy().taper()
-            tr2 = tr.copy().taper("cosine", p=0.1)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper("hann")
-            tr2 = tr.copy().taper(max_percentage=None, type="hann")
-            self.assertEqual(tr1, tr2)
-            tr2 = tr.copy().taper(None, type="hann")
-            self.assertEqual(tr1, tr2)
-            tr2 = tr.copy().taper(type="hann", max_percentage=None)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper(type="cosine", p=0.2)
-            tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper(type="cosine", p=1.0)
-            tr2 = tr.copy().taper(type="cosine", max_percentage=None)
-            # processing info is different for this case
-            tr1.stats.pop("processing")
-            tr2.stats.pop("processing")
-            self.assertEqual(tr1, tr2)
-
-            self.assertRaises(NotImplementedError, tr.copy().taper,
-                              type="hann", p=0.3)
-
-            tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
-            self.assertTrue(np.all(tr1.data[6:] < 1))
 
     def test_issue_695(self):
         x = np.zeros(12)
