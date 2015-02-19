@@ -120,19 +120,30 @@ class Arrivals(list):
             ax.plot([0], [radius - arrivals[0].source_depth],
                     marker="*", color="#FEF215", markersize=20, zorder=10,
                     markeredgewidth=1.5, markeredgecolor="0.3", clip_on=False)
+
             # Pretty station marker.
-            ms = 14
-            station_marker_transform = matplotlib.transforms.offset_copy(
-                ax.transData,
-                fig=ax.get_figure(),
-                x=np.sin(np.deg2rad(self.distance)) * ms / 2.0,
-                y=np.cos(np.deg2rad(self.distance)) * ms / 2.0,
-                units="points")
-            ax.plot([np.deg2rad(self.distance)], [radius],
-                    marker=(3, 0, 180.0 - self.distance), color="#C95241",
-                    markersize=ms, zorder=10, markeredgewidth=1.5,
-                    markeredgecolor="0.3", clip_on=False,
-                    transform=station_marker_transform)
+            arrowprops = dict(arrowstyle='-|>,head_length=0.8,head_width=0.5',
+                              color='#C95241',
+                              lw=1.5)
+            ax.annotate('',
+                        xy=(np.deg2rad(self.distance), radius),
+                        xycoords='data',
+                        xytext=(np.deg2rad(self.distance), radius * 1.02),
+                        textcoords='data',
+                        arrowprops=arrowprops,
+                        clip_on=False)
+            arrowprops = dict(arrowstyle='-|>,head_length=1.0,head_width=0.6',
+                              color='0.3',
+                              lw=1.5,
+                              fill=False)
+            ax.annotate('',
+                        xy=(np.deg2rad(self.distance), radius),
+                        xycoords='data',
+                        xytext=(np.deg2rad(self.distance), radius * 1.01),
+                        textcoords='data',
+                        arrowprops=arrowprops,
+                        clip_on=False)
+
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
             if 0 <= self.distance <= 180.0:
