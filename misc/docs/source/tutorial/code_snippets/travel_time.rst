@@ -12,3 +12,25 @@ distance range, selected phases and the ``iasp91`` velocity model using the
 
 .. plot:: tutorial/code_snippets/travel_time_plot.py
    :include-source:
+
+Cartesian Ray Paths
+-------------------
+
+The following lines show how to create a simple plot of ray paths for a given
+distance range, phase, and the ``iasp91`` velocity model on a Cartesian map,
+using the :func:`~obspy.taup.tau.Arrivals.plot` function of the class
+:class:`obspy.taup.tau.Arrivals`.
+
+.. plot:: tutorial/code_snippets/travel_time_cartesian_raypath.py
+   :include-source:
+
+Spherical Ray Paths
+-------------------
+
+The following lines show how to create a simple plot of ray paths for a given
+distance range, phase, and the ``iasp91`` velocity model on a spherical map,
+using the :func:`~obspy.taup.tau.Arrivals.plot` function of the class
+:class:`obspy.taup.tau.Arrivals`.
+
+.. plot:: tutorial/code_snippets/travel_time_spherical_raypath.py
+   :include-source:
