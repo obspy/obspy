@@ -59,7 +59,7 @@ class Arrivals(list):
         return "[%s]" % (", ".join([repr(_i) for _i in self]))
 
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
-             ax=None, show=True):
+             label_arrivals=False, ax=None, show=True):
         """
         Plot the ray paths if any have been calculated.
 
@@ -73,8 +73,15 @@ class Arrivals(list):
         :type plot_all: bool
         :param legend: If boolean, specify whether or not to show the legend
             (at the default location.) If a str, specify the location of the
-            legend.
+            legend. If you are plotting a single phase, you may consider using
+            the ``label_arrivals`` argument.
         :type legend: bool or str
+        :param label_arrivals: Label the arrivals with their respective phase
+            names. This setting is only useful if you are plotting a single
+            phase as otherwise the names be large and possibly overlap or clip.
+            Consider using the ``legend`` parameter instead if you are plotting
+            multiple phases.
+        :type label_arrivals: bool
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
             a regular one for the cartesian plot.
@@ -148,6 +155,12 @@ class Arrivals(list):
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
+            if label_arrivals:
+                name = ','.join(sorted(set(ray.name for ray in arrivals)))
+                # We cannot just set the text of the annotations above because
+                # it changes the arrow path.
+                ax.text(np.deg2rad(self.distance), radius * 1.1, name,
+                        clip_on=False)
 
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
@@ -190,6 +203,12 @@ class Arrivals(list):
                     markersize=ms, zorder=10, markeredgewidth=1.5,
                     markeredgecolor="0.3", clip_on=False,
                     transform=station_marker_transform)
+            if label_arrivals:
+                name = ','.join(sorted(set(ray.name for ray in arrivals)))
+                ax.annotate(name, xy=(self.distance, 0.0),
+                            xytext=(0, ms * 1.5), textcoords='offset points',
+                            ha='center', annotation_clip=False)
+
             # Pretty earthquake marker.
             ax.plot([0], [arrivals[0].source_depth],
                     marker="*", color="#FEF215", markersize=20, zorder=10,
