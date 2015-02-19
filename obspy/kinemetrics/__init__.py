@@ -56,12 +56,13 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
                calib: 1.0
              _format: KINEMETRICS_EVT
     >>> for k, v in sorted(stats_evt.items()):
-    ...     print(k, v)  # doctest: +NORMALIZE_WHITESPACE
+    ...     print(k, v)
+    ...     # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     a2dbits 24
     batteryvoltage -134
     chan_azimuth 0
-    chan_calcoil 0.0500000007451
-    chan_damping 0.707000017166
+    chan_calcoil 0.05000000074...
+    chan_damping 0.70700001716...
     chan_east 0
     chan_fullscale 2.5
     chan_gain 1
@@ -79,8 +80,8 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
     gpsstatus Present ON
     installedchan 4
     instrument New Etna
-    latitude 50.6097946167
-    longitude 6.00925016403
+    latitude 50.609794616...
+    longitude 6.0092501640...
     maxchannels 12
     nchannels 3
     nscans 6
@@ -94,8 +95,8 @@ a ``kinemetrics_evt`` dictionary with specific attributes.
 The actual data is stored as :class:`numpy.ndarray` in the ``data`` attribute
 of each trace.
 
-    >>> type(st[0].data)
-    <type 'numpy.ndarray'>
+    >>> type(st[0].data)  # doctest: +ELLIPSIS
+    <... 'numpy.ndarray'>
     >>> print(st[0].data)
     [-0.02446475 -0.02453492 -0.02446709 ..., -0.02452556 -0.02450685
      -0.02442499]
