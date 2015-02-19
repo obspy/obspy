@@ -138,6 +138,10 @@ Gallery
     :target: tutorial/code_snippets/travel_time.html#spherical-ray-paths
     :alt: Spherical Ray Paths
 
+.. gallery-plot:: tutorial/code_snippets/travel_time_body_waves.py
+    :target: tutorial/code_snippets/travel_time.html#body-wave-ray-paths
+    :alt: Body Wave Ray Paths
+
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
     :target: tutorial/code_snippets/xcorr_pick_correction.html
     :alt: Cross Correlation Pick Correction

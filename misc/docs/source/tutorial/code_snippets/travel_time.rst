@@ -34,3 +34,15 @@ using the :func:`~obspy.taup.tau.Arrivals.plot` function of the class
 
 .. plot:: tutorial/code_snippets/travel_time_spherical_raypath.py
    :include-source:
+
+Body Wave Ray Paths
+-------------------
+
+The following lines show how to create a large set of body wave ray paths for
+several distance, phases and the ``iasp91`` velocity model using the
+:func:`~obspy.taup.tau.Arrivals.plot` function of the class
+:class:`obspy.taup.tau.Arrivals`. For simpler examples, try one of the plots
+in the preceeding sections.
+
+.. plot:: tutorial/code_snippets/travel_time_body_waves.py
+   :include-source:
