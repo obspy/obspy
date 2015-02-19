@@ -8,6 +8,7 @@ import copy
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.text
 import numpy as np
 
 from .tau_model import TauModel
@@ -29,6 +30,41 @@ COLORS = [
     "#fb9a99",
     "#fdbf6f",
     "#cab2d6"]
+
+
+class SmartPolarText(matplotlib.text.Text):
+    """
+    Automatically align text on polar plots to be away from axes.
+
+    This class automatically sets the horizontal and vertical alignments
+    based on which sides of the spherical axes the text is located.
+    """
+
+    def draw(self, renderer, *args, **kwargs):
+        fig = self.get_figure()
+        midx = fig.get_figwidth() * fig.dpi / 2
+        midy = fig.get_figheight() * fig.dpi / 2
+
+        extent = self.get_window_extent(renderer, dpi=fig.dpi)
+        points = extent.get_points()
+
+        is_left = points[0, 0] < midx
+        is_top = points[0, 1] > midy
+        updated = False
+
+        ha = 'right' if is_left else 'left'
+        if self.get_horizontalalignment() != ha:
+            self.set_horizontalalignment(ha)
+            updated = True
+        va = 'bottom' if is_top else 'top'
+        if self.get_verticalalignment() != va:
+            self.set_verticalalignment(va)
+            updated = True
+
+        if updated:
+            self.update_bbox_position_size(renderer)
+
+        matplotlib.text.Text.draw(self, renderer, *args, **kwargs)
 
 
 class Arrivals(list):
@@ -159,8 +195,9 @@ class Arrivals(list):
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
-                ax.text(np.deg2rad(self.distance), radius * 1.1, name,
-                        clip_on=False)
+                t = SmartPolarText(np.deg2rad(self.distance), radius * 1.07,
+                                   name, clip_on=False)
+                ax.add_artist(t)
 
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
