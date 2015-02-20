@@ -144,6 +144,8 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
     if projection == "local":
         ax_x0, ax_width = 0.10, 0.80
+    elif projection == "global":
+        ax_x0, ax_width = 0.01, 0.98
     else:
         ax_x0, ax_width = 0.05, 0.90
 
