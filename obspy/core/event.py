@@ -3187,7 +3187,7 @@ class Catalog(object):
         writeFormat(self, filename, **kwargs)
 
     @deprecated_keywords({'date_colormap': 'colormap'})
-    def plot(self, projection='cyl', resolution='l',
+    def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9',
              water_fill_color='1.0',
              label='magnitude',
@@ -3200,11 +3200,11 @@ class Catalog(object):
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
 
-            * ``"cyl"`` (Will plot the whole world.)
+            * ``"global"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
 
-            Defaults to "cyl"
+            Defaults to "global"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:

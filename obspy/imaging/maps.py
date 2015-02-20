@@ -51,8 +51,8 @@ else:
     HAS_BASEMAP = False
 
 
-def plot_basemap(lons, lats, size, color, labels=None,
-                 projection='cyl', resolution='l', continent_fill_color='0.8',
+def plot_basemap(lons, lats, size, color, labels=None, projection='global',
+                 resolution='l', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
                  show=True, **kwargs):  # @UnusedVariable
@@ -75,10 +75,10 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
     :param projection: The map projection. Currently supported are
-        * ``"cyl"`` (Will plot the whole world.)
+        * ``"global"`` (Will plot the whole world.)
         * ``"ortho"`` (Will center around the mean lat/long.)
         * ``"local"`` (Will plot around local events)
-        Defaults to "cyl"
+        Defaults to "global"
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
         based directly to the basemap module. Possible values are
@@ -157,7 +157,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
             ax_height -= 0.05
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
-    if projection == 'cyl':
+    if projection == 'global':
         bmap = Basemap(resolution=resolution, ax=map_ax)
     elif projection == 'ortho':
         bmap = Basemap(projection='ortho', resolution=resolution,

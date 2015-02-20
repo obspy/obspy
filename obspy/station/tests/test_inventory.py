@@ -150,7 +150,7 @@ class InventoryTestCase(unittest.TestCase):
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
     @skipIf(not HAS_BASEMAP, 'basemap not installed')
-    def test_location_plot_cylindrical(self):
+    def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters.
         """

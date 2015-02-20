@@ -136,7 +136,7 @@ class NetworkTestCase(unittest.TestCase):
         self.assertRaises(Exception, network.get_coordinates, 'BW.RJOB..XXX')
 
     @skipIf(not HAS_BASEMAP, 'basemap not installed')
-    def test_location_plot_cylindrical(self):
+    def test_location_plot_global(self):
         """
         Tests the network location preview plot, default parameters.
         """
