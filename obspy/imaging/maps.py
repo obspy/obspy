@@ -197,7 +197,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         else:
             height = width / aspect
 
-        bmap = Basemap(projection='aeqd', resolution=resolution,
+        bmap = Basemap(projection='aea', resolution=resolution,
                        area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
                        width=width, height=height, ax=map_ax)
         # not most elegant way to calculate some round lats/lons

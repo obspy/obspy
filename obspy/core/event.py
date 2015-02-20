@@ -3281,7 +3281,7 @@ class Catalog(object):
             cat = readEvents()
             cat.plot(projection="ortho")
 
-        Local (azimuthal equidistant) projection:
+        Local (Albers equal area) projection:
 
         >>> cat.plot(projection="local")  # doctest:+SKIP
 

@@ -409,7 +409,7 @@ class Network(BaseNode):
             net = read_inventory()[0]
             net.plot(projection="ortho")
 
-        Local (azimuthal equidistant) projection:
+        Local (Albers equal area) projection:
 
         >>> net.plot(projection="local")  # doctest:+SKIP
 

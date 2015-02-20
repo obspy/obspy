@@ -500,7 +500,7 @@ class Inventory(ComparingObject):
             inv = read_inventory()
             inv.plot(projection="ortho", label=False, color_per_network=True)
 
-        Local (azimuthal equidistant) projection, with custom colors:
+        Local (Albers equal area) projection, with custom colors:
 
         >>> colors = {'GR': 'blue', 'BW': 'green'}
         >>> inv.plot(projection="local",
