@@ -387,7 +387,7 @@ class Network(BaseNode):
 
         .. rubric:: Example
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> from obspy import read_inventory
         >>> net = read_inventory()[0]

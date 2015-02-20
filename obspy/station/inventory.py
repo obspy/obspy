@@ -477,7 +477,7 @@ class Inventory(ComparingObject):
 
         .. rubric:: Example
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> from obspy import read_inventory
         >>> inv = read_inventory()

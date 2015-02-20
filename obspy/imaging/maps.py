@@ -158,7 +158,8 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
     if projection == 'global':
-        bmap = Basemap(resolution=resolution, ax=map_ax)
+        bmap = Basemap(projection='moll', lon_0=np.mean(lons),
+                       resolution=resolution, ax=map_ax)
     elif projection == 'ortho':
         bmap = Basemap(projection='ortho', resolution=resolution,
                        area_thresh=1000.0, lat_0=np.mean(lats),

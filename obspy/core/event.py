@@ -3260,7 +3260,7 @@ class Catalog(object):
 
         .. rubric:: Examples
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> cat = readEvents()
         >>> cat.plot()  # doctest:+SKIP
