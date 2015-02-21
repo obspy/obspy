@@ -19,14 +19,12 @@ from obspy.xseed.utils import compareSEED
 
 class ScriptTestCase(unittest.TestCase):
     def setUp(self):
+        self.data = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                 'data'))
         self.dataless_name = 'dataless.seed.BW_FURT'
-        self.dataless_file = os.path.join(os.path.dirname(__file__),
-                                          'data',
-                                          self.dataless_name)
+        self.dataless_file = os.path.join(self.data, self.dataless_name)
         self.xseed_name = 'dataless.seed.BW_FURT.xml'
-        self.xseed_file = os.path.join(os.path.dirname(__file__),
-                                       'data',
-                                       self.xseed_name)
+        self.xseed_file = os.path.join(self.data, self.xseed_name)
 
     #
     # obspy-dataless2resp
@@ -95,9 +93,7 @@ Parsing file %s
             self.assertEqual(expected, actual)
 
     def test_dataless2xseed_split(self):
-        dataless_multi_file = os.path.join(os.path.dirname(__file__),
-                                           'data',
-                                           'CL.AIO.dataless')
+        dataless_multi_file = os.path.join(self.data, 'CL.AIO.dataless')
 
         with TemporaryWorkingDirectory():
             with CatchOutput() as out:
