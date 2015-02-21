@@ -674,7 +674,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         process = multiprocessing.Process(target=_testFunction,
                                           args=(filename, ))
         process.start()
-        process.join(5)
+        process.join(60)
 
         fail = process.is_alive()
         process.terminate()
