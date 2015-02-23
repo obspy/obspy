@@ -81,7 +81,9 @@ class TauBranch(object):
         self.tau = self.time - ray_params * self.dist
 
     def calcTimeDist(self, sMod, topLayerNum, botLayerNum, ray_params):
-        timeDist = np.zeros_like(ray_params, dtype=TimeDist)
+        # numpy 1.6 compatibility
+        # timeDist = np.zeros_like(ray_params, dtype=TimeDist)
+        timeDist = np.zeros(ray_params.shape, dtype=TimeDist)
         timeDist['p'] = ray_params
 
         layerNum = np.arange(topLayerNum, botLayerNum + 1)
