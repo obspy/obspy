@@ -408,6 +408,7 @@ class ImageComparison(NamedTemporaryFile):
         # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
+            self.close()  # flush internal buffer
             self._fileobj.close()
             plt.close()
             if self.keep_output:
