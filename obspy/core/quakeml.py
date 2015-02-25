@@ -764,8 +764,14 @@ class Unpickler(object):
             # USGS event types contain '_' which is not compliant with
             # the QuakeML standard
             if isinstance(event_type, str):
-                event_type = event_type.replace('_', ' ')
-            event.event_type = event_type
+                event_type = event_type.replace("_", " ")
+            try:
+                event.event_type = event_type
+            except ValueError, e:
+                msg = "Event type '%s' does not comply " % event_type
+                msg += "with QuakeML standard -- event will be ignored."
+                warnings.warn(msg, UserWarning)
+                continue
             event.event_type_certainty = self._xpath2obj(
                 'typeCertainty', event_el)
             event.creation_info = self._creation_info(event_el)
