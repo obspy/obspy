@@ -26,14 +26,13 @@ COLORS = ['#%02x%02x%02x' % tuple(col * 255 for col in cmap(i)[:3])
 COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
 
 
-class SmartPolarText(matplotlib.text.Text):
+class _SmartPolarText(matplotlib.text.Text):
     """
     Automatically align text on polar plots to be away from axes.
 
     This class automatically sets the horizontal and vertical alignments
     based on which sides of the spherical axes the text is located.
     """
-
     def draw(self, renderer, *args, **kwargs):
         fig = self.get_figure()
         midx = fig.get_figwidth() * fig.dpi / 2
@@ -109,9 +108,9 @@ class Arrivals(list):
         :type legend: bool or str
         :param label_arrivals: Label the arrivals with their respective phase
             names. This setting is only useful if you are plotting a single
-            phase as otherwise the names be large and possibly overlap or clip.
-            Consider using the ``legend`` parameter instead if you are plotting
-            multiple phases.
+            phase as otherwise the names could be large and possibly overlap
+            or clip. Consider using the ``legend`` parameter instead if you
+            are plotting multiple phases.
         :type label_arrivals: bool
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
@@ -190,7 +189,7 @@ class Arrivals(list):
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
-                t = SmartPolarText(np.deg2rad(self.distance), radius * 1.07,
+                t = _SmartPolarText(np.deg2rad(self.distance), radius * 1.07,
                                    name, clip_on=False)
                 ax.add_artist(t)
 
