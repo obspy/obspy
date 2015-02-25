@@ -3,7 +3,7 @@
 .PHONY: binary
 
 %:
-	dh $@ --buildsystem=python_distutils --with=python2
+	dh $@ --buildsystem=python_distutils --with=python2 --with quilt
 
 binary:
 	dh binary
