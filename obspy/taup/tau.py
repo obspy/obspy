@@ -67,14 +67,12 @@ class Arrivals(list):
 
     :param arrivals: List of arrivals.
     :param model: The model used to calculate the arrivals.
-    :param distance: The requested distance.
     """
-    __slots__ = ["model", "distance"]
+    __slots__ = ["model"]
 
-    def __init__(self, arrivals, model, distance):
+    def __init__(self, arrivals, model):
         super(Arrivals, self).__init__()
         self.model = model
-        self.distance = distance
         self.extend(arrivals)
 
     def __str__(self):
@@ -127,7 +125,8 @@ class Arrivals(list):
             if _i.path is None:
                 continue
             dist = _i.purist_distance % 360.0
-            if abs(dist - self.distance) / dist > 1E-5:
+            distance = _i.get_modulo_dist_deg()
+            if abs(dist - distance) / dist > 1E-5:
                 if plot_all is False:
                     continue
                 # Mirror on axis.
@@ -168,9 +167,9 @@ class Arrivals(list):
                               color='#C95241',
                               lw=1.5)
             ax.annotate('',
-                        xy=(np.deg2rad(self.distance), radius),
+                        xy=(np.deg2rad(distance), radius),
                         xycoords='data',
-                        xytext=(np.deg2rad(self.distance), radius * 1.02),
+                        xytext=(np.deg2rad(distance), radius * 1.02),
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
@@ -179,9 +178,9 @@ class Arrivals(list):
                               lw=1.5,
                               fill=False)
             ax.annotate('',
-                        xy=(np.deg2rad(self.distance), radius),
+                        xy=(np.deg2rad(distance), radius),
                         xycoords='data',
-                        xytext=(np.deg2rad(self.distance), radius * 1.01),
+                        xytext=(np.deg2rad(distance), radius * 1.01),
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
@@ -189,15 +188,15 @@ class Arrivals(list):
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
-                t = _SmartPolarText(np.deg2rad(self.distance), radius * 1.07,
-                                   name, clip_on=False)
+                t = _SmartPolarText(np.deg2rad(distance), radius * 1.07,
+                                    name, clip_on=False)
                 ax.add_artist(t)
 
             ax.set_rmax(radius)
             ax.set_rmin(0.0)
             if legend:
                 if isinstance(legend, bool):
-                    if 0 <= self.distance <= 180.0:
+                    if 0 <= distance <= 180.0:
                         loc = "upper left"
                     else:
                         loc = "upper right"
@@ -229,14 +228,14 @@ class Arrivals(list):
                 fig=ax.get_figure(),
                 y=ms / 2.0,
                 units="points")
-            ax.plot([self.distance], [0.0],
+            ax.plot([distance], [0.0],
                     marker=(3, 0, 180), color="#C95241",
                     markersize=ms, zorder=10, markeredgewidth=1.5,
                     markeredgecolor="0.3", clip_on=False,
                     transform=station_marker_transform)
             if label_arrivals:
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
-                ax.annotate(name, xy=(self.distance, 0.0),
+                ax.annotate(name, xy=(distance, 0.0),
                             xytext=(0, ms * 1.5), textcoords='offset points',
                             ha='center', annotation_clip=False)
 
@@ -254,9 +253,9 @@ class Arrivals(list):
                     continue
                 ax.hlines(depth, x[0], x[1], color="0.5", zorder=-1)
             # Plot some more station markers if necessary.
-            possible_distances = [_i * (self.distance + 360.0)
+            possible_distances = [_i * (distance + 360.0)
                                   for _i in range(1, 10)]
-            possible_distances += [-_i * (360.0 - self.distance) for _i in
+            possible_distances += [-_i * (360.0 - distance) for _i in
                                    range(1, 10)]
             possible_distances = [_i for _i in possible_distances
                                   if x[0] <= _i <= x[1]]
@@ -319,7 +318,7 @@ class TauPyModel(object):
                        distance_in_degree)
         tt.run()
         return Arrivals(sorted(tt.arrivals, key=lambda x: x.time),
-                        model=self.model, distance=distance_in_degree)
+                        model=self.model)
 
     def get_pierce_points(self, source_depth_in_km, distance_in_degree,
                           phase_list=("ttall",)):
@@ -342,7 +341,7 @@ class TauPyModel(object):
                          distance_in_degree)
         pp.run()
         return Arrivals(sorted(pp.arrivals, key=lambda x: x.time),
-                        model=self.model, distance=distance_in_degree)
+                        model=self.model)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
                       phase_list=("ttall",)):
@@ -365,7 +364,7 @@ class TauPyModel(object):
                        distance_in_degree)
         rp.run()
         return Arrivals(sorted(rp.arrivals, key=lambda x: x.time),
-                        model=self.model, distance=distance_in_degree)
+                        model=self.model)
 
 
 def create_taup_model(model_name, output_dir, input_dir):
