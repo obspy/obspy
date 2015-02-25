@@ -18,8 +18,8 @@ import warnings
 from lxml.etree import Element, SubElement
 
 from obspy import UTCDateTime
-from obspy.xseed.utils import toTag, DateTime2String, setXPath, \
-    SEEDParserException, getXPath
+from obspy.xseed.utils import (DateTime2String, SEEDParserException, getXPath,
+                               setXPath, toTag)
 
 
 class SEEDTypeException(Exception):
@@ -55,6 +55,9 @@ class Field(object):
     def __str__(self):
         if self.id:
             return "F%02d" % self.id
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def convert(self, value):
         return value
@@ -125,7 +128,7 @@ class Field(object):
         self.data = text
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, text)))
+            print('  %s: %s' % (self, text))
 
     def getSEED(self, blockette, pos=0):
         """
@@ -143,7 +146,7 @@ class Field(object):
             result = result[pos]
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, result)))
+            print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
 
     def getXML(self, blockette, pos=0):
@@ -189,7 +192,7 @@ class Field(object):
             node.text = str(result).strip()
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, [node])))
+            print('  %s: %s' % (self, [node]))
         return [node]
 
     def parseXML(self, blockette, xml_doc, pos=0):
@@ -218,7 +221,7 @@ class Field(object):
         setattr(blockette, self.attribute_name, self.convert(text))
         # debug
         if blockette.debug:
-            print(('  %s: %s' % (self, text)))
+            print('  %s: %s' % (self, text))
 
 
 class Integer(Field):
@@ -461,9 +464,9 @@ class Loop(Field):
         # debug
         if debug:
             if len(temp) > 3:
-                print(('  LOOP: ... (%d elements) ' % (len(temp))))
+                print('  LOOP: ... (%d elements) ' % (len(temp)))
             else:
-                print(('  LOOP: %s' % (temp)))
+                print('  LOOP: %s' % (temp))
             blockette.debug = debug
 
     def getSEED(self, blockette):

@@ -13,15 +13,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import read
-from obspy.core.preview import createPreview
-from obspy.core.util.base import _getEntryPoints
-from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
-    WaveformGaps, WaveformFeatures
 import fnmatch
 import os
 import sys
 import time
+
+from obspy import read
+from obspy.core.preview import createPreview
+from obspy.core.util.base import _getEntryPoints
+from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
+                         WaveformGaps, WaveformPath)
 
 
 class WaveformFileCrawler(object):

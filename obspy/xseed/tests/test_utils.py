@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import unittest
 
 from obspy import UTCDateTime
-from obspy.xseed.utils import toTag, DateTime2String
+from obspy.xseed.utils import DateTime2String, toTag
 
 
 class UtilsTestCase(unittest.TestCase):

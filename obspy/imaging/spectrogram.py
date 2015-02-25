@@ -20,12 +20,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import math as M
+
+import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
+
 from obspy.core.util import getMatplotlibVersion
-import math as M
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -178,7 +180,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         # see:
         #  - http://matplotlib.svn.sourceforge.net/viewvc/...
         #    matplotlib?revision=5716&view=revision
-        #  - http://matplotlib.sourceforge.net/_static/CHANGELOG
+        #  - http://matplotlib.org/_static/CHANGELOG
         if MATPLOTLIB_VERSION >= [0, 98, 3]:
             # Log scaling for frequency values (y-axis)
             ax.set_yscale('log')

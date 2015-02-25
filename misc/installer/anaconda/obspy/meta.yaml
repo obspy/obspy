@@ -1,17 +1,16 @@
 package:
   name: obspy
-  version: !!str 0.9.0
+  version: !!str 0.10.0
 
 source:
-  fn: obspy-0.9.0.zip
-  url: https://pypi.python.org/packages/source/o/obspy/obspy-0.9.0.zip
-  md5: f720f675e66e8b2b6518e41b9ab9ada4
+  fn: taupy.zip
+  url: https://github.com/obspy/obspy/archive/taupy.zip
 #  patches:
    # List any patch files here
    # - fix.patch
 
-build:
-  preserve_egg_dir: True
+# build:
+  #preserve_egg_dir: True
   #entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
     # syntax is module:function.  For example
@@ -30,37 +29,37 @@ requirements:
     - python
     - numpy
     - setuptools
-    - suds
     - scipy
-    - matplotlib
     - lxml
+    - matplotlib
     - future
     - sqlalchemy
-    - nose
-    - mock
-    - flake8
-
   run:
     - python
     - numpy
     - setuptools
-    - suds
     - scipy
-    - matplotlib
     - lxml
+    - matplotlib
     - future
     - sqlalchemy
-    - nose
-    - mock
-    - flake8
 
 test:
   # Python imports
   imports:
     - obspy
 
-  commands:
-    - obspy-runtests -d
+  #commands:
+    # You can put test commands to be run here.  Use this to test that the
+    # entry points work.
+
+
+  # You can also put a file called run_test.py in the recipe that will be run
+  # at test time.
+
+  # requires:
+    # Put any additional test requirements here.  For example
+    # - nose
 
 about:
   home: http://www.obspy.org

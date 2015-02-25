@@ -15,18 +15,23 @@ from future.builtins import *  # NOQA
 
 import inspect
 import io
-from lxml import etree
+import math
 import os
+import warnings
+
+from lxml import etree
 
 import obspy
-from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
-    ClockDrift, SampleRate, Frequency, Angle
-from obspy.station.response import PolesZerosResponseStage, \
-    CoefficientsTypeResponseStage, ResponseListResponseStage, \
-    FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
-    CoefficientWithUncertainties, ResponseStage
-from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    ComplexWithUncertainties
+from obspy.core.util.obspy_types import (ComplexWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.response import (CoefficientsTypeResponseStage,
+                                    CoefficientWithUncertainties,
+                                    FilterCoefficient, FIRResponseStage,
+                                    PolesZerosResponseStage,
+                                    PolynomialResponseStage,
+                                    ResponseListResponseStage, ResponseStage)
+from obspy.station.util import (Angle, Azimuth, ClockDrift, Dip, Distance,
+                                Frequency, Latitude, Longitude, SampleRate)
 
 
 # Define some constants for writing StationXML files.
@@ -42,7 +47,7 @@ def is_StationXML(path_or_file_object):
 
     This is simply done by validating against the StationXML schema.
 
-    :param path_or_file_object: Filename or file like object.
+    :param path_or_file_object: File name or file like object.
     """
     return validate_StationXML(path_or_file_object)[0]
 
@@ -55,7 +60,7 @@ def validate_StationXML(path_or_object):
     was successful or not. The second item is a list of all found validation
     errors, if existent.
 
-    :param path_or_object: Filename or file like object. Can also be an etree
+    :param path_or_object: File name or file like object. Can also be an etree
         element.
     """
     # Get the schema location.
@@ -85,12 +90,13 @@ def read_StationXML(path_or_file_object):
     """
     Function reading a StationXML file.
 
-    :param path_or_file_object: Filename or file like object.
+    :param path_or_file_object: File name or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
     namespace = root.nsmap[None]
 
-    _ns = lambda tagname: "{%s}%s" % (namespace, tagname)
+    def _ns(tagname):
+        return "{%s}%s" % (namespace, tagname)
 
     # Source and Created field must exist in a StationXML.
     source = root.find(_ns("Source")).text
@@ -189,7 +195,24 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False,
     elem = parent.find(tag)
     if elem is None:
         return None
-    obj = cls(float(elem.text))
+
+    # Catch non convertible numbers.
+    try:
+        convert = float(elem.text)
+    except:
+        warnings.warn(
+            "'%s' could not be converted to a float. Will be skipped. Please "
+            "contact to report this issue." % etree.tostring(elem),
+            UserWarning)
+        return None
+
+    # Catch NaNs.
+    if math.isnan(convert):
+        warnings.warn("Tag '%s' has a value of NaN. It will be skipped." %
+                      tag, UserWarning)
+        return None
+
+    obj = cls(convert)
     if unit:
         obj.unit = elem.attrib.get("unit")
     if datum:

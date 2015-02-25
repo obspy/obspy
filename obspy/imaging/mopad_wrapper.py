@@ -28,12 +28,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from matplotlib import patches, transforms
 import matplotlib.collections as mpl_collections
+from matplotlib import patches, transforms
+
+from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
 from obspy.imaging.scripts.mopad import epsilon
-from obspy.imaging.beachball import xy2patch
 
 
 # seems the base system we (gmt) are using is called "USE" in mopad
@@ -183,8 +184,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # 1. Need to bring the all patches to the origin (0, 0).
         for p in collection._paths:
             p.vertices -= xy
-        # 2. Then use the offset property of the collection.ection to
-        # position the patches
+        # 2. Then use the offset property of the collection to position the
+        # patches
         collection.set_offsets(xy)
         collection._transOffset = axes.transData
     collection.set_edgecolors(edgecolor)
@@ -284,7 +285,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             mopad_kwargs[mopad_key] = value
     # convert from points to size in cm
     for key in ['plot_aux_plot_size', 'plot_size']:
-        # 100.0 is matplotlibs default dpi for savefig
+        # 100.0 is matplotlib's default DPI for savefig
         mopad_kwargs[key] = mopad_kwargs[key] / 100.0 * 2.54
     # use nofill kwarg
 

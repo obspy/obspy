@@ -11,24 +11,27 @@ SeisHub database client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
+from future.utils import PY2, native_str
 
-from datetime import datetime
-from lxml import objectify
-from lxml.etree import Element, SubElement, tostring
-from math import log
-from obspy import UTCDateTime
-from obspy.core.util import guessDelta
-from obspy.xseed import Parser
+import functools
 import os
 import pickle
 import time
 import warnings
-import functools
+from datetime import datetime
+from math import log
+
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
+from lxml import objectify
+from lxml.etree import Element, SubElement, tostring
+
+from obspy import Catalog, UTCDateTime, readEvents
+from obspy.core.util import guessDelta
+from obspy.xseed import Parser
 
 
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
@@ -174,7 +177,7 @@ class Client(object):
             urllib.request.urlopen(self.base_url, timeout=self.timeout).read()
             return (time.time() - t1) * 1000.0
         except:
-            None
+            pass
 
     def testAuth(self):
         """
@@ -216,7 +219,7 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + \
             urllib.parse.urlencode(params)
         if self.debug:
-            print(('\nRequesting %s' % (remoteaddr)))
+            print('\nRequesting %s' % (remoteaddr))
         # certain requests randomly fail on rare occasions, retry
         for _i in range(self.retries):
             try:
@@ -225,7 +228,7 @@ class Client(object):
                 doc = response.read()
                 return doc
             # XXX currently there are random problems with SeisHub's internal
-            # XXX sql database access ("cannot operate on a closed database").
+            # XXX SQL database access ("cannot operate on a closed database").
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
@@ -507,7 +510,7 @@ master/seishub/plugins/seismology/waveform.py
 
         trim_start = kwargs['starttime']
         trim_end = kwargs['endtime']
-        # we expand the requested timespan on both ends by two samples in
+        # we expand the requested time span on both ends by two samples in
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
         # only possible if a channel is specified otherwise delta = 0
@@ -689,7 +692,7 @@ master/seishub/plugins/seismology/waveform.py
                 pass
             elif datetime < UTCDateTime(data['start_datetime']):
                 continue
-            # check if endtime is present and fitting
+            # check if end time is present and fitting
             if data['end_datetime'] == "":
                 pass
             elif datetime > UTCDateTime(data['end_datetime']):
@@ -795,7 +798,7 @@ master/seishub/plugins/seismology/event.py
     resourcetype = 'event'
 
     def getList(self, limit=50, offset=None, localisation_method=None,
-                account=None, user=None, min_datetime=None, max_datetime=None,
+                author=None, min_datetime=None, max_datetime=None,
                 first_pick=None, last_pick=None, min_latitude=None,
                 max_latitude=None, min_longitude=None, max_longitude=None,
                 min_magnitude=None, max_magnitude=None, min_depth=None,
@@ -804,6 +807,10 @@ master/seishub/plugins/seismology/event.py
                 document_id=None, **kwargs):
         """
         Gets a list of event information.
+
+        ..note:
+            For SeisHub versions < 1.4 available keys include "user" and
+            "account". In newer SeisHub versions they are replaced by "author".
 
         :rtype: list
         :return: List of dictionaries containing event information.
@@ -825,12 +832,38 @@ master/seishub/plugins/seismology/event.py
         root = self.client._objectify(url, **kwargs)
         results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                    for node in root.getchildren()]
+        for res in results:
+            res['resource_name'] = str(res['resource_name'])
         if limit == len(results) or \
            limit is None and len(results) == 50 or \
            len(results) == 2500:
             msg = "List of results might be incomplete due to option 'limit'."
             warnings.warn(msg)
         return results
+
+    def getEvents(self, **kwargs):
+        """
+        Fetches a catalog with event information. Parameters to narrow down
+        the request are the same as for :meth:`getList`.
+
+        ..warning::
+            Only works when connecting to a SeisHub server of version 1.4.0
+            or higher (serving event data as QuakeML).
+
+        :rtype: :class:`~obspy.core.event.Catalog`
+        :returns: Catalog containing event information matching the request.
+
+        The number of resulting events is by default limited to 50 entries from
+        a SeisHub server. You may raise this by setting the ``limit`` option to
+        a maximal value of 2500. Numbers above 2500 will result into an
+        exception.
+        """
+        resource_names = [item["resource_name"]
+                          for item in self.getList(**kwargs)]
+        cat = Catalog()
+        for resource_name in resource_names:
+            cat.extend(readEvents(self.getResource(resource_name)))
+        return cat
 
     def getKML(self, nolabels=False, **kwargs):
         """
@@ -853,7 +886,7 @@ master/seishub/plugins/seismology/event.py
         kml.set("xmlns", "http://www.opengis.net/kml/2.2")
 
         document = SubElement(kml, "Document")
-        SubElement(document, "name").text = "Seishub Event Locations"
+        SubElement(document, "name").text = "SeisHub Event Locations"
 
         # style definitions for earthquakes
         style = SubElement(document, "Style")

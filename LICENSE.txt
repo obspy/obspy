@@ -1,0 +1,1 @@
+obspy/LICENSE.txt

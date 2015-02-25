@@ -14,21 +14,23 @@ The format is an ASCII format but will internally handled by unicode routines.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-
 from future import standard_library
-with standard_library.hooks():
-    import itertools
 
 import math
 import re
 import traceback
-import warnings
 import uuid
+import warnings
+
+with standard_library.hooks():
+    import itertools
 
 from obspy import UTCDateTime
-from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, Comment, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, SourceTimeFunction
+from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
+                              Event, EventDescription, FocalMechanism,
+                              Magnitude, MomentTensor, NodalPlane, NodalPlanes,
+                              Origin, PrincipalAxes, SourceTimeFunction,
+                              Tensor)
 from obspy.core.util.geodetics import FlinnEngdahl
 
 
@@ -208,8 +210,8 @@ def read_ndk(filename, *args, **kwargs):  # @UnusedVariable
             version=record["version_code"]
         )
 
-        # Use the ObsPy flinn engdahl region determinator as the region in
-        # the NDK files is oftentimes trimmed.
+        # Use the ObsPy Flinn Engdahl region determiner as the region in the
+        # NDK files is oftentimes trimmed.
         region = fe.get_region(record["centroid_longitude"],
                                record["centroid_latitude"])
 
@@ -586,7 +588,7 @@ def _read_lines(line1, line2, line3, line4, line5):
     rec["principal_axis"] = []
     for axis in zip(*[iter(principal_axis)] * 3):
         rec["principal_axis"].append({
-            # Again set the exponent directly do avoid even more rounding
+            # Again set the exponent directly to avoid even more rounding
             # errors.
             "length": "%sE%i" % (axis[0], exponent),
             "plunge": float(axis[1]),

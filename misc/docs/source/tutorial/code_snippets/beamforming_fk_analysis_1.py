@@ -1,7 +1,10 @@
-from obspy.core import read, UTCDateTime, AttribDict
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+from obspy.core import AttribDict, UTCDateTime, read
 from obspy.signal import cornFreq2Paz
 from obspy.signal.array_analysis import array_processing
-import matplotlib.pyplot as plt
+
 
 # Load data
 st = read("http://examples.obspy.org/agfa.mseed")
@@ -63,6 +66,8 @@ paz1hz = cornFreq2Paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
 # Execute array_processing
+stime = UTCDateTime("20080217110515")
+etime = UTCDateTime("20080217110545")
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
     sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,
@@ -72,13 +77,14 @@ kwargs = dict(
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
     semb_thres=-1e9, vel_thres=-1e9, timestamp='mlabday',
-    stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
+    stime=stime, etime=etime
 )
 out = array_processing(st, **kwargs)
 
 # Plot
 labels = ['rel.power', 'abs.power', 'baz', 'slow']
 
+xlocator = mdates.AutoDateLocator()
 fig = plt.figure()
 for i, lab in enumerate(labels):
     ax = fig.add_subplot(4, 1, i + 1)
@@ -87,8 +93,11 @@ for i, lab in enumerate(labels):
     ax.set_ylabel(lab)
     ax.set_xlim(out[0, 0], out[-1, 0])
     ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
+    ax.xaxis.set_major_locator(xlocator)
+    ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
-
+fig.suptitle('AGFA skyscraper blasting in Munich %s' % (
+    stime.strftime('%Y-%m-%d'), ))
 fig.autofmt_xdate()
-fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
+fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
 plt.show()

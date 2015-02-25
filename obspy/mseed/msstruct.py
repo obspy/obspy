@@ -6,11 +6,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.mseed.headers import clibmseed, MSRecord, MSFileParam, \
-    MS_NOERROR, HPTMODULUS
-from obspy import UTCDateTime
 import ctypes as C
 import os
+
+from obspy import UTCDateTime
+from obspy.mseed.headers import (HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord,
+                                 clibmseed)
 
 
 def _getMSFileInfo(f, real_name):

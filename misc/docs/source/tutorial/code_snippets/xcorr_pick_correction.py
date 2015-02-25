@@ -1,6 +1,8 @@
 from __future__ import print_function
-from obspy.core import read, UTCDateTime
+
+from obspy.core import UTCDateTime, read
 from obspy.signal.cross_correlation import xcorrPickCorrection
+
 
 # read example data of two small earthquakes
 st1 = read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.a.slist.gz")

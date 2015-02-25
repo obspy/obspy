@@ -13,13 +13,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import fnmatch
+import textwrap
+import warnings
+
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
-from obspy.station.util import Longitude, Latitude, Distance
-import textwrap
-import fnmatch
-import warnings
-import copy
+from obspy.station.util import Distance, Latitude, Longitude
 
 
 class Station(BaseNode):
@@ -50,7 +51,7 @@ class Station(BaseNode):
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
             etc
         :param geology: Type of rock and/or geologic formation.
-        :param equiment: Equipment used by all channels at a station.
+        :param equipments: Equipment used by all channels at a station.
         :type operators: list of :class:`~obspy.station.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
@@ -141,6 +142,9 @@ class Station(BaseNode):
             subsequent_indent="\t\t", expand_tabs=False))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __getitem__(self, index):
         return self.channels[index]
 
@@ -193,10 +197,10 @@ class Station(BaseNode):
     @equipments.setter
     def equipments(self, value):
         if not hasattr(value, "__iter__"):
-            msg = "Equipments needs to be an iterable, e.g. a list."
+            msg = "equipments needs to be an iterable, e.g. a list."
             raise ValueError(msg)
         if any([not isinstance(x, Equipment) for x in value]):
-            msg = "Equipments can only contain Equipment objects."
+            msg = "equipments can only contain Equipment objects."
             raise ValueError(msg)
         self._equipments = value
         # if value is None or isinstance(value, Equipment):
@@ -287,7 +291,7 @@ class Station(BaseNode):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see http://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/2/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -399,7 +403,7 @@ class Station(BaseNode):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

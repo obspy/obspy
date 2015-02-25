@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Header files for the FDSN webservice.
@@ -13,15 +12,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import __version__, UTCDateTime
-
 import platform
+
+from obspy import UTCDateTime, __version__
 
 
 class FDSNException(Exception):
     pass
 
 
+# A curated list collecting some implementations:
+# http://www.fdsn.org/webservices/datacenters/
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "ORFEUS": "http://www.orfeus-eu.org",
                 "USGS": "http://comcat.cr.usgs.gov",
@@ -30,6 +31,10 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USP": "http://sismo.iag.usp.br",
                 "GFZ": "http://geofon.gfz-potsdam.de",
                 "NERIES": "http://www.seismicportal.eu",
+                "SCEC": "http://www.data.scec.org",
+                "GEONET": "http://service.geonet.org.nz",
+                "INGV": "http://webservices.rm.ingv.it",
+                "BGR": "http://eida.bgr.de",
                 }
 
 FDSNWS = ("dataselect", "event", "station")

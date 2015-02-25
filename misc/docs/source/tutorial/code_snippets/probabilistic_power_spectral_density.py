@@ -1,6 +1,7 @@
 from obspy.core import read
-from obspy.xseed import Parser
 from obspy.signal import PPSD
+from obspy.xseed import Parser
+
 
 st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
 tr = st.select(id="BW.KW1..EHZ")[0]

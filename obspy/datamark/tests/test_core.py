@@ -7,11 +7,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import unittest
+
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.datamark.core import readDATAMARK
-import os
-import unittest
 
 
 class CoreTestCase(unittest.TestCase):

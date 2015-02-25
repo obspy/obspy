@@ -13,18 +13,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from pkg_resources import load_entry_point
-import obspy
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
-from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
-from obspy.station.network import Network
-import textwrap
-import warnings
 import copy
 import fnmatch
+import textwrap
+import warnings
+
+from pkg_resources import load_entry_point
 import numpy as np
+
+import obspy
+from obspy.core.util.base import ENTRY_POINTS, ComparingObject, _readFromPlugin
+from obspy.core.util.decorator import map_example_filename
+from obspy.station.network import Network
+from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 
 
 def _createExampleInventory():
@@ -39,7 +40,7 @@ def read_inventory(path_or_file_object=None, format=None):
     """
     Function to read inventory files.
 
-    :param path_or_file_object: Filename or file like object. If this
+    :param path_or_file_object: File name or file like object. If this
         attribute is omitted, an example :class:`Inventory`
         object will be returned.
     :type format: str, optional
@@ -90,19 +91,14 @@ class Inventory(ComparingObject):
 
     def __add__(self, other):
         new = copy.deepcopy(self)
-        if isinstance(other, Inventory):
-            new.networks.extend(other.networks)
-        elif isinstance(other, Network):
-            new.networks.append(other)
-        else:
-            msg = ("Only Inventory and Network objects can be added to "
-                   "an Inventory.")
-            raise TypeError(msg)
+        new += other
         return new
 
     def __iadd__(self, other):
         if isinstance(other, Inventory):
             self.networks.extend(other.networks)
+            # This is a straight inventory merge.
+            self.__copy_inventory_metadata(other)
         elif isinstance(other, Network):
             self.networks.append(other)
         else:
@@ -113,6 +109,46 @@ class Inventory(ComparingObject):
 
     def __getitem__(self, index):
         return self.networks[index]
+
+    def __copy_inventory_metadata(self, other):
+        """
+        Will be called after two inventory objects have been merged. It
+        attempts to assure that inventory meta information is somewhat
+        correct after the merging.
+
+        The networks in other will have been moved to self.
+        """
+        # The creation time is naturally adjusted to the current time.
+        self.created = obspy.UTCDateTime()
+
+        # Merge the source.
+        srcs = [self.source, other.source]
+        srcs = [_i for _i in srcs if _i]
+        all_srcs = []
+        for src in srcs:
+            all_srcs.extend(src.split(","))
+        if all_srcs:
+            src = sorted(list(set(all_srcs)))
+            self.source = ",".join(src)
+        else:
+            self.source = None
+
+        # Do the same with the sender.
+        sndrs = [self.sender, other.sender]
+        sndrs = [_i for _i in sndrs if _i]
+        all_sndrs = []
+        for sndr in sndrs:
+            all_sndrs.extend(sndr.split(","))
+        if all_sndrs:
+            sndr = sorted(list(set(all_sndrs)))
+            self.sender = ",".join(sndr)
+        else:
+            self.sender = None
+
+        # The module and URI strings will be changed to ObsPy as it did the
+        # modification.
+        self.module = SOFTWARE_MODULE
+        self.module_uri = SOFTWARE_URI
 
     def get_contents(self):
         """
@@ -169,12 +205,15 @@ class Inventory(ComparingObject):
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret_str
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def write(self, path_or_file_object, format, **kwargs):
         """
         Writes the inventory object to a file or file-like object in
         the specified format.
 
-        :param path_or_file_object: Filename or file-like object to be written
+        :param path_or_file_object: File name or file-like object to be written
             to.
         :param format: The format of the written file.
         """
@@ -229,7 +268,7 @@ class Inventory(ComparingObject):
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get response for.
         :rtype: :class:`~obspy.station.response.Response`
-        :returns: Response for timeseries specified by input arguments.
+        :returns: Response for time series specified by input arguments.
         """
         network, _, _, _ = seed_id.split(".")
 
@@ -293,7 +332,7 @@ class Inventory(ComparingObject):
             The returned object is based on a shallow copy of the original
             object. That means that modifying any mutable child elements will
             also modify the original object
-            (see http://docs.python.org/2/library/copy.html).
+            (see https://docs.python.org/2/library/copy.html).
             Use :meth:`copy()` afterwards to make a new copy of the data in
             memory.
 
@@ -431,7 +470,7 @@ class Inventory(ComparingObject):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
@@ -529,8 +568,15 @@ class Inventory(ComparingObject):
             count = len(ax.collections)
             for code, color in sorted(color_per_network.items()):
                 ax.scatter([0], [0], size, color, label=code, marker=marker)
-            ax.legend(loc=legend, fancybox=True, scatterpoints=1,
-                      fontsize="medium", markerscale=0.8, handletextpad=0.1)
+            # workaround for older matplotlib versions
+            try:
+                ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                          fontsize="medium", markerscale=0.8,
+                          handletextpad=0.1)
+            except TypeError:
+                leg_ = ax.legend(loc=legend, fancybox=True, scatterpoints=1,
+                                 markerscale=0.8, handletextpad=0.1)
+                leg_.prop.set_size("medium")
             # remove collections again solely created for legend handles
             ax.collections = ax.collections[:count]
 
@@ -598,7 +644,7 @@ class Inventory(ComparingObject):
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
-            will not be displayed interactively. The given path/filename is
+            will not be displayed interactively. The given path/file name is
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.

@@ -21,13 +21,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import warnings
-import numpy as np
 import ctypes as C
+import warnings
+
+import numpy as np
 import scipy
-from obspy import Trace, Stream
+
+from obspy import Stream, Trace
 from obspy.signal.headers import clibsignal
-from obspy.signal import cosTaper
+from obspy.signal.invsim import cosTaper
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
@@ -67,10 +69,9 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
        possibilities to do cross correlations e.g. in frequency domain.
 
     .. seealso::
-        `ObsPy-users mailing list
+       `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
-       and
-       `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
+       and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
 
     .. rubric:: Example
 
@@ -104,8 +105,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     shift = C.c_int()
     coe_p = C.c_double()
 
-    clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
-                      C.byref(shift), C.byref(coe_p))
+    res = clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
+                            C.byref(shift), C.byref(coe_p))
+    if res:
+        raise MemoryError
 
     if full_xcorr:
         return shift.value, coe_p.value, corp
@@ -156,7 +159,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
     ndat = len(streams[0].select(component=components[0])[0])
     if False in [len(st.select(component=component)[0]) == ndat
                  for st in streams for component in components]:
-            raise ValueError("All traces have to be the same length.")
+        raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
     corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
 
@@ -286,6 +289,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
         warnings.warn(msg)
     samp_rate = trace1.stats.sampling_rate
+    # don't modify existing traces with filters
+    if filter:
+        trace1 = trace1.copy()
+        trace2 = trace2.copy()
     # check data, apply filter and take correct slice of traces
     slices = []
     for _i, (t, tr) in enumerate(((pick1, trace1), (pick2, trace2))):

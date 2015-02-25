@@ -1,6 +1,7 @@
 from obspy.core import read
 from obspy.signal import cornFreq2Paz
 
+
 paz_sts2 = {
     'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j, -251.33 + 0j,
               - 131.04 - 467.29j, -131.04 + 467.29j],

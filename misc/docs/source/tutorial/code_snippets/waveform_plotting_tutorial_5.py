@@ -1,4 +1,6 @@
 from obspy import read
+
+
 st = read("http://examples.obspy.org/GR.BFO..LHZ.2012.108")
 st.filter("lowpass", freq=0.1, corners=2)
 st.plot(type="dayplot", interval=60, right_vertical_labels=False,

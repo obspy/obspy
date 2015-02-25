@@ -1,0 +1,70 @@
+#!/usr/bin/make -f
+
+.PHONY: binary
+
+export DH_ALWAYS_EXCLUDE=CVS:.git:.gitignore:__pycache__:src
+export PYBUILD_SYSTEM=distutils
+
+%:
+	dh $@ --buildsystem=pybuild --with=python2,python3 --with quilt
+
+binary:
+	dh binary
+
+override_dh_auto_build:
+	dh_auto_build
+	set -ex; for python in $(shell py3versions -r); do \
+	    $$python setup.py build; \
+	done;
+
+override_dh_auto_install:
+	dh_auto_install #-- release
+	python2 setup.py build_man
+	dh_numpy
+	dh_numpy3
+	set -ex; for python in $(shell py3versions -r); do \
+	    $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
+	done;
+	python3 setup.py build_man
+	ln build/man/* debian/
+	ls -1 build/man/obspy-* | sed 's#.*/#./debian/#' > debian/python-obspy.manpages
+	ls -1 build/man/obspy3-* | sed 's#.*/#./debian/#' > debian/python3-obspy.manpages
+
+override_dh_install:
+	# data files get separated into /usr/share for both python2/3 to use
+	sh -x debian/_dh_install_data_files.sh
+	# files for normal packages
+	## bin
+	dh_install -p python3-obspy "debian/tmp/usr/bin/obspy3-*"
+	dh_install -p python-obspy "debian/tmp/usr/bin/obspy-*"
+	## lib
+	########## lib naming hack start
+	# python-setuptools on Debian/Ubuntu is patched to include multiarch information in lib filenames
+	# in the deb build log e.g.:
+	#   "renaming extension libevresp_Linux_32bit_py34.cpython-34m.so -> libevresp_Linux_32bit_py34.cpython-34m-i386-linux-gnu.so"
+	# the patch can be viewed here: http://sources.debian.net/src/python-setuptools/5.5.1-1/debian/patches/multiarch-extname.diff/
+	# in principle the cleaner solution would be to patch obspy.core.util.libnames._get_lib_name,
+	# but setuptools only changes the name in a if/else depending on (it looks like) whether multiarch is enabled in the current system,
+	# and this is also only done by newer (patched) setuptools in Debian/Ubuntu.
+	# Therefore, the uglier but easier solution is to rename libraries back to our own naming scheme.
+	# This can still be changed when somebody runs into problems in an obscure multiarch setup and reports problems.
+	# Links:
+	#  - http://sources.debian.net/src/python-setuptools/5.5.1-1/debian/patches/multiarch-extname.diff/
+	#  - http://metadata.ftp-master.debian.org/changelogs/main/p/python-setuptools/unstable_changelog
+	#  - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=733128
+	sh -x debian/_rename_lib_extensions.sh
+	########## lib naming hack end
+	dh_install -p python3-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python3*/*-packages/*"
+	dh_install -p python-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python2*/*-packages/*"
+	# Continue with regular dh_install
+	dh_install
+
+override_dh_link:
+	sh -x debian/_dh_link_data_files.sh
+	dh_link
+
+override_dh_installdeb:
+	find $(CURDIR)/debian/ -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian/ -name README.txt -exec rm -f {} \;
+	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
+	dh_installdeb

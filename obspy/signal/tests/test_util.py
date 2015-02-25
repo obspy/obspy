@@ -6,12 +6,14 @@ The Filter test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from obspy.core.util.libnames import _load_CDLL
 
-from obspy.signal import xcorr
 import ctypes as C
-import numpy as np
 import unittest
+
+import numpy as np
+
+from obspy.core.util.libnames import _load_CDLL
+from obspy.signal import xcorr
 
 
 class UtilTestCase(unittest.TestCase):
@@ -22,7 +24,7 @@ class UtilTestCase(unittest.TestCase):
         """
         """
         # example 1 - all samples are equal
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         tr1 = np.random.randn(10000).astype(np.float32)
         tr2 = tr1.copy()
         shift, corr = xcorr(tr1, tr2, 100)
@@ -72,12 +74,13 @@ class UtilTestCase(unittest.TestCase):
         #
         shift = C.c_int()
         coe_p = C.c_double()
-        lib.X_corr(data1.ctypes.data_as(C.c_void_p),
-                   data2.ctypes.data_as(C.c_void_p),
-                   corp.ctypes.data_as(C.c_void_p),
-                   window_len, len(data1), len(data2),
-                   C.byref(shift), C.byref(coe_p))
+        res = lib.X_corr(data1.ctypes.data_as(C.c_void_p),
+                         data2.ctypes.data_as(C.c_void_p),
+                         corp.ctypes.data_as(C.c_void_p),
+                         window_len, len(data1), len(data2),
+                         C.byref(shift), C.byref(coe_p))
 
+        self.assertEqual(0, res)
         self.assertAlmostEqual(0.0, shift.value)
         self.assertAlmostEqual(1.0, coe_p.value)
 

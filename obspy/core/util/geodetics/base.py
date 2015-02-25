@@ -13,8 +13,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import math
-import numpy as np
 import warnings
+
+import numpy as np
 
 
 def calcVincentyInverse(lat1, lon1, lat2, lon2):
@@ -253,6 +254,27 @@ def kilometer2degrees(kilometer, radius=6371):
     return kilometer / (2.0 * radius * math.pi / 360.0)
 
 
+def degrees2kilometers(degrees, radius=6371):
+    """
+    Convenience function to convert (great circle) degrees to kilometers
+    assuming a perfectly spherical Earth.
+
+    :type degrees: float
+    :param degrees: Distance in (great circle) degrees
+    :type radius: int, optional
+    :param radius: Radius of the Earth used for the calculation.
+    :rtype: float
+    :return: Distance in kilometers as a floating point number.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import degrees2kilometers
+    >>> degrees2kilometers(1)
+    111.19492664455873
+    """
+    return degrees * (2.0 * radius * math.pi / 360.0)
+
+
 def locations2degrees(lat1, long1, lat2, long2):
     """
     Convenience function to calculate the great circle distance between two
@@ -260,7 +282,7 @@ def locations2degrees(lat1, long1, lat2, long2):
 
     This method uses the Vincenty formula in the special case of a spherical
     Earth. For more accurate values use the geodesic distance calculations of
-    geopy (http://code.google.com/p/geopy/).
+    geopy (https://github.com/geopy/geopy).
 
     :type lat1: float
     :param lat1: Latitude of point 1 in degrees

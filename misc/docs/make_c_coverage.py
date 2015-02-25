@@ -4,14 +4,16 @@ USAGE: make_c_coverage.py output_dir
 """
 
 import os
-from os import walk, rename, makedirs
-import sys
-from os.path import join, exists, dirname, abspath, pardir, sep
-from subprocess import call
-from fnmatch import fnmatch
-import tempfile
 import shutil
-from lxml.html import fromstring, tostring, Element
+import sys
+import tempfile
+from fnmatch import fnmatch
+from os import makedirs, rename, walk
+from os.path import abspath, dirname, exists, join, pardir, sep
+from subprocess import call
+
+from lxml.html import Element, fromstring, tostring
+
 
 try:
     target_dir = sys.argv[1]

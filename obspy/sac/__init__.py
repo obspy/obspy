@@ -3,7 +3,7 @@
 obspy.sac - SAC read and write support for ObsPy
 ================================================
 This module provides read and write support for ASCII and binary SAC-files as
-defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
+defined by IRIS (http://www.iris.edu/files/sac-manual/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & C. J. Annon
@@ -59,13 +59,18 @@ Writing is also straight forward. All changes on the data as well as in
 stats and stats['sac'] are written with the following command to a file:
 
 >>> st.write('tmp.sac', format='SAC') #doctest: +SKIP
+
+You can also specify a ``byteorder`` keyword argument to set the
+endianness of the resulting SAC-file. It must be either ``0`` or ``'<'``
+for LSBF or little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
+Defaults to little endian.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.sac.sacio import SacIO, SacError, SacIOError, attach_paz, \
-    attach_resp
+from obspy.sac.sacio import (SacError, SacIO, SacIOError, attach_paz,
+                             attach_resp)
 
 
 if __name__ == '__main__':

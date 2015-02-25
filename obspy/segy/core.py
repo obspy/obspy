@@ -12,22 +12,23 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core import AttribDict
-from obspy.segy.segy import readSEGY as readSEGYrev1
-from obspy.segy.segy import readSU as readSUFile
-from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
-from obspy.segy.segy import SEGYTrace, autodetectEndianAndSanityCheckSU
-from obspy.segy.segy import SUFile, SEGYTraceHeader
-from obspy.segy.header import BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
-from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE, TRACE_HEADER_KEYS
-from obspy.segy.header import ENDIAN
-from obspy.segy.util import unpack_header_value
+import warnings
+from copy import deepcopy
+from struct import unpack
 
 import numpy as np
-from struct import unpack
-from copy import deepcopy
-import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import AttribDict
+from obspy.segy.header import (BINARY_FILE_HEADER_FORMAT,
+                               DATA_SAMPLE_FORMAT_CODE_DTYPE, ENDIAN,
+                               TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
+from obspy.segy.segy import readSEGY as readSEGYrev1
+from obspy.segy.segy import readSU as readSUFile
+from obspy.segy.segy import (SEGYBinaryFileHeader, SEGYError, SEGYFile,
+                             SEGYTrace, SEGYTraceHeader, SUFile,
+                             autodetectEndianAndSanityCheckSU)
+from obspy.segy.util import unpack_header_value
 
 
 # Valid data format codes as specified in the SEGY rev1 manual.
@@ -359,7 +360,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             byteorder = stream.stats.endian
         else:
             byteorder = '>'
-    # Map the byteorder.
+    # Map the byte order.
     byteorder = ENDIAN[byteorder]
     if textual_header_encoding is None:
         if hasattr(stream, 'stats') and hasattr(

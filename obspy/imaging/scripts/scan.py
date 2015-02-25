@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspy-scan [-f FORMAT] [OPTIONS] file1 file2 dir1 dir2 file3 ...
-
 Scan all specified files/directories, determine which time spans are covered
 for which stations and plot everything in summarized in one overview plot.
 Start times of traces with available data are marked by crosses, gaps are
@@ -15,7 +13,7 @@ recursively (disable with "-n"). Symbolic links are followed by default
 (disable with "-i"). Detailed information on all files is printed using "-v".
 
 In case of memory problems during plotting with very large datasets, the
-options --nox and --nogaps can help to reduce the size of the plot
+options --no-x and --no-gaps can help to reduce the size of the plot
 considerably.
 
 Gap data can be written to a NumPy npz file. This file can be loaded later
@@ -34,18 +32,21 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import os
+import sys
 import warnings
-from obspy import read, UTCDateTime
-from optparse import OptionParser
+from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
+
 import numpy as np
+
+from obspy import UTCDateTime, __version__, read
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
 
 
 def compressStartend(x, stop_iteration):
     """
-    Compress 2-dimensional array of piecewise continuous starttime/endtime
-    pairs by merging overlapping and exactly fitting pieces into one.
+    Compress 2-dimensional array of piecewise continuous start/end time pairs
+    by merging overlapping and exactly fitting pieces into one.
     This reduces the number of lines needed in the plot considerably and is
     necessary for very large data sets.
     The maximum number of iterations can be specified.
@@ -74,23 +75,23 @@ def compressStartend(x, stop_iteration):
 
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
-                       verbose=False, ignore_links=False):
+                       verbose=False, quiet=False, ignore_links=False):
     from matplotlib.dates import date2num
     if ignore_links and os.path.islink(file):
-        print(("Ignoring symlink: %s" % (file)))
+        if verbose or not quiet:
+            print("Ignoring symlink: %s" % (file))
         return counter
     try:
         stream = read(file, format=format, headonly=True)
     except:
-        print(("Can not read %s" % (file)))
+        if verbose or not quiet:
+            print("Can not read %s" % (file))
         return counter
     s = "%s %s" % (counter, file)
-    if verbose:
+    if verbose and not quiet:
         sys.stdout.write("%s\n" % s)
         for line in str(stream).split("\n"):
             sys.stdout.write("    " + line + "\n")
-    else:
-        sys.stdout.write("\r" + s)
         sys.stdout.flush()
     for tr in stream:
         _id = tr.getId()
@@ -102,25 +103,28 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
             samp_int_dict[_id].\
                 append(1. / (24 * 3600 * tr.stats.sampling_rate))
         except ZeroDivisionError:
-            print(("Skipping file with zero samlingrate: %s" % (file)))
+            if verbose or not quiet:
+                print("Skipping file with zero samlingrate: %s" % (file))
             return counter
     return (counter + 1)
 
 
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
-                    verbose=False, ignore_links=False):
+                    verbose=False, quiet=False, ignore_links=False):
     if ignore_links and os.path.islink(path):
-        print(("Ignoring symlink: %s" % (path)))
+        if verbose or not quiet:
+            print("Ignoring symlink: %s" % (path))
         return counter
     if os.path.isfile(path):
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
-                                     format, verbose)
+                                     format, verbose, quiet=quiet)
     elif os.path.isdir(path):
         for file in (os.path.join(path, file) for file in os.listdir(path)):
             counter = recursive_parse(data_dict, samp_int_dict, file, counter,
-                                      format, verbose, ignore_links)
+                                      format, verbose, quiet, ignore_links)
     else:
-        print(("Problem with filename/dirname: %s" % (path)))
+        if verbose or not quiet:
+            print("Problem with filename/dirname: %s" % (path))
     return counter
 
 
@@ -142,79 +146,100 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def main(option_list=None):
-    parser = OptionParser(__doc__.strip())
-    parser.add_option("-f", "--format", default=None,
-                      type="string", dest="format",
-                      help="Optional, the file format.\n" +
-                      " ".join(__doc__.split('\n')[-4:]))
-    parser.add_option("-v", "--verbose", default=False,
-                      action="store_true", dest="verbose",
-                      help="Optional. Verbose output.")
-    parser.add_option("-n", "--non-recursive", default=True,
-                      action="store_false", dest="recursive",
-                      help="Optional. Do not descend into directories.")
-    parser.add_option("-i", "--ignore-links", default=False,
-                      action="store_true", dest="ignore_links",
-                      help="Optional. Do not follow symbolic links.")
-    parser.add_option("--starttime", default=None,
-                      type="string", dest="starttime",
-                      help="Optional, a UTCDateTime compatible string. " +
-                      "Only visualize data after this time and set " +
-                      "time-axis axis accordingly.")
-    parser.add_option("--endtime", default=None,
-                      type="string", dest="endtime",
-                      help="Optional, a UTCDateTime compatible string. " +
-                      "Only visualize data after this time and set " +
-                      "time-axis axis accordingly.")
-    parser.add_option("--ids", default=None,
-                      type="string", dest="ids",
-                      help="Optional, a list of SEED channel identifiers " +
-                      "separated by commas " +
-                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'). Only these " +
-                      "channels will be plotted.")
-    parser.add_option("-t", "--event-times", default=None,
-                      type="string", dest="event_times",
-                      help="Optional, a list of UTCDateTime compatible " +
-                      "strings separated by commas " +
-                      "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " +
-                      "These get marked by vertical lines in the plot. " +
-                      "Useful e.g. to mark event origin times.")
-    parser.add_option("-w", "--write", default=None,
-                      type="string", dest="write",
-                      help="Optional, npz file for writing data "
-                      "after scanning waveform files")
-    parser.add_option("-l", "--load", default=None,
-                      type="string", dest="load",
-                      help="Optional, npz file for loading data "
-                      "before scanning waveform files")
-    parser.add_option("--nox", default=False,
-                      action="store_true", dest="nox",
-                      help="Optional, Do not plot crosses.")
-    parser.add_option("--nogaps", default=False,
-                      action="store_true", dest="nogaps",
-                      help="Optional, Do not plot gaps.")
-    parser.add_option("-o", "--output", default=None,
-                      type="string", dest="output",
-                      help="Save plot to image file (e.g. out.pdf, " +
-                      "out.png) instead of opening a window.")
-    parser.add_option("--print-gaps", default=False,
-                      action="store_true", dest="print_gaps",
-                      help="Optional, prints a list of gaps at the end.")
-    (options, largs) = parser.parse_args(option_list)
+def main(argv=None):
+    parser = ArgumentParser(prog='obspy-scan', description=__doc__.strip(),
+                            formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-f', '--format', choices=ENTRY_POINTS['waveform'],
+                        help='Optional, the file format.\n' +
+                             ' '.join(__doc__.split('\n')[-4:]))
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Optional. Verbose output.')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Optional. Be quiet. Overwritten by --verbose '
+                             'flag.')
+    parser.add_argument('-n', '--non-recursive',
+                        action='store_false', dest='recursive',
+                        help='Optional. Do not descend into directories.')
+    parser.add_argument('-i', '--ignore-links', action='store_true',
+                        help='Optional. Do not follow symbolic links.')
+    parser.add_argument('--start-time', default=None, type=UTCDateTime,
+                        help='Optional, a UTCDateTime compatible string. ' +
+                             'Only visualize data after this time and set ' +
+                             'time-axis axis accordingly.')
+    parser.add_argument('--end-time', default=None, type=UTCDateTime,
+                        help='Optional, a UTCDateTime compatible string. ' +
+                             'Only visualize data before this time and set ' +
+                             'time-axis axis accordingly.')
+    parser.add_argument('--id', action='append',
+                        help='Optional, a SEED channel identifier '
+                             "(e.g. 'GR.FUR..HHZ'). You may provide this " +
+                             'option multiple times. Only these ' +
+                             'channels will be plotted.')
+    parser.add_argument('-t', '--event-time', default=None, type=UTCDateTime,
+                        action='append',
+                        help='Optional, a UTCDateTime compatible string ' +
+                             "(e.g. '2010-01-01T12:00:00'). You may provide " +
+                             'this option multiple times. These times get ' +
+                             'marked by vertical lines in the plot. ' +
+                             'Useful e.g. to mark event origin times.')
+    parser.add_argument('-w', '--write', default=None,
+                        help='Optional, npz file for writing data '
+                             'after scanning waveform files')
+    parser.add_argument('-l', '--load', default=None,
+                        help='Optional, npz file for loading data '
+                             'before scanning waveform files')
+    parser.add_argument('--no-x', action='store_true',
+                        help='Optional, Do not plot crosses.')
+    parser.add_argument('--no-gaps', action='store_true',
+                        help='Optional, Do not plot gaps.')
+    parser.add_argument('-o', '--output', default=None,
+                        help='Save plot to image file (e.g. out.pdf, ' +
+                             'out.png) instead of opening a window.')
+    parser.add_argument('--print-gaps', action='store_true',
+                        help='Optional, prints a list of gaps at the end.')
+    parser.add_argument('paths', nargs='*',
+                        help='Files or directories to scan.')
+
+    # Deprecated arguments
+    action = _DeprecatedArgumentAction('--endtime', '--end-time')
+    parser.add_argument('--endtime', type=UTCDateTime,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--event-times', '--event-time')
+    parser.add_argument('--event-times', action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--ids', '--id')
+    parser.add_argument('--ids', action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--nox', '--no-x',
+                                       real_action='store_true')
+    parser.add_argument('--nox', dest='no_x', nargs=0,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--nogaps', '--no-gaps',
+                                       real_action='store_true')
+    parser.add_argument('--nogaps', dest='no_gaps', nargs=0,
+                        action=action, help=SUPPRESS)
+
+    action = _DeprecatedArgumentAction('--starttime', '--start-time')
+    parser.add_argument('--starttime', type=UTCDateTime,
+                        action=action, help=SUPPRESS)
+
+    args = parser.parse_args(argv)
 
     # Print help and exit if no arguments are given
-    if len(largs) == 0 and options.load is None:
-        parser.print_help()
-        sys.exit(1)
+    if len(args.paths) == 0 and args.load is None:
+        parser.error('No paths specified.')
 
     # Use recursively parsing function?
-    if options.recursive:
+    if args.recursive:
         parse_func = recursive_parse
     else:
         parse_func = parse_file_to_dict
 
-    if options.output is not None:
+    if args.output is not None:
         import matplotlib
         matplotlib.use("agg")
     global date2num
@@ -227,58 +252,72 @@ def main(option_list=None):
     ax = fig.add_subplot(111)
 
     # Plot vertical lines if option 'event_times' was specified
-    if options.event_times:
-        times = options.event_times.split(',')
-        times = list(map(UTCDateTime, times))
-        times = list(map(date2num, times))
+    if args.event_time:
+        times = map(date2num, args.event_time)
+        for time in times:
+            ax.axvline(time, color='k')
+    # Deprecated version (don't plot twice)
+    if args.event_times and not args.event_time:
+        times = args.event_times.split(',')
+        times = map(UTCDateTime, times)
+        times = map(date2num, times)
         for time in times:
             ax.axvline(time, color='k')
 
-    if options.starttime:
-        options.starttime = UTCDateTime(options.starttime)
-        options.starttime = date2num(options.starttime)
-    if options.endtime:
-        options.endtime = UTCDateTime(options.endtime)
-        options.endtime = date2num(options.endtime)
+    if args.start_time:
+        args.start_time = date2num(args.start_time)
+    elif args.starttime:
+        # Deprecated version
+        args.start_time = date2num(args.starttime)
+    if args.end_time:
+        args.end_time = date2num(args.end_time)
+    elif args.endtime:
+        # Deprecated version
+        args.end_time = date2num(args.endtime)
 
     # Generate dictionary containing nested lists of start and end times per
     # station
     data = {}
     samp_int = {}
     counter = 1
-    if options.load:
-        load_npz(options.load, data, samp_int)
-    for path in largs:
-        counter = parse_func(data, samp_int, path, counter, options.format,
-                             options.verbose, options.ignore_links)
+    if args.load:
+        load_npz(args.load, data, samp_int)
+    for path in args.paths:
+        counter = parse_func(data, samp_int, path, counter, args.format,
+                             verbose=args.verbose, quiet=args.quiet,
+                             ignore_links=args.ignore_links)
     if not data:
-        print("No waveform data found.")
+        if args.verbose or not args.quiet:
+            print("No waveform data found.")
         return
-    if options.write:
-        write_npz(options.write, data, samp_int)
+    if args.write:
+        write_npz(args.write, data, samp_int)
 
     # Loop through this dictionary
     ids = list(data.keys())
+    # Handle deprecated argument
+    if args.ids and not args.id:
+        args.id = args.ids.split(',')
     # restrict plotting of results to given ids
-    if options.ids:
-        options.ids = options.ids.split(',')
-        ids = [x for x in ids if x in options.ids]
+    if args.id:
+        ids = [x for x in ids if x in args.id]
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
-    print('\n')
+    if args.verbose or not args.quiet:
+        print('\n')
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
         data[_id].sort()
         startend = np.array(data[_id])
         if len(startend) == 0:
             continue
-        # restrict plotting of results to given start/endtime
-        if options.starttime:
-            startend = startend[startend[:, 1] > options.starttime]
+        # restrict plotting of results to given start/end time
+        if args.start_time:
+            startend = startend[startend[:, 1] > args.start_time]
         if len(startend) == 0:
             continue
-        if options.starttime:
-            startend = startend[startend[:, 0] < options.endtime]
+        if args.start_time:
+            startend = startend[startend[:, 0] < args.end_time]
         if len(startend) == 0:
             continue
         timerange = startend[:, 1].max() - startend[:, 0].min()
@@ -290,7 +329,7 @@ def main(option_list=None):
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
         ax.xaxis_date()
-        if not options.nox:
+        if not args.no_x:
             ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
         ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0],
                   startend_compressed[:, 1], 'b', linewidth=2, zorder=3)
@@ -302,53 +341,70 @@ def main(option_list=None):
         gap_indices = diffs > 1.8 * np.array(samp_int[_id][:-1])
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
-            # dont handle last endtime as start of gap
+            # don't handle last end time as start of gap
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
-            if not options.nogaps and any(gap_indices):
+            if not args.no_gaps and any(gap_indices):
                 rects = [Rectangle((start_, offset[0] - 0.4),
                                    end_ - start_, 0.8)
                          for start_, end_ in zip(gaps_start, gaps_end)]
                 ax.add_collection(PatchCollection(rects, color="r"))
-            if options.print_gaps:
+            if args.print_gaps:
                 for start_, end_ in zip(gaps_start, gaps_end):
                     start_, end_ = num2date((start_, end_))
                     start_ = UTCDateTime(start_.isoformat())
                     end_ = UTCDateTime(end_.isoformat())
-                    print("%s %s %s %.3f" % (_id, start_, end_, end_ - start_))
+                    if args.verbose or not args.quiet:
+                        print("%s %s %s %.3f" % (_id, start_, end_,
+                                                 end_ - start_))
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
-    # set x-axis limits according to given start/endtime
-    if options.starttime:
-        ax.set_xlim(left=options.starttime, auto=None)
-    if options.endtime:
-        ax.set_xlim(right=options.endtime, auto=None)
+    # set x-axis limits according to given start/end time
+    if args.start_time and args.end_time:
+        ax.set_xlim(left=args.start_time, right=args.end_time)
+    elif args.start_time:
+        ax.set_xlim(left=args.start_time, auto=None)
+    elif args.end_time:
+        ax.set_xlim(right=args.end_time, auto=None)
     fig.autofmt_xdate()  # rotate date
     plt.subplots_adjust(left=0.2)
-    if options.output is None:
+    if args.output is None:
         plt.show()
     else:
         fig.set_dpi(72)
         height = len(ids) * 0.5
         height = max(4, height)
         fig.set_figheight(height)
+
         # tight_layout() only available from matplotlib >= 1.1
         try:
             plt.tight_layout()
+        except:
+            pass
+
+        if not args.start_time or not args.end_time:
             days = ax.get_xlim()
             days = days[1] - days[0]
-            width = max(6, days / 30.)
-            width = min(width, height * 4)
-            fig.set_figwidth(width)
-            plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+        else:
+            days = args.end_time - args.start_time
+
+        width = max(6, days / 30.)
+        width = min(width, height * 4)
+        fig.set_figwidth(width)
+        plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+
+        # tight_layout() only available from matplotlib >= 1.1
+        try:
             plt.tight_layout()
         except:
             pass
-        fig.savefig(options.output)
-    sys.stdout.write('\n')
+
+        fig.savefig(args.output)
+    if args.verbose and not args.quiet:
+        sys.stdout.write('\n')
 
 
 if __name__ == '__main__':

@@ -28,8 +28,9 @@ addition of the following:
 """
 from __future__ import print_function
 
-from docutils.parsers.rst import directives, Directive, DirectiveError
 from docutils import nodes
+from docutils.parsers.rst import Directive, DirectiveError, directives
+
 
 class Gallery(Directive):
     name = 'gallery-plot'
@@ -45,7 +46,7 @@ class Gallery(Directive):
     def run(self):
         language = self.state_machine.language
         document = self.state.document
-        directive,messages = directives.directive('plot', language, document)
+        directive, messages = directives.directive('plot', language, document)
         self.state.parent += messages
 
         # Temporarily override template
@@ -114,8 +115,8 @@ class Gallery(Directive):
             result = directive_instance.run()
         except DirectiveError as error:
             msg_node = self.reporter.system_message(error.level, error.msg,
-                                                    line=lineno)
-            msg_node += nodes.literal_block(block_text, block_text)
+                                                    line=self.lineno)
+            msg_node += nodes.literal_block(self.block_text, self.block_text)
             result = [msg_node]
 
         # Restore original settings
@@ -123,6 +124,7 @@ class Gallery(Directive):
         document.settings.env.config.plot_formats = plot_formats_orig
 
         return result
+
 
 def fix_thumbnail_class(app, doctree):
     """
@@ -143,6 +145,7 @@ def fix_thumbnail_class(app, doctree):
             continue
         for ref in fig.traverse(condition=nodes.reference):
             ref['classes'].append('thumbnail')
+
 
 def setup(app):
     app.setup_extension('matplotlib.sphinxext.plot_directive')

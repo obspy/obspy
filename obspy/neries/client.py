@@ -13,23 +13,25 @@ NERIES Web service client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
-
-from obspy import UTCDateTime, read, Stream, __version__
-from obspy.core.util import NamedTemporaryFile, guessDelta
+from future.utils import native_str
 
 import functools
 import json
 import platform
+import warnings
+
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
-import warnings
+
+from obspy import Stream, UTCDateTime, __version__, read
+from obspy.core.util import NamedTemporaryFile, guessDelta
 
 
 DEPR_WARN = ("This service was shut down on the server side, please use the "
@@ -168,7 +170,7 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + \
             urllib.parse.urlencode(params)
         if self.debug:
-            print(('\nRequesting %s' % (remoteaddr)))
+            print('\nRequesting %s' % (remoteaddr))
         response = urllib.request.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
@@ -567,8 +569,8 @@ class Client(object):
             break
         # keep only request ids which are fulfilled and have 'status = OK'
         request_ids = [r._Id for r in response.RoutedRequest
-                       if 'Status: OK' in r.StatusDescription
-                       and r.Fulfillment == 100]
+                       if 'Status: OK' in r.StatusDescription and
+                       r.Fulfillment == 100]
         if not request_ids:
             return
         # retrieve download URLs using request ids

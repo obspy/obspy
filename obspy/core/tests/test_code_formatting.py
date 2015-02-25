@@ -6,11 +6,12 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import codecs
 import fnmatch
 import inspect
-from obspy.core.util.decorator import skipIf
-from obspy.core.util.testing import check_flake8
 import os
 import re
 import unittest
+
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import check_flake8
 
 
 class CodeFormattingTestCase(unittest.TestCase):

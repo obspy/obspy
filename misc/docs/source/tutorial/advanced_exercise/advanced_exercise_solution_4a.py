@@ -1,8 +1,11 @@
 from __future__ import print_function
+
+from math import log10
+
+from obspy.arclink import Client
 from obspy.core import UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth
-from obspy.arclink import Client
-from math import log10
+
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
           'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}

@@ -13,16 +13,22 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import warnings
 import ctypes as C
-import numpy as np
-from math import pi
+import warnings
 from collections import defaultdict
+from copy import deepcopy
+from math import pi
 
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
-from obspy.station.util import Frequency, Angle
+import numpy as np
+
+from obspy.core.util.base import ComparingObject, getMatplotlibVersion
+from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+                                         FloatWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.util import Angle, Frequency
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ResponseStage(ComparingObject):
@@ -60,8 +66,8 @@ class ResponseStage(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
@@ -136,19 +142,19 @@ class ResponseStage(ComparingObject):
             "{decimation}").format(
             response_type=self.__class__.__name__,
             response_stage=self.stage_sequence_number,
+            gain=self.stage_gain,
+            gain_freq=self.stage_gain_frequency,
             name_desc="\t%s %s\n" % (
                 self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
-            resource_id="\tResource Id: %s" % self.resource_id
-            if self.resource_id else "",
+            resource_id=("\tResource Id: %s" % self.resource_id
+                         if self.resource_id else ""),
             input_units=self.input_units if self.input_units else "UNKNOWN",
-            input_desc=" (%s)" % self.input_units_description
-            if self.input_units_description else "",
+            input_desc=(" (%s)" % self.input_units_description
+                        if self.input_units_description else ""),
             output_units=self.output_units if self.output_units else "UNKNOWN",
-            output_desc=" (%s)" % self.output_units_description
-            if self.output_units_description else "",
-            gain=self.stage_gain,
-            gain_freq=self.stage_gain_frequency,
+            output_desc=(" (%s)" % self.output_units_description
+                         if self.output_units_description else ""),
             decimation=(
                 "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
                 "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
@@ -158,6 +164,9 @@ class ResponseStage(ComparingObject):
                     self.decimation_correction)
                 if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class PolesZerosResponseStage(ResponseStage):
@@ -239,6 +248,9 @@ class PolesZerosResponseStage(ResponseStage):
             zeros=", ".join(map(str, self.zeros)),
             )
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def zeros(self):
@@ -360,6 +372,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 transfer_fct_type=self.cf_transfer_function_type,
                 num_count=len(self.numerator), den_count=len(self.denominator))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def numerator(self):
@@ -681,8 +696,8 @@ class Response(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
@@ -1057,12 +1072,34 @@ class Response(ComparingObject):
         output = np.empty(len(freqs), dtype=np.complex128)
         out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
-        clibevresp.check_channel(C.pointer(chan))
-        clibevresp.norm_resp(C.pointer(chan), -1, 0)
-        clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
-                             out_units, -1, 0, 0)
-        # XXX: Check if this is really not needed.
-        # output *= scale_factor[0]
+        # Set global variables
+        if self.resource_id:
+            clibevresp.curr_file.value = self.resource_id.encode('utf-8')
+        else:
+            clibevresp.curr_file.value = None
+
+        try:
+            rc = clibevresp._obspy_check_channel(C.byref(chan))
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('check_channel: ' + m)
+
+            rc = clibevresp._obspy_norm_resp(C.byref(chan), -1, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('norm_resp: ' + m)
+
+            rc = clibevresp._obspy_calc_resp(C.byref(chan), freqs, len(freqs),
+                                             output, out_units, -1, 0, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('calc_resp: ' + m)
+
+            # XXX: Check if this is really not needed.
+            # output *= scale_factor[0]
+
+        finally:
+            clibevresp.curr_file.value = None
 
         return output, freqs
 
@@ -1108,6 +1145,9 @@ class Response(ComparingObject):
                      ("%g" % i.stage_gain) if i.stage_gain else "UNKNOWN")
                  for i in self.response_stages]))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
@@ -1176,8 +1216,8 @@ class Response(ComparingObject):
         # detect sampling rate from response stages
         if sampling_rate is None:
             for stage in self.response_stages[::-1]:
-                if (stage.decimation_input_sample_rate is not None
-                        and stage.decimation_factor is not None):
+                if (stage.decimation_input_sample_rate is not None and
+                        stage.decimation_factor is not None):
                     sampling_rate = (stage.decimation_input_sample_rate /
                                      stage.decimation_factor)
                     break
@@ -1211,7 +1251,11 @@ class Response(ComparingObject):
         lw = 1.5
         lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
         color = lines[0].get_color()
-        if self.instrument_sensitivity:
+        # Cannot be plotted with matplotlib < 1.0.0
+        if MATPLOTLIB_VERSION < [1, 0, 0]:
+            warnings.warn("Cannot plot the instrument sensitivity. Your "
+                          "matplotlib version is too old. Please update.")
+        if self.instrument_sensitivity and MATPLOTLIB_VERSION >= [1, 0, 0]:
             trans_above = blended_transform_factory(ax1.transData,
                                                     ax1.transAxes)
             trans_right = blended_transform_factory(ax1.transAxes,
@@ -1253,6 +1297,63 @@ class Response(ComparingObject):
                 plt.show()
 
         return fig
+
+    def get_paz(self):
+        """
+        Get Poles and Zeros stage.
+
+        Prints a warning if more than one poles and zeros stage is found.
+        Raises if no poles and zeros stage is found.
+
+        :rtype: :class:`PolesZerosResponseStage`
+        :returns: Poles and Zeros response stage.
+        """
+        paz = [deepcopy(stage) for stage in self.response_stages
+               if isinstance(stage, PolesZerosResponseStage)]
+        if len(paz) == 0:
+            msg = "No PolesZerosResponseStage found."
+            raise Exception(msg)
+        elif len(paz) > 1:
+            msg = ("More than one PolesZerosResponseStage encountered. "
+                   "Returning first one found.")
+            warnings.warn(msg)
+        return paz[0]
+
+    def get_sacpz(self):
+        """
+        Returns SACPZ ASCII text representation of Response.
+
+        :rtype: str
+        :returns: Textual SACPZ representation of response.
+        """
+        # extract paz
+        paz = self.get_paz()
+        sensitivity = self.instrument_sensitivity.value
+        return paz_to_sacpz_string(paz, sensitivity)
+
+
+def paz_to_sacpz_string(paz, instrument_sensitivity):
+    """
+    Returns SACPZ ASCII text representation of Response.
+
+    :type paz: :class:`PolesZerosResponseStage`
+    :param paz: Poles and Zeros response information
+    :type instrument_sensitivity: :class:`InstrumentSensitivity`
+    :param paz: Overall instrument sensitivity of response
+    :rtype: str
+    :returns: Textual SACPZ representation of poles and zeros response stage.
+    """
+    # assemble output string
+    out = []
+    out.append("ZEROS %i" % len(paz.zeros))
+    for c in paz.zeros:
+        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+    out.append("POLES %i" % len(paz.poles))
+    for c in paz.poles:
+        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+    constant = paz.normalization_factor * instrument_sensitivity.value
+    out.append("CONSTANT %.6e" % constant)
+    return "\n".join(out)
 
 
 class InstrumentSensitivity(ComparingObject):
@@ -1376,8 +1477,8 @@ class InstrumentPolynomial(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
@@ -1494,7 +1595,12 @@ def _adjust_bode_plot_figure(fig, grid=True, show=True):
     # make more room in between subplots for the ylabel of right plot
     fig.subplots_adjust(hspace=0.02, top=0.87, right=0.82)
     ax1, ax2 = fig.axes[:2]
-    ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    # workaround for older matplotlib versions
+    try:
+        ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    except TypeError:
+        leg_ = ax1.legend(loc="lower center", ncol=3)
+        leg_.prop.set_size("small")
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.setp(ax2.get_yticklabels()[-1], visible=False)
     ax1.set_ylabel('Amplitude')

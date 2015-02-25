@@ -6,12 +6,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import gzip
+import os
+import unittest
+
 import numpy as np
+
 from obspy import read
 from obspy.core import AttribDict
-import os
-import gzip
-import unittest
 
 
 TRACE1_HEADER = {'ACQUISITION_DATE': '07/JAN/2013',

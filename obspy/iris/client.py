@@ -11,18 +11,19 @@ IRIS Web service client for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.parse
-    import urllib.request
-
-from obspy import UTCDateTime, read, Stream, __version__
-from obspy.core.util import NamedTemporaryFile, loadtxt
+from future.utils import native_str
 
 import io
 import json
 import platform
+
+with standard_library.hooks():
+    import urllib.parse
+    import urllib.request
+
+from obspy import Stream, UTCDateTime, __version__, read
+from obspy.core.util import NamedTemporaryFile, loadtxt
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -32,7 +33,7 @@ DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
 DEPR_WARN = ("This service was shut down on the server side in December "
              "2013, please use %s instead. Further information: "
-             "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
+             "http://www.iris.edu/ds/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
 DEPR_WARNS = dict([(new, DEPR_WARN % "obspy.fdsn.client.Client.%s" % new)
                    for new in ["get_waveform", "get_events", "get_stations",
@@ -130,7 +131,7 @@ class Client(object):
         if options:
             remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
-            print(('\nRequesting %s' % (remoteaddr)))
+            print('\nRequesting %s' % (remoteaddr))
         req = urllib.request.Request(url=remoteaddr, data=data,
                                      headers=headers)
         response = urllib.request.urlopen(req, timeout=self.timeout)
@@ -158,7 +159,7 @@ class Client(object):
         else:
             method = 'wt'
         file_opened = False
-        # filename is given, create fh, write to file and return nothing
+        # file name is given, create fh, write to file and return nothing
         if hasattr(filename, "write") and callable(filename.write):
             fh = filename
         elif isinstance(filename, (str, native_str)):
@@ -184,7 +185,7 @@ class Client(object):
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
@@ -198,7 +199,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
@@ -212,7 +213,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
@@ -225,7 +226,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])
@@ -262,7 +263,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         **Filter Options**
 
-        The following parameters act as filters upon the timeseries.
+        The following parameters act as filters upon the time series.
 
         :type filter: list of str, optional
         :param filter: Filter list.  List order matters because each filter
@@ -273,7 +274,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
             ``"taper=WIDTH,TYPE"``
                 Apply a time domain symmetric tapering function to the
-                timeseries data. The width is specified as a fraction of the
+                time series data. The width is specified as a fraction of the
                 trace length from 0 to 0.5. The window types HANNING (default),
                 HAMMING, or COSINE may be optionally followed, e.g.
                 ``"taper=0.25"`` or ``"taper=0.5,COSINE"``.
@@ -353,7 +354,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             ``'miniseed'``
                 IRIS MiniSEED format
             ``'plot'``
-                A simple plot of the timeseries
+                A simple plot of the time series
             ``'saca'``
                 SAC, ASCII format
             ``'sacbb'``
@@ -400,7 +401,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        # write directly if filename is given
+        # write directly if file name is given
         if filename:
             return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
@@ -421,7 +422,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
-        `RESP <http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F>`_
+        `RESP <http://www.iris.edu/ds/nodes/dmc/kb/questions/60/>`_
         format (as used by evalresp). Users can query for channel response by
         network, station, channel, location and time.
 
@@ -517,7 +518,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
@@ -531,7 +532,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform'])
@@ -545,7 +546,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/
         new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_waveform_bulk'])
@@ -564,7 +565,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_stations'])
@@ -1134,7 +1135,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         2013, please use :mod:`obspy.fdsn` instead.
 
         Further information:
-        http://www.iris.edu/dms/nodes/dmc/news/2013/03/\
+        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
 new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
         raise Exception(DEPR_WARNS['get_events'])

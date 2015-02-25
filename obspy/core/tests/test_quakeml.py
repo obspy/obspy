@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
-import difflib
 import math
 import os
 import unittest
@@ -12,14 +11,16 @@ import warnings
 
 from lxml import etree
 
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
-    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
-    Pick
-from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
+from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
+                              MomentTensor, Origin, Pick, ResourceIdentifier,
+                              Tensor, WaveformStreamID, readEvents)
+from obspy.core.quakeml import Pickler, readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import compare_xml_strings
+
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
@@ -37,37 +38,6 @@ class QuakeMLTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.neries_filename = os.path.join(self.path, 'neries_events.xml')
         self.neries_catalog = readQuakeML(self.neries_filename)
-
-    def _compareStrings(self, doc1, doc2):
-        """
-        Simple helper function to compare two XML strings.
-        """
-        # Compat py2k and py3k
-        try:
-            doc1 = doc1.encode()
-            doc2 = doc2.encode()
-        except:
-            pass
-        obj1 = etree.fromstring(doc1).getroottree()
-        obj2 = etree.fromstring(doc2).getroottree()
-
-        buf = io.BytesIO()
-        obj1.write_c14n(buf)
-        buf.seek(0, 0)
-        str1 = buf.read()
-        str1 = [_i.strip() for _i in str1.splitlines()]
-
-        buf = io.BytesIO()
-        obj2.write_c14n(buf)
-        buf.seek(0, 0)
-        str2 = buf.read()
-        str2 = [_i.strip() for _i in str2.splitlines()]
-
-        unified_diff = difflib.unified_diff(str1, str2)
-
-        err_msg = "\n".join(unified_diff)
-        if err_msg:  # pragma: no cover
-            raise AssertionError("Strings are not equal.\n" + err_msg)
 
     def test_readQuakeML(self):
         """
@@ -148,7 +118,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_origin(self):
         """
@@ -249,7 +219,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_magnitude(self):
         """
@@ -294,7 +264,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_stationmagnitudecontribution(self):
         """
@@ -328,7 +298,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_stationmagnitude(self):
         """
@@ -366,7 +336,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_data_used_in_moment_tensor(self):
         """
@@ -408,7 +378,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_arrival(self):
         """
@@ -444,7 +414,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_pick(self):
         """
@@ -482,7 +452,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_focalmechanism(self):
         """
@@ -576,7 +546,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_writeQuakeML(self):
         """
@@ -733,7 +703,7 @@ class QuakeMLTestCase(unittest.TestCase):
                            depth=depth, resource_id=ResourceIdentifier())
         ev.origins.append(ev_origin)
 
-        # populte event moment tensor
+        # populate event moment tensor
         ev_tensor = Tensor(m_rr=mrr, m_tt=mtt, m_pp=mpp, m_rt=mtr, m_rp=mpr,
                            m_tp=mtp)
 
@@ -919,29 +889,34 @@ class QuakeMLTestCase(unittest.TestCase):
             # write file
             cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
             # check contents
-            with open(tmpfile, "r") as fh:
-                content = fh.read()
+            with open(tmpfile, "rb") as fh:
+                # enforce reproducible attribute orders through write_c14n
+                obj = etree.fromstring(fh.read()).getroottree()
+                buf = io.BytesIO()
+                obj.write_c14n(buf)
+                buf.seek(0, 0)
+                content = buf.read()
             # check namespace definitions in root element
-            expected = ['<q:quakeml',
-                        'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
-                        'xmlns:ns0="http://test.org/xmlns/0.1"',
-                        'xmlns:ns1="http://some-page.de/xmlns/1.0"',
-                        'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
-                        'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            expected = [b'<q:quakeml',
+                        b'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
+                        b'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        b'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
             for line in expected:
                 self.assertTrue(line in content)
             # check additional tags
             expected = [
-                '<ns0:custom>True</ns0:custom>',
-                '<ns0:new_tag>1234</ns0:new_tag>',
-                '<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
-                '<ns1:public '
-                'another_attrib="another_value" '
-                'some_attrib="some_value">false</ns1:public>'
+                b'<ns0:custom>True</ns0:custom>',
+                b'<ns0:new_tag>1234</ns0:new_tag>',
+                b'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
+                b'<ns1:public '
+                b'another_attrib="another_value" '
+                b'some_attrib="some_value">false</ns1:public>'
             ]
             for line in expected:
                 self.assertTrue(line in content)
-            # now, read again to test if its parsed correctly..
+            # now, read again to test if it's parsed correctly..
             cat = readQuakeML(tmpfile)
         # when reading..
         #  - namespace abbreviations should be disregarded

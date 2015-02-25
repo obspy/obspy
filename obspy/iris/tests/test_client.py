@@ -6,12 +6,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import os
+import unittest
+
+import numpy as np
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.iris import Client
-import numpy as np
-import os
-import unittest
 
 
 class ClientTestCase(unittest.TestCase):

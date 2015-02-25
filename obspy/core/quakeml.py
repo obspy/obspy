@@ -24,20 +24,25 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
-    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
-    QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict
-import warnings
-
 import inspect
 import io
-from lxml import etree
 import os
+import warnings
+
+from lxml import etree
+
+from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
+                              CompositeTime, ConfidenceEllipsoid, CreationInfo,
+                              DataUsed, Event, EventDescription,
+                              FocalMechanism, Magnitude, MomentTensor,
+                              NodalPlane, NodalPlanes, Origin, OriginQuality,
+                              OriginUncertainty, Pick, PrincipalAxes,
+                              QuantityError, ResourceIdentifier,
+                              SourceTimeFunction, StationMagnitude,
+                              StationMagnitudeContribution, Tensor, TimeWindow,
+                              WaveformStreamID)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",

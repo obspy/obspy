@@ -23,7 +23,7 @@ import xdrlib
 
 import numpy as np
 
-from obspy import UTCDateTime, Trace, Stream
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
 
 

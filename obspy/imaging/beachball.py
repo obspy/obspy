@@ -30,9 +30,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
-import matplotlib.pyplot as plt
-from matplotlib import patches, collections, transforms, path as mplpath
+
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import path as mplpath
+from matplotlib import collections, patches, transforms
 
 
 D2R = np.pi / 180
@@ -391,14 +393,14 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
                 azp = az
             else:
                 if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10.:
-                        azi[n][1] = azp
-                        n += 1
-                        azi[n][0] = az
+                    azi[n][1] = azp
+                    n += 1
+                    azi[n][0] = az
                 if np.fabs(np.fabs(az - azp) - np.pi * 2.) < D2R * 2.:
-                        if azp < az:
-                            azi[n][0] += np.pi * 2.
-                        else:
-                            azi[n][0] -= np.pi * 2.
+                    if azp < az:
+                        azi[n][0] += np.pi * 2.
+                    else:
+                        azi[n][0] -= np.pi * 2.
                 if n == 0:
                     x[j] = x0 + radius_size * r * si
                     y[j] = y0 + radius_size * r * co
@@ -689,9 +691,9 @@ def StrikeDip(n, e, u):
     strike = np.arctan2(e, n) * r2d
     strike = strike - 90
     while strike >= 360:
-            strike = strike - 360
+        strike = strike - 360
     while strike < 0:
-            strike = strike + 360
+        strike = strike + 360
     x = np.sqrt(np.power(n, 2) + np.power(e, 2))
     dip = np.arctan2(x, u) * r2d
     return (strike, dip)

@@ -6,7 +6,7 @@
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?station=ANMO&amp;endtime=2001-01-01T00%3A00%3A00.000000&amp;network=IU&amp;starttime=2000-01-01T00%3A00%3A00.000000</ModuleURI>
  <Created>2014-07-26T09:15:09</Created>
- <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+ <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>260</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>

@@ -26,9 +26,12 @@ from future.builtins import *  # NOQA
 
 import math
 import sys
+
 import numpy as np
+
 from obspy.core.trace import Trace, UTCDateTime
 from obspy.realtime.rtmemory import RtMemory
+
 
 _PI = math.pi
 _TWO_PI = 2.0 * math.pi
@@ -121,13 +124,13 @@ def integrate(trace, rtmemory_list=None):
         rtmemory.initialize(sample.dtype, memory_size_input,
                             memory_size_output, 0, 0)
 
-    sum = rtmemory.output[0]
+    sum_ = rtmemory.output[0]
 
     for i in range(np.size(sample)):
-        sum += sample[i] * delta_time
-        sample[i] = sum
+        sum_ += sample[i] * delta_time
+        sample[i] = sum_
 
-    rtmemory.output[0] = sum
+    rtmemory.output[0] = sum_
 
     return sample
 
@@ -226,7 +229,7 @@ def boxcar(trace, width, rtmemory_list=None):
     i = 0
     i1 = i - width
     i2 = i  # causal boxcar of width width
-    sum = 0.0
+    sum_ = 0.0
     icount = 0
     for i in range(np.size(sample)):
         value = 0.0
@@ -236,21 +239,21 @@ def boxcar(trace, width, rtmemory_list=None):
                     value = rtmemory.input[width + n]
                 else:
                     value = sample[n]
-                sum += value
+                sum_ += value
                 icount = icount + 1
         else:  # later passes, update sum
             if ((i1 - 1) < 0):
                 value = rtmemory.input[width + (i1 - 1)]
             else:
                 value = sample[(i1 - 1)]
-            sum -= value
+            sum_ -= value
             if (i2 < 0):
                 value = rtmemory.input[width + i2]
             else:
                 value = sample[i2]
-            sum += value
+            sum_ += value
         if (icount > 0):
-            new_sample[i] = (float)(sum / float(icount))
+            new_sample[i] = (float)(sum_ / float(icount))
         else:
             new_sample[i] = 0.0
         i1 = i1 + 1
@@ -429,8 +432,8 @@ def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
     new_sample = np.zeros(np.size(sample), sample.dtype)
 
     ioffset_pick = int(round(
-                       (ref_time - trace.stats.starttime)
-                       * trace.stats.sampling_rate))
+                       (ref_time - trace.stats.starttime) *
+                       trace.stats.sampling_rate))
     ioffset_mwp_min = ioffset_pick
 
     # set reference amplitude
@@ -571,7 +574,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     npts = len(sample)
     dt = trace.stats.delta
 
-    # set some constants for the kurtosis calulation
+    # set some constants for the kurtosis calculation
     C1 = dt / float(win)
     a1 = 1.0 - C1
     C2 = (1.0 - a1 * a1) / 2.0

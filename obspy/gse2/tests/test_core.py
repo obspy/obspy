@@ -7,13 +7,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import os
+import unittest
+
+import numpy as np
+
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2.libgse2 import ChksumError
-import copy
-import numpy as np
-import os
-import unittest
 
 
 class CoreTestCase(unittest.TestCase):
@@ -147,7 +149,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 1000
         # data cloud of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         stats = {'network': 'BW', 'station': 'TEST', 'location': '',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}

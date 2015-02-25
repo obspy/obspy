@@ -1,6 +1,12 @@
 #!/bin/bash
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
+# Remove all test images stored locally. Otherwise they'll end up on the
+# images.
+rm -rf $OBSPY_PATH/obspy/core/tests/images/testrun
+rm -rf $OBSPY_PATH/obspy/imaging/tests/images/testrun
+rm -rf $OBSPY_PATH/obspy/station/tests/images/testrun
+
 DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
@@ -44,9 +50,9 @@ create_image () {
     image_name=$1;
     has_image=$($DOCKER images | grep obspy | grep $image_name)
     if [ "$has_image" ]; then
-        printf "\tImage '$image_name already exists.\n"
+        printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
-        printf "\tImage '$image_name will be created.\n"
+        printf "\e[101m\e[30m  Image '$image_name'will be created.\e[0m\n"
         $DOCKER build -t obspy:$image_name $image_path
     fi
 }
@@ -55,7 +61,7 @@ create_image () {
 # Function running test on an image.
 run_tests_on_image () {
     image_name=$1;
-    printf "\tRunning tests for image '"$image_name"'...\n"
+    printf "\n\e[101m\e[30m  >>> Running tests for image '"$image_name"'...\e[0m\n"
     # Copy dockerfile and render template.
     sed 's/{{IMAGE_NAME}}/'$image_name'/g' scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
 
@@ -71,13 +77,27 @@ run_tests_on_image () {
     $DOCKER cp $ID:/INSTALL_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
 
+    $DOCKER cp $ID:/obspy/obspy/imaging/tests/images/testrun $LOG_DIR/imaging_testrun
+    $DOCKER cp $ID:/obspy/obspy/core/tests/images/testrun $LOG_DIR/core_testrun
+    $DOCKER cp $ID:/obspy/obspy/station/tests/images/testrun $LOG_DIR/station_testrun
+
+    mkdir -p $LOG_DIR/test_images
+
+    mv $LOG_DIR/imaging_testrun/testrun $LOG_DIR/test_images/imaging
+    mv $LOG_DIR/core_testrun/testrun $LOG_DIR/test_images/core
+    mv $LOG_DIR/station_testrun/testrun $LOG_DIR/test_images/station
+
+    rm -rf $LOG_DIR/imaging_testrun
+    rm -rf $LOG_DIR/core_testrun
+    rm -rf $LOG_DIR/station_testrun
+
     $DOCKER rm $ID
     $DOCKER rmi temp:temp
 }
 
 
 # 1. Build all the base images if they do not yet exist.
-printf "STEP 1: CREATING BASE IMAGES\n"
+printf "\e[44m\e[30mSTEP 1: CREATING BASE IMAGES\e[0m\n"
 
 for image_path in $DOCKERFILE_FOLDER/*; do
     image_name=$(basename $image_path)
@@ -91,7 +111,7 @@ done
 
 
 # 2. Execute the ObsPy
-printf "\nSTEP 2: EXECUTING THE TESTS\n"
+printf "\n\e[44m\e[30mSTEP 2: EXECUTING THE TESTS\e[0m\n"
 
 # Loop over all ObsPy Docker images.
 for image_name in $($DOCKER images | grep obspy | awk '{print $2}'); do

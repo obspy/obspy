@@ -11,24 +11,30 @@ Base utilities and constants for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future import standard_library
 from future.utils import native_str
 
-from obspy.core.util.misc import toIntOrZero
-from obspy.core.util.obspy_types import OrderedDict
-from pkg_resources import iter_entry_points, load_entry_point
 import doctest
 import inspect
-import numpy as np
+import io
 import os
 import sys
 import tempfile
+
+with standard_library.hooks():
+    from collections import OrderedDict
+
+from pkg_resources import iter_entry_points, load_entry_point
+import numpy as np
+
+from obspy.core.util.misc import toIntOrZero
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk', 'ah']
+                   'ndk', 'ah', 'zmap', 'nlloc', 'pdas', 'cnv', 'kinemetrics']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -37,14 +43,14 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'PICKLE',
                             'SEGY', 'SU', 'SEG2', 'WAV', 'DATAMARK', 'CSS',
-                            'AH']
-EVENT_PREFERRED_ORDER = ['QUAKEML']
+                            'AH', 'PDAS', 'KINEMETRICS_EVT']
+EVENT_PREFERRED_ORDER = ['QUAKEML', 'NLLOC_HYP']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
-class NamedTemporaryFile(object):
+class NamedTemporaryFile(io.BufferedIOBase):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
@@ -79,19 +85,29 @@ class NamedTemporaryFile(object):
     >>> os.path.exists(tf.name)
     False
     """
-
     def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
         fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
         self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-    def __getattr__(self, attr):
-        return getattr(self._fileobj, attr)
+    def read(self, *args, **kwargs):
+        return self._fileobj.read(*args, **kwargs)
+
+    def write(self, *args, **kwargs):
+        return self._fileobj.write(*args, **kwargs)
+
+    def seek(self, *args, **kwargs):
+        self._fileobj.seek(*args, **kwargs)
+        return self._fileobj.tell()
+
+    def tell(self, *args, **kwargs):
+        return self._fileobj.tell(*args, **kwargs)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-        self.close()
+        self.close()  # flush internal buffer
+        self._fileobj.close()
         os.remove(self.name)
 
 
@@ -227,8 +243,8 @@ ENTRY_POINTS = {
     'filter': _getEntryPoints('obspy.plugin.filter'),
     'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
-    'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'interpolate': _getEntryPoints('obspy.plugin.interpolate'),
+    'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
@@ -301,7 +317,29 @@ def getMatplotlibVersion():
     try:
         import matplotlib
         version = matplotlib.__version__
-        version = version.split("~rc")[0]
+        version = version.split("rc")[0].strip("~")
+        version = list(map(toIntOrZero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
+def getBasemapVersion():
+    """
+    Get basemap version information.
+
+    :returns: basemap version as a list of three integers or ``None`` if
+        basemap import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        from mpl_toolkits import basemap
+        version = basemap.__version__
+        version = version.split("rc")[0].strip("~")
         version = list(map(toIntOrZero, version.split(".")))
     except ImportError:
         version = None
@@ -399,12 +437,15 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
-    ======= ================= =======================================
-        Format  Required Module   _`Linked Function Call`
-        ======= ================= =======================================
-        JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
-        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
-        ======= ================= =======================================
+    ========= ================== ========================================
+        Format    Required Module    _`Linked Function Call`
+        ========= ================== ========================================
+        CNV       :mod:`obspy.cnv`   :func:`obspy.cnv.core.write_CNV`
+        JSON      :mod:`obspy.core`  :func:`obspy.core.json.core.writeJSON`
+        NLLOC_OBS :mod:`obspy.nlloc` :func:`obspy.nlloc.core.write_nlloc_obs`
+        QUAKEML   :mod:`obspy.core`  :func:`obspy.core.quakeml.writeQuakeML`
+        ZMAP      :mod:`obspy.zmap`  :func:`obspy.zmap.core.writeZmap`
+        ========= ================== ========================================
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
@@ -464,6 +505,32 @@ class ComparingObject(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+def _DeprecatedArgumentAction(old_name, new_name, real_action='store'):
+    """
+    Specifies deprecated command-line arguments to scripts
+    """
+    message = '%s has been deprecated. Please use %s in the future.' % (
+        old_name, new_name
+    )
+
+    from argparse import Action
+
+    class _Action(Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            import warnings
+            warnings.warn(message)
+
+            # I wish there were an easier way...
+            if real_action == 'store':
+                setattr(namespace, self.dest, values)
+            elif real_action == 'store_true':
+                setattr(namespace, self.dest, True)
+            elif real_action == 'store_false':
+                setattr(namespace, self.dest, False)
+
+    return _Action
 
 
 if __name__ == '__main__':

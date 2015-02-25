@@ -6,9 +6,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import unittest
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.neic import Client
-import unittest
 
 
 class ClientTestCase(unittest.TestCase):

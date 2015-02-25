@@ -1,0 +1,65 @@
+Source: python-obspy
+Maintainer: ObsPy Development Team <devs@obspy.org>
+Section: python
+Priority: extra
+X-Python-Version: >= 2.6
+Build-Depends: debhelper (>= 5), python (>= 2.6),
+ python (>= 2.7) | python-argparse, python-all-dev,
+ python-support (>= 0.7.1), python-numpy, python-setuptools (>=0.6.21), gcc,
+ python-future (>= 0.12.4), python-mock,
+ gfortran, help2man
+Standards-Version: 3.9.3
+Vcs-Git: git://github.com/obspy/obspy.git
+Vcs-Browser: https://github.com/obspy/obspy
+Homepage: http://www.obspy.org
+
+Package: python-obspy
+Architecture: any
+Section: python
+Priority: extra
+Depends: python (>= 2.6), python (>= 2.7) | python-argparse,
+ ${python:Depends}, python-future (>= 0.12.4),
+ python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
+ python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
+ python-suds (>= 0.4), ${shlibs:Depends}, python-tornado
+Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
+ python-obspy-db, python-obspy-earthworm, python-obspy-fissures,
+ python-obspy-gse2, python-obspy-imaging, python-obspy-iris,
+ python-obspy-mseed, python-obspy-neries, python-obspy-realtime,
+ python-obspy-sac, python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
+ python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
+ python-obspy-wav, python-obspy-xseed
+Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
+ python-obspy-db, python-obspy-earthworm, python-obspy-gse2,
+ python-obspy-imaging, python-obspy-iris, python-obspy-mseed,
+ python-obspy-neries, python-obspy-realtime, python-obspy-sac,
+ python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
+ python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
+ python-obspy-wav, python-obspy-xseed
+Recommends: python-obspy-dbg (= ${binary:Version}),
+ python-geographiclib, python-nose, python-flake8, python-imaging, python-mock
+Suggests: python-mpltoolkits.basemap, python-mlpy, python-pyproj, ipython
+Description: ObsPy: A Python Toolbox for seismology seismological observatories
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats,
+ clients to access data centers and seismological signal processing routines
+ which allow the manipulation of seismological time series.
+ .
+ For more information visit http://www.obspy.org.
+Homepage: http://www.obspy.org
+
+Package: python-obspy-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Description: ObsPy: A Python Toolbox for seismology
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats,
+ clients to access data centers and seismological signal processing routines
+ which allow the manipulation of seismological time series.
+ .
+ For more information visit http://www.obspy.org.
+ .
+ This package provides data and image files, primarily those needed to run the
+ test suite.
+Homepage: http://www.obspy.org

@@ -21,12 +21,9 @@ If the image is not yet available it will be created automatically. The `base_im
 
 ```bash
 $ ls base_images
-centos_6/
-debian_6_squeeze/
-debian_7_wheezy/
-debian_8_jessie/
-fedora_20/
-opensuse_13_1/
+centos_6/              debian_7_wheezy_32bit/ opensuse_13_1/
+debian_6_squeeze/      debian_8_jessie/       ubuntu_14_04_trusty/
+debian_7_wheezy/       fedora_20/             ubuntu_14_10_utopic/
 ```
 
 Each directory in `base_images` contains a `Dockerfile` with instructions to install all ObsPy dependencies without actually installing ObsPy itsself. This makes it easy to add more test images.
@@ -52,7 +49,5 @@ logs
     ├── fedora_20
     │   ├── INSTALL_LOG.txt
     │   └── TEST_LOG.txt
-    └── opensuse_13_1
-        ├── INSTALL_LOG.txt
-        └── TEST_LOG.txt
+    ...
 ```

@@ -21,14 +21,22 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import os
-import warnings
-import pickle
-import math
 import bisect
 import bz2
+import math
+import os
+import pickle
+import warnings
+
 import numpy as np
-from obspy import Trace, Stream
+import matplotlib.pyplot as plt
+from matplotlib import mlab
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.dates import date2num
+from matplotlib.mlab import detrend_none, window_hanning
+from matplotlib.ticker import FormatStrFormatter
+
+from obspy import Stream, Trace
 from obspy.core.util import getMatplotlibVersion
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
@@ -37,38 +45,6 @@ from obspy.signal.util import prevpow2
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 dtiny = np.finfo(0.0).tiny
-
-
-if MATPLOTLIB_VERSION is None:
-    # if matplotlib is not present be silent about it and only raise the
-    # ImportError if matplotlib actually is used (currently in psd() and
-    # PPSD())
-    msg_matplotlib_ImportError = "Failed to import matplotlib. While this " \
-        "is no dependency of obspy.signal it is however necessary for a " \
-        "few routines. Please install matplotlib in order to be able " \
-        "to use e.g. psd() or PPSD()."
-    # set up two dummy functions. this makes it possible to make the docstring
-    # of psd() look like it should with two functions as default values for
-    # kwargs although matplotlib might not be present and the routines
-    # therefore not usable
-
-    def detrend_none():
-        pass
-
-    def window_hanning():
-        pass
-
-else:
-    # Import matplotlib routines. These are no official dependency of
-    # obspy.signal so an import error should really only be raised if any
-    # routine is used which relies on matplotlib (at the moment: psd, PPSD).
-    from matplotlib import mlab
-    import matplotlib.pyplot as plt
-    from matplotlib.dates import date2num
-    from matplotlib.ticker import FormatStrFormatter
-    from matplotlib.colors import LinearSegmentedColormap
-    from matplotlib.mlab import detrend_none, window_hanning
-
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0, 1.0, 1.0),
@@ -109,13 +85,12 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     :func:`matplotlib.mlab.psd` default behavior which changes with
     matplotlib version 0.98.4:
 
-    * http://matplotlib.sourceforge.net/users/whats_new.html\
-#psd-amplitude-scaling
-    * http://matplotlib.sourceforge.net/_static/CHANGELOG
+    * http://matplotlib.org/users/whats_new.html#psd-amplitude-scaling
+    * http://matplotlib.org/_static/CHANGELOG
       (entries on 2009-05-18 and 2008-11-11)
     * http://matplotlib.svn.sourceforge.net/viewvc/matplotlib\
 ?view=revision&revision=6518
-    * http://matplotlib.sourceforge.net/api/api_changes.html#changes-for-0-98-x
+    * http://matplotlib.org/api/api_changes.html#changes-for-0-98-x
 
     .. note::
         For details on all arguments see :func:`matplotlib.mlab.psd`.
@@ -129,12 +104,8 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
     """
-    # check if matplotlib is available, no official dependency for obspy.signal
-    if MATPLOTLIB_VERSION is None:
-        raise ImportError(msg_matplotlib_ImportError)
-
     # check matplotlib version
-    elif MATPLOTLIB_VERSION >= [0, 98, 4]:
+    if MATPLOTLIB_VERSION >= [0, 98, 4]:
         new_matplotlib = True
     else:
         new_matplotlib = False
@@ -198,7 +169,7 @@ def welch_window(N):
 
     .. note::
         See e.g.:
-        http://www.cg.tuwien.ac.at/hostings/cescg/CESCG99/TTheussl/node7.html
+        http://www.cescg.org/CESCG99/TTheussl/node7.html
 
     :type N: int
     :param N: Length of window function.
@@ -262,6 +233,10 @@ class PPSD():
 
     ... but the example stream is too short and does not contain enough data.
 
+    .. note::
+
+        For a real world example see the `ObsPy Tutorial`_.
+
     .. rubric:: Saving and Loading
 
     The PPSD object supports saving to a pickled file with optional
@@ -283,8 +258,6 @@ class PPSD():
         While saving the PPSD with compression enabled takes significantly
         longer, it can reduce the resulting file size by more than 80%.
 
-    For a real world example see the `ObsPy Tutorial`_.
-
     .. note::
 
         It is safer (but a bit slower) to provide a
@@ -295,7 +268,7 @@ class PPSD():
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5):
+                 ppsd_length=3600., overlap=0.5, water_level=600.0):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -353,12 +326,9 @@ class PPSD():
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
+        :type water_level: float, optional
+        :param water_level: Water level used in instrument correction.
         """
-        # check if matplotlib is available, no official dependency for
-        # obspy.signal
-        if MATPLOTLIB_VERSION is None:
-            raise ImportError(msg_matplotlib_ImportError)
-
         if paz is not None and parser is not None:
             msg = "Both paz and parser specified. Using parser object for " \
                   "metadata."
@@ -374,6 +344,7 @@ class PPSD():
         self.is_rotational_data = is_rotational_data
         self.ppsd_length = ppsd_length
         self.overlap = overlap
+        self.water_level = water_level
         # trace length for one segment
         self.len = int(self.sampling_rate * ppsd_length)
         # set paz either from kwarg or try to get it from stats
@@ -383,7 +354,7 @@ class PPSD():
             self.merge_method = -1
         else:
             self.merge_method = 0
-        # nfft is determined mimicing the fft setup in McNamara&Buland paper:
+        # nfft is determined mimicking the fft setup in McNamara&Buland paper:
         # (they take 13 segments overlapping 75% and truncate to next lower
         #  power of 2)
         #  - take number of points of whole ppsd segment (default 1 hour)
@@ -422,7 +393,7 @@ class PPSD():
         per = 1.0 / freq[::-1]
         self.freq = freq
         self.per = per
-        # calculate left/rigth edge of first period bin,
+        # calculate left/right edge of first period bin,
         # width of bin is one octave
         per_left = per[0] / 2
         per_right = 2 * per_left
@@ -566,7 +537,7 @@ class PPSD():
                     warnings.warn(msg)
                 else:
                     # throw warnings if trace length is different
-                    # than ppsd_lenth..!?!
+                    # than ppsd_length..!?!
                     slice = tr.slice(t1, t1 + self.ppsd_length)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
@@ -637,7 +608,8 @@ class PPSD():
             tr.data /= paz['sensitivity']
         else:
             tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                        paz_simulate=None, simulate_sensitivity=False)
+                        paz_simulate=None, simulate_sensitivity=False,
+                        water_level=self.water_level)
 
         # go to acceleration, do nothing for rotational data:
         if self.is_rotational_data:
@@ -717,6 +689,29 @@ class PPSD():
         percentile_values = self.spec_bins[percentile_values]
         return (self.period_bin_centers, percentile_values)
 
+    def get_mode(self):
+        """
+        Returns periods and mode psd values (i.e. for each frequency the psd
+        value with the highest probability is selected).
+
+        :returns: (periods, psd mode values)
+        """
+        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
+        mode = db_bin_centers[self.hist_stack.argmax(axis=1)]
+        return (self.period_bin_centers, mode)
+
+    def get_mean(self):
+        """
+        Returns periods and mean psd values (i.e. for each frequency the mean
+        psd value is selected).
+
+        :returns: (periods, psd mean values)
+        """
+        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
+        mean = (self.hist_stack * db_bin_centers /
+                len(self.times_used)).sum(axis=1)
+        return (self.period_bin_centers, mean)
+
     def __get_normalized_cumulative_histogram(self):
         """
         Returns the current histogram in a cumulative version normalized per
@@ -793,7 +788,8 @@ class PPSD():
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
-             max_percentage=30, period_lim=(0.01, 179)):
+             max_percentage=30, period_lim=(0.01, 179), show_mode=False,
+             show_mean=False):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -825,6 +821,10 @@ class PPSD():
         :param max_percentage: Maximum percentage to adjust the colormap.
         :type period_lim: tuple of 2 floats, optional
         :param period_lim: Period limits to show in histogram.
+        :type show_mode: bool, optional
+        :param show_mode: Enable/disable plotting of mode psd values.
+        :type show_mean: bool, optional
+        :param show_mean: Enable/disable plotting of mean psd values.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -861,6 +861,14 @@ class PPSD():
                     self.get_percentile(percentile=percentile,
                                         hist_cum=hist_cum)
                 ax.plot(periods, percentile_values, color="black")
+
+        if show_mode:
+            periods, mode_ = self.get_mode()
+            ax.plot(periods, mode_, color="black")
+
+        if show_mean:
+            periods, mean_ = self.get_mean()
+            ax.plot(periods, mean_, color="black")
 
         if show_noise_models:
             model_periods, high_noise = get_NHNM()

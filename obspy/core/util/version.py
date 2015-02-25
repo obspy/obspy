@@ -30,14 +30,16 @@
 # contains the following line:
 #
 #   include RELEASE-VERSION
-__all__ = ("get_git_version")
 
 # NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
 # installation time)
+import inspect
 import io
 import os
-import inspect
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
+
+
+__all__ = ("get_git_version")
 
 script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
                                              inspect.currentframe())))

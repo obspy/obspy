@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Headers for obspy.seg2.
@@ -12,6 +11,7 @@ Headers for obspy.seg2.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
 
 MONTHS = {'jan': 1,
           'feb': 2,

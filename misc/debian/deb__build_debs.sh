@@ -38,6 +38,7 @@ GITDIR=$BUILDDIR/git
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
 git clone git://github.com/${GITFORK}/obspy.git $GITDIR
+cd $GITDIR
 if [ "$GITFORK" != "obspy" ]
 then
     git remote add upstream git://github.com/obspy/obspy.git
@@ -49,8 +50,24 @@ echo "#### Working on $GITTARGET"
 cd $GITDIR
 git clean -fxd
 git checkout -- .
-git checkout $GITTARGET
+if [ "$GITTARGET" != "master" ]
+then
+    git checkout -b $GITTARGET origin/$GITTARGET
+fi
 git clean -fxd
+# first of all selectively use debian build instructions for either
+# buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
+# (newer Debuntu releases)
+if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
+then
+    # old build style, python2 only
+    cp -a debian/python_distutils/* debian/
+else
+    # new build style, python2 and python3
+    # Ubuntu: trusty and higher
+    # Debian: jessie and higher
+    cp -a debian/pybuild/* debian/
+fi
 # remove dependencies of distribute for obspy.core
 # distribute is not packed for python2.5 in Debian
 # Note: the space before distribute is essential
@@ -86,35 +103,23 @@ cat >> debian/changelog << EOF
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
-# dh doesn't know option python2 in lucid
-if [ $CODENAME = "lucid" ]
-    then
-    ex ./debian/rules << EOL
-%s/--with=python2/ /g
-g/dh_numpy/d
-wq
-EOL
-fi
 # adjust dh compatibility for older dh versions
-if [ $CODENAME = "lucid" ]
-    then
-    echo "7" > ./debian/compat
-elif [ $CODENAME = "squeeze" ]
+if [ $CODENAME = "squeeze" ]
     then
     echo "8" > ./debian/compat
 fi
 # build the package
 export FFLAGS="$FFLAGS -fPIC"  # needed for gfortran
-export LDFLAGS="$LDFLAGS -shared"  # needed for gfortran
+export LDFLAGS="$LDFLAGS -shared -z relro -z now"  # needed for gfortran
 fakeroot ./debian/rules clean build binary
 # generate changes file
 DEBARCH=`dpkg-architecture -qDEB_HOST_ARCH`
-dpkg-genchanges -b > ../python-obspy_${VERSION_COMPLETE}_${DEBARCH}.changes
+dpkg-genchanges -b > ../obspy_${VERSION_COMPLETE}_${DEBARCH}.changes
 # move deb and changes files
-mv ../python-obspy_*.deb ../python-obspy_*.changes $PACKAGEDIR/
+mv ../*.deb ../*.changes $PACKAGEDIR/
 
 # run lintian to verify the packages
-for PACKAGE in `ls $PACKAGEDIR/python-obspy_*.deb`; do
+for PACKAGE in `ls $PACKAGEDIR/*.deb`; do
     echo "#### lintian for $PACKAGE"
     #lintian -i $PACKAGE # verbose output
     lintian $PACKAGE
