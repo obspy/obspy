@@ -60,9 +60,10 @@ class Arrivals(list):
             A spherical plot is always global whereas a cartesian one can
             also be local.
         :type plot_type: str
-        :param plot_all: By default only rays that match the requested
-            distance are plotted and rays arriving at 360 - x degrees are
-            not shown.
+        :param plot_all: By default all rays, even those travelling in the
+            other direction and thus arriving at a distance of 360 - x
+            degrees are shown. Set this to ``False`` to only show rays
+            arriving at exactly x degrees.
         :type plot_all: bool
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
