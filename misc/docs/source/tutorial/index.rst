@@ -51,7 +51,7 @@ Introduction to ObsPy
    code_snippets/continuous_wavelet_transform
    code_snippets/time_frequency_misfit
    code_snippets/visualize_data_availability_of_local_waveform_archive
-   code_snippets/travel_time_plot
+   code_snippets/travel_time
    code_snippets/xcorr_pick_correction
    code_snippets/quakeml_custom_tags
    code_snippets/easyseedlink

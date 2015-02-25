@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       tau
        taup
 
     .. comment to end block
