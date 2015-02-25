@@ -79,6 +79,16 @@ class TauPyPlottingTestCase(unittest.TestCase):
                                                     plot_all=False, show=False)
             plt.savefig(ic.name)
 
+    def test_cartesian_multiple_station_markers(self):
+        """
+        Cartesian plot with two station markers.
+        """
+        with ImageComparison(self.image_dir,
+                             "cartesian_multiple_stations.png") as ic:
+            self.model.get_ray_paths(350, 100).plot(plot_type="cartesian",
+                                                    plot_all=True, show=False)
+            plt.savefig(ic.name)
+
 
 def suite():
     return unittest.makeSuite(TauPyPlottingTestCase, 'test')
