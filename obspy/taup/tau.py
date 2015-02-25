@@ -17,18 +17,12 @@ from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
 
 
-# From colorbrewer2.org
-COLORS = [
-    "#1f78b4",
-    "#33a02c",
-    "#e31a1c",
-    "#ff7f00",
-    "#6a3d9a",
-    "#a6cee3",
-    "#b2df8a",
-    "#fb9a99",
-    "#fdbf6f",
-    "#cab2d6"]
+# Pretty paired colors. Reorder to have saturated colors first and remove
+# some colors at the end.
+cmap = plt.get_cmap('Paired', lut=12)
+COLORS = ['#%02x%02x%02x' % tuple(col * 255 for col in cmap(i)[:3])
+          for i in range(12)]
+COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
 
 
 class Arrivals(list):
