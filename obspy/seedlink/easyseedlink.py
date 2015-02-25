@@ -497,9 +497,10 @@ def create_client(server_url, on_data=None, on_seedlink_error=None,
         ...     print(trace)
         ...     print()
         ...
-        >>> client = create_client('geofon.gfz-potsdam.de', handle_data)
-        >>> client.select_stream('BW', 'MANZ', 'EHZ')
-        >>> client.run()
+        >>> client = create_client('geofon.gfz-potsdam.de',
+        ...                        handle_data)  # doctest: +SKIP
+        >>> client.select_stream('BW', 'MANZ', 'EHZ')  # doctest: +SKIP
+        >>> client.run()  # doctest: +SKIP
 
     .. note::
 

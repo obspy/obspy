@@ -31,6 +31,11 @@ from obspy.seedlink.slpacket import SLPacket
 # default logger
 logger = logging.getLogger('obspy.seedlink')
 
+# set to True for debugging to stdout
+if False:
+    import sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
 
 class SeedLinkConnection(object):
     """
@@ -755,9 +760,8 @@ class SeedLinkConnection(object):
         npass = 0
         while True:
 
-            logger.debug("primary loop pass %s" % (npass))
-            # print("DEBUG: self.state.state:", self.state.state)
-            npass += 1
+            _msg = "primary loop pass %s, state %d"
+            logger.debug(_msg % (npass, self.state.state))
 
             # we are terminating (abnormally!)
             if self.terminate_flag:
