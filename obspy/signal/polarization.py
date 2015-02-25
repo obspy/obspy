@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Polarization Analysis
+Functions for polarization analysis.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -39,18 +39,19 @@ def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
     just the numerical differentiation by central differences (carried out by
     the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
-    :type data_x: :class:`~numpy.ndarray`
     :param data_x: Data of x component. Note this is most useful with
         windowed data, represented by a 2 dimensional array. First
         dimension is the window number, second dimension is the data.
-    :type data_y: :class:`~numpy.ndarray`
+    :type data_x: :class:`~numpy.ndarray`
     :param data_y: Data of y component. See description of data_x.
-    :type data_z: :class:`~numpy.ndarray`
+    :type data_y: :class:`~numpy.ndarray`
     :param data_z: Data of z component. See description of data_x.
-    :type fk: list
+    :type data_z: :class:`~numpy.ndarray`
     :param fk: Coefficients of polynomial used to calculate the time
         derivatives.
+    :type fk: list
     :param norm_factor: Factor for normalization.
+    :type norm_factor: float
     :return: **leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect,
         dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
@@ -127,16 +128,15 @@ def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
 def flinn(stream, noise_thres=0):
     """
     Computes the azimuth, incidence, rectilinearity and planarity after the
-    eigenstructur decomposition method of [Flinn1965b]_.
+    eigenstructure decomposition method of [Flinn1965b]_.
 
     :param stream: ZNE sorted trace data
-    :param noise_tresh: variance of noise sphere; data points are excluded when
-        falling within the sphere with radius sqrt(noise_thres), default is
-        set to 0.
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param noise_tresh: Variance of the noise sphere; data points are excluded
+        when falling within the sphere with radius sqrt(noise_thres),
+        default is set to 0.
     :type noise_thres: float
-    :return azimuth, incidence, reclin, plan:  azimuth, incidence,
-        rectilinearity and planarity
-    :type azimuth, incidence, reclin, plan: float, float, float, float
+    :returns:  azimuth, incidence, rectilinearity, and planarity
     """
     Z = []
     N = []
@@ -179,7 +179,7 @@ def flinn(stream, noise_thres=0):
 def instantaneous_frequency(data, sampling_rate):
     """
     Simple function to estimate the instantaneous frequency based on the
-    derivative of data and the analytical (hilbert) data.
+    derivative of the data and the analytical (hilbert) data.
 
     :param data: The data array.
     :type data: :class:`numpy.ndarray`
@@ -214,17 +214,14 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :param flow: lower frequency for analysis
     :type flow: float
     :param fhigh: upper frequency limit for analysis
-    :tpye fhigh: float
+    :type fhigh: float
     :param spoint: array with traces` individual start times in sample
     :type spoint: :class:`numpy.ndarray`
     :param stime: start time of the analysis
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param etime: end time for the analysis
     :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :return azimuth, incidence, rectlit, plan, ellip: azimuth, incidence,
-        rectilinearity planarity and ellipticity
-    :type azimuth, incidence, rectlit, plan, ellip: float, float, float, float,
-        float
+    :returns: azimuth, incidence, rectilinearity planarity, and ellipticity
     """
     W = 3.0
     stream.sort(reverse=True)
@@ -284,31 +281,31 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
                 ((eigvec[1][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 +
                 ((eigvec[2][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2)
 
-        final = fminbound(fun, 0., math.pi, full_output=True)
+        final = fminbound(fun, 0.0, math.pi, full_output=True)
         X = 1. - final[1]
-        ellip = math.sqrt(1 - X ** 2) / X
+        ellip = math.sqrt(1.0 - X ** 2) / X
         # rectilinearity defined after Montalbetti & Kanasewich, 1970
         rect = 1. - np.sqrt(eigenval[1] / eigenval[0])
         # planarity defined after Jurkevics, 1988
-        plan = 1. - (2.*eigenval[2] / (eigenval[1] + eigenval[0]))
+        plan = 1. - (2.0 * eigenval[2] / (eigenval[1] + eigenval[0]))
 
         azimuth = 180 * math.atan2(eigvec[0][0].real, eigvec[1][0].real) / \
             math.pi
         eve = np.sqrt(eigvec[0][0].real ** 2 + eigvec[1][0].real ** 2)
 
         incidence = 180 * math.atan2(eve, eigvec[2][0].real) / math.pi
-        if azimuth < 0.:
-            azimuth = 360. + azimuth
+        if azimuth < 0.0:
+            azimuth = 360.0 + azimuth
         if incidence < 0.0:
-            incidence += 180.
-        if incidence > 90.:
-            incidence = 180. - incidence
-            if azimuth > 180.:
-                azimuth -= 180.
+            incidence += 180.0
+        if incidence > 90.0:
+            incidence = 180.0 - incidence
+            if azimuth > 180.0:
+                azimuth -= 180.0
             else:
-                azimuth += 180.
-        if azimuth > 180.:
-            azimuth -= 180.
+                azimuth += 180.0
+        if azimuth > 180.0:
+            azimuth -= 180.0
 
         res.append(np.array([newstart.timestamp, azimuth, incidence, rect,
                              plan, ellip]))
@@ -327,8 +324,7 @@ def particle_motion_odr(stream, noise_thres=0):
     :param noise_tres: variance of the noise sphere; data points are excluded
         when falling within the sphere with radius sqrt(noise_thres)
     :type noise_thres: float
-    :return azimuth, incidence, az_error, in_error: Returns azimuth, incidence,
-        error of azimuth, error of incidence
+    :returns: azimuth, incidence, error of azimuth, error of incidence
     """
     Z = []
     N = []
@@ -381,8 +377,7 @@ def get_s_point(stream, stime, etime):
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param etime: time to end
     :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :return: spoint, epoint
-    :rtype: :class:`numpy.ndarray`
+    :returns: spoint, epoint
     """
     slatest = stream[0].stats.starttime
     eearliest = stream[0].stats.endtime
@@ -421,18 +416,17 @@ def get_s_point(stream, stime, etime):
 
 
 def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
-                          etime, verbose=False, timestamp='mlabday',
+                          etime, verbose=False, timestamp="mlabday",
                           method="pm", var_noise=0.0):
     """
     Method carrying out polarization analysis with the Flinn, Jurkevics,
     ParticleMotion, or Vidale algorithm.
 
-    :param stream: Stream object, the trace.stats dict like class must contain
-        a three component trace. In case of Jurkevics or Vidale also an array
-        like processing should be possible
-    :param win_len: Sliding window length in seconds
+    :param stream: 3 component input data.
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param win_len: Sliding window length in seconds.
     :type win_len: float
-    :param win_frac: Fraction of sliding window to use for step
+    :param win_frac: Fraction of sliding window to use for step.
     :type win_frac: float
     :param var_noise: resembles a sphere of noise in PM where the 3C is
         excluded
@@ -445,13 +439,13 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :type stime: :class:`obspy.core.utcdatetime.UTCDateTime`
     :param etime: End time of interest
     :type etime: :class:`obspy.core.utcdatetime.UTCDateTime`
-    :type timestamp: string
     :param timestamp: valid values: ``"julsec"`` and ``"mlabday"``;
         ``"julsec"`` returns the timestamp in seconds since
         ``1970-01-01T00:00:00``, ``"mlabday"`` returns the timestamp in days
         (decimals represent hours, minutes and seconds) since
         ``0001-01-01T00:00:00`` as needed for matplotlib date plotting (see
         e.g. matplotlibs num2date)
+    :type timestamp: str
     :param method: the method to use. one of ``"pm"``, ``"flinn"`` or
         ``"vidale"``.
     :type method: str
@@ -468,7 +462,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
     if len(stream) != len(stream.select(sampling_rate=fs)):
-        msg = 'in array sampling rates of traces in stream are not equal'
+        msg = "in array sampling rates of traces in stream are not equal"
         raise ValueError(msg)
 
     if verbose:
@@ -500,11 +494,11 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
                     dat = tr.data[spoint[i] + offset:
                                   spoint[i] + offset + nsamp]
                     dat = (dat - dat.mean()) * tap
-                    if 'Z' in tr.stats.channel:
+                    if "Z" in tr.stats.channel:
                         Z = dat.copy()
-                    if 'N' in tr.stats.channel:
+                    if "N" in tr.stats.channel:
                         N = dat.copy()
-                    if 'E' in tr.stats.channel:
+                    if "E" in tr.stats.channel:
                         E = dat.copy()
 
                 data.append(Z)
@@ -531,9 +525,9 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
 
             newstart += nstep / fs
     res = np.array(res)
-    if timestamp == 'julsec':
+    if timestamp == "julsec":
         pass
-    elif timestamp == 'mlabday':
+    elif timestamp == "mlabday":
         # 719162 == hours between 1970 and 0001
         res[:, 0] = res[:, 0] / (24. * 3600) + 719162
     else:
@@ -569,6 +563,6 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         raise NotImplementedError
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
     doctest.testmod(exclude_empty=True)
