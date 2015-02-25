@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------
-# Filename: polarization.py
-#   Author: Conny Hammer,Joachim Wassermann
-#    Email: conny.hammer@geo.uni-potsdam.de,j.wassermann@lmu.de
-#
-# Copyright (C) 2008-2012 Conny Hammer, 2013 Joachim Wassermann
 """
 Polarization Analysis
 
@@ -29,7 +23,7 @@ from scipy.optimize import fminbound
 from obspy.signal.invsim import cosTaper
 
 
-def eigval(datax, datay, dataz, fk, normf=1):
+def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
     """
     Polarization attributes of a signal.
 
@@ -38,53 +32,53 @@ def eigval(datax, datay, dataz, fk, normf=1):
     The time derivatives are calculated by central differences and the
     parameter ``fk`` describes the coefficients of the used polynomial. The
     values of ``fk`` depend on the order of the derivative you want to
-    calculate. If you do not want to use derivatives you can simply
-    use [1, 1, 1, 1, 1] for ``fk``.
+    calculate. If you do not want to use derivatives you can simply use
+    [1, 1, 1, 1, 1] for ``fk``.
 
     The algorithm is mainly based on the paper by [Jurkevics1988]_. The rest is
     just the numerical differentiation by central differences (carried out by
     the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
-    :type datax: :class:`~numpy.ndarray`
-    :param datax: Data of x component. Note this is most usefull with
+    :type data_x: :class:`~numpy.ndarray`
+    :param data_x: Data of x component. Note this is most useful with
         windowed data, represented by a 2 dimensional array. First
-        dimension window number, second dimension the actualy data.
-    :type datay: :class:`~numpy.ndarray`
-    :param datay: Data of y component. See also note in datax.
-    :type dataz: :class:`~numpy.ndarray`
-    :param dataz: Data of z component. See also note in datax.
+        dimension is the window number, second dimension is the data.
+    :type data_y: :class:`~numpy.ndarray`
+    :param data_y: Data of y component. See description of data_x.
+    :type data_z: :class:`~numpy.ndarray`
+    :param data_z: Data of z component. See description of data_x.
     :type fk: list
-    :param fk: Coefficients of polynomial used for calculating the time
+    :param fk: Coefficients of polynomial used to calculate the time
         derivatives.
-    :param normf: Factor for normalization.
+    :param norm_factor: Factor for normalization.
     :return: **leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect,
         dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
         time derivative of rectilinearity, Time derivative of planarity.
     """
-    # function is made for windowed (two dimensional input).
+    # The function is made for windowed data (two dimensional input).
     # However be nice and allow one dimensional input, see #919
-    datax = np.atleast_2d(datax)
-    datay = np.atleast_2d(datay)
-    dataz = np.atleast_2d(dataz)
+    data_x = np.atleast_2d(data_x)
+    data_y = np.atleast_2d(data_y)
+    data_z = np.atleast_2d(data_z)
     covmat = np.zeros([3, 3])
-    leigenv1 = np.zeros(datax.shape[0], dtype=np.float64)
-    leigenv2 = np.zeros(datax.shape[0], dtype=np.float64)
-    leigenv3 = np.zeros(datax.shape[0], dtype=np.float64)
-    dleigenv = np.zeros([datax.shape[0], 3], dtype=np.float64)
-    rect = np.zeros(datax.shape[0], dtype=np.float64)
-    plan = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv1 = np.zeros(data_x.shape[0], dtype=np.float64)
+    leigenv2 = np.zeros(data_x.shape[0], dtype=np.float64)
+    leigenv3 = np.zeros(data_x.shape[0], dtype=np.float64)
+    dleigenv = np.zeros([data_x.shape[0], 3], dtype=np.float64)
+    rect = np.zeros(data_x.shape[0], dtype=np.float64)
+    plan = np.zeros(data_x.shape[0], dtype=np.float64)
     i = 0
-    for i in range(datax.shape[0]):
-        covmat[0][0] = np.cov(datax[i, :], rowvar=False)
-        covmat[0][1] = covmat[1][0] = np.cov(datax[i, :], datay[i, :],
+    for i in range(data_x.shape[0]):
+        covmat[0][0] = np.cov(data_x[i, :], rowvar=False)
+        covmat[0][1] = covmat[1][0] = np.cov(data_x[i, :], data_y[i, :],
                                              rowvar=False)[0, 1]
-        covmat[0][2] = covmat[2][0] = np.cov(datax[i, :], dataz[i, :],
+        covmat[0][2] = covmat[2][0] = np.cov(data_x[i, :], data_z[i, :],
                                              rowvar=False)[0, 1]
-        covmat[1][1] = np.cov(datay[i, :], rowvar=False)
-        covmat[1][2] = covmat[2][1] = np.cov(dataz[i, :], datay[i, :],
+        covmat[1][1] = np.cov(data_y[i, :], rowvar=False)
+        covmat[1][2] = covmat[2][1] = np.cov(data_z[i, :], data_y[i, :],
                                              rowvar=False)[0, 1]
-        covmat[2][2] = np.cov(dataz[i, :], rowvar=False)
+        covmat[2][2] = np.cov(data_z[i, :], rowvar=False)
         _eigvec, eigenval, _v = (np.linalg.svd(covmat))
         eigenv = np.sort(eigenval)
         leigenv1[i] = eigenv[0]
@@ -92,9 +86,9 @@ def eigval(datax, datay, dataz, fk, normf=1):
         leigenv3[i] = eigenv[2]
         rect[i] = 1 - ((eigenv[1] + eigenv[0]) / (2 * eigenv[2]))
         plan[i] = 1 - ((2 * eigenv[0]) / (eigenv[1] + eigenv[2]))
-    leigenv1 = leigenv1 / normf
-    leigenv2 = leigenv2 / normf
-    leigenv3 = leigenv3 / normf
+    leigenv1 = leigenv1 / norm_factor
+    leigenv2 = leigenv2 / norm_factor
+    leigenv3 = leigenv3 / norm_factor
 
     leigenv1_add = np.append(np.append([leigenv1[0]] * (np.size(fk) // 2),
                                        leigenv1),
@@ -137,14 +131,13 @@ def flinn(stream, noise_thres=0):
 
     :param stream: ZNE sorted trace data
     :param noise_tresh: variance of noise sphere; data points are excluded when
-        falling within the sphere with radius
-     sqrt(noise_thres), default is set to 0
+        falling within the sphere with radius sqrt(noise_thres), default is
+        set to 0.
     :type noise_thres: float
     :return azimuth, incidence, reclin, plan:  azimuth, incidence,
         rectilinearity and planarity
-    :type azimuth, incidence, reclin, plan: flaot, float, float, float
+    :type azimuth, incidence, reclin, plan: float, float, float, float
     """
-
     Z = []
     N = []
     E = []
@@ -152,46 +145,45 @@ def flinn(stream, noise_thres=0):
 
     for i in range(0, npts):
         if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
-           > noise_thres:
+                > noise_thres:
             Z.append(stream[0][i])
             N.append(stream[1][i])
             E.append(stream[2][i])
 
-    covmat = np.zeros([3, 3])
     X = np.vstack((E, N, Z))
     covmat = np.cov(X)
     eigvec, eigenval, v = (np.linalg.svd(covmat))
-    # rectilinearity defined after Montalbetti & Kanasewich, 1970
-    rect = 1. - np.sqrt(eigenval[1] / eigenval[0])
-    # planarity defined after Jurkevics, 1988
-    plan = 1. - (2.*eigenval[2] / (eigenval[1] + eigenval[0]))
-    azimuth = 180 * math.atan2(eigvec[0][0], eigvec[1][0]) / math.pi
+    # Rectilinearity defined after Montalbetti & Kanasewich, 1970
+    rect = 1.0 - np.sqrt(eigenval[1] / eigenval[0])
+    # Planarity defined after Jurkevics, 1988
+    plan = 1.0 - (2.0 * eigenval[2] / (eigenval[1] + eigenval[0]))
+    azimuth = math.degrees(math.atan2(eigvec[0][0], eigvec[1][0]))
     eve = np.sqrt(eigvec[0][0] ** 2 + eigvec[1][0] ** 2)
-    incidence = 180 * math.atan2(eve, eigvec[2][0]) / math.pi
-    if azimuth < 0.:
-        azimuth = 360. + azimuth
+    incidence = math.degrees(math.atan2(eve, eigvec[2][0]))
+    if azimuth < 0.0:
+        azimuth = 360.0 + azimuth
     if incidence < 0.0:
-        incidence += 180.
-    if incidence > 90.:
-        incidence = 180. - incidence
-        if azimuth > 180.:
-            azimuth -= 180.
+        incidence += 180.0
+    if incidence > 90.0:
+        incidence = 180.0 - incidence
+        if azimuth > 180.0:
+            azimuth -= 180.0
         else:
-            azimuth += 180.
-    if azimuth > 180.:
-        azimuth -= 180.
+            azimuth += 180.0
+    if azimuth > 180.0:
+        azimuth -= 180.0
 
     return azimuth, incidence, rect, plan
 
 
 def instantaneous_frequency(data, sampling_rate):
     """
-    simple program to estimate the instaneuous frequency based on the
-    derivative of data and the analytical (hilbert) data
+    Simple function to estimate the instantaneous frequency based on the
+    derivative of data and the analytical (hilbert) data.
 
-    :param data: ndarray(dtype(float))
-    :type data: ndarray(dtype(float))
-    :param sampling_rate: in Hz
+    :param data: The data array.
+    :type data: :class:`numpy.ndarray`
+    :param sampling_rate: The sampling rate in Hz.
     :type sampling_rate: float
     """
     x = data.copy()
@@ -208,12 +200,14 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     """
     Adaptive window polarization analysis after [Vidale1986]_ with the
     modification of adapted analysis window estimated by estimating the
-    instantenous frequency. It returns the azimuth, incidence, rectilinearity
+    instantaneous frequency. It returns the azimuth, incidence, rectilinearity
     planarity and ellipticity.
 
     :param stream: ZNE sorted trace data
-    :param noise_thres: variance of noise sphere; data points are excluded when
-        falling within the sphere with radius sqrt(noise_thres), Default = 0
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param noise_thres: Variance of the noise sphere; data points are excluded
+        when falling within the sphere with radius sqrt(noise_thres),
+        Default = 0
     :type noise_thres: float
     :param fs: sampling rate
     :type fs: float
@@ -221,18 +215,18 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :type flow: float
     :param fhigh: upper frequency limit for analysis
     :tpye fhigh: float
-    :param spoint: array with trace individual start times in sample
-    :type spoint: npdarray(type(int))
-    :param stime: starttime (UTCDateTime) for analysis
-    :type stime: UTCDateTime
-    :param etime: endtime (UTCDateTime) for analysis
-    :type etime: UTCDateTime
+    :param spoint: array with traces` individual start times in sample
+    :type spoint: :class:`numpy.ndarray`
+    :param stime: start time of the analysis
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: end time for the analysis
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :return azimuth, incidence, rectlit, plan, ellip: azimuth, incidence,
         rectilinearity planarity and ellipticity
     :type azimuth, incidence, rectlit, plan, ellip: float, float, float, float,
         float
     """
-    W = 3.
+    W = 3.0
     stream.sort(reverse=True)
     Z = stream[0].data.copy()
     N = stream[1].data.copy()
@@ -246,7 +240,6 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     Ea = signal.hilbert(E)
     res = []
 
-    # tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = int(3 * fs / flow)
     while True:
         adapt = int(3. * W * fs / (Zi[offset] + Ni[offset] + Ei[offset]))
@@ -271,7 +264,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         Nx -= Nx.mean()
         Ex -= Ex.mean()
 
-        covmat = np.zeros([3, 3], dtype=complex)
+        covmat = np.zeros([3, 3], dtype=np.complex128)
 
         covmat[0][0] = np.dot(Ex, Ex.conjugate())
         covmat[0][1] = np.dot(Ex, Nx.conjugate())
@@ -326,12 +319,13 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
 
 def particle_motion_odr(stream, noise_thres=0):
     """
-    Computes the orientation of the particle motion vector based on
+    Computes the orientation of the particle motion vector based on an
     orthogonal regression algorithm.
 
     :param stream: ZNE sorted trace data
-    :param noise_tres: variance of noise sphere; data points are excluded when
-        falling within the sphere with radius sqrt(noise_thres)
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param noise_tres: variance of the noise sphere; data points are excluded
+        when falling within the sphere with radius sqrt(noise_thres)
     :type noise_thres: float
     :return azimuth, incidence, az_error, in_error: Returns azimuth, incidence,
         error of azimuth, error of incidence
@@ -358,7 +352,6 @@ def particle_motion_odr(stream, noise_thres=0):
     out = odr.run()
     az_slope = out.beta[0]
     az_error = out.sd_beta[0]
-    # az_relerror = out.rel_error
 
     N = np.asarray(N)
     E = np.asarray(E)
@@ -376,22 +369,20 @@ def particle_motion_odr(stream, noise_thres=0):
     inc = math.atan2(1.0, in_slope)
     az_error = 1.0 / ((1.0 ** 2 + az_slope ** 2) * azim) * az_error
     in_error = 1.0 / ((1.0 ** 2 + in_slope ** 2) * inc) * in_error
-    azim *= 180.0 / math.pi
-    inc *= 180.0 / math.pi
 
-    return azim, inc, az_error, in_error
+    return math.degrees(azim), math.degrees(inc), az_error, in_error
 
 
 def get_s_point(stream, stime, etime):
     """
-    Function for computing trace dependend start time in samples
+    Function for computing the trace dependent start time in samples
 
-    :param stime: UTCDateTime to start
-    :type : UTCDatTime
-    :param etime: UTCDateTime to end
-    :type : UTCDatTime
+    :param stime: time to start
+    :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param etime: time to end
+    :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :return: spoint, epoint
-    :type npdarray(int)
+    :rtype: :class:`numpy.ndarray`
     """
     slatest = stream[0].stats.starttime
     eearliest = stream[0].stats.endtime
@@ -402,8 +393,8 @@ def get_s_point(stream, stime, etime):
             eearliest = tr.stats.endtime
 
     nostat = len(stream)
-    spoint = np.empty(nostat, dtype="int32", order="C")
-    epoint = np.empty(nostat, dtype="int32", order="C")
+    spoint = np.empty(nostat, dtype=np.int32, order="C")
+    epoint = np.empty(nostat, dtype=np.int32, order="C")
     # now we have to adjust to the beginning of real start time
     if slatest > stime:
         msg = "Specified start-time is smaller than starttime in stream"
@@ -433,36 +424,40 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
                           etime, verbose=False, timestamp='mlabday',
                           method="pm", var_noise=0.0):
     """
-    Method for Flinn/Jurkevics/ParticleMotion/Vidale calling
+    Method carrying out polarization analysis with the Flinn, Jurkevics,
+    ParticleMotion, or Vidale algorithm.
 
     :param stream: Stream object, the trace.stats dict like class must contain
         a three component trace. In case of Jurkevics or Vidale also an array
         like processing should be possible
-    :type win_len: Float
     :param win_len: Sliding window length in seconds
-    :type win_frac: Float
+    :type win_len: float
     :param win_frac: Fraction of sliding window to use for step
-    :type var_noise: Float
+    :type win_frac: float
     :param var_noise: resembles a sphere of noise in PM where the 3C is
         excluded
-    :type frqlow: Float
+    :type var_noise: float
     :param frqlow: lower frequency for PM
-    :type frqhigh: Float
+    :type frqlow: float
     :param frqhigh: higher frequency for PM
-    :type stime: UTCDateTime
-    :param stime: Starttime of interest
-    :type etime: UTCDateTime
-    :param etime: Endtime of interest
+    :type frqhigh: float
+    :param stime: Start time of interest
+    :type stime: :class:`obspy.core.utcdatetime.UTCDateTime`
+    :param etime: End time of interest
+    :type etime: :class:`obspy.core.utcdatetime.UTCDateTime`
     :type timestamp: string
-    :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
-        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
-        returns the timestamp in days (decimals represent hours, minutes
-        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlibs num2date)
+    :param timestamp: valid values: ``"julsec"`` and ``"mlabday"``;
+        ``"julsec"`` returns the timestamp in seconds since
+        ``1970-01-01T00:00:00``, ``"mlabday"`` returns the timestamp in days
+        (decimals represent hours, minutes and seconds) since
+        ``0001-01-01T00:00:00`` as needed for matplotlib date plotting (see
+        e.g. matplotlibs num2date)
+    :param method: the method to use. one of ``"pm"``, ``"flinn"`` or
+        ``"vidale"``.
     :type method: str
-    :param method: the method to use. one of "pm", "flinn" or "vidale".
-    :return numpy.ndarray of timestamp, azimuth, incidence, reclin (az_error),
-        plan (in_error), (ellip):
+    :returns: Dictionary with azimuth, incidence angle, errors,
+        rectilinearity, planarity, and/or ellipticity (the returned values
+        depend on the used method).
     """
     if method.lower() not in ["pm", "flinn", "vidale"]:
         msg = "Invalid method ('%s')" % method
@@ -495,7 +490,6 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         # 0.22 matches 0.2 of historical C bbfk.c
         tap = cosTaper(nsamp, p=0.22)
         offset = 0
-        # tr.sort(reverse=True)
         while (newstart + (nsamp + nstep) / fs) < etime:
             try:
                 data = []
