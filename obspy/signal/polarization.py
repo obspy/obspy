@@ -184,7 +184,7 @@ def flinn(stream, noise_thres=0):
     return azimuth, incidence, rect, plan
 
 
-def instantFreq(data, sampling_rate):
+def instantaneous_frequency(data, sampling_rate):
     """
     simple program to estimate the instaneuous frequency based on the
     derivative of data and the analytical (hilbert) data
@@ -204,7 +204,7 @@ def instantFreq(data, sampling_rate):
     return instf
 
 
-def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
+def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     """
     Adaptive window polarization analysis after [Vidale1986]_ with the
     modification of adapted analysis window estimated by estimating the
@@ -238,11 +238,11 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     N = stream[1].data.copy()
     E = stream[2].data.copy()
 
-    Zi = instantFreq(Z, fs)
+    Zi = instantaneous_frequency(Z, fs)
     Za = signal.hilbert(Z)
-    Ni = instantFreq(N, fs)
+    Ni = instantaneous_frequency(N, fs)
     Na = signal.hilbert(N)
-    Ei = instantFreq(E, fs)
+    Ei = instantaneous_frequency(E, fs)
     Ea = signal.hilbert(E)
     res = []
 
@@ -324,7 +324,7 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     return res
 
 
-def particleMotionOdr(stream, noise_thres=0):
+def particle_motion_odr(stream, noise_thres=0):
     """
     Computes the orientation of the particle motion vector based on
     orthogonal regression algorithm.
@@ -382,7 +382,7 @@ def particleMotionOdr(stream, noise_thres=0):
     return azim, inc, az_error, in_error
 
 
-def getSpoint(stream, stime, etime):
+def get_s_point(stream, stime, etime):
     """
     Function for computing trace dependend start time in samples
 
@@ -429,9 +429,9 @@ def getSpoint(stream, stime, etime):
     return spoint, epoint
 
 
-def polarizationAnalysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
-                         etime, verbose=False, timestamp='mlabday',
-                         method="pm", var_noise=0.0):
+def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
+                          etime, verbose=False, timestamp='mlabday',
+                          method="pm", var_noise=0.0):
     """
     Method for Flinn/Jurkevics/ParticleMotion/Vidale calling
 
@@ -482,12 +482,12 @@ def polarizationAnalysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
     # offset of arrays
-    spoint, _epoint = getSpoint(stream, stime, etime)
+    spoint, _epoint = get_s_point(stream, stime, etime)
     # loop with a sliding window over the dat trace array and apply bbfk
     fs = stream[0].stats.sampling_rate
     if method.lower() == "vidale":
-        res = vidaleAdapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
-                          stime, etime)
+        res = vidale_adapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
+                           stime, etime)
     else:
         nsamp = int(win_len * fs)
         nstep = int(nsamp * win_frac)
@@ -521,7 +521,7 @@ def polarizationAnalysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
 
             if method.lower() == "pm":
                 azimuth, incidence, error_az, error_inc = \
-                    particleMotionOdr(data, var_noise)
+                    particle_motion_odr(data, var_noise)
                 if abs(error_az) < 0.1 and abs(error_inc) < 0.1:
                     res.append(np.array([newstart.timestamp + nsamp / fs,
                                          azimuth, incidence, error_az,

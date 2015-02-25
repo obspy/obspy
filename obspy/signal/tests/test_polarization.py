@@ -128,7 +128,7 @@ class PolarizationTestCase(unittest.TestCase):
         t = st[0].stats.starttime
         e = st[0].stats.endtime
 
-        out = polarization.polarizationAnalysis(
+        out = polarization.polarization_analysis(
             st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
             verbose=False, timestamp='mlabday', stime=t, etime=e, method="pm",
             var_noise=0.0)
@@ -143,7 +143,7 @@ class PolarizationTestCase(unittest.TestCase):
         t = st[0].stats.starttime
         e = st[0].stats.endtime
 
-        out = polarization.polarizationAnalysis(
+        out = polarization.polarization_analysis(
             st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
             verbose=False, timestamp='mlabday', stime=t, etime=e,
             method="flinn", var_noise=0.0)
@@ -158,7 +158,7 @@ class PolarizationTestCase(unittest.TestCase):
         t = st[0].stats.starttime
         e = st[0].stats.endtime
 
-        out = polarization.polarizationAnalysis(
+        out = polarization.polarization_analysis(
             st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
             verbose=False, timestamp='mlabday', stime=t, etime=e,
             method="vidale", var_noise=0.0)
