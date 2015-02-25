@@ -13,7 +13,38 @@ from os.path import dirname, join
 import numpy as np
 from scipy import signal
 
+import obspy
 from obspy.signal import polarization, util
+
+
+def _create_test_data():
+    """
+    Test data used for some polarization tests.
+    :return:
+    """
+    x = np.arange(0, 2048 / 20.0, 1.0 / 20.0)
+    x *= 2. * np.pi
+    y = np.cos(x)
+    trZ = obspy.Trace(data=y)
+    trZ.stats.sampling_rate = 20.
+    trZ.stats.starttime = obspy.UTCDateTime('2014-03-01T00:00')
+    trZ.stats.station = 'POLT'
+    trZ.stats.channel = 'HHZ'
+    trZ.stats.network = 'XX'
+
+    trN = trZ.copy()
+    trN.data *= 2.
+    trN.stats.channel = 'HHN'
+    trE = trZ.copy()
+    trE.stats.channel = 'HHE'
+
+    sz = obspy.Stream()
+    sz.append(trZ)
+    sz.append(trN)
+    sz.append(trE)
+    sz.sort(reverse=True)
+
+    return sz
 
 
 class PolarizationTestCase(unittest.TestCase):
@@ -91,6 +122,61 @@ class PolarizationTestCase(unittest.TestCase):
         pol_5_ref = [2.81387533e-04, 3.18409580e-04, 6.74030846e-04,
                      5.55067015e-01, 4.32938188e-01]
         self.assertTrue(np.allclose(np.concatenate(pol[:5]), pol_5_ref))
+
+    def test_polarization_pm(self):
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarizationAnalysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, timestamp='mlabday', stime=t, etime=e, method="pm",
+            var_noise=0.0)
+
+        npt = len(out[:, 0])
+        npt /= 2
+
+        self.assertAlmostEqual(out[npt, 1], 26.56505117707799)
+        self.assertAlmostEqual(out[npt, 2], 65.905157447889309)
+        self.assertAlmostEqual(out[npt, 3], 0.000000)
+        self.assertAlmostEqual(out[npt, 4], 0.000000)
+
+    def test_polarization_flinn(self):
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarizationAnalysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, timestamp='mlabday', stime=t, etime=e,
+            method="flinn", var_noise=0.0)
+
+        npt = len(out[:, 0])
+        npt /= 2
+
+        self.assertAlmostEqual(out[npt, 1], 26.56505117707799)
+        self.assertAlmostEqual(out[npt, 2], 65.905157447889309)
+        self.assertAlmostEqual(out[npt, 3], 1.000000)
+        self.assertAlmostEqual(out[npt, 4], 1.000000)
+
+    def test_polarization_vidale(self):
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarizationAnalysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, timestamp='mlabday', stime=t, etime=e,
+            method="vidale", var_noise=0.0)
+
+        npt = len(out[:, 0])
+        npt /= 2
+
+        self.assertAlmostEqual(out[npt, 1], 26.56505117707799)
+        self.assertAlmostEqual(out[npt, 2], 65.905157447889309)
+        self.assertAlmostEqual(out[npt, 3], 1.000000)
+        self.assertAlmostEqual(out[npt, 4], 1.000000)
+        self.assertAlmostEqual(out[npt, 5], 3.8195545129768958e-06)
 
 
 def suite():

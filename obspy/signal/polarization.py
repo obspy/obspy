@@ -18,13 +18,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from scipy import signal
 import math
 import warnings
+
 import numpy as np
+import scipy.odr
 from scipy import signal
 from scipy.optimize import fminbound
-import scipy.odr
+
 from obspy.signal.invsim import cosTaper
 
 
@@ -101,8 +102,6 @@ def eigval(datax, datay, dataz, fk, normf=1):
                              (np.size(fk) // 2))
     dleigenv1 = signal.lfilter(fk, 1, leigenv1_add)
     dleigenv[:, 0] = dleigenv1[len(fk) - 1:]
-    # dleigenv1 = dleigenv1[np.size(fk) // 2:(np.size(dleigenv1) -
-    #        np.size(fk) / 2)]
 
     leigenv2_add = np.append(np.append([leigenv2[0]] * (np.size(fk) // 2),
                                        leigenv2),
@@ -110,8 +109,6 @@ def eigval(datax, datay, dataz, fk, normf=1):
                              (np.size(fk) // 2))
     dleigenv2 = signal.lfilter(fk, 1, leigenv2_add)
     dleigenv[:, 1] = dleigenv2[len(fk) - 1:]
-    # dleigenv2 = dleigenv2[np.size(fk) // 2:(np.size(dleigenv2) -
-    #        np.size(fk) / 2)]
 
     leigenv3_add = np.append(np.append([leigenv3[0]] * (np.size(fk) // 2),
                                        leigenv3),
@@ -119,20 +116,16 @@ def eigval(datax, datay, dataz, fk, normf=1):
                              (np.size(fk) // 2))
     dleigenv3 = signal.lfilter(fk, 1, leigenv3_add)
     dleigenv[:, 2] = dleigenv3[len(fk) - 1:]
-    # dleigenv3 = dleigenv3[np.size(fk) // 2:(np.size(dleigenv3) -
-    #        np.size(fk) / 2)]
 
     rect_add = np.append(np.append([rect[0]] * (np.size(fk) // 2), rect),
                          [rect[np.size(rect) - 1]] * (np.size(fk) // 2))
     drect = signal.lfilter(fk, 1, rect_add)
     drect = drect[len(fk) - 1:]
-    # drect = drect[np.size(fk) // 2:(np.size(drect3) - np.size(fk) // 2)]
 
     plan_add = np.append(np.append([plan[0]] * (np.size(fk) // 2), plan),
                          [plan[np.size(plan) - 1]] * (np.size(fk) // 2))
     dplan = signal.lfilter(fk, 1, plan_add)
     dplan = dplan[len(fk) - 1:]
-    # dplan = dplan[np.size(fk) // 2:(np.size(dplan) - np.size(fk) // 2)]
 
     return leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect, dplan
 
@@ -156,7 +149,8 @@ def flinn(stream, noise_thres=0):
     N = []
     E = []
     comp, npts = np.shape(stream)
-    for i in xrange(0, npts):
+
+    for i in range(0, npts):
         if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
            > noise_thres:
             Z.append(stream[0][i])
@@ -238,8 +232,6 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :type azimuth, incidence, rectlit, plan, ellip: float, float, float, float,
         float
     """
-    newstart = stime
-
     W = 3.
     stream.sort(reverse=True)
     Z = stream[0].data.copy()
@@ -254,7 +246,7 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     Ea = signal.hilbert(E)
     res = []
 
-    #tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
+    # tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = int(3 * fs / flow)
     while True:
         adapt = int(3. * W * fs / (Zi[offset] + Ni[offset] + Ei[offset]))
@@ -269,9 +261,12 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         if (newstart + (adapt / 2) / fs) > etime:
             break
 
-        Zx = Za[int(spoint[2] + offset - adapt / 2): int(spoint[2] + offset + adapt / 2)]
-        Nx = Na[int(spoint[1] + offset - adapt / 2): int(spoint[1] + offset + adapt / 2)]
-        Ex = Ea[int(spoint[0] + offset - adapt / 2): int(spoint[0] + offset + adapt / 2)]
+        Zx = Za[int(spoint[2] + offset - adapt / 2):
+                int(spoint[2] + offset + adapt / 2)]
+        Nx = Na[int(spoint[1] + offset - adapt / 2):
+                int(spoint[1] + offset + adapt / 2)]
+        Ex = Ea[int(spoint[0] + offset - adapt / 2):
+                int(spoint[0] + offset + adapt / 2)]
         Zx -= Zx.mean()
         Nx -= Nx.mean()
         Ex -= Ex.mean()
@@ -289,9 +284,13 @@ def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         covmat[2][2] = np.dot(Zx, Zx.conjugate())
 
         eigvec, eigenval, v = (np.linalg.svd(covmat))
-        fun = lambda x: 1. - math.sqrt(((eigvec[0][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 + \
-            ((eigvec[1][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 + \
-            ((eigvec[2][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2)
+
+        def fun(x):
+            return 1. - math.sqrt(
+                ((eigvec[0][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 +
+                ((eigvec[1][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 +
+                ((eigvec[2][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2)
+
         final = fminbound(fun, 0., math.pi, full_output=True)
         X = 1. - final[1]
         ellip = math.sqrt(1 - X ** 2) / X
@@ -341,17 +340,17 @@ def particleMotionOdr(stream, noise_thres=0):
     N = []
     E = []
     comp, npts = np.shape(stream)
-    for i in xrange(0, npts):
+
+    for i in range(0, npts):
         if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
                 > noise_thres:
             Z.append(stream[0][i])
             N.append(stream[1][i])
             E.append(stream[2][i])
 
-    #def fit_func(beta, x):
-    #    return beta[0] * x + beta[1]
-
-    fit_func = lambda beta, x: beta[0] * x
+    def fit_func(beta, x):
+        # Eventually this is correct: return beta[0] * x + beta[1]
+        return beta[0] * x
 
     data = scipy.odr.Data(E, N)
     model = scipy.odr.Model(fit_func)
@@ -412,7 +411,7 @@ def getSpoint(stream, stime, etime):
     if eearliest < etime:
         msg = "Specified end-time bigger is than endtime in stream"
         raise ValueError(msg)
-    for i in xrange(nostat):
+    for i in range(nostat):
         offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
         negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
         diffstart = slatest - stream[i].stats.starttime
