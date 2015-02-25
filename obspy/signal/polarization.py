@@ -545,7 +545,34 @@ def polarizationAnalysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
-    return np.array(res)
+
+    npt = len(res[:, 0])
+    npt /= 2
+
+    if method == "pm":
+        return {
+            "azimuth": res[npt, 1],
+            "incidence": res[npt, 2],
+            "azimuth_error": res[npt, 3],
+            "incidence_error": res[npt, 4]
+        }
+    elif method == "vidale":
+        return {
+            "azimuth": res[npt, 1],
+            "incidence": res[npt, 2],
+            "rectilinearity": res[npt, 3],
+            "planarity": res[npt, 4],
+            "ellipticity": res[npt, 5]
+        }
+    elif method == "flinn":
+        return {
+            "azimuth": res[npt, 1],
+            "incidence": res[npt, 2],
+            "rectilinearity": res[npt, 3],
+            "planarity": res[npt, 4],
+        }
+    else:
+        raise NotImplementedError
 
 
 if __name__ == '__main__':

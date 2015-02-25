@@ -133,13 +133,10 @@ class PolarizationTestCase(unittest.TestCase):
             verbose=False, timestamp='mlabday', stime=t, etime=e, method="pm",
             var_noise=0.0)
 
-        npt = len(out[:, 0])
-        npt /= 2
-
-        self.assertAlmostEqual(out[npt, 1], 26.56505117707799)
-        self.assertAlmostEqual(out[npt, 2], 65.905157447889309)
-        self.assertAlmostEqual(out[npt, 3], 0.000000)
-        self.assertAlmostEqual(out[npt, 4], 0.000000)
+        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
+        self.assertAlmostEqual(out["azimuth_error"], 0.000000)
+        self.assertAlmostEqual(out["incidence_error"], 0.000000)
 
     def test_polarization_flinn(self):
         st = _create_test_data()
@@ -151,13 +148,10 @@ class PolarizationTestCase(unittest.TestCase):
             verbose=False, timestamp='mlabday', stime=t, etime=e,
             method="flinn", var_noise=0.0)
 
-        npt = len(out[:, 0])
-        npt /= 2
-
-        self.assertAlmostEqual(out[npt, 1], 26.56505117707799)
-        self.assertAlmostEqual(out[npt, 2], 65.905157447889309)
-        self.assertAlmostEqual(out[npt, 3], 1.000000)
-        self.assertAlmostEqual(out[npt, 4], 1.000000)
+        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
+        self.assertAlmostEqual(out["rectilinearity"], 1.000000)
+        self.assertAlmostEqual(out["planarity"], 1.000000)
 
     def test_polarization_vidale(self):
         st = _create_test_data()
@@ -169,14 +163,11 @@ class PolarizationTestCase(unittest.TestCase):
             verbose=False, timestamp='mlabday', stime=t, etime=e,
             method="vidale", var_noise=0.0)
 
-        npt = len(out[:, 0])
-        npt /= 2
-
-        self.assertAlmostEqual(out[npt, 1], 26.56505117707799)
-        self.assertAlmostEqual(out[npt, 2], 65.905157447889309)
-        self.assertAlmostEqual(out[npt, 3], 1.000000)
-        self.assertAlmostEqual(out[npt, 4], 1.000000)
-        self.assertAlmostEqual(out[npt, 5], 3.8195545129768958e-06)
+        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
+        self.assertAlmostEqual(out["rectilinearity"], 1.000000)
+        self.assertAlmostEqual(out["planarity"], 1.000000)
+        self.assertAlmostEqual(out["ellipticity"], 3.8195545129768958e-06)
 
 
 def suite():
