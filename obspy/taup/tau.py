@@ -172,6 +172,20 @@ class Arrivals(list):
                 if not (y[1] <= depth <= y[0]):
                     continue
                 ax.hlines(depth, x[0], x[1], color="0.5", zorder=-1)
+            # Plot some more station markers if necessary.
+            possible_distances = [_i * (self.distance + 360.0)
+                                  for _i in range(1, 10)]
+            possible_distances += [-_i * (360.0 - self.distance) for _i in
+                                   range(1, 10)]
+            possible_distances = [_i for _i in possible_distances
+                                  if x[0] <= _i <= x[1]]
+            if possible_distances:
+                ax.plot(possible_distances,  [0.0] * len(possible_distances),
+                        marker=(3, 0, 180), color="#C95241",
+                        markersize=ms, zorder=10, markeredgewidth=1.5,
+                        markeredgecolor="0.3", clip_on=False, lw=0,
+                        transform=station_marker_transform)
+
         else:
             raise NotImplementedError
         if show:
