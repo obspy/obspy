@@ -660,11 +660,17 @@ class SlownessModel(object):
 
         # Make sure P and S are consistent by adding discontinuities in one to
         # the other.
-        uniq = np.unique(self.PLayers[['topP', 'botP']].view(np.float_))
+        # Numpy 1.6 compatibility
+        # _tb = self.PLayers[['topP', 'botP']]
+        _tb = np.vstack([self.PLayers['topP'], self.PLayers['botP']]).T.ravel()
+        uniq = np.unique(_tb)
         for p in uniq:
             self.addSlowness(p, self.SWAVE)
 
-        uniq = np.unique(self.SLayers[['topP', 'botP']].view(np.float_))
+        # Numpy 1.6 compatibility
+        # _tb = self.PLayers[['topP', 'botP']]
+        _tb = np.vstack([self.SLayers['topP'], self.SLayers['botP']]).T.ravel()
+        uniq = np.unique(_tb)
         for p in uniq:
             self.addSlowness(p, self.PWAVE)
 
@@ -796,8 +802,9 @@ class SlownessModel(object):
         topLayer['botP'].fill(p)
         topLayer['botDepth'] = botDepth[mask]
 
-        otherIndex = np.where(otherLayers[np.newaxis, :] ==
-                              layers[mask, np.newaxis])
+        # numpy 1.6 compatibility
+        otherIndex = np.where(otherLayers.reshape(1, -1) ==
+                              layers[mask].reshape(-1, 1))
         layers[index] = botLayer
         layers = np.insert(layers, index, topLayer)
         if len(otherIndex[0]):

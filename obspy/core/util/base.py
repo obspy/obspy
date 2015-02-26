@@ -20,7 +20,6 @@ import io
 import os
 import sys
 import tempfile
-import time
 
 with standard_library.hooks():
     from collections import OrderedDict
@@ -107,16 +106,9 @@ class NamedTemporaryFile(io.BufferedIOBase):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        self.close()  # flush internal buffer
         self._fileobj.close()
-        for _ in range(10):
-            try:
-                os.remove(self.name)
-                break
-            except WindowsError as e:
-                werr = e
-                time.sleep(0.1)
-        else:
-            raise werr
+        os.remove(self.name)
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):

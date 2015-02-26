@@ -6,7 +6,9 @@ Capabilities include filtering, triggering, rotation, instrument
 correction and coordinate transformations.
 
 :copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Filter
 ------

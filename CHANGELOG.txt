@@ -3,8 +3,10 @@
    * Python3 support
    * anaconda support
    * New formats: AH, CNV, NDK, Datamark, NLLOC, CNV, PDAS, ZMAP
+   * ObsPy licensed under LGPL v3.0 now as a whole.
  - General:
    * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
+   * ObsPy licensed under LGPL v3.0 now as a whole.
    * More generic processing history for most Stream and Trace methods.
    * Now requires NumPy >= 1.4.0
    * Now requires SciPy >= 0.7.2

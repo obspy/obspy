@@ -150,7 +150,7 @@ class EvtVirtual(object):
         :param offset: not used
         :rtype: str
         """
-        return strn.rstrip(b"\0").decode()
+        return strn.split(b"\0", 1)[0].decode()
 
     def _array(self, unused_firstval, param, val, offset):
         """

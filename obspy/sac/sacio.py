@@ -819,7 +819,8 @@ class SacIO(object):
             np.savetxt(fh, np.reshape(self.hi, (8, 5)),
                        fmt=native_str("%10d%10d%10d%10d%10d"))
             for i in range(0, 24, 3):
-                fh.write(self.hs[i:i + 3].data)
+                # numpy 1.6 compatibility
+                fh.write(self.hs[i:i + 3].tostring())
                 fh.write(b'\n')
         except Exception as e:
             raise SacIOError("Cannot write header values.", e)
@@ -852,10 +853,11 @@ class SacIO(object):
         """
         try:
             self._chck_header()
-            fh.write(self.hf.data)
-            fh.write(self.hi.data)
-            fh.write(self.hs.data)
-            fh.write(self.seis.data)
+            # numpy 1.6 compatibility
+            fh.write(self.hf.tostring())
+            fh.write(self.hi.tostring())
+            fh.write(self.hs.tostring())
+            fh.write(self.seis.tostring())
         except Exception as e:
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, e)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.nllox - NonLinLoc file format support for ObsPy
+obspy.nlloc - NonLinLoc file format support for ObsPy
 =====================================================
 
 This module provides read/write support for some NonLinLoc file

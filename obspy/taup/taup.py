@@ -58,7 +58,7 @@ def getTravelTimes(delta, depth, model='iasp91', phase_list=["ttall"]):
     """
     warnings.warn("The getTravelTimes() function is deprecated. Please use "
                   "the obspy.taup.TauPyModel class directly.",
-                  DeprecationWarning)
+                  DeprecationWarning, stacklevel=2)
     model = model.lower()
 
     # Cache models.
@@ -120,7 +120,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
     """
     warnings.warn("The travelTimePlot() function is deprecated. Please use "
                   "the obspy.taup.TauPyModel class directly.",
-                  DeprecationWarning)
+                  DeprecationWarning, stacklevel=2)
     import matplotlib.pylab as plt
 
     data = {}
@@ -131,8 +131,8 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
     degrees = np.linspace(min_degree, max_degree, npoints)
     # Loop over all degrees.
     for degree in degrees:
-        print(degree)
-        tt = getTravelTimes(degree, depth, model, phase_list=phases)
+        with warnings.catch_warnings(record=True):
+            tt = getTravelTimes(degree, depth, model, phase_list=phases)
         # Mirror if necessary.
         if degree > 180:
             degree = 180 - (degree - 180)

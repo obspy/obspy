@@ -3,10 +3,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.moves import pickle
 from future.utils import PY2, native_str
 
 import os
+# use cPickle on Python2
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from copy import deepcopy
 from itertools import count
 from math import pi

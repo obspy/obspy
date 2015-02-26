@@ -69,10 +69,9 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
        possibilities to do cross correlations e.g. in frequency domain.
 
     .. seealso::
-        `ObsPy-users mailing list
+       `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
-       and
-       `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
+       and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
 
     .. rubric:: Example
 

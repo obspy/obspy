@@ -25,7 +25,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.decorator import (deprecated_keywords, raiseIfMasked,
-                                       skipIfNoData, taper_API_change)
+                                       skipIfNoData)
 from obspy.core.util.misc import flatnotmaskedContiguous
 
 
@@ -1818,7 +1818,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @skipIfNoData
-    @taper_API_change()
     @_add_processing_info
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
