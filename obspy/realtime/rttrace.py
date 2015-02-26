@@ -8,14 +8,19 @@ Module for handling ObsPy RtTrace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import copy
+import warnings
+
+import numpy as np
 
 from obspy import Trace
 from obspy.core import Stats
 from obspy.realtime import signal
 from obspy.realtime.rtmemory import RtMemory
-import copy
-import numpy as np
-import warnings
 
 
 # dictionary to map given type-strings to processing functions keys must be all
@@ -103,8 +108,8 @@ class RtTrace(Trace):
         >>> print(peak)
         0.136404
         >>> mwp = calculateMwpMag(peak, epicentral_distance)
-        >>> print(mwp)
-        8.78902911791
+        >>> print(mwp)  # doctest: +ELLIPSIS
+        8.78902911791...
     """
     have_appended_data = False
 
@@ -157,7 +162,7 @@ class RtTrace(Trace):
         """
         Too ambiguous, throw an Error.
 
-        .. seealso:: :meth:`obspy.realtime.RtTrace.append`.
+        .. seealso:: :meth:`obspy.realtime.rttrace.RtTrace.append`.
         """
         msg = "Too ambiguous for realtime trace data. Try: RtTrace.append()"
         raise NotImplementedError(msg)
@@ -177,14 +182,16 @@ class RtTrace(Trace):
         :type gap_overlap_check: bool, optional
         :param gap_overlap_check: Action to take when there is a gap or overlap
             between the end of this RtTrace and start of appended Trace:
-                If True, raise TypeError.
-                If False, all trace processing memory will be re-initialized to
-                    prevent false signal in processed trace.
+
+            * If True, raise TypeError.
+            * If False, all trace processing memory will be re-initialized to
+              prevent false signal in processed trace.
+
             (default is ``True``).
         :type verbose: bool, optional
         :param verbose: Print additional information to stdout
-        :return: NumPy :class:`np.ndarray` object containing processed trace
-            data from appended Trace object.
+        :return: NumPy :class:`~numpy.ndarray` object containing processed
+            trace data from appended Trace object.
         """
         if not isinstance(trace, Trace):
             # only add Trace objects
@@ -214,16 +221,16 @@ class RtTrace(Trace):
         # check times
         gap_or_overlap = False
         if self.have_appended_data:
-            #delta = int(math.floor(\
+            # delta = int(math.floor(\
             #    round((rt.stats.starttime - lt.stats.endtime) * sr, 5) )) - 1
             diff = trace.stats.starttime - self.stats.endtime
             delta = diff * self.stats.sampling_rate - 1.0
             if verbose:
                 msg = "%s: Overlap/gap of (%g) samples in data: (%s) (%s) " + \
                     "diff=%gs  dt=%gs"
-                print msg % (self.__class__.__name__,
+                print(msg % (self.__class__.__name__,
                              delta, self.stats.endtime, trace.stats.starttime,
-                             diff, self.stats.delta)
+                             diff, self.stats.delta))
             if delta < -0.1:
                 msg = "Overlap of (%g) samples in data: (%s) (%s) diff=%gs" + \
                     "  dt=%gs"
@@ -251,8 +258,9 @@ class RtTrace(Trace):
                 self.stats.starttime = \
                     self.stats.starttime + diff - self.stats.delta
                 if verbose:
-                    print "%s: self.stats.starttime adjusted by: %gs" \
-                        % (self.__class__.__name__, diff - self.stats.delta)
+                    print("%s: self.stats.starttime adjusted by: %gs"
+                          % (self.__class__.__name__, diff -
+                             self.stats.delta))
         # first apply all registered processing to Trace
         for proc in self.processing:
             process_name, options, rtmemory_list = proc
@@ -305,7 +313,7 @@ class RtTrace(Trace):
 
         Processing function must be one of:
             %s. % REALTIME_PROCESS_FUNCTIONS.keys()
-            or a non-recursive, time-domain np or obspy function which takes
+            or a non-recursive, time-domain NumPy or ObsPy function which takes
             a single array as an argument and returns an array
 
         :type process: str or function

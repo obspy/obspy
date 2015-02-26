@@ -2,14 +2,17 @@
 """
 The obspy.earthworm.client test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
-from numpy import array
+import unittest
+
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skip_on_network_error
 from obspy.earthworm import Client
-import unittest
 
 
 class ClientTestCase(unittest.TestCase):
@@ -51,7 +54,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
                                     cleanup=False)
         self.assertTrue(len(stream) >= 2)
-        summed_length = array([len(tr) for tr in stream]).sum()
+        summed_length = sum(len(tr) for tr in stream)
         self.assertTrue(summed_length == 1201)
         self.assertTrue(stream[0].stats.starttime >= start - delta)
         self.assertTrue(stream[0].stats.starttime <= start + delta)

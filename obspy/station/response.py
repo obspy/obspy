@@ -9,15 +9,26 @@ Classes related to instrument responses.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import warnings
-import ctypes as C
-import numpy as np
-from collections import defaultdict
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
-from obspy.station.util import Frequency, Angle
+import ctypes as C
+import warnings
+from collections import defaultdict
+from copy import deepcopy
+from math import pi
+
+import numpy as np
+
+from obspy.core.util.base import ComparingObject, getMatplotlibVersion
+from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+                                         FloatWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.util import Angle, Frequency
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ResponseStage(ComparingObject):
@@ -35,58 +46,58 @@ class ResponseStage(ComparingObject):
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
         """
-        :type stage_sequence_number: integer greater or equal to zero
-        :param stage_sequence_number: Stage sequence number. This is used in
-            all the response SEED blockettes.
+        :type stage_sequence_number: int
+        :param stage_sequence_number: Stage sequence number, greater or equal
+            to zero. This is used in all the response SEED blockettes.
         :type stage_gain: float
         :param stage_gain: Value of stage gain.
         :type stage_gain_frequency: float
         :param stage_gain_frequency: Frequency of stage gain.
-        :param input_units: string
+        :type input_units: str
         :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :param output_units: string
+        :type output_units: str
         :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type resource_id2: string
+        :type resource_id2: str
         :param resource_id2: This field contains a string that should serve as
             a unique resource identifier. Resource identifier of the subgroup
             of the response stage that varies across different response stage
             types (e.g. the poles and zeros part or the FIR part).
-        :type name: string
+        :type name: str
         :param name: A name given to the filter stage.
-        :param input_units_description: string, optional
+        :type input_units_description: str, optional
         :param input_units_description: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type description: string, optional
+        :type description: str, optional
         :param description: A short description of of the filter.
         :type decimation_input_sample_rate:  float, optional
         :param decimation_input_sample_rate: The sampling rate before the
             decimation in samples per second.
-        :type decimation_factor: integer, optional
+        :type decimation_factor: int, optional
         :param decimation_factor: The applied decimation factor.
-        :type decimation_offset: integer, optional
+        :type decimation_offset: int, optional
         :param decimation_offset: The sample chosen for use. 0 denotes the
             first sample, 1 the second, and so forth.
         :type decimation_delay: float, optional
@@ -131,19 +142,19 @@ class ResponseStage(ComparingObject):
             "{decimation}").format(
             response_type=self.__class__.__name__,
             response_stage=self.stage_sequence_number,
+            gain=self.stage_gain,
+            gain_freq=self.stage_gain_frequency,
             name_desc="\t%s %s\n" % (
                 self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
-            resource_id="\tResource Id: %s" % self.resource_id
-            if self.resource_id else "",
+            resource_id=("\tResource Id: %s" % self.resource_id
+                         if self.resource_id else ""),
             input_units=self.input_units if self.input_units else "UNKNOWN",
-            input_desc=" (%s)" % self.input_units_description
-            if self.input_units_description else "",
+            input_desc=(" (%s)" % self.input_units_description
+                        if self.input_units_description else ""),
             output_units=self.output_units if self.output_units else "UNKNOWN",
-            output_desc=" (%s)" % self.output_units_description
-            if self.output_units_description else "",
-            gain=self.stage_gain,
-            gain_freq=self.stage_gain_frequency,
+            output_desc=(" (%s)" % self.output_units_description
+                         if self.output_units_description else ""),
             decimation=(
                 "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
                 "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
@@ -153,6 +164,9 @@ class ResponseStage(ComparingObject):
                     self.decimation_correction)
                 if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class PolesZerosResponseStage(ResponseStage):
@@ -166,19 +180,21 @@ class PolesZerosResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type pz_transfer_function_type: String
+    :type pz_transfer_function_type: str
     :param pz_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
-            * ``LAPLACE (RADIANS/SECOND)``
-            * ``LAPLACE (HERTZ)``
-            * ``DIGITAL (Z-TRANSFORM)``
+
+        * ``LAPLACE (RADIANS/SECOND)``
+        * ``LAPLACE (HERTZ)``
+        * ``DIGITAL (Z-TRANSFORM)``
+
         The function tries to match inputs to one of three types if it can.
     :type normalization_frequency: float
     :param normalization_frequency: The frequency at which the normalization
         factor is normalized.
-    :type zeros: A list of complex numbers.
+    :type zeros: list of complex
     :param zeros: All zeros of the stage.
-    :type poles: A list of complex numbers.
+    :type poles: list of complex
     :param poles: All poles of the stage.
     :type normalization_factor: float, optional
     :param normalization_factor:
@@ -232,6 +248,9 @@ class PolesZerosResponseStage(ResponseStage):
             zeros=", ".join(map(str, self.zeros)),
             )
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def zeros(self):
@@ -297,12 +316,14 @@ class CoefficientsTypeResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type cf_transfer_function_type: String
+    :type cf_transfer_function_type: str
     :param cf_transfer_function_type: A string describing the type of transfer
         function. Can be one of:
-            * ``ANALOG (RADIANS/SECOND)``
-            * ``ANALOG (HERTZ)``
-            * ``DIGITAL``
+
+        * ``ANALOG (RADIANS/SECOND)``
+        * ``ANALOG (HERTZ)``
+        * ``DIGITAL``
+
         The function tries to match inputs to one of three types if it can.
     :type numerator: list of
         :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`
@@ -351,6 +372,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 transfer_fct_type=self.cf_transfer_function_type,
                 num_count=len(self.numerator), den_count=len(self.denominator))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def numerator(self):
@@ -506,11 +530,13 @@ class FIRResponseStage(ResponseStage):
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
-    :type symmetry: String
+    :type symmetry: str
     :param symmetry: A string describing the symmetry. Can be one of:
+
             * ``NONE``
             * ``EVEN``
             * ``ODD``
+
     :type coefficients: list of floats
     :param coefficients: List of FIR coefficients.
     """
@@ -667,12 +693,12 @@ class Response(ComparingObject):
     def __init__(self, resource_id=None, instrument_sensitivity=None,
                  instrument_polynomial=None, response_stages=None):
         """
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
         :type instrument_sensitivity:
@@ -685,7 +711,7 @@ class Response(ComparingObject):
         :param instrument_polynomial: The total sensitivity for the given
             channel, representing the complete acquisition system expressed as
             a polynomial.
-        :type response_stages: List of
+        :type response_stages: list of
             :class:`~obspy.station.response.ResponseStage` objects
         :param response_stages: A list of the response stages. Covers SEED
             blockettes 53 to 56.
@@ -712,9 +738,15 @@ class Response(ComparingObject):
         :type nfft: int
         :param nfft: Number of FFT points to use
         :type output: str
-        :param output: Output units. One of "DISP" (displacement, output unit
-            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
-            (acceleration, output unit is meters/second**2).
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+
         :type start_stage: int, optional
         :param start_stage: Stage sequence number of first stage that will be
             used (disregarding all earlier stages).
@@ -879,7 +911,7 @@ class Response(ComparingObject):
                         msg = ("When no denominators are given it must "
                                "be a digital FIR filter.")
                         raise ValueError(msg)
-                    # Set the type to an assymetric FIR blockette.
+                    # Set the type to an asymmetric FIR blockette.
                     blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
                     fir = blkt.blkt_info.fir
                     fir.h0 = 1.0
@@ -999,7 +1031,7 @@ class Response(ComparingObject):
 
             # Attach the blockette chain to the stage.
             st.first_blkt = C.pointer(stage_blkts[0])
-            for _i in xrange(1, len(stage_blkts)):
+            for _i in range(1, len(stage_blkts)):
                 stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
 
             stage_objects.append(st)
@@ -1024,7 +1056,7 @@ class Response(ComparingObject):
 
         # Attach the stage chain to the channel.
         chan.first_stage = C.pointer(stage_objects[0])
-        for _i in xrange(1, len(stage_objects)):
+        for _i in range(1, len(stage_objects)):
             stage_objects[_i - 1].next_stage = C.pointer(stage_objects[_i])
 
         chan.nstages = len(stage_objects)
@@ -1035,17 +1067,39 @@ class Response(ComparingObject):
 
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
-        freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype(np.float64)
 
-        output = np.empty(len(freqs), dtype="complex128")
-        out_units = C.c_char_p(out_units)
+        output = np.empty(len(freqs), dtype=np.complex128)
+        out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
 
-        clibevresp.check_channel(C.pointer(chan))
-        clibevresp.norm_resp(C.pointer(chan), -1, 0)
-        clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
-                             out_units, -1, 0, 0)
-        # XXX: Check if this is really not needed.
-        #output *= scale_factor[0]
+        # Set global variables
+        if self.resource_id:
+            clibevresp.curr_file.value = self.resource_id.encode('utf-8')
+        else:
+            clibevresp.curr_file.value = None
+
+        try:
+            rc = clibevresp._obspy_check_channel(C.byref(chan))
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('check_channel: ' + m)
+
+            rc = clibevresp._obspy_norm_resp(C.byref(chan), -1, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('norm_resp: ' + m)
+
+            rc = clibevresp._obspy_calc_resp(C.byref(chan), freqs, len(freqs),
+                                             output, out_units, -1, 0, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('calc_resp: ' + m)
+
+            # XXX: Check if this is really not needed.
+            # output *= scale_factor[0]
+
+        finally:
+            clibevresp.curr_file.value = None
 
         return output, freqs
 
@@ -1091,6 +1145,215 @@ class Response(ComparingObject):
                      ("%g" % i.stage_gain) if i.stage_gain else "UNKNOWN")
                  for i in self.response_stages]))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
+    def plot(self, min_freq, output="VEL", start_stage=None,
+             end_stage=None, label=None, axes=None, sampling_rate=None,
+             unwrap_phase=False, show=True, outfile=None):
+        """
+        Show bode plot of instrument response.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of:
+
+                ``"DISP"``
+                    displacement
+                ``"VEL"``
+                    velocity
+                ``"ACC"``
+                    acceleration
+
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :type label: str
+        :param label: Label string for legend.
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type sampling_rate: float
+        :param sampling_rate: Manually specify sampling rate of time series.
+            If not given it is attempted to determine it from the information
+            in the individual response stages.  Does not influence the spectra
+            calculation, if it is not known, just provide the highest frequency
+            that should be plotted times two.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> resp = read_inventory()[0][0][0].response
+        >>> resp.plot(0.001, output="VEL")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            resp = read_inventory()[0][0][0].response
+            resp.plot(0.001, output="VEL")
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.transforms import blended_transform_factory
+
+        # detect sampling rate from response stages
+        if sampling_rate is None:
+            for stage in self.response_stages[::-1]:
+                if (stage.decimation_input_sample_rate is not None and
+                        stage.decimation_factor is not None):
+                    sampling_rate = (stage.decimation_input_sample_rate /
+                                     stage.decimation_factor)
+                    break
+            else:
+                msg = ("Failed to autodetect sampling rate of channel from "
+                       "response stages. Please manually specify parameter "
+                       "`sampling_rate`")
+                raise Exception(msg)
+
+        t_samp = 1.0 / sampling_rate
+        nyquist = sampling_rate / 2.0
+        nfft = sampling_rate / min_freq
+
+        cpx_response, freq = self.get_evalresp_response(
+            t_samp=t_samp, nfft=nfft, output=output, start_stage=start_stage,
+            end_stage=end_stage)
+
+        if axes:
+            ax1, ax2 = axes
+            fig = ax1.figure
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        label_kwarg = {}
+        if label is not None:
+            label_kwarg['label'] = label
+
+        # plot amplitude response
+        lw = 1.5
+        lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
+        color = lines[0].get_color()
+        # Cannot be plotted with matplotlib < 1.0.0
+        if MATPLOTLIB_VERSION < [1, 0, 0]:
+            warnings.warn("Cannot plot the instrument sensitivity. Your "
+                          "matplotlib version is too old. Please update.")
+        if self.instrument_sensitivity and MATPLOTLIB_VERSION >= [1, 0, 0]:
+            trans_above = blended_transform_factory(ax1.transData,
+                                                    ax1.transAxes)
+            trans_right = blended_transform_factory(ax1.transAxes,
+                                                    ax1.transData)
+            arrowprops = dict(
+                arrowstyle="wedge,tail_width=1.4,shrink_factor=0.8", fc=color)
+            bbox = dict(boxstyle="round", fc="w")
+            ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
+                         (self.instrument_sensitivity.frequency, 1.0),
+                         xytext=(self.instrument_sensitivity.frequency, 1.1),
+                         xycoords=trans_above, textcoords=trans_above,
+                         ha="center", va="bottom",
+                         arrowprops=arrowprops, bbox=bbox)
+            ax1.annotate("%.1e" % self.instrument_sensitivity.value,
+                         (1.0, self.instrument_sensitivity.value),
+                         xytext=(1.05, self.instrument_sensitivity.value),
+                         xycoords=trans_right, textcoords=trans_right,
+                         ha="left", va="center",
+                         arrowprops=arrowprops, bbox=bbox)
+
+        # plot phase response
+        phase = np.angle(cpx_response)
+        if unwrap_phase:
+            phase = np.unwrap(phase)
+        ax2.semilogx(freq, phase, color=color, lw=lw)
+
+        # plot nyquist frequency
+        for ax in (ax1, ax2):
+            ax.axvline(nyquist, ls="--", color=color, lw=lw)
+
+        # only do adjustments if we initialized the figure in here
+        if not axes:
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
+
+    def get_paz(self):
+        """
+        Get Poles and Zeros stage.
+
+        Prints a warning if more than one poles and zeros stage is found.
+        Raises if no poles and zeros stage is found.
+
+        :rtype: :class:`PolesZerosResponseStage`
+        :returns: Poles and Zeros response stage.
+        """
+        paz = [deepcopy(stage) for stage in self.response_stages
+               if isinstance(stage, PolesZerosResponseStage)]
+        if len(paz) == 0:
+            msg = "No PolesZerosResponseStage found."
+            raise Exception(msg)
+        elif len(paz) > 1:
+            msg = ("More than one PolesZerosResponseStage encountered. "
+                   "Returning first one found.")
+            warnings.warn(msg)
+        return paz[0]
+
+    def get_sacpz(self):
+        """
+        Returns SACPZ ASCII text representation of Response.
+
+        :rtype: str
+        :returns: Textual SACPZ representation of response.
+        """
+        # extract paz
+        paz = self.get_paz()
+        sensitivity = self.instrument_sensitivity.value
+        return paz_to_sacpz_string(paz, sensitivity)
+
+
+def paz_to_sacpz_string(paz, instrument_sensitivity):
+    """
+    Returns SACPZ ASCII text representation of Response.
+
+    :type paz: :class:`PolesZerosResponseStage`
+    :param paz: Poles and Zeros response information
+    :type instrument_sensitivity: :class:`InstrumentSensitivity`
+    :param paz: Overall instrument sensitivity of response
+    :rtype: str
+    :returns: Textual SACPZ representation of poles and zeros response stage.
+    """
+    # assemble output string
+    out = []
+    out.append("ZEROS %i" % len(paz.zeros))
+    for c in paz.zeros:
+        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+    out.append("POLES %i" % len(paz.poles))
+    for c in paz.poles:
+        out.append(" %+.6e %+.6e" % (c.real, c.imag))
+    constant = paz.normalization_factor * instrument_sensitivity.value
+    out.append("CONSTANT %.6e" % constant)
+    return "\n".join(out)
 
 
 class InstrumentSensitivity(ComparingObject):
@@ -1142,7 +1405,7 @@ class InstrumentSensitivity(ComparingObject):
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
@@ -1211,15 +1474,15 @@ class InstrumentPolynomial(ComparingObject):
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type resource_id: string
+        :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
-            GENERATOR:Meaningful ID. As a common behaviour equipment with the
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
+            GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type name: string
+        :type name: str
         :param name: A name given to the filter stage.
         :param input_units_description: string, optional
         :param input_units_description: The units of the data as input from the
@@ -1227,13 +1490,13 @@ class InstrumentPolynomial(ComparingObject):
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type output_units_description: string, optional
+        :type output_units_description: str, optional
         :param output_units_description: The units of the data as output from
             the perspective of data acquisition. These would be the units of
             the data prior to correcting for this response.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :type description: string, optional
+        :type description: str, optional
         :param description: A short description of of the filter.
         """
         self.input_units = input_units
@@ -1322,6 +1585,64 @@ class CoefficientWithUncertainties(FloatWithUncertainties):
         if value is not None:
             value = int(value)
         self._number = value
+
+
+def _adjust_bode_plot_figure(fig, grid=True, show=True):
+    """
+    Helper function to do final adjustments to Bode plot figure.
+    """
+    import matplotlib.pyplot as plt
+    # make more room in between subplots for the ylabel of right plot
+    fig.subplots_adjust(hspace=0.02, top=0.87, right=0.82)
+    ax1, ax2 = fig.axes[:2]
+    # workaround for older matplotlib versions
+    try:
+        ax1.legend(loc="lower center", ncol=3, fontsize='small')
+    except TypeError:
+        leg_ = ax1.legend(loc="lower center", ncol=3)
+        leg_.prop.set_size("small")
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    plt.setp(ax2.get_yticklabels()[-1], visible=False)
+    ax1.set_ylabel('Amplitude')
+    minmax1 = ax1.get_ylim()
+    ax1.set_ylim(top=minmax1[1] * 5)
+    ax1.grid(True)
+    ax2.set_xlabel('Frequency [Hz]')
+    ax2.set_ylabel('Phase [rad]')
+    minmax2 = ax2.yaxis.get_data_interval()
+    yticks2 = np.arange(minmax2[0] - minmax2[0] % (pi / 2),
+                        minmax2[1] - minmax2[1] % (pi / 2) + pi, pi / 2)
+    ax2.set_yticks(yticks2)
+    ax2.set_yticklabels([_pitick2latex(x) for x in yticks2])
+    ax2.grid(True)
+    if show:
+        plt.show()
+
+
+def _pitick2latex(x):
+    """
+    Helper function to convert a float that is a multiple of pi/2
+    to a latex string.
+    """
+    # safety check, if no multiple of pi/2 return normal representation
+    if x % (pi / 2) != 0:
+        return "%#.3g" % x
+    string = "$"
+    if x < 0:
+        string += "-"
+    if x / pi % 1 == 0:
+        x = abs(int(x / pi))
+        if x == 0:
+            return "$0$"
+        elif x == 1:
+            x = ""
+        string += r"%s\pi$" % x
+    else:
+        x = abs(int(2 * x / pi))
+        if x == 1:
+            x = ""
+        string += r"\frac{%s\pi}{2}$" % x
+    return string
 
 
 if __name__ == '__main__':

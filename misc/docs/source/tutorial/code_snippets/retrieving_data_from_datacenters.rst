@@ -22,10 +22,8 @@ instrument response and to simulate a 1Hz instrument with damping 0.707.
     with the ArcLink server as well as for usage statistics within the data
     center, so please provide a meaningful user id such as your email address.
 
-.. include:: retrieving_data_from_datacenters_1.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/retrieving_data_from_datacenters_1.py
+.. plot:: tutorial/code_snippets/retrieving_data_from_datacenters_1.py
+   :include-source:
 
 -----------------
 IRIS Web Services

@@ -1,5 +1,6 @@
 from obspy.core import read
 
+
 singlechannel = read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
 dt = singlechannel[0].stats.starttime
 singlechannel.plot(color='red', number_of_ticks=7, tick_rotation=5,

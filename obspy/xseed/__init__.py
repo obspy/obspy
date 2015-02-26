@@ -70,6 +70,9 @@ volume will be stored in the attributes``Parser.volume``,
 related Blockettes and ``Parser.stations`` is a list of stations which contains
 all related Blockettes.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'

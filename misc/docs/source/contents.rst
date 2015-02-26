@@ -8,6 +8,7 @@ ObsPy Documentation Contents
 
    tutorial/index
    packages/index
+   changelog
    credits
    pep8/index
    coding_style

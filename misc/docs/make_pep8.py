@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import obspy
-from obspy.core.util.testing import check_flake8
 import os
 from shutil import copyfile
 
+import obspy
+from obspy.core.util.testing import check_flake8
+
 
 ROOT = os.path.dirname(__file__)
-PEP8_IMAGE = os.path.join(ROOT, 'source', 'pep8', 'pep8.png')
-PEP8_FAIL_IMAGE = os.path.join(ROOT, 'source', '_static', 'pep8-failing.png')
-PEP8_PASS_IMAGE = os.path.join(ROOT, 'source', '_static', 'pep8-passing.png')
+PEP8_IMAGE = os.path.join(ROOT, 'source', 'pep8', 'pep8.svg')
+PEP8_FAIL_IMAGE = os.path.join(ROOT, 'source', '_images', 'pep8-failing.svg')
+PEP8_PASS_IMAGE = os.path.join(ROOT, 'source', '_images', 'pep8-passing.svg')
 
 
 path = obspy.__path__[0]
@@ -31,7 +32,7 @@ head = ("""
 PEP8
 ====
 
-.. image:: pep8.png
+.. image:: pep8.svg
 
 Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented

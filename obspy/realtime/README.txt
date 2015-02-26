@@ -24,7 +24,7 @@ Overview
 --------
 Real time support for ObsPy.
 
-This package extends the ObsPy core classes with real time functionalities.
+This package extends the ObsPy core classes with real time functionality.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

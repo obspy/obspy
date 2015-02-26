@@ -3,12 +3,19 @@
 """
 The obspy.seishub.client test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future import standard_library
 
-from urllib2 import urlopen
-from obspy.seishub import Client
 import unittest
-from obspy.core import UTCDateTime, AttribDict
+
+with standard_library.hooks():
+    import urllib.request
+
+from obspy.core import AttribDict, UTCDateTime
 from obspy.core.util.decorator import skipIf
+from obspy.seishub import Client
 from obspy.xseed.utils import SEEDParserException
 
 
@@ -22,7 +29,7 @@ def _check_server_availability():
     otherwise.
     """
     try:
-        code = urlopen(TESTSERVER, timeout=3).getcode()
+        code = urllib.request.urlopen(TESTSERVER, timeout=3).getcode()
         assert(code == 200)
     except:
         return TESTSERVER_UNREACHABLE_MSG
@@ -84,29 +91,29 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(time, float))
 
     def test_getStationIds(self):
-        #1 - some selected stations
+        # 1 - some selected stations
         stations = ['FUR', 'FURT', 'ROTZ', 'RTAK', 'MANZ', 'WET']
         data = self.client.waveform.getStationIds()
         for station in stations:
             self.assertTrue(station in data)
-        #2 - all stations of network BW
+        # 2 - all stations of network BW
         stations = ['FURT', 'ROTZ', 'RTAK', 'MANZ']
         data = self.client.waveform.getStationIds(network='BW')
         for station in stations:
             self.assertTrue(station in data)
 
     def test_getLocationIds(self):
-        #1 - all locations
+        # 1 - all locations
         items = ['', '10']
         data = self.client.waveform.getLocationIds()
         for item in items:
             self.assertTrue(item in data)
-        #2 - all locations for network BW
+        # 2 - all locations for network BW
         items = ['']
         data = self.client.waveform.getLocationIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
-        #3 - all locations for network BW and station MANZ
+        # 3 - all locations for network BW and station MANZ
         items = ['']
         data = self.client.waveform.getLocationIds(network='BW',
                                                    station='MANZ')
@@ -114,25 +121,25 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(item in data)
 
     def test_getChannelIds(self):
-        #1 - all channels
+        # 1 - all channels
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
                  'EHZ', 'HHE', 'HHN', 'HHZ', 'LHE', 'LHN', 'LHZ', 'SHE', 'SHN',
                  'SHZ']
         data = self.client.waveform.getChannelIds()
         for item in items:
             self.assertTrue(item in data)
-        #2 - all channels for network BW
+        # 2 - all channels for network BW
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
                  'EHZ', 'HHE', 'HHN', 'HHZ', 'SHE', 'SHN', 'SHZ']
         data = self.client.waveform.getChannelIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
-        #3 - all channels for network BW and station MANZ
+        # 3 - all channels for network BW and station MANZ
         items = ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
         data = self.client.waveform.getChannelIds(network='BW', station='MANZ')
         for item in items:
             self.assertTrue(item in data)
-        #4 - all channels for network BW, station MANZ and given location
+        # 4 - all channels for network BW, station MANZ and given location
         items = ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
         data = self.client.waveform.getChannelIds(network='BW', station='MANZ',
                                                   location='')
@@ -262,7 +269,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_localcache(self):
         """
-        Tests local 'caching' of xml seed resources and station list coordinate
+        Tests local 'caching' of XML seed resources and station list coordinate
         information to avoid repeat requests to server.
         Tests..
             - returned information is stored with client instance in memory

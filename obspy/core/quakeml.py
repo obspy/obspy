@@ -9,24 +9,76 @@ by a distributed team in a transparent collaborative manner.
 
 .. seealso:: https://quake.ethz.ch/quakeml/
 
+.. note::
+
+    For handling additional information not covered by the QuakeML standard and
+    how to output it to QuakeML see the :ref:`ObsPy Tutorial <quakeml-extra>`.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
-    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
-    QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
-import StringIO
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
+import io
 import os
 import warnings
+
+from lxml import etree
+
+from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
+                              CompositeTime, ConfidenceEllipsoid, CreationInfo,
+                              DataUsed, Event, EventDescription,
+                              FocalMechanism, Magnitude, MomentTensor,
+                              NodalPlane, NodalPlanes, Origin, OriginQuality,
+                              OriginUncertainty, Pick, PrincipalAxes,
+                              QuantityError, ResourceIdentifier,
+                              SourceTimeFunction, StationMagnitude,
+                              StationMagnitudeContribution, Tensor, TimeWindow,
+                              WaveformStreamID)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
+
+
+NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
+                 'q': "http://quakeml.org/xmlns/quakeml/1.2"}
+
+
+def _get_first_child_namespace(element):
+    """
+    Helper function extracting the namespace of an element.
+    """
+    try:
+        element = element[0]
+    except IndexError:
+        return None
+    return etree.QName(element.tag).namespace
+
+
+def _xml_doc_from_anything(source):
+    """
+    Helper function attempting to create an xml etree element from either a
+    filename, a file-like object, or a (byte)string.
+
+    Will raise a ValueError if it fails.
+    """
+    try:
+        xml_doc = etree.parse(source)
+    except:
+        try:
+            xml_doc = etree.fromstring(source)
+        except:
+            try:
+                xml_doc = etree.fromstring(source.encode())
+            except:
+                raise ValueError("Could not parse '%s' to an etree element." %
+                                 source)
+    return xml_doc
 
 
 def isQuakeML(filename):
@@ -43,14 +95,28 @@ def isQuakeML(filename):
     >>> isQuakeML('/path/to/quakeml.xml')  # doctest: +SKIP
     True
     """
+    if hasattr(filename, "tell") and hasattr(filename, "seek") and \
+            hasattr(filename, "read"):
+        file_like_object = True
+        position = filename.tell()
+    else:
+        file_like_object = False
+
     try:
-        xml_doc = XMLParser(filename)
+        xml_doc = _xml_doc_from_anything(filename)
     except:
         return False
+    finally:
+        if file_like_object:
+            filename.seek(position, 0)
+
     # check if node "*/eventParameters/event" for the global namespace exists
     try:
-        namespace = xml_doc._getFirstChildNamespace()
-        xml_doc.xpath('eventParameters', namespace=namespace)[0]
+        if hasattr(xml_doc, "getroot"):
+            namespace = _get_first_child_namespace(xml_doc.getroot())
+        else:
+            namespace = _get_first_child_namespace(xml_doc)
+        xml_doc.xpath('q:eventParameters', namespaces={"q": namespace})[0]
     except:
         return False
     return True
@@ -60,8 +126,15 @@ class Unpickler(object):
     """
     De-serializes a QuakeML string into an ObsPy Catalog object.
     """
-    def __init__(self, parser=None):
-        self.parser = parser
+    def __init__(self, xml_doc=None):
+        self.xml_doc = xml_doc
+
+    @property
+    def xml_root(self):
+        try:
+            return self.xml_doc.getroot()
+        except AttributeError:
+            return self.xml_doc
 
     def load(self, file):
         """
@@ -72,7 +145,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(file)
+        self.xml_doc = _xml_doc_from_anything(file)
         return self._deserialize()
 
     def loads(self, string):
@@ -84,92 +157,136 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(StringIO.StringIO(string))
+        self.xml_doc = etree.parse(io.BytesIO(string))
         return self._deserialize()
 
-    def _xpath2obj(self, *args, **kwargs):
-        return self.parser.xpath2obj(*args, **kwargs)
+    def _xpath2obj(self, xpath, element=None, convert_to=str, namespace=None):
+        q = self._xpath(xpath, element=element, namespace=namespace)
+        if not q:
+            return None
+        text = q[0].text
+        if text is None or text == '':
+            return None
+        if convert_to == bool:
+            if text.lower() in ["true", "1"]:
+                return True
+            elif text.lower() in ["false", "0"]:
+                return False
+            return None
+        try:
+            return convert_to(text)
+        except:
+            msg = "Could not convert %s to type %s. Returning None."
+            warnings.warn(msg % (text, convert_to))
+        return None
 
-    def _xpath(self, *args, **kwargs):
-        return self.parser.xpath(*args, **kwargs)
+    def _xpath(self, xpath, element=None, namespace=None):
+        if element is None:
+            element = self.xml_root
 
-    def _comments(self, element):
+        namespaces = None
+        if namespace:
+            xpath = "b:%s" % xpath
+            namespaces = {"b": namespace}
+        elif hasattr(element, "nsmap") and None in element.nsmap:
+            xpath = "b:%s" % xpath
+            namespaces = {"b": element.nsmap[None]}
+        elif hasattr(self, "nsmap") and None in self.nsmap:
+            xpath = "b:%s" % xpath
+            namespaces = {"b": self.nsmap[None]}
+
+        return element.xpath(xpath, namespaces=namespaces)
+
+    def _comments(self, parent):
         obj = []
-        for el in self._xpath('comment', element):
+        for el in self._xpath('comment', parent):
             comment = Comment(force_resource_id=False)
             comment.text = self._xpath2obj('text', el)
             comment.creation_info = self._creation_info(el)
             comment.resource_id = el.get('id', None)
+            self._extra(el, comment)
             obj.append(comment)
         return obj
 
-    def _station_magnitude_contributions(self, element):
+    def _station_magnitude_contributions(self, parent):
         obj = []
-        for el in self._xpath("stationMagnitudeContribution", element):
+        for el in self._xpath("stationMagnitudeContribution", parent):
             contrib = StationMagnitudeContribution()
             contrib.weight = self._xpath2obj("weight", el, float)
             contrib.residual = self._xpath2obj("residual", el, float)
             contrib.station_magnitude_id = \
                 self._xpath2obj("stationMagnitudeID", el, str)
+            self._extra(el, contrib)
             obj.append(contrib)
         return obj
 
-    def _creation_info(self, element):
-        for child in element:
-            if 'creationInfo' in child.tag:
-                break
-        else:
+    def _creation_info(self, parent):
+        elements = self._xpath("creationInfo", parent)
+        if len(elements) > 1:
+            raise NotImplementedError("Only one CreationInfo allowed.")
+        elif len(elements) == 0:
             return None
+        element = elements[0]
         obj = CreationInfo()
-        obj.agency_uri = self._xpath2obj('creationInfo/agencyURI', element)
-        obj.author_uri = self._xpath2obj('creationInfo/authorURI', element)
-        obj.agency_id = self._xpath2obj('creationInfo/agencyID', element)
-        obj.author = self._xpath2obj('creationInfo/author', element)
+        obj.agency_uri = self._xpath2obj('agencyURI', element)
+        obj.author_uri = self._xpath2obj('authorURI', element)
+        obj.agency_id = self._xpath2obj('agencyID', element)
+        obj.author = self._xpath2obj('author', element)
         obj.creation_time = self._xpath2obj(
-            'creationInfo/creationTime', element, UTCDateTime)
-        obj.version = self._xpath2obj('creationInfo/version', element)
+            'creationTime', element, UTCDateTime)
+        obj.version = self._xpath2obj('version', element)
+        self._extra(element, obj)
         return obj
 
-    def _origin_quality(self, element):
+    def _origin_quality(self, parent):
+        elements = self._xpath("quality", parent)
+        if len(elements) > 1:
+            raise NotImplementedError("Only one OriginQuality allowed.")
+        # Do not add an element if it is not given in the XML file.
+        elif len(elements) == 0:
+            return None
+        element = elements[0]
         obj = OriginQuality()
         obj.associated_phase_count = self._xpath2obj(
-            'quality/associatedPhaseCount', element, int)
+            'associatedPhaseCount', element, int)
         obj.used_phase_count = self._xpath2obj(
-            'quality/usedPhaseCount', element, int)
+            'usedPhaseCount', element, int)
         obj.associated_station_count = self._xpath2obj(
-            'quality/associatedStationCount', element, int)
+            'associatedStationCount', element, int)
         obj.used_station_count = self._xpath2obj(
-            'quality/usedStationCount', element, int)
+            'usedStationCount', element, int)
         obj.depth_phase_count = self._xpath2obj(
-            'quality/depthPhaseCount', element, int)
+            'depthPhaseCount', element, int)
         obj.standard_error = self._xpath2obj(
-            'quality/standardError', element, float)
+            'standardError', element, float)
         obj.azimuthal_gap = self._xpath2obj(
-            'quality/azimuthalGap', element, float)
+            'azimuthalGap', element, float)
         obj.secondary_azimuthal_gap = self._xpath2obj(
-            'quality/secondaryAzimuthalGap', element, float)
+            'secondaryAzimuthalGap', element, float)
         obj.ground_truth_level = self._xpath2obj(
-            'quality/groundTruthLevel', element)
+            'groundTruthLevel', element)
         obj.minimum_distance = self._xpath2obj(
-            'quality/minimumDistance', element, float)
+            'minimumDistance', element, float)
         obj.maximum_distance = self._xpath2obj(
-            'quality/maximumDistance', element, float)
+            'maximumDistance', element, float)
         obj.median_distance = self._xpath2obj(
-            'quality/medianDistance', element, float)
+            'medianDistance', element, float)
+        self._extra(element, obj)
         return obj
 
-    def _event_description(self, element):
+    def _event_description(self, parent):
         out = []
-        for el in self._xpath('description', element):
+        for el in self._xpath('description', parent):
             text = self._xpath2obj('text', el)
             type = self._xpath2obj('type', el)
             out.append(EventDescription(text=text, type=type))
+            self._extra(el, out[-1])
         return out
 
-    def _value(self, element, name, quantity_type=float):
+    def _value(self, parent, name, quantity_type=float):
         try:
-            el = self._xpath(name, element)[0]
-        except:
+            el = self._xpath(name, parent)[0]
+        except IndexError:
             return None, None
 
         value = self._xpath2obj('value', el, quantity_type)
@@ -210,9 +327,9 @@ class Unpickler(object):
     def _time_value(self, element, name):
         return self._value(element, name, UTCDateTime)
 
-    def _composite_times(self, element):
+    def _composite_times(self, parent):
         obj = []
-        for el in self._xpath('compositeTime', element):
+        for el in self._xpath('compositeTime', parent):
             ct = CompositeTime()
             ct.year, ct.year_errors = self._int_value(el, 'year')
             ct.month, ct.month_errors = self._int_value(el, 'month')
@@ -220,6 +337,7 @@ class Unpickler(object):
             ct.hour, ct.hour_errors = self._int_value(el, 'hour')
             ct.minute, ct.minute_errors = self._int_value(el, 'minute')
             ct.second, ct.second_errors = self._float_value(el, 'second')
+            self._extra(el, ct)
             obj.append(ct)
         return obj
 
@@ -237,34 +355,43 @@ class Unpickler(object):
             'majorAxisAzimuth', element, float)
         obj.major_axis_rotation = self._xpath2obj(
             'majorAxisRotation', element, float)
+        self._extra(element, obj)
         return obj
 
-    def _origin_uncertainty(self, element):
+    def _origin_uncertainty(self, parent):
+        elements = self._xpath("originUncertainty", parent)
+        if len(elements) > 1:
+            raise NotImplementedError("Only one OriginUncertainty allowed.")
+        # Do not add an element if it is not given in the XML file.
+        elif len(elements) == 0:
+            return None
+        element = elements[0]
         obj = OriginUncertainty()
         obj.preferred_description = self._xpath2obj(
-            'originUncertainty/preferredDescription', element)
+            'preferredDescription', element)
         obj.horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/horizontalUncertainty', element, float)
+            'horizontalUncertainty', element, float)
         obj.min_horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/minHorizontalUncertainty', element, float)
+            'minHorizontalUncertainty', element, float)
         obj.max_horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/maxHorizontalUncertainty', element, float)
+            'maxHorizontalUncertainty', element, float)
         obj.azimuth_max_horizontal_uncertainty = self._xpath2obj(
-            'originUncertainty/azimuthMaxHorizontalUncertainty', element,
-            float)
+            'azimuthMaxHorizontalUncertainty', element, float)
         obj.confidence_level = self._xpath2obj(
-            'originUncertainty/confidenceLevel', element, float)
+            'confidenceLevel', element, float)
+        ce_el = self._xpath('confidenceEllipsoid', element)
         try:
-            ce_el = self._xpath('originUncertainty/confidenceEllipsoid',
-                                element)
-            obj.confidence_ellipsoid = self._confidence_ellipsoid(ce_el[0])
-        except:
+            ce_el = ce_el[0]
+        except IndexError:
             obj.confidence_ellipsoid = ConfidenceEllipsoid()
+        else:
+            obj.confidence_ellipsoid = self._confidence_ellipsoid(ce_el)
+        self._extra(element, obj)
         return obj
 
-    def _waveform_ids(self, element):
+    def _waveform_ids(self, parent):
         objs = []
-        for wid_el in self._xpath('waveformID', element):
+        for wid_el in self._xpath('waveformID', parent):
             obj = WaveformStreamID()
             obj.network_code = wid_el.get('networkCode') or ''
             obj.station_code = wid_el.get('stationCode') or ''
@@ -274,9 +401,9 @@ class Unpickler(object):
             objs.append(obj)
         return objs
 
-    def _waveform_id(self, element):
+    def _waveform_id(self, parent):
         try:
-            return self._waveform_ids(element)[0]
+            return self._waveform_ids(parent)[0]
         except IndexError:
             return None
 
@@ -311,6 +438,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _pick(self, element):
@@ -340,6 +468,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _time_window(self, element):
@@ -355,6 +484,7 @@ class Unpickler(object):
         obj.end = self._xpath2obj('end', element, convert_to=float)
         obj.reference = self._xpath2obj('reference', element,
                                         convert_to=UTCDateTime)
+        self._extra(element, obj)
         return obj
 
     def _amplitude(self, element):
@@ -389,6 +519,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _origin(self, element):
@@ -400,14 +531,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> from lxml import etree
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <origin>
         ...   <latitude><value>34.23</value></latitude>
         ... </origin>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> origin = unpickler._origin(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> origin = unpickler._origin(xml_doc)
         >>> print(origin.latitude)
         34.23
         """
@@ -435,6 +566,7 @@ class Unpickler(object):
         obj.comments = self._comments(element)
         obj.origin_uncertainty = self._origin_uncertainty(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _magnitude(self, element):
@@ -446,14 +578,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> from lxml import etree
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <magnitude>
         ...   <mag><value>3.2</value></mag>
         ... </magnitude>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> magnitude = unpickler._magnitude(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> magnitude = unpickler._magnitude(xml_doc)
         >>> print(magnitude.mag)
         3.2
         """
@@ -473,6 +605,7 @@ class Unpickler(object):
             self._station_magnitude_contributions(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _station_magnitude(self, element):
@@ -484,14 +617,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> from lxml import etree
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <stationMagnitude>
         ...   <mag><value>3.2</value></mag>
         ... </stationMagnitude>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> station_mag = unpickler._station_magnitude(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> station_mag = unpickler._station_magnitude(xml_doc)
         >>> print(station_mag.mag)
         3.2
         """
@@ -507,37 +640,40 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
-    def _axis(self, element, name):
+    def _axis(self, parent, name):
         """
         Converts an etree.Element into an Axis object.
 
-        :type element: etree.Element
-        :type name: tag name of axis
+        :type parent: etree.Element
+        :type name: str
+        :param name: tag name of axis
         :rtype: :class:`~obspy.core.event.Axis`
         """
         obj = Axis()
         try:
-            sub_el = self._xpath(name, element)[0]
-        except:
+            sub_el = self._xpath(name, parent)[0]
+        except IndexError:
             return obj
         # required parameter
         obj.azimuth, obj.azimuth_errors = self._float_value(sub_el, 'azimuth')
         obj.plunge, obj.plunge_errors = self._float_value(sub_el, 'plunge')
         obj.length, obj.length_errors = self._float_value(sub_el, 'length')
+        self._extra(sub_el, obj)
         return obj
 
-    def _principal_axes(self, element):
+    def _principal_axes(self, parent):
         """
         Converts an etree.Element into an PrincipalAxes object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.PrincipalAxes`
         """
         try:
-            sub_el = self._xpath('principalAxes', element)[0]
-        except:
+            sub_el = self._xpath('principalAxes', parent)[0]
+        except IndexError:
             return None
         obj = PrincipalAxes()
         # required parameter
@@ -545,38 +681,41 @@ class Unpickler(object):
         obj.p_axis = self._axis(sub_el, 'pAxis')
         # optional parameter
         obj.n_axis = self._axis(sub_el, 'nAxis')
+        self._extra(sub_el, obj)
         return obj
 
-    def _nodal_plane(self, element, name):
+    def _nodal_plane(self, parent, name):
         """
         Converts an etree.Element into an NodalPlane object.
 
-        :type element: etree.Element
-        :type name: tag name of sub nodal plane
+        :type parent: etree.Element
+        :type name: str
+        :param name: tag name of sub nodal plane
         :rtype: :class:`~obspy.core.event.NodalPlane`
         """
         obj = NodalPlane()
         try:
-            sub_el = self._xpath(name, element)[0]
-        except:
+            sub_el = self._xpath(name, parent)[0]
+        except IndexError:
             return obj
         # required parameter
         obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
         obj.dip, obj.dip_errors = self._float_value(sub_el, 'dip')
         obj.rake, obj.rake_errors = self._float_value(sub_el, 'rake')
+        self._extra(sub_el, obj)
         return obj
 
-    def _nodal_planes(self, element):
+    def _nodal_planes(self, parent):
         """
         Converts an etree.Element into an NodalPlanes object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.NodalPlanes`
         """
         obj = NodalPlanes()
         try:
-            sub_el = self._xpath('nodalPlanes', element)[0]
-        except:
+            sub_el = self._xpath('nodalPlanes', parent)[0]
+        except IndexError:
             return obj
         # optional parameter
         obj.nodal_plane_1 = self._nodal_plane(sub_el, 'nodalPlane1')
@@ -586,19 +725,20 @@ class Unpickler(object):
             obj.preferred_plane = int(sub_el.get('preferredPlane'))
         except:
             obj.preferred_plane = None
+        self._extra(sub_el, obj)
         return obj
 
-    def _source_time_function(self, element):
+    def _source_time_function(self, parent):
         """
         Converts an etree.Element into an SourceTimeFunction object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.SourceTimeFunction`
         """
         obj = SourceTimeFunction()
         try:
-            sub_el = self._xpath('sourceTimeFunction', element)[0]
-        except:
+            sub_el = self._xpath('sourceTimeFunction', parent)[0]
+        except IndexError:
             return obj
         # required parameters
         obj.type = self._xpath2obj('type', sub_el)
@@ -606,19 +746,20 @@ class Unpickler(object):
         # optional parameter
         obj.rise_time = self._xpath2obj('riseTime', sub_el, float)
         obj.decay_time = self._xpath2obj('decayTime', sub_el, float)
+        self._extra(sub_el, obj)
         return obj
 
-    def _tensor(self, element):
+    def _tensor(self, parent):
         """
         Converts an etree.Element into an Tensor object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.Tensor`
         """
         obj = Tensor()
         try:
-            sub_el = self._xpath('tensor', element)[0]
-        except:
+            sub_el = self._xpath('tensor', parent)[0]
+        except IndexError:
             return obj
         # required parameters
         obj.m_rr, obj.m_rr_errors = self._float_value(sub_el, 'Mrr')
@@ -627,40 +768,46 @@ class Unpickler(object):
         obj.m_rt, obj.m_rt_errors = self._float_value(sub_el, 'Mrt')
         obj.m_rp, obj.m_rp_errors = self._float_value(sub_el, 'Mrp')
         obj.m_tp, obj.m_tp_errors = self._float_value(sub_el, 'Mtp')
+        self._extra(sub_el, obj)
         return obj
 
-    def _data_used(self, element):
+    def _data_used(self, parent):
         """
-        Converts an etree.Element into an DataUsed object.
+        Converts an etree.Element into a list of DataUsed objects.
 
-        :type element: etree.Element
-        :rtype: :class:`~obspy.core.event.DataUsed`
+        :type parent: etree.Element
+        :rtype: list of :class:`~obspy.core.event.DataUsed`
         """
-        obj = DataUsed()
-        try:
-            sub_el = self._xpath('dataUsed', element)[0]
-        except:
-            return obj
-        # required parameters
-        obj.wave_type = self._xpath2obj('waveType', sub_el)
-        # optional parameter
-        obj.station_count = self._xpath2obj('stationCount', sub_el, int)
-        obj.component_count = self._xpath2obj('componentCount', sub_el, int)
-        obj.shortest_period = self._xpath2obj('shortestPeriod', sub_el, float)
-        obj.longest_period = self._xpath2obj('longestPeriod', sub_el, float)
+        obj = []
+        for el in self._xpath('dataUsed', parent):
+            data_used = DataUsed()
+            # required parameters
+            data_used.wave_type = self._xpath2obj('waveType', el)
+            # optional parameter
+            data_used.station_count = \
+                self._xpath2obj('stationCount', el, int)
+            data_used.component_count = \
+                self._xpath2obj('componentCount', el, int)
+            data_used.shortest_period = \
+                self._xpath2obj('shortestPeriod', el, float)
+            data_used.longest_period = \
+                self._xpath2obj('longestPeriod', el, float)
+
+            self._extra(el, data_used)
+            obj.append(data_used)
         return obj
 
-    def _moment_tensor(self, element):
+    def _moment_tensor(self, parent):
         """
         Converts an etree.Element into an MomentTensor object.
 
-        :type element: etree.Element
+        :type parent: etree.Element
         :rtype: :class:`~obspy.core.event.MomentTensor`
         """
         obj = MomentTensor(force_resource_id=False)
         try:
-            mt_el = self._xpath('momentTensor', element)[0]
-        except:
+            mt_el = self._xpath('momentTensor', parent)[0]
+        except IndexError:
             return obj
         # required parameters
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
@@ -685,6 +832,7 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(mt_el)
         obj.comments = self._comments(mt_el)
         obj.resource_id = mt_el.get('publicID')
+        self._extra(mt_el, obj)
         return obj
 
     def _focal_mechanism(self, element):
@@ -696,14 +844,14 @@ class Unpickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.util import XMLParser
-        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        >>> from lxml import etree
+        >>> XML = b'''<?xml version="1.0" encoding="UTF-8"?>
         ... <focalMechanism>
         ...   <methodID>smi:ISC/methodID=Best_double_couple</methodID>
         ... </focalMechanism>'''
-        >>> parser = XMLParser(XML)
-        >>> unpickler = Unpickler(parser)
-        >>> fm = unpickler._focal_mechanism(parser.xml_root)
+        >>> xml_doc = etree.fromstring(XML)
+        >>> unpickler = Unpickler(xml_doc)
+        >>> fm = unpickler._focal_mechanism(xml_doc)
         >>> print(fm.method_id)
         smi:ISC/methodID=Best_double_couple
         """
@@ -728,19 +876,23 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.resource_id = element.get('publicID')
+        self._extra(element, obj)
         return obj
 
     def _deserialize(self):
         # check node "quakeml/eventParameters" for global namespace
         try:
-            namespace = self.parser._getFirstChildNamespace()
+            namespace = _get_first_child_namespace(self.xml_root)
             catalog_el = self._xpath('eventParameters', namespace=namespace)[0]
-        except:
+        except IndexError:
             raise Exception("Not a QuakeML compatible file or string")
-        # set default namespace for parser
-        self.parser.namespace = self.parser._getElementNamespace(catalog_el)
+        self._quakeml_namespaces = [
+            ns for ns in self.xml_root.nsmap.values()
+            if ns.startswith(r"http://quakeml.org/xmlns/")]
         # create catalog
         catalog = Catalog(force_resource_id=False)
+        # add any custom namespace abbreviations of root element to Catalog
+        catalog.nsmap = self.xml_root.nsmap.copy()
         # optional catalog attributes
         catalog.description = self._xpath2obj('description', catalog_el)
         catalog.comments = self._comments(catalog_el)
@@ -815,15 +967,78 @@ class Unpickler(object):
                 event.focal_mechanisms.append(fm)
             # finally append newly created event to catalog
             event.resource_id = event_el.get('publicID')
+            self._extra(event_el, event)
             catalog.append(event)
         catalog.resource_id = catalog_el.get('publicID')
+        self._extra(catalog_el, catalog)
         return catalog
+
+    def _extra(self, element, obj):
+        """
+        Add information stored in custom tags/attributes in obj.extra.
+        """
+        # search all namespaces in current scope
+        for ns in element.nsmap.values():
+            # skip the two top-level quakeml namespaces,
+            # we're not interested in quakeml defined tags here
+            if ns in self._quakeml_namespaces:
+                continue
+            # process all elements of this custom namespace, if any
+            for el in element.iterfind("{%s}*" % ns):
+                # remove namespace from tag name
+                _, name = el.tag.split("}")
+                value = el.text
+                try:
+                    extra = obj.setdefault("extra", AttribDict())
+                # Catalog object is not based on AttribDict..
+                except AttributeError:
+                    if not isinstance(obj, Catalog):
+                        raise
+                    if hasattr(obj, "extra"):
+                        extra = obj.extra
+                    else:
+                        extra = AttribDict()
+                        obj.extra = extra
+                extra[name] = {'value': value,
+                               'namespace': '%s' % ns}
+                if el.attrib:
+                    extra[name]['attrib'] = el.attrib
+        # process all attributes of custom namespaces, if any
+        for key, value in element.attrib.items():
+            # no custom namespace
+            if "}" not in key:
+                continue
+            # separate namespace from tag name
+            ns, name = key.lstrip("{").split("}")
+            try:
+                extra = obj.setdefault("extra", AttribDict())
+            # Catalog object is not based on AttribDict..
+            except AttributeError:
+                if not isinstance(obj, Catalog):
+                    raise
+                if hasattr(obj, "extra"):
+                    extra = obj.extra
+                else:
+                    extra = AttribDict()
+                    obj.extra = extra
+            extra[name] = {'value': str(value),
+                           'namespace': '%s' % ns,
+                           'type': 'attribute'}
 
 
 class Pickler(object):
     """
     Serializes an ObsPy Catalog object into QuakeML format.
     """
+    def __init__(self, nsmap=None):
+        # set of namespace urls without given abbreviation
+        self.ns_set = set()
+        # dictionary of namespace/namespace urls
+        self.ns_dict = nsmap
+        if self.ns_dict is None:
+            self.ns_dict = {}
+        self.ns_dict.update(NSMAP_QUAKEML.copy())
+
     def dump(self, catalog, file):
         """
         Writes ObsPy Catalog into given file.
@@ -844,7 +1059,7 @@ class Pickler(object):
         :type catalog: :class:`~obspy.core.event.Catalog`
         :param catalog: ObsPy Catalog object.
         :rtype: str
-        :returns: QuakeML formated string.
+        :returns: QuakeML formatted string.
         """
         return self._serialize(catalog)
 
@@ -854,17 +1069,18 @@ class Pickler(object):
         except:
             return ResourceIdentifier().getQuakeMLURI()
 
-    def _str(self, value, root, tag, always_create=False):
+    def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
             value = value.getQuakeMLURI()
         if always_create is False and value is None:
             return
-        etree.SubElement(root, tag).text = "%s" % (value)
+        etree.SubElement(root, tag, attrib=attrib).text = "%s" % value
 
-    def _bool(self, value, root, tag, always_create=False):
+    def _bool(self, value, root, tag, always_create=False, attrib=None):
         if always_create is False and value is None:
             return
-        etree.SubElement(root, tag).text = str(bool(value)).lower()
+        etree.SubElement(root, tag, attrib=attrib).text = \
+            str(bool(value)).lower()
 
     def _time(self, value, root, tag, always_create=False):
         if always_create is False and value is None:
@@ -918,6 +1134,7 @@ class Pickler(object):
         self._str(creation_info.author_uri, subelement, 'authorURI')
         self._time(creation_info.creation_time, subelement, 'creationTime')
         self._str(creation_info.version, subelement, 'version')
+        self._extra(creation_info, subelement)
         # append only if at least one sub-element is set
         if len(subelement) > 0:
             element.append(subelement)
@@ -933,6 +1150,7 @@ class Pickler(object):
             if contrib.residual:
                 etree.SubElement(contrib_el, 'residual').text = \
                     str(contrib.residual)
+            self._extra(contrib, contrib_el)
             element.append(contrib_el)
 
     def _comments(self, comments, element):
@@ -943,7 +1161,52 @@ class Pickler(object):
             comment_el = etree.Element('comment', attrib=attrib)
             etree.SubElement(comment_el, 'text').text = comment.text
             self._creation_info(comment.creation_info, comment_el)
+            self._extra(comment, comment_el)
             element.append(comment_el)
+
+    def _extra(self, obj, element):
+        """
+        Add information stored in obj.extra as custom tags/attributes in
+        non-quakeml namespace.
+        """
+        if not hasattr(obj, "extra"):
+            return
+        for key, item in obj.extra.items():
+            value = item["value"]
+            ns = item["namespace"]
+            attrib = item.get("attrib", {})
+            type_ = item.get("type", "element")
+            self._add_namespace(ns)
+            tag = "{%s}%s" % (ns, key)
+            # add either as subelement or attribute
+            if type_.lower() in ("attribute", "attrib"):
+                element.attrib[tag] = str(value)
+            elif type_.lower() == "element":
+                if isinstance(value, bool):
+                    self._bool(value, element, tag, attrib=attrib)
+                else:
+                    self._str(value, element, tag, attrib=attrib)
+            else:
+                msg = ("Invalid 'type' for custom QuakeML item: '%s'. "
+                       "Should be either 'element' or 'attribute' or "
+                       "left empty.") % type_
+                raise ValueError(msg)
+
+    def _get_namespace_map(self):
+        nsmap = self.ns_dict.copy()
+        _i = 0
+        for ns in self.ns_set:
+            if ns in nsmap.values():
+                continue
+            ns_abbrev = "ns%d" % _i
+            while ns_abbrev in nsmap:
+                _i += 1
+                ns_abbrev = "ns%d" % _i
+            nsmap[ns_abbrev] = ns
+        return nsmap
+
+    def _add_namespace(self, ns):
+        self.ns_set.add(ns)
 
     def _arrival(self, arrival):
         """
@@ -974,6 +1237,7 @@ class Pickler(object):
         self._str(arrival.earth_model_id, element, 'earthModelID')
         self._comments(arrival.comments, element)
         self._creation_info(arrival.creation_info, element)
+        self._extra(arrival, element)
         return element
 
     def _magnitude(self, magnitude):
@@ -987,11 +1251,13 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Magnitude
-        >>> from obspy.core.util import tostring as _tostring
+        >>> from lxml.etree import tostring
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tostring(el, encoding="utf-8",
+        ...                xml_declaration=True).decode()) \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
@@ -1010,6 +1276,7 @@ class Pickler(object):
             magnitude.station_magnitude_contributions, element)
         self._comments(magnitude.comments, element)
         self._creation_info(magnitude.creation_info, element)
+        self._extra(magnitude, element)
         return element
 
     def _station_magnitude(self, magnitude):
@@ -1023,11 +1290,13 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import StationMagnitude
-        >>> from obspy.core.util import tostring as _tostring
+        >>> from lxml.etree import tostring
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tostring(el, encoding="utf-8",
+        ...       xml_declaration=True).decode()) \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
@@ -1043,6 +1312,7 @@ class Pickler(object):
         self._waveform_id(magnitude.waveform_id, element)
         self._comments(magnitude.comments, element)
         self._creation_info(magnitude.creation_info, element)
+        self._extra(magnitude, element)
         return element
 
     def _origin(self, origin):
@@ -1056,11 +1326,13 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Origin
-        >>> from obspy.core.util import tostring as _tostring
+        >>> from lxml.etree import tostring
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(tostring(el, encoding="utf-8",
+        ...                xml_declaration=True).decode()) \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
         """
@@ -1088,6 +1360,7 @@ class Pickler(object):
             self._value(ctime.hour, ctime.hour_errors, ct_el, 'hour')
             self._value(ctime.minute, ctime.minute_errors, ct_el, 'minute')
             self._value(ctime.second, ctime.second_errors, ct_el, 'second')
+            self._extra(ctime, ct_el)
             if len(ct_el) > 0:
                 element.append(ct_el)
         # quality
@@ -1108,6 +1381,7 @@ class Pickler(object):
             self._str(qu.minimum_distance, qu_el, 'minimumDistance')
             self._str(qu.maximum_distance, qu_el, 'maximumDistance')
             self._str(qu.median_distance, qu_el, 'medianDistance')
+            self._extra(qu, qu_el)
             if len(qu_el) > 0:
                 element.append(qu_el)
         self._str(origin.origin_type, element, 'type')
@@ -1142,15 +1416,18 @@ class Pickler(object):
                 self._str(ce.major_axis_plunge, ce_el, 'majorAxisPlunge')
                 self._str(ce.major_axis_azimuth, ce_el, 'majorAxisAzimuth')
                 self._str(ce.major_axis_rotation, ce_el, 'majorAxisRotation')
+                self._extra(ce, ce_el)
                 # add confidence ellipsoid to origin uncertainty only if set
                 if len(ce_el) > 0:
                     ou_el.append(ce_el)
+            self._extra(ou, ou_el)
             # add origin uncertainty to origin only if anything is set
             if len(ou_el) > 0:
                 element.append(ou_el)
         # arrivals
         for ar in origin.arrivals:
             element.append(self._arrival(ar))
+        self._extra(origin, element)
         return element
 
     def _time_window(self, time_window, element):
@@ -1158,6 +1435,7 @@ class Pickler(object):
         self._time(time_window.reference, el, 'reference')
         self._str(time_window.begin, el, 'begin')
         self._str(time_window.end, el, 'end')
+        self._extra(time_window, element)
         element.append(el)
 
     def _amplitude(self, amp):
@@ -1191,6 +1469,7 @@ class Pickler(object):
         self._str(amp.evaluation_status, element, 'evaluationStatus')
         self._comments(amp.comments, element)
         self._creation_info(amp.creation_info, element)
+        self._extra(amp, element)
         return element
 
     def _pick(self, pick):
@@ -1220,6 +1499,7 @@ class Pickler(object):
         self._str(pick.evaluation_status, element, 'evaluationStatus')
         self._comments(pick.comments, element)
         self._creation_info(pick.creation_info, element)
+        self._extra(pick, element)
         return element
 
     def _nodal_planes(self, obj, element):
@@ -1239,6 +1519,7 @@ class Pickler(object):
                         obj.nodal_plane_1.dip_errors, el, 'dip')
             self._value(obj.nodal_plane_1.rake,
                         obj.nodal_plane_1.rake_errors, el, 'rake')
+            self._extra(obj.nodal_plane_1, el)
             subelement.append(el)
         if obj.nodal_plane_2:
             el = etree.Element('nodalPlane2')
@@ -1248,10 +1529,12 @@ class Pickler(object):
                         obj.nodal_plane_2.dip_errors, el, 'dip')
             self._value(obj.nodal_plane_2.rake,
                         obj.nodal_plane_2.rake_errors, el, 'rake')
+            self._extra(obj.nodal_plane_2, el)
             subelement.append(el)
         if obj.preferred_plane:
             subelement.attrib['preferredPlane'] = str(obj.preferred_plane)
         # append only if at least one sub-element is set
+        self._extra(obj, subelement)
         if len(subelement) > 0:
             element.append(subelement)
 
@@ -1273,6 +1556,7 @@ class Pickler(object):
                     obj.t_axis.plunge_errors, el, 'plunge')
         self._value(obj.t_axis.length,
                     obj.t_axis.length_errors, el, 'length')
+        self._extra(obj.t_axis, el)
         subelement.append(el)
         # pAxis
         el = etree.Element('pAxis')
@@ -1282,6 +1566,7 @@ class Pickler(object):
                     obj.p_axis.plunge_errors, el, 'plunge')
         self._value(obj.p_axis.length,
                     obj.p_axis.length_errors, el, 'length')
+        self._extra(obj.p_axis, el)
         subelement.append(el)
         # nAxis (optional)
         if obj.n_axis:
@@ -1292,7 +1577,9 @@ class Pickler(object):
                         obj.n_axis.plunge_errors, el, 'plunge')
             self._value(obj.n_axis.length,
                         obj.n_axis.length_errors, el, 'length')
+            self._extra(obj.n_axis, el)
             subelement.append(el)
+        self._extra(obj, subelement)
         element.append(subelement)
 
     def _moment_tensor(self, moment_tensor, element):
@@ -1311,14 +1598,14 @@ class Pickler(object):
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
         # optional parameter
         # Data Used
-        if moment_tensor.data_used:
+        for sub in moment_tensor.data_used:
             sub_el = etree.Element('dataUsed')
-            sub = moment_tensor.data_used
             self._str(sub.wave_type, sub_el, 'waveType')
             self._str(sub.station_count, sub_el, 'stationCount')
             self._str(sub.component_count, sub_el, 'componentCount')
             self._str(sub.shortest_period, sub_el, 'shortestPeriod')
             self._str(sub.longest_period, sub_el, 'longestPeriod')
+            self._extra(sub, sub_el)
             mt_el.append(sub_el)
         self._str(moment_tensor.moment_magnitude_id,
                   mt_el, 'momentMagnitudeID')
@@ -1334,6 +1621,7 @@ class Pickler(object):
             self._value(sub.m_rt, sub.m_rt_errors, sub_el, 'Mrt')
             self._value(sub.m_rp, sub.m_rp_errors, sub_el, 'Mrp')
             self._value(sub.m_tp, sub.m_tp_errors, sub_el, 'Mtp')
+            self._extra(sub, sub_el)
             mt_el.append(sub_el)
         self._str(moment_tensor.variance, mt_el, 'variance')
         self._str(moment_tensor.variance_reduction, mt_el, 'varianceReduction')
@@ -1350,12 +1638,14 @@ class Pickler(object):
             self._str(sub.duration, sub_el, 'duration')
             self._str(sub.rise_time, sub_el, 'riseTime')
             self._str(sub.decay_time, sub_el, 'decayTime')
+            self._extra(sub, sub_el)
             mt_el.append(sub_el)
         self._str(moment_tensor.method_id, mt_el, 'MethodID')
         self._str(moment_tensor.category, mt_el, 'category')
         self._str(moment_tensor.inversion_type, mt_el, 'inversionType')
         self._comments(moment_tensor.comments, mt_el)
         self._creation_info(moment_tensor.creation_info, mt_el)
+        self._extra(moment_tensor, mt_el)
         element.append(mt_el)
 
     def _focal_mechanism(self, focal_mechanism):
@@ -1390,24 +1680,20 @@ class Pickler(object):
                   'evaluationStatus')
         self._comments(focal_mechanism.comments, element)
         self._creation_info(focal_mechanism.creation_info, element)
+        self._extra(focal_mechanism, element)
         return element
 
     def _serialize(self, catalog, pretty_print=True):
         """
         Converts a Catalog object into XML string.
         """
-        root_el = etree.Element(
-            '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
-            attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
-        catalog_el = etree.Element(
-            'eventParameters',
-            attrib={'publicID': self._id(catalog.resource_id)})
+        catalog_el = etree.Element('eventParameters', attrib={'publicID':
+                                   self._id(catalog.resource_id)})
         # optional catalog parameters
         if catalog.description:
             self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)
         self._creation_info(catalog.creation_info, catalog_el)
-        root_el.append(catalog_el)
         for event in catalog:
             # create event node
             event_el = etree.Element(
@@ -1433,6 +1719,7 @@ class Pickler(object):
                 el = etree.Element('description')
                 self._str(description.text, el, 'text', True)
                 self._str(description.type, el, 'type')
+                self._extra(description, el)
                 event_el.append(el)
             self._comments(event.comments, event_el)
             self._creation_info(event.creation_info, event_el)
@@ -1454,9 +1741,16 @@ class Pickler(object):
             # focal mechanisms
             for focal_mechanism in event.focal_mechanisms:
                 event_el.append(self._focal_mechanism(focal_mechanism))
+            self._extra(event, event_el)
             # add event node to catalog
             catalog_el.append(event_el)
-        return tostring(root_el, pretty_print=pretty_print)
+        self._extra(catalog, catalog_el)
+        nsmap = self._get_namespace_map()
+        root_el = etree.Element('{%s}quakeml' % NSMAP_QUAKEML['q'],
+                                nsmap=nsmap)
+        root_el.append(catalog_el)
+        return etree.tostring(root_el, pretty_print=pretty_print,
+                              encoding="utf-8", xml_declaration=True)
 
 
 def readQuakeML(filename):
@@ -1476,7 +1770,7 @@ def readQuakeML(filename):
 
     >>> from obspy.core.event import readEvents
     >>> cat = readEvents('/path/to/iris_events.xml')
-    >>> print cat
+    >>> print(cat)
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
     2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
@@ -1484,7 +1778,7 @@ def readQuakeML(filename):
     return Unpickler().load(filename)
 
 
-def writeQuakeML(catalog, filename, validate=False,
+def writeQuakeML(catalog, filename, validate=False, nsmap=None,
                  **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
@@ -1496,23 +1790,29 @@ def writeQuakeML(catalog, filename, validate=False,
 
     :type catalog: :class:`~obspy.core.stream.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: string or open file-like object
+    :type filename: str or file
     :param filename: Filename to write or open file-like object.
-    :type validate: Boolean, optional
+    :type validate: bool, optional
     :param validate: If True, the final QuakeML file will be validated against
         the QuakeML schema file. Raises an AssertionError if the validation
         fails.
+    :type nsmap: dict, optional
+    :param nsmap: Additional custom namespace abbreviation mappings
+        (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
-    xml_doc = Pickler().dumps(catalog)
+    nsmap_ = getattr(catalog, "nsmap", {})
+    if nsmap:
+        nsmap_.update(nsmap)
+    xml_doc = Pickler(nsmap=nsmap_).dumps(catalog)
 
-    if validate is True and not _validate(StringIO.StringIO(xml_doc)):
+    if validate is True and not _validate(io.BytesIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, "write"):
         file_opened = True
-        fh = open(filename, "wt")
+        fh = open(filename, "wb")
     else:
         file_opened = False
         fh = filename
@@ -1529,12 +1829,13 @@ def readSeisHubEventXML(filename):
     Reads a single SeisHub event XML file and returns an ObsPy Catalog object.
     """
     # XXX: very ugly way to add new root tags without parsing
-    lines = open(filename, 'rt').readlines()
-    lines.insert(2, '<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
-    lines.insert(3, '  <eventParameters>')
-    lines.append('  </eventParameters>\n')
-    lines.append('</quakeml>\n')
-    temp = StringIO.StringIO(''.join(lines))
+    lines = open(filename, 'rb').readlines()
+    lines.insert(2,
+                 b'<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
+    lines.insert(3, b'  <eventParameters>')
+    lines.append(b'  </eventParameters>\n')
+    lines.append(b'</quakeml>\n')
+    temp = io.BytesIO(b''.join(lines))
     return readQuakeML(temp)
 
 
@@ -1565,9 +1866,9 @@ def _validate(xml_file, verbose=False):
 
     # Pretty error printing if the validation fails.
     if verbose and valid is not True:
-        print "Error validating QuakeML file:"
+        print("Error validating QuakeML file:")
         for entry in relaxng.error_log:
-            print "\t%s" % entry
+            print("\t%s" % entry)
     return valid
 
 

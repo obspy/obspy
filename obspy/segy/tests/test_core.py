@@ -2,19 +2,24 @@
 """
 The obspy.segy core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import os
+import unittest
+from struct import unpack
 
 import numpy as np
+
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.segy.core import isSEGY, readSEGY, writeSEGY, SEGYCoreWritingError
-from obspy.segy.core import SEGYSampleIntervalError
-from obspy.segy.core import isSU, readSU, writeSU
-from obspy.segy.segy import SEGYError
+from obspy.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
+                             isSEGY, isSU, readSEGY, readSU, writeSEGY,
+                             writeSU)
 from obspy.segy.segy import readSEGY as readSEGYInternal
-from obspy.segy.tests.header import FILES, DTYPES
-import os
-from struct import unpack
-import unittest
+from obspy.segy.segy import SEGYError
+from obspy.segy.tests.header import DTYPES, FILES
 
 
 class SEGYCoreTestCase(unittest.TestCase):
@@ -71,13 +76,13 @@ class SEGYCoreTestCase(unittest.TestCase):
         # readSEGY
         file = os.path.join(self.path, '1.sgy_first_trace')
         st = readSEGY(file, headonly=True)
-        self.assertEquals(st[0].stats.npts, 8000)
-        self.assertEquals(len(st[0].data), 0)
+        self.assertEqual(st[0].stats.npts, 8000)
+        self.assertEqual(len(st[0].data), 0)
         # readSU
         file = os.path.join(self.path, '1.su_first_trace')
         st = readSU(file, headonly=True)
-        self.assertEquals(st[0].stats.npts, 8000)
-        self.assertEquals(len(st[0].data), 0)
+        self.assertEqual(st[0].stats.npts, 8000)
+        self.assertEqual(len(st[0].data), 0)
 
     def test_enforcingTextualHeaderEncodingWhileReading(self):
         """
@@ -88,20 +93,20 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = readSEGY(file, textual_header_encoding='EBCDIC')
-        self.assertTrue(st1.stats.textual_file_header[3:21]
-                        == 'CLIENT: LITHOPROBE')
+        self.assertTrue(st1.stats.textual_file_header[3:21] ==
+                        b'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
         self.assertEqual(st1.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = readSEGY(file, textual_header_encoding='ascii')
-        self.assertFalse(st2.stats.textual_file_header[3:21]
-                         == 'CLIENT: LITHOPROBE')
+        self.assertFalse(st2.stats.textual_file_header[3:21] ==
+                         b'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
-        # Autodection should also write the textual file header encoding to the
-        # stats dictionary.
+        # Autodetection should also write the textual file header encoding to
+        # the stats dictionary.
         st3 = readSEGY(file)
         self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')
@@ -165,21 +170,21 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = readSEGY(file)
         data = st[0].data
         # All working encodings with corresponding dtypes.
-        encodings = {1: 'float32',
-                     2: 'int32',
-                     3: 'int16',
-                     5: 'float32'}
+        encodings = {1: np.float32,
+                     2: np.int32,
+                     3: np.int16,
+                     5: np.float32}
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
-            for data_encoding, dtype in encodings.iteritems():
+            for data_encoding, dtype in encodings.items():
                 this_data = np.require(data.copy(), dtype)
                 st[0].data = this_data
                 writeSEGY(st, out_file, data_encoding=data_encoding)
                 # Read again and compare data.
                 this_stream = readSEGY(out_file)
                 # Both should now be equal. Usually converting from IBM to IEEE
-                # floating point numbers might result in small rouning errors
+                # floating point numbers might result in small rounding errors
                 # but in this case it seems to work. Might be different on
                 # different computers.
                 np.testing.assert_array_equal(this_data, this_stream[0].data)
@@ -193,7 +198,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         st = readSEGY(file)
         # Use float64 as the wrong encoding in every case.
-        st[0].data = np.require(st[0].data, 'float64')
+        st[0].data = np.require(st[0].data, np.float64)
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
@@ -285,7 +290,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         obspy.segy.tests.test_segy, is correct and compared all values to it.
         This seems to be the easiest way to test everything.
         """
-        for file, _ in self.files.iteritems():
+        for file, _ in self.files.items():
             file = os.path.join(self.path, file)
             # Read the file with the internal SEGY representation.
             segy_file = readSEGYInternal(file)
@@ -309,11 +314,11 @@ class SEGYCoreTestCase(unittest.TestCase):
                              st.stats.data_encoding)
             # Test the file and trace binary headers.
             for key, value in \
-                    segy_file.binary_file_header.__dict__.iteritems():
+                    segy_file.binary_file_header.__dict__.items():
                 self.assertEqual(getattr(st.stats.binary_file_header,
                                  key), value)
             for key, value in \
-                    segy_file.traces[0].header.__dict__.iteritems():
+                    segy_file.traces[0].header.__dict__.items():
                 self.assertEqual(getattr(st[0].stats.segy.trace_header, key),
                                  value)
 
@@ -324,7 +329,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         files using the internal SEGY object which is thoroughly tested in
         obspy.segy.tests.test_segy.
         """
-        for file, _ in self.files.iteritems():
+        for file, _ in self.files.items():
             file = os.path.join(self.path, file)
             # Read the file with the internal SEGY representation.
             segy_file = readSEGYInternal(file)
@@ -439,7 +444,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         st = read()
         del st[1:]
-        st[0].data = np.require(st[0].data, 'float32')
+        st[0].data = np.require(st[0].data, np.float32)
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             st.write(outfile, format='SU')
@@ -496,7 +501,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         with open(file, 'rb') as f:
             f.seek(3600 + 156, 0)
             date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('>5h', date_time)
+        year, julday, hour, minute, second = unpack(b'>5h', date_time)
         self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
                           second == 54], 5 * [True])
         # Read and set zero time.
@@ -509,7 +514,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 f.seek(3600 + 156, 0)
                 date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('>5h', date_time)
+        year, julday, hour, minute, second = unpack(b'>5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
         # The same for SU.
@@ -518,7 +523,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         with open(file, 'rb') as f:
             f.seek(156, 0)
             date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('<5h', date_time)
+        year, julday, hour, minute, second = unpack(b'<5h', date_time)
         self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
                           second == 54], 5 * [True])
         # Read and set zero time.
@@ -531,7 +536,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 f.seek(156, 0)
                 date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('<5h', date_time)
+        year, julday, hour, minute, second = unpack(b'<5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
 

@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy import Trace, read
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
-from pkg_resources import load_entry_point
-import StringIO
-import cStringIO
-import numpy as np
+import io
 import os
 import threading
 import time
 import unittest
 import warnings
 from copy import deepcopy
+
+from pkg_resources import load_entry_point
+import numpy as np
+
+from obspy import Trace, read
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -51,11 +55,15 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
+                    if format == 'SAC' and byteorder == '=':
+                        # SAC file format enforces '<' or '>'
+                        # byteorder on writing
+                        continue
                     # new trace object in native byte order
-                    dt = np.dtype("int").newbyteorder(native_byteorder)
+                    dt = np.dtype(np.int_).newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
                         # MiniSEED and GSE2 cannot write int64, enforce type
-                        dt = "int32"
+                        dt = np.int32
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
                     tr.stats.station = "MANZ1"
@@ -78,40 +86,28 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         st = read(outfile, format=format)
                         self.assertEqual(len(st), 1)
                         self.assertEqual(st[0].stats._format, format)
-                        # read in using a StringIO instances, skip Q files as
+                        # read in using a BytesIO instances, skip Q files as
                         # it needs multiple files
                         if format not in ['Q']:
                             # file handler without format
-                            temp = open(outfile, 'rb')
-                            st = read(temp)
+                            with open(outfile, 'rb') as fp:
+                                st = read(fp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # file handler with format
-                            temp = open(outfile, 'rb')
-                            st = read(temp, format=format)
+                            with open(outfile, 'rb') as fp:
+                                st = read(fp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
-                            # StringIO without format
-                            temp = StringIO.StringIO(
-                                open(outfile, 'rb').read())
+                            # BytesIO without format
+                            with open(outfile, 'rb') as fp:
+                                temp = io.BytesIO(fp.read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
-                            # StringIO with format
-                            temp = StringIO.StringIO(
-                                open(outfile, 'rb').read())
-                            st = read(temp, format=format)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
-                            # cStringIO without format
-                            temp = cStringIO.StringIO(
-                                open(outfile, 'rb').read())
-                            st = read(temp)
-                            self.assertEqual(len(st), 1)
-                            self.assertEqual(st[0].stats._format, format)
-                            # cStringIO with format
-                            temp = cStringIO.StringIO(
-                                open(outfile, 'rb').read())
+                            # BytesIO with format
+                            with open(outfile, 'rb') as fp:
+                                temp = io.BytesIO(fp.read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
@@ -121,7 +117,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             os.remove(outfile[:-4] + '.QBN')
                             os.remove(outfile[:-4] + '.QHD')
                     # check byte order
-                    self.assertEqual(st[0].data.dtype.byteorder, '=')
+                    if format == 'SAC':
+                        # SAC format preserves byteorder on writing
+                        self.assertTrue(st[0].data.dtype.byteorder
+                                        in ('=', byteorder))
+                    else:
+                        self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
                     if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
@@ -146,7 +147,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         modules for false positives.
         """
         formats_ep = _getEntryPoints('obspy.plugin.waveform', 'isFormat')
-        formats = formats_ep.values()
+        formats = list(formats_ep.values())
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
@@ -199,9 +200,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
 
-            dt = np.dtype("int")
+            dt = np.int_
             if format in ('MSEED', 'GSE2'):
-                dt = "int32"
+                dt = np.int32
             tr = Trace(data=data.astype(dt))
             tr.stats.network = "BW"
             tr.stats.station = "MANZ1"
@@ -218,30 +219,43 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     outfile += '.QHD'
                 n_threads = 30
                 streams = []
+                timeout = 120
+                if 'TRAVIS' in os.environ:
+                    timeout = 570  # 30 seconds under Travis' limit
+                cond = threading.Condition()
 
-                def testFunction(streams):
+                def testFunction(streams, cond):
                     st = read(outfile, format=format)
                     streams.append(st)
+                    with cond:
+                        cond.notify()
                 # Read the ten files at one and save the output in the just
                 # created class.
-                for _i in xrange(n_threads):
+                our_threads = []
+                for _i in range(n_threads):
                     thread = threading.Thread(target=testFunction,
-                                              args=(streams,))
+                                              args=(streams, cond))
                     thread.start()
+                    our_threads.append(thread)
+                our_threads = set(our_threads)
                 # Loop until all threads are finished.
                 start = time.time()
                 while True:
-                    if threading.activeCount() == 1:
+                    with cond:
+                        cond.wait(1)
+                    remaining_threads = set(threading.enumerate())
+                    if len(remaining_threads & our_threads) == 0:
                         break
-                    # Avoid infinite loop and leave after 120 seconds
-                    # such a long time is needed for debugging with valgrind
-                    elif time.time() - start >= 120:  # pragma: no cover
-                        msg = 'Not all threads finished!'
+                    # Avoid infinite loop and leave after some time; such a
+                    # long time is needed for debugging with valgrind or Travis
+                    elif time.time() - start >= timeout:  # pragma: no cover
+                        msg = 'Not all threads finished after %d seconds!' % (
+                            timeout)
                         raise Warning(msg)
                 # Compare all values which should be identical and clean up
                 # files
-                #for data in :
-                #    np.testing.assert_array_equal(values, original)
+                for st in streams:
+                    np.testing.assert_array_equal(st[0].data, tr.data)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
@@ -258,7 +272,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
-        data = np.arange(10, dtype='int32')
+        data = np.arange(10, dtype=np.int32)
         # make array non-contiguous
         data = data[::2]
         tr = Trace(data=data)
@@ -331,13 +345,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         Test case for issue #338:
         """
-        tmpfile = NamedTemporaryFile().name
-        # create empty file
-        open(tmpfile, 'wb').close()
-        # using format keyword
-        self.assertRaises(TypeError, read, tmpfile)
-        # cleanup
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # create empty file
+            open(tmpfile, 'wb').close()
+            # using format keyword
+            self.assertRaises(TypeError, read, tmpfile)
 
     def test_deepcopy(self):
         """
@@ -361,22 +374,22 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             stream = deepcopy(stream_orig)
             # set some data
-            dt = 'f4'
+            dt = np.float32
             if format in ('GSE2', 'MSEED'):
-                dt = 'i4'
+                dt = np.int32
             for tr in stream:
                 tr.data = np.arange(tr.stats.npts).astype(dt)
-            tmpfile = NamedTemporaryFile().name
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                stream.write(format=format, filename=tmpfile)
-            st = read(tmpfile, format=format)
+            with NamedTemporaryFile() as tf:
+                tmpfile = tf.name
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    stream.write(format=format, filename=tmpfile)
+                st = read(tmpfile, format=format)
             st.sort()
             st_deepcopy = deepcopy(st)
             st_deepcopy.sort()
             msg = "Error in wavform format=%s" % format
-            self.assertEquals(str(st), str(st_deepcopy), msg=msg)
-            os.remove(tmpfile)
+            self.assertEqual(str(st), str(st_deepcopy), msg=msg)
 
 
 def suite():

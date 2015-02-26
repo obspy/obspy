@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
+from obspy import UTCDateTime
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString
-from obspy import UTCDateTime
 
 
 class Blockette010(Blockette):

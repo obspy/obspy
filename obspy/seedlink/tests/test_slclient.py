@@ -2,10 +2,15 @@
 """
 The obspy.seedlink.slclient test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import unittest
+
 from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
 from obspy.seedlink.slclient import SLClient
-import unittest
 
 
 class SLClientTestCase(unittest.TestCase):

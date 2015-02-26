@@ -1,30 +1,32 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
-    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
-from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIf
-from obspy.core.util.xmlwrapper import LXML_ETREE
-from xml.etree.ElementTree import tostring, fromstring
-import StringIO
-import difflib
+import io
 import math
 import os
 import unittest
 import warnings
 
+from lxml import etree
+
+from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
+                              MomentTensor, Origin, Pick, ResourceIdentifier,
+                              Tensor, WaveformStreamID, readEvents)
+from obspy.core.quakeml import Pickler, readQuakeML, writeQuakeML
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import compare_xml_strings
+
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
-try:
-    from lxml.etree import __version__
-    version = float(__version__.rsplit('.', 1)[0])
-    if version >= 2.3:
-        IS_RECENT_LXML = True
-except:
-    pass
+version = float(etree.__version__.rsplit('.', 1)[0])
+if version >= 2.3:
+    IS_RECENT_LXML = True
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -36,30 +38,6 @@ class QuakeMLTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.neries_filename = os.path.join(self.path, 'neries_events.xml')
         self.neries_catalog = readQuakeML(self.neries_filename)
-
-    def _compareStrings(self, doc1, doc2):
-        """
-        Simple helper function to compare two XML strings.
-        """
-        obj1 = fromstring(doc1)
-        obj2 = fromstring(doc2)
-        str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
-        str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
-        # when xml is used instead of old lxml in obspy.core.util.xmlwrapper
-        # there is no pretty_print option and we get a string without line
-        # breaks, so we have to allow for that in the test
-        if not LXML_ETREE:
-            str1 = "".join(str1)
-            str2 = "".join(str2)
-
-        unified_diff = difflib.unified_diff(str1, str2)
-        has_error = False
-        for line in unified_diff:  # pragma: no cover
-            has_error = True
-            print line
-        if has_error:  # pragma: no cover
-            msg = "Strings are not equal."
-            raise AssertionError(msg)
 
     def test_readQuakeML(self):
         """
@@ -145,9 +123,10 @@ class QuakeMLTestCase(unittest.TestCase):
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_origin(self):
         """
@@ -245,9 +224,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c.semi_major_axis_length, 0.123)
         self.assertEqual(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_magnitude(self):
         """
@@ -289,9 +269,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.creation_info.creation_time, None)
         self.assertEqual(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_stationmagnitudecontribution(self):
         """
@@ -322,9 +303,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(stat_contrib.residual, 0.11)
 
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_stationmagnitude(self):
         """
@@ -359,9 +341,52 @@ class QuakeMLTestCase(unittest.TestCase):
                              resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
+
+    def test_data_used_in_moment_tensor(self):
+        """
+        Tests the data used objects in moment tensors.
+        """
+        filename = os.path.join(self.path, 'quakeml_1.2_data_used.xml')
+
+        # Test reading first.
+        catalog = readQuakeML(filename)
+        event = catalog[0]
+
+        self.assertTrue(len(event.focal_mechanisms), 2)
+        # First focmec contains only one data used element.
+        self.assertEqual(
+            len(event.focal_mechanisms[0].moment_tensor.data_used), 1)
+        du = event.focal_mechanisms[0].moment_tensor.data_used[0]
+        self.assertEqual(du.wave_type, "body waves")
+        self.assertEqual(du.station_count, 88)
+        self.assertEqual(du.component_count, 166)
+        self.assertEqual(du.shortest_period, 40.0)
+        # Second contains three. focmec contains only one data used element.
+        self.assertEqual(
+            len(event.focal_mechanisms[1].moment_tensor.data_used), 3)
+        du = event.focal_mechanisms[1].moment_tensor.data_used
+        self.assertEqual(du[0].wave_type, "body waves")
+        self.assertEqual(du[0].station_count, 88)
+        self.assertEqual(du[0].component_count, 166)
+        self.assertEqual(du[0].shortest_period, 40.0)
+        self.assertEqual(du[1].wave_type, "surface waves")
+        self.assertEqual(du[1].station_count, 96)
+        self.assertEqual(du[1].component_count, 189)
+        self.assertEqual(du[1].shortest_period, 50.0)
+        self.assertEqual(du[2].wave_type, "mantle waves")
+        self.assertEqual(du[2].station_count, 41)
+        self.assertEqual(du[2].component_count, 52)
+        self.assertEqual(du[2].shortest_period, 125.0)
+
+        # exporting back to XML should result in the same document
+        with open(filename, "rt") as fp:
+            original = fp.read()
+        processed = Pickler().dumps(catalog)
+        compare_xml_strings(original, processed)
 
     def test_arrival(self):
         """
@@ -394,9 +419,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(ar.comments), 1)
         self.assertEqual(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_pick(self):
         """
@@ -431,9 +457,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(pick.comments), 2)
         self.assertEqual(pick.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_focalmechanism(self):
         """
@@ -524,9 +551,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
         self.assertAlmostEqual(mt.clvd, 0.22)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rb") as fp:
+            original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_writeQuakeML(self):
         """
@@ -571,26 +599,24 @@ class QuakeMLTestCase(unittest.TestCase):
         If obspy.core.event will ever be more loosely coupled to QuakeML this
         test WILL HAVE to be changed.
         """
-        # Currently only works with lxml.
-        try:
-            from lxml.etree import parse
-        except ImportError:
-            return
+        from lxml.etree import parse
+
         xsd_enum_definitions = {}
         xsd_file = os.path.join(
             self.path, "..", "..", "docs", "QuakeML-BED-1.2.xsd")
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
-        for stype in root.findall("xs:simpleType", namespaces=root.nsmap):
+        nsmap = dict((k, v) for k, v in root.nsmap.items() if k is not None)
+        for stype in root.findall("xs:simpleType", namespaces=nsmap):
             type_name = stype.get("name")
-            restriction = stype.find("xs:restriction", namespaces=root.nsmap)
+            restriction = stype.find("xs:restriction", namespaces=nsmap)
             if restriction is None:
                 continue
             if restriction.get("base") != "xs:string":
                 continue
             enums = restriction.findall(
-                "xs:enumeration", namespaces=root.nsmap)
+                "xs:enumeration", namespaces=nsmap)
             if not enums:
                 continue
             enums = [_i.get("value") for _i in enums]
@@ -609,7 +635,7 @@ class QuakeMLTestCase(unittest.TestCase):
             enum_values = [_i.lower() for _i in module_item.keys()]
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
-        for enum_name, enum_items in xsd_enum_definitions.iteritems():
+        for enum_name, enum_items in xsd_enum_definitions.items():
             self.assertTrue(enum_name in all_enums.keys())
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
@@ -633,7 +659,9 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Test reading a QuakeML string/unicode object via readEvents.
         """
-        data = open(self.neries_filename, 'rt').read()
+        with open(self.neries_filename, 'rb') as fp:
+            data = fp.read()
+
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 
@@ -683,7 +711,7 @@ class QuakeMLTestCase(unittest.TestCase):
                            depth=depth, resource_id=ResourceIdentifier())
         ev.origins.append(ev_origin)
 
-        # populte event moment tensor
+        # populate event moment tensor
         ev_tensor = Tensor(m_rr=mrr, m_tt=mtt, m_pp=mpp, m_rt=mtr, m_rp=mpr,
                            m_tp=mtp)
 
@@ -703,7 +731,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # write QuakeML file
         cat = Catalog(events=[ev])
-        memfile = StringIO.StringIO()
+        memfile = io.BytesIO()
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)
@@ -785,7 +813,6 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(amp.time_window.reference,
                          UTCDateTime("2007-10-10T14:40:39.055"))
 
-    @skipIf(not LXML_ETREE, "lxml too old to run this test.")
     def test_write_amplitude_time_window(self):
         """
         Tests writing an QuakeML Amplitude with TimeWindow.
@@ -804,27 +831,126 @@ class QuakeMLTestCase(unittest.TestCase):
                 lines = fh.readlines()
 
             firstline = 45
-            while "<amplitude " not in lines[firstline]:
+            while b"<amplitude " not in lines[firstline]:
                 firstline += 1
 
             got = [lines[i_].strip()
-                   for i_ in xrange(firstline, firstline + 13)]
+                   for i_ in range(firstline, firstline + 13)]
             expected = [
-                '<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
-                'amplitude/1/modified">',
-                '<genericAmplitude>',
-                '<value>1e-08</value>',
-                '</genericAmplitude>',
-                '<type>A</type>',
-                '<category>point</category>',
-                '<unit>m/s</unit>',
-                '<timeWindow>',
-                '<reference>2007-10-10T14:40:39.055000Z</reference>',
-                '<begin>0.0</begin>',
-                '<end>0.51424</end>',
-                '</timeWindow>',
-                '</amplitude>']
+                b'<amplitude publicID="smi:nz.org.geonet/event/2806038g/'
+                b'amplitude/1/modified">',
+                b'<genericAmplitude>',
+                b'<value>1e-08</value>',
+                b'</genericAmplitude>',
+                b'<type>A</type>',
+                b'<category>point</category>',
+                b'<unit>m/s</unit>',
+                b'<timeWindow>',
+                b'<reference>2007-10-10T14:40:39.055000Z</reference>',
+                b'<begin>0.0</begin>',
+                b'<end>0.51424</end>',
+                b'</timeWindow>',
+                b'</amplitude>']
             self.assertEqual(got, expected)
+
+    def test_write_with_extra_tags_and_read(self):
+        """
+        Tests that a QuakeML file with additional custom "extra" tags gets
+        written correctly and that when reading it again the extra tags are
+        parsed correctly.
+        """
+        filename = os.path.join(self.path, "quakeml_1.2_origin.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        # add some custom tags to first event:
+        #  - tag with explicit namespace but no explicit ns abbreviation
+        #  - tag without explicit namespace (gets obspy default ns)
+        #  - tag with explicit namespace and namespace abbreviation
+        my_extra = AttribDict(
+            {'public': {'value': False,
+                        'namespace': r"http://some-page.de/xmlns/1.0",
+                        'attrib': {u"some_attrib": u"some_value",
+                                   u"another_attrib": u"another_value"}},
+             'custom': {'value': u"True",
+                        'namespace': r'http://test.org/xmlns/0.1'},
+             'new_tag': {'value': 1234,
+                         'namespace': r"http://test.org/xmlns/0.1"},
+             'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z'),
+                    'namespace': r'http://test.org/xmlns/0.1'},
+             'dataid': {'namespace': r'http://anss.org/xmlns/catalog/0.1',
+                        'type': 'attribute', 'value': '00999999'}})
+        nsmap = {"ns0": r"http://test.org/xmlns/0.1",
+                 "catalog": r'http://anss.org/xmlns/catalog/0.1'}
+        cat[0].extra = my_extra.copy()
+        # insert a pick with an extra field
+        p = Pick()
+        p.extra = {'weight': {'value': 2,
+                              'namespace': r"http://test.org/xmlns/0.1"}}
+        cat[0].picks.append(p)
+
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write file
+            cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
+            # check contents
+            with open(tmpfile, "rb") as fh:
+                # enforce reproducible attribute orders through write_c14n
+                obj = etree.fromstring(fh.read()).getroottree()
+                buf = io.BytesIO()
+                obj.write_c14n(buf)
+                buf.seek(0, 0)
+                content = buf.read()
+            # check namespace definitions in root element
+            expected = [b'<q:quakeml',
+                        b'xmlns:catalog="http://anss.org/xmlns/catalog/0.1"',
+                        b'xmlns:ns0="http://test.org/xmlns/0.1"',
+                        b'xmlns:ns1="http://some-page.de/xmlns/1.0"',
+                        b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
+                        b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
+            for line in expected:
+                self.assertTrue(line in content)
+            # check additional tags
+            expected = [
+                b'<ns0:custom>True</ns0:custom>',
+                b'<ns0:new_tag>1234</ns0:new_tag>',
+                b'<ns0:tX>2013-01-02T13:12:14.600000Z</ns0:tX>',
+                b'<ns1:public '
+                b'another_attrib="another_value" '
+                b'some_attrib="some_value">false</ns1:public>'
+            ]
+            for line in expected:
+                self.assertTrue(line in content)
+            # now, read again to test if it's parsed correctly..
+            cat = readQuakeML(tmpfile)
+        # when reading..
+        #  - namespace abbreviations should be disregarded
+        #  - we always end up with a namespace definition, even if it was
+        #    omitted when originally setting the custom tag
+        #  - custom namespace abbreviations should attached to Catalog
+        self.assertTrue(hasattr(cat[0], "extra"))
+
+        def _tostr(x):
+            if isinstance(x, bool):
+                if x:
+                    return str("true")
+                else:
+                    return str("false")
+            return str(x)
+
+        for key, value in my_extra.items():
+            my_extra[key]['value'] = _tostr(value['value'])
+        self.assertEqual(cat[0].extra, my_extra)
+        self.assertTrue(hasattr(cat[0].picks[0], "extra"))
+        self.assertEqual(
+            cat[0].picks[0].extra,
+            {'weight': {'value': '2',
+                        'namespace': r'http://test.org/xmlns/0.1'}})
+        self.assertTrue(hasattr(cat, "nsmap"))
+        self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])
 
 
 def suite():

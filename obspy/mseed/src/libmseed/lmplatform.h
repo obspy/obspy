@@ -18,7 +18,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2012.138
+ * modified: 2014.074
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H

@@ -12,19 +12,26 @@ and should be removed once the datacenters are fully standard compliant.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime
-from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
-    DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from collections import defaultdict
-from lxml import etree
+import io
 import warnings
+from collections import defaultdict
+
+from lxml import etree
+
+from obspy import UTCDateTime
+from obspy.fdsn.header import (DEFAULT_DATASELECT_PARAMETERS,
+                               DEFAULT_EVENT_PARAMETERS,
+                               DEFAULT_STATION_PARAMETERS, DEFAULT_TYPES,
+                               WADL_PARAMETERS_NOT_TO_BE_PARSED)
 
 
 class WADLParser(object):
     def __init__(self, wadl_string):
-        doc = etree.fromstring(wadl_string)
+        doc = etree.parse(io.BytesIO(wadl_string)).getroot()
         self.nsmap = doc.nsmap
         self._ns = self.nsmap.get(None, None)
         self.parameters = {}
@@ -58,7 +65,7 @@ class WADLParser(object):
         # list of special cases for different WADLs is not a good solution.
         all_parameters = defaultdict(list)
 
-        # Group the parameters by the 'id' attribute of the greatparents tag.
+        # Group the parameters by the 'id' attribute of the grandparents tag.
         # The 'name' tag will always be 'GET' due to the construction of the
         # xpath expression.
         for param in parameters:
@@ -73,7 +80,7 @@ class WADLParser(object):
         # that have query in them. If all of that fails but an empty "id"
         # attribute is available, choose that.
         else:
-            for key in all_parameters.iterkeys():
+            for key in all_parameters.keys():
                 if "query" in key and "auth" not in key:
                     parameters = all_parameters[key]
                     break

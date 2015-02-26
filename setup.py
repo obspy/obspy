@@ -36,16 +36,40 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
-from numpy.distutils.core import setup
-from numpy.distutils.misc_util import Configuration
-from numpy.distutils.ccompiler import get_default_compiler
+try:
+    import future  # @UnusedImport # NOQA
+except:
+    msg = ("No module named future. Please install future first, it is needed "
+           "before installing ObsPy.")
+    raise ImportError(msg)
 
+import sys
+if sys.version_info[0] == 2:
+    try:
+        from mock import patch  # PY2
+    except:
+        msg = ("No module named mock. Please install mock first, it is needed "
+               "before installing ObsPy.")
+        raise ImportError(msg)
+else:
+    from unittest.mock import patch
+
+import ctypes
+import fnmatch
 import glob
 import inspect
-import fnmatch
 import os
 import platform
-import sys
+from distutils.dep_util import newer
+from distutils.util import change_root
+
+from numpy.distutils.core import DistutilsSetupError, setup
+from numpy.distutils.ccompiler import get_default_compiler
+from numpy.distutils.command.build import build
+from numpy.distutils.command.build_ext import build_ext
+from numpy.distutils.command.install import install
+from numpy.distutils.exec_command import exec_command, find_executable
+from numpy.distutils.misc_util import Configuration
 
 
 # Directory of the current file in the (hopefully) most reliable way
@@ -57,7 +81,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from misc import _get_lib_name  # @UnresolvedImport
+from libnames import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -65,11 +89,15 @@ DOCSTRING = __doc__.split("\n")
 
 # check for MSVC
 if platform.system() == "Windows" and (
-        'msvc' in sys.argv or '-c' not in sys.argv and get_default_compiler()
-        == 'msvc'):
+        'msvc' in sys.argv or
+        '-c' not in sys.argv and
+        get_default_compiler() == 'msvc'):
     IS_MSVC = True
 else:
     IS_MSVC = False
+
+# Use system libraries? Set later...
+EXTERNAL_LIBS = False
 
 # package specific settings
 KEYWORDS = [
@@ -77,28 +105,38 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
-    'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NERA', 'NERIES', 'observatory', 'ORFEUS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
-    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
+    'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
+    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
+    'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology', 'seismogram', 'seismograms', 'signal', 'slink',
+    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
+    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
+    'web service', 'Winston', 'XML-SEED', 'XSEED']
+
 INSTALL_REQUIRES = [
-    'numpy>1.0.0',
-    'scipy',
+    'future>=0.12.4',
+    'numpy>1.4.0',
+    'scipy>=0.7.2',
     'matplotlib',
     'lxml',
-    'sqlalchemy',
-    'suds>=0.4.0']
+    'sqlalchemy']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2',
-              'nose',
-              'mock']}
+    'tests': ['flake8>=2', 'pyimgur'],
+    'arclink': ['m2crypto'],
+    'neries': ['suds-jurko']}
+# PY2
+if sys.version_info[0] == 2:
+    INSTALL_REQUIRES.append('mock')
+# Add argparse for Python 2.6. stdlib package for Python >= 2.7
+if sys.version_info[:2] == (2, 6):
+    INSTALL_REQUIRES.append('argparse')
+
 ENTRY_POINTS = {
     'console_scripts': [
+        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.core.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
         'obspy-print = obspy.core.scripts.print:main',
@@ -111,15 +149,20 @@ ENTRY_POINTS = {
         'obspy-xseed2dataless = obspy.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.xseed.scripts.dataless2resp:main',
     ],
+    'distutils.commands': [
+        'build_man = Help2Man'
+    ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.core.ascii',
         'SLIST = obspy.core.ascii',
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
+        'KINEMETRICS_EVT = obspy.kinemetrics.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
+        'PDAS = obspy.pdas.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
         'Y = obspy.y.core',
@@ -130,6 +173,7 @@ ENTRY_POINTS = {
         'Q = obspy.sh.core',
         'SH_ASC = obspy.sh.core',
         'WAV = obspy.wav.core',
+        'AH = obspy.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.core.ascii:isTSPAIR',
@@ -154,6 +198,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
     ],
+    'obspy.plugin.waveform.KINEMETRICS_EVT': [
+        'isFormat = obspy.kinemetrics.core:is_evt',
+        'readFormat = obspy.kinemetrics.core:read_evt',
+    ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',
         'readFormat = obspy.gse2.core:readGSE1',
@@ -167,6 +215,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.mseed.core:isMSEED',
         'readFormat = obspy.mseed.core:readMSEED',
         'writeFormat = obspy.mseed.core:writeMSEED',
+    ],
+    'obspy.plugin.waveform.PDAS': [
+        'isFormat = obspy.pdas.core:isPDAS',
+        'readFormat = obspy.pdas.core:readPDAS',
     ],
     'obspy.plugin.waveform.SAC': [
         'isFormat = obspy.sac.core:isSAC',
@@ -215,10 +267,19 @@ ENTRY_POINTS = {
         'isFormat = obspy.y.core:isY',
         'readFormat = obspy.y.core:readY',
     ],
+    'obspy.plugin.waveform.AH': [
+        'isFormat = obspy.ah.core:is_AH',
+        'readFormat = obspy.ah.core:read_AH',
+    ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
+        'ZMAP = obspy.zmap.core',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
+        'NDK = obspy.ndk.core',
+        'NLLOC_HYP = obspy.nlloc.core',
+        'NLLOC_OBS = obspy.nlloc.core',
+        'CNV = obspy.cnv.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -232,13 +293,40 @@ ENTRY_POINTS = {
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
     ],
+    'obspy.plugin.event.ZMAP': [
+        'isFormat = obspy.zmap.core:isZmap',
+        'readFormat = obspy.zmap.core:readZmap',
+        'writeFormat = obspy.zmap.core:writeZmap',
+    ],
+    'obspy.plugin.event.CNV': [
+        'writeFormat = obspy.cnv.core:write_CNV',
+    ],
+    'obspy.plugin.event.NDK': [
+        'isFormat = obspy.ndk.core:is_ndk',
+        'readFormat = obspy.ndk.core:read_ndk',
+        ],
+    'obspy.plugin.event.NLLOC_HYP': [
+        'isFormat = obspy.nlloc.core:is_nlloc_hyp',
+        'readFormat = obspy.nlloc.core:read_nlloc_hyp',
+        ],
+    'obspy.plugin.event.NLLOC_OBS': [
+        'writeFormat = obspy.nlloc.core:write_nlloc_obs',
+        ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
+        'SACPZ = obspy.sac.sacpz',
+        'CSS = obspy.css.station',
     ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.station.stationxml:is_StationXML',
         'readFormat = obspy.station.stationxml:read_StationXML',
         'writeFormat = obspy.station.stationxml:write_StationXML',
+    ],
+    'obspy.plugin.inventory.SACPZ': [
+        'writeFormat = obspy.sac.sacpz:write_SACPZ',
+    ],
+    'obspy.plugin.inventory.CSS': [
+        'writeFormat = obspy.css.station:writeCSS',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
@@ -249,6 +337,12 @@ ENTRY_POINTS = {
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
     ],
+    'obspy.plugin.integrate': [
+        'cumtrapz = '
+        'obspy.signal.differentiate_and_integrate:integrate_cumtrapz',
+        'spline = '
+        'obspy.signal.differentiate_and_integrate:integrate_spline',
+    ],
     'obspy.plugin.filter': [
         'bandpass = obspy.signal.filter:bandpass',
         'bandstop = obspy.signal.filter:bandstop',
@@ -258,11 +352,10 @@ ENTRY_POINTS = {
         'lowpassFIR = obspy.signal.filter:lowpassFIR',
         'remezFIR = obspy.signal.filter:remezFIR',
     ],
-    'obspy.plugin.integrate': [
-        'trapz = scipy.integrate:trapz',
-        'cumtrapz = scipy.integrate:cumtrapz',
-        'simps = scipy.integrate:simps',
-        'romb = scipy.integrate:romb',
+    'obspy.plugin.interpolate': [
+        'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
+        'weighted_average_slopes = '
+        'obspy.signal.interpolation:weighted_average_slopes',
     ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
@@ -304,6 +397,11 @@ ENTRY_POINTS = {
         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
+# PY3: rename entry points for executable scripts to "obspy3-..."
+if sys.version_info[0] == 3:
+    ENTRY_POINTS['console_scripts'] = [
+        string.replace("obspy", "obspy3", 1)
+        for string in ENTRY_POINTS['console_scripts']]
 
 
 def find_packages():
@@ -320,39 +418,21 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    # support library paths containing spaces
-    def _library_dir_option(self, dir):
-        return '"/LIBPATH:%s"' % (dir)
-
+    import distutils
     from distutils.msvc9compiler import MSVCCompiler
-    MSVCCompiler.library_dir_option = _library_dir_option
+
+    # for Python 2.x only -> support library paths containing spaces
+    if distutils.__version__.startswith('2.'):
+        def _library_dir_option(self, dir):
+            return '/LIBPATH:"%s"' % (dir)
+
+        MSVCCompiler.library_dir_option = _library_dir_option
 
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):
         return ext.export_symbols
     from distutils.command.build_ext import build_ext
     build_ext.get_export_symbols = _get_export_symbols
-
-    # tau shared library has to be compiled with gfortran directly
-    def link(self, _target_desc, objects, output_filename,
-             *args, **kwargs):  # @UnusedVariable
-        # check if 'tau' library is linked
-        if 'tau' not in output_filename:
-            # otherwise just use the original link method
-            return self.original_link(_target_desc, objects, output_filename,
-                                      *args, **kwargs)
-        if '32' in platform.architecture()[0]:
-            taupargs = ["-m32"]
-        else:
-            taupargs = ["-m64"]
-        # ignoring all f2py objects
-        objects = objects[2:]
-        self.spawn(['gfortran.exe'] +
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] +
-                   taupargs + objects + ["-o", output_filename])
-
-    MSVCCompiler.original_link = MSVCCompiler.link
-    MSVCCompiler.link = link
 
 
 # helper function for collecting export symbols from .def files
@@ -361,9 +441,32 @@ def export_symbols(*path):
     return [s.strip() for s in lines if s.strip() != '']
 
 
+# adds --with-system-libs command-line option if possible
+def add_features():
+    if 'setuptools' not in sys.modules:
+        return {}
+
+    class ExternalLibFeature(setuptools.Feature):
+        def include_in(self, dist):
+            global EXTERNAL_LIBS
+            EXTERNAL_LIBS = True
+
+        def exclude_from(self, dist):
+            global EXTERNAL_LIBS
+            EXTERNAL_LIBS = False
+
+    return {
+        'system-libs': ExternalLibFeature(
+            'use of system C libraries',
+            standard=False,
+            EXTERNAL_LIBS=True
+        )
+    }
+
+
 def configuration(parent_package="", top_path=None):
     """
-    Config function mainly used to compile C and Fortran code.
+    Config function mainly used to compile C code.
     """
     config = Configuration("", parent_package, top_path)
 
@@ -375,12 +478,14 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
-    config.add_extension(_get_lib_name("gse2"), files, **kwargs)
+    config.add_extension(_get_lib_name("gse2", add_extension_suffix=False),
+                         files, **kwargs)
 
     # LIBMSEED
     path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
-    files = glob.glob(os.path.join(path, "libmseed", "*.c"))
-    files.append(os.path.join(path, "obspy-readbuffer.c"))
+    files = [os.path.join(path, "obspy-readbuffer.c")]
+    if not EXTERNAL_LIBS:
+        files += glob.glob(os.path.join(path, "libmseed", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -394,7 +499,10 @@ def configuration(parent_package="", top_path=None):
         # workaround Win32 and MSVC - see issue #64
         if '32' in platform.architecture()[0]:
             kwargs['extra_compile_args'] = ["/fp:strict"]
-    config.add_extension(_get_lib_name("mseed"), files, **kwargs)
+    if EXTERNAL_LIBS:
+        kwargs['libraries'] = ['mseed']
+    config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SEGY
     path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
@@ -404,7 +512,8 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
-    config.add_extension(_get_lib_name("segy"), files, **kwargs)
+    config.add_extension(_get_lib_name("segy", add_extension_suffix=False),
+                         files, **kwargs)
 
     # SIGNAL
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
@@ -414,11 +523,15 @@ def configuration(parent_package="", top_path=None):
     if IS_MSVC:
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
-    config.add_extension(_get_lib_name("signal"), files, **kwargs)
+    config.add_extension(_get_lib_name("signal", add_extension_suffix=False),
+                         files, **kwargs)
 
     # EVALRESP
     path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
-    files = glob.glob(os.path.join(path, "evalresp", "*.c"))
+    if EXTERNAL_LIBS:
+        files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
+    else:
+        files = glob.glob(os.path.join(path, "evalresp", "*.c"))
     # compiler specific options
     kwargs = {}
     if IS_MSVC:
@@ -426,32 +539,21 @@ def configuration(parent_package="", top_path=None):
         kwargs['define_macros'] = [('WIN32', '1')]
         # get export symbols
         kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
-    config.add_extension(_get_lib_name("evresp"), files, **kwargs)
+    if EXTERNAL_LIBS:
+        kwargs['libraries'] = ['evresp']
+    config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
+                         files, **kwargs)
 
-    # TAUP
+    # TAU
     path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau")
-    files = glob.glob(os.path.join(path, "*.f"))
+    files = [os.path.join(path, "inner_tau_loops.c")]
     # compiler specific options
-    kwargs = {'libraries': []}
-    # XXX: The build subdirectory is difficult to determine if installed
-    # via pypi or other means. I could not find a reliable way of doing it.
-    new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
-    interface_file = os.path.join(path, "_libtau.pyf")
-    with open(interface_file, "r") as open_file:
-        interface_file = open_file.read()
-    # In the original .pyf file the library is called _libtau.
-    interface_file = interface_file.replace("_libtau", libname)
-    if not os.path.exists("build"):
-        os.mkdir("build")
-    with open(new_interface_path, "w") as open_file:
-        open_file.write(interface_file)
-    files.insert(0, new_interface_path)
-    # we do not need this when linking with gcc, only when linking with
-    # gfortran the option -lgcov is required
-    if os.environ.get('OBSPY_C_COVERAGE', ""):
-        kwargs['libraries'].append('gcov')
-    config.add_extension(libname, files, **kwargs)
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
+    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
+                         files, **kwargs)
 
     add_data_files(config)
 
@@ -464,7 +566,7 @@ def add_data_files(config):
     """
     # python files are included per default, we only include data files
     # here
-    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf']
+    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf', '.git*']
     EXCLUDE_DIRS = ['src', '__pycache__']
     common_prefix = SETUP_DIRECTORY + os.path.sep
     for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
@@ -476,6 +578,114 @@ def add_data_files(config):
         for folder in EXCLUDE_DIRS:
             if folder in dirs:
                 dirs.remove(folder)
+
+
+# Auto-generate man pages from --help output
+class Help2ManBuild(build):
+    description = "Run help2man on scripts to produce man pages"
+
+    def finalize_options(self):
+        build.finalize_options(self)
+        self.help2man = find_executable('help2man')
+        if not self.help2man:
+            raise DistutilsSetupError('Building man pages requires help2man.')
+
+    def run(self):
+        mandir = os.path.join(self.build_base, 'man')
+        self.mkpath(mandir)
+
+        from pkg_resources import iter_entry_points
+        for entrypoint in iter_entry_points(group='console_scripts'):
+            if not entrypoint.module_name.startswith('obspy'):
+                continue
+
+            output = os.path.join(mandir, entrypoint.name + '.1')
+            print('Generating %s ...' % (output))
+            exec_command([self.help2man,
+                          '--no-info', '--no-discard-stderr',
+                          '--output', output,
+                          '"%s -m %s"' % (sys.executable,
+                                          entrypoint.module_name)])
+
+
+class Help2ManInstall(install):
+    description = 'Install man pages generated by help2man'
+    user_options = install.user_options + [
+        ('manprefix=', None, 'MAN Prefix Path')
+    ]
+
+    def initialize_options(self):
+        self.manprefix = None
+        install.initialize_options(self)
+
+    def finalize_options(self):
+        if self.manprefix is None:
+            self.manprefix = os.path.join('share', 'man')
+        install.finalize_options(self)
+
+    def run(self):
+        if not self.skip_build:
+            self.run_command('build_man')
+
+        srcdir = os.path.join(self.build_base, 'man')
+        mandir = os.path.join(self.install_base, self.manprefix, 'man1')
+        if self.root is not None:
+            mandir = change_root(self.root, mandir)
+        self.mkpath(mandir)
+        self.copy_tree(srcdir, mandir)
+
+
+class BuildExtAndTauPy(build_ext):
+    def build_taup_models(self):
+        """
+        Builds the obspy.taup models during install time. This is needed as the
+        models are pickled Python classes which are not compatible across
+        Python versions.
+        """
+        obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
+        model_input = os.path.join(obspy_taup_path, "taup", "data")
+
+        model_path = os.path.join('obspy', 'taup', 'data', 'models')
+        for path, files in self.distribution.data_files:
+            if path == model_path:
+                dist_models = files
+                break
+        else:
+            dist_models = []
+            self.distribution.data_files.append((model_path, dist_models))
+
+        libname = _get_lib_name('tau', add_extension_suffix=True)
+        libpath = os.path.join(os.curdir if self.inplace else self.build_lib,
+                               'obspy', 'lib', libname)
+        taulib = ctypes.CDLL(libpath)
+
+        sys.path.insert(0, obspy_taup_path)
+        with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+            from taup.taup_create import TauP_Create
+            from taup.utils import _get_model_filename
+
+        for model in glob.glob(os.path.join(model_input, "*.tvel")):
+            output_filename = _get_model_filename(model)
+            dist_models.append(os.path.relpath(output_filename,
+                                               SETUP_DIRECTORY))
+
+            if not newer(model, output_filename) and not self.force:
+                print("obspy.taup model '%s' already exists. To rebuild, "
+                      "please delete the existing version or build with "
+                      "--force." % (output_filename, ))
+                sys.stdout.flush()
+                continue
+            print("Building obspy.taup model for '%s' ..." % (model, ))
+            sys.stdout.flush()
+            if not self.dry_run:
+                mod_create = TauP_Create(input_filename=model,
+                                         output_filename=output_filename)
+                mod_create.loadVMod()
+                mod_create.run()
+
+    def run(self):
+        build_ext.run(self)
+        self.build_taup_models()
 
 
 def setupPackage():
@@ -499,6 +709,12 @@ def setupPackage():
                 'Lesser General Public License (LGPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 2.6',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.3',
+            'Programming Language :: Python :: 3.4',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
@@ -507,12 +723,18 @@ def setupPackage():
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
+        features=add_features(),
         # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"
                       "#egg=obspy=dev"),
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
+        cmdclass={
+            'build_ext': BuildExtAndTauPy,
+            'build_man': Help2ManBuild,
+            'install_man': Help2ManInstall
+        },
         configuration=configuration)
 
 
@@ -538,4 +760,10 @@ if __name__ == '__main__':
                 os.remove(filename)
             except:
                 pass
-    setupPackage()
+        path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
+        try:
+            shutil.rmtree(path)
+        except:
+            pass
+    else:
+        setupPackage()

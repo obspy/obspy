@@ -1,10 +1,40 @@
 # -*- coding: utf-8 -*-
-import numpy as np
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
 import ctypes as C
+
+import numpy as np
+
 from obspy.signal.headers import clibevresp
 
 
 clibevresp.twoPi = 3.141
+
+ENUM_ERROR_CODES = {
+    2: (IOError, 'Open file error'),
+    3: (Exception, 'RE compilation failed'),
+    4: (Exception, 'Merge error'),  # Unused
+    5: (Exception, 'Swap failed'),
+    6: (Exception, 'Usage error'),  # Should not happen
+    7: (ValueError, 'Bad out units'),
+    -1: (MemoryError, 'Out of memory'),
+    -2: (Exception, 'Non existent field'),  # Unused
+    -3: (ValueError, 'Undefined prefix'),
+    -4: (ValueError, 'Parse error'),
+    -5: (ValueError, 'Illegal RESP format'),
+    -6: (ValueError, 'Undef sepstr'),
+    -7: (IOError, 'Unrecognized file type'),
+    -8: (EOFError, 'Unexpected EOF'),
+    -9:  (IndexError, 'Array bounds exceeded'),
+    -10: (ValueError, 'Improper data type'),
+    -11: (NotImplementedError, 'Unsupported file type'),
+    -12: (ValueError, 'Illegal filter specification'),
+    -13: (IndexError, 'No stage matched'),
+    -14: (NotImplementedError, 'Unrecognized units')
+}
 
 ENUM_UNITS = {
     "UNDEF_UNITS": 0,
@@ -34,7 +64,6 @@ ENUM_FILT_TYPES = {
     "FIR_COEFFS": 12,
     "IIR_COEFFS": 13
 }
-
 
 ENUM_STAGE_TYPES = {
     "UNDEF_STAGE": 0,
@@ -132,7 +161,7 @@ class blkt(C.Structure):
 blkt._fields_ = [
     ("type", C.c_int),
     ("blkt_info", blkt_info_union),
-    #("blkt_info", pole_zeroType),
+    # ("blkt_info", pole_zeroType),
     ("next_blkt", C.POINTER(blkt))
 ]
 
@@ -191,34 +220,37 @@ channel._fields_ = [
 ]
 
 
-# void calc_resp(struct channel *chan, double *freq, int nfreqs,
-#                struct complex *output,
-#                char *out_units, int start_stage, int stop_stage,
-#                int useTotalSensitivityFlag)
-clibevresp.calc_resp.argtypes = [
+clibevresp.curr_file = C.c_char_p.in_dll(clibevresp, 'curr_file')
+
+
+# int _obspy_calc_resp(struct channel *chan, double *freq, int nfreqs,
+#                      struct complex *output,
+#                      char *out_units, int start_stage, int stop_stage,
+#                      int useTotalSensitivityFlag)
+clibevresp._obspy_calc_resp.argtypes = [
     C.POINTER(channel),
-    np.ctypeslib.ndpointer(dtype='float64',  # freqs
+    np.ctypeslib.ndpointer(dtype=np.float64,  # freqs
                            ndim=1,
-                           flags='C_CONTIGUOUS'),
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int,
-    np.ctypeslib.ndpointer(dtype='complex128',  # output
+    np.ctypeslib.ndpointer(dtype=np.complex128,  # output
                            ndim=1,
-                           flags='C_CONTIGUOUS'),
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_char_p,
     C.c_int,
     C.c_int,
     C.c_int]
-clibevresp.calc_resp.restype = C.c_void_p
+clibevresp._obspy_calc_resp.restype = C.c_int
 
 
-# void check_channel(struct channel *chan)
-clibevresp.check_channel.argtypes = [C.POINTER(channel)]
-clibevresp.check_channel.restype = C.c_void_p
+# int _obspy_check_channel(struct channel *chan)
+clibevresp._obspy_check_channel.argtypes = [C.POINTER(channel)]
+clibevresp._obspy_check_channel.restype = C.c_int
 
 
-#void norm_resp(struct channel *chan, int start_stage, int stop_stage)
-clibevresp.norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
-clibevresp.norm_resp.restype = C.c_void_p
+# int _obspy_norm_resp(struct channel *chan, int start_stage, int stop_stage)
+clibevresp._obspy_norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
+clibevresp._obspy_norm_resp.restype = C.c_int
 
 
 # Only useful for debugging thus not officially included as every import of
@@ -226,6 +258,6 @@ clibevresp.norm_resp.restype = C.c_void_p
 # void print_chan(struct channel *chan, int start_stage, int stop_stage,
 #                 int stdio_flag, int listinterp_out_flag,
 #                 int listinterp_in_flag, int useTotalSensitivityFlag)
-#clibevresp.print_chan.argtypes = [C.POINTER(channel), C.c_int, C.c_int,
+# clibevresp.print_chan.argtypes = [C.POINTER(channel), C.c_int, C.c_int,
 #                                  C.c_int, C.c_int, C.c_int, C.c_int]
-#clibevresp.print_chan.restype = C.c_void_p
+# clibevresp.print_chan.restype = C.c_void_p

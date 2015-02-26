@@ -3,13 +3,18 @@
 """
 The tf_misfit test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
-    tfpg, teg, feg, fpg, tpg, tfeg, tpm
-from scipy.signal import hilbert
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+from scipy.signal import hilbert
+
+from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
+                                    tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
 
 
 class TfTestCase(unittest.TestCase):
@@ -40,10 +45,12 @@ class TfTestCase(unittest.TestCase):
         t = np.linspace(0., tmax, npts)
         f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-        H = lambda t: (np.sign(t) + 1) / 2
+        def H(t):
+            return (np.sign(t) + 1) / 2
 
-        S1 = lambda t: A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
-            np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
+        def S1(t):
+            return A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
+                np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         # generate analytical signal (hilbert transform) and add phase shift
         s1h = hilbert(S1(t))
@@ -51,8 +58,9 @@ class TfTestCase(unittest.TestCase):
             np.abs(s1h) * np.exp(np.angle(s1h) * 1j + ps * np.pi * 1j))
 
         # signal with amplitude error
-        S1a = lambda t: A1a * (t - t1) * np.exp(-2 * (t - t1)) * \
-            np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
+        def S1a(t):
+            return A1a * (t - t1) * np.exp(-2 * (t - t1)) * \
+                np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         self.S1 = S1
         self.s1p = s1p
@@ -119,14 +127,16 @@ class TfTestCase(unittest.TestCase):
                         atol=np.abs(PM_11p_ref).max() * tol + atol_min))
 
         # keeping the save commands in case the files need to be updated
-        #np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TFPM_11p.dat', TFPM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TEM_11p.dat', TEM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FEM_11p.dat', FEM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FPM_11p.dat', FPM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TPM_11p.dat', TPM_11p, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFPM_11p.dat', TFPM_11p,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TEM_11p.dat', TEM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FEM_11p.dat', FEM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FPM_11p.dat', FPM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TPM_11p.dat', TPM_11p, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
     def test_envelope_misfit(self):
         """
@@ -180,14 +190,16 @@ class TfTestCase(unittest.TestCase):
                         atol=np.abs(PM_11a_ref).max() * tol + atol_min))
 
         # keeping the save commands in case the files need to be updated
-        #np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TFPM_11a.dat', TFPM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TEM_11a.dat', TEM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FEM_11a.dat', FEM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'FPM_11a.dat', FPM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'TPM_11a.dat', TPM_11a, fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
-        #np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TFPM_11a.dat', TFPM_11a,
+        #            fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TEM_11a.dat', TEM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FEM_11a.dat', FEM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'FPM_11a.dat', FPM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'TPM_11a.dat', TPM_11a, fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
+        # np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
 
     def test_envelope_gof(self):
         """

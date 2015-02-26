@@ -2,17 +2,20 @@
 """
 The obspy.imaging.waveform test suite.
 """
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core.stream import read
-from obspy.core.util import AttribDict
-from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
-from obspy.core.util.base import getMatplotlibVersion
-import numpy as np
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import os
 import unittest
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.event import readEvents
+from obspy.core.stream import read
+from obspy.core.util import AttribDict
+from obspy.core.util.testing import ImageComparison
 
 
 class WaveformTestCase(unittest.TestCase):
@@ -103,7 +106,6 @@ class WaveformTestCase(unittest.TestCase):
         st += self._createStream(start + 10, start + 20, 10.0)
         self.assertRaises(Exception, st.plot)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotOneHourManySamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -119,7 +121,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotOneHourFewSamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -133,7 +134,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotSimpleGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -149,7 +149,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotSimpleGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -165,7 +164,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotComplexGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -187,7 +185,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotComplexGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -209,52 +206,41 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotMultipleTraces(self):
         """
         Plots multiple traces underneath.
         """
-        reltol = 1
-        if [1, 0, 0] < MATPLOTLIB_VERSION < [1, 2, 0]:
-            reltol = 20
         # 1 trace
         st = read()[1]
-        with ImageComparison(self.path, 'waveform_1_trace.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_1_trace.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 3 traces
         st = read()
-        with ImageComparison(self.path, 'waveform_3_traces.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_3_traces.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 5 traces
         st = st[1] * 5
-        with ImageComparison(self.path, 'waveform_5_traces.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_5_traces.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 10 traces
         st = st[1] * 10
-        with ImageComparison(self.path, 'waveform_10_traces.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_10_traces.png') as ic:
             st.plot(outfile=ic.name, automerge=False)
         # 10 traces - huge numbers
         st = st[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data * 10 ** i
-        with ImageComparison(self.path, 'waveform_10_traces_huge.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_10_traces_huge.png') as ic:
             st.plot(outfile=ic.name, automerge=False, equal_scale=False)
         # 10 traces - tiny numbers
         st = st[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data / (10 ** i)
-        with ImageComparison(self.path, 'waveform_10_traces_tiny.png',
-                             reltol=reltol) as ic:
+        with ImageComparison(self.path, 'waveform_10_traces_tiny.png') as ic:
             st.plot(outfile=ic.name, automerge=False, equal_scale=False)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotWithLabels(self):
         """
         Plots with labels.
@@ -268,7 +254,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_labels.png') as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotBinningError(self):
         """
         Tests the plotting of a trace with a certain amount of sampling that
@@ -284,7 +269,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_binning_error_2.png') as ic:
             tr.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotDefaultSection(self):
         """
         Tests plotting 10 in a section
@@ -292,13 +276,13 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = Stream()
         for _i in range(10):
-            st += self._createStream(start, start + 3600, 100)
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
             st[-1].stats.distance = _i * 10e3
         # create and compare image
         with ImageComparison(self.path, 'waveform_default_section.png') as ic:
             st.plot(outfile=ic.name, type='section')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotAzimSection(self):
         """
         Tests plotting 10 in a azimuthal distant section
@@ -314,6 +298,94 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_azim_section.png') as ic:
             st.plot(outfile=ic.name, type='section', dist_degree=True,
                     ev_coord=(0.0, 0.0))
+
+    def test_plotRefTimeSection(self):
+        """
+        Tests plotting 10 in a section with alternate reference time
+        """
+        start = UTCDateTime(0)
+        reftime = start + 600
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+        # create and compare image
+        with ImageComparison(self.path, 'waveform_reftime_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', reftime=reftime)
+
+    def test_plotDefaultRelative(self):
+        """
+        Plots one hour, starting Jan 1970, with a relative scale.
+        """
+        start = UTCDateTime(0)
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_default_relative.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='relative')
+
+    def test_plotRefTimeRelative(self):
+        """
+        Plots one hour, starting Jan 1970, with a relative scale.
+
+        The reference time is at 300 seconds after the start.
+        """
+        start = UTCDateTime(0)
+        ref = UTCDateTime(300)
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_reftime_relative.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='relative', reftime=ref)
+
+    def test_plotDayPlot(self):
+        '''
+        Plots day plot, starting Jan 1970.
+        '''
+        start = UTCDateTime(0)
+        st = self._createStream(start, start + 3 * 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5)
+
+    def test_plotDayPlotExplicitEvent(self):
+        '''
+        Plots day plot, starting Jan 1970, with several events.
+        '''
+        start = UTCDateTime(0)
+        event1 = UTCDateTime(30)       # Event: Top left; Note: below right
+        event2 = UTCDateTime(14 * 60)  # Event: Top right; Note: below left
+        event3 = UTCDateTime(46 * 60)  # Event: Bottom left; Note: above right
+        event4 = UTCDateTime(59 * 60)  # Event: Bottom right; Note: above left
+        event5 = UTCDateTime(61 * 60)  # Should be ignored
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot_event.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5,
+                    events=[{'time': event1, 'text': 'Event 1'},
+                            {'time': event2, 'text': 'Event 2'},
+                            {'time': event3, 'text': 'Event 3'},
+                            {'time': event4, 'text': 'Event 4'},
+                            {'time': event5, 'text': 'Event 5'}])
+
+    def test_plotDayPlotCatalog(self):
+        '''
+        Plots day plot, with a catalog of events.
+        '''
+        start = UTCDateTime(2012, 4, 4, 14, 0, 0)
+        cat = readEvents()
+        st = self._createStream(start, start + 3600, 100)
+        # create and compare image
+        image_name = 'waveform_dayplot_catalog.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name, type='dayplot',
+                    timezone='EST', time_offset=-5,
+                    events=cat)
 
 
 def suite():

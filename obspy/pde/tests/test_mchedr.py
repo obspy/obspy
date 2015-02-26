@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.core.event import ResourceIdentifier, readEvents
-from obspy.pde.mchedr import readMchedr
-from obspy.core.quakeml import readQuakeML, writeQuakeML
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile
 import os
 import unittest
 import warnings
 
+from obspy.core.event import ResourceIdentifier, readEvents
+from obspy.core.quakeml import readQuakeML, writeQuakeML
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.pde.mchedr import readMchedr
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
@@ -140,7 +143,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         # confidence ellipsoid
         c = u.confidence_ellipsoid
         self.assertEqual(c.semi_intermediate_axis_length, 2750.0)
-        #c.major_axis_rotation is computed during file reading:
+        # c.major_axis_rotation is computed during file reading:
         self.assertAlmostEqual(c.major_axis_rotation, 170.5, places=3)
         self.assertEqual(c.major_axis_plunge, 76.06)
         self.assertEqual(c.semi_minor_axis_length, 2210.0)
@@ -306,13 +309,13 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         Tests writing a QuakeML document.
         """
         with NamedTemporaryFile() as tf:
-            tmpfile = tf.name
-            writeQuakeML(self.catalog, tmpfile, validate=IS_RECENT_LXML)
+            writeQuakeML(self.catalog, tf, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
+            tf.seek(0)
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
-                catalog2 = readQuakeML(tmpfile)
+                catalog2 = readQuakeML(tf)
         self.assertTrue(len(catalog2), 1)
 
     def test_readEvents(self):

@@ -24,10 +24,13 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.ah
    obspy.css
    obspy.datamark
    obspy.gse2
+   obspy.kinemetrics
    obspy.mseed
+   obspy.pdas
    obspy.sac
    obspy.seisan
    obspy.seg2
@@ -43,7 +46,11 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.core.quakeml
+   obspy.cnv
+   obspy.ndk
+   obspy.nlloc
    obspy.pde
+   obspy.zmap
 
 .. rubric:: Database or Web Service Access Clients
 

@@ -6,15 +6,15 @@ obspy.earthworm - Earthworm Wave Server client for ObsPy.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Basic Usage
 -----------
 (1) :meth:`~obspy.earthworm.client.Client.getWaveform()`: The following example
     illustrates how to request and plot 30 seconds of all three broadband
     channels (``"BH*"``) of station ``"TUCA"`` of the `Pacific Northwest
-    Seismic Network <http://www.pnsn.org/>`_ (``"UW"``).
+    Seismic Network <http://pnsn.org/>`_ (``"UW"``).
 
     >>> from obspy.earthworm import Client
     >>> client = Client("pele.ess.washington.edu", 16017)
@@ -40,8 +40,11 @@ Basic Usage
         st = client.getWaveform('UW', 'TUCA', '', 'BH*', t + 100, t + 130)
         st.plot()
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

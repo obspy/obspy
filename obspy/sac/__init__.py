@@ -3,7 +3,7 @@
 obspy.sac - SAC read and write support for ObsPy
 ================================================
 This module provides read and write support for ASCII and binary SAC-files as
-defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
+defined by IRIS (http://www.iris.edu/files/sac-manual/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & C. J. Annon
@@ -13,8 +13,8 @@ defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
 
 Reading
 -------
-Similiar to reading any other waveform data format using
-:func:`~obspy.core.read`:
+Similar to reading any other waveform data format using
+:func:`~obspy.core.stream.read()`:
 
 >>> from obspy import read
 >>> st = read('/path/to/test.sac')
@@ -26,7 +26,7 @@ Similiar to reading any other waveform data format using
 
 The format will be determined automatically. As SAC-files can contain only one
 data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
-'st[0]' will have a stats attribute containing the issential meta data (station
+'st[0]' will have a stats attribute containing the essential meta data (station
 name, channel, location, start time, end time, sampling rate, number of
 points). Additionally, when reading a SAC-file it will have one additional
 attribute, 'sac', which contains all SAC-specific attributes (SAC header
@@ -44,9 +44,11 @@ values).
             npts: 100
            calib: 1.0
          _format: SAC
-             sac: AttribDict({'dist': -12345.0, 'isynth': -12345, ...'})
+             sac: AttribDict({...})
+>>> print(st[0].stats.sac.dist)
+-12345.0
 
-The data is stored in the data attribut.
+The data is stored in the data attribute.
 
 >>> st[0].data #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 array([ -8.74227766e-08,  -3.09016973e-01,..., 3.09007347e-01], dtype=float32)
@@ -57,9 +59,18 @@ Writing is also straight forward. All changes on the data as well as in
 stats and stats['sac'] are written with the following command to a file:
 
 >>> st.write('tmp.sac', format='SAC') #doctest: +SKIP
-"""
 
-from sacio import SacIO, SacError, SacIOError, attach_paz, attach_resp
+You can also specify a ``byteorder`` keyword argument to set the
+endianness of the resulting SAC-file. It must be either ``0`` or ``'<'``
+for LSBF or little-endian, ``1`` or ``'>'`` for MSBF or big-endian.
+Defaults to little endian.
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+from obspy.sac.sacio import (SacError, SacIO, SacIOError, attach_paz,
+                             attach_resp)
 
 
 if __name__ == '__main__':

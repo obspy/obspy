@@ -1,0 +1,22 @@
+Description: make built libs accessible in source tree after building
+ For building taup models during obspy build, we currently need to import some
+ things from obspy itself. Some critical submodules are mocked out in setup.py
+ already, but deb packaging puts the built C extensions in a folder different
+ from the source tree, where ObsPy is looking for them on import. So we need to
+ copy them from the build directories to the source tree.
+Author: megies@geophysik.uni-muenchen.de
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/setup.py
++++ b/setup.py
+@@ -660,6 +660,10 @@ class BuildExtAndTauPy(build_ext):
+         taulib = ctypes.CDLL(libpath)
+ 
+         sys.path.insert(0, obspy_taup_path)
++        import shutil
++        import glob
++        for file_ in glob.glob(os.path.join(SETUP_DIRECTORY, "build/lib*/obspy/lib/*.so")):
++            shutil.copy(file_, os.path.join(SETUP_DIRECTORY, "obspy/lib"))
+         with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+             from taup.taup_create import TauP_Create
+             from taup.utils import _get_model_filename

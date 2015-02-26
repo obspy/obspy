@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core.util.testing import ImageComparison, \
-    ImageComparisonException, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
 import os
-import unittest
 import shutil
+import unittest
 
+from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 # checking for matplotlib
 try:
@@ -21,7 +23,7 @@ def image_comparison_in_function(path, img_basename, img_to_compare):
     """
     This is just used to wrap an image comparison to check if it raises or not.
     """
-    with ImageComparison(path, img_basename) as ic:
+    with ImageComparison(path, img_basename, adjust_tolerance=False) as ic:
         shutil.copy(img_to_compare, ic.name)
 
 
@@ -56,6 +58,10 @@ class UtilBaseTestCase(unittest.TestCase):
         version = getMatplotlibVersion()
         self.assertEqual(version, [1, 2, 0])
 
+        matplotlib.__version__ = "1.3.1rc2"
+        version = getMatplotlibVersion()
+        self.assertEqual(version, [1, 3, 1])
+
         # Set it to the original version str just in case.
         matplotlib.__version__ = original_version
 
@@ -64,7 +70,7 @@ class UtilBaseTestCase(unittest.TestCase):
         Tests the automatic closing/deleting of NamedTemporaryFile using the
         context manager.
         """
-        content = "burn after writing"
+        content = b"burn after writing"
         # write something to tempfile and check closing/deletion afterwards
         with NamedTemporaryFile() as tf:
             filename = tf.name
@@ -75,7 +81,7 @@ class UtilBaseTestCase(unittest.TestCase):
             filename = tf.name
             tf.write(content)
             tf.close()
-            with open(filename) as fh:
+            with open(filename, 'rb') as fh:
                 tmp_content = fh.read()
         self.assertEqual(content, tmp_content)
         self.assertFalse(os.path.exists(filename))
@@ -84,7 +90,6 @@ class UtilBaseTestCase(unittest.TestCase):
             filename = tf.name
         self.assertFalse(os.path.exists(filename))
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_image_comparison(self):
         """
         Tests the image comparison mechanism with an expected fail and an

@@ -1,0 +1,5 @@
+LIBRARY libtau.dll
+EXPORTS
+    tau_branch_calc_time_dist_inner_loop
+    bullen_radial_slowness_inner_loop
+    seismic_phase_calc_time_inner_loop

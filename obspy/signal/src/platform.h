@@ -15,8 +15,13 @@ extern "C" {
   // Windows 32 & 64
   #include <limits.h>
   #include <malloc.h>
+  #define _USE_MATH_DEFINES
   #include <math.h>
-  #define fmax max
+  #if defined(_MSC_VER)
+    // MSC
+    #define fmax max
+    #define fmin min
+  #endif
 #else
   #include <limits.h>
   #include <malloc.h>
@@ -24,7 +29,7 @@ extern "C" {
 
 
 #ifndef M_PI
-  #define M_PI 3.14159265
+  #define M_PI 3.14159265358979323846
 #endif
 
 

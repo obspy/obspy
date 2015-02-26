@@ -44,6 +44,7 @@ containing the usual information. When reading a GSE2 file it will have one
 additional attribute named ``gse2``. This attribute contains all GSE2 specific
 attributes:
 
+>>> gse2 = st[0].stats.pop('gse2')
 >>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
          network:
          station: RJOB
@@ -56,11 +57,20 @@ attributes:
             npts: 12000
            calib: 0.0949
          _format: GSE2
-            gse2: AttribDict({'instype': '', 'elev': -0.999,
-                              'datatype': 'CM6', 'hang': -1.0, 'lon': -999.0,
-                              'edepth': -0.999, 'auxid': 'RJOB',
-                              'vang': -1.0, 'calper': 1.0,
-                              'lat': -99.0, 'coordsys': ''})
+
+>>> for k, v in sorted(gse2.items()):
+...     print(k, v) #doctest: +NORMALIZE_WHITESPACE
+auxid RJOB
+calper 1.0
+coordsys
+datatype CM6
+edepth -0.999
+elev -0.999
+hang -1.0
+instype
+lat -99.0
+lon -999.0
+vang -1.0
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.
@@ -76,6 +86,9 @@ You may export the data to the file system using the
 
 >>> st.write('GSE2-filename.gse', format='GSE2') #doctest: +SKIP
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

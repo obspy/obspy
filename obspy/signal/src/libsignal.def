@@ -15,3 +15,4 @@ EXPORTS
     stalta
     calcSteer
     generalizedBeamformer
+    hermite_interpolation

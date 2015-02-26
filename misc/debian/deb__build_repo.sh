@@ -50,46 +50,6 @@ Contents: . .gz
 
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
-Codename: lucid
-Version: 10.04 LTS
-Architectures: amd64 i386
-Components: main
-Description: ObsPy Apt Repository
-SignWith: 34811F05
-Contents: . .gz
-
-Origin: ObsPy Development Team
-Label: ObsPy Apt Repository
-Codename: maverick
-Version: 10.10
-Architectures: amd64 i386
-Components: main
-Description: ObsPy Apt Repository
-SignWith: 34811F05
-Contents: . .gz
-
-Origin: ObsPy Development Team
-Label: ObsPy Apt Repository
-Codename: natty
-Version: 11.04
-Architectures: amd64 i386
-Components: main
-Description: ObsPy Apt Repository
-SignWith: 34811F05
-Contents: . .gz
-
-Origin: ObsPy Development Team
-Label: ObsPy Apt Repository
-Codename: oneiric
-Version: 11.10
-Architectures: amd64 i386
-Components: main
-Description: ObsPy Apt Repository
-SignWith: 34811F05
-Contents: . .gz
-
-Origin: ObsPy Development Team
-Label: ObsPy Apt Repository
 Codename: precise
 Version: 12.04 LTS
 Architectures: amd64 i386
@@ -100,8 +60,8 @@ Contents: . .gz
 
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
-Codename: quantal
-Version: 12.10
+Codename: trusty
+Version: 14.04 LTS
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository
@@ -110,18 +70,8 @@ Contents: . .gz
 
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
-Codename: raring
-Version: 13.04
-Architectures: amd64 i386
-Components: main
-Description: ObsPy Apt Repository
-SignWith: 34811F05
-Contents: . .gz
-
-Origin: ObsPy Development Team
-Label: ObsPy Apt Repository
-Codename: saucy
-Version: 13.10
+Codename: utopic
+Version: 14.10
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository

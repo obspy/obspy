@@ -21,7 +21,7 @@ and SU (Seismic Unix) format.
     with custom headers please consider sending them to ``devs@obspy.org``.
 
 Reading
-=======
+-------
 The SEG Y and Seismic Unix (SU) file formats are quite different from the
 file formats usually used in observatories (GSE2, MiniSEED, ...). The
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace` structures
@@ -38,7 +38,7 @@ some changes (keep in mind that SU files have no file wide headers).
 3. Using the internal :func:`obspy.segy.segy.readSEGY` function.
 
 Reading using methods 1 and 2
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The first two methods will return a :class:`~obspy.core.stream.Stream` object
 and they are identical except that the file wide SEGY headers are only
 accessible if method 2 is used. These headers are stored in Stream.stats.
@@ -87,9 +87,8 @@ Reading SEG Y files with ``unpack_trace_headers=True`` will be very slow and
 memory intensive for a large number of traces due to the huge number of objects
 created.
 
-
 Reading using method 3
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 The internal reading method is much faster and less of a memory hog but does
 not return a :class:`~obspy.core.stream.Stream` object. Instead it returns a
 :class:`~obspy.segy.segy.SEGYFile` object which is somewhat similar to the
@@ -110,9 +109,9 @@ The traces are a list of :class:`~obspy.segy.segy.SEGYTrace` objects stored in
 By default these header values will not be unpacked and thus will not show up
 in ipython's tab completion. See :const:`obspy.segy.header.TRACE_HEADER_FORMAT`
 `(source)
-<http://obspy.org/browser/obspy/trunk/obspy.segy/obspy/segy/header.py#L47>`_
-for a list of all available trace header attributes. They will be unpacked on
-the fly if they are accessed as class attributes.
+<https://github.com/obspy/obspy/blob/master/obspy/segy/header.py#L53>`_ for a
+list of all available trace header attributes. They will be unpacked on the
+fly if they are accessed as class attributes.
 
 By default trace data are read into memory, but this may be impractical for
 very large datasets. To skip loading data into memory, read SEG Y files with
@@ -125,10 +124,10 @@ tab completion, but data are read directly from the disk when it is accessed:
 2001
 
 Writing
-=======
+-------
 
 Writing ObsPy :class:`~obspy.core.stream.Stream` objects
---------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Writing :class:`~obspy.core.stream.Stream` objects is done in the usual way.
 
@@ -145,7 +144,7 @@ meaning are documented here: :func:`~obspy.segy.core.writeSEGY`
 
 
 Writing :class:`~obspy.segy.segy.SEGYFile` objects
---------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :class:`~obspy.segy.segy.SEGYFile` objects are written using its
 :func:`~obspy.segy.segy.SEGYFile.write` method. Optional kwargs are able to
@@ -155,7 +154,7 @@ enforce the data encoding and the byte order.
 
 
 Converting other file formats to SEG Y
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SEGY files are sensitive to their headers and wrong headers might break them.
 
@@ -183,7 +182,7 @@ script::
     for _i in xrange(3):
         # Create some random data.
         data = np.random.ranf(1000)
-        data = np.require(data, dtype='float32')
+        data = np.require(data, dtype=np.float32)
         trace = Trace(data=data)
 
         # Attributes in trace.stats will overwrite everything in
@@ -237,6 +236,9 @@ _i + 1
     print stream.stats.binary_file_header.trace_sorting_code
     print st1.stats.binary_file_header.trace_sorting_code
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

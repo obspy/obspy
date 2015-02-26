@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from copy import deepcopy
-import numpy as np
-from obspy import UTCDateTime, Trace, read
-from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
-from obspy.signal.filter import lowpassCheby2
 import unittest
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Trace, UTCDateTime, read
+from obspy.signal import bandpass, bandstop, highpass, lowpass, seisSim
+from obspy.signal.filter import lowpassCheby2
 
 
 class TraceTestCase(unittest.TestCase):
@@ -32,15 +37,8 @@ class TraceTestCase(unittest.TestCase):
         data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=paz_sts2,
                        paz_simulate=paz_le3d1s,
                        remove_sensitivity=True, simulate_sensitivity=True)
-        try:
-            proc_info = tr.stats.processing
-        except KeyError:
-            proc_info = []
-        proc_info.append("simulate:inverse:%s:sensitivity=True" % paz_sts2)
-        proc_info.append("simulate:forward:%s:sensitivity=True" % paz_le3d1s)
         tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
         np.testing.assert_array_equal(tr.data, data)
-        self.assertEqual(tr.stats.processing, proc_info)
 
     def test_filter(self):
         """
@@ -92,8 +90,11 @@ class TraceTestCase(unittest.TestCase):
                 np.testing.assert_array_equal(tr.data, data_filt)
                 self.assertTrue('processing' in tr.stats)
                 self.assertEqual(len(tr.stats.processing), 1)
-                self.assertEqual(tr.stats.processing[0],
-                                 "filter:%s:%s" % (filt_type, filt_ops))
+                self.assertTrue("filter" in tr.stats.processing[0])
+                self.assertTrue(filt_type in tr.stats.processing[0])
+                for key, value in filt_ops.items():
+                    self.assertTrue("'%s': %s" % (key, value)
+                                    in tr.stats.processing[0])
                 # another filter run
                 tr.filter(filt_type, **filt_ops)
                 data_filt = filter_map[filt_type](
@@ -103,8 +104,12 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue('processing' in tr.stats)
                 self.assertEqual(len(tr.stats.processing), 2)
                 for proc_info in tr.stats.processing:
-                    self.assertEqual(proc_info, "filter:%s:%s" %
-                                     (filt_type, filt_ops))
+                    self.assertTrue("filter" in proc_info)
+                    self.assertTrue(filt_type in proc_info)
+                    for key, value in filt_ops.items():
+                        self.assertTrue("'%s': %s" % (key, value)
+                                        in proc_info)
+
         # some tests that should raise an Exception
         tr = traces[0]
         bad_filters = [
@@ -142,15 +147,15 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.sampling_rate, 0.25)
-        self.assertEqual(tr.stats.processing,
-                         ["downsample:integerDecimation:4"])
+        self.assertTrue("decimate" in tr.stats.processing[0])
+        self.assertTrue("factor=4" in tr.stats.processing[0])
         tr = tr_bkp.copy()
         tr.decimate(10, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
         self.assertEqual(tr.stats.npts, 2)
         self.assertEqual(tr.stats.sampling_rate, 0.1)
-        self.assertEqual(tr.stats.processing,
-                         ["downsample:integerDecimation:10"])
+        self.assertTrue("decimate" in tr.stats.processing[0])
+        self.assertTrue("factor=10" in tr.stats.processing[0])
         # some tests with automatic prefiltering
         tr = tr_bkp.copy()
         tr2 = tr_bkp.copy()

@@ -1,35 +1,40 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Filename: beachball.py
 #  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
 #   Author: Robert Barsch
-#    Email: barsch@geophysik.uni-muenchen.de
+#    Email: barsch@egu.eu
 #
 # Copyright (C) 2008-2012 Robert Barsch
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 """
 Draws a beachball diagram of an earthquake focal mechanism
 
 Most source code provided here are adopted from
 
-1. MatLab script `bb.m`_ written by Andy Michael and Oliver Boyd.
+1. MatLab script `bb.m`_ written by Andy Michael, Chen Ji and Oliver Boyd.
 2. ps_meca program from the `Generic Mapping Tools (GMT)`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    GNU General Public License (GPL)
-    (http://www.gnu.org/licenses/gpl.txt)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
-import matplotlib.pyplot as plt
-from matplotlib import patches, collections, path as mplpath
-import StringIO
+import io
+
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import path as mplpath
+from matplotlib import collections, patches, transforms
 
 
 D2R = np.pi / 180
@@ -39,7 +44,7 @@ EPSILON = 0.00001
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
-          zorder=100):
+          zorder=100, axes=None):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -75,6 +80,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
+    :type axes: :class:`matplotlib.axes.Axes`
+    :param axes: Used to make beach balls circular on non-scaled axes. Also
+        maintains the aspect ratio when resizing the figure. Will not add
+        the returned collection to the axes instance.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -120,6 +129,20 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         # Replace color dummies 'b' and 'w' by face and bgcolor
         fc = [facecolor if c == 'b' else bgcolor for c in colors]
         col.set_facecolors(fc)
+
+    # Use the given axes to maintain the aspect ratio of beachballs on figure
+    # resize.
+    if axes is not None:
+        # This is what holds the aspect ratio (but breaks the positioning)
+        col.set_transform(transforms.IdentityTransform())
+        # Next is a dirty hack to fix the positioning:
+        # 1. Need to bring the all patches to the origin (0, 0).
+        for p in col._paths:
+            p.vertices -= xy
+        # 2. Then use the offset property of the collection to position the
+        #    patches
+        col.set_offsets(xy)
+        col._transOffset = axes.transData
 
     col.set_edgecolor(edgecolor)
     col.set_alpha(alpha)
@@ -205,7 +228,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
     elif format and not outfile:
-        imgdata = StringIO.StringIO()
+        imgdata = io.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
         return imgdata.read()
@@ -370,14 +393,14 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
                 azp = az
             else:
                 if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10.:
-                        azi[n][1] = azp
-                        n += 1
-                        azi[n][0] = az
+                    azi[n][1] = azp
+                    n += 1
+                    azi[n][0] = az
                 if np.fabs(np.fabs(az - azp) - np.pi * 2.) < D2R * 2.:
-                        if azp < az:
-                            azi[n][0] += np.pi * 2.
-                        else:
-                            azi[n][0] -= np.pi * 2.
+                    if azp < az:
+                        azi[n][0] += np.pi * 2.
+                    else:
+                        azi[n][0] -= np.pi * 2.
                 if n == 0:
                     x[j] = x0 + radius_size * r * si
                     y[j] = y0 + radius_size * r * co
@@ -546,7 +569,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -575,7 +598,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     if D2 >= 90:
         D2 = 89.9999
 
-    # arange checked for numerical stablility, np.pi is not multiple of 0.1
+    # arange checked for numerical stability, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
     l1 = np.sqrt(
         np.power(90 - D1, 2) / (
@@ -634,7 +657,7 @@ def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system
     x = x * res[0] + xy[0]
     y = y * res[1] + xy[1]
-    verts = zip(x.tolist(), y.tolist())
+    verts = list(zip(x.tolist(), y.tolist()))
     codes = [mplpath.Path.MOVETO]
     codes.extend([mplpath.Path.LINETO] * (len(x) - 2))
     codes.append(mplpath.Path.CLOSEPOLY)
@@ -657,7 +680,7 @@ def StrikeDip(n, e, u):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
     if u < 0:
@@ -668,9 +691,9 @@ def StrikeDip(n, e, u):
     strike = np.arctan2(e, n) * r2d
     strike = strike - 90
     while strike >= 360:
-            strike = strike - 360
+        strike = strike - 360
     while strike < 0:
-            strike = strike + 360
+        strike = strike + 360
     x = np.sqrt(np.power(n, 2) + np.power(e, 2))
     dip = np.arctan2(x, u) * r2d
     return (strike, dip)
@@ -682,7 +705,7 @@ def AuxPlane(s1, d1, r1):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     r2d = 180 / np.pi
 
@@ -704,6 +727,11 @@ def AuxPlane(s1, d1, r1):
 
     z = h1 * n1 + h2 * n2
     z = z / np.sqrt(h1 * h1 + h2 * h2)
+    # we might get above 1.0 only due to floating point
+    # precision. Clip for those cases.
+    float64epsilon = 2.2204460492503131e-16
+    if 1.0 < abs(z) < 1.0 + 100 * float64epsilon:
+        z = np.copysign(1.0, z)
     z = np.arccos(z)
     rake = 0
     if sl3 > 0:
@@ -722,7 +750,7 @@ def MT2Plane(mt):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
     D = np.array([d[1], d[0], d[2]])
@@ -756,7 +784,7 @@ def TDL(AN, BN):
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
-    written by Andy Michael and Oliver Boyd.
+    written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     XN = AN[0]
     YN = AN[1]
@@ -793,7 +821,7 @@ def TDL(AN, BN):
         if SL < 0. and CL > 0:
             FL = -FL
     else:
-        if - ZN > 1.0:
+        if -ZN > 1.0:
             ZN = -1.0
         FDH = np.arccos(-ZN)
         FD = FDH * CON

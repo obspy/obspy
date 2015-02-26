@@ -1,8 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
-import os
 import csv
+import os
 
 
 class FlinnEngdahl(object):
@@ -11,9 +15,9 @@ class FlinnEngdahl(object):
     to Flinn Engdahl region names.
 
     >>> fe = FlinnEngdahl()
-    >>> print fe.get_region(12, 48)
+    >>> print(fe.get_region(12, 48))
     GERMANY
-    >>> print fe.get_region_by_number(543)
+    >>> print(fe.get_region_by_number(543))
     GERMANY
     """
 
@@ -43,7 +47,7 @@ class FlinnEngdahl(object):
 
         self.lons_per_lat = dict(zip(
             self.quads_order,
-            [indexes[x:x + 91] for x in xrange(0, len(indexes), 91)]
+            [indexes[x:x + 91] for x in range(0, len(indexes), 91)]
         ))
 
         self.lat_begins = {}
@@ -84,9 +88,10 @@ class FlinnEngdahl(object):
             self.lons[quad] = lons
             self.fenums[quad] = fenums
 
-        with open(self.numbers_file, 'rb') as csvfile:
-            FE_csv = csv.reader(csvfile, delimiter=';',
-                                quotechar='#', skipinitialspace=True)
+        with open(self.numbers_file, 'rt') as csvfile:
+            FE_csv = csv.reader(csvfile, delimiter=native_str(';'),
+                                quotechar=native_str('#'),
+                                skipinitialspace=True)
             self.by_number = \
                 dict((int(row[0]), row[1]) for row in FE_csv if len(row) > 1)
 
@@ -115,9 +120,9 @@ class FlinnEngdahl(object):
         Return region from given coordinate
 
         >>> fe = FlinnEngdahl()
-        >>> print fe.get_region(12, 48)
+        >>> print(fe.get_region(12, 48))
         GERMANY
-        >>> print fe.get_region(-60, -30)
+        >>> print(fe.get_region(-60, -30))
         NORTHEASTERN ARGENTINA
 
         :param longitude: WGS84 longitude
@@ -164,9 +169,9 @@ class FlinnEngdahl(object):
         Return region with given number
 
         >>> fe = FlinnEngdahl()
-        >>> print fe.get_region_by_number(123)
+        >>> print(fe.get_region_by_number(123))
         NORTHERN CHILE
-        >>> print fe.get_region_by_number(456)
+        >>> print(fe.get_region_by_number(456))
         MONTANA
 
         :param number: Region ID

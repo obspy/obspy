@@ -9,10 +9,18 @@ Provides the Station class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import copy
+import fnmatch
+import textwrap
+import warnings
+
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
-from obspy.station.util import Longitude, Latitude, Distance
-import textwrap
+from obspy.station.util import Distance, Latitude, Longitude
 
 
 class Station(BaseNode):
@@ -31,7 +39,7 @@ class Station(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type channels: A list of :class:`obspy.station.channel.Channel`
+        :type channels: list of :class:`~obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
         :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: The latitude of the station
@@ -43,8 +51,8 @@ class Station(BaseNode):
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
             etc
         :param geology: Type of rock and/or geologic formation.
-        :param equiment: Equipment used by all channels at a station.
-        :type operators: A list of :class:`~obspy.station.util.Operator`
+        :param equipments: Equipment used by all channels at a station.
+        :type operators: list of :class:`~obspy.station.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
             Operator tag. Since the Contact element is a generic type that
@@ -53,36 +61,36 @@ class Station(BaseNode):
         :type creation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param creation_date: Date and time (UTC) when the station was first
             installed
-        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
         :param termination_date: Date and time (UTC) when the station was
             terminated or will be terminated. A blank value should be assumed
-            to mean that the station is still active. Optional
-        :type total_number_of_channels: Integer
+            to mean that the station is still active.
+        :type total_number_of_channels: int, optional
         :param total_number_of_channels: Total number of channels recorded at
-            this station. Optional.
-        :type selected_number_of_channels: Integer
+            this station.
+        :type selected_number_of_channels: int, optional
         :param selected_number_of_channels: Number of channels recorded at this
             station and selected by the query that produced this document.
-            Optional.
         :type external_references: list of
-            :class:`~obspy.station.util.ExternalReference`
+            :class:`~obspy.station.util.ExternalReference`, optional
         :param external_references: URI of any type of external report, such as
-            IRIS data reports or dataless SEED volumes. Optional.
-        :type description: String, optional
+            IRIS data reports or dataless SEED volumes.
+        :type description: str, optional
         :param description: A description of the resource
-        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.station.util.Comment`, optional
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param start_date: The start date of the resource
         :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param end_date: The end date of the resource
-        :type restricted_status: String, optional
+        :type restricted_status: str, optional
         :param restricted_status: The restriction status
-        :type alternate_code: String, optional
+        :type alternate_code: str, optional
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: String, optional
+        :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
         """
@@ -134,6 +142,9 @@ class Station(BaseNode):
             subsequent_indent="\t\t", expand_tabs=False))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __getitem__(self, index):
         return self.channels[index]
 
@@ -141,14 +152,18 @@ class Station(BaseNode):
         """
         Returns a dictionary containing the contents of the object.
 
-        Example
+        .. rubric:: Example
+
         >>> from obspy import read_inventory
         >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
         >>> inventory = read_inventory(example_filename)
         >>> station = inventory.networks[0].stations[0]
-        >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE
-        {'channels': ['ANMO.10.BHZ'],
-         'stations': [u'ANMO (Albuquerque, New Mexico, USA)']}
+        >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        {...}
+        >>> for (k, v) in sorted(station.get_contents().items()):
+        ...     print(k, v[0])
+        channels ANMO.10.BHZ
+        stations ANMO (Albuquerque, New Mexico, USA)
         """
         site_name = None
         if self.site and self.site.name:
@@ -182,17 +197,17 @@ class Station(BaseNode):
     @equipments.setter
     def equipments(self, value):
         if not hasattr(value, "__iter__"):
-            msg = "Equipments needs to be an iterable, e.g. a list."
+            msg = "equipments needs to be an iterable, e.g. a list."
             raise ValueError(msg)
         if any([not isinstance(x, Equipment) for x in value]):
-            msg = "Equipments can only contain Equipment objects."
+            msg = "equipments can only contain Equipment objects."
             raise ValueError(msg)
         self._equipments = value
-        #if value is None or isinstance(value, Equipment):
+        # if value is None or isinstance(value, Equipment):
         #    self._equipment = value
-        #elif isinstance(value, dict):
+        # elif isinstance(value, dict):
         #    self._equipment = Equipment(**value)
-        #else:
+        # else:
         #    msg = ("equipment needs to be be of type obspy.station.Equipment "
         #        "or contain a dictionary with values suitable for "
         #        "initialization.")
@@ -264,6 +279,177 @@ class Station(BaseNode):
             self._elevation = value
         else:
             self._elevation = Distance(value)
+
+    def select(self, location=None, channel=None, time=None, starttime=None,
+               endtime=None, sampling_rate=None):
+        """
+        Returns the :class:`Station` object with only the
+        :class:`~obspy.station.channel.Channel`\ s that match the given
+        criteria (e.g. all channels with ``channel="EHZ"``).
+
+        .. warning::
+            The returned object is based on a shallow copy of the original
+            object. That means that modifying any mutable child elements will
+            also modify the original object
+            (see https://docs.python.org/2/library/copy.html).
+            Use :meth:`copy()` afterwards to make a new copy of the data in
+            memory.
+
+        .. rubric:: Example
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> sta = read_inventory()[0][0]
+        >>> t = UTCDateTime(2008, 7, 1, 12)
+        >>> sta = sta.select(channel="[LB]HZ", time=t)
+        >>> print(sta)  # doctest: +NORMALIZE_WHITESPACE
+        Station FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
+            Station Code: FUR
+            Channel Count: None/None (Selected/Total)
+            2006-12-16T00:00:00.000000Z -
+            Access: None
+            Latitude: 48.16, Longitude: 11.28, Elevation: 565.0 m
+            Available Channels:
+                FUR..BHZ, FUR..LHZ
+
+        The `location` and `channel` selection criteria  may also contain UNIX
+        style wildcards (e.g. ``*``, ``?``, ...; see
+        :func:`~fnmatch.fnmatch`).
+
+        :type location: str
+        :type channel: str
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Only include channels active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only include channels active at or after given point
+            in time (i.e. channels ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only include channels active before or at given point
+            in time (i.e. channels starting after given time will not be
+            shown).
+        :type sampling_rate: float
+        """
+        channels = []
+        for cha in self.channels:
+            # skip if any given criterion is not matched
+            if location is not None:
+                if not fnmatch.fnmatch(cha.location_code.upper(),
+                                       location.upper()):
+                    continue
+            if channel is not None:
+                if not fnmatch.fnmatch(cha.code.upper(),
+                                       channel.upper()):
+                    continue
+            if sampling_rate is not None:
+                if not cha.sample_rate:
+                    msg = ("Omitting channel that has no sampling rate "
+                           "specified.")
+                    warnings.warn(msg)
+                    continue
+                if float(sampling_rate) != cha.sample_rate:
+                    continue
+            if any([t is not None for t in (time, starttime, endtime)]):
+                if not cha.is_active(time=time, starttime=starttime,
+                                     endtime=endtime):
+                    continue
+
+            channels.append(cha)
+        sta = copy.copy(self)
+        sta.channels = channels
+        return sta
+
+    def plot(self, min_freq, output="VEL", location="*", channel="*",
+             time=None, starttime=None, endtime=None, axes=None,
+             unwrap_phase=False, show=True, outfile=None):
+        """
+        Show bode plot of instrument response of all (or a subset of) the
+        station's channels.
+
+        :type min_freq: float
+        :param min_freq: Lowest frequency to plot.
+        :type output: str
+        :param output: Output units. One of:
+
+                ``"DISP"``
+                    displacement, output unit is meters
+                ``"VEL"``
+                    velocity, output unit is meters/second
+                ``"ACC"``
+                    acceleration, output unit is meters/second**2
+
+        :type location: str
+        :param location: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
+        :type channel: str
+        :param channel: Only plot matching channels. Accepts UNIX style
+            patterns and wildcards (e.g. ``"BH*"``, ``"BH?"``, ``"*Z"``,
+            ``"[LB]HZ"``; see :func:`~fnmatch.fnmatch`)
+        :param time: Only show channels active at given point in time.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Only show channels active at or after given point in
+            time (i.e. channels ending before given time will not be shown).
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only show channels active before or at given point in
+            time (i.e. channels starting after given time will not be shown).
+        :type axes: list of 2 :class:`matplotlib.axes.Axes`
+        :param axes: List/tuple of two axes instances to plot the
+            amplitude/phase spectrum into. If not specified, a new figure is
+            opened.
+        :type unwrap_phase: bool
+        :param unwrap_phase: Set optional phase unwrapping using NumPy.
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/file name is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+
+        .. rubric:: Basic Usage
+
+        >>> from obspy import read_inventory
+        >>> sta = read_inventory()[0][0]
+        >>> sta.plot(0.001, output="VEL", channel="*Z")  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read_inventory
+            sta = read_inventory()[0][0]
+            sta.plot(0.001, output="VEL", channel="*Z")
+        """
+        import matplotlib.pyplot as plt
+
+        if axes:
+            ax1, ax2 = axes
+            fig = ax1.figure
+        else:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(211)
+            ax2 = fig.add_subplot(212, sharex=ax1)
+
+        matching = self.select(location=location, channel=channel, time=time,
+                               starttime=starttime, endtime=endtime)
+
+        for cha in matching.channels:
+            cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                     label=".".join((self.code, cha.location_code, cha.code)),
+                     unwrap_phase=unwrap_phase, show=False, outfile=None)
+
+        # final adjustments to plot if we created the figure in here
+        if not axes:
+            from obspy.station.response import _adjust_bode_plot_figure
+            _adjust_bode_plot_figure(fig, show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        else:
+            if show:
+                plt.show()
+
+        return fig
 
 
 if __name__ == '__main__':

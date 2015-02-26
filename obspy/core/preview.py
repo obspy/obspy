@@ -8,11 +8,18 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
 from copy import copy
+
+import numpy as np
+
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-import numpy as np
 
 
 def createPreview(trace, delta=60):
@@ -23,9 +30,9 @@ def createPreview(trace, delta=60):
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
 
-    :type delta: integer, optional
+    :type delta: int, optional
     :param delta: Difference between two preview points. Defaults to ``60``.
-    :rtype: :class:`~obspy.core.Trace`
+    :rtype: :class:`~obspy.core.trace.Trace`
     :return: New Trace object.
 
     This method will modify the original Trace object. Create a copy of the
@@ -69,7 +76,7 @@ def createPreview(trace, delta=60):
     if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)
     data = np.concatenate([first_diff, diff, last_diff])
-    data = np.require(data, dtype="float32")
+    data = np.require(data, dtype=np.float32)
     tr = Trace(data=data, header=trace.stats)
     tr.stats.delta = delta
     tr.stats.npts = len(data)
@@ -83,9 +90,9 @@ def mergePreviews(stream):
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
 
-    :type stream: :class:`~obspy.core.Stream`
+    :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: Stream object to be merged
-    :rtype: :class:`~obspy.core.Stream`
+    :rtype: :class:`~obspy.core.stream.Stream`
     :return: Merged Stream object.
     """
     copied_traces = copy(stream.traces)
@@ -122,15 +129,15 @@ def mergePreviews(stream):
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = set([str(tr.data.dtype) for tr in value])
+        dtypes = set([native_str(tr.data.dtype) for tr in value])
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)
         dtype = dtypes.pop()
-        # Get the minimum start and maximum endtime for all traces.
+        # Get the minimum start and maximum end time for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
-        samples = (max_endtime - min_starttime) / delta + 1
+        samples = int(round((max_endtime - min_starttime) / delta)) + 1
         data = np.empty(samples, dtype=dtype)
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
@@ -154,7 +161,7 @@ def resamplePreview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
-    :type trace: :class:`~obspy.core.Trace`
+    :type trace: :class:`~obspy.core.trace.Trace`
     :param trace: Trace object to be resampled.
     :type samples: int
     :param samples: Desired number of samples.
@@ -210,7 +217,7 @@ def resamplePreview(trace, samples, method='accurate'):
     elif method == 'accurate':
         new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
-        for _i in xrange(samples):
+        for _i in range(samples):
             new_data[_i] = trace.data[int(_i * step):
                                       int((_i + 1) * step)].max()
         trace.data = new_data

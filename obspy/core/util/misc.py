@@ -8,28 +8,32 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
-from contextlib import contextmanager
-import os
-import sys
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import inspect
-from subprocess import Popen, PIPE
-import warnings
 import itertools
-import tempfile
-import numpy as np
 import math
-import re
+import os
 import platform
-# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
+import shutil
+import sys
+import tempfile
+import warnings
+from contextlib import contextmanager
+from subprocess import PIPE, Popen
+
+import numpy as np
 
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
 # to: SEED MANUAL p.124
-# We use this e.g. in seihub.client.getWaveform to request two samples more on
+# We use this e.g. in seishub.client.getWaveform to request two samples more on
 # both start and end to cut to the samples that really are nearest to requested
-# start/endtime afterwards.
+# start/end time afterwards.
+
 BAND_CODE = {'F': 1000.0,
              'G': 1000.0,
              'D': 250.0,
@@ -134,7 +138,7 @@ def flatnotmaskedContiguous(a):
     Find contiguous unmasked data in a masked array along the given axis.
 
     This function is taken from
-    :func:`numpy.ma.extras.flatnotmasked_contiguous`.
+    :func:`numpy.ma.flatnotmasked_contiguous`.
 
     Copyright (c) Pierre Gerard-Marchant
     """
@@ -179,7 +183,7 @@ def toIntOrZero(value):
 
     :param value: Arbitrary data type.
     :rtype: int
-numpy.version.version
+
     .. rubric:: Example
 
     >>> toIntOrZero("12")
@@ -194,29 +198,29 @@ numpy.version.version
         return 0
 
 
-# import numpy loadtxt and check if ndlim parameter is available
+# import numpy loadtxt and check if ndmin parameter is available
 try:
     from numpy import loadtxt
-    loadtxt(np.array([]), ndlim=1)
+    loadtxt(np.array([0]), ndmin=1)
 except TypeError:
     # otherwise redefine loadtxt
     def loadtxt(*args, **kwargs):
         """
-        Replacement for older numpy.loadtxt versions not supporting ndlim
+        Replacement for older numpy.loadtxt versions not supporting ndmin
         parameter.
         """
-        if 'ndlim' not in kwargs:
+        if 'ndmin' not in kwargs:
             return np.loadtxt(*args, **kwargs)
-        # ok we got a ndlim param
-        if kwargs['ndlim'] != 1:
+        # ok we got a ndmin param
+        if kwargs['ndmin'] != 1:
             # for now we support only one dimensional arrays
             raise NotImplementedError('Upgrade your NumPy version!')
-        del kwargs['ndlim']
+        del kwargs['ndmin']
         dtype = kwargs.get('dtype', None)
         # lets get the data
         try:
             data = np.loadtxt(*args, **kwargs)
-        except IOError, e:
+        except IOError as e:
             # raises in older versions if no data could be read
             if 'reached before encountering data' in str(e):
                 # return empty array
@@ -243,12 +247,14 @@ def get_untracked_files_from_git():
                   cwd=dir_, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         git_root_dir = p.stdout.readlines()[0].strip()
+        p.stdout.close()
         if git_root_dir != dir_:
             raise Exception
         p = Popen(['git', 'status', '-u', '--porcelain'],
                   cwd=dir_, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         stdout = p.stdout.readlines()
+        p.stdout.close()
         files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
                  for line in stdout
                  if line.startswith("??")]
@@ -284,41 +290,50 @@ def wrap_long_string(string, line_length=79, prefix="",
         line to be longer than the specified line length. If set to True,
         Long words will be force-hyphenated to fit the line.
 
+    .. deprecated:: 0.10.0
+        The wrap_long_string function is deprecated. Please use the textwrap
+        module from the standard library instead.
+
     .. rubric:: Examples
 
     >>> string = ("Retrieve an event based on the unique origin "
     ...           "ID numbers assigned by the IRIS DMC")
-    >>> print wrap_long_string(string, prefix="\t*\t > ",
-    ...                        line_length=50)  # doctest: +SKIP
+    >>> print(wrap_long_string(string, prefix="\t*\t > ",
+    ...                        line_length=50))  # doctest: +SKIP
             *        > Retrieve an event based on
             *        > the unique origin ID numbers
             *        > assigned by the IRIS DMC
-    >>> print wrap_long_string(string, prefix="\t* ",
-    ...                        line_length=70)  # doctest: +SKIP
+    >>> print(wrap_long_string(string, prefix="\t* ",
+    ...                        line_length=70))  # doctest: +SKIP
             * Retrieve an event based on the unique origin ID
             * numbers assigned by the IRIS DMC
-    >>> print wrap_long_string(string, prefix="\t \t  > ",
+    >>> print(wrap_long_string(string, prefix="\t \t  > ",
     ...                        special_first_prefix="\t*\t",
-    ...                        line_length=50)  # doctest: +SKIP
+    ...                        line_length=50))  # doctest: +SKIP
             *        Retrieve an event based on
                      > the unique origin ID numbers
                      > assigned by the IRIS DMC
     >>> problem_string = ("Retrieve_an_event_based_on_the_unique "
     ...                   "origin ID numbers assigned by the IRIS DMC")
-    >>> print wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40, sloppy=True)  # doctest: +SKIP
+    >>> print(wrap_long_string(problem_string, prefix="\t\t",
+    ...                        line_length=40, sloppy=True))  # doctest: +SKIP
                     Retrieve_an_event_based_on_the_unique
                     origin ID
                     numbers
                     assigned by
                     the IRIS DMC
-    >>> print wrap_long_string(problem_string, prefix="\t\t",
-    ...                        line_length=40)  # doctest: +SKIP
+    >>> print(wrap_long_string(problem_string, prefix="\t\t",
+    ...                        line_length=40))  # doctest: +SKIP
                     Retrieve_an_event_base\
                     d_on_the_unique origin
                     ID numbers assigned by
                     the IRIS DMC
     """
+
+    warnings.warn('The wrap_long_string function is deprecated. Please use '
+                  'the textwrap module from the standard library instead.',
+                  DeprecationWarning)
+
     def text_width_for_prefix(line_length, prefix):
         text_width = line_length - len(prefix) - \
             (assumed_tab_width - 1) * prefix.count("\t")
@@ -366,84 +381,87 @@ def wrap_long_string(string, line_length=79, prefix="",
 @contextmanager
 def CatchOutput():
     """
-    A context manager that catches stdout/stderr for its scope.
+    A context manager that catches stdout/stderr/exit() for its scope.
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Roughly based on: http://stackoverflow.com/a/17954769
-
-    This variant does not leak file descriptors.
+    Based on: http://bugs.python.org/msg184312
 
     >>> with CatchOutput() as out:  # doctest: +SKIP
     ...    os.system('echo "mystdout"')
     ...    os.system('echo "mystderr" >&2')
-    >>> print out.stdout  # doctest: +SKIP
+    >>> print(out.stdout)  # doctest: +SKIP
     mystdout
-    >>> print out.stderr  # doctest: +SKIP
+    >>> print(out.stderr)  # doctest: +SKIP
     mystderr
     """
-    stdout_file, stdout_filename = tempfile.mkstemp(prefix="obspy-")
-    stderr_file, stderr_filename = tempfile.mkstemp(prefix="obspy-")
 
-    try:
-        fd_stdout = sys.stdout.fileno()
-        fd_stderr = sys.stderr.fileno()
+    # Dummy class to transport the output.
+    class Output():
+        pass
+    out = Output()
+    out.stdout = ''
+    out.stderr = ''
 
-        # Dummy class to transport the output.
-        class Output():
-            pass
-        out = Output()
-        out.stdout = ""
-        out.stderr = ""
+    stdout_fd = sys.stdout.fileno()
+    stderr_fd = sys.stderr.fileno()
+    with tempfile.TemporaryFile(prefix='obspy-') as tmp_stdout:
+        with tempfile.TemporaryFile(prefix='obspy-') as tmp_stderr:
+            stdout_copy = os.dup(stdout_fd)
+            stderr_copy = os.dup(stderr_fd)
 
-        with os.fdopen(os.dup(sys.stdout.fileno()), "w") as old_stdout:
-            with os.fdopen(os.dup(sys.stderr.fileno()), "w") as old_stderr:
+            try:
                 sys.stdout.flush()
+                os.dup2(tmp_stdout.fileno(), stdout_fd)
+
                 sys.stderr.flush()
+                os.dup2(tmp_stderr.fileno(), stderr_fd)
 
-                os.dup2(stdout_file, fd_stdout)
-                os.dup2(stderr_file, fd_stderr)
+                raised = False
+                yield out
 
-                os.close(stdout_file)
-                os.close(stderr_file)
+            except SystemExit:
+                raised = True
 
-                try:
-                    yield out
-                finally:
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    os.fsync(sys.stdout.fileno())
-                    os.fsync(sys.stderr.fileno())
-                    sys.stdout = sys.__stdout__
-                    sys.stderr = sys.__stderr__
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    os.dup2(old_stdout.fileno(), sys.stdout.fileno())
-                    os.dup2(old_stderr.fileno(), sys.stderr.fileno())
+            finally:
+                sys.stdout.flush()
+                os.dup2(stdout_copy, stdout_fd)
+                os.close(stdout_copy)
+                tmp_stdout.seek(0)
+                out.stdout = tmp_stdout.read()
 
-                    with open(stdout_filename, "r") as fh:
-                        out.stdout = fh.read()
-                    with open(stderr_filename, "r") as fh:
-                        out.stderr = fh.read()
+                sys.stderr.flush()
+                os.dup2(stderr_copy, stderr_fd)
+                os.close(stderr_copy)
+                tmp_stderr.seek(0)
+                out.stderr = tmp_stderr.read()
 
+                if platform.system() == "Windows":
+                    out.stdout = out.stdout.replace(b'\r', b'')
+                    out.stderr = out.stderr.replace(b'\r', b'')
+
+                if raised:
+                    raise SystemExit(out.stderr)
+
+
+@contextmanager
+def TemporaryWorkingDirectory():
+    """
+    A context manager that changes to a temporary working directory.
+
+    Always use with "with" statement. Does nothing useful otherwise.
+
+    >>> with TemporaryWorkingDirectory():  # doctest: +SKIP
+    ...    os.system('echo "$PWD"')
+    """
+    tempdir = tempfile.mkdtemp(prefix='obspy-')
+    old_dir = os.getcwd()
+    os.chdir(tempdir)
+    try:
+        yield
     finally:
-        # Make sure to always close and remove the temporary files.
-        try:
-            os.close(stdout_file)
-        except:
-            pass
-        try:
-            os.close(stderr_file)
-        except:
-            pass
-        try:
-            os.remove(stdout_filename)
-        except OSError:
-            pass
-        try:
-            os.remove(stderr_filename)
-        except OSError:
-            pass
+        os.chdir(old_dir)
+        shutil.rmtree(tempdir)
 
 
 def factorize_int(x):
@@ -464,45 +482,13 @@ def factorize_int(x):
     if x == 1:
         return [1]
     factors, limit, check, num = [], int(math.sqrt(x)) + 1, 2, x
-    for check in xrange(2, limit):
+    for check in range(2, limit):
         while num % check == 0:
             factors.append(check)
             num /= check
     if num > 1:
-        factors.append(num)
+        factors.append(int(num))
     return factors
-
-
-def cleanse_pymodule_filename(filename):
-    """
-    Replace all characters not allowed in Python module names in filename with
-    "_".
-
-    See bug report:
-     - http://stackoverflow.com/questions/21853678/install-obspy-in-cygwin
-     - See #755
-
-    See also:
-     - http://stackoverflow.com/questions/7552311/
-     - http://docs.python.org/2/reference/lexical_analysis.html#identifiers
-
-    >>> cleanse_pymodule_filename("0blup-bli.554_3!32")
-    '_blup_bli_554_3_32'
-    """
-    filename = re.sub(r'^[^a-zA-Z_]', "_", filename)
-    filename = re.sub(r'[^a-zA-Z0-9_]', "_", filename)
-    return filename
-
-
-def _get_lib_name(lib):
-    """
-    Helper function to get an architecture and Python version specific library
-    filename.
-    """
-    libname = "lib%s_%s_%s_py%s" % (
-        lib, platform.system(), platform.architecture()[0], "".join(
-            [str(i) for i in platform.python_version_tuple()[:2]]))
-    return cleanse_pymodule_filename(libname)
 
 
 if __name__ == '__main__':

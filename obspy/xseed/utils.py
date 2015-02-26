@@ -8,9 +8,14 @@ Various additional utilities for ObsPy xseed.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
+
+import sys
 
 from obspy import UTCDateTime
-import sys
 
 
 # Ignore Attributes of Blockettes
@@ -48,7 +53,7 @@ def DateTime2String(dt, compact=False):
     """
     if isinstance(dt, UTCDateTime):
         return dt.formatSEED(compact)
-    elif isinstance(dt, basestring):
+    elif isinstance(dt, (str, native_str)):
         dt = dt.strip()
     if not dt:
         return ""
@@ -74,19 +79,19 @@ def compareSEED(seed1, seed2):
         raise Exception(msg)
     # Loop over each record and remove empty ones. obspy.xseed doesn't write
     # empty records. Redundant code to ease coding...
-    recnums = len(seed1) / 4096
-    new_seed1 = ''
-    for _i in xrange(recnums):
+    recnums = len(seed1) // 4096
+    new_seed1 = b''
+    for _i in range(recnums):
         cur_record = seed1[_i * 4096 + 8:(_i + 1) * 4096].strip()
-        if cur_record == '':
+        if cur_record == b'':
             continue
         new_seed1 += seed1[_i * 4096:(_i + 1) * 4096]
     seed1 = new_seed1
-    recnums = len(seed2) / 4096
-    new_seed2 = ''
-    for _i in xrange(recnums):
+    recnums = len(seed2) // 4096
+    new_seed2 = b''
+    for _i in range(recnums):
         cur_record = seed2[_i * 4096 + 8:(_i + 1) * 4096].strip()
-        if cur_record == '':
+        if cur_record == b'':
             continue
         new_seed2 += seed2[_i * 4096:(_i + 1) * 4096]
     seed2 = new_seed2
@@ -96,30 +101,31 @@ def compareSEED(seed1, seed2):
                                                              len(seed2))
         raise Exception(msg)
     # version string is always ' 2.4' for output
-    if seed1[15:19] == ' 2.3':
-        seed1 = seed1.replace(' 2.3', ' 2.4', 1)
-    if seed1[15:19] == '02.3':
-        seed1 = seed1.replace('02.3', ' 2.4', 1)
+    if seed1[15:19] == b' 2.3':
+        seed1 = seed1.replace(b' 2.3', b' 2.4', 1)
+    if seed1[15:19] == b'02.3':
+        seed1 = seed1.replace(b'02.3', b' 2.4', 1)
     # check for missing '~' in blockette 10 (faulty dataless from BW network)
     l = int(seed1[11:15])
     temp = seed1[0:(l + 8)]
-    if temp.count('~') == 4:
+    if temp.count(b'~') == 4:
         # added a '~' and remove a space before the next record
         # record length for now 4096
-        seed1 = seed1[0:11] + '%04i' % (l + 1) + seed1[15:(l + 8)] + '~' + \
+        b_l = ('%04i' % (l + 1)).encode('ascii', 'strict')
+        seed1 = seed1[0:11] + b_l + seed1[15:(l + 8)] + b'~' + \
             seed1[(l + 8):4095] + seed1[4096:]
     # check each byte
-    for i in xrange(0, len(seed1)):
+    for i in range(0, len(seed1)):
         if seed1[i] == seed2[i]:
             continue
         temp = seed1[i] + seed2[i]
-        if temp == '0+':
+        if temp == b'0+':
             continue
-        if temp == '0 ':
+        if temp == b'0 ':
             continue
-        if temp == ' +':
+        if temp == b' +':
             continue
-        if temp == '- ':
+        if temp == b'- ':
             # -056.996398+0031.0
             #  -56.996398  +31.0
             continue
@@ -212,4 +218,4 @@ def uniqueList(seq):
     keys = {}
     for e in seq:
         keys[e] = 1
-    return keys.keys()
+    return list(keys.keys())

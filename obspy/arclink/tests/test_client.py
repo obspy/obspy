@@ -2,17 +2,22 @@
 """
 The obspy.arclink.client test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import io
+import operator
+import unittest
+import warnings
+
+import numpy as np
 
 from obspy import read
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict
-import numpy as np
-import operator
-import StringIO
-import unittest
-import warnings
+from obspy.core.util import AttribDict, NamedTemporaryFile
 
 
 class ClientTestCase(unittest.TestCase):
@@ -267,9 +272,9 @@ class ClientTestCase(unittest.TestCase):
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
-                'filesize': 30720L,
+                'filesize': 30720,
                 'dataquality': 'D',
-                'number_of_records': 60L,
+                'number_of_records': 60,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 47.737167,
@@ -284,6 +289,7 @@ class ClientTestCase(unittest.TestCase):
             'npts': 1370,
             'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
             'channel': 'EHZ'}
+        results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
         # example 2
         client = Client(user='test@obspy.org')
@@ -309,9 +315,9 @@ class ClientTestCase(unittest.TestCase):
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
-                'filesize': 3584L,
+                'filesize': 3584,
                 'dataquality': 'D',
-                'number_of_records': 7L,
+                'number_of_records': 7,
                 'byteorder': '>'}),
             'coordinates': AttribDict({
                 'latitude': 49.3084,
@@ -326,6 +332,7 @@ class ClientTestCase(unittest.TestCase):
             'calib': 1.0,
             'sampling_rate': 40.0,
             'channel': 'BHZ'}
+        results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
 
     def test_getNotExistingWaveform(self):
@@ -402,7 +409,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
-            self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+            with open(mseedfile, 'rb') as fp:
+                self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertTrue(st[0].stats.starttime <= start)
             self.assertTrue(st[0].stats.endtime >= end)
@@ -417,7 +425,8 @@ class ClientTestCase(unittest.TestCase):
                                 format='FSEED')
             st = read(fseedfile)
             # Full SEED must start with Volume Index Control Headers (V)
-            self.assertEqual(open(fseedfile).read(8)[6], "V")
+            with open(fseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertTrue(st[0].stats.starttime <= start)
             self.assertTrue(st[0].stats.endtime >= end)
@@ -457,7 +466,8 @@ class ClientTestCase(unittest.TestCase):
                                 compressed=False)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
-            self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+            with open(mseedfile, 'rb') as fp:
+                self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertEqual(st[0].stats.network, 'GE')
             self.assertEqual(st[0].stats.station, 'APE')
@@ -492,7 +502,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 unpack=False)
             # check if compressed
-            self.assertEqual(open(mseedfile, 'rb').read(2), 'BZ')
+            with open(mseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(2), b'BZ')
             # importing via read should work too
             read(mseedfile)
         # Full SEED
@@ -501,7 +512,8 @@ class ClientTestCase(unittest.TestCase):
             client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 format="FSEED", unpack=False)
             # check if compressed
-            self.assertEqual(open(fseedfile, 'rb').read(2), 'BZ')
+            with open(fseedfile, 'rb') as fp:
+                self.assertEqual(fp.read(2), b'BZ')
             # importing via read should work too
             read(fseedfile)
 
@@ -558,17 +570,18 @@ class ClientTestCase(unittest.TestCase):
             tempfile = tf.name
             # Dataless SEED
             client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-            self.assertEqual(open(tempfile).read(8), "000001V ")
+            with open(tempfile, 'rb') as fp:
+                self.assertEqual(fp.read(8), b"000001V ")
 
-        # Try again but write to a StringIO instance.
-        file_object = StringIO.StringIO()
+        # Try again but write to a BytesIO instance.
+        file_object = io.BytesIO()
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         # Dataless SEED
         client.saveResponse(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
         file_object.seek(0, 0)
-        self.assertEqual(file_object.read(8), "000001V ")
+        self.assertEqual(file_object.read(8), b"000001V ")
 
     def test_SRL(self):
         """
@@ -590,8 +603,10 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
-        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ",
-                                    t, t + 30).values()[0]
+        # original but deprecated call
+        # poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
+        #                                 t, t+30).values())[0]
+        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ", t)
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])

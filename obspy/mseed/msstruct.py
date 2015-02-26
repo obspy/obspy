@@ -2,11 +2,16 @@
 """
 Convenience class for handling MSRecord and MSFileparam.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from headers import clibmseed, MSRecord, MSFileParam, MS_NOERROR, HPTMODULUS
-from obspy import UTCDateTime
 import ctypes as C
 import os
+
+from obspy import UTCDateTime
+from obspy.mseed.headers import (HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord,
+                                 clibmseed)
 
 
 def _getMSFileInfo(f, real_name):
@@ -29,8 +34,8 @@ def _getMSFileInfo(f, real_name):
     rec_buffer = f.read(512)
     info['record_length'] = clibmseed.ms_detect(rec_buffer, 512)
     # Calculate Number of Records
-    info['number_of_records'] = long(info['filesize'] //
-                                     info['record_length'])
+    info['number_of_records'] = int(info['filesize'] //
+                                    info['record_length'])
     info['excess_bytes'] = info['filesize'] % info['record_length']
     f.seek(pos)
     return info
@@ -131,7 +136,8 @@ class _MSStruct(object):
         """
         errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf),
                                          C.pointer(self.msr),
-                                         self.file, reclen, None, None,
+                                         self.file.encode('ascii', 'strict'),
+                                         reclen, None, None,
                                          skipnotdata, dataflag, verbose)
         if raise_flag:
             if errcode != MS_NOERROR:

@@ -2,8 +2,13 @@
 """
 The obspy.seedlink.client.slnetstation test suite.
 """
-from obspy.seedlink.client.slnetstation import SLNetStation
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import unittest
+
+from obspy.seedlink.client.slnetstation import SLNetStation
 
 
 class SLNetStationTestCase(unittest.TestCase):

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Header files for the FDSN webservice.
@@ -9,15 +8,21 @@ Header files for the FDSN webservice.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import __version__, UTCDateTime
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import platform
+
+from obspy import UTCDateTime, __version__
 
 
 class FDSNException(Exception):
     pass
 
 
+# A curated list collecting some implementations:
+# http://www.fdsn.org/webservices/datacenters/
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "ORFEUS": "http://www.orfeus-eu.org",
                 "USGS": "http://comcat.cr.usgs.gov",
@@ -26,6 +31,10 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USP": "http://sismo.iag.usp.br",
                 "GFZ": "http://geofon.gfz-potsdam.de",
                 "NERIES": "http://www.seismicportal.eu",
+                "SCEC": "http://www.data.scec.org",
+                "GEONET": "http://service.geonet.org.nz",
+                "INGV": "http://webservices.rm.ingv.it",
+                "BGR": "http://eida.bgr.de",
                 }
 
 FDSNWS = ("dataselect", "event", "station")
@@ -48,7 +57,7 @@ DEFAULT_STATION_PARAMETERS = [
     "endafter", "network", "station", "location", "channel", "minlatitude",
     "maxlatitude", "minlongitude", "maxlongitude", "latitude", "longitude",
     "minradius", "maxradius", "level", "includerestricted",
-    "includeavailability", "updatedafter"]
+    "includeavailability", "updatedafter", "matchtimeseries"]
 
 DEFAULT_EVENT_PARAMETERS = [
     "starttime", "endtime", "minlatitude", "maxlatitude", "minlongitude",
@@ -79,7 +88,7 @@ PARAMETER_ALIASES = {
     "minmag": "minmagnitude",
     "maxmag": "maxmagnitude",
     "magtype": "magnitudetype",
-    }
+}
 
 
 # The default types if none are given. If the parameter can not be found in
@@ -117,6 +126,7 @@ DEFAULT_TYPES = {
     "includeallorigins": bool,
     "includeallmagnitudes": bool,
     "includearrivals": bool,
+    "matchtimeseries": bool,
     "eventid": str,
     "limit": int,
     "offset": int,

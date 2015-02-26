@@ -2,13 +2,18 @@
 """
 The obspy.segy Seismic Unix test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.core.util import NamedTemporaryFile
-from obspy.segy.segy import readSU, SEGYTraceReadingError
-from StringIO import StringIO
-import numpy as np
+import io
 import os
 import unittest
+
+import numpy as np
+
+from obspy.core.util import NamedTemporaryFile
+from obspy.segy.segy import SEGYTraceReadingError, readSU
 
 
 class SUTestCase(unittest.TestCase):
@@ -45,8 +50,8 @@ class SUTestCase(unittest.TestCase):
 
     def test_enforcingByteordersWhileReading(self):
         """
-        Tests whether or not enforcing the byteorder while reading and writing
-        does something and works at all. Using the wrong byteorder will most
+        Tests whether or not enforcing the byte order while reading and writing
+        does something and works at all. Using the wrong byte order will most
         likely raise an Exception.
         """
         # This file is little endian.
@@ -63,7 +68,7 @@ class SUTestCase(unittest.TestCase):
 
     def test_readingAndWritingDifferentByteorders(self):
         """
-        Writing different byteorders should not change
+        Writing different byte orders should not change
         """
         # This file is little endian.
         file = os.path.join(self.path, '1.su_first_trace')
@@ -103,18 +108,19 @@ class SUTestCase(unittest.TestCase):
         su = readSU(file)
         data = su.traces[0].data
         # The data is written as integer so it is also converted to float32.
-        correct_data = np.require(np.load(data_file).ravel(), 'float32')
+        correct_data = np.require(np.load(data_file).ravel(), np.float32)
         # Compare both.
         np.testing.assert_array_equal(correct_data, data)
 
-    def test_readStringIO(self):
+    def test_readBytesIO(self):
         """
-        Tests reading from StringIO instances.
+        Tests reading from BytesIO instances.
         """
         # 1
-        file = os.path.join(self.path, '1.su_first_trace')
-        data = open(file, 'rb').read()
-        st = readSU(StringIO(data))
+        filename = os.path.join(self.path, '1.su_first_trace')
+        with open(filename, 'rb') as fp:
+            data = fp.read()
+        st = readSU(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
 
 

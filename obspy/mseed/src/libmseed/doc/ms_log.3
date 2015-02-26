@@ -1,4 +1,4 @@
-.TH MS_LOG 3 2006/11/21
+.TH MS_LOG 3 2014/07/16
 .SH NAME
 ms_log and friends \- Central logging facility for libmseed
 
@@ -10,12 +10,12 @@ ms_log and friends \- Central logging facility for libmseed
 .sp
 .BI "int  \fBms_log_l\fP (MSLogParam *" logp ", int " level ", const char *" format ", ...);
 .sp
-.BI "void \fBms_loginit\fP (void (*" log_print ")(const char*), const char *" logprefix ",
-.BI "               void (*" diag_print ")(const char*), const char *" errprefix ");
+.BI "void \fBms_loginit\fP (void (*" log_print ")(char*), const char *" logprefix ",
+.BI "                 void (*" diag_print ")(char*), const char *" errprefix ");
 .sp
 .BI "MSLogParam * \fBms_loginit_l\fP (MSLogParam *" logp ",
-.BI "               void (*" log_print ")(const char*), const char *" logprefix ",
-.BI "               void (*" diag_print ")(const char*), const char *" errprefix ");
+.BI "               void (*" log_print ")(char*), const char *" logprefix ",
+.BI "               void (*" diag_print ")(char*), const char *" errprefix ");
 .fi
 .SH DESCRIPTION
 The \fBms_log\fP functions are the central logging facility for

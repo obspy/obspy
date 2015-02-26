@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Float, Integer, VariableString, Loop
+from obspy.xseed.fields import Float, Integer, Loop, VariableString
 from obspy.xseed.utils import formatRESP
 
 
@@ -53,7 +56,7 @@ class Blockette048(Blockette):
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n'
-            for _i in xrange(self.number_of_history_values):
+            for _i in range(self.number_of_history_values):
                 string += \
                     'B048F08-09   %2s %13s %13s %s\n' \
                     % (formatRESP(self.sensitivity_for_calibration[_i], 6),

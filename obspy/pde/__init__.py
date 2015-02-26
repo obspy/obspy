@@ -8,7 +8,7 @@ Epicenters (PDE) Bulletin.
 Currently, only the mchedr (machine readable Earthquake Data Report)
 format is supported.
 
-.. seealso:: http://earthquake.usgs.gov/research/data/pde.php
+.. seealso:: http://earthquake.usgs.gov/data/pde.php
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org), Claudio Satriano
@@ -17,6 +17,9 @@ format is supported.
     (http://www.gnu.org/copyleft/lesser.html)
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

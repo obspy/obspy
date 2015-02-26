@@ -13,5 +13,9 @@ A write function for files and a utility for compact string serialization using
 the Default class are located in :mod:`obspy.core.json.core`.
 
 """
-from default import Default
-from core import get_dump_kwargs, writeJSON
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+from .default import Default
+from .core import get_dump_kwargs, writeJSON

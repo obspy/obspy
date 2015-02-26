@@ -1,27 +1,37 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from copy import deepcopy
-from numpy.ma import is_masked
-from obspy import UTCDateTime, Trace, read, Stream
-from obspy.core import Stats
-from obspy.core.util.base import getMatplotlibVersion
-from obspy.core.util.decorator import skipIf
-from obspy.xseed import Parser
 import math
-import mock
-import numpy as np
-import unittest
-import warnings
 import os
+import unittest
+from copy import deepcopy
 
+import numpy as np
+import numpy.ma as ma
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+from obspy import Stream, Trace, UTCDateTime, __version__, read
+from obspy.core import Stats
+from obspy.core.compatibility import mock
+from obspy.xseed import Parser
 
 
 class TraceTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.trace.Trace.
     """
+    @staticmethod
+    def __remove_processing(tr):
+        """
+        Removes all processing information in the trace object.
+
+        Useful for testing.
+        """
+        if "processing" not in tr.stats:
+            return
+        del tr.stats.processing
+
     def test_init(self):
         """
         Tests the __init__ method of the Trace class.
@@ -149,7 +159,7 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         self.assertEqual(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
-        np.testing.assert_array_equal(trace.data, tr.data[delta:])
+        np.testing.assert_array_equal(trace.data, tr.data[int(delta):])
         self.assertEqual(tr.stats.endtime, trace.stats.endtime)
         # start time > end time
         tr = deepcopy(trace)
@@ -259,8 +269,7 @@ class TraceTestCase(unittest.TestCase):
         # returns one sample!
         tr = deepcopy(trace)
         tr._rtrim(4.995)
-        #XXX I do not understand why this fails!!!
-        #tr.verify()
+        tr.verify()
         np.testing.assert_array_equal(tr.data, np.array([0]))
         self.assertEqual(len(tr.data), 1)
         self.assertEqual(tr.stats.npts, 1)
@@ -325,7 +334,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.sampling_rate, 200.0)
         self.assertEqual(trace.stats.starttime, start + 0.5)
         self.assertEqual(trace.stats.endtime, end - 0.5)
-        # starttime should be before endtime
+        # start time should be before end time
         self.assertRaises(ValueError, trace.trim, end, start)
 
     def test_trimAllDoesNotChangeDtype(self):
@@ -337,11 +346,11 @@ class TraceTestCase(unittest.TestCase):
         should not be changed anyways.
         """
         # Choose non native dtype.
-        tr = Trace(np.arange(100, dtype='int16'))
+        tr = Trace(np.arange(100, dtype=np.int16))
         tr.trim(UTCDateTime(10000), UTCDateTime(20000))
         # Assert the result.
         self.assertEqual(len(tr.data), 0)
-        self.assertEqual(tr.data.dtype, 'int16')
+        self.assertEqual(tr.data.dtype, np.int16)
 
     def test_addTraceWithGap(self):
         """
@@ -369,8 +378,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(trace), 3000)
         self.assertEqual(trace[0], 0)
         self.assertEqual(trace[999], 999)
-        self.assertTrue(is_masked(trace[1000]))
-        self.assertTrue(is_masked(trace[1999]))
+        self.assertTrue(ma.is_masked(trace[1000]))
+        self.assertTrue(ma.is_masked(trace[1999]))
         self.assertEqual(trace[2000], 999)
         self.assertEqual(trace[2999], 0)
         # verify
@@ -436,7 +445,7 @@ class TraceTestCase(unittest.TestCase):
         trace = tr1 + tr2
         # should return exact the same values like trace 1
         self.assertEqual(trace.stats, tr1.stats)
-        mask = np.zeros(len(tr1)).astype("bool")
+        mask = np.zeros(len(tr1)).astype(np.bool_)
         mask[200:401] = True
         np.testing.assert_array_equal(trace.data.mask, mask)
         np.testing.assert_array_equal(trace.data.data[:200], tr1.data[:200])
@@ -469,7 +478,7 @@ class TraceTestCase(unittest.TestCase):
         # overlap
         overlap = tr1 + tr2
         self.assertEqual(len(overlap), 1800)
-        mask = np.zeros(1800).astype("bool")
+        mask = np.zeros(1800).astype(np.bool_)
         mask[800:1000] = True
         np.testing.assert_array_equal(overlap.data.mask, mask)
         np.testing.assert_array_equal(overlap.data.data[:800], tr1.data[:800])
@@ -477,7 +486,7 @@ class TraceTestCase(unittest.TestCase):
         # overlap + gap
         overlap_gap = overlap + tr3
         self.assertEqual(len(overlap_gap), 3400)
-        mask = np.zeros(3400).astype("bool")
+        mask = np.zeros(3400).astype(np.bool_)
         mask[800:1000] = True
         mask[1800:2400] = True
         np.testing.assert_array_equal(overlap_gap.data.mask, mask)
@@ -489,7 +498,7 @@ class TraceTestCase(unittest.TestCase):
         # gap
         gap = tr2 + tr3
         self.assertEqual(len(gap), 2600)
-        mask = np.zeros(2600).astype("bool")
+        mask = np.zeros(2600).astype(np.bool_)
         mask[1000:1600] = True
         np.testing.assert_array_equal(gap.data.mask, mask)
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
@@ -541,29 +550,29 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.failUnless((bigtrace_sort.data == myArray).all())
+            self.assertTrue((bigtrace_sort.data == myArray).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
             failinfo = fail_pattern % (myTrace, bigtrace_sort)
             failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.failUnless(bigtrace_sort == myTrace, failinfo)
+            self.assertTrue(bigtrace_sort == myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.failUnless((bigtrace.data == myArray).all(), failinfo)
+            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
 
             failinfo = fail_pattern % (myTrace, bigtrace)
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.failUnless(bigtrace == myTrace, failinfo)
+            self.assertTrue(bigtrace == myTrace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
                 failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.failUnless(myArray.dtype == array_.dtype, failinfo)
+                self.assertTrue(myArray.dtype == array_.dtype, failinfo)
 
     def test_slice(self):
         """
         Tests the slicing of trace objects.
         """
-        tr = Trace(data=np.arange(10, dtype='int32'))
+        tr = Trace(data=np.arange(10, dtype=np.int32))
         mempos = tr.data.ctypes.data
         t = tr.stats.starttime
         tr1 = tr.slice(t + 2, t + 8)
@@ -573,50 +582,107 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data[2:9].ctypes.data, tr1.data.ctypes.data)
         self.assertEqual(tr1.data.ctypes.data - 8, mempos)
 
+        # Test the processing information for the slicing. The sliced trace
+        # should have a processing information showing that it has been
+        # trimmed. The original trace should have nothing.
+        tr = Trace(data=np.arange(10, dtype=np.int32))
+        tr2 = tr.slice(tr.stats.starttime)
+        self.assertTrue("processing" not in tr.stats)
+        self.assertTrue("processing" in tr2.stats)
+        self.assertTrue("trim" in tr2.stats.processing[0])
+
     def test_slice_noStarttimeOrEndtime(self):
         """
-        Tests the slicing of trace objects with no starttime or endtime
+        Tests the slicing of trace objects with no start time or end time
         provided. Compares results against the equivalent trim() operation
         """
-        tr_orig = Trace(data=np.arange(10, dtype='int32'))
+        tr_orig = Trace(data=np.arange(10, dtype=np.int32))
         tr = tr_orig.copy()
         # two time points outside the trace and two inside
         t1 = tr.stats.starttime - 2
         t2 = tr.stats.starttime + 2
         t3 = tr.stats.endtime - 3
         t4 = tr.stats.endtime + 2
+
         # test 1: only removing data at left side
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t2)
         self.assertEqual(tr_trim, tr.slice(starttime=t2))
-        self.assertEqual(tr_trim, tr.slice(starttime=t2, endtime=t4))
+        tr2 = tr.slice(starttime=t2, endtime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         # test 2: only removing data at right side
         tr_trim = tr_orig.copy()
         tr_trim.trim(endtime=t3)
         self.assertEqual(tr_trim, tr.slice(endtime=t3))
-        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t3))
+        tr2 = tr.slice(starttime=t1, endtime=t3)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         # test 3: not removing data at all
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t1, endtime=t4)
-        self.assertEqual(tr_trim, tr.slice())
-        self.assertEqual(tr_trim, tr.slice(starttime=t1))
-        self.assertEqual(tr_trim, tr.slice(endtime=t4))
-        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t4))
+        tr2 = tr.slice()
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(endtime=t4)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1, endtime=t4)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         tr_trim.trim()
-        self.assertEqual(tr_trim, tr.slice())
-        self.assertEqual(tr_trim, tr.slice(starttime=t1))
-        self.assertEqual(tr_trim, tr.slice(endtime=t4))
-        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t4))
+        tr2 = tr.slice()
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(endtime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t1, endtime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
         # test 4: removing data at left and right side
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t2, endtime=t3)
         self.assertEqual(tr_trim, tr.slice(t2, t3))
         self.assertEqual(tr_trim, tr.slice(starttime=t2, endtime=t3))
+
         # test 5: no data left after operation
         tr_trim = tr_orig.copy()
         tr_trim.trim(starttime=t4)
-        self.assertEqual(tr_trim, tr.slice(starttime=t4))
-        self.assertEqual(tr_trim, tr.slice(starttime=t4, endtime=t4 + 1))
+
+        tr2 = tr.slice(starttime=t4)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
+
+        tr2 = tr.slice(starttime=t4, endtime=t4 + 1)
+        self.__remove_processing(tr_trim)
+        self.__remove_processing(tr2)
+        self.assertEqual(tr_trim, tr2)
 
     def test_trimFloatingPoint(self):
         """
@@ -633,7 +699,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.endtime, UTCDateTime(10))
         # Create temp trace object used for testing.
         st = tr.stats.starttime
-        # This is supposed to include the start- and endtimes and should
+        # This is supposed to include the start and end times and should
         # therefore cut right at 2 and 8.
         temp = deepcopy(tr)
         temp.trim(st + 2.1, st + 7.1)
@@ -644,7 +710,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(temp.stats.endtime, UTCDateTime(7))
         self.assertEqual(temp.stats.npts, 6)
         self.assertEqual(temp2.stats.npts, 7)
-        #self.assertEqual(temp.stats, temp2.stats)
+        # self.assertEqual(temp.stats, temp2.stats)
         np.testing.assert_array_equal(temp.data, temp2.data[:-1])
         # Create test array that allows for easy testing.
         # Check if the data is the same.
@@ -654,14 +720,14 @@ class TraceTestCase(unittest.TestCase):
         # a copy of the stats.
         temp = deepcopy(tr)
         temp.trim(st - 2.5, st + 200)
-        # The start- and endtimes should not change.
+        # The start and end times should not change.
         self.assertEqual(temp.stats.starttime, UTCDateTime(0))
         self.assertEqual(temp.stats.endtime, UTCDateTime(10))
         self.assertEqual(temp.stats.npts, 11)
         # Alter the new stats to make sure the old one stays intact.
         temp.stats.starttime = UTCDateTime(1000)
         self.assertEqual(org_stats, tr.stats)
-        # Check if the data adress is not the same, that is it is a copy
+        # Check if the data address is not the same, that is it is a copy
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data)
         # Make sure the original Trace object did not change.
@@ -724,14 +790,14 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(temp.stats.starttime.timestamp, -2.0)
         self.assertEqual(temp.stats.endtime.timestamp, 200)
         self.assertEqual(temp.stats.npts, 203)
-        mask = np.zeros(203).astype("bool")
+        mask = np.zeros(203).astype(np.bool_)
         mask[:2] = True
         mask[13:] = True
         np.testing.assert_array_equal(temp.data.mask, mask)
         # Alter the new stats to make sure the old one stays intact.
         temp.stats.starttime = UTCDateTime(1000)
         self.assertEqual(org_stats, tr.stats)
-        # Check if the data adress is not the same, that is it is a copy
+        # Check if the data address is not the same, that is it is a copy
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data[2:13])
         # Make sure the original Trace object did not change.
@@ -806,7 +872,7 @@ class TraceTestCase(unittest.TestCase):
         """
         Test __add__ method of the Trace object.
         """
-        #1
+        # 1
         # overlapping trace with differing data
         # Trace 1: 0000000
         # Trace 2:      1111111
@@ -823,7 +889,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
-        #2
+        # 2
         # overlapping trace with same data
         # Trace 1: 0000000
         # Trace 2:      0000000
@@ -838,7 +904,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr2 + tr1
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.zeros(12))
-        #3
+        # 3
         # contained trace with same data
         # Trace 1: 1111111111
         # Trace 2:      11
@@ -853,7 +919,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr2 + tr1
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.ones(10))
-        #4
+        # 4
         # contained trace with differing data
         # Trace 1: 0000000000
         # Trace 2:      11
@@ -870,7 +936,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 0, 0, 0])
-        #5
+        # 5
         # completely contained trace with same data until end
         # Trace 1: 1111111111
         # Trace 2: 1111111111
@@ -880,7 +946,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.ones(10))
-        #6
+        # 6
         # completely contained trace with differing data
         # Trace 1: 0000000000
         # Trace 2: 1111111111
@@ -926,18 +992,18 @@ class TraceTestCase(unittest.TestCase):
         Test __add__ method of the Trace object.
         """
         # 1 - different data types for the same channel should fail
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         self.assertRaises(TypeError, tr1.__add__, tr2)
         self.assertRaises(TypeError, tr2.__add__, tr1)
         # 2 - different sampling rates for the different channels works
-        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr1 = Trace(data=np.zeros(5, dtype=np.int32))
         tr1.stats.channel = 'EHE'
-        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr2 = Trace(data=np.zeros(5, dtype=np.float32))
         tr2.stats.channel = 'EHZ'
-        tr3 = Trace(data=np.zeros(5, dtype="int32"))
+        tr3 = Trace(data=np.zeros(5, dtype=np.int32))
         tr3.stats.channel = 'EHE'
-        tr4 = Trace(data=np.zeros(5, dtype="float32"))
+        tr4 = Trace(data=np.zeros(5, dtype=np.float32))
         tr4.stats.channel = 'EHZ'
         # same data types and ids should not fail
         tr1 + tr3
@@ -1134,7 +1200,7 @@ class TraceTestCase(unittest.TestCase):
         data = 0.1 * t + 1.
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.differentiate(type='gradient')
+        tr.differentiate(method='gradient')
         np.testing.assert_array_almost_equal(tr.data, np.ones(11) * 0.1)
 
     def test_integrate(self):
@@ -1144,8 +1210,12 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(101) * 0.01
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.integrate(type='cumtrapz')
-        np.testing.assert_almost_equal(tr.data[-1], 0.1)
+        tr.integrate()
+        # Assert time and length of resulting array.
+        self.assertEqual(tr.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr.stats.npts, 101)
+        np.testing.assert_array_almost_equal(
+            tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
     def test_issue317(self):
         """
@@ -1192,7 +1262,7 @@ class TraceTestCase(unittest.TestCase):
                                    org_trace.stats.sampling_rate)
             self.assertAlmostEqual(sum_trace.stats.sampling_rate,
                                    org_trace.stats.sampling_rate)
-            # check endtimes
+            # check end times
             self.assertEqual(traces[i].stats.endtime, sum_trace.stats.endtime)
 
     def test_verify(self):
@@ -1307,7 +1377,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
@@ -1315,7 +1384,6 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(25))
         tr.plot(show=False)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
@@ -1352,8 +1420,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(trace, Trace))
         st = trace.split()
         self.assertTrue(isinstance(st, Stream))
-        self.assertEquals(len(st[0]), 1000)
-        self.assertEquals(len(st[1]), 1000)
+        self.assertEqual(len(st[0]), 1000)
+        self.assertEqual(len(st[1]), 1000)
         # check if have no masked arrays
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
@@ -1392,10 +1460,10 @@ class TraceTestCase(unittest.TestCase):
         """
         # fill_value = None
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime - 0.01,
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=None)
-        self.assertEquals(len(tr), 3002)
+        self.assertEqual(len(tr), 3002)
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertTrue(tr.data[0] is np.ma.masked)
         self.assertTrue(tr.data[1] is not np.ma.masked)
@@ -1403,20 +1471,47 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(tr.data[-1] is np.ma.masked)
         # fill_value = 999
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime - 0.01,
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=999)
-        self.assertEquals(len(tr), 3002)
+        self.assertEqual(len(tr), 3002)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
-        self.assertEquals(tr.data[0], 999)
-        self.assertEquals(tr.data[-1], 999)
+        self.assertEqual(tr.data[0], 999)
+        self.assertEqual(tr.data[-1], 999)
         # given fill_value but actually no padding at all
         tr = read()[0]
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         tr.trim(starttime=tr.stats.starttime,
                 endtime=tr.stats.endtime, pad=True, fill_value=-999)
-        self.assertEquals(len(tr), 3000)
+        self.assertEqual(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
+
+    def test_resample(self):
+        """
+        Tests the resampling of traces.
+        """
+        tr = read()[0]
+
+        self.assertEqual(tr.stats.sampling_rate, 100.0)
+        self.assertEqual(tr.stats.npts, 3000)
+
+        tr_2 = tr.copy().resample(sampling_rate=50.0)
+        self.assertEqual(tr_2.stats.endtime, tr.stats.endtime - 1.0 / 100.0)
+        self.assertEqual(tr_2.stats.sampling_rate, 50.0)
+        self.assertEqual(tr_2.stats.starttime, tr.stats.starttime)
+
+        tr_3 = tr.copy().resample(sampling_rate=10.0)
+        self.assertEqual(tr_3.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
+        self.assertEqual(tr_3.stats.sampling_rate, 10.0)
+        self.assertEqual(tr_3.stats.starttime, tr.stats.starttime)
+
+        tr_4 = tr.copy()
+        tr_4.data = np.require(tr_4.data,
+                               dtype=tr_4.data.dtype.newbyteorder('>'))
+        tr_4 = tr_4.resample(sampling_rate=10.0)
+        self.assertEqual(tr_4.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
+        self.assertEqual(tr_4.stats.sampling_rate, 10.0)
+        self.assertEqual(tr_4.stats.starttime, tr.stats.starttime)
 
     def test_method_chaining(self):
         """
@@ -1431,8 +1526,8 @@ class TraceTestCase(unittest.TestCase):
             .verify()\
             .filter("lowpass", freq=2.0)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            - 0.037004 - 0.037016j,
-                                            - 251.33 + 0j],
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\
@@ -1451,16 +1546,17 @@ class TraceTestCase(unittest.TestCase):
         # Use the processing chain to check the results. The trim() methods
         # does not have an entry in the processing chain.
         pr = tr.stats.processing
-        self.assertTrue(pr[0].startswith("filter:lowpass"))
-        self.assertTrue(pr[1].startswith("simulate"))
-        self.assertTrue(pr[2].startswith("trigger"))
-        self.assertTrue(pr[3].startswith("downsample"))
-        self.assertTrue(pr[4].startswith("resample"))
-        self.assertTrue(pr[5].startswith("differentiate"))
-        self.assertTrue(pr[6].startswith("integrate"))
-        self.assertTrue(pr[7].startswith("detrend"))
-        self.assertTrue(pr[8].startswith("taper"))
-        self.assertTrue(pr[9].startswith("normalize"))
+        self.assertTrue("trim" in pr[0])
+        self.assertTrue("filter" in pr[1] and "lowpass" in pr[1])
+        self.assertTrue("simulate" in pr[2])
+        self.assertTrue("trigger" in pr[3])
+        self.assertTrue("decimate" in pr[4])
+        self.assertTrue("resample" in pr[5])
+        self.assertTrue("differentiate" in pr[6])
+        self.assertTrue("integrate" in pr[7])
+        self.assertTrue("detrend" in pr[8])
+        self.assertTrue("taper" in pr[9])
+        self.assertTrue("normalize" in pr[10])
 
     def test_skip_empty_trace(self):
         tr = read()[0]
@@ -1471,43 +1567,6 @@ class TraceTestCase(unittest.TestCase):
         tr.differentiate()
         tr.integrate()
         tr.taper()
-
-    def test_taper_backwards_compatibility(self):
-        """
-        Test that old style .taper() calls get emulated correctly.
-        """
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('ignore', DeprecationWarning)
-            tr = Trace(np.ones(10))
-
-            tr1 = tr.copy().taper()
-            tr2 = tr.copy().taper("cosine", p=0.1)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper("hann")
-            tr2 = tr.copy().taper(max_percentage=None, type="hann")
-            self.assertEqual(tr1, tr2)
-            tr2 = tr.copy().taper(None, type="hann")
-            self.assertEqual(tr1, tr2)
-            tr2 = tr.copy().taper(type="hann", max_percentage=None)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper(type="cosine", p=0.2)
-            tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper(type="cosine", p=1.0)
-            tr2 = tr.copy().taper(type="cosine", max_percentage=None)
-            # processing info is different for this case
-            tr1.stats.pop("processing")
-            tr2.stats.pop("processing")
-            self.assertEqual(tr1, tr2)
-
-            self.assertRaises(NotImplementedError, tr.copy().taper,
-                              type="hann", p=0.3)
-
-            tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
-            self.assertTrue(np.all(tr1.data[6:] < 1))
 
     def test_issue_695(self):
         x = np.zeros(12)
@@ -1574,6 +1633,223 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
+    def test_processing_information(self):
+        """
+        Test case for the automatic processing information.
+        """
+        tr = read()[0]
+        trimming_starttime = tr.stats.starttime + 1
+        tr.trim(trimming_starttime)
+        tr.filter("lowpass", freq=2.0)
+        tr.simulate(paz_remove={
+            'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                      -251.33 + 0j],
+            'zeros': [0j, 0j],
+            'gain': 60077000.0,
+            'sensitivity': 2516778400.0})
+        tr.trigger(type="zdetect", nsta=20)
+        tr.decimate(factor=2, no_filter=True)
+        tr.resample(tr.stats.sampling_rate / 2.0)
+        tr.differentiate()
+        tr.integrate()
+        tr.detrend()
+        tr.taper(max_percentage=0.05, type='cosine')
+        tr.normalize()
+
+        pr = tr.stats.processing
+
+        self.assertTrue("trim" in pr[0])
+        self.assertEqual(
+            "ObsPy %s: trim(endtime=None::fill_value=None::"
+            "nearest_sample=True::pad=False::starttime=%s)" % (
+                __version__, str(trimming_starttime)),
+            pr[0])
+        self.assertTrue("filter" in pr[1])
+        self.assertTrue("simulate" in pr[2])
+        self.assertTrue("trigger" in pr[3])
+        self.assertTrue("decimate" in pr[4])
+        self.assertTrue("resample" in pr[5])
+        self.assertTrue("differentiate" in pr[6])
+        self.assertTrue("integrate" in pr[7])
+        self.assertTrue("detrend" in pr[8])
+        self.assertTrue("taper" in pr[9])
+        self.assertTrue("normalize" in pr[10])
+
+    def test_no_processing_info_for_failed_operations(self):
+        """
+        If an operation fails, no processing information should be attached
+        to the Trace object.
+        """
+        # create test Trace
+        tr = Trace(data=np.arange(20))
+        self.assertFalse("processing" in tr.stats)
+        # This decimation by a factor of 7 in this case would change the
+        # end time of the time series. Therefore it fails.
+        self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
+        # No processing should be applied yet.
+        self.assertFalse("processing" in tr.stats)
+
+        # Test the same but this time with an already existing processing
+        # information.
+        tr = Trace(data=np.arange(20))
+        tr.detrend()
+        self.assertEqual(len(tr.stats.processing), 1)
+        info = tr.stats.processing[0]
+
+        self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
+        self.assertEqual(tr.stats.processing, [info])
+
+    def test_meta(self):
+        """
+        Tests Trace.meta an alternative to Trace.stats
+        """
+        tr = Trace()
+        tr.meta = Stats({'network': 'NW'})
+        self.assertEqual(tr.stats.network, 'NW')
+        tr.stats = Stats({'network': 'BW'})
+        self.assertEqual(tr.meta.network, 'BW')
+
+    def test_interpolate(self):
+        """
+        Tests the interpolate function.
+
+        This also tests the interpolation in obspy.signal. No need to repeat
+        the same test twice I guess.
+        """
+        # Load the prepared data. The data has been created using SAC.
+        file_ = "interpolation_test_random_waveform_delta_0.01_npts_50.sac"
+        org_tr = read("/path/to/%s" % file_)[0]
+        file_ = "interpolation_test_interpolated_delta_0.003.sac"
+        interp_delta_0_003 = read("/path/to/%s" % file_)[0]
+        file_ = "interpolation_test_interpolated_delta_0.077.sac"
+        interp_delta_0_077 = read("/path/to/%s" % file_)[0]
+
+        # Perform the same interpolation as in Python with ObsPy.
+        int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.003,
+                                           method="weighted_average_slopes")
+        # Assert that the sampling rate has been set correctly.
+        self.assertEqual(int_tr.stats.delta, 0.003)
+        # Assert that the new end time is smaller than the old one. SAC at
+        # times performs some extrapolation which we do not want to do here.
+        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        # SAC extrapolates a bit which we don't want here. The deviations
+        # to SAC are likely due to the fact that we use double precision
+        # math while SAC uses single precision math.
+        self.assertTrue(np.allclose(
+            int_tr.data,
+            interp_delta_0_003.data[:int_tr.stats.npts],
+            rtol=1E-3))
+
+        int_tr = org_tr.copy().interpolate(sampling_rate=1.0 / 0.077,
+                                           method="weighted_average_slopes")
+        # Assert that the sampling rate has been set correctly.
+        self.assertEqual(int_tr.stats.delta, 0.077)
+        # Assert that the new end time is smaller than the old one. SAC
+        # calculates one sample less in this case.
+        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        self.assertTrue(np.allclose(
+            int_tr.data[:interp_delta_0_077.stats.npts],
+            interp_delta_0_077.data,
+            rtol=1E-5))
+
+        # Also test the other interpolation methods mainly by assuring the
+        # correct SciPy function is called and everything stays internally
+        # consistent. SciPy's functions are tested enough to be sure that
+        # they work.
+        for inter_type in ["linear", "nearest", "zero"]:
+            with mock.patch("scipy.interpolate.interp1d") as patch:
+                patch.return_value = lambda x: x
+                org_tr.copy().interpolate(sampling_rate=0.5, method=inter_type)
+            self.assertEqual(patch.call_count, 1)
+            self.assertEqual(patch.call_args[1]["kind"], inter_type)
+
+            int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
+                                               method=inter_type)
+            self.assertEqual(int_tr.stats.delta, 2.0)
+            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+
+        for inter_type in ["slinear", "quadratic", "cubic", 1, 2, 3]:
+            with mock.patch("scipy.interpolate.InterpolatedUnivariateSpline") \
+                    as patch:
+                patch.return_value = lambda x: x
+                org_tr.copy().interpolate(sampling_rate=0.5, method=inter_type)
+            s_map = {
+                "slinear": 1,
+                "quadratic": 2,
+                "cubic": 3
+            }
+            if inter_type in s_map:
+                inter_type = s_map[inter_type]
+            self.assertEqual(patch.call_count, 1)
+            self.assertEqual(patch.call_args[1]["k"], inter_type)
+
+            int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
+                                               method=inter_type)
+            self.assertEqual(int_tr.stats.delta, 2.0)
+            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+
+    def test_interpolation_arguments(self):
+        """
+        Test case for the interpolation arguments.
+        """
+        tr = read()[0]
+        tr.stats.sampling_rate = 1.0
+        tr.data = tr.data[:50]
+
+        for inter_type in ["linear", "nearest", "zero", "slinear",
+                           "quadratic", "cubic", 1, 2, 3,
+                           "weighted_average_slopes"]:
+            # If only the sampling rate is specified, the end time will be very
+            # close to the original end time but never bigger.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              method=inter_type)
+            self.assertEqual(tr.stats.starttime, interp_tr.stats.starttime)
+            self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
+                            tr.stats.endtime - (1.0 / 0.3))
+
+            # If the starttime is modified the new starttime will be used but
+            # the end time will again be modified as little as possible.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              method=inter_type,
+                                              starttime=tr.stats.starttime +
+                                              5.0)
+            self.assertEqual(tr.stats.starttime + 5.0,
+                             interp_tr.stats.starttime)
+            self.assertTrue(tr.stats.endtime >= interp_tr.stats.endtime >=
+                            tr.stats.endtime - (1.0 / 0.3))
+
+            # If npts is given it will be used to modify the end time.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              method=inter_type, npts=10)
+            self.assertEqual(tr.stats.starttime,
+                             interp_tr.stats.starttime)
+            self.assertEqual(interp_tr.stats.npts, 10)
+
+            # If npts and starttime are given, both will be modified.
+            interp_tr = tr.copy().interpolate(sampling_rate=0.3,
+                                              method=inter_type,
+                                              starttime=tr.stats.starttime +
+                                              5.0, npts=10)
+            self.assertEqual(tr.stats.starttime + 5.0,
+                             interp_tr.stats.starttime)
+            self.assertEqual(interp_tr.stats.npts, 10)
+
+            # An earlier starttime will raise an exception. No extrapolation
+            # is supported
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=1.0,
+                              starttime=tr.stats.starttime - 10.0)
+            # As will too many samples that would overstep the end time bound.
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=1.0,
+                              npts=tr.stats.npts * 1E6)
+
+            # A negative or zero desired sampling rate should raise.
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=0.0)
+            self.assertRaises(ValueError, tr.copy().interpolate,
+                              sampling_rate=-1.0)
+
     def test_resample_new(self):
         """
         Tests if Trace.resample works as expected and test that issue #857 is
@@ -1596,7 +1872,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:0:hanning'])
 
         # upsample
         tr = tr0.copy()
@@ -1608,7 +1883,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:2:hanning'])
 
         # downsample with non integer ratio
         tr = tr0.copy()
@@ -1623,7 +1897,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:0:hanning'])
 
         # downsample without window
         tr = tr0.copy()
@@ -1635,7 +1908,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing, ['resample:0:None'])
 
         # downsample with window and automatic filtering
         tr = tr0.copy()
@@ -1647,18 +1919,11 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime, starttime)
         self.assertEqual(tr.stats.endtime,
                          starttime + tr.stats.delta * (tr.stats.npts-1))
-        self.assertEqual(tr.stats.processing,
-                         ["filter:lowpasscheby2:" +
-                          "{'freq': 0.25, 'maxorder': 12}",
-                          "resample:0:hanning"])
 
         # downsample with custom window
         tr = tr0.copy()
         window = np.ones((tr.stats.npts))
         tr.resample(0.5, window=window, no_filter=True)
-        self.assertEqual(tr.stats.processing,
-                         ["resample:0:" +
-                          "[ 1.  1.  1.  1.  1.  1.  1.  1.  1.  1.]"])
 
         # downsample with bad window
         tr = tr0.copy()

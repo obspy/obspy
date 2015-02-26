@@ -2,14 +2,19 @@
 """
 The obspy.arclink.client test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.arclink import Client
-from obspy.arclink.client import ArcLinkException, DCID_KEY_FILE
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, skipIf
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy.arclink import Client
+from obspy.arclink.client import DCID_KEY_FILE, ArcLinkException
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import NamedTemporaryFile, skipIf
 
 try:
     from M2Crypto.EVP import EVPError

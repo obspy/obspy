@@ -1,5 +1,9 @@
+from __future__ import print_function
+
 import numpy as np
-from obspy.core import read, Trace, Stream, UTCDateTime
+
+from obspy.core import Stream, Trace, UTCDateTime, read
+
 
 weather = """
 00.0000 0.0 ??? 4.7 97.7 1015.0 0.0 010308 000000
@@ -12,7 +16,7 @@ weather = """
 00.0019 0.0 ??? 4.7 97.7 1015.0 0.0 010308 000007
 """
 
-# Convert to numpy character array
+# Convert to NumPy character array
 data = np.fromstring(weather, dtype='|S1')
 
 # Fill header attributes
@@ -25,6 +29,6 @@ st = Stream([Trace(data=data, header=stats)])
 # write as ASCII file (encoding=0)
 st.write("weather.mseed", format='MSEED', encoding=0, reclen=256)
 
-# Show that it worked, convert numpy character array back to string
+# Show that it worked, convert NumPy character array back to string
 st1 = read("weather.mseed")
-print st1[0].data.tostring()
+print(st1[0].data.tostring())

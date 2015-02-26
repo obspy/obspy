@@ -2,10 +2,14 @@
 """
 The cross correlation test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import os
 import unittest
-from obspy import read, UTCDateTime
+
+from obspy import UTCDateTime, read
 from obspy.signal.cross_correlation import xcorrPickCorrection
 
 
@@ -29,6 +33,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
 
         tr1 = st1.select(component="Z")[0]
         tr2 = st2.select(component="Z")[0]
+        tr1_copy = tr1.copy()
+        tr2_copy = tr2.copy()
         t1 = UTCDateTime("2010-05-27T16:24:33.315000Z")
         t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 
@@ -43,6 +49,8 @@ class CrossCorrelationTestCase(unittest.TestCase):
             filter_options={'freqmin': 1, 'freqmax': 10})
         self.assertAlmostEqual(dt, -0.013025086360067755)
         self.assertAlmostEqual(coeff, 0.98279277273758803)
+        self.assertEqual(tr1, tr1_copy)
+        self.assertEqual(tr2, tr2_copy)
 
 
 def suite():

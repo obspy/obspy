@@ -18,8 +18,12 @@ Example
 >>> s = json.dumps(c, default=d)
 
 """
-from obspy.core.event import (AttribDict, Catalog, UTCDateTime,
-                              ResourceIdentifier)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+from obspy.core.event import (AttribDict, Catalog, ResourceIdentifier,
+                              UTCDateTime)
 
 
 class Default(object):
@@ -61,9 +65,9 @@ class Default(object):
             # Map to a serializable dict
             # Leave out nulls, empty strings, list, dicts, except for numbers
             if self.OMIT_NULLS:
-                return dict((k, v) for k, v in obj.iteritems() if v or v == 0)
+                return dict((k, v) for k, v in obj.items() if v or v == 0)
             else:
-                return dict((k, v) for k, v in obj.iteritems())
+                return dict((k, v) for k, v in obj.items())
         elif isinstance(obj, Catalog):
             # Catalog isn't a dict
             return dict((k, getattr(obj, k))
