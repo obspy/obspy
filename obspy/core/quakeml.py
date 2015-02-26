@@ -767,7 +767,7 @@ class Unpickler(object):
                 event_type = event_type.replace("_", " ")
             try:
                 event.event_type = event_type
-            except ValueError, e:
+            except ValueError:
                 msg = "Event type '%s' does not comply " % event_type
                 msg += "with QuakeML standard -- event will be ignored."
                 warnings.warn(msg, UserWarning)
