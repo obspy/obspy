@@ -558,7 +558,7 @@ class SlownessModel(object):
         DepthRange, just like in the java code, despite its claims to the
         contrary.
         """
-        ret = np.zeros_like(depth, dtype=np.bool_)
+        ret = np.zeros(shape=depth.shape, dtype=np.bool_)
         for elem in self.fluidLayerDepths:
             ret |= (elem.topDepth <= depth) & (depth < elem.botDepth)
         return ret
@@ -609,7 +609,7 @@ class SlownessModel(object):
 
         # Add the layer, with zero thickness but nonzero slowness step,
         # corresponding to the discontinuity.
-        currVLayer = np.empty_like(above, dtype=VelocityLayer)
+        currVLayer = np.empty(shape=above.shape, dtype=VelocityLayer)
         currVLayer['topDepth'] = above['botDepth']
         currVLayer['botDepth'] = above['botDepth']
         currVLayer['topPVelocity'] = above['botPVelocity']
@@ -790,13 +790,13 @@ class SlownessModel(object):
                                              layers['topDepth'][nonzero],
                                              slope)
 
-        botLayer = np.empty_like(index, dtype=SlownessLayer)
+        botLayer = np.empty(shape=index.shape, dtype=SlownessLayer)
         botLayer['topP'].fill(p)
         botLayer['topDepth'] = botDepth[mask]
         botLayer['botP'] = layers['botP'][mask]
         botLayer['botDepth'] = layers['botDepth'][mask]
 
-        topLayer = np.empty_like(index, dtype=SlownessLayer)
+        topLayer = np.empty(shape=index.shape, dtype=SlownessLayer)
         topLayer['topP'] = layers['topP'][mask]
         topLayer['topDepth'] = layers['topDepth'][mask]
         topLayer['botP'].fill(p)
@@ -1099,15 +1099,15 @@ class SlownessModel(object):
         pdim = np.ndim(sphericalRayParam)
         ldim = np.ndim(layerNum)
         if ldim == 1 and pdim == 0:
-            time = np.empty_like(layerNum, dtype=np.float_)
-            dist = np.empty_like(layerNum, dtype=np.float_)
+            time = np.empty(shape=layerNum.shape, dtype=np.float_)
+            dist = np.empty(shape=layerNum.shape, dtype=np.float_)
         elif ldim == 0 and pdim == 1:
-            time = np.empty_like(sphericalRayParam, dtype=np.float_)
-            dist = np.empty_like(sphericalRayParam, dtype=np.float_)
+            time = np.empty(shape=sphericalRayParam.shape, dtype=np.float_)
+            dist = np.empty(shape=sphericalRayParam.shape, dtype=np.float_)
         elif ldim == pdim and (ldim == 0 or
                                layerNum.shape == sphericalRayParam.shape):
-            time = np.empty_like(layerNum, dtype=np.float_)
-            dist = np.empty_like(layerNum, dtype=np.float_)
+            time = np.empty(shape=layerNum.shape, dtype=np.float_)
+            dist = np.empty(shape=layerNum.shape, dtype=np.float_)
         else:
             raise TypeError('Either sphericalRayParam or layerNum must be 0D, '
                             'or they must have the same shape.')
@@ -1122,7 +1122,7 @@ class SlownessModel(object):
                 dist.fill(0)
                 return time, dist
             else:
-                zero_thick = np.zeros_like(time, dtype=np.bool_)
+                zero_thick = np.zeros(shape=time.shape, dtype=np.bool_)
 
         leftover = ~zero_thick
         time[zero_thick] = 0
@@ -1189,7 +1189,7 @@ class SlownessModel(object):
         # zero. We check for this case specifically because
         # numerical chatter can cause small round-off errors that
         # lead to botTerm being negative, causing a sqrt error.
-        botTerm = np.zeros_like(topTerm)
+        botTerm = np.zeros(shape=topTerm.shape)
         mask = (ray_param_const_velocity !=
                 sphericalLayer['botP'][constant_velocity])
         if pdim:

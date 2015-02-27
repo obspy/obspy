@@ -23,14 +23,14 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     ldim = np.ndim(layer)
     pdim = np.ndim(p)
     if ldim == 1 and pdim == 0:
-        time = np.zeros_like(layer, dtype=np.float_)
-        dist = np.zeros_like(layer, dtype=np.float_)
+        time = np.zeros(shape=layer.shape, dtype=np.float_)
+        dist = np.zeros(shape=layer.shape, dtype=np.float_)
     elif ldim == 0 and pdim == 1:
-        time = np.zeros_like(p, dtype=np.float_)
-        dist = np.zeros_like(p, dtype=np.float_)
+        time = np.zeros(shape=p.shape, dtype=np.float_)
+        dist = np.zeros(shape=p.shape, dtype=np.float_)
     elif ldim == pdim and (ldim == 0 or layer.shape == p.shape):
-        time = np.zeros_like(layer, dtype=np.float_)
-        dist = np.zeros_like(layer, dtype=np.float_)
+        time = np.zeros(shape=layer.shape, dtype=np.float_)
+        dist = np.zeros(shape=layer.shape, dtype=np.float_)
     else:
         raise TypeError('Either layer or p must be 0D, or they must have '
                         'the same shape.')
@@ -180,7 +180,7 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
     """
     Compute the slowness layer from a velocity layer.
     """
-    ret = np.empty_like(vLayer, dtype=SlownessLayer)
+    ret = np.empty(shape=vLayer.shape, dtype=SlownessLayer)
     ret['topDepth'] = vLayer['topDepth']
     ret['botDepth'] = vLayer['botDepth']
     waveType = ('p' if isPWave else 's')
