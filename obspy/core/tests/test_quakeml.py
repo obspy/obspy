@@ -67,6 +67,14 @@ class QuakeMLTestCase(unittest.TestCase):
             catalog[2].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039'))
 
+    def test_USGS_eventype(self):
+        filename = os.path.join(self.path, 'usgs_event.xml')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            catalog = readQuakeML(filename)
+        self.assertEqual(len(catalog), 1)
+        self.assertEqual(catalog[0].event_type, 'quarry blast')
+
     def test_event(self):
         """
         Tests Event object.
