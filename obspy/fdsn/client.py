@@ -816,7 +816,7 @@ class Client(object):
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                None
+                     http://service.iris.edu/fdsnws/station/1/query?
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
@@ -847,7 +847,7 @@ class Client(object):
         >>> print(inv)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Inventory created at ...
             Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
-                    None
+                     http://service.iris.edu/fdsnws/station/1/query?
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
