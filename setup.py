@@ -660,7 +660,8 @@ class BuildExtAndTauPy(build_ext):
         taulib = ctypes.CDLL(libpath)
 
         sys.path.insert(0, obspy_taup_path)
-        with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+        with patch('obspy.core.util.libnames._load_CDLL') as load:
+            load.return_value = taulib
             from taup.taup_create import TauP_Create
             from taup.utils import _get_model_filename
 

@@ -17,6 +17,6 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +        import glob
 +        for file_ in glob.glob(os.path.join(SETUP_DIRECTORY, "build/lib*/obspy/lib/*.so")):
 +            shutil.copy(file_, os.path.join(SETUP_DIRECTORY, "obspy/lib"))
-         with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+         with patch('obspy.core.util.libnames._load_CDLL') as load:
+             load.return_value = taulib
              from taup.taup_create import TauP_Create
-             from taup.utils import _get_model_filename
