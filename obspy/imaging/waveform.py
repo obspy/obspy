@@ -42,6 +42,9 @@ from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import decimal_seconds_format, ObsPyAutoDateFormatter
 
 
+MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
+
+
 class WaveformPlotting(object):
     """
     Class that provides several solutions for plotting large and small waveform
@@ -835,6 +838,10 @@ class WaveformPlotting(object):
         ax.plot(x_values, y_values, color=self.color)
         # Set the x-limit to avoid clipping of masked values.
         ax.set_xlim(x_values[0], x_values[-1])
+        # remember xlim state and add callback to warn when zooming in
+        self._initial_xrange = x_values[-1] - x_values[0]
+        self._minmax_plot_xrange_dangerous = False
+        ax.callbacks.connect("xlim_changed", self._warn_on_xaxis_zoom)
 
     def __plotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -1361,3 +1368,31 @@ class WaveformPlotting(object):
         # add suptitle
         self.fig.suptitle(suptitle, fontsize='small',
                           horizontalalignment='center')
+
+    def _warn_on_xaxis_zoom(self, ax):
+        """
+        Method to be used as a callback on `method=fast`, "minmax"-type plots
+        to warn the user when zooming into the plot.
+        """
+        xlim = ax.get_xlim()
+        if xlim[1] - xlim[0] < self._initial_xrange:
+            dangerous = True
+        else:
+            dangerous = False
+        if dangerous and not self._minmax_plot_xrange_dangerous:
+            self._add_zoomlevel_warning_text()
+        elif self._minmax_plot_xrange_dangerous and not dangerous:
+            self._remove_zoomlevel_warning_text()
+        self._minmax_plot_xrange_dangerous = dangerous
+        return
+
+    def _add_zoomlevel_warning_text(self):
+        ax = self.fig.axes[0]
+        ax.text(0.95, 0.9, MINMAX_ZOOMLEVEL_WARNING_TEXT, color="r",
+                ha="right", va="top", transform=ax.transAxes)
+
+    def _remove_zoomlevel_warning_text(self):
+        ax = self.fig.axes[0]
+        for text in list(ax.texts):
+            if text.get_text() == MINMAX_ZOOMLEVEL_WARNING_TEXT:
+                ax.texts.remove(text)
