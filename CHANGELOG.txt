@@ -24,6 +24,8 @@
  - obspy.arclink:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
+   * Preview waveform plot improved: interactive updating of ticks and
+     ticklabels, correct ticklabels for sub-minute zoom level (#657)
    * fixed a problem with UTCDateTime with timestamps of far future
      dates (larger than 2038, often seen in StationXML end dates,
      see #805)
