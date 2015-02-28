@@ -11,6 +11,7 @@ Waveform plotting utilities.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
 
 from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 from matplotlib.ticker import FuncFormatter
@@ -94,7 +95,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
                 fmt = self.scaled[k]
                 break
 
-        if isinstance(fmt, basestring):
+        if isinstance(fmt, (str, native_str)):
             self._formatter = DateFormatter(fmt, self._tz)
             return self._formatter(x, pos)
         elif hasattr(fmt, '__call__'):
