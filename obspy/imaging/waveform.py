@@ -25,13 +25,14 @@ import io
 import warnings
 from copy import copy
 from datetime import datetime
+from dateutil.rrule import MINUTELY, SECONDLY
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.dates import AutoDateLocator, date2num
 from matplotlib.path import Path
-from matplotlib.ticker import FuncFormatter, MaxNLocator, ScalarFormatter
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
@@ -39,7 +40,7 @@ from obspy.core.preview import mergePreviews
 from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
                              locations2degrees)
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.imaging.util import decimal_seconds_format, ObsPyAutoDateFormatter
+from obspy.imaging.util import ObsPyAutoDateFormatter
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
@@ -857,11 +858,10 @@ class WaveformPlotting(object):
             locator = MaxNLocator(5)
         else:
             ax.xaxis_date()
-            locator = AutoDateLocator(minticks=4, maxticks=5)
-            formatter = ObsPyAutoDateFormatter(locator)
-            formatter.scaled[1/(24.*60.)] = \
-                FuncFormatter(decimal_seconds_format)
-            ax.xaxis.set_major_formatter(formatter)
+            locator = AutoDateLocator(minticks=5, maxticks=6)
+            locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+            locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+            ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
         ax.xaxis.set_major_locator(locator)
         plt.setp(ax.get_xticklabels(), fontsize='small',
                  rotation=self.tick_rotation)
