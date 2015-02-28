@@ -3,9 +3,14 @@
 """
 The array_analysis test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import unittest
+
 import numpy as np
+
 from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 
@@ -22,9 +27,12 @@ class ArrayTestCase(unittest.TestCase):
                                       [-5.0, -7.0, 0.0],
                                       [-10.0, 0.0, 0.0]])
         self.subarray = np.array([0, 1, 2, 3, 4, 5, 6])
-        self.ts1 = np.empty((1000, 7)) * np.NaN
-        self.ts2 = np.empty((1000, 7)) * np.NaN
-        self.ts3 = np.empty((1000, 7)) * np.NaN
+        self.ts1 = np.empty((1000, 7))
+        self.ts2 = np.empty((1000, 7))
+        self.ts3 = np.empty((1000, 7))
+        self.ts1.fill(np.NaN)
+        self.ts2.fill(np.NaN)
+        self.ts3.fill(np.NaN)
         self.sigmau = 0.0001
         self.Vp = 1.93
         self.Vs = 0.326
@@ -51,8 +59,8 @@ class ArrayTestCase(unittest.TestCase):
         rotz = 0.00001 * np.exp(-1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-10 * np.pi, 10 * np.pi, 1000))
 
-        for stat in xrange(7):
-            for t in xrange(1000):
+        for stat in range(7):
+            for t in range(1000):
                 ts1[t, stat] = -1. * array_coords[stat, 1] * rotz[t]
                 ts2[t, stat] = array_coords[stat, 0] * rotz[t]
                 ts3[t, stat] = array_coords[stat, 1] * rotx[t] - \
@@ -89,8 +97,8 @@ class ArrayTestCase(unittest.TestCase):
             -1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-40 * np.pi, 40 * np.pi, 1000))
 
-        for stat in xrange(7):
-            for t in xrange(1000):
+        for stat in range(7):
+            for t in range(1000):
                 ts1[t, stat] = array_coords[stat, 0] * dilation[t]
                 ts2[t, stat] = array_coords[stat, 1] * dilation[t]
                 ts3[t, stat] = array_coords[stat, 2] * dilation[t]
@@ -134,8 +142,8 @@ class ArrayTestCase(unittest.TestCase):
 
         ts3 = np.zeros((1000, 7))
 
-        for stat in xrange(7):
-            for t in xrange(1000):
+        for stat in range(7):
+            for t in range(1000):
                 ts1[t, stat] = array_coords[stat, 1] * shear_strainh[t]
                 ts2[t, stat] = array_coords[stat, 0] * shear_strainh[t]
 

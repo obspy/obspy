@@ -156,8 +156,11 @@ Further Resources
 .. _`GNU Lesser General Public License, Version 3`:
         http://www.gnu.org/copyleft/lesser.html
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from client import Client
+from .client import Client  # NOQA
 
 
 if __name__ == '__main__':

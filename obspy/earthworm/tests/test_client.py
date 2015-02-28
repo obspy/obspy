@@ -2,13 +2,17 @@
 """
 The obspy.earthworm.client test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
-from numpy import array
+import unittest
+
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import skip_on_network_error
 from obspy.earthworm import Client
-import unittest
 
 
 class ClientTestCase(unittest.TestCase):
@@ -18,16 +22,18 @@ class ClientTestCase(unittest.TestCase):
     def setUp(self):
         # Monkey patch: set lower default precision of all UTCDateTime objects
         UTCDateTime.DEFAULT_PRECISION = 4
+        self.client = Client("pele.ess.washington.edu", 16017, timeout=7)
 
     def tearDown(self):
         # restore default precision of all UTCDateTime objects
         UTCDateTime.DEFAULT_PRECISION = 6
 
+    @skip_on_network_error
     def test_getWaveform(self):
         """
         Tests getWaveform method.
         """
-        client = Client("pele.ess.washington.edu", 16017)
+        client = self.client
         start = UTCDateTime(2013, 1, 17)
         end = start + 30
         # example 1 -- 1 channel, cleanup
@@ -48,7 +54,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
                                     cleanup=False)
         self.assertTrue(len(stream) >= 2)
-        summed_length = array([len(tr) for tr in stream]).sum()
+        summed_length = sum(len(tr) for tr in stream)
         self.assertTrue(summed_length == 1201)
         self.assertTrue(stream[0].stats.starttime >= start - delta)
         self.assertTrue(stream[0].stats.starttime <= start + delta)
@@ -75,12 +81,13 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(stream[1].stats.channel, 'BHN')
         self.assertEqual(stream[2].stats.channel, 'BHE')
 
+    @skip_on_network_error
     def test_saveWaveform(self):
         """
         Tests saveWaveform method.
         """
         # initialize client
-        client = Client("pele.ess.washington.edu", 16017)
+        client = self.client
         start = UTCDateTime(2013, 1, 17)
         end = start + 30
         with NamedTemporaryFile() as tf:
@@ -102,9 +109,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'BHZ')
 
+    @skip_on_network_error
     def test_availability(self):
-        client = Client("pele.ess.washington.edu", 16017)
-        data = client.availability()
+        data = self.client.availability()
         seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
         self.assertTrue('UW.TUCA.--.BHZ' in seeds)
 

@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
+import copy
+import datetime
+import unittest
+
+import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
-import copy
-import datetime
-import numpy as np
-import unittest
 
 
 # some Python version don't support negative timestamps
@@ -282,7 +287,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_add(self):
         a = UTCDateTime(0.0)
         self.assertEqual(a + 1, UTCDateTime(1970, 1, 1, 0, 0, 1))
-        self.assertEqual(a + long(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEqual(a + int(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEqual(a + np.int32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEqual(a + np.int64(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEqual(a + np.float32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
@@ -298,19 +303,19 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(a + td, UTCDateTime(1970, 1, 1, 0, 0, 1))
 
     def test_sub(self):
-        #1
+        # 1
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
         self.assertAlmostEqual(end - start, 4.995)
-        #2
+        # 2
         start = UTCDateTime(1000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(1000, 1, 1, 0, 0, 4, 0)
         self.assertAlmostEqual(end - start, 4)
-        #3
+        # 3
         start = UTCDateTime(0)
         td = datetime.timedelta(seconds=1)
         self.assertEqual(start - td, UTCDateTime(1969, 12, 31, 23, 59, 59))
-        #4
+        # 4
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 999999)
         end = UTCDateTime(2000, 1, 1, 0, 0, 1, 1)
         self.assertAlmostEqual(end - start, 0.000002, 6)
@@ -374,11 +379,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
 
     @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_bigNegativeUTCDateTime(self):
-        #1
+        # 1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
         self.assertEqual(dt.timestamp, -1000.1)
         self.assertEqual(str(dt), "1969-12-31T23:43:19.900000Z")
-        #2
+        # 2
         dt = UTCDateTime("1905-01-01T12:23:34.123456Z")
         self.assertEqual(dt.timestamp, -2051177785.876544)
         self.assertEqual(str(dt), "1905-01-01T12:23:34.123456Z")
@@ -438,7 +443,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests subtraction of floats from UTCDateTime
         """
-        time = UTCDateTime(2010, 05, 31, 19, 54, 24.490)
+        time = UTCDateTime(2010, 0o5, 31, 19, 54, 24.490)
         res = -0.045149
 
         result1 = UTCDateTime("2010-05-31T19:54:24.535148Z")
@@ -492,13 +497,13 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Couldn't calculate julday before 1900.
         """
-        #1
+        # 1
         dt = UTCDateTime("2010-01-01")
         self.assertEqual(dt.julday, 1)
-        #2
+        # 2
         dt = UTCDateTime("1905-12-31")
         self.assertEqual(dt.julday, 365)
-        #3
+        # 3
         dt = UTCDateTime("1906-12-31T23:59:59.999999Z")
         self.assertEqual(dt.julday, 365)
 
@@ -506,27 +511,27 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests formatSEED method
         """
-        #1
+        # 1
         dt = UTCDateTime("2010-01-01")
         self.assertEqual(dt.formatSEED(compact=True), "2010,001")
-        #2
+        # 2
         dt = UTCDateTime("2010-01-01T00:00:00.000000")
         self.assertEqual(dt.formatSEED(compact=True), "2010,001")
-        #3
+        # 3
         dt = UTCDateTime("2010-01-01T12:00:00")
         self.assertEqual(dt.formatSEED(compact=True), "2010,001,12")
-        #4
+        # 4
         dt = UTCDateTime("2010-01-01T12:34:00")
         self.assertEqual(dt.formatSEED(compact=True), "2010,001,12:34")
-        #5
+        # 5
         dt = UTCDateTime("2010-01-01T12:34:56")
         self.assertEqual(dt.formatSEED(compact=True), "2010,001,12:34:56")
-        #6
+        # 6
         dt = UTCDateTime("2010-01-01T12:34:56.123456")
         self.assertEqual(dt.formatSEED(compact=True),
                          "2010,001,12:34:56.1234")
-        #7 - explicit disabling compact flag still results into compact date if
-        # no time information is given
+        # 7 - explicit disabling compact flag still results into compact date
+        # if no time information is given
         dt = UTCDateTime("2010-01-01")
         self.assertEqual(dt.formatSEED(compact=False), "2010,001")
 
@@ -865,18 +870,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
             def utcoffset(self, dt):  # @UnusedVariable
                 return datetime.timedelta(hours=8)
 
-            def tzname(self, dt):  # @UnusedVariable
-                return "Manila"
-
         dt = datetime.datetime(2006, 11, 21, 16, 30, tzinfo=ManilaTime())
-        self.assertEquals(dt.isoformat(), '2006-11-21T16:30:00+08:00')
-        self.assertEquals(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
+        self.assertEqual(dt.isoformat(), '2006-11-21T16:30:00+08:00')
+        self.assertEqual(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
 
     def test_hash(self):
         """
         Test __hash__ method of UTCDateTime class.
         """
-        self.assertEquals(UTCDateTime().__hash__(), None)
+        self.assertEqual(UTCDateTime().__hash__(), None)
 
     def test_now(self):
         """
@@ -897,15 +899,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
         Test __abs__ method of UTCDateTime class.
         """
         dt = UTCDateTime(1970, 1, 1, 0, 0, 1)
-        self.assertEquals(abs(dt), 1)
+        self.assertEqual(abs(dt), 1)
         dt = UTCDateTime(1970, 1, 1, 0, 0, 1, 500000)
-        self.assertEquals(abs(dt), 1.5)
+        self.assertEqual(abs(dt), 1.5)
         dt = UTCDateTime(1970, 1, 1)
-        self.assertEquals(abs(dt), 0)
+        self.assertEqual(abs(dt), 0)
         dt = UTCDateTime(1969, 12, 31, 23, 59, 59)
-        self.assertEquals(abs(dt), 1)
+        self.assertEqual(abs(dt), 1)
         dt = UTCDateTime(1969, 12, 31, 23, 59, 59, 500000)
-        self.assertEquals(abs(dt), 0.5)
+        self.assertEqual(abs(dt), 0.5)
 
     def test_string_with_timezone(self):
         """
@@ -931,6 +933,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
              "2013-09-01T12:34:56-0000"]
         for time_string in time_strings:
             self.assertEqual(t, UTCDateTime(time_string))
+
+    def test_year_2038_problem(self):
+        """
+        See issue #805
+        """
+        dt = UTCDateTime(2004, 1, 10, 13, 37, 4)
+        self.assertEqual(dt.__str__(), '2004-01-10T13:37:04.000000Z')
+        dt = UTCDateTime(2038, 1, 19, 3, 14, 8)
+        self.assertEqual(dt.__str__(), '2038-01-19T03:14:08.000000Z')
+        dt = UTCDateTime(2106, 2, 7, 6, 28, 16)
+        self.assertEqual(dt.__str__(), '2106-02-07T06:28:16.000000Z')
 
 
 def suite():

@@ -4,18 +4,17 @@
 #   CC : Specify the C compiler to use
 #   CFLAGS : Specify compiler options to use
 
-# Options specific for GCC
-GCC = gcc
-GCCFLAGS = -O2 -Wall -fPIC
-
-LIB_OBJS = fileutils.o genutils.o gswap.o lmplatform.o lookup.o \
-           msrutils.o pack.o packdata.o traceutils.o tracelist.o \
-           parseutils.o unpack.o unpackdata.o selection.o logging.o
-
 MAJOR_VER = 2
-MINOR_VER = 10
+MINOR_VER = 13
 CURRENT_VER = $(MAJOR_VER).$(MINOR_VER)
 COMPAT_VER = $(MAJOR_VER).$(MINOR_VER)
+
+LIB_SRCS = fileutils.c genutils.c gswap.c lmplatform.c lookup.c \
+           msrutils.c pack.c packdata.c traceutils.c tracelist.c \
+           parseutils.c unpack.c unpackdata.c selection.c logging.c
+
+LIB_OBJS = $(LIB_SRCS:.c=.o)
+LIB_DOBJS = $(LIB_SRCS:.c=.lo)
 
 LIB_A = libmseed.a
 LIB_SO_FILENAME = libmseed.so
@@ -28,59 +27,43 @@ all: static
 
 static: $(LIB_A)
 
-shared: gcc $(LIB_SO)
+shared: $(LIB_SO)
 
-dynamic: gcc $(LIB_DYN)
+dynamic: $(LIB_DYN)
 
+# Build static library
 $(LIB_A): $(LIB_OBJS)
 	rm -f $(LIB_A)
-	ar -csq $(LIB_A) $(LIB_OBJS)
+	ar -crs $(LIB_A) $(LIB_OBJS)
 
-$(LIB_SO): $(LIB_OBJS)
+# Build shared library using GCC-style options
+$(LIB_SO): $(LIB_DOBJS)
 	rm -f $(LIB_SO) $(LIB_SO_FILENAME)
-	$(GCC) $(GCCFLAGS) -shared -Wl,-soname -Wl,$(LIB_SO_ALIAS) -o $(LIB_SO) $(LIB_OBJS)
+	$(CC) $(CFLAGS) -shared -Wl,-soname -Wl,$(LIB_SO_ALIAS) -o $(LIB_SO) $(LIB_DOBJS)
 	ln -s $(LIB_SO) $(LIB_SO_ALIAS)
 	ln -s $(LIB_SO) $(LIB_SO_FILENAME)
 
-$(LIB_DYN): $(LIB_OBJS)
+# Build dynamic library (usually for Mac OSX)
+$(LIB_DYN): $(LIB_DOBJS)
 	rm -f $(LIB_DYN) $(LIB_DYN_ALIAS)
-	$(GCC) $(GCCFLAGS) -dynamiclib -compatibility_version $(COMPAT_VER) -current_version $(CURRENT_VER) -install_name $(LIB_DYN_ALIAS) -o $(LIB_DYN) $(LIB_OBJS)
+	$(CC) $(CFLAGS) -dynamiclib -compatibility_version $(COMPAT_VER) -current_version $(CURRENT_VER) -install_name $(LIB_DYN_ALIAS) -o $(LIB_DYN) $(LIB_DOBJS)
 	ln -sf $(LIB_DYN) $(LIB_DYN_ALIAS)
 
 clean:
-	rm -f $(LIB_OBJS) $(LIB_A) $(LIB_SO) $(LIB_SO_ALIAS) $(LIB_DYN) $(LIB_DYN_ALIAS)
-
-cc:
-	@$(MAKE) "CC=$(CC)" "CFLAGS=$(CFLAGS)"
-
-gcc:
-	@$(MAKE) "CC=$(GCC)" "CFLAGS=$(GCCFLAGS)"
-
-gcc32:
-	@$(MAKE) "CC=$(GCC)" "CFLAGS=-m32 $(GCCFLAGS)"
-
-gcc64:
-	@$(MAKE) "CC=$(GCC)" "CFLAGS=-m64 $(GCCFLAGS)"
-
-debug:
-	$(MAKE) "CC=$(CC)" "CFLAGS=-g $(CFLAGS)"
-
-gccdebug:
-	$(MAKE) "CC=$(GCC)" "CFLAGS=-g $(GCCFLAGS)"
-
-gcc32debug:
-	$(MAKE) "CC=$(GCC)" "CFLAGS=-g -m32 $(GCCFLAGS)"
-
-gcc64debug:
-	$(MAKE) "CC=$(GCC)" "CFLAGS=-g -m64 $(GCCFLAGS)"
-
-gcc32gprof:
-	$(MAKE) "CC=$(GCC)" "CFLAGS=-pg -m32 $(GCCFLAGS)"
-
-gcc64gprof:
-	$(MAKE) "CC=$(GCC)" "CFLAGS=-pg -m64 $(GCCFLAGS)"
+	rm -f $(LIB_OBJS) $(LIB_DOBJS) $(LIB_A) $(LIB_SO_FILENAME) $(LIB_SO) $(LIB_SO_ALIAS) $(LIB_DYN) $(LIB_DYN_ALIAS)
 
 install:
 	@echo
-	@echo "No install target, copy the library and header yourself"
+	@echo "No install target, copy the library and header as needed"
 	@echo
+
+
+.SUFFIXES: .c .o .lo
+
+# Standard object building
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Standard object building for dynamic library components using -fPIC
+.c.lo:
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@

@@ -9,20 +9,25 @@ Quick and dirty conversion routine from CSS 2.8 to Seismic Handler ASCII format
 - output written to stdout
 - shows plot for inspection (if matplotlib installed)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-import sys
 import struct
+import sys
 from datetime import datetime
+
 
 # read header (assume CSS2.8)
 try:
     # only process first line
-    head = map(str.strip, open(sys.argv[1]).readlines()[0].split())
+    head = list(map(str.strip, open(sys.argv[1]).readlines()[0].split()))
 except:
     sys.exit("cannot read wfdisc file (arg)")
 
 input = head[15]  # input file name
-timedata = map(int, head[1].split("."))  # 0 -> timestamp, 1-> milliseconds
+# 0 -> timestamp, 1-> milliseconds
+timedata = list(map(int, head[1].split(".")))
 
 # headers for SH ASCII file
 SH = {
@@ -44,17 +49,17 @@ data = struct.unpack(fmt, open(input, "rb").read(struct.calcsize(fmt)))
 
 # echo headers
 for header in SH:
-    print ": ".join((header, str(SH[header])))
+    print(": ".join((header, str(SH[header]))))
 
 # echo data
 for dat in data:
     # CALIB factor
-    print "%e" % (dat * SH["CALIB"],)
+    print("%e" % (dat * SH["CALIB"],))
 
 # inspection plot
 try:
     import pylab
-    pylab.plot([x * SH["DELTA"] for x in xrange(SH["LENGTH"])],
+    pylab.plot([x * SH["DELTA"] for x in range(SH["LENGTH"])],
                [d * SH["CALIB"] for d in data])
     pylab.show()
 except:

@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.y.core import isY, readY
 import os
 import unittest
+
+from obspy.y.core import isY, readY
 
 
 class CoreTestCase(unittest.TestCase):

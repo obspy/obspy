@@ -1,4 +1,4 @@
-.TH MST_PACK 3 2007/08/16 "Libmseed API"
+.TH MST_PACK 3 2013/05/17 "Libmseed API"
 .SH DESCRIPTION
 Packing of Mini-SEED records from MSTrace segments.
 
@@ -9,13 +9,13 @@ Packing of Mini-SEED records from MSTrace segments.
 .BI "int  \fBmst_pack\fP ( MSTrace *" mst ","
 .BI "                void (*" record_handler ") (char *, int, void *),"
 .BI "                void *" handlerdata ", int " reclen ", flag " encoding ","
-.BI "                flag " byteorder ", int *" packedsamples ", flag " flush ","
+.BI "                flag " byteorder ", int64_t *" packedsamples ", flag " flush ","
 .BI "                flag " verbose ", MSRecord *" mstemplate " );"
 
 .BI "int  \fBmsr_packgroup\fP ( MSTraceGroup *" mstg ","
 .BI "                     void (*" record_handler ") (char *, int, void *),"
 .BI "                     void *" handlerdata ", int " reclen ", flag " encoding ","
-.BI "                     flag " byteorder ", int *" packedsamples ", flag " flush ","
+.BI "                     flag " byteorder ", int64_t *" packedsamples ", flag " flush ","
 .BI "                     flag " verbose ", MSRecord *" mstemplate " );"
 .fi
 
@@ -127,7 +127,7 @@ static void record_handler (char *record, int reclen, void *srcname) {
 }
 
 main() {
-  int psamples;
+  int64_t psamples;
   int precords;
   MSTrace *mst;
   char srcname[50];
@@ -144,7 +144,7 @@ main() {
   /* The datasamples pointer and numsamples counter will be adjusted by
      the packing routine, the datasamples array must be dynamic memory
      allocated by the malloc() family of routines. */
-  mst->datasamples = dataptr; /* pointer to 32-bit integer data samples */  
+  mst->datasamples = dataptr; /* pointer to 32-bit integer data samples */
   mst->numsamples = 1234;
   mst->sampletype = 'i';      /* declare type to be 32-bit integers */
 
@@ -154,7 +154,8 @@ main() {
   precords = mst_pack (mst, &record_handler, srcname, 4096, DE_STEIM2,
                        1, &psamples, 1, verbose, NULL);
 
-  ms_log (0, "Packed %d samples into %d records\n", psamples, precords);
+  ms_log (0, "Packed %lld samples into %d records\n",
+             (long long int)psamples, precords);
 
   mst_free (&mst);
 }

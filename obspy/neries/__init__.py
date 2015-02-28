@@ -8,6 +8,16 @@ Commission-funded NERIES project. The Portal provides a single point of access
 to diverse, distributed European earthquake data provided in a unique joint
 initiative by observatories and research institutes in and around Europe.
 
+.. warning::
+    The `obspy.neries` module is deprecated and will be removed with the
+    next major release. To access EMSC event data please use the
+    :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
+    (use `Client(base_url='NERIES', ...)`), for access to
+    ORFEUS waveform data please use the
+    :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
+    (use `Client(base_url='ORFEUS', ...)`) and for travel times please use
+    :mod:`obspy.taup`.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -16,50 +26,17 @@ initiative by observatories and research institutes in and around Europe.
 
 Basic Usage
 -----------
-(1) :meth:`~obspy.neries.client.Client.getEvents()`: The following example
-    illustrates how to request all earthquakes of a magnitude of >=9 in the
-    year 2004.
+(1) :meth:`~obspy.neries.client.Client.getEvents()`:
+    This service was shut down on the server side, please use the
+    obspy.fdsn Client instead (with `base_url='NERIES'`).
 
-    >>> from obspy.neries import Client
-    >>> client = Client(user='test@obspy.org')
-    >>> events = client.getEvents(min_datetime="2004-01-01",
-    ...                           max_datetime="2005-01-01",
-    ...                           min_magnitude=9)
-    >>> len(events)
-    1
-    >>> events #doctest: +SKIP
-    [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
-      'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
-      'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
-      'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
+(2) :meth:`~obspy.neries.client.Client.getLatestEvents()`:
+    This service was shut down on the server side, please use the
+    obspy.fdsn Client instead (with `base_url='NERIES'`).
 
-(2) :meth:`~obspy.neries.client.Client.getLatestEvents()`: Returns only the
-    latest earthquakes.
-
-    >>> from obspy.neries import Client
-    >>> client = Client(user='test@obspy.org')
-    >>> events = client.getLatestEvents(num=5, format='list')
-    >>> len(events)
-    5
-    >>> events[0]  #doctest: +SKIP
-    [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
-      'longitude': 95.724, 'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0,
-      'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
-      'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
-
-(3) :meth:`~obspy.neries.client.Client.getEventDetail()`: Returns additional
-    information for each event by a given event_id.
-
-    >>> from obspy.neries import Client
-    >>> client = Client(user='test@obspy.org')
-    >>> result = client.getEventDetail("20041226_0000148", 'list')
-    >>> len(result)  # Number of calculated origins
-    11
-    >>> result[0]  # Details about first calculated origin #doctest: +SKIP
-    {'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
-     'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
-     'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
-     'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}
+(3) :meth:`~obspy.neries.client.Client.getEventDetail()`:
+    This service was shut down on the server side, please use the
+    obspy.fdsn Client instead (with `base_url='NERIES'`).
 
 (4) :meth:`~obspy.neries.client.Client.getWaveform()`: Wraps a NERIES Web
     service build on top of the ArcLink protocol. Here we give a small example
@@ -96,9 +73,31 @@ Basic Usage
     >>> result[0] # doctest: +SKIP
     {'P': 356981.13561726053, 'S': 646841.5619481194}
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
-from client import Client
+import warnings
 
+from .client import Client  # NOQA
+
+msg = ("The obspy.neries module is deprecated and will be removed with the "
+       "next major release. To access EMSC event data please use the "
+       "obspy.fdsn client (use `Client(base_url='NERIES')`), for access to "
+       "ORFEUS waveform data please use the obspy.fdsn client "
+       "(use `Client(base_url='ORFEUS')`) and for travel times please use "
+       "obspy.taup.")
+warnings.warn(msg, DeprecationWarning)
+
+try:
+    import suds  # NOQA
+except ImportError:
+    msg = ("To use obspy.neries you need to install either 'suds' (works on "
+           "Python 2.x) or 'suds-jurko' (works on Python 2.x and Python 3.x)")
+    raise ImportError(msg)
+
+__all__ = [native_str("Client")]
 
 if __name__ == '__main__':
     import doctest

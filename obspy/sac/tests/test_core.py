@@ -2,15 +2,22 @@
 """
 The sac.core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, read, UTCDateTime
-from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, SacIOError
 import copy
-import numpy as np
+import io
 import os
 import unittest
-import filecmp
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.core.util import NamedTemporaryFile
+from obspy.sac import SacError, SacIO, SacIOError
+from obspy.sac.core import (isSAC, isSACXY, readSAC, readSACXY, writeSAC,
+                            writeSACXY)
 
 
 class CoreTestCase(unittest.TestCase):
@@ -27,7 +34,7 @@ class CoreTestCase(unittest.TestCase):
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
              -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
-             -5.87784529e-01, -3.09016049e-01], dtype='float32')
+             -5.87784529e-01, -3.09016049e-01], dtype=np.float32)
 
     def test_readViaObsPy(self):
         """
@@ -44,7 +51,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readwriteViaObspy(self):
+    def test_readwriteViaObsPy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -62,7 +69,7 @@ class CoreTestCase(unittest.TestCase):
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
         self.assertTrue(tr == tr1)
 
-    def test_readXYwriteXYViaObspy(self):
+    def test_readXYwriteXYViaObsPy(self):
         """
         Write/Read files via L{obspy.Stream}
         """
@@ -73,7 +80,7 @@ class CoreTestCase(unittest.TestCase):
             tr1 = read(tempfile)[0]
         self.assertTrue(tr == tr1)
 
-    def test_readwriteXYViaObspy(self):
+    def test_readwriteXYViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -92,7 +99,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr1.data[0:10])
 
-    def test_readBigEndianViaObspy(self):
+    def test_readBigEndianViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -106,6 +113,32 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.b, 10.0)
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
+
+    def test_swapbytesViaObsPy(self):
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            trbe = read(self.filebe, format='SAC')[0]
+            trbe.write(tempfile, format='SAC', byteorder='<')
+            tr = read(tempfile, format='SAC')[0]
+            trle = read(self.file, format='SAC')[0]
+            self.assertEqual(tr.stats.station, trle.stats.station)
+            self.assertEqual(tr.stats.npts, trle.stats.npts)
+            self.assertEqual(tr.stats.delta, trle.stats.delta)
+            self.assertEqual(tr.stats.sac.b, trle.stats.sac.b)
+            np.testing.assert_array_almost_equal(tr.data[0:10],
+                                                 trle.data[0:10])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            trle = read(self.file, format='SAC')[0]
+            trle.write(tempfile, format='SAC', byteorder='>')
+            tr = read(tempfile, format='SAC')[0]
+            trbe = read(self.filebe, format='SAC')[0]
+            self.assertEqual(tr.stats.station, trbe.stats.station)
+            self.assertEqual(tr.stats.npts, trbe.stats.npts)
+            self.assertEqual(tr.stats.delta, trbe.stats.delta)
+            self.assertEqual(tr.stats.sac.b, trbe.stats.sac.b)
+            np.testing.assert_array_almost_equal(tr.data[0:10],
+                                                 trbe.data[0:10])
 
     def test_readHeadViaObsPy(self):
         """
@@ -185,7 +218,7 @@ class CoreTestCase(unittest.TestCase):
         head = {'network': 'NL', 'station': 'HGN', 'location': '00',
                 'channel': 'BHZ', 'calib': 1.0, 'sampling_rate': 40.0,
                 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400)}
-        data = np.random.randint(0, 5000, 11947).astype("int32")
+        data = np.random.randint(0, 5000, 11947).astype(np.int32)
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
         with NamedTemporaryFile() as tf:
@@ -209,15 +242,17 @@ class CoreTestCase(unittest.TestCase):
         # test that iztype 11 is read correctly
         sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
         tr = read(sod_file)[0]
-        sac = SacIO(sod_file)
+        with open(sod_file, "rb") as fh:
+            sac = SacIO(fh)
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
         t2 = sac.reftime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
-        # see that iztype is written corretly
+        # see that iztype is written correctly
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tr.write(tempfile, format="SAC")
-            sac2 = SacIO(tempfile)
+            with open(tempfile, "rb") as fh:
+                sac2 = SacIO(fh)
         self.assertEqual(sac2.iztype, 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
@@ -246,7 +281,13 @@ class CoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             tr.write(tmpfile, format="SAC")
-            filecmp.cmp(file, tmpfile, shallow=False)
+            tr2 = read(tmpfile)[0]
+            self.assertEqual(tr.stats.station, tr2.stats.station)
+            self.assertEqual(tr.stats.npts, tr2.stats.npts)
+            self.assertEqual(tr.stats.delta, tr2.stats.delta)
+            self.assertEqual(tr.stats.starttime, tr2.stats.starttime)
+            self.assertEqual(tr.stats.sac.b, tr2.stats.sac.b)
+            np.testing.assert_array_equal(tr.data, tr2.data)
         # test some more entries, I can see from the plot
         self.assertEqual(tr.stats.station, "CDV")
         self.assertEqual(tr.stats.channel, "Q")
@@ -261,7 +302,8 @@ class CoreTestCase(unittest.TestCase):
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.b, 10.0)
-        sac_ref_time = SacIO(self.file).reftime
+        with open(self.file, 'rb') as fh:
+            sac_ref_time = SacIO(fh).reftime
         self.assertEqual(sac_ref_time.timestamp, 269596800.0)
         # change b to undefined and write (same case as if b == 0.0)
         # now sac reference time and reftime of seismogram must be the
@@ -273,14 +315,15 @@ class CoreTestCase(unittest.TestCase):
             tr2 = read(tmpfile)[0]
             self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
             self.assertEqual(tr2.stats.sac.b, -12345.0)
-            sac_ref_time2 = SacIO(tmpfile).reftime
+            with open(tmpfile, "rb") as fh:
+                sac_ref_time2 = SacIO(fh).reftime
         self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
 
     def test_issue156(self):
         """
         Test case for issue #156.
         """
-        #1
+        # 1
         tr = Trace()
         tr.stats.delta = 0.01
         tr.data = np.arange(0, 3000)
@@ -288,9 +331,9 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SAC')
             st = read(sac_file)
-        self.assertEquals(st[0].stats.delta, 0.01)
-        self.assertEquals(st[0].stats.sampling_rate, 100.0)
-        #2
+        self.assertEqual(st[0].stats.delta, 0.01)
+        self.assertEqual(st[0].stats.sampling_rate, 100.0)
+        # 2
         tr = Trace()
         tr.stats.delta = 0.005
         tr.data = np.arange(0, 2000)
@@ -298,8 +341,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SAC')
             st = read(sac_file)
-        self.assertEquals(st[0].stats.delta, 0.005)
-        self.assertEquals(st[0].stats.sampling_rate, 200.0)
+        self.assertEqual(st[0].stats.delta, 0.005)
+        self.assertEqual(st[0].stats.sampling_rate, 200.0)
 
     def test_writeSACXYWithMinimumStats(self):
         """
@@ -312,8 +355,8 @@ class CoreTestCase(unittest.TestCase):
             sac_file = tf.name
             tr.write(sac_file, 'SACXY')
             st = read(sac_file)
-        self.assertEquals(st[0].stats.delta, 0.01)
-        self.assertEquals(st[0].stats.sampling_rate, 100.0)
+        self.assertEqual(st[0].stats.delta, 0.01)
+        self.assertEqual(st[0].stats.sampling_rate, 100.0)
 
     def test_notUsedButGivenHeaders(self):
         """
@@ -330,7 +373,7 @@ class CoreTestCase(unittest.TestCase):
             tr1.write(sac_file, 'SAC')
             tr2 = read(sac_file)[0]
         for i, header_value in enumerate(not_used):
-            self.assertEquals(int(tr2.stats.sac[header_value]), i)
+            self.assertEqual(int(tr2.stats.sac[header_value]), i)
 
     def test_writingMicroSeconds(self):
         """
@@ -341,7 +384,7 @@ class CoreTestCase(unittest.TestCase):
         head = {'network': 'NL', 'station': 'HGN', 'channel': 'BHZ',
                 'sampling_rate': 200.0,
                 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 999999)}
-        data = np.random.randint(0, 5000, 100).astype("int32")
+        data = np.random.randint(0, 5000, 100).astype(np.int32)
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
         with NamedTemporaryFile() as tf:
@@ -365,18 +408,18 @@ class CoreTestCase(unittest.TestCase):
 
     def test_writeSmallTrace(self):
         """
-        Tests writing Traces containing 0, 1 or 2 samples only.
+        Tests writing Traces containing 0, 1, 2, 3, 4 samples only.
         """
         for format in ['SAC', 'SACXY']:
-            for num in range(0, 4):
+            for num in range(5):
                 tr = Trace(data=np.arange(num))
                 with NamedTemporaryFile() as tf:
                     tempfile = tf.name
                     tr.write(tempfile, format=format)
                     # test results
                     st = read(tempfile, format=format)
-                self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
+                self.assertEqual(len(st), 1)
+                np.testing.assert_array_equal(tr.data, st[0].data)
 
     def test_issue390(self):
         """
@@ -443,6 +486,258 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
         self.assertEqual(tr.stats.sac.kstnm, 'CDV     ')
         self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+
+    def test_read_sac_from_bytes_io(self):
+        """
+        Tests reading from a BytesIO object.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+
+            # Attempt to read from it.
+            tr = readSAC(buf)[0]
+
+        # Open file normally and make sure the results are identical.
+        tr2 = readSAC(self.file)[0]
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_read_sac_from_open_file(self):
+        """
+        Tests reading from an open file.
+        """
+        with open(self.file, "rb") as fh:
+            # Attempt to read from it.
+            tr = readSAC(fh)[0]
+
+        # Open file normally and make sure the results are identical.
+        tr2 = readSAC(self.file)[0]
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_read_write_bytes_io(self):
+        """
+        Tests reading and writing to and from BytesIO.
+        """
+        st = readSAC(self.file)
+        with io.BytesIO() as buf:
+            writeSAC(st, buf)
+            buf.seek(0, 0)
+            # Attempt to read from it.
+            st2 = readSAC(buf)
+
+        tr = st[0]
+        tr2 = st2[0]
+        # depmen is different as it is actually calculated on the fly.
+        del tr.stats.sac.depmen
+        del tr2.stats.sac.depmen
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_read_write_open_file(self):
+        st = readSAC(self.file)
+
+        with NamedTemporaryFile() as tf_out:
+            writeSAC(st, tf_out)
+            tf_out.seek(0, 0)
+            st2 = readSAC(tf_out)
+
+        tr = st[0]
+        tr2 = st2[0]
+        # depmen is different as it is actually calculated on the fly.
+        del tr.stats.sac.depmen
+        del tr2.stats.sac.depmen
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_writing_to_obj_with_multiple_traces_fails(self):
+        """
+        Writing to a buf with multiple trace objects should fail. The SAC
+        format cannot deal with that.
+        """
+        st = read()
+        with io.BytesIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sac")
+
+    def test_writing_to_io_string_io_fails(self):
+        """
+        Writing to io.StringIO should fail on all platforms.
+        """
+        st = read()[:1]
+        with io.StringIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sac")
+
+    def test_read_via_obspy_from_bytes_io(self):
+        """
+        Read sac files from a BytesIO object via ObsPy.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+
+            # Attempt to read from it.
+            tr = read(buf)[0]
+
+        # Open file normally and make sure the results are identical.
+        tr2 = read(self.file)[0]
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_write_via_obspy_to_bytes_io(self):
+        """
+        Read sac files from a BytesIO object via ObsPy.
+        """
+        tr = read(self.file)[0]
+        with io.BytesIO() as buf:
+            tr.write(buf, format="sac")
+            buf.seek(0, 0)
+            # Attempt to read from it.
+            tr2 = read(buf)[0]
+
+        # depmen is different as it is actually calculated on the fly.
+        del tr.stats.sac.depmen
+        del tr2.stats.sac.depmen
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr, tr2)
+
+    def test_readXYwriteXY_from_BytesIO(self):
+        """
+        Reading/writing XY sac files from/to io.BytesIO. It's alphanumeric
+        so bytes should also do the trick.
+        """
+        # Original.
+        st = readSACXY(self.filexy)
+
+        with io.BytesIO() as fh:
+            writeSACXY(st, fh)
+            fh.seek(0, 0)
+            st2 = readSACXY(fh)
+
+        self.assertTrue(st == st2)
+
+    def test_readXYwriteXY_from_open_file_binary_mode(self):
+        """
+        Reading/writing XY sac files to open files in binary mode.
+        """
+        # Original.
+        st = readSACXY(self.filexy)
+
+        with NamedTemporaryFile() as tf:
+            writeSACXY(st, tf)
+            tf.seek(0, 0)
+            st2 = readSACXY(tf)
+
+        self.assertTrue(st == st2)
+
+    def test_is_sac_bytes_io(self):
+        """
+        Tests the isSAC function for BytesIO objects.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertTrue(isSAC(buf))
+
+        # Should naturally fail for an XY file.
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.filexy, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertFalse(isSAC(buf))
+
+    def test_is_sac_string_io_raises(self):
+        """
+        Should raise a ValueError.
+        """
+        with io.StringIO() as buf:
+            buf.write("abcdefghijklmnopqrstuvwxyz")
+            buf.seek(0, 0)
+            self.assertRaises(ValueError, isSAC, buf)
+
+    def test_is_sac_open_file(self):
+        """
+        Tests the isSAC function for open files.
+        """
+        with open(self.file, "rb") as fh:
+            self.assertTrue(isSAC(fh))
+
+    def test_is_sacxy_bytes_io(self):
+        """
+        Tests the isSACXY function for BytesIO objects.
+        """
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.filexy, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertTrue(isSACXY(buf))
+
+        # Should naturally fail for a normal sac file.
+        with io.BytesIO() as buf:
+            # Read file to BytesIO.
+            with open(self.file, "rb") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertFalse(isSACXY(buf))
+
+    def test_is_sacxy_string_io_raises(self):
+        """
+        Tests the isSACXY function for StringIO objects where it should
+        raise. I/O is binary only.
+        """
+        with io.StringIO() as buf:
+            # Read file to BytesIO.
+            with open(self.filexy, "rt") as fh:
+                buf.write(fh.read())
+            buf.seek(0, 0)
+            self.assertRaises(ValueError, isSACXY, buf)
+
+    def test_is_sacxy_open_file_binary_mode(self):
+        """
+        Tests the isSACXY function for open files in binary mode.
+        """
+        with open(self.filexy, "rb") as fh:
+            self.assertTrue(isSACXY(fh))
+
+        with open(__file__, "rb") as fh:
+            self.assertFalse(isSACXY(fh))
+
+    def test_is_sacxy_open_file_text_mode_fails(self):
+        """
+        Tests that the isSACXY function for open files in text mode fails.
+        """
+        with open(self.filexy, "rt") as fh:
+            self.assertRaises(ValueError, isSACXY, fh)
+
+    def test_writing_to_file_like_objects_with_obspy(self):
+        """
+        Very simple test just executing a common operation and making sure
+        it does not fail.
+        """
+        st = read()[:1]
+
+        with io.BytesIO() as fh:
+            st.write(fh, format="sac")
+
+        with io.BytesIO() as fh:
+            st.write(fh, format="sacxy")
+
+        # Will fail if the stream contains more than one trace.
+        st = read()
+        self.assertTrue(len(st) > 1)
+        with io.BytesIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sac")
+
+        with io.BytesIO() as fh:
+            self.assertRaises(ValueError, st.write, fh, format="sacxy")
 
 
 def suite():

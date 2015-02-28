@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-#------------------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
 # Filename: spectral_estimation.py
 #  Purpose: Various Routines Related to Spectral Estimation
 #   Author: Tobias Megies
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2011-2012 Tobias Megies
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 """
 Various Routines Related to Spectral Estimation
 
@@ -16,15 +17,26 @@ Various Routines Related to Spectral Estimation
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-import os
-import warnings
-import pickle
-import math
 import bisect
 import bz2
+import math
+import os
+import pickle
+import warnings
+
 import numpy as np
-from obspy import Trace, Stream
+import matplotlib.pyplot as plt
+from matplotlib import mlab
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.dates import date2num
+from matplotlib.mlab import detrend_none, window_hanning
+from matplotlib.ticker import FormatStrFormatter
+
+from obspy import Stream, Trace
 from obspy.core.util import getMatplotlibVersion
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
@@ -33,38 +45,6 @@ from obspy.signal.util import prevpow2
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 dtiny = np.finfo(0.0).tiny
-
-
-if MATPLOTLIB_VERSION is None:
-    # if matplotlib is not present be silent about it and only raise the
-    # ImportError if matplotlib actually is used (currently in psd() and
-    # PPSD())
-    msg_matplotlib_ImportError = "Failed to import matplotlib. While this " \
-        "is no dependency of obspy.signal it is however necessary for a " \
-        "few routines. Please install matplotlib in order to be able " \
-        "to use e.g. psd() or PPSD()."
-    # set up two dummy functions. this makes it possible to make the docstring
-    # of psd() look like it should with two functions as default values for
-    # kwargs although matplotlib might not be present and the routines
-    # therefore not usable
-
-    def detrend_none():
-        pass
-
-    def window_hanning():
-        pass
-
-else:
-    # Import matplotlib routines. These are no official dependency of
-    # obspy.signal so an import error should really only be raised if any
-    # routine is used which relies on matplotlib (at the moment: psd, PPSD).
-    from matplotlib import mlab
-    import matplotlib.pyplot as plt
-    from matplotlib.dates import date2num
-    from matplotlib.ticker import FormatStrFormatter
-    from matplotlib.colors import LinearSegmentedColormap
-    from matplotlib.mlab import detrend_none, window_hanning
-
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0, 1.0, 1.0),
@@ -105,13 +85,12 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     :func:`matplotlib.mlab.psd` default behavior which changes with
     matplotlib version 0.98.4:
 
-    * http://matplotlib.sourceforge.net/users/whats_new.html\
-#psd-amplitude-scaling
-    * http://matplotlib.sourceforge.net/_static/CHANGELOG
+    * http://matplotlib.org/users/whats_new.html#psd-amplitude-scaling
+    * http://matplotlib.org/_static/CHANGELOG
       (entries on 2009-05-18 and 2008-11-11)
     * http://matplotlib.svn.sourceforge.net/viewvc/matplotlib\
 ?view=revision&revision=6518
-    * http://matplotlib.sourceforge.net/api/api_changes.html#changes-for-0-98-x
+    * http://matplotlib.org/api/api_changes.html#changes-for-0-98-x
 
     .. note::
         For details on all arguments see :func:`matplotlib.mlab.psd`.
@@ -125,12 +104,8 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
     """
-    # check if matplotlib is available, no official dependency for obspy.signal
-    if MATPLOTLIB_VERSION is None:
-        raise ImportError(msg_matplotlib_ImportError)
-
     # check matplotlib version
-    elif MATPLOTLIB_VERSION >= [0, 98, 4]:
+    if MATPLOTLIB_VERSION >= [0, 98, 4]:
         new_matplotlib = True
     else:
         new_matplotlib = False
@@ -194,7 +169,7 @@ def welch_window(N):
 
     .. note::
         See e.g.:
-        http://www.cg.tuwien.ac.at/hostings/cescg/CESCG99/TTheussl/node7.html
+        http://www.cescg.org/CESCG99/TTheussl/node7.html
 
     :type N: int
     :param N: Length of window function.
@@ -244,19 +219,23 @@ class PPSD():
     ...        'zeros': [0j, 0j]}
 
     >>> ppsd = PPSD(tr.stats, paz)
-    >>> print ppsd.id
+    >>> print(ppsd.id)
     BW.RJOB..EHZ
-    >>> print ppsd.times
+    >>> print(ppsd.times)
     []
 
     Now we could add data to the probabilistic psd (all processing like
     demeaning, tapering and so on is done internally) and plot it like ...
 
     >>> ppsd.add(st) # doctest: +SKIP
-    >>> print ppsd.times # doctest: +SKIP
+    >>> print(ppsd.times) # doctest: +SKIP
     >>> ppsd.plot() # doctest: +SKIP
 
     ... but the example stream is too short and does not contain enough data.
+
+    .. note::
+
+        For a real world example see the `ObsPy Tutorial`_.
 
     .. rubric:: Saving and Loading
 
@@ -279,8 +258,6 @@ class PPSD():
         While saving the PPSD with compression enabled takes significantly
         longer, it can reduce the resulting file size by more than 80%.
 
-    For a real world example see the `ObsPy Tutorial`_.
-
     .. note::
 
         It is safer (but a bit slower) to provide a
@@ -291,7 +268,7 @@ class PPSD():
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5):
+                 ppsd_length=3600., overlap=0.5, water_level=600.0):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -318,13 +295,13 @@ class PPSD():
 
         :type stats: :class:`~obspy.core.trace.Stats`
         :param stats: Stats of the station/instrument to process
-        :type paz: dict (optional)
+        :type paz: dict, optional
         :param paz: Response information of instrument. If not specified the
                 information is supposed to be present as stats.paz.
-        :type parser: :class:`obspy.xseed.parser.Parser` (optional)
+        :type parser: :class:`obspy.xseed.parser.Parser`, optional
         :param parser: Parser instance with response information (e.g. read
                 from a Dataless SEED volume)
-        :type skip_on_gaps: Boolean (optional)
+        :type skip_on_gaps: bool, optional
         :param skip_on_gaps: Determines whether time segments with gaps should
                 be skipped entirely. [McNamara2004]_ merge gappy
                 traces by filling with zeros. This results in a clearly
@@ -332,29 +309,26 @@ class PPSD():
                 `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than `ppsd_length` not
                 used in the PPSD.
-        :type is_rotational_data: Boolean (optional)
+        :type is_rotational_data: bool, optional
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
-        :type db_bins: Tuple of three ints/floats
+        :type db_bins: tuple of three ints/floats
         :param db_bins: Specify the lower and upper boundary and the width of
                 the db bins. The bin width might get adjusted to fit  a number
                 of equally spaced bins in between the given boundaries.
-        :type ppsd_length: float (optional)
+        :type ppsd_length: float, optional
         :param ppsd_length: Length of data segments passed to psd in seconds.
                 In the paper by [McNamara2004]_ a value of 3600 (1 hour) was
                 chosen. Longer segments increase the upper limit of analyzed
                 periods but decrease the number of analyzed segments.
-        :type overlap: float (optional)
+        :type overlap: float, optional
         :param overlap: Overlap of segments passed to psd. Overlap may take
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
+        :type water_level: float, optional
+        :param water_level: Water level used in instrument correction.
         """
-        # check if matplotlib is available, no official dependency for
-        # obspy.signal
-        if MATPLOTLIB_VERSION is None:
-            raise ImportError(msg_matplotlib_ImportError)
-
         if paz is not None and parser is not None:
             msg = "Both paz and parser specified. Using parser object for " \
                   "metadata."
@@ -370,6 +344,7 @@ class PPSD():
         self.is_rotational_data = is_rotational_data
         self.ppsd_length = ppsd_length
         self.overlap = overlap
+        self.water_level = water_level
         # trace length for one segment
         self.len = int(self.sampling_rate * ppsd_length)
         # set paz either from kwarg or try to get it from stats
@@ -379,7 +354,7 @@ class PPSD():
             self.merge_method = -1
         else:
             self.merge_method = 0
-        # nfft is determined mimicing the fft setup in McNamara&Buland paper:
+        # nfft is determined mimicking the fft setup in McNamara&Buland paper:
         # (they take 13 segments overlapping 75% and truncate to next lower
         #  power of 2)
         #  - take number of points of whole ppsd segment (default 1 hour)
@@ -418,7 +393,7 @@ class PPSD():
         per = 1.0 / freq[::-1]
         self.freq = freq
         self.per = per
-        # calculate left/rigth edge of first period bin,
+        # calculate left/right edge of first period bin,
         # width of bin is one octave
         per_left = per[0] / 2
         per_right = 2 * per_left
@@ -521,7 +496,7 @@ class PPSD():
     def add(self, stream, verbose=False):
         """
         Process all traces with compatible information and add their spectral
-        estimates to the histogram containg the probabilistic psd.
+        estimates to the histogram containing the probabilistic psd.
         Also ensures that no piece of data is inserted twice.
 
         :type stream: :class:`~obspy.core.stream.Stream` or
@@ -562,7 +537,7 @@ class PPSD():
                     warnings.warn(msg)
                 else:
                     # throw warnings if trace length is different
-                    # than ppsd_lenth..!?!
+                    # than ppsd_length..!?!
                     slice = tr.slice(t1, t1 + self.ppsd_length)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
@@ -570,12 +545,12 @@ class PPSD():
                     if success:
                         self.__insert_used_time(t1)
                         if verbose:
-                            print t1
+                            print(t1)
                         changed = True
                 t1 += (1 - self.overlap) * self.ppsd_length  # advance
 
             # enforce time limits, pad zeros if gaps
-            #tr.trim(t, t+PPSD_LENGTH, pad=True)
+            # tr.trim(t, t+PPSD_LENGTH, pad=True)
         return changed
 
     def __process(self, tr):
@@ -596,10 +571,10 @@ class PPSD():
         if len(tr) != self.len:
             msg = "Got a piece of data with wrong length. Skipping"
             warnings.warn(msg)
-            print len(tr), self.len
+            print(len(tr), self.len)
             return False
         # being paranoid, only necessary if in-place operations would follow
-        tr.data = tr.data.astype("float64")
+        tr.data = tr.data.astype(np.float64)
         # if trace has a masked array we fill in zeros
         try:
             tr.data[tr.data.mask] = 0.0
@@ -611,7 +586,7 @@ class PPSD():
         # get instrument response preferably from parser object
         try:
             paz = self.parser.getPAZ(self.id, datetime=tr.stats.starttime)
-        except Exception, e:
+        except Exception as e:
             if self.parser is not None:
                 msg = "Error getting response from parser:\n%s: %s\n" \
                       "Skipping time segment(s)."
@@ -633,7 +608,8 @@ class PPSD():
             tr.data /= paz['sensitivity']
         else:
             tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                        paz_simulate=None, simulate_sensitivity=False)
+                        paz_simulate=None, simulate_sensitivity=False,
+                        water_level=self.water_level)
 
         # go to acceleration, do nothing for rotational data:
         if self.is_rotational_data:
@@ -690,7 +666,7 @@ class PPSD():
         :type percentile: int
         :param percentile: percentile for which to return approximate psd
                 value. (e.g. a value of 50 is equal to the median.)
-        :type hist_cum: `numpy.ndarray` (optional)
+        :type hist_cum: :class:`numpy.ndarray`, optional
         :param hist_cum: if it was already computed beforehand, the normalized
                 cumulative histogram can be provided here (to avoid computing
                 it again), otherwise it is computed from the currently stored
@@ -712,6 +688,29 @@ class PPSD():
         # map to power db values
         percentile_values = self.spec_bins[percentile_values]
         return (self.period_bin_centers, percentile_values)
+
+    def get_mode(self):
+        """
+        Returns periods and mode psd values (i.e. for each frequency the psd
+        value with the highest probability is selected).
+
+        :returns: (periods, psd mode values)
+        """
+        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
+        mode = db_bin_centers[self.hist_stack.argmax(axis=1)]
+        return (self.period_bin_centers, mode)
+
+    def get_mean(self):
+        """
+        Returns periods and mean psd values (i.e. for each frequency the mean
+        psd value is selected).
+
+        :returns: (periods, psd mean values)
+        """
+        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
+        mean = (self.hist_stack * db_bin_centers /
+                len(self.times_used)).sum(axis=1)
+        return (self.period_bin_centers, mean)
 
     def __get_normalized_cumulative_histogram(self):
         """
@@ -738,17 +737,17 @@ class PPSD():
 
         :type filename: str
         :param filename: Name of output file with pickled PPSD object
-        :type compress: bool (optional)
+        :type compress: bool, optional
         :param compress: Enable/disable file compression.
         """
         if compress:
             # due to an bug in older python version we can't use with
             # http://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'w')
+            file_ = bz2.BZ2File(filename, 'wb')
             pickle.dump(self, file_)
             file_.close()
         else:
-            with open(filename, 'w') as file_:
+            with open(filename, 'wb') as file_:
                 pickle.dump(self, file_)
 
     @staticmethod
@@ -763,7 +762,7 @@ class PPSD():
         :param filename: Name of file containing the pickled PPSD object
         """
         # identify bzip2 compressed file using bzip2's magic number
-        bz2_magic = '\x42\x5a\x68'
+        bz2_magic = b'\x42\x5a\x68'
         with open(filename, 'rb') as file_:
             file_start = file_.read(len(bz2_magic))
 
@@ -777,11 +776,11 @@ class PPSD():
             #
             # due to an bug in older python version we can't use with
             # http://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'r')
+            file_ = bz2.BZ2File(filename, 'rb')
             ppsd = pickle.load(file_)
             file_.close()
         else:
-            with open(filename, 'r') as file_:
+            with open(filename, 'rb') as file_:
                 ppsd = pickle.load(file_)
 
         return ppsd
@@ -789,34 +788,43 @@ class PPSD():
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
-             max_percentage=30, period_lim=(0.01, 179)):
+             max_percentage=30, period_lim=(0.01, 179), show_mode=False,
+             show_mean=False):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
         a plot window is shown.
 
-        :type filename: str (optional)
+        :type filename: str, optional
         :param filename: Name of output file
-        :type show_coverage: bool (optional)
+        :type show_coverage: bool, optional
         :param show_coverage: Enable/disable second axes with representation of
                 data coverage time intervals.
-        :type show_percentiles: bool (optional)
+        :type show_percentiles: bool, optional
         :param show_percentiles: Enable/disable plotting of approximated
                 percentiles. These are calculated from the binned histogram and
                 are not the exact percentiles.
+        :type show_histogram: bool, optional
+        :param show_histogram: Enable/disable plotting of histogram. This
+                can be set ``False`` e.g. to make a plot with only percentiles
+                plotted. Defaults to ``True``.
         :type percentiles: list of ints
         :param percentiles: percentiles to show if plotting of percentiles is
                 selected.
-        :type show_noise_models: bool (optional)
+        :type show_noise_models: bool, optional
         :param show_noise_models: Enable/disable plotting of noise models.
-        :type grid: bool (optional)
+        :type grid: bool, optional
         :param grid: Enable/disable grid in histogram plot.
-        :type show: bool (optional)
+        :type show: bool, optional
         :param show: Enable/disable immediately showing the plot.
-        :type max_percentage: float (optional)
+        :type max_percentage: float, optional
         :param max_percentage: Maximum percentage to adjust the colormap.
-        :type period_lim: tuple of 2 floats (optional)
+        :type period_lim: tuple of 2 floats, optional
         :param period_lim: Period limits to show in histogram.
+        :type show_mode: bool, optional
+        :param show_mode: Enable/disable plotting of mode psd values.
+        :type show_mean: bool, optional
+        :param show_mean: Enable/disable plotting of mean psd values.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -835,7 +843,7 @@ class PPSD():
             ax = fig.add_subplot(111)
 
         if show_histogram:
-            ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
+            ppsd = ax.pcolormesh(X, Y, hist_stack.T, cmap=self.colormap)
             cb = plt.colorbar(ppsd, ax=ax)
             cb.set_label("[%]")
             color_limits = (0, max_percentage)
@@ -853,6 +861,14 @@ class PPSD():
                     self.get_percentile(percentile=percentile,
                                         hist_cum=hist_cum)
                 ax.plot(periods, percentile_values, color="black")
+
+        if show_mode:
+            periods, mode_ = self.get_mode()
+            ax.plot(periods, mode_, color="black")
+
+        if show_mean:
+            periods, mean_ = self.get_mean()
+            ax.plot(periods, mean_, color="black")
 
         if show_noise_models:
             model_periods, high_noise = get_NHNM()
@@ -891,7 +907,7 @@ class PPSD():
         If a filename is specified the plot is saved to this file, otherwise
         a plot window is shown.
 
-        :type filename: str (optional)
+        :type filename: str, optional
         :param filename: Name of output file
         """
         fig = plt.figure()

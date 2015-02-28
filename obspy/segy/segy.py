@@ -1,25 +1,32 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: seg.py
 #  Purpose: Routines for reading and writing SEG Y files.
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Routines to read and write SEG Y rev 1 encoded seismic data files.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
-    BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
-    TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
-from obspy.segy.util import unpack_header_value
-from struct import pack, unpack
-from unpack import OnTheFlyDataUnpacker
-import StringIO
-import numpy as np
+import io
 import os
+from struct import pack, unpack
+
+import numpy as np
+
+from obspy.segy.header import (BINARY_FILE_HEADER_FORMAT,
+                               DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
+                               DATA_SAMPLE_FORMAT_SAMPLE_SIZE,
+                               DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, ENDIAN,
+                               TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
+from obspy.segy.unpack import OnTheFlyDataUnpacker
+from obspy.segy.util import unpack_header_value
 
 
 class SEGYError(Exception):
@@ -77,14 +84,16 @@ class SEGYFile(object):
             Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
             be attempted. If it is None and file is also None, it will default
             to 'ASCII'.
-        :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read. Defaults to False.
-        :param headonly: Bool. Determines whether or not the actual data
-            records will be read and unpacked. Has a huge impact on memory
-            usage. Data can be read and unpacked on-the-fly after reading the
-            file. Defaults to False.
+        :type unpack_headers: bool
+        :param unpack_headers: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
+        :type headonly: bool
+        :param headonly: Determines whether or not the actual data records
+            will be read and unpacked. Has a huge impact on memory usage. Data
+            can be read and unpacked on-the-fly after reading the file.
+            Defaults to False.
         """
         if file is None:
             self._createEmptySEGYFileObject()
@@ -96,7 +105,7 @@ class SEGYFile(object):
             # And the textual header encoding to ASCII.
             if textual_header_encoding is None:
                 self.textual_header_encoding = 'ASCII'
-            self.textual_header = ''
+            self.textual_header = b''
             return
         self.file = file
         # If endian is None autodetect is.
@@ -117,6 +126,9 @@ class SEGYFile(object):
         """
         return '%i traces in the SEG Y structure.' % len(self.traces)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def _autodetectEndianness(self):
         """
         Tries to automatically determine the endianness of the file at hand.
@@ -124,14 +136,14 @@ class SEGYFile(object):
         pos = self.file.tell()
         # Jump to the data sample format code.
         self.file.seek(3224, 1)
-        format = unpack('>h', self.file.read(2))[0]
+        format = unpack(b'>h', self.file.read(2))[0]
         # Check if valid.
         if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
             self.endian = '>'
         # Else test little endian.
         else:
             self.file.seek(-2, 1)
-            format = unpack('<h', self.file.read(2))[0]
+            format = unpack(b'<h', self.file.read(2))[0]
             if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
                 self.endian = '<'
             else:
@@ -145,7 +157,7 @@ class SEGYFile(object):
         """
         Creates an empty SEGYFile object.
         """
-        self.textual_file_header = ''
+        self.textual_file_header = b''
         self.binary_file_header = None
         self.traces = []
 
@@ -160,7 +172,7 @@ class SEGYFile(object):
         # encoding. Sometimes is it not C but also cannot be decoded from
         # EBCDIC so it is treated as ASCII and all empty symbols are removed.
         if not self.textual_header_encoding:
-            if textual_header[0] != 'C':
+            if textual_header[0:1] != b'C':
                 try:
                     textual_header = \
                         textual_header.decode('EBCDIC-CP-BE').encode('ascii')
@@ -268,7 +280,7 @@ class SEGYFile(object):
         length = len(self.textual_file_header)
         # Append spaces to the end if its too short.
         if length < 3200:
-            textual_header = self.textual_file_header + ' ' * (3200 - length)
+            textual_header = self.textual_file_header + b' ' * (3200 - length)
         elif length == 3200:
             textual_header = self.textual_file_header
         # The length must not exceed 3200 byte.
@@ -293,20 +305,25 @@ class SEGYFile(object):
         Reads the actual traces starting at the current file pointer position
         to the end of the file.
 
-        :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read. Defaults to False.
+        :type unpack_headers: bool
+        :param unpack_headers: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
 
-        :param headonly: Bool. Determines whether or not the actual data
-            records will be read and unpacked. Has a huge impact on memory
-            usage. Data can be read and unpacked on-the-fly after reading the
-            file. Defaults to False.
+        :type headonly: bool
+        :param headonly: Determines whether or not the actual data records
+            will be read and unpacked. Has a huge impact on memory usage. Data
+            can be read and unpacked on-the-fly after reading the file.
+            Defaults to False.
         """
         self.traces = []
         # Determine the filesize once.
-        if isinstance(self.file, StringIO.StringIO):
-            filesize = self.file.len
+        if isinstance(self.file, io.BytesIO):
+            pos = self.file.tell()
+            self.file.seek(0, 2)  # go t end of file
+            filesize = self.file.tell()
+            self.file.seek(pos, 0)
         else:
             filesize = os.fstat(self.file.fileno())[6]
         # Big loop to read all data traces.
@@ -346,20 +363,20 @@ class SEGYBinaryFileHeader(object):
             pos += length
             # Unpack according to different lengths.
             if length == 2:
-                format = '%sh' % self.endian
+                format = ('%sh' % self.endian).encode('ascii', 'strict')
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%si' % self.endian
+                format = ('%si' % self.endian).encode('ascii', 'strict')
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # The other value are the unassigned values. As it is unclear how
-            # these are formated they will be stored as strings.
+            # these are formatted they will be stored as strings.
             elif name.startswith('unassigned'):
                 # These are only the unassigned fields.
-                format = 'h' * (length / 2)
+                format = 'h' * (length // 2)
                 # Set the class attribute.
                 setattr(self, name, string)
             # Should not happen.
@@ -376,6 +393,9 @@ class SEGYBinaryFileHeader(object):
                                            str(getattr(self, item[1]))))
         return "\n".join(final_str)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def write(self, file, endian=None):
         """
         Writes the header to an open file like object.
@@ -386,22 +406,24 @@ class SEGYBinaryFileHeader(object):
             length, name, _ = item
             # Unpack according to different lengths.
             if length == 2:
-                format = '%sh' % endian
+                format = ('%sh' % endian).encode('ascii', 'strict')
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%si' % endian
+                format = ('%si' % endian).encode('ascii', 'strict')
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # These are the two unassigned values in the binary file header.
             elif name.startswith('unassigned'):
-                temp = '%s' % str(getattr(self, name))
+                temp = getattr(self, name)
+                if not isinstance(temp, bytes):
+                    temp = str(temp).encode('ascii', 'strict')
                 temp_length = len(temp)
                 # Pad to desired length if necessary.
                 if temp_length != length:
-                    temp += '\x00' * (length - temp_length)
+                    temp += b'\x00' * (length - temp_length)
                 file.write(temp)
             # Should not happen.
             else:
@@ -411,8 +433,7 @@ class SEGYBinaryFileHeader(object):
         """
         Just fills all necessary class attributes with zero.
         """
-        for item in BINARY_FILE_HEADER_FORMAT:
-            _, name, _ = item
+        for _, name, _ in BINARY_FILE_HEADER_FORMAT:
             setattr(self, name, 0)
 
 
@@ -431,32 +452,36 @@ class SEGYTrace(object):
         :param data_encoding: The data sample format code as defined in the
             binary file header:
 
-                1:
-                    4 byte IBM floating point
-                2:
-                    4 byte Integer, two's complement
-                3:
-                    2 byte Integer, two's complement
-                4:
-                    4 byte Fixed point with gain
-                5:
-                    4 byte IEEE floating point
-                8:
-                    1 byte Integer, two's complement
+            1:
+                4 byte IBM floating point
+            2:
+                4 byte Integer, two's complement
+            3:
+                2 byte Integer, two's complement
+            4:
+                4 byte Fixed point with gain
+            5:
+                4 byte IEEE floating point
+            8:
+                1 byte Integer, two's complement
 
             Defaults to 4.
-        :param big_endian: Bool. True means the header is encoded in big endian
-            and False corresponds to a little endian header.
-        :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read. Defaults to False.
-        :param filesize: Integer. Filesize of the file. If not given it will be
+        :type big_endian: bool
+        :param big_endian: True means the header is encoded in big endian and
+            False corresponds to a little endian header.
+        :type unpack_headers: bool
+        :param unpack_headers: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
+        :type filesize: int
+        :param filesize: Filesize of the file. If not given it will be
             determined using fstat which is slow.
-        :param headonly: Bool. Determines whether or not the actual data
-            records will be read and unpacked. Has a huge impact on memory
-            usage. Data can be read and unpacked on-the-fly after reading the
-            file. Defaults to False.
+        :param headonly: bool
+        :param headonly: Determines whether or not the actual data records
+            will be read and unpacked. Has a huge impact on memory usage. Data
+            can be read and unpacked on-the-fly after reading the file.
+            Defaults to False.
         """
         self.endian = endian
         self.data_encoding = data_encoding
@@ -469,8 +494,11 @@ class SEGYTrace(object):
         if filesize:
             self.filesize = filesize
         else:
-            if isinstance(self.file, StringIO.StringIO):
-                self.filesize = self.file.len
+            if isinstance(self.file, io.BytesIO):
+                _pos = self.file.tell()
+                self.file.seek(0, 2)
+                self.filesize = self.file.tell()
+                self.file.seek(_pos)
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
         # Otherwise read the file.
@@ -481,14 +509,16 @@ class SEGYTrace(object):
         Reads the complete next header starting at the file pointer at
         self.file.
 
-        :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read. Defaults to False.
-        :param headonly: Bool. Determines whether or not the actual data
-            records will be read and unpacked. Has a huge impact on memory
-            usage. Data can be read and unpacked on-the-fly after reading the
-            file. Defaults to False.
+        :type unpack_headers: bool
+        :param unpack_headers: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
+        :type headonly: bool
+        :param headonly: Determines whether or not the actual data records
+            will be read and unpacked. Has a huge impact on memory usage. Data
+            can be read and unpacked on-the-fly after reading the file.
+            Defaults to False.
         """
         trace_header = self.file.read(240)
         # Check if it is smaller than 240 byte.
@@ -510,7 +540,7 @@ class SEGYTrace(object):
             msg = """
                   Too little data left in the file to unpack it according to
                   its trace header. This is most likely either due to a wrong
-                  byteorder or a corrupt file.
+                  byte order or a corrupt file.
                   """.strip()
             raise SEGYTraceReadingError(msg)
         if headonly:
@@ -552,7 +582,7 @@ class SEGYTrace(object):
         """
         Creates an empty trace with an empty header.
         """
-        self.data = np.zeros(0, dtype='float32')
+        self.data = np.zeros(0, dtype=np.float32)
         self.header = SEGYTraceHeader(header=None, endian=self.endian)
 
     def __str__(self):
@@ -567,6 +597,9 @@ class SEGYTrace(object):
             (self.header.sample_interval_in_ms_for_this_trace /
                 float(1E6)))
         return ret_val
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __getattr__(self, name):
         """
@@ -599,15 +632,18 @@ class SEGYTraceHeader(object):
         Will take the 240 byte of the trace header and unpack all values with
         the given endianness.
 
+        :type header: str
         :param header: String that contains the packed binary header values.
             If header is None, a trace header with all values set to 0 will be
             created
-        :param big_endian: Bool. True means the header is encoded in big endian
-            and False corresponds to a little endian header.
-        :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read. Defaults to False.
+        :type big_endian: bool
+        :param big_endian: True means the header is encoded in big endian and
+            False corresponds to a little endian header.
+        :type unpack_headers: bool
+        :param unpack_headers: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
         """
         self.endian = endian
         if header is None:
@@ -651,23 +687,26 @@ class SEGYTraceHeader(object):
             length, name, special_format, _ = item
             # Use special format if necessary.
             if special_format:
-                format = '%s%s' % (endian, special_format)
+                format = ('%s%s' % (endian,
+                                    special_format)).encode('ascii',
+                                                            'strict')
                 file.write(pack(format, getattr(self, name)))
             # Pack according to different lengths.
             elif length == 2:
-                format = '%sh' % endian
+                format = ('%sh' % endian).encode('ascii', 'strict')
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%si' % endian
+                format = ('%si' % endian).encode('ascii', 'strict')
                 file.write(pack(format, getattr(self, name)))
             # Just the one unassigned field.
             elif length == 8:
                 field = getattr(self, name)
                 # An empty field will have a zero.
                 if field == 0:
-                    field = 2 * pack('%si' % endian, 0)
+                    field = 2 * pack(('%si' % endian).encode('ascii',
+                                                             'strict'), 0)
                 file.write(field)
             # Should not happen.
             else:
@@ -700,13 +739,15 @@ class SEGYTraceHeader(object):
         Just returns all header values.
         """
         retval = ''
-        for item in TRACE_HEADER_FORMAT:
-            _, name, _, _ = item
+        for _, name, _, _ in TRACE_HEADER_FORMAT:
             # Do not print the unassigned value.
             if name == 'unassigned':
                 continue
             retval += '%s: %i\n' % (name, getattr(self, name))
         return retval
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def _createEmptyTraceHeader(self):
         """
@@ -724,6 +765,7 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
 
     :param file: Open file like object or a string which will be assumed to be
         a filename.
+    :type endian: str
     :param endian: String that determines the endianness of the file. Either
         '>' for big endian or '<' for little endian. If it is None, obspy.segy
         will try to autodetect the endianness. The endianness is always valid
@@ -731,14 +773,15 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
     :param textual_header_encoding: The encoding of the textual header.
         Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
         be attempted.
-    :param unpack_headers: Bool. Determines whether or not all headers will be
+    :type unpack_headers: bool
+    :param unpack_headers: Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines whether or not the actual data
-        records will be read and unpacked. Has a huge impact on memory usage.
-        Data can be read and unpacked on-the-fly after reading the file.
-        Defaults to False.
+    :type headonly: bool
+    :param headonly: Determines whether or not the actual data records will be
+        read and unpacked. Has a huge impact on memory usage. Data can be read
+        and unpacked on-the-fly after reading the file. Defaults to False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -759,6 +802,7 @@ def _readSEGY(file, endian=None, textual_header_encoding=None,
     Reads on open file object and returns a SEGYFile object.
 
     :param file: Open file like object.
+    :type endian: str
     :param endian: String that determines the endianness of the file. Either
         '>' for big endian or '<' for little endian. If it is None, obspy.segy
         will try to autodetect the endianness. The endianness is always valid
@@ -766,14 +810,15 @@ def _readSEGY(file, endian=None, textual_header_encoding=None,
     :param textual_header_encoding: The encoding of the textual header.
         Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
         be attempted.
-    :param unpack_headers: Bool. Determines whether or not all headers will be
+    :type unpack_headers: bool
+    :param unpack_headers: Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines whether or not the actual data
-        records will be read and unpacked. Has a huge impact on memory usage.
-        Data can be read and unpacked on-the-fly after reading the file.
-        Defaults to False.
+    :type headonly: bool
+    :param headonly: Determines whether or not the actual data records will be
+        read and unpacked. Has a huge impact on memory usage. Data can be read
+        and unpacked on-the-fly after reading the file. Defaults to False.
     """
     return SEGYFile(file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
@@ -794,15 +839,16 @@ class SUFile(object):
 
         :param endian: The endianness of the file. If None, autodetection will
             be used.
-        :param unpack_header: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read.
+        :type unpack_header: bool
+        :param unpack_header: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
+        :type headonly: bool
+        :param headonly: Determines whether or not the actual data records
+            will be read and unpacked. Has a huge impact on memory usage. Data
+            can be read and unpacked on-the-fly after reading the file.
             Defaults to False.
-        :param headonly: Bool. Determines whether or not the actual data
-            records will be read and unpacked. Has a huge impact on memory
-            usage. Data can be read and unpacked on-the-fly after reading the
-            file. Defaults to False.
         """
         if file is None:
             self._createEmptySUFileObject()
@@ -844,19 +890,23 @@ class SUFile(object):
         """
         return '%i traces in the SU structure.' % len(self.traces)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def _readTraces(self, unpack_headers=False, headonly=False):
         """
         Reads the actual traces starting at the current file pointer position
         to the end of the file.
 
-        :param unpack_header: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the
-            memory usage and the performance. They can be unpacked on-the-fly
-            after being read.
+        :type unpack_header: bool
+        :param unpack_header: Determines whether or not all headers will be
+            unpacked during reading the file. Has a huge impact on the memory
+            usage and the performance. They can be unpacked on-the-fly after
+            being read. Defaults to False.
+        :type headonly: bool
+        :param headonly: Determines whether or not the actual data records
+            will be unpacked. Useful if one is just interested in the headers.
             Defaults to False.
-        :param headonly: Bool. Determines whether or not the actual data
-            records will be unpacked. Useful if one is just interested in the
-            headers.  Defaults to False.
         """
         self.traces = []
         # Big loop to read all data traces.
@@ -902,17 +952,20 @@ def readSU(file, endian=None, unpack_headers=False, headonly=False):
 
     :param file: Open file like object or a string which will be assumed to be
         a filename.
+    :type endian: str
     :param endian: String that determines the endianness of the file. Either
         '>' for big endian or '<' for little endian. If it is None, obspy.segy
         will try to autodetect the endianness. The endianness is always valid
         for the whole file.
-    :param unpack_header: Bool. Determines whether or not all headers will be
+    :type unpack_header: bool
+    :param unpack_header: Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines whether or not the actual data records
-        will be unpacked. Useful if one is just interested in the headers.
-        Defaults to False.
+    :type headonly: bool
+    :param headonly: Determines whether or not the actual data records will be
+        unpacked. Useful if one is just interested in the headers. Defaults to
+        False.
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
@@ -930,17 +983,20 @@ def _readSU(file, endian=None, unpack_headers=False, headonly=False):
     Reads on open file object and returns a SUFile object.
 
     :param file: Open file like object.
+    :type endian: str
     :param endian: String that determines the endianness of the file. Either
         '>' for big endian or '<' for little endian. If it is None, obspy.segy
         will try to autodetect the endianness. The endianness is always valid
         for the whole file.
-    :param unpack_header: Bool. Determines whether or not all headers will be
+    :type unpack_header: bool
+    :param unpack_header: Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines whether or not the actual data records
-        will be unpacked. Useful if one is just interested in the headers.
-        Defaults to False.
+    :type headonly: bool
+    :param headonly: Determines whether or not the actual data records will be
+        unpacked. Useful if one is just interested in the headers. Defaults to
+        False.
     """
     return SUFile(file, endian=endian, unpack_headers=unpack_headers,
                   headonly=headonly)
@@ -961,8 +1017,10 @@ def autodetectEndianAndSanityCheckSU(file):
     the Trace header.
     """
     pos = file.tell()
-    if isinstance(file, StringIO.StringIO):
-        size = file.len
+    if isinstance(file, io.BytesIO):
+        file.seek(0, 2)
+        size = file.tell()
+        file.seek(pos, 0)
     else:
         size = os.fstat(file.fileno())[6]
     if size < 244:
@@ -985,8 +1043,8 @@ def autodetectEndianAndSanityCheckSU(file):
     # Jump to previous position.
     file.seek(pos, 0)
     # Unpack in little and big endian.
-    le_sample_count = unpack('<h', sample_count)[0]
-    be_sample_count = unpack('>h', sample_count)[0]
+    le_sample_count = unpack(b'<h', sample_count)[0]
+    be_sample_count = unpack(b'>h', sample_count)[0]
     # Check if both work.
     working_byteorders = []
     if le_sample_count > 0:
@@ -1003,12 +1061,13 @@ def autodetectEndianAndSanityCheckSU(file):
     # Check if the other header values make sense.
     still_working_byteorders = []
     for bo in working_byteorders:
-        this_interval = unpack('%sh' % bo, interval)[0]
-        this_year = unpack('%sh' % bo, year)[0]
-        this_julday = unpack('%sh' % bo, jul_day)[0]
-        this_hour = unpack('%sh' % bo, hour)[0]
-        this_minute = unpack('%sh' % bo, minute)[0]
-        this_second = unpack('%sh' % bo, second)[0]
+        fmt = ("%sh" % bo).encode('ascii', 'strict')
+        this_interval = unpack(fmt, interval)[0]
+        this_year = unpack(fmt, year)[0]
+        this_julday = unpack(fmt, jul_day)[0]
+        this_hour = unpack(fmt, hour)[0]
+        this_minute = unpack(fmt, minute)[0]
+        this_second = unpack(fmt, second)[0]
         # Make a sanity check for each.
         # XXX: The arbitrary maximum of the sample interval is 10 seconds.
         if this_interval <= 0 or this_interval > 10E7:
@@ -1033,10 +1092,10 @@ def autodetectEndianAndSanityCheckSU(file):
     elif length == 1:
         return still_working_byteorders[0]
     else:
-        # XXX: In the unlikely case both byteorders pass the sanity checks
+        # XXX: In the unlikely case both byte orders pass the sanity checks
         # something else should be checked. Currently it is not.
         msg = """
-            Both possible byteorders passed all sanity checks. Please contact
+            Both possible byte orders passed all sanity checks. Please contact
             the ObsPy developers so they can implement additional tests.
             """.strip()
         raise Exception(msg)

@@ -9,12 +9,16 @@ The obspy.fdsn.wadl_parser test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.fdsn.wadl_parser import WADLParser
 import os
 import unittest
 import warnings
+
+from obspy import UTCDateTime
+from obspy.fdsn.wadl_parser import WADLParser
 
 
 class WADLParserTestCase(unittest.TestCase):
@@ -25,12 +29,25 @@ class WADLParserTestCase(unittest.TestCase):
         # directory where the test files are located
         self.data_path = os.path.join(os.path.dirname(__file__), "data")
 
+    def _parse_wadl_file(self, filename):
+        """
+        Parses wadl, returns WADLParser and any catched warnings.
+        """
+        filename = os.path.join(self.data_path, filename)
+        with open(filename, "rb") as fh:
+            wadl_string = fh.read()
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            parser = WADLParser(wadl_string)
+        return parser, w
+
     def test_dataselect_wadl_parsing(self):
         """
         Tests the parsing of a dataselect wadl.
         """
         filename = os.path.join(self.data_path, "dataselect.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -69,10 +86,10 @@ class WADLParserTestCase(unittest.TestCase):
         """
         Tests the parsing of an event wadl.
         """
-        filename = os.path.join(self.data_path, "event.wadl")
-        with open(filename, "rt") as fh:
-            wadl_string = fh.read()
-        parser = WADLParser(wadl_string)
+        parser, w = self._parse_wadl_file("event.wadl")
+        self.assertEqual(len(w), 1)
+        self.assertTrue("cannot deal with the following required" in str(w[0]))
+
         params = parser.parameters
 
         # The WADL contains some short forms. In the parameters dictionary
@@ -138,9 +155,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of a station wadl.
         """
         filename = os.path.join(self.data_path, "station.wadl")
-        with open(filename, "rt") as fh:
-            wadl_string = fh.read()
-        parser = WADLParser(wadl_string)
+        parser, w = self._parse_wadl_file(filename)
         params = parser.parameters
 
         self.assertTrue("starttime" in params)
@@ -185,9 +200,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the reading of WADL files that have no type.
         """
         filename = os.path.join(self.data_path, "station_no_types.wadl")
-        with open(filename, "rt") as fh:
-            wadl_string = fh.read()
-        parser = WADLParser(wadl_string)
+        parser, w = self._parse_wadl_file(filename)
         params = parser.parameters
 
         # Assert that types have been assigned.
@@ -216,7 +229,7 @@ class WADLParserTestCase(unittest.TestCase):
 
         # Now read a dataselect file with no types.
         filename = os.path.join(self.data_path, "dataselect_no_types.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -237,7 +250,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of an event wadl.
         """
         filename = os.path.join(self.data_path, "usgs_event.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         parser = WADLParser(wadl_string)
         params = parser.parameters
@@ -282,7 +295,7 @@ class WADLParserTestCase(unittest.TestCase):
         # longestonly parameters.
         filename = os.path.join(self.data_path,
                                 "dataselect_missing_attributes.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -290,12 +303,12 @@ class WADLParserTestCase(unittest.TestCase):
             parser = WADLParser(wadl_string)
             # Assert that the warning raised is correct.
             self.assertEqual(len(w), 1)
-            msg = w[0].message.message
+            msg = str(w[0].message)
             self.assertTrue("quality" in msg)
             self.assertTrue("minimumlength" in msg)
             self.assertTrue("longestonly" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
@@ -313,7 +326,7 @@ class WADLParserTestCase(unittest.TestCase):
         # parameters.
         filename = os.path.join(self.data_path,
                                 "event_missing_attributes.wadl")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
@@ -321,11 +334,11 @@ class WADLParserTestCase(unittest.TestCase):
             parser = WADLParser(wadl_string)
             # Assert that the warning raised is correct.
             self.assertEqual(len(w), 1)
-            msg = w[0].message.message
+            msg = str(w[0].message)
             self.assertTrue("includeallorigins" in msg)
             self.assertTrue("updatedafter" in msg)
 
-        # Assert that some other parameters are still existant.
+        # Assert that some other parameters are still existent.
         params = parser.parameters
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
@@ -337,6 +350,196 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("maxmagnitude" in params)
         self.assertTrue("magnitudetype" in params)
         self.assertTrue("catalog" in params)
+
+    def test_parsing_current_wadls_iris(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-01-07.
+        """
+        parser, w = self._parse_wadl_file("2014-01-07_iris_event.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['catalog', 'contributor', 'endtime', 'eventid',
+                    'includeallmagnitudes', 'includeallorigins',
+                    'includearrivals', 'latitude', 'limit', 'longitude',
+                    'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
+                    'orderby', 'originid', 'starttime', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue("required parameters: magnitudetype" in str(w[0]))
+
+        parser, w = self._parse_wadl_file("2014-01-07_iris_station.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+                    'includeavailability', 'includerestricted', 'latitude',
+                    'level', 'location', 'longitude', 'matchtimeseries',
+                    'maxlatitude', 'maxlongitude', 'maxradius', 'minlatitude',
+                    'minlongitude', 'minradius', 'network', 'startafter',
+                    'startbefore', 'starttime', 'station', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 0)
+
+        parser, w = self._parse_wadl_file("2014-01-07_iris_dataselect.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endtime', 'location', 'longestonly',
+                    'minimumlength', 'network', 'quality', 'starttime',
+                    'station']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 0)
+
+    def test_parsing_current_wadls_usgs(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-01-07.
+        """
+        parser, w = self._parse_wadl_file("2014-01-07_usgs_event.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['alertlevel', 'callback', 'catalog', 'contributor',
+                    'endtime', 'eventid', 'eventtype', 'includeallmagnitudes',
+                    'includeallorigins', 'includearrivals', 'kmlanimated',
+                    'kmlcolorby', 'latitude', 'limit', 'longitude',
+                    'magnitudetype', 'maxcdi', 'maxdepth', 'maxgap',
+                    'maxlatitude', 'maxlongitude', 'maxmagnitude', 'maxmmi',
+                    'maxradius', 'maxsig', 'mincdi', 'mindepth', 'minfelt',
+                    'mingap', 'minlatitude', 'minlongitude', 'minmagnitude',
+                    'minmmi', 'minradius', 'minsig', 'offset', 'orderby',
+                    'producttype', 'reviewstatus', 'starttime', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 0)
+
+    def test_parsing_current_wadls_seismicportal(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-02-16.
+        """
+        parser, w = \
+            self._parse_wadl_file("2014-02-16_seismicportal_event.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['callback', 'catalog', 'contributor', 'endtime', 'eventid',
+                    'includeallmagnitudes', 'includeallorigins',
+                    'includearrivals', 'latitude', 'limit', 'longitude',
+                    'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
+                    'orderby', 'starttime', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue("required parameters: magnitudetype" in str(w[0]))
+
+    def test_parsing_current_wadls_resif(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-01-07.
+        """
+        parser, w = self._parse_wadl_file("2014-01-07_resif_station.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+                    'includeavailability', 'includerestricted', 'latitude',
+                    'level', 'location', 'longitude', 'maxlatitude',
+                    'maxlongitude', 'maxradius', 'minlatitude', 'minlongitude',
+                    'minradius', 'network', 'startafter', 'startbefore',
+                    'starttime', 'station', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue("matchtimeseries" in str(w[0].message))
+
+        parser, w = self._parse_wadl_file("2014-01-07_resif_dataselect.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endtime', 'location', 'longestonly',
+                    'minimumlength', 'network', 'quality', 'starttime',
+                    'station']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 0)
+
+    def test_parsing_current_wadls_ncedc(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-01-07.
+        """
+        parser, w = self._parse_wadl_file("2014-01-07_ncedc_event.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['catalog', 'contributor', 'endtime', 'eventid',
+                    'includeallmagnitudes', 'includearrivals',
+                    'includemechanisms', 'latitude', 'limit', 'longitude',
+                    'magnitudetype', 'maxdepth', 'maxlatitude', 'maxlongitude',
+                    'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
+                    'minlongitude', 'minmagnitude', 'minradius', 'offset',
+                    'orderby', 'starttime']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue(": includeallorigins, updatedafter\n"
+                        in str(w[0].message))
+
+        parser, w = self._parse_wadl_file("2014-01-07_ncedc_station.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+                    'includeavailability', 'latitude', 'level', 'location',
+                    'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
+                    'minlatitude', 'minlongitude', 'minradius', 'network',
+                    'startafter', 'startbefore', 'starttime', 'station',
+                    'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue("includerestricted" in str(w[0].message))
+        self.assertTrue("matchtimeseries" in str(w[0].message))
+
+        parser, w = self._parse_wadl_file("2014-01-07_ncedc_dataselect.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endtime', 'location', 'network', 'starttime',
+                    'station']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue(": quality, minimumlength, longestonly\n"
+                        in str(w[0].message))
+
+    def test_parsing_current_wadls_ethz(self):
+        """
+        Test parsing real world wadls provided by servers as of 2014-01-07.
+        """
+        parser, w = self._parse_wadl_file("2014-01-07_ethz_event.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['contributor', 'endtime', 'eventid', 'formatted',
+                    'includeallorigins', 'includearrivals', 'includecomments',
+                    'includemagnitudes', 'includepicks', 'latitude', 'limit',
+                    'longitude', 'magnitudetype', 'maxdepth', 'maxlatitude',
+                    'maxlongitude', 'maxmagnitude', 'maxradius', 'mindepth',
+                    'minlatitude', 'minlongitude', 'minmagnitude', 'minradius',
+                    'offset', 'orderby', 'output', 'starttime', 'updatedafter']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue(": includeallmagnitudes, catalog\n"
+                        in str(w[0].message))
+
+        parser, w = self._parse_wadl_file("2014-01-07_ethz_station.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'formatted',
+                    'includerestricted', 'latitude', 'level', 'location',
+                    'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
+                    'minlatitude', 'minlongitude', 'minradius', 'network',
+                    'output', 'startafter', 'startbefore', 'starttime',
+                    'station']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue("includeavailability" in str(w[0].message))
+        self.assertTrue("updatedafter" in str(w[0].message))
+        self.assertTrue("matchtimeseries" in str(w[0].message))
+
+        parser, w = self._parse_wadl_file("2014-01-07_ethz_dataselect.wadl")
+        params = parser.parameters
+        # Check parsed parameters
+        expected = ['channel', 'endtime', 'location', 'network', 'quality',
+                    'starttime', 'station']
+        self.assertEqual(sorted(params.keys()), expected)
+        self.assertEqual(len(w), 1)
+        self.assertTrue(": minimumlength, longestonly\n" in str(w[0].message))
 
 
 def suite():

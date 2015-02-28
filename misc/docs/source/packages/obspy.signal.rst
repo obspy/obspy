@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       ~array_analysis.array_processing
        ~array_analysis.array_rotation_strain
        ~trigger.arPick
        ~filter.bandpass
@@ -20,6 +21,8 @@
        ~invsim.cosTaper
        ~trigger.delayedSTALTA
        ~filter.envelope
+       ~interpolation.interpolate_1d
+       ~interpolation.weighted_average_slopes
        ~invsim.estimateMagnitude
        ~invsim.evalresp
        ~filter.highpass
@@ -31,7 +34,6 @@
        ~trigger.recSTALTA
        ~rotate.rotate_NE_RT
        ~invsim.seisSim
-       ~array_analysis.sonic
        ~util.utlGeoKm
        ~util.utlLonLat
        ~cross_correlation.xcorr
@@ -54,6 +56,7 @@
        freqattributes
        hoctavbands
        invsim
+       interpolation
        konnoohmachismoothing
        polarization
        spectral_estimation

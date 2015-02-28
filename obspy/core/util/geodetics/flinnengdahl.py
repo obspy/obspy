@@ -1,13 +1,24 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
+import csv
 import os
 
 
 class FlinnEngdahl(object):
     """
-    Load data from asc files and allow to resolve coordinates
+    Load data from asc files and allow to resolve coordinates or region numbers
     to Flinn Engdahl region names.
+
+    >>> fe = FlinnEngdahl()
+    >>> print(fe.get_region(12, 48))
+    GERMANY
+    >>> print(fe.get_region_by_number(543))
+    GERMANY
     """
 
     data_directory = os.path.join(os.path.dirname(__file__), 'data')
@@ -20,6 +31,7 @@ class FlinnEngdahl(object):
         os.path.join(data_directory, 'sesect.asc'),
         os.path.join(data_directory, 'swsect.asc')
     )
+    numbers_file = os.path.join(data_directory, 'Flinn-Engdahl.csv')
     quads_order = ('ne', 'nw', 'se', 'sw')
 
     def __init__(self):
@@ -35,7 +47,7 @@ class FlinnEngdahl(object):
 
         self.lons_per_lat = dict(zip(
             self.quads_order,
-            [indexes[x:x + 91] for x in xrange(0, len(indexes), 91)]
+            [indexes[x:x + 91] for x in range(0, len(indexes), 91)]
         ))
 
         self.lat_begins = {}
@@ -76,9 +88,16 @@ class FlinnEngdahl(object):
             self.lons[quad] = lons
             self.fenums[quad] = fenums
 
+        with open(self.numbers_file, 'rt') as csvfile:
+            FE_csv = csv.reader(csvfile, delimiter=native_str(';'),
+                                quotechar=native_str('#'),
+                                skipinitialspace=True)
+            self.by_number = \
+                dict((int(row[0]), row[1]) for row in FE_csv if len(row) > 1)
+
     def get_quadrant(self, longitude, latitude):
         """
-        Return quadrat from given coordinate
+        Return quadrant from given coordinate
 
         :param longitude: WGS84 longitude
         :type longitude: int or float
@@ -99,6 +118,12 @@ class FlinnEngdahl(object):
     def get_region(self, longitude, latitude):
         """
         Return region from given coordinate
+
+        >>> fe = FlinnEngdahl()
+        >>> print(fe.get_region(12, 48))
+        GERMANY
+        >>> print(fe.get_region(-60, -30))
+        NORTHEASTERN ARGENTINA
 
         :param longitude: WGS84 longitude
         :type longitude: int or float
@@ -138,6 +163,23 @@ class FlinnEngdahl(object):
         fe_name = self.names[fe_num - 1]
 
         return fe_name
+
+    def get_region_by_number(self, number):
+        """
+        Return region with given number
+
+        >>> fe = FlinnEngdahl()
+        >>> print(fe.get_region_by_number(123))
+        NORTHERN CHILE
+        >>> print(fe.get_region_by_number(456))
+        MONTANA
+
+        :param number: Region ID
+        :type number: int
+        :rtype: string
+        :return: Flinn Engdahl region name
+        """
+        return self.by_number[number]
 
 
 if __name__ == '__main__':

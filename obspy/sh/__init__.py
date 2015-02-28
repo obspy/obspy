@@ -33,7 +33,7 @@ The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
              network:
              station: TEST
             location:
@@ -45,7 +45,10 @@ information.
                 npts: 801
                calib: 1.5
              _format: SH_ASC
-                  sh: AttribDict({'COMMENT': 'TEST TRACE IN QFILE #1'})
+                  sh: AttribDict({...})
+
+>>> print(st[0].stats.sh['COMMENT'])
+TEST TRACE IN QFILE #1
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
@@ -63,6 +66,9 @@ or
 
 >>> st.write('file.asc', format = 'SH_ASC') #doctest: +SKIP
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 if __name__ == '__main__':

@@ -1,18 +1,38 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
-    Origin, CreationInfo, ResourceIdentifier, Comment, Pick
-from obspy.core.utcdatetime import UTCDateTime
+import copy
 import os
 import sys
 import unittest
 import warnings
+
+from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
+                              Pick, ResourceIdentifier, WaveformStreamID,
+                              readEvents)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import getBasemapVersion
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import ImageComparison
+
+BASEMAP_VERSION = getBasemapVersion()
+if BASEMAP_VERSION:
+    from matplotlib import rcParams
 
 
 class EventTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Event
     """
+    def setUp(self):
+        # Clear the Resource Identifier dict for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+
     def test_str(self):
         """
         Testing the __str__ method of the Event object.
@@ -31,9 +51,9 @@ class EventTestCase(unittest.TestCase):
         # resource id so they do not clutter the test output.
         with warnings.catch_warnings() as _:  # NOQA
             warnings.simplefilter("ignore")
-            ev1 = Event('id1')
-            ev2 = Event('id1')
-            ev3 = Event('id2')
+            ev1 = Event(resource_id='id1')
+            ev2 = Event(resource_id='id1')
+            ev3 = Event(resource_id='id2')
         self.assertTrue(ev1 == ev2)
         self.assertTrue(ev2 == ev1)
         self.assertFalse(ev1 == ev3)
@@ -48,19 +68,19 @@ class EventTestCase(unittest.TestCase):
         #449.
         """
         # Test with basic event object.
-        e = Event()
-        e.comments.append(Comment("test"))
+        e = Event(force_resource_id=False)
+        e.comments.append(Comment(text="test"))
         e.event_type = "explosion"
         self.assertEqual(len(e.comments), 1)
         self.assertEqual(e.event_type, "explosion")
         e.clear()
-        self.assertTrue(e == Event())
+        self.assertTrue(e == Event(force_resource_id=False))
         self.assertEqual(len(e.comments), 0)
         self.assertEqual(e.event_type, None)
         # Test with pick object. Does not really fit in the event test case but
         # it tests the same thing...
         p = Pick()
-        p.comments.append(Comment("test"))
+        p.comments.append(Comment(text="test"))
         p.phase_hint = "p"
         self.assertEqual(len(p.comments), 1)
         self.assertEqual(p.phase_hint, "p")
@@ -76,11 +96,48 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(hasattr(p, "test_1"))
         self.assertFalse(hasattr(p, "test_2"))
 
+    def test_event_copying_does_not_raise_duplicate_resource_id_warnings(self):
+        """
+        Tests that copying an event does not raise a duplicate resource id
+        warning.
+        """
+        ev = readEvents()[0]
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ev2 = copy.copy(ev)
+            self.assertEqual(len(w), 0)
+            ev3 = copy.deepcopy(ev)
+            self.assertEqual(len(w), 0)
+
+        # The two events should compare equal.
+        self.assertEqual(ev, ev2)
+        self.assertEqual(ev, ev3)
+
+        # A shallow copy should just use the exact same resource identifier,
+        # while a deep copy should not.
+        self.assertTrue(ev.resource_id is ev2.resource_id)
+        self.assertTrue(ev.resource_id is not ev3.resource_id)
+        self.assertTrue(ev.resource_id == ev3.resource_id)
+
+        # But all should point to the same object.
+        self.assertTrue(ev.resource_id.getReferredObject() is
+                        ev2.resource_id.getReferredObject())
+        self.assertTrue(ev.resource_id.getReferredObject() is
+                        ev3.resource_id.getReferredObject())
+
 
 class OriginTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.Origin
     """
+    def setUp(self):
+        # Clear the Resource Identifier dict for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+
     def test_creationInfo(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
@@ -106,17 +163,20 @@ class OriginTestCase(unittest.TestCase):
         Parameters of multiple origins should not interfere with each other.
         """
         origin = Origin()
-        origin.public_id = 'smi:ch.ethz.sed/origin/37465'
+        origin.resource_id = 'smi:ch.ethz.sed/origin/37465'
         origin.time = UTCDateTime(0)
         origin.latitude = 12
         origin.latitude_errors.confidence_level = 95
         origin.longitude = 42
         origin.depth_type = 'from location'
+        self.assertEqual(
+            origin.resource_id,
+            ResourceIdentifier(id='smi:ch.ethz.sed/origin/37465'))
         self.assertEqual(origin.latitude, 12)
         self.assertEqual(origin.latitude_errors.confidence_level, 95)
         self.assertEqual(origin.latitude_errors.uncertainty, None)
         self.assertEqual(origin.longitude, 42)
-        origin2 = Origin()
+        origin2 = Origin(force_resource_id=False)
         origin2.latitude = 13.4
         self.assertEqual(origin2.depth_type, None)
         self.assertEqual(origin2.resource_id, None)
@@ -132,8 +192,14 @@ class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         path = os.path.join(os.path.dirname(__file__), 'data')
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
+        # Clear the Resource Identifier dict for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
     def test_creationInfo(self):
         cat = Catalog()
@@ -334,12 +400,71 @@ class CatalogTestCase(unittest.TestCase):
             attr_filter = attr.split('.')[-1]
             cat_smaller = cat.filter('%s < %s' % (attr_filter, value))
             cat_bigger = cat.filter('%s >= %s' % (attr_filter, value))
-            self.assertTrue(all(getattrs(event, attr) < value
-                                for event in cat_smaller))
-            self.assertTrue(all(getattrs(event, attr) >= value
-                                for event in cat_bigger))
+            self.assertTrue(all(True if a is None else a < value
+                                for event in cat_smaller
+                                for a in [getattrs(event, attr)]))
+            self.assertTrue(all(False if a is None else a >= value
+                                for event in cat_bigger
+                                for a in [getattrs(event, attr)]))
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
+            cat_smaller_inverse = cat.filter(
+                '%s < %s' % (attr_filter, value), inverse=True)
+            self.assertTrue(all(event in cat_bigger
+                                for event in cat_smaller_inverse))
+            cat_bigger_inverse = cat.filter(
+                '%s >= %s' % (attr_filter, value), inverse=True)
+            self.assertTrue(all(event in cat_smaller
+                                for event in cat_bigger_inverse))
+
+    def test_catalog_resource_id(self):
+        """
+        See #662
+        """
+        cat = readEvents(self.neries_xml)
+        self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
+
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    def test_catalog_plot_cylindrical(self):
+        """
+        Tests the catalog preview plot, default parameters.
+        """
+        cat = readEvents()
+        with ImageComparison(self.image_dir, "catalog1.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(outfile=ic.name)
+
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    def test_catalog_plot_ortho(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters.
+        """
+        cat = readEvents()
+        with ImageComparison(self.image_dir, "catalog2.png") as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(outfile=ic.name, projection="ortho",
+                     resolution="c",
+                     water_fill_color="b", label=None)
+
+    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    def test_catalog_plot_local(self):
+        """
+        Tests the catalog preview plot, local projection, some more non-default
+        parameters.
+        """
+        cat = readEvents()
+        reltol = 1.5
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100
+        with ImageComparison(self.image_dir, "catalog3.png",
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(outfile=ic.name, projection="local",
+                     resolution="i", continent_fill_color="0.3",
+                     color="date", colormap="gist_heat")
 
 
 class WaveformStreamIDTestCase(unittest.TestCase):
@@ -402,33 +527,32 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # Clear the Resource Identifier dict for the tests. NEVER do this
         # otherwise.
         ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
     def test_same_resource_id_different_referred_object(self):
         """
         Tests the handling of the case that different ResourceIdentifier
         instances are created that have the same resource id but different
         objects. This should not happen and thus a warning should be emitted.
-
-        Skipped for Python 2.5 because it does not have the catch_warnings
-        context manager.
         """
-        object_a = UTCDateTime()
-        object_b = UTCDateTime()
+        object_a = UTCDateTime(1000)
+        object_b = UTCDateTime(1001)
         self.assertEqual(object_a is object_b, False)
-        resource_id = 'obspy.org/tests/test_resource'
-        res_a = ResourceIdentifier(resource_id=resource_id,
+        id = 'obspy.org/tests/test_resource'
+        res_a = ResourceIdentifier(id=id,
                                    referred_object=object_a)
         # Now create a new resource with the same id but a different object.
         # This will raise a warning.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, ResourceIdentifier,
-                              resource_id=resource_id,
+                              id=id,
                               referred_object=object_b)
             # Now ignore the warning and actually create the new
             # ResourceIdentifier.
             warnings.simplefilter('ignore', UserWarning)
-            res_b = ResourceIdentifier(resource_id=resource_id,
+            res_b = ResourceIdentifier(id=id,
                                        referred_object=object_b)
         # Object b was the last to added, thus all resource identifiers will
         # now point to it.
@@ -452,20 +576,20 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         NEVER modify the __resource_id_weak_dict!
 
         Only those ResourceIdentifiers that have a reference to an object that
-        is refered to somewhere else should stay in the dictionary.
+        is referred to somewhere else should stay in the dictionary.
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        ResourceIdentifier()
-        self.assertEqual(len(r_dict.keys()), 0)
+        _r1 = ResourceIdentifier()  # NOQA
+        self.assertEqual(len(list(r_dict.keys())), 0)
         # Adding a ResourceIdentifier with an object that has a reference
         # somewhere will have no effect because it gets garbage collected
         # pretty much immediately.
-        ResourceIdentifier(referred_object=UTCDateTime())
-        self.assertEqual(len(r_dict.keys()), 0)
+        _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
+        self.assertEqual(len(list(r_dict.keys())), 0)
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
-        ResourceIdentifier(referred_object=obj)
-        self.assertEqual(len(r_dict.keys()), 1)
+        _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
+        self.assertEqual(len(list(r_dict.keys())), 1)
 
     def test_adding_a_referred_object_after_creation(self):
         """
@@ -489,7 +613,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertEqual(id(ref_b.getReferredObject()), obj_id)
         self.assertEqual(id(ref_c.getReferredObject()), obj_id)
 
-    def test_resources_in_global_dict_get_garbage_colleted(self):
+    def test_resources_in_global_dict_get_garbage_collected(self):
         """
         Tests that the ResourceIdentifiers in the class level resource dict get
         deleted if they have no other reference and the object they refer to
@@ -497,14 +621,17 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         obj_a = UTCDateTime()
         obj_b = UTCDateTime()
-        ResourceIdentifier(referred_object=obj_a)
-        ResourceIdentifier(referred_object=obj_b)
+        res1 = ResourceIdentifier(referred_object=obj_a)
+        res2 = ResourceIdentifier(referred_object=obj_b)
         # Now two keys should be in the global dict.
         rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        self.assertEqual(len(rdict.keys()), 2)
+        self.assertEqual(len(list(rdict.keys())), 2)
         # Deleting the objects should also remove the from the dictionary.
         del obj_a, obj_b
-        self.assertEqual(len(rdict.keys()), 0)
+        self.assertEqual(len(list(rdict.keys())), 0)
+        # references are still around but no longer have associates objects.
+        self.assertEqual(res1.getReferredObject(), None)
+        self.assertEqual(res2.getReferredObject(), None)
 
     def test_quakeml_regex(self):
         """
@@ -546,7 +673,99 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         __init__()) gets set up with a QUAKEML conform ID.
         """
         rid = ResourceIdentifier()
-        self.assertEqual(rid.resource_id, rid.getQuakeMLURI())
+        self.assertEqual(rid.id, rid.getQuakeMLURI())
+
+    def test_resource_id_init_deprecation(self):
+        """
+        Test that a resource identifier initialized with deprecated
+        "resource_id" gets initialized correctly and that a warning is shown.
+        """
+        with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
+            rid = ResourceIdentifier(resource_id="blablup")
+        self.assertEqual(rid.id, "blablup")
+        self.assertEqual(len(w), 1)
+        w = w[0]
+        self.assertEqual(w.category, DeprecationWarning)
+        self.assertTrue(
+            str(w.message).startswith("Deprecated keyword resource_id "))
+
+    def test_resource_id_tracking(self):
+        """
+        The class keeps track of all instances.
+        """
+        # Create a couple of lightweight objects for testing purposes.
+        t1 = UTCDateTime(2013, 1, 1)
+        t2 = UTCDateTime(2013, 1, 2)
+        t3 = UTCDateTime(2013, 1, 3)
+
+        # First assert, that all ResourceIds are tracked correctly.
+        r1 = ResourceIdentifier("a", referred_object=t1)
+        r2 = ResourceIdentifier("b", referred_object=t2)
+        r3 = ResourceIdentifier("c", referred_object=t3)
+
+        self.assertEqual(
+            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
+            {"a": 1, "b": 1, "c": 1})
+
+        # Create a new instance, similar to the first one.
+        r4 = ResourceIdentifier("a", referred_object=t1)
+        self.assertEqual(
+            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
+            {"a": 2, "b": 1, "c": 1})
+
+        # Now delete r2 and r4. They should not be tracked anymore.
+        del r2
+        del r4
+        self.assertEqual(
+            ResourceIdentifier._ResourceIdentifier__resource_id_tracker,
+            {"a": 1, "c": 1})
+
+        # Delete the two others. Nothing should be tracked any more.
+        del r1
+        del r3
+        self.assertEqual(
+            ResourceIdentifier._ResourceIdentifier__resource_id_tracker, {})
+
+    def test_automatic_dereferring_if_resource_id_goes_out_of_scope(self):
+        """
+        Tests that objects that have no more referrer are no longer stored in
+        the reference dictionary.
+        """
+        t1 = UTCDateTime(2010, 1, 1)
+
+        # Create object and assert the reference has been created.
+        r1 = ResourceIdentifier("a", referred_object=t1)
+        self.assertEqual(
+            dict(
+                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
+            {"a": t1})
+        # Deleting the object should remove the reference.
+        del r1
+        self.assertEqual(
+            dict(
+                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
+            {})
+
+        # Now create two equal references.
+        r1 = ResourceIdentifier("a", referred_object=t1)
+        r2 = ResourceIdentifier("a", referred_object=t1)
+        self.assertEqual(
+            dict(
+                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
+            {"a": t1})
+        # Deleting one should not remove the reference.
+        del r1
+        self.assertEqual(
+            dict(
+                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
+            {"a": t1})
+        # Deleting the second one should
+        del r2
+        self.assertEqual(
+            dict(
+                ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
+            {})
 
 
 def suite():

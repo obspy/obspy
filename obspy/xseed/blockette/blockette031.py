@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, VariableString, FixedString
+from obspy.xseed.fields import FixedString, Integer, VariableString
 
 
 class Blockette031(Blockette):

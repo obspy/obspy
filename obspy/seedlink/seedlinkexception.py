@@ -2,7 +2,7 @@
 """
 SeedLinkException.
 
-Part of Python implementaion of libslink of Chad Trabant and
+Part of Python implementation of libslink of Chad Trabant and
 JSeedLink of Anthony Lomax
 
 :copyright:
@@ -11,6 +11,9 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 
 class SeedLinkException(Exception):

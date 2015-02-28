@@ -1,4 +1,4 @@
-.TH MSR_PACK 3 2007/08/16 "Libmseed API"
+.TH MSR_PACK 3 2013/05/17 "Libmseed API"
 .SH DESCRIPTION
 Packing of Mini-SEED records.
 
@@ -8,7 +8,7 @@ Packing of Mini-SEED records.
 
 .BI "int       \fBmsr_pack\fP ( MSRecord *" msr ","
 .BI "                     void (*" record_handler ") (char *, int, void *),"
-.BI "                     void *" handlerdata ", int *" packedsamples ","
+.BI "                     void *" handlerdata ", int64_t *" packedsamples ","
 .BI "                     flag " flush ", flag " verbose " );"
 
 .BI "int       \fBmsr_pack_header\fP ( MSRecord *" msr ", flag " normalize ","
@@ -151,7 +151,7 @@ static void record_handler (char *record, int reclen, void *srcname) {
 }
 
 main() {
-  int psamples;
+  int64_t psamples;
   int precords;
   MSRecord *msr;
   char srcname[50];
@@ -177,7 +177,8 @@ main() {
   /* Pack the record(s) */
   precords = msr_pack (msr, &record_handler, srcname, &psamples, 1, verbose);
 
-  ms_log (0, "Packed %d samples into %d records\n", psamples, precords);
+  ms_log (0, "Packed %lld samples into %d records\n",
+             (long long int)psamples, precords);
 
   msr_free (&msr);
 }

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="FDSN event web service 1.0"/>
+  <resources base="http://service.ncedc.org/fdsnws/event/1/">
+    <resource path="/">
+      <method id="index" name="GET">
+        <response>
+          <representation mediaType="text/plain"/>
+          <representation mediaType="application/xml"/>
+        </response>
+      </method>
+      <resource path="/query">
+        <method id="query" name="GET">
+          <request>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="starttime" style="query" type="xs:date">
+              <doc xml:lang="english" title="limit to events occurring on or after the specified start time">
+                Examples: starttime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000</doc>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="endtime" style="query" type="xs:date">
+              <doc xml:lang="english" title="limit to events occurring on or before the specified end time"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minlatitude" style="query" type="xs:double" default="-90.0">
+              <doc xml:lang="english" title="southern boundary"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxlatitude" style="query" type="xs:double" default="90.0">
+              <doc xml:lang="english" title="northern boundary"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minlongitude" style="query" type="xs:double" default="-180.0">
+              <doc xml:lang="english" title="western boundary"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxlongitude" style="query" type="xs:double" default="180.0">
+              <doc xml:lang="english" title="eastern boundary"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minmagnitude" style="query" type="xs:double">
+              <doc xml:lang="english" title="Limit to events with a magnitude larger than or equal to the specified minimum"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxmagnitude" style="query" type="xs:double">
+              <doc xml:lang="english" title="Limit to events with a magnitude smaller than or equal to the specified maximum"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="magnitudetype" style="query" type="xs:string">
+              <doc xml:lang="english" title="type of Magnitude used to test minimum and maximum limits">
+                Examples: magnitudetype=a,d,dl,h,l,w</doc>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="catalog" style="query" type="xs:string" default="NCSS">
+              <doc xml:lang="english" title="Specify the catalog from which origins and magnitudes will be retrieved"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="contributor" style="query" type="xs:string">
+              <doc xml:lang="english" title="Limit to events contributed by a specified contributor"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxdepth" style="query" type="xs:double">
+              <doc xml:lang="english" title="Limit to events with depths equal to or less than the specified depth"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="mindepth" style="query" type="xs:double">
+              <doc xml:lang="english" title="Limit to events with depths equal to or greater than the specified depth"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="latitude" style="query" type="xs:double" default="0.0">
+              <doc xml:lang="english" title="Specify the central latitude point for a radial search"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="longitude" style="query" type="xs:double" default="0.0">
+              <doc xml:lang="english" title="Specify the central longitude point for a radial search"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="maxradius" style="query" type="xs:double" default="180.0">
+              <doc xml:lang="english" title="Specify maximum distance from the geographic point defined by latitude and longitude"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="minradius" style="query" type="xs:double" default="0.0">
+              <doc xml:lang="english" title="Specify minimum distance from the geographic point defined by latitude and longitude"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="orderby" style="query" type="xs:string" default="time">
+              <doc xml:lang="english" title="Specify the ordering of the returned results"/>
+              <option value="time">
+                <doc xml:lang="english" title="Sort by time, descending"/>
+              </option>
+              <option value="magnitude">
+                <doc xml:lang="english" title="Sort by magnitude, descending"/>
+              </option>
+              <option value="time-asc">
+                <doc xml:lang="english" title="Sort by time, ascending"/>
+              </option>
+              <option value="magnitude-asc">
+                <doc xml:lang="english" title="Sort by magnitude, ascending"/>
+              </option>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="eventid" style="query" type="xs:long">
+              <doc xml:lang="english" title="Retrieve an event based on the unique ID numbers assigned by the NCSS"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includearrivals" style="query" type="xs:boolean" default="false">
+              <doc xml:lang="english" title="Specify if phase arrivals should be included"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includeallmagnitudes" style="query" type="xs:boolean" default="false">
+              <doc xml:lang="english"
+                title="Retrieve all magnitudes for the event, or only the primary magnitude from within the catalog"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="limit" style="query" type="xs:int">
+              <doc xml:lang="english" title="Limit the results to the specified number of events"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="offset" style="query" type="xs:int" default="1">
+              <doc xml:lang="english" title="Return results starting at the event count specified"/>
+            </param>
+	    <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="format" style="query" type="xs:string" default="xml">
+              <doc xml:lang="english" title="Specify output format"/>
+              <option value="xml"/>
+              <option value="text"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="nodata" style="query" type="xs:int" default="204">
+              <doc xml:lang="english" title="Specify which HTML Status code is returned when no data is found. This is a NCEDC extension to the FDSN specification"/>
+              <option value="204"/>
+              <option value="404"/>
+            </param>
+            <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includemechanisms" style="query" type="xs:boolean" default="false">
+              <doc xml:lang="english" title="Retrieve all moment tensor and focal mechanism associated with each event in a catalog. This is a NCEDC extension to the FDSN specification"/>
+            </param>
+          </request>
+          <response>
+            <representation mediaType="text/plain"/>
+            <representation mediaType="application/xml"/>
+          </response>
+        </method>
+      </resource>
+      <resource path="/version">
+        <method id="version" name="GET">
+          <response>
+            <representation mediaType="text/plain"/>
+          </response>
+        </method>
+      </resource>
+      <resource path="/catalogs">
+        <method id="catalogs" name="GET">
+          <response>
+            <representation mediaType="application/xml"/>
+          </response>
+        </method>
+      </resource>
+      <resource path="/contributors">
+        <method id="contributors" name="GET">
+          <response>
+            <representation mediaType="application/xml"/>
+          </response>
+        </method>
+      </resource>
+      <resource path="/application.wadl">
+        <method name="GET" id="application.wadl">
+          <response>
+            <representation mediaType="application/xml"/>
+          </response>
+        </method>
+      </resource>
+    </resource>
+  </resources>
+</application>

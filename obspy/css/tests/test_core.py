@@ -3,14 +3,20 @@
 """
 The obspy.css.core test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import gzip
+import os
+import unittest
+
+import numpy as np
 
 from obspy import read
-from obspy.core import UTCDateTime, Trace, Stream
+from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.css.core import readCSS, isCSS
-import os
-import numpy as np
-import unittest
+from obspy.css.core import isCSS, readCSS
 
 
 class CoreTestCase(unittest.TestCase):
@@ -30,11 +36,21 @@ class CoreTestCase(unittest.TestCase):
         header['calper'] = 1.0
         header['_format'] = 'CSS'
         filename = os.path.join(self.path, '201101311155.10.ascii.gz')
-        data = np.loadtxt(filename, dtype='int')
+        # no with due to py 2.6
+        fp = gzip.open(filename, 'rb')
+        data = np.loadtxt(fp, dtype=np.int_)
+        fp.close()
         # traces in the test files are sorted ZEN
         st = Stream()
         for x, cha in zip(data.reshape((3, 4800)), ('HHZ', 'HHE', 'HHN')):
+            # big-endian copy
             tr = Trace(x, header.copy())
+            tr.stats.station += 'be'
+            tr.stats.channel = cha
+            st += tr
+            # little-endian copy
+            tr = Trace(x, header.copy())
+            tr.stats.station += 'le'
             tr.stats.channel = cha
             st += tr
         self.st_result = st

@@ -16,13 +16,17 @@ JSeedLink of Anthony Lomax
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import logging
+import sys
+import traceback
 
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.seedlink.seedlinkexception import SeedLinkException
 from obspy.seedlink.slpacket import SLPacket
-import logging
-import sys
-import traceback
 
 
 USAGE = """
@@ -75,7 +79,7 @@ class SLClient(object):
     :var verbose: Verbosity level, 0 is lowest.
     :type verbose: int
     :var ppackets: Flag to indicate show detailed packet information.
-    :type  ppackets: boolean
+    :type  ppackets: bool
     :var streamfile: Name of file containing stream list for multi-station
         mode.
     :type  streamfile: str
@@ -87,7 +91,7 @@ class SLClient(object):
     :var statefile: Name of file for reading (if exists) and storing state.
     :type  statefile: str
     :var begin_time: Beginning of time window for read start in past.
-    :type  begin_time :str
+    :type  begin_time: str
     :var end_time: End of time window for reading windowed data.
     :type  end_time: str
     :var infolevel: INFO LEVEL for info request only.
@@ -99,7 +103,6 @@ class SLClient(object):
     COPYRIGHT_YEAR = VERSION_YEAR
     PROGRAM_NAME = "SLClient v" + VERSION
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
-    BANNER = ["SLClient comes with ABSOLUTELY NO WARRANTY"]
 
     def __init__(self, loglevel='DEBUG'):
         """
@@ -109,6 +112,7 @@ class SLClient(object):
         if not isinstance(numeric_level, int):
             raise ValueError('Invalid log level: %s' % loglevel)
         logging.basicConfig(level=numeric_level)
+        logger.setLevel(numeric_level)
 
         self.slconn = None
         self.verbose = 0
@@ -120,15 +124,11 @@ class SLClient(object):
         self.begin_time = None
         self.end_time = None
         self.infolevel = None
-
-        ## for-while
-        for line in SLClient.BANNER:
-            print line
         self.slconn = SeedLinkConnection()
 
     def parseCmdLineArgs(self, args):
         """
-        Parses the commmand line arguments.
+        Parses the command line arguments.
 
         :type args: list
         :param args: main method arguments.
@@ -140,7 +140,7 @@ class SLClient(object):
         optind = 1
         while optind < len(args):
             if args[optind] == "-V":
-                print(self.VERSION_INFO, sys.stderr)
+                print(self.VERSION_INFO, file=sys.stderr)
                 return 1
             elif args[optind] == "-h":
                 self.printUsage(False)
@@ -180,12 +180,12 @@ class SLClient(object):
                 optind += 1
                 self.infolevel = args[optind]
             elif args[optind].startswith("-"):
-                print("Unknown option: " + args[optind], sys.stderr)
+                print("Unknown option: " + args[optind], file=sys.stderr)
                 return -1
             elif self.slconn.getSLAddress() is None:
                 self.slconn.setSLAddress(args[optind])
             else:
-                print("Unknown option: " + args[optind], sys.stderr)
+                print("Unknown option: " + args[optind], file=sys.stderr)
                 return -1
             optind += 1
         return 0
@@ -236,10 +236,10 @@ class SLClient(object):
                     break
             except SeedLinkException as sle:
                 print(self.__class__.__name__ + ": " + sle.value)
-            if count >= sys.maxint:
+            if count >= sys.maxsize:
                 count = 1
-                print "DEBUG INFO: " + self.__class__.__name__ + ":",
-                print "Packet count reset to 1"
+                print("DEBUG INFO: " + self.__class__.__name__ + ":", end=' ')
+                print("Packet count reset to 1")
             else:
                 count += 1
             slpack = self.slconn.collect()
@@ -255,10 +255,12 @@ class SLClient(object):
 
         :type count: int
         :param count:  Packet counter.
-        :type slpack: :class:`~obspy.seedlink.SLPacket`
+        :type slpack: :class:`~obspy.seedlink.slpacket.SLPacket`
         :param slpack: packet to process.
-        :return: Boolean true if connection to SeedLink server should be
-            closed and session terminated, false otherwise.
+
+        :rtype: bool
+        :return: True if connection to SeedLink server should be closed and
+            session terminated, False otherwise.
         """
         # check if not a complete packet
         if slpack is None or (slpack == SLPacket.SLNOPACKET) or \
@@ -273,7 +275,7 @@ class SLClient(object):
         if (type == SLPacket.TYPE_SLINF):
             return False
         if (type == SLPacket.TYPE_SLINFT):
-            print "Complete INFO:\n" + self.slconn.getInfoString()
+            print("Complete INFO:\n" + self.slconn.getInfoString())
             if self.infolevel is not None:
                 return True
             else:
@@ -281,7 +283,7 @@ class SLClient(object):
 
         # can send an in-line INFO request here
         try:
-            #if (count % 100 == 0 and not self.slconn.state.expect_info):
+            # if (count % 100 == 0 and not self.slconn.state.expect_info):
             if (count % 100 == 0):
                 infostr = "ID"
                 self.slconn.requestInfo(infostr)
@@ -289,25 +291,25 @@ class SLClient(object):
             print(self.__class__.__name__ + ": " + sle.value)
 
         # if here, must be a data blockette
-        print self.__class__.__name__ + ": packet seqnum:",
-        print str(seqnum) + ": blockette type: " + str(type)
+        print(self.__class__.__name__ + ": packet seqnum:", end=' ')
+        print(str(seqnum) + ": blockette type: " + str(type))
         if not self.ppackets:
             return False
 
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: "
-            print trace.id, trace.stats['starttime'],
-            print " dt:" + str(1.0 / trace.stats['sampling_rate']),
-            print " npts:" + str(trace.stats['npts']),
-            print " sampletype:" + str(trace.stats['sampletype']),
-            print " dataquality:" + str(trace.stats['dataquality'])
+            print(self.__class__.__name__ + ": blockette contains a trace: ")
+            print(trace.id, trace.stats['starttime'], end=' ')
+            print(" dt:" + str(1.0 / trace.stats['sampling_rate']), end=' ')
+            print(" npts:" + str(trace.stats['npts']), end=' ')
+            print(" sampletype:" + str(trace.stats['sampletype']), end=' ')
+            print(" dataquality:" + str(trace.stats['dataquality']))
             if self.verbose >= 3:
-                print self.__class__.__name__ + ":"
-                print "blockette contains a trace: " + str(trace.stats)
+                print(self.__class__.__name__ + ":")
+                print("blockette contains a trace: " + str(trace.stats))
         else:
-            print self.__class__.__name__ + ": blockette contains no trace"
+            print(self.__class__.__name__ + ": blockette contains no trace")
         return False
 
     def printUsage(self, concise=True):

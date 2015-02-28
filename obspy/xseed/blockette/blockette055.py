@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, Loop
@@ -67,7 +70,7 @@ class Blockette055(Blockette):
                 '#\t\t  frequency\t amplitude\t amp error\t    ' + \
                 'phase\t phase error\n'
             if self.number_of_responses_listed > 1:
-                for _i in xrange(self.number_of_responses_listed):
+                for _i in range(self.number_of_responses_listed):
                     string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
                         (formatRESP(self.frequency[_i], 6),
                          formatRESP(self.amplitude[_i], 6),

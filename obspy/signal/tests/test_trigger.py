@@ -2,16 +2,23 @@
 """
 The obspy.signal.trigger test suite.
 """
-from ctypes import ArgumentError
-from obspy import read, Stream, UTCDateTime
-from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
-    coincidenceTrigger, arPick, classicSTALTA, classicSTALTAPy
-from obspy.signal.util import clibsignal
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import gzip
-import numpy as np
 import os
 import unittest
 import warnings
+from ctypes import ArgumentError
+
+import numpy as np
+
+from obspy import Stream, UTCDateTime, read
+from obspy.signal import (arPick, classicSTALTA, classicSTALTAPy,
+                          coincidenceTrigger, pkBaer, recSTALTA, recSTALTAPy,
+                          triggerOnset)
+from obspy.signal.util import clibsignal
 
 
 class TriggerTestCase(unittest.TestCase):
@@ -52,24 +59,24 @@ class TriggerTestCase(unittest.TestCase):
         Type checking recSTALTA
         """
         ndat = 1
-        charfct = np.empty(ndat, dtype='float64')
+        charfct = np.empty(ndat, dtype=np.float64)
         self.assertRaises(ArgumentError, clibsignal.recstalta, [1], charfct,
                           ndat, 5, 10)
         self.assertRaises(ArgumentError, clibsignal.recstalta,
-                          np.array([1], dtype='int32'), charfct, ndat, 5, 10)
+                          np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
 
     def test_pkBaer(self):
         """
         Test pkBaer against implementation for UNESCO short course
         """
         file = os.path.join(self.path, 'manz_waldk.a01.gz')
-        data = np.loadtxt(gzip.open(file), dtype='float32')
+        data = np.loadtxt(gzip.open(file), dtype=np.float32)
         df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
                              thr1, thr2, npreset_len, np_dur)
-        self.assertEquals(nptime, 17545)
-        self.assertEquals(pfm, 'IPU0')
+        self.assertEqual(nptime, 17545)
+        self.assertEqual(pfm, 'IPU0')
 
     def test_arPick(self):
         """
@@ -79,7 +86,7 @@ class TriggerTestCase(unittest.TestCase):
         for channel in ['z', 'n', 'e']:
             file = os.path.join(self.path,
                                 'loc_RJOB20050801145719850.' + channel)
-            data.append(np.loadtxt(file, dtype='float32'))
+            data.append(np.loadtxt(file, dtype=np.float32))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
             200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
@@ -87,8 +94,8 @@ class TriggerTestCase(unittest.TestCase):
                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
-        #self.assertAlmostEqual(stime, 31.2800006866)
-        self.assertEquals(int(stime + 0.5), 31)
+        # self.assertAlmostEqual(stime, 31.2800006866)
+        self.assertEqual(int(stime + 0.5), 31)
 
     def test_triggerOnset(self):
         """
@@ -358,10 +365,17 @@ class TriggerTestCase(unittest.TestCase):
                      "BW.UH3..SHZ": 1,
                      "BW.UH4..EHZ": 1}
         similarity_thresholds = {"UH1": 0.8, "UH3": 0.7}
-        trig = coincidenceTrigger("classicstalta", 5, 1, st.copy(), 4, sta=0.5,
-                                  lta=10, trace_ids=trace_ids,
-                                  event_templates=templ,
-                                  similarity_threshold=similarity_thresholds)
+        with warnings.catch_warnings(record=True) as w:
+            # avoid getting influenced by the warning filters getting set up
+            # differently in obspy-runtests.
+            # (e.g. depending on options "-v" and "-q")
+            warnings.resetwarnings()
+            trig = coincidenceTrigger(
+                "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
+                trace_ids=trace_ids, event_templates=templ,
+                similarity_threshold=similarity_thresholds)
+            # two warnings get raised
+            self.assertEqual(len(w), 2)
         # check floats in resulting dictionary separately
         self.assertAlmostEqual(trig[0].pop('duration'), 3.9600000381469727)
         self.assertAlmostEqual(trig[1].pop('duration'), 1.9900000095367432)

@@ -7,7 +7,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * modified: 2012.090
+ * modified: 2014.197
  ***************************************************************************/
 
 #include <stdio.h>
@@ -553,7 +553,7 @@ msr_pack_header_raw ( MSRecord *msr, char *rawrec, int maxheaderlen,
       return -1;
     }
   
-  if ( maxheaderlen < sizeof(struct fsdh_s) )
+  if ( maxheaderlen < (int)sizeof(struct fsdh_s) )
     {
       ms_log (2, "msr_pack_header_raw(%s): maxheaderlen of %d is too small, must be >= %d\n",
 	      PACK_SRCNAME, maxheaderlen, sizeof(struct fsdh_s));

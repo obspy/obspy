@@ -6,7 +6,7 @@
  * Written by Chad Trabant unless otherwise noted
  *   IRIS Data Management Center
  *
- * modified: 2010.068
+ * modified: 2014.197
  ***************************************************************************/
 
 #include <stdio.h>
@@ -140,6 +140,7 @@ ms_addselect (Selections **ppselections, char *srcname,
 	}
       
       strncpy (newsl->srcname, srcname, sizeof(newsl->srcname));
+      newsl->srcname[sizeof(newsl->srcname) - 1] = '\0';
       
       /* Add new Selections struct as first in list */
       *ppselections = newsl;
@@ -178,6 +179,7 @@ ms_addselect (Selections **ppselections, char *srcname,
 	    }
 	  
 	  strncpy (newsl->srcname, srcname, sizeof(newsl->srcname));
+	  newsl->srcname[sizeof(newsl->srcname) - 1] = '\0';
 	  
 	  /* Add new Selections to beginning of list */
 	  newsl->next = *ppselections;

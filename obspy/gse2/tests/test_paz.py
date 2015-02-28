@@ -3,10 +3,14 @@
 """
 The paz test suite.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import io
+import unittest
 
 from obspy.gse2 import paz
-import unittest
-import StringIO
 
 
 class PAZTestCase(unittest.TestCase):
@@ -17,7 +21,7 @@ class PAZTestCase(unittest.TestCase):
         """
         Reading PAZ files where PAZ are separated by spaces.
         """
-        f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
         2
         -4.39823 4.48709
         -4.39823 -4.48709
@@ -41,7 +45,7 @@ class PAZTestCase(unittest.TestCase):
 
         Tests uses unrealistic PAZ information.
         """
-        f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
 2
 -4.3982340.48709
 -4.39823-4.48709

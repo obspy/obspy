@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">
+  <Source>OBS</Source>
+  <Sender>The ObsPy Team</Sender>
+  <Module>Some Random Module</Module>
+  <ModuleURI>http://www.some-random.site</ModuleURI>
+  <Created>2013-01-01T00:00:00+00:00</Created>
+  <Network code="PY" startDate="2011-01-01T00:00:00+00:00" endDate="2012-01-01T00:00:00+00:00" restrictedStatus="open" alternateCode="PYY" historicalCode="YYP">
+      <Description>Some Description...</Description>
+      <Comment id="0">
+          <Value>Comment number 1</Value>
+          <BeginEffectiveTime>1990-05-05T00:00:00+00:00</BeginEffectiveTime>
+          <EndEffectiveTime>2008-02-03T00:00:00+00:00</EndEffectiveTime>
+          <Author>
+            <Name>This person</Name>
+            <Name>has multiple names!</Name>
+            <Agency>And also</Agency>
+            <Agency>many</Agency>
+            <Agency>many Agencies</Agency>
+            <Email>email1@mail.com</Email>
+            <Email>email2@mail.com</Email>
+            <Email>email3@mail.com</Email>
+            <Email>email4@mail.com</Email>
+            <Phone description="phone number 1">
+              <CountryCode>49</CountryCode>
+              <AreaCode>123</AreaCode>
+              <PhoneNumber>456-7890</PhoneNumber>
+            </Phone>
+            <Phone description="phone number 2">
+              <CountryCode>34</CountryCode>
+              <AreaCode>321</AreaCode>
+              <PhoneNumber>129-7890</PhoneNumber>
+            </Phone>
+          </Author>
+      </Comment>
+      <Comment id="1">
+          <Value>Comment number 2</Value>
+          <BeginEffectiveTime>1990-05-05T00:00:00+00:00</BeginEffectiveTime>
+          <EndEffectiveTime>2008-02-03T00:00:00+00:00</EndEffectiveTime>
+          <Author>
+            <Name>Person 1</Name>
+            <Agency>Some agency</Agency>
+            <Email>email@mail.com</Email>
+            <Phone>
+              <CountryCode>49</CountryCode>
+              <AreaCode>123</AreaCode>
+              <PhoneNumber>456-7890</PhoneNumber>
+            </Phone>
+          </Author>
+          <Author>
+            <Name>Person 2</Name>
+            <Agency>Some agency</Agency>
+            <Email>email@mail.com</Email>
+            <Phone>
+              <CountryCode>49</CountryCode>
+              <AreaCode>123</AreaCode>
+              <PhoneNumber>456-7890</PhoneNumber>
+            </Phone>
+          </Author>
+          <Author>
+            <Name>Person 3</Name>
+            <Agency>Some agency</Agency>
+            <Email>email@mail.com</Email>
+            <Phone>
+              <CountryCode>49</CountryCode>
+              <AreaCode>123</AreaCode>
+              <PhoneNumber>456-7890</PhoneNumber>
+            </Phone>
+          </Author>
+      </Comment>
+      <TotalNumberStations>200</TotalNumberStations>
+      <SelectedNumberStations>1</SelectedNumberStations>
+  </Network>
+</FDSNStationXML>

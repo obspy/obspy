@@ -8,11 +8,17 @@ Module containing a UTC-based datetime class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
+
 import datetime
+import math
 import time
 
 
-TIMESTAMP0 = datetime.datetime(1970, 1, 1)
+TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
 
 class UTCDateTime(object):
@@ -27,11 +33,11 @@ class UTCDateTime(object):
     specification and some additional string patterns during object
     initialization.
 
-    :type args: int, float, string, :class:`datetime.datetime`, optional
+    :type args: int, float, str, :class:`datetime.datetime`, optional
     :param args: The creation of a new `UTCDateTime` object depends from the
         given input parameters. All possible options are summarized in the
         `Examples`_ section below.
-    :type iso8601: boolean, optional
+    :type iso8601: bool, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
     :type precision: int, optional
@@ -142,7 +148,7 @@ class UTCDateTime(object):
 
     (5) Using the following keyword arguments: `year, month, day, julday, hour,
         minute, second, microsecond`. Either the combination of year, month and
-        day, or year and julday are required.
+        day, or year and Julian day are required.
 
         >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
         UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
@@ -171,7 +177,7 @@ class UTCDateTime(object):
     >>> dt == dt3  # 7th digit will be neglected
     True
 
-    You may change that behaviour either by,
+    You may change that behavior either by,
 
     (1) using the ``precision`` keyword during object initialization:
 
@@ -233,7 +239,9 @@ class UTCDateTime(object):
                 dt = datetime.datetime(value.year, value.month, value.day)
                 self._fromDateTime(dt)
                 return
-            elif isinstance(value, basestring):
+            elif isinstance(value, (bytes, str)):
+                if not isinstance(value, (str, native_str)):
+                    value = value.decode()
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
@@ -285,11 +293,8 @@ class UTCDateTime(object):
                         ms = float('.' + parts[1].strip())
                     except:
                         pass
-                # The module copy.deepcopy passes a (binary) string to
-                # UTCDateTime which contains the class specifications. If
-                # argument is not a digit by now, it must be a binary string
-                # and we pass it to datetime.datetime,
-                # XXX: can't reproduce: not sure this is still needed
+                # all parts should be digits now - here we filter unknown
+                # patterns and pass it directly to Python's  datetime.datetime
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
                     self._fromDateTime(dt)
@@ -318,8 +323,9 @@ class UTCDateTime(object):
 
         # check if seconds are given as float value
         if len(args) == 6 and isinstance(args[5], float):
-            kwargs['microsecond'] = int(args[5] % 1 * 1000000)
-            kwargs['second'] = int(args[5])
+            _frac, _sec = math.modf(round(args[5], 6))
+            kwargs['microsecond'] = int(_frac * 1e6)
+            kwargs['second'] = int(_sec)
             args = args[0:5]
         dt = datetime.datetime(*args, **kwargs)
         self._fromDateTime(dt)
@@ -419,7 +425,6 @@ class UTCDateTime(object):
         else:
             delta = 0
         if delta:
-            tz = tz.replace(':', '')
             while len(tz) < 3:
                 tz += '0'
             delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
@@ -444,7 +449,7 @@ class UTCDateTime(object):
         dt = datetime.datetime.strptime(date + 'T' + time,
                                         date_pattern + 'T' + time_pattern)
         # add microseconds and eventually correct time zone
-        return UTCDateTime(dt) + (delta + ms)
+        return UTCDateTime(dt) + (float(delta) + ms)
 
     def _getTimeStamp(self):
         """
@@ -489,7 +494,9 @@ class UTCDateTime(object):
         >>> dt.datetime
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        return datetime.datetime.utcfromtimestamp(self.timestamp)
+        # datetime.utcfromtimestamp will cut off but not round
+        # avoid through adding timedelta - also avoids the year 2038 problem
+        return TIMESTAMP0 + datetime.timedelta(seconds=self.timestamp)
 
     datetime = property(_getDateTime)
 
@@ -895,19 +902,22 @@ class UTCDateTime(object):
         return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
                           (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __unicode__(self):
         """
         Returns ISO8601 unicode representation from current UTCDateTime object.
 
-        :return: unicode
+        :return: string
 
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> unicode(dt)
-        u'2008-10-01T12:30:35.045020Z'
+        >>> dt.__unicode__()
+        '2008-10-01T12:30:35.045020Z'
         """
-        return unicode(self.__str__())
+        return str(self.__str__())
 
     def __eq__(self, other):
         """
@@ -928,7 +938,7 @@ class UTCDateTime(object):
         >>> t1.timestamp == t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 == t2
@@ -958,7 +968,7 @@ class UTCDateTime(object):
         >>> t1.timestamp != t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 != t2
@@ -985,7 +995,7 @@ class UTCDateTime(object):
         >>> t1.timestamp < t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 < t2
@@ -1015,7 +1025,7 @@ class UTCDateTime(object):
         >>> t1.timestamp <= t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 <= t2
@@ -1045,7 +1055,7 @@ class UTCDateTime(object):
         >>> t1.timestamp > t2.timestamp
         True
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 > t2
@@ -1075,7 +1085,7 @@ class UTCDateTime(object):
         >>> t1.timestamp >= t2.timestamp
         False
 
-        Resetting the precision changes the behaviour of the operator
+        Resetting the precision changes the behavior of the operator
 
         >>> t1.precision = 11
         >>> t1 >= t2
@@ -1096,7 +1106,7 @@ class UTCDateTime(object):
         """
         Returns absolute timestamp value of the current UTCDateTime object.
         """
-        # needed for unittest.assertAlmostEqual tests on linux
+        # needed for unittest.assertAlmostEqual tests on Linux
         return abs(self.timestamp)
 
     def __hash__(self):
@@ -1117,7 +1127,7 @@ class UTCDateTime(object):
 
         :type format: str
         :param format: Format string.
-        :return: Formated string representing the date and time.
+        :return: Formatted string representing the date and time.
 
         Format codes referring to hours, minutes or seconds will see 0 values.
         See methods :meth:`~datetime.datetime.strftime()` and
@@ -1249,7 +1259,7 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self._getDateTime().isoformat(sep=sep)
+        return self._getDateTime().isoformat(sep=native_str(sep))
 
     def formatFissures(self):
         """
@@ -1260,8 +1270,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatFissures()
-        '2008275T123035.0450Z'
+        >>> print(dt.formatFissures())
+        2008275T123035.0450Z
         """
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
             (self.year, self.julday, self.hour, self.minute, self.second,
@@ -1276,8 +1286,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatArcLink()
-        '2008,10,1,12,30,35,45020'
+        >>> print(dt.formatArcLink())
+        2008,10,1,12,30,35,45020
         """
         return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
                                          self.hour, self.minute, self.second,
@@ -1292,8 +1302,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35.45020)
-        >>> dt.formatSeedLink()
-        '2008,10,1,12,30,35'
+        >>> print(dt.formatSeedLink())
+        2008,10,1,12,30,35
         """
         # round seconds down to integer
         seconds = int(float(self.second) + float(self.microsecond) / 1.0e6)
@@ -1304,7 +1314,7 @@ class UTCDateTime(object):
         """
         Returns string representation for a SEED volume.
 
-        :type compact: boolean, optional
+        :type compact: bool, optional
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
         :rtype: string
@@ -1313,12 +1323,12 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatSEED()
-        '2008,275,12:30:35.0450'
+        >>> print(dt.formatSEED())
+        2008,275,12:30:35.0450
 
         >>> dt = UTCDateTime(2008, 10, 1, 0, 30, 0, 0)
-        >>> dt.formatSEED(compact=True)
-        '2008,275,00:30'
+        >>> print(dt.formatSEED(compact=True))
+        2008,275,00:30
         """
         if not compact:
             if not self.time:
@@ -1349,8 +1359,8 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
-        >>> dt.formatIRISWebService()
-        '2008-05-27T12:30:35.045'
+        >>> print(dt.formatIRISWebService())
+        2008-05-27T12:30:35.045
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
             (self.year, self.month, self.day, self.hour, self.minute,

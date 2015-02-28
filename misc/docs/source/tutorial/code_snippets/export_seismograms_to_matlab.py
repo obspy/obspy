@@ -1,5 +1,7 @@
-from obspy.core import read
 from scipy.io import savemat
+
+from obspy.core import read
+
 
 st = read("http://examples.obspy.org/BW.BGLD..EH.D.2010.037")
 for i, tr in enumerate(st):

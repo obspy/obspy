@@ -1,20 +1,29 @@
 # -*- coding: utf-8 -*-
-from obspy import UTCDateTime, Stream, Trace, read
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
+
+import ctypes as C
+import io
+import multiprocessing
+import os
+import random
+import sys
+import unittest
+import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
-from obspy.mseed.headers import clibmseed, PyFile_FromFile
+from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
-import ctypes as C
-import numpy as np
-import os
-import random
-from StringIO import StringIO
-import sys
-import unittest
-import warnings
 
 
 # some Python version don't support negative timestamps
@@ -23,6 +32,17 @@ try:
     UTCDateTime(-50000)
 except:
     NO_NEGATIVE_TIMESTAMPS = True
+
+
+def _testFunction(filename):
+    """
+    Internal function used by MSEEDSpecialIssueTestCase.test_infinite_loop
+    """
+    try:
+        st = read(filename)  # noqa @UnusedVariable
+    except ValueError:
+        # Should occur with broken files
+        pass
 
 
 class MSEEDSpecialIssueTestCase(unittest.TestCase):
@@ -42,10 +62,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         An invalid record length should raise an exception.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            data = np.random.randint(-1000, 1000, npts).astype('int32')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int32)
             st = Stream([Trace(data=data)])
             # Writing should fail with invalid record lengths.
             # Not a power of 2.
@@ -63,10 +83,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         An invalid encoding should raise an exception.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            data = np.random.randint(-1000, 1000, npts).astype('int32')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int32)
             st = Stream([Trace(data=data)])
             # Writing should fail with invalid record lengths.
             # Wrong number.
@@ -88,7 +108,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, cl.ms_readmsr_r, *args)
         self.assertRaises(TypeError, cl.ms_readmsr_r, *args[:-1])
         self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
-        self.assertRaises(ArgumentError, PyFile_FromFile, *args[:5])
         self.assertRaises(ArgumentError, cl.ms_detect, *args[:4])
         args.append(1)  # 10 argument function
         self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
@@ -108,7 +127,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, "data", "brokenlastrecord.mseed")
         # independent reading of the data
-        data_string = open(file, 'rb').read()[128:]  # 128 Bytes header
+        with open(file, 'rb') as fp:
+            data_string = fp.read()[128:]  # 128 Bytes header
         data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
                                   verbose=0)
         # test readMSTraces
@@ -148,7 +168,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # read temp file directly without libmseed
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
-                bin_data = np.fromfile(fp, dtype='>f4', count=7)
+                dtype = np.dtype(native_str('>f4'))
+                bin_data = frombuffer(fp.read(7 * dtype.itemsize),
+                                      dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
             st2 = readMSEED(tempfile)
@@ -180,15 +202,15 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         Writing data of type int64 and int16 are not supported.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # int64
-            data = np.random.randint(-1000, 1000, npts).astype('int64')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int64)
             st = Stream([Trace(data=data)])
             self.assertRaises(Exception, st.write, tempfile, format="MSEED")
             # int8
-            data = np.random.randint(-1000, 1000, npts).astype('int8')
+            data = np.random.randint(-1000, 1000, npts).astype(np.int8)
             st = Stream([Trace(data=data)])
             self.assertRaises(Exception, st.write, tempfile, format="MSEED")
 
@@ -203,7 +225,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             # Read the data and convert them to float
             st = read(file)
-            st[0].data = st[0].data.astype('float32') + .5
+            st[0].data = st[0].data.astype(np.float32) + .5
             # Type is not consistent float32 cannot be compressed with STEIM1,
             # therefore a exception should be raised.
             self.assertRaises(Exception, st.write, tempfile, format="MSEED",
@@ -221,7 +243,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             # Read the data and convert them to float
             st = read(file)
-            st[0].data = st[0].data.astype('float32') + .5
+            st[0].data = st[0].data.astype(np.float32) + .5
             # Type is not consistent float32 cannot be compressed with STEIM1,
             # therefore a warning should be raised.
             self.assertEqual(st[0].stats.mseed.encoding, 'STEIM1')
@@ -318,7 +340,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 1 - transform to np.float64 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('float64')
+                tr.data = tr.data.astype(np.float64)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -330,7 +352,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 2 - transform to np.float32 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('float32')
+                tr.data = tr.data.astype(np.float32)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -342,7 +364,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 3 - transform to np.int32 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('int32')
+                tr.data = tr.data.astype(np.int32)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -362,7 +384,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 4 - transform to np.int16 values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('int16')
+                tr.data = tr.data.astype(np.int16)
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -374,7 +396,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # 5 - transform to ASCII values
             st = read()
             for tr in st:
-                tr.data = tr.data.astype('|S1')
+                tr.data = tr.data.astype(native_str('|S1'))
             # write a single trace automatically detecting encoding
             st[0].write(tempfile, format="MSEED")
             # write a single trace automatically detecting encoding
@@ -388,7 +410,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Tests issue #289.
 
-        Reading MiniSEED using start-/endtime outside of data should result in
+        Reading MiniSEED using start/end time outside of data should result in
         an empty Stream object.
         """
         # 1
@@ -408,7 +430,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        # start and endtime
+        # start and end time
         ms = _MSStruct(filename)
         ms.read(-1, 0, 1, 0)
         blkt_link = ms.msr.contents.blkts.contents
@@ -453,13 +475,19 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # 2 - select full time window
         st2 = read(filename, starttime=t1, endtime=t2)
         self.assertEqual(len(st2), 3)
+        for tr in st2:
+            del tr.stats.processing
         self.assertEqual(st, st2)
         # 3 - use selection
         st2 = read(filename, starttime=t1, endtime=t2, sourcename='*.*.*.*')
         self.assertEqual(len(st2), 3)
+        for tr in st2:
+            del tr.stats.processing
         self.assertEqual(st, st2)
         st2 = read(filename, starttime=t1, endtime=t2, sourcename='*')
         self.assertEqual(len(st2), 3)
+        for tr in st2:
+            del tr.stats.processing
         self.assertEqual(st, st2)
         # 4 - selection without times
         st2 = read(filename, sourcename='*.*.*.*')
@@ -480,7 +508,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             tempfile = tf.name
             st = read()
             tr = st[0]
-            tr.data = tr.data.astype('float64') + .5
+            tr.data = tr.data.astype(np.float64) + .5
             tr.stats.mseed = {'encoding': 0}
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('error', UserWarning)
@@ -526,16 +554,16 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
     def test_enforcing_reading_byteorder(self):
         """
-        Tests if setting the byteorder of the header for reading is passed to
+        Tests if setting the byte order of the header for reading is passed to
         the C functions.
 
-        Quite simple. It just checks if reading with the correct byteorder
-        works and reading with the wrong byteorder fails.
+        Quite simple. It just checks if reading with the correct byte order
+        works and reading with the wrong byte order fails.
         """
-        tr = Trace(data=np.arange(10, dtype="int32"))
+        tr = Trace(data=np.arange(10, dtype=np.int32))
 
         # Test with little endian.
-        memfile = StringIO()
+        memfile = io.BytesIO()
         tr.write(memfile, format="mseed", byteorder="<")
         memfile.seek(0, 0)
         # Reading little endian should work just fine.
@@ -547,11 +575,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Wrong byteorder raises.
+        # Wrong byte order raises.
         self.assertRaises(ValueError, read, memfile, header_byteorder=">")
 
         # Same test with big endian
-        memfile = StringIO()
+        memfile = io.BytesIO()
         tr.write(memfile, format="mseed", byteorder=">")
         memfile.seek(0, 0)
         # Reading big endian should work just fine.
@@ -563,14 +591,14 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Wrong byteorder raises.
+        # Wrong byte order raises.
         self.assertRaises(ValueError, read, memfile, header_byteorder="<")
 
     def test_long_year_range(self):
         """
         Tests reading and writing years 1900 to 2100.
         """
-        tr = Trace(np.arange(5, dtype="float32"))
+        tr = Trace(np.arange(5, dtype=np.float32))
 
         # Year 2056 is non-deterministic for days 1, 256 and 257. These three
         # dates are simply simply not supported right now. See the libmseed
@@ -580,8 +608,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         years = range(1901, 2101, 5)
         for year in years:
             for byteorder in ["<", ">"]:
-                memfile = StringIO()
-                # Get some random time with the year and byteorder as the seed.
+                memfile = io.BytesIO()
+                # Get some random time with the year and the byte order as the
+                # seed.
                 random.seed(year + ord(byteorder))
                 tr.stats.starttime = UTCDateTime(
                     year,
@@ -600,6 +629,56 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 del tr2.stats.mseed
                 del tr2.stats._format
                 self.assertEqual(tr, tr2)
+
+    def test_full_seed_with_non_default_dataquality(self):
+        """
+        Tests the reading of full SEED files with dataqualities other then D.
+        """
+        # Test the normal one first.
+        filename = os.path.join(self.path, 'data', 'fullseed.mseed')
+        st = read(filename)
+        self.assertEqual(st[0].stats.mseed.dataquality, "D")
+
+        # Test the others. They should also have identical data.
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_M.mseed')
+        st = read(filename)
+        data_m = st[0].data
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.mseed.dataquality, "M")
+
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_R.mseed')
+        st = read(filename)
+        data_r = st[0].data
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.mseed.dataquality, "R")
+
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_Q.mseed')
+        st = read(filename)
+        data_q = st[0].data
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.mseed.dataquality, "Q")
+
+        # Assert that the data is the same.
+        np.testing.assert_array_equal(data_m, data_r)
+        np.testing.assert_array_equal(data_m, data_q)
+
+    def test_infinite_loop(self):
+        """
+        Tests that libmseed doesn't enter an infinite loop on buggy files.
+        """
+        filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
+
+        process = multiprocessing.Process(target=_testFunction,
+                                          args=(filename, ))
+        process.start()
+        process.join(60)
+
+        fail = process.is_alive()
+        process.terminate()
+        self.assertFalse(fail)
 
 
 def suite():

@@ -20,7 +20,8 @@ Basic Example
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
->>> st.sort()
+>>> st.sort()  # doctest: +ELLIPSIS
+<obspy.core.stream.Stream object at ...>
 >>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
 BW.MANZ..EHE | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
@@ -41,36 +42,6 @@ Advanced Examples
 >>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'LOG', 'SHE', 'SHN', 'SHZ']
 
->>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
-...                                  format='metadata')
->>> print(res)  # doctest: +NORMALIZE_WHITESPACE
-<?xml version="1.0" encoding="utf-8"?>
-<metadata>
-  <item title="Station Name">
-    <text text="Manzenberg,Bavaria, BW-Net"/>
-  </item>
-  <item title="Station ID">
-    <text text="MANZ"/>
-  </item>
-  <item title="Network ID">
-    <text text="BW"/>
-  </item>
-  <item title="Channel IDs">
-    <text text="EHZ"/>
-    <text text="EHN"/>
-    <text text="EHE"/>
-  </item>
-  <item title="Latitude (°)">
-    <text text="+49.986198"/>
-  </item>
-  <item title="Longitude (°)">
-    <text text="+12.108300"/>
-  </item>
-  <item title="Elevation (m)">
-    <text text="+635.0"/>
-  </item>
-</metadata>
-
 >>> paz = client.station.getPAZ('BW.MANZ..EHZ', UTCDateTime('20090808'))
 >>> paz = paz.items()
 >>> sorted(paz)  # doctest: +SKIP
@@ -80,6 +51,9 @@ Advanced Examples
  ('sensitivity', 2516800000.0),
  ('zeros', [0j, 0j])]
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from obspy.seishub.client import Client
 

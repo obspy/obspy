@@ -14,7 +14,5 @@ The available filters are:
 * ``lowpass``
 * ``highpass`` 
 
-.. include:: filtering_seismograms.py
-   :literal:
-
-.. plot:: source/tutorial/code_snippets/filtering_seismograms.py
+.. plot:: tutorial/code_snippets/filtering_seismograms.py
+   :include-source:

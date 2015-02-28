@@ -1,25 +1,32 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+# ------------------------------------------------------------------
 #  Filename: unpack.py
 #  Purpose: Routines for unpacking SEG Y data formats.
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2010 Lion Krischer
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
 """
 Functions that will all take a file pointer and the sample count and return a
-numpy array with the unpacked values.
+NumPy array with the unpacked values.
 """
-from util import clibsegy
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import ctypes as C
-import numpy as np
-import sys
 import os
+import sys
 import warnings
 
-# Get the system byteorder.
+import numpy as np
+
+from obspy.segy.util import clibsegy
+
+
+# Get the system byte order.
 BYTEORDER = sys.byteorder
 if BYTEORDER == 'little':
     BYTEORDER = '<'
@@ -28,7 +35,8 @@ else:
 
 
 clibsegy.ibm2ieee.argtypes = [
-    np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype=np.float32, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int]
 clibsegy.ibm2ieee.restype = C.c_void_p
 
@@ -38,8 +46,8 @@ def unpack_4byte_IBM(file, count, endian='>'):
     Unpacks 4 byte IBM floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype='float32')
-    # Swap the byteorder if necessary.
+    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     length = len(data)
@@ -50,13 +58,13 @@ def unpack_4byte_IBM(file, count, endian='>'):
 
 # Old pure Python/NumPy code
 #
-#def unpack_4byte_IBM(file, count, endian='>'):
+# def unpack_4byte_IBM(file, count, endian='>'):
 #    """
 #    Unpacks 4 byte IBM floating points.
 #    """
 #    # Read as 4 byte integer so bit shifting works.
-#    data = np.fromstring(file.read(count * 4), dtype='int32')
-#    # Swap the byteorder if necessary.
+#    data = np.fromstring(file.read(count * 4), dtype=np.int32)
+#    # Swap the byte order if necessary.
 #    if BYTEORDER != endian:
 #        data = data.byteswap()
 #    # See http://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
@@ -84,8 +92,8 @@ def unpack_4byte_Integer(file, count, endian='>'):
     Unpacks 4 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype='int32')
-    # Swap the byteorder if necessary.
+    data = np.fromstring(file.read(count * 4), dtype=np.int32)
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     return data
@@ -96,8 +104,8 @@ def unpack_2byte_Integer(file, count, endian='>'):
     Unpacks 2 byte integers.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 2), dtype='int16')
-    # Swap the byteorder if necessary.
+    data = np.fromstring(file.read(count * 2), dtype=np.int16)
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     return data
@@ -112,8 +120,8 @@ def unpack_4byte_IEEE(file, count, endian='>'):
     Unpacks 4 byte IEEE floating points.
     """
     # Read as 4 byte integer so bit shifting works.
-    data = np.fromstring(file.read(count * 4), dtype='float32')
-    # Swap the byteorder if necessary.
+    data = np.fromstring(file.read(count * 4), dtype=np.float32)
+    # Swap the byte order if necessary.
     if BYTEORDER != endian:
         data = data.byteswap()
     return data
@@ -147,6 +155,7 @@ class OnTheFlyDataUnpacker:
             msg += "; data may be read incorrectly "
             msg += "(modification time = %s)." % mtime
             warnings.warn(msg)
-        file = open(self.filename, self.filemode)
-        file.seek(self.seek)
-        return self.unpack_function(file, self.count, endian=self.endian)
+        with open(self.filename, self.filemode) as fp:
+            fp.seek(self.seek)
+            raw = self.unpack_function(fp, self.count, endian=self.endian)
+        return raw

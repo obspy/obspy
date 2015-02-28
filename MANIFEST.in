@@ -1,0 +1,56 @@
+# Unfortunately setuptools and numpy.distutils do not like each other and lot's
+# of small incompatibilities are around. One manifestation of this is that the
+# source code and data files included in the setup.py are included in binary
+# distributions but not in source distributions...
+# Therefore the MANIFEST.in files appears to be necessary.
+# See http://scipy-user.10969.n7.nabble.com/SciPy-User-setuptools-messing-with-sdists-using-numpy-distutils-and-Fortran-libraries-td19023.html
+# for more details.
+
+# Include the release-version file.
+include obspy/RELEASE-VERSION
+
+# Include source files, XML schemas files and some documentation files.
+global-include *.c *.h *.f *.pyf *.inc *.xsd *.rng LICENSE.txt README.txt
+
+# Exclude the misc directory
+prune misc
+prune doc
+
+# All tests/data directories
+graft obspy/core/tests/data
+graft obspy/core/util/geodetics/data
+graft obspy/css/tests/data
+graft obspy/datamark/tests/data
+graft obspy/fdsn/tests/data
+graft obspy/gse2/tests/data
+graft obspy/iris/tests/data
+graft obspy/imaging/tests/images
+graft obspy/mseed/tests/data
+graft obspy/pde/tests/data
+graft obspy/realtime/tests/data
+graft obspy/sac/tests/data
+graft obspy/seg2/tests/data
+graft obspy/segy/tests/data
+graft obspy/segy/tests/images
+graft obspy/seisan/tests/data
+graft obspy/sh/tests/data
+graft obspy/signal/data
+graft obspy/signal/tests/data
+graft obspy/station/tests/data
+graft obspy/taup/tests/data
+graft obspy/wav/tests/data
+graft obspy/xseed/tests/data
+graft obspy/xseed/tests/blockette-tests
+graft obspy/y/tests/data
+
+recursive-include obspy/core/tests/images *.png
+
+# Geodetics data
+graft obspy/core/util/geodetics/data
+
+# obspy.taup data
+graft obspy/taup/data
+graft obspy/taup/data/models
+
+# Needed for the XSD validation
+include obspy/station/docs/Variations-FDSNSXML-SEED.txt

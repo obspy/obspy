@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
-from obspy.core.util import AttribDict
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import copy
 import pickle
 import unittest
 import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
+from obspy.core.util import AttribDict
 
 
 class StatsTestCase(unittest.TestCase):
@@ -94,7 +99,7 @@ class StatsTestCase(unittest.TestCase):
         """
         Various setter and getter tests.
         """
-        #1
+        # 1
         stats = Stats()
         stats.test = dict()
         stats.test['test2'] = 'muh'
@@ -107,11 +112,11 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats.test['test2'], 'maeh')
         self.assertEqual(stats['test'].test2, 'maeh')
         self.assertEqual(stats['test']['test2'], 'maeh')
-        #2 - multiple initialization
+        # 2 - multiple initialization
         stats = Stats({'muh': 'meah'})
         stats2 = Stats(Stats(Stats(stats)))
         self.assertEqual(stats2.muh, 'meah')
-        #3 - check conversion to AttribDict
+        # 3 - check conversion to AttribDict
         stats = Stats()
         stats.sub1 = {'muh': 'meah'}
         stats.sub2 = AttribDict({'muh2': 'meah2'})
@@ -163,7 +168,7 @@ class StatsTestCase(unittest.TestCase):
         st = st + st
         st[3].stats.station = 'BBB'
         # changed in rev. 1625: adding streams doesn't deepcopy
-        # therefore all traces in the test stream are idential
+        # therefore all traces in the test stream are identical
         # (python list behavior)
         for tr in st:
             self.assertTrue(tr == st[0])

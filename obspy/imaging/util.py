@@ -8,7 +8,11 @@ Waveform plotting utilities.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
-from matplotlib.dates import num2date, AutoDateFormatter, DateFormatter
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
+
+from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 
 
 def decimal_seconds_format(x, pos=None):

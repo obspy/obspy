@@ -3,6 +3,11 @@
 Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+import numpy as np
 
 from obspy.segy import pack, unpack
 
@@ -196,10 +201,10 @@ DATA_SAMPLE_FORMAT_SAMPLE_SIZE = {
 
 # Map the data format sample code and the corresponding dtype.
 DATA_SAMPLE_FORMAT_CODE_DTYPE = {
-    1: 'float32',
-    2: 'int32',
-    3: 'int16',
-    5: 'float32'}
+    1: np.float32,
+    2: np.int32,
+    3: np.int16,
+    5: np.float32}
 
 # Map the endianness to bigger/smaller sign.
 ENDIAN = {

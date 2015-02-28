@@ -1,15 +1,16 @@
 {% extends "layout.html" %}
 {% set title = 'Overview' %}
 {% block body %}
-  <h1>Welcome to the ObsPy Documentation! ({{ release|e }}) </h1>
+  <h1 class="hidden-xs">
+    Welcome to the ObsPy Documentation! ({{ release|e }})<br>
+    <small>A Python Toolbox for seismology/seismological observatories.</small>
+  </h1>
 
-  <p>
-    <strong>A Python Toolbox for seismology/seismological observatories.</strong>
-  </p>
-
-  <div style="float: right; margin-left: 2em; margin-bottom: 1em;">
-    <a href="http://www.obspy.org/"><img src="_static/obspy-logo.png"
-       alt="ObsPy logo" title="ObsPy logo" style="border: none;"/></a>
+  <div id="logo" class="pull-right">
+    <a href="http://www.obspy.org/">
+      <img src="_static/obspy-logo.png" alt="ObsPy logo" title="ObsPy logo"
+        class="img-responsive">
+    </a>
   </div>
 
   <p>
@@ -28,60 +29,90 @@
   </p>
 
   <h3>Documentation</h3>
-  <table class="contentstable" align="center"><tbody><tr>
-    <td width="50%">
 
-      <p class="biglink"><a class="biglink" href="tutorial/index.html">Tutorial</a><br />
-         <span class="linkdescr">start here</span></p>
-      <p class="biglink"><a class="biglink" href="packages/index.html">Library Reference</a><br />
-         <span class="linkdescr">use the source, luke</span></p>
-      <p class="biglink"><a class="biglink" href="http://lists.obspy.org/cgi-bin/mailman/listinfo/obspy-users">User Mailing List</a><br />
-         <span class="linkdescr">stay informed</span></p>
-    </td><td width="50%">
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="tutorial/index.html">Tutorial</a><br>
+         <span class="linkdescr">Start here</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
       <p class="biglink"><a class="biglink" href="gallery.html">Gallery</a><br>
-         <span class="linkdescr">eye candies</span></p>
-      <p class="biglink"><a class="biglink" href="https://github.com/obspy/obspy/issues?page=1&state=closed">FAQs</a><br />
-         <span class="linkdescr">frequently asked questions (hopefully answered!)</span></p>
-      <p class="biglink"><a class="biglink" href="https://github.com/obspy/obspy/issues/new">Help!</a><br />
-         <span class="linkdescr">report bugs, suggest features or submit patches (needs github login)</span></p>
-    </td></tr>
-  </tbody></table>
+         <span class="linkdescr">Eye candy</span></p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="packages/index.html">Library Reference</a><br>
+         <span class="linkdescr">Use the source, Luke</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="https://github.com/obspy/obspy/issues?page=1&state=closed">FAQs</a><br>
+         <span class="linkdescr">Frequently asked questions (hopefully answered!)</span></p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="http://lists.obspy.org/cgi-bin/mailman/listinfo/obspy-announcements">Announcements</a> /
+                         <a class="biglink" href="http://lists.obspy.org/cgi-bin/mailman/listinfo/obspy-users">User</a> Mailing Lists<br>
+         <span class="linkdescr">Stay informed</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="https://github.com/obspy/obspy/issues/new">Help!</a><br>
+         <span class="linkdescr">Report bugs, suggest features or submit patches (needs GitHub login)</span></p>
+    </div>
+  </div>
 
   <h3>Indices and Tables</h3>
-  <table class="contentstable" align="center"><tr>
-    <td width="50%">
 
-      <p class="biglink"><a class="biglink" href="py-modindex.html">Global Module Index</a><br/>
-         <span class="linkdescr">quick access to all modules</span></p>
-      <p class="biglink"><a class="biglink" href="genindex.html">General Index</a><br/>
-         <span class="linkdescr">all functions, classes, terms</span></p>
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="py-modindex.html">Global Module Index</a><br>
+         <span class="linkdescr">Quick access to all modules</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="genindex.html">General Index</a><br>
+         <span class="linkdescr">All functions, classes, terms</span></p>
+    </div>
+  </div>
 
-    </td><td width="50%">
-      <p class="biglink"><a class="biglink" href="contents.html">Complete Table of Contents</a><br/>
-         <span class="linkdescr">lists all sections and subsections</span></p>
-      <p class="biglink"><a class="biglink" href="citations.html">Citations</a> &amp;
-         <a class="biglink" href="credits.html">Credits</a><br/>
-         <span class="linkdescr">lists of contributers and used publications</span></p>
-    </td></tr>
-  </table>
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="contents.html">Complete Table of Contents</a><br>
+         <span class="linkdescr">Lists all sections and subsections</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="changelog.html">ChangeLog</a>,
+         <a class="biglink" href="citations.html">Citations</a> &amp;
+         <a class="biglink" href="credits.html">Credits</a><br>
+         <span class="linkdescr">Lists of contributors and used publications</span></p>
+    </div>
+  </div>
 
   <h3>Developer Resources</h3>
-  <table class="contentstable" align="center"><tr>
-    <td width="50%">
-      <p class="biglink"><a class="biglink" href="coding_style.html">Coding Style Guide</a><br/>
-         <span class="linkdescr">it's all about consistency</span></p>
-      <p class="biglink"><a class="biglink" href="pep8/index.html">PEP 8</a><br/>
-         <span class="linkdescr">don't use tabs!</span></p>
-      <p class="biglink">&nbsp;<br/>
-         <span>&nbsp;</span></p>
-    </td>
-    <td width="50%">
-      <p class="biglink"><a class="biglink" href="http://tests.obspy.org/">Buildbot</a><br/>
-         <span class="linkdescr">last 20 test reports</span></p>
-      <p class="biglink">Coverage <a class="biglink" href="https://coveralls.io/r/obspy/obspy?branch=master">Python</a> / <a class="biglink" href="c_coverage/index.html">C</a><br/>
-         <span class="linkdescr">test coverage measurements</span></p>
-    </td></tr>
-  </table>
 
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="coding_style.html">Coding Style Guide</a><br>
+         <span class="linkdescr">It's all about consistency</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="http://tests.obspy.org/">Buildbot</a><br>
+         <span class="linkdescr">Last 20 test reports</span></p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink"><a class="biglink" href="pep8/index.html">PEP 8</a><br>
+         <span class="linkdescr">Don't use tabs!</span></p>
+    </div>
+    <div class="col-sm-4 col-sm-offset-1">
+      <p class="biglink">Coverage <a class="biglink" href="https://coveralls.io/r/obspy/obspy?branch=master">Python</a> /
+                                  <a class="biglink" href="c_coverage/index.html">C</a><br>
+         <span class="linkdescr">Test coverage measurements</span></p>
+    </div>
+  </div>
 
 {% endblock %}

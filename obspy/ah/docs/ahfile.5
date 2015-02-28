@@ -1,0 +1,214 @@
+.TH AHFILE 5 "17 June 1991"
+.SH NAME
+ahfile \- file format for seismic time series data
+.SH SYNOPSIS
+\fB#include <local/ah.h>\fR
+.SH DESCRIPTION
+.LP
+An AH file is used for the storage of binary seismic time series data.
+The file is portable among machines of varying architecture by virtue of
+its XDR implementation. It is composed of a variable-sized header containing
+a number of values followed by the time series data, which must be of one of
+two data types (single-precision floating point or complex single-precision
+floating point).
+.LP
+Following is a partial listing of the contents of the file ah.h which define
+the AH header structure and a few relevant constants:
+.sp 24p
+/* magic numbers (1100-1149 reserved for AH) */
+.br
+#define	AH_VERSION_2_0		(1100)
+.br
+
+.br
+/* data types */
+.br
+#define	AH_UNDEFINED		((short) 0)
+.br
+#define	AH_FLOAT			((short) 1)
+.br
+#define	AH_COMPLEX			((short) 2)
+.br
+#define AH_DOUBLE			((short) 3)
+.br
+
+.br
+/* error codes */
+.br
+#define	AH_SUCCESS		(0)		/* no error */
+.br
+#define	AH_MISC			(-1)		/* miscellaneous error */
+.br
+#define	AH_RDHEAD		(-2)		/* header read error */
+.br
+#define	AH_WRHEAD		(-3)		/* header write error */
+.br
+#define	AH_DATATYPE		(-4)		/* bad data type */
+.br
+#define	AH_RDDATA		(-5)		/* data read error */
+.br
+#define	AH_WRDATA		(-6)		/* data write error */
+.br
+#define	AH_MEMALLOC		(-7)		/* memory allocation error */
+.br
+#define	AH_BADARG		(-8)		/* invalid argument */
+.br
+#define	AH_BADMATCH		(-9)		/* parameter mismatch */
+.br
+#define AH_OPENFILE             (-10)           /* open file error */
+.br
+#define AH_CALIBINFO            (-11)           /* no calibration info */
+.br
+
+.br
+typedef	struct {
+.br
+	float r;
+.br
+	float i;
+.br
+} complex;
+.br
+
+.br
+typedef struct {
+.br
+	short yr;
+.br
+	short mo;
+.br
+	short day;
+.br
+	short hr;
+.br
+	short mn;
+.br
+	float sec;
+.br
+} ahtime;
+.br
+
+.br
+typedef struct {
+.br
+	char *code;				/* station code */
+.br
+	char *chan;				/* lpz, spn, etc. */
+.br
+	char *stype;				/* wwssn, hglp, etc. */
+.br
+	char *recorder;				/* recorder serial number */
+.br
+	char *sensor;				/* sensor serial number */
+.br
+	float azimuth;				/* degrees east from north */
+.br
+	float dip;				/* up = -90, down = +90 */
+.br
+	double slat;				/* latitude */
+.br
+	double slon;				/* longitude */
+.br
+	float elev;				/* elevation */
+.br
+	float DS;				/* gain	*/
+.br
+	float A0;				/* normalization */
+.br
+	short npoles;				/* calibration info */
+.br
+	complex *poles;
+.br
+	short nzeros;
+.br
+	complex *zeros;
+.br
+	char *scomment;				/* station comment */
+.br
+} ahstation;
+.br
+
+.br
+typedef struct {
+.br
+	double lat;				/* latitude */
+.br
+	double lon;				/* longitude */
+.br
+	float depth;				/* depth */
+.br
+	ahtime ot;				/* origin time */
+.br
+	char *ecomment;				/* comment */
+.br
+} ahevent;
+.br
+
+.br
+typedef struct {
+.br
+	short type;				/* data type */
+.br
+	long ndata;				/* number of samples */
+.br
+	float delta;				/* sampling interval  in seconds */
+.br
+	float maxamp;				/* maximum amplitude of record */
+.br
+	ahtime abstime;				/* start time of record section */
+.br
+	char *units;				/* data units */
+.br
+	char *inunits;				/* input units of transfer function */
+.br
+	char *outunits;				/* output units of transfer function */
+.br
+	char *rcomment;				/* comment line */
+.br
+	char *log;				/* log of data manipulations */
+.br
+} ahrecord;
+.br
+
+.br
+typedef struct {
+.br
+	char *attr;
+.br
+	char *val;
+.br
+} ahattr;
+.br
+
+.br
+typedef struct {
+.br
+	int magic;
+.br
+	unsigned long length;
+.br
+	ahstation station;
+.br
+	ahevent event;
+.br
+	ahrecord record;
+.br
+	short nusrattr;				/* user-defined information */
+.br
+	ahattr *usrattr;
+.br
+} ahhead;
+.LP
+The header consists of (i) a magic number indicating the format version,
+(ii) a length field which indicates the size in bytes of the XDR-encoded
+version of the remainder of the header structure together with the following
+data record, (iii) station, event and record substructures, and (iv) any
+number of user-defined attribute/value character string pairs.
+.LP
+Many fields (e.g., station name, record log, etc.) are dynamic in size and
+may be of any length, including zero. Zero-length dynamic fields are
+frequently represented as null pointers.
+.SH FILES
+\fB/usr/include/local/ah.h\fR
+.SH SEE ALSO
+.BR ah (3)

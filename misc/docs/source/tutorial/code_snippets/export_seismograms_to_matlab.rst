@@ -10,4 +10,4 @@ The data can the be loaded from within MATLAB with the ``load`` function.
 .. include:: export_seismograms_to_matlab.py
    :literal:
 
-.. _MATLAB: http://www.mathworks.de/products/matlab/
+.. _MATLAB: http://www.mathworks.com/products/matlab/

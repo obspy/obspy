@@ -1,10 +1,13 @@
-from obspy.core import UTCDateTime
-from obspy.arclink import Client
-from obspy.signal.trigger import recSTALTA, triggerOnset
 import matplotlib.pyplot as plt
 
+from obspy.arclink import Client
+from obspy.core import UTCDateTime
+from obspy.signal.trigger import recSTALTA, triggerOnset
+
+
 # Retrieve waveforms via ArcLink
-client = Client(host="erde.geophysik.uni-muenchen.de", port=18001)
+client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
+                user="test@obspy.de")
 t = UTCDateTime("2009-08-24 00:19:45")
 st = client.getWaveform('BW', 'RTSH', '', 'EHZ', t, t + 50)
 

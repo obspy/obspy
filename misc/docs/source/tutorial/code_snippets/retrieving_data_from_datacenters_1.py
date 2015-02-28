@@ -1,8 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from obspy.core import UTCDateTime
+
 from obspy.arclink import Client
+from obspy.core import UTCDateTime
 from obspy.signal import cornFreq2Paz, seisSim
+
 
 # Retrieve data via ArcLink
 # please provide a valid email address for the keyword user

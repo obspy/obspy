@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future.utils import native_str
 
-from StringIO import StringIO
-from lxml.etree import Element
-from obspy.xseed import DEFAULT_XSEED_VERSION, utils
-from obspy.xseed.fields import Integer, Loop
+import io
 import os
 import warnings
+
+from lxml.etree import Element
+
+from obspy.xseed import DEFAULT_XSEED_VERSION, utils
+from obspy.xseed.fields import Integer, Loop
 
 
 class BlocketteLengthException(Exception):
@@ -65,6 +71,9 @@ class Blockette(object):
             temp += os.linesep
         return temp.strip()
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def getFields(self, xseed_version=DEFAULT_XSEED_VERSION):
         fields = []
         for field in self.fields:
@@ -83,9 +92,11 @@ class Blockette(object):
         Parse given data for blockette fields and create attributes.
         """
         # convert to stream for test issues
-        if isinstance(data, basestring):
+        if isinstance(data, bytes):
             expected_length = len(data)
-            data = StringIO(data)
+            data = io.BytesIO(data)
+        elif isinstance(data, (str, native_str)):
+            raise TypeError("data must be bytes, not string")
         start_pos = data.tell()
         # debug
         if self.debug:
@@ -133,11 +144,12 @@ class Blockette(object):
         Converts the blockette to a valid SEED string and returns it.
         """
         # loop over all blockette fields
-        data = ''
+        data = b''
         for field in self.getFields():
             data += field.getSEED(self)
         # add blockette id and length
-        return '%03d%04d%s' % (self.id, len(data) + 7, data)
+        _head = '%03d%04d' % (self.id, len(data) + 7)
+        return _head.encode('ascii', 'strict') + data
 
     def parseXML(self, xml_doc):
         """

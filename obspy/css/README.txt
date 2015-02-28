@@ -5,10 +5,11 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2013 by:
+Copyright (c) 2013-2014 by:
     * Tobias Megies
     * Marcus Walther
     * https://github.com/isbreen
+    * Elliott Sales de Andrade
 
 
 Overview

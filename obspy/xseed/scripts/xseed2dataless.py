@@ -3,21 +3,23 @@
 """
 A command-line program that converts XML-SEED into Dataless SEED files.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
-from glob import glob
-from obspy.xseed.parser import Parser
-from optparse import OptionParser
 import os
 import sys
+from argparse import ArgumentParser
+from glob import glob
+
+from obspy import __version__
+from obspy.xseed.parser import Parser
 
 
 def xseed2dataless(filename, options):
-    if isinstance(filename, list):
-        files = []
-        for item in filename:
-            files.extend(glob(item))
-    else:
-        files = glob(filename)
+    files = []
+    for item in filename:
+        files.extend(glob(item))
     outdir = False
     outfile = False
     if options.output:
@@ -35,8 +37,8 @@ def xseed2dataless(filename, options):
     for file in files:
         if not os.path.isfile(file):
             continue
-        f = open(file, 'r')
-        if f.read(1) != '<':
+        f = open(file, 'rb')
+        if f.read(1) != b'<':
             if options.verbose:
                 msg = 'Skipping file %s' % file
                 msg += '\t-- not a XML-SEED file' + os.linesep
@@ -58,7 +60,7 @@ def xseed2dataless(filename, options):
         try:
             parser = Parser(file, debug=options.debug)
             parser.writeSEED(output)
-        except Exception, e:
+        except Exception as e:
             if options.debug:
                 raise
             msg = '\tError parsing file %s' % file + os.linesep
@@ -66,25 +68,21 @@ def xseed2dataless(filename, options):
             sys.stderr.write(msg)
 
 
-def main():
-    usage = "USAGE: %prog [options] filename"
-    parser = OptionParser(usage)
-    parser.add_option("-d", "--debug", default=False,
-                      action="store_true", dest="debug",
-                      help="show debugging information")
-    parser.add_option("-q", "--quiet", default=True,
-                      action="store_false", dest="verbose",
-                      help="non verbose mode")
-    parser.add_option("-o", "--output", dest="output", default=None,
-                      help="output filename or directory")
-    (options, args) = parser.parse_args()
-    if len(args) == 0:
-        parser.print_help()
-        return
-    filenames = args
-    if len(filenames) == 1:
-        filenames = filenames[0]
-    xseed2dataless(filenames, options)
+def main(argv=None):
+    parser = ArgumentParser(prog='obspy-xseed2dataless',
+                            description=__doc__.strip())
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='show debugging information')
+    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose',
+                        help='non verbose mode')
+    parser.add_argument('-o', '--output', default=None,
+                        help='output filename or directory')
+    parser.add_argument('files', nargs='+', help='files to convert')
+    args = parser.parse_args(argv)
+
+    xseed2dataless(args.files, args)
 
 
 if __name__ == "__main__":
