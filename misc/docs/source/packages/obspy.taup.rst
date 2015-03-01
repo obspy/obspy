@@ -9,8 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       ~taup.getTravelTimes
-       ~taup.travelTimePlot
+       ~tau.TauPyModel
 
     .. comment to end block
 
