@@ -370,20 +370,21 @@ class WaveformPlotting(object):
                                       sharex=sharex)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
-            if self.plotting_method is None:
+            method_ = self.plotting_method
+            if method_ is None:
                 if ((self.endtime - self.starttime) * sampling_rate >
                         self.max_npts):
-                    self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+                    method_ = "fast"
                 else:
-                    self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
+                    method_ = "full"
+            method_ = method_.lower()
+            if method_ == 'full':
+                self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
+            elif method_ == 'fast':
+                self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
-                if self.plotting_method.lower() == 'full':
-                    self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
-                elif self.plotting_method.lower() == 'fast':
-                    self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
-                else:
-                    msg = ("Invalid plot method: '%s'") % self.plotting_method
-                    raise ValueError(msg)
+                msg = "Invalid plot method: '%s'" % method_
+                raise ValueError(msg)
         # Set ticks.
         self.__plotSetXTicks()
         self.__plotSetYTicks()
