@@ -46,6 +46,13 @@ from obspy.imaging.util import ObsPyAutoDateFormatter
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
 SECONDS_PER_DAY = 3600.0 * 24.0
 
+datelocator_warning_msg = (
+    "AutoDateLocator was unable to pick an appropriate interval for this date "
+    "range. It may be necessary to add an interval value to the "
+    "AutoDateLocator's intervald dictionary.")
+warnings.filterwarnings("ignore", datelocator_warning_msg, UserWarning,
+                        "matplotlib.dates")
+
 
 class WaveformPlotting(object):
     """
@@ -383,6 +390,7 @@ class WaveformPlotting(object):
         xmin = self._time_to_xvalue(self.starttime)
         xmax = self._time_to_xvalue(self.endtime)
         ax.set_xlim(xmin, xmax)
+        self._draw_overlap_axvspan_legend()
 
     @deprecated_keywords({'swap_time_axis': None})
     def plotDay(self, *args, **kwargs):
@@ -650,8 +658,9 @@ class WaveformPlotting(object):
         Slow and high memory consumption for large datasets.
         """
         # trace argument seems to actually be a list of traces..
-        traces = trace
-        for trace in traces:
+        st = Stream(trace)
+        self._draw_overlap_axvspans(st, ax)
+        for trace in st:
             # Check if it is a preview file and adjust accordingly.
             # XXX: Will look weird if the preview file is too small.
             if trace.stats.get('preview'):
@@ -701,6 +710,7 @@ class WaveformPlotting(object):
         maximum values of each "pixel" and then plots only these values. Works
         much faster with large data sets.
         """
+        self._draw_overlap_axvspans(Stream(trace), ax)
         # Some variables to help calculate the values.
         starttime = self._time_to_xvalue(self.starttime)
         endtime = self._time_to_xvalue(self.endtime)
@@ -1281,8 +1291,7 @@ class WaveformPlotting(object):
         if hasattr(self.stream, 'label'):
             suptitle = self.stream.label
         elif self.type == 'relative':
-            # hide time information for relative plots
-            return
+            suptitle = "Time in seconds relative to %s" % self.reftime
         elif self.type == 'dayplot':
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
@@ -1304,7 +1313,7 @@ class WaveformPlotting(object):
         to warn the user when zooming into the plot.
         """
         xlim = ax.get_xlim()
-        if xlim[1] - xlim[0] < self._initial_xrange:
+        if xlim[1] - xlim[0] < 0.9 * self._initial_xrange:
             dangerous = True
         else:
             dangerous = False
@@ -1325,6 +1334,21 @@ class WaveformPlotting(object):
         if self._minmax_warning_text in ax.texts:
             ax.texts.remove(self._minmax_warning_text)
         self._minmax_warning_text = None
+
+    def _draw_overlap_axvspans(self, st, ax):
+        for _, _, _, _, start, end, delta, _ in st.getGaps():
+            if delta > 0:
+                continue
+            start = self._time_to_xvalue(start)
+            end = self._time_to_xvalue(end)
+            self._overlap_axvspan = \
+                ax.axvspan(start, end, color="r", zorder=-10, alpha=0.5)
+
+    def _draw_overlap_axvspan_legend(self):
+        if hasattr(self, "_overlap_axvspan"):
+            self.fig.axes[-1].legend(
+                [self._overlap_axvspan], ["Overlaps"],
+                loc="lower right", prop=dict(size="small"))
 
     def _time_to_xvalue(self, t):
             if self.type == 'relative':
