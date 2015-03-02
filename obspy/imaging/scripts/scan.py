@@ -41,6 +41,8 @@ import numpy as np
 
 from obspy import UTCDateTime, __version__, read
 from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
+from obspy.imaging.util import ObsPyAutoDateFormatter, \
+    decimal_seconds_format_date_first_tick
 
 
 def compressStartend(x, stop_iteration):
@@ -242,14 +244,11 @@ def main(argv=None):
     if args.output is not None:
         import matplotlib
         matplotlib.use("agg")
-    global date2num
     from matplotlib.dates import date2num, num2date
     from matplotlib.ticker import FuncFormatter
     from matplotlib.patches import Rectangle
     from matplotlib.collections import PatchCollection
     import matplotlib.pyplot as plt
-    from obspy.imaging.util import ObsPyAutoDateFormatter, \
-        decimal_seconds_format_date_first_tick
 
     fig = plt.figure()
     ax = fig.add_subplot(111)

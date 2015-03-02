@@ -90,7 +90,6 @@ class WaveformPlotting(object):
                                   self.stream])
         if not self.endtime:
             self.endtime = max([trace.stats.endtime for trace in self.stream])
-        # Map stream object and slice just in case.
         self.stream.trim(self.starttime, self.endtime)
         # Assigning values for type 'section'
         self.sect_offset_min = kwargs.get('offset_min', None)
@@ -241,12 +240,10 @@ class WaveformPlotting(object):
         return tr_id
 
     def __getMergablesIds(self):
-        ids = []
+        ids = set()
         for tr in self.stream:
-            tr_id = self.__getMergeId(tr)
-            if tr_id not in ids:
-                ids.append(tr_id)
-        return ids
+            ids.add(self.__getMergeId(tr))
+        return list(ids)
 
     def plotWaveform(self, *args, **kwargs):
         """
@@ -341,10 +338,6 @@ class WaveformPlotting(object):
                     if tr_id == id:
                         # does not copy the elements of the data array
                         tr_ref = copy(tr)
-                        # Trim does nothing if times are outside
-                        if self.starttime >= tr_ref.stats.endtime or \
-                                self.endtime <= tr_ref.stats.starttime:
-                            continue
                         if tr_ref.data.size:
                             stream_new[-1].append(tr_ref)
                 # delete if empty list
