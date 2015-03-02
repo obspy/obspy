@@ -65,8 +65,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
         (strike, dip, and rake) or NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
-        system is 1,2,3 = Up,South,East which equals r,theta,phi). The strike
-        is of the first plane, clockwise relative to north.
+        system is 1,2,3 = Up,South,East).
+        The Conversion between Up,South,East (z,y,x) and r,theta,phi is
+        as: Mrr=Mzz, Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
+        The strike is of the first plane, clockwise relative to north.
         The dip is of the first plane, defined clockwise and perpendicular to
         strike, relative to horizontal such that 0 is horizontal and 90 is
         vertical. The rake is of the first focal plane solution. 90 moves the
