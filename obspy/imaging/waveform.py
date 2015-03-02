@@ -349,7 +349,7 @@ class WaveformPlotting(object):
         if not len(stream_new):
             raise Exception("Nothing to plot")
         # Create helper variable to track ids and min/max/mean values.
-        self.stats = []
+        self.ids = []
         # Loop over each Trace and call the appropriate plotting method.
         self.axis = []
         for _i, tr in enumerate(stream_new):
@@ -677,20 +677,7 @@ class WaveformPlotting(object):
                 # The times are not supposed to change.
                 trace.stats.delta = (
                     old_time_range / float(trace.stats.npts - 1))
-            # Write to self.stats.
-            calib = trace.stats.calib
-            max_ = trace.data.max()
-            min_ = trace.data.min()
-            # set label
-            if trace.stats.get('preview'):
-                tr_id = trace.id + ' [preview]'
-            elif hasattr(trace, 'label'):
-                tr_id = trace.label
-            else:
-                tr_id = trace.id
-            self.stats.append([tr_id, calib * trace.data.mean(),
-                               calib * min_, calib * max_])
-            trace.data = np.require(trace.data, np.float64) * calib
+            trace.data = np.require(trace.data, np.float64) * trace.stats.calib
             if self.type == 'relative':
                 # use seconds of relative sample times and shift by trace's
                 # start time, which was set relative to `reftime`.
@@ -703,6 +690,15 @@ class WaveformPlotting(object):
                             date2num(trace.stats.starttime))
             ax.plot(x_values, trace.data, color=self.color,
                     linewidth=self.linewidth, linestyle=self.linestyle)
+        # Write to self.ids
+        trace = st[0]
+        if trace.stats.get('preview'):
+            tr_id = trace.id + ' [preview]'
+        elif hasattr(trace, 'label'):
+            tr_id = trace.label
+        else:
+            tr_id = trace.id
+        self.ids.append(tr_id)
 
     def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -755,15 +751,6 @@ class WaveformPlotting(object):
                 extreme_values = np.empty((pixel_count, 2), dtype=np.float)
                 extreme_values[:, 0] = min_
                 extreme_values[:, 1] = max_
-            # set label
-            if hasattr(trace[0], 'label'):
-                tr_id = trace[0].label
-            else:
-                tr_id = trace[0].id
-            # Write to self.stats.
-            self.stats.append([tr_id, extreme_values.mean(),
-                               extreme_values[:, 0].min(),
-                               extreme_values[:, 1].max()])
             # Finally plot the data.
             start = self._time_to_xvalue(tr.stats.starttime)
             end = self._time_to_xvalue(tr.stats.endtime)
@@ -782,6 +769,12 @@ class WaveformPlotting(object):
                                 self._time_to_xvalue(self.starttime))
         self._minmax_plot_xrange_dangerous = False
         ax.callbacks.connect("xlim_changed", self._warn_on_xaxis_zoom)
+        # set label, write to self.ids
+        if hasattr(trace[0], 'label'):
+            tr_id = trace[0].label
+        else:
+            tr_id = trace[0].id
+        self.ids.append(tr_id)
 
     def __plotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -807,34 +800,15 @@ class WaveformPlotting(object):
 
     def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
-        Goes through all axes in pyplot, reads self.stats and sets all ticks on
-        the y axis.
-
-        This method also adjusts the y limits so that the mean value is always
-        in the middle of the graph and all graphs are equally scaled.
         """
-        # Figure out the maximum distance from the mean value to either end.
-        # Add 10 percent for better looking graphs.
-        max_distance = max([max(trace[1] - trace[2], trace[3] - trace[1])
-                            for trace in self.stats]) * 1.1
-
         for _i, ax in enumerate(self.axis):
-            mean = self.stats[_i][1]
-            if not self.equal_scale:
-                trace = self.stats[_i]
-                max_distance = max(trace[1] - trace[2],
-                                   trace[3] - trace[1]) * 1.1
-            # Set the ylimit.
-            min_range = mean - max_distance
-            max_range = mean + max_distance
             # Set the title of each plot.
-            ax.text(0.02, 0.95, self.stats[_i][0], transform=ax.transAxes,
+            ax.text(0.02, 0.95, self.ids[_i], transform=ax.transAxes,
                     fontdict=dict(fontsize="small", ha='left', va='top'),
                     bbox=dict(boxstyle="round", fc="w", alpha=0.8))
             plt.setp(ax.get_yticklabels(), fontsize='small')
-            ax.yaxis.set_major_locator(MaxNLocator(7))
+            ax.yaxis.set_major_locator(MaxNLocator(7, prune="both"))
             ax.yaxis.set_major_formatter(ScalarFormatter())
-            ax.set_ylim(min_range, max_range)
 
     def __dayplotGetMinMaxValues(self, *args, **kwargs):  # @UnusedVariable
         """
