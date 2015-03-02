@@ -1377,15 +1377,15 @@ class WaveformPlotting(object):
         elif self._minmax_plot_xrange_dangerous and not dangerous:
             self._remove_zoomlevel_warning_text()
         self._minmax_plot_xrange_dangerous = dangerous
-        return
 
     def _add_zoomlevel_warning_text(self):
         ax = self.fig.axes[0]
-        ax.text(0.95, 0.9, MINMAX_ZOOMLEVEL_WARNING_TEXT, color="r",
-                ha="right", va="top", transform=ax.transAxes)
+        self._minmax_warning_text = ax.text(
+            0.95, 0.9, MINMAX_ZOOMLEVEL_WARNING_TEXT, color="r",
+            ha="right", va="top", transform=ax.transAxes)
 
     def _remove_zoomlevel_warning_text(self):
         ax = self.fig.axes[0]
-        for text in list(ax.texts):
-            if text.get_text() == MINMAX_ZOOMLEVEL_WARNING_TEXT:
-                ax.texts.remove(text)
+        if self._minmax_warning_text in ax.texts:
+            ax.texts.remove(self._minmax_warning_text)
+        self._minmax_warning_text = None
