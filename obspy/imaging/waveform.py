@@ -36,7 +36,6 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.preview import mergePreviews
 from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
                              locations2degrees)
 from obspy.core.util.decorator import deprecated_keywords
@@ -107,13 +106,10 @@ class WaveformPlotting(object):
         self.sect_vred = kwargs.get('vred', None)
         # normalize times
         if self.type == 'relative':
-            dt = kwargs.get('reftime', self.starttime)
+            self.reftime = kwargs.get('reftime', self.starttime)
             # fix plotting boundaries
-            self.endtime = UTCDateTime(self.endtime - dt)
-            self.starttime = UTCDateTime(self.starttime - dt)
-            # fix stream times
-            for tr in self.stream:
-                tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
+            self.endtime = UTCDateTime(self.endtime - self.reftime)
+            self.starttime = UTCDateTime(self.starttime - self.reftime)
         elif self.type == 'section':
             self.sect_reftime = kwargs.get('reftime', None)
         # Whether to use straight plotting or the fast minmax method. If not
@@ -344,8 +340,6 @@ class WaveformPlotting(object):
                 if not len(stream_new[-1]):
                     stream_new.pop()
                     continue
-                stream_new[-1].sort(key=lambda x: x.stats.endtime)
-                stream_new[-1].sort(key=lambda x: x.stats.starttime)
         # If everything is lost in the process raise an Exception.
         if not len(stream_new):
             raise Exception("Nothing to plot")
@@ -654,81 +648,59 @@ class WaveformPlotting(object):
 
         Slow and high memory consumption for large datasets.
         """
-        if len(trace) > 1:
-            stream = Stream(traces=trace)
-            # Merge with 'interpolation'. In case of overlaps this method will
-            # always use the longest available trace.
-            if hasattr(trace[0].stats, 'preview') and trace[0].stats.preview:
-                stream = Stream(traces=stream)
-                stream = mergePreviews(stream)
+        # trace argument seems to actually be a list of traces..
+        traces = trace
+        for trace in traces:
+            # Check if it is a preview file and adjust accordingly.
+            # XXX: Will look weird if the preview file is too small.
+            if trace.stats.get('preview'):
+                # Mask the gaps.
+                trace.data = np.ma.masked_array(trace.data)
+                trace.data[trace.data == -1] = np.ma.masked
+                # Recreate the min_max scene.
+                dtype = trace.data.dtype
+                old_time_range = trace.stats.endtime - trace.stats.starttime
+                data = np.empty(2 * trace.stats.npts, dtype=dtype)
+                data[0::2] = trace.data / 2.0
+                data[1::2] = -trace.data / 2.0
+                trace.data = data
+                # The times are not supposed to change.
+                trace.stats.delta = (
+                    old_time_range / float(trace.stats.npts - 1))
+            # Write to self.stats.
+            calib = trace.stats.calib
+            max_ = trace.data.max()
+            min_ = trace.data.min()
+            # set label
+            if trace.stats.get('preview'):
+                tr_id = trace.id + ' [preview]'
+            elif hasattr(trace, 'label'):
+                tr_id = trace.label
             else:
-                stream.merge(method=1)
-            trace = stream[0]
-        else:
-            trace = trace[0]
-        # Check if it is a preview file and adjust accordingly.
-        # XXX: Will look weird if the preview file is too small.
-        if hasattr(trace.stats, 'preview') and trace.stats.preview:
-            # Mask the gaps.
-            trace.data = np.ma.masked_array(trace.data)
-            trace.data[trace.data == -1] = np.ma.masked
-            # Recreate the min_max scene.
-            dtype = trace.data.dtype
-            old_time_range = trace.stats.endtime - trace.stats.starttime
-            data = np.empty(2 * trace.stats.npts, dtype=dtype)
-            data[0::2] = trace.data / 2.0
-            data[1::2] = -trace.data / 2.0
-            trace.data = data
-            # The times are not supposed to change.
-            trace.stats.delta = old_time_range / float(trace.stats.npts - 1)
-        # Write to self.stats.
-        calib = trace.stats.calib
-        max = trace.data.max()
-        min = trace.data.min()
-        # set label
-        if hasattr(trace.stats, 'preview') and trace.stats.preview:
-            tr_id = trace.id + ' [preview]'
-        elif hasattr(trace, 'label'):
-            tr_id = trace.label
-        else:
-            tr_id = trace.id
-        self.stats.append([tr_id, calib * trace.data.mean(),
-                           calib * min, calib * max])
-        # Pad the beginning and the end with masked values if necessary. Might
-        # seem like overkill but it works really fast and is a clean solution
-        # to gaps at the beginning/end.
-        concat = [trace]
-        if self.starttime != trace.stats.starttime:
-            samples = (trace.stats.starttime - self.starttime) * \
-                trace.stats.sampling_rate
-            temp = [np.ma.masked_all(int(samples))]
-            concat = temp.extend(concat)
-            concat = temp
-        if self.endtime != trace.stats.endtime:
-            samples = (self.endtime - trace.stats.endtime) * \
-                trace.stats.sampling_rate
-            concat.append(np.ma.masked_all(int(samples)))
-        if len(concat) > 1:
-            # Use the masked array concatenate, otherwise it will result in a
-            # not masked array.
-            trace.data = np.ma.concatenate(concat)
-            # set starttime and calculate endtime
-            trace.stats.starttime = self.starttime
-        trace.data = np.require(trace.data, np.float64) * calib
+                tr_id = trace.id
+            self.stats.append([tr_id, calib * trace.data.mean(),
+                               calib * min_, calib * max_])
+            trace.data = np.require(trace.data, np.float64) * calib
+            if self.type == 'relative':
+                # use seconds of relative sample times and shift by trace's
+                # start time, which was set relative to `reftime`.
+                x_values = (
+                    trace.times() + (trace.stats.starttime - self.reftime))
+            else:
+                # convert seconds of relative sample times to days and add
+                # start time of trace.
+                x_values = ((trace.times() / 3600. / 24.) +
+                            date2num(trace.stats.starttime))
+            ax.plot(
+                x_values, trace.data, color=self.color,
+                linewidth=self.linewidth, linestyle=self.linestyle)
         if self.type == 'relative':
-            start = 0
-            end = self.endtime - self.starttime
-            x_values = np.linspace(start, end, num=len(trace))
+            xmin = self.starttime.timestamp
+            xmax = self.endtime.timestamp
         else:
-            start, end = self.starttime, self.endtime
-            x_values = np.linspace(date2num(start), date2num(end),
-                                   num=len(trace))
-        ax.plot(
-            x_values, trace.data, color=self.color, linewidth=self.linewidth,
-            linestyle=self.linestyle)
-        # Set the x limit for the graph to also show the masked values at the
-        # beginning/end.
-        ax.set_xlim(x_values[0], x_values[-1])
+            xmin = date2num(self.starttime)
+            xmax = date2num(self.endtime)
+        ax.set_xlim(xmin, xmax)
 
     def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
