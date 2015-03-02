@@ -44,6 +44,7 @@ from obspy.imaging.util import ObsPyAutoDateFormatter
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
+SECONDS_PER_DAY = 3600.0 * 24.0
 
 
 class WaveformPlotting(object):
@@ -105,12 +106,8 @@ class WaveformPlotting(object):
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
-        # normalize times
         if self.type == 'relative':
             self.reftime = kwargs.get('reftime', self.starttime)
-            # fix plotting boundaries
-            self.endtime = UTCDateTime(self.endtime - self.reftime)
-            self.starttime = UTCDateTime(self.starttime - self.reftime)
         elif self.type == 'section':
             self.sect_reftime = kwargs.get('reftime', None)
         # Whether to use straight plotting or the fast minmax method. If not
@@ -383,6 +380,9 @@ class WaveformPlotting(object):
         # Set ticks.
         self.__plotSetXTicks()
         self.__plotSetYTicks()
+        xmin = self._time_to_xvalue(self.starttime)
+        xmax = self._time_to_xvalue(self.endtime)
+        ax.set_xlim(xmin, xmax)
 
     @deprecated_keywords({'swap_time_axis': None})
     def plotDay(self, *args, **kwargs):
@@ -690,18 +690,10 @@ class WaveformPlotting(object):
             else:
                 # convert seconds of relative sample times to days and add
                 # start time of trace.
-                x_values = ((trace.times() / 3600. / 24.) +
+                x_values = ((trace.times() / SECONDS_PER_DAY) +
                             date2num(trace.stats.starttime))
-            ax.plot(
-                x_values, trace.data, color=self.color,
-                linewidth=self.linewidth, linestyle=self.linestyle)
-        if self.type == 'relative':
-            xmin = self.starttime.timestamp
-            xmax = self.endtime.timestamp
-        else:
-            xmin = date2num(self.starttime)
-            xmax = date2num(self.endtime)
-        ax.set_xlim(xmin, xmax)
+            ax.plot(x_values, trace.data, color=self.color,
+                    linewidth=self.linewidth, linestyle=self.linestyle)
 
     def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -710,104 +702,74 @@ class WaveformPlotting(object):
         much faster with large data sets.
         """
         # Some variables to help calculate the values.
-        starttime = self.starttime.timestamp
-        endtime = self.endtime.timestamp
+        starttime = self._time_to_xvalue(self.starttime)
+        endtime = self._time_to_xvalue(self.endtime)
         # The same trace will always have the same sampling_rate.
         sampling_rate = trace[0].stats.sampling_rate
-        # The samples per resulting pixel. The end time is defined as the time
-        # of the last sample.
+        # width of x axis in seconds
+        x_width = endtime - starttime
+        # normal plots have x-axis in days, so convert x_width to seconds
+        if self.type != "relative":
+            x_width = x_width * SECONDS_PER_DAY
+        # number of samples that get represented by one min-max pair
         pixel_length = int(
-            np.ceil(((endtime - starttime) * sampling_rate + 1) / self.width))
+            np.ceil((x_width * sampling_rate + 1) / self.width))
         # Loop over all the traces. Do not merge them as there are many samples
         # and therefore merging would be slow.
         for _i, tr in enumerate(trace):
-            # Get the start of the next pixel in case the starttime of the
-            # trace does not match the starttime of the plot.
-            if tr.stats.starttime > self.starttime:
-                offset = int(
-                    np.ceil(((tr.stats.starttime - self.starttime) *
-                             sampling_rate) / pixel_length))
-            else:
-                offset = 0
-            # Figure out the number of pixels in the current trace.
-            trace_length = len(tr.data) - offset
+            trace_length = len(tr.data)
             pixel_count = int(trace_length // pixel_length)
             remaining_samples = int(trace_length % pixel_length)
+            remaining_seconds = remaining_samples / sampling_rate
+            if self.type != "relative":
+                remaining_seconds /= SECONDS_PER_DAY
             # Reference to new data array which does not copy data but can be
             # reshaped.
-            data = tr.data[offset: offset + pixel_count * pixel_length]
-            data = data.reshape(pixel_count, pixel_length)
-            # Calculate extreme_values and put them into new array.
-            extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)
-            min = data.min(axis=1) * tr.stats.calib
-            max = data.max(axis=1) * tr.stats.calib
-            extreme_values[offset: offset + pixel_count, 0] = min
-            extreme_values[offset: offset + pixel_count, 1] = max
-            # First and last pixel need separate treatment.
-            if offset:
-                extreme_values[offset - 1, 0] = \
-                    tr.data[:offset].min() * tr.stats.calib
-                extreme_values[offset - 1, 1] = \
-                    tr.data[:offset].max() * tr.stats.calib
             if remaining_samples:
-                if offset + pixel_count == self.width:
-                    index = self.width - 1
-                else:
-                    index = offset + pixel_count
-                extreme_values[index, 0] = \
-                    tr.data[-remaining_samples:].min() * tr.stats.calib
-                extreme_values[index, 1] = \
-                    tr.data[-remaining_samples:].max() * tr.stats.calib
-            # Use the first array as a reference and merge all following
-            # extreme_values into it.
-            if _i == 0:
-                minmax = extreme_values
+                data = tr.data[:-remaining_samples]
             else:
-                # Merge minmax and extreme_values.
-                min = np.ma.empty((self.width, 2))
-                max = np.ma.empty((self.width, 2))
-                # Fill both with the values.
-                min[:, 0] = minmax[:, 0]
-                min[:, 1] = extreme_values[:, 0]
-                max[:, 0] = minmax[:, 1]
-                max[:, 1] = extreme_values[:, 1]
-                # Find the minimum and maximum values.
-                min = min.min(axis=1)
-                max = max.max(axis=1)
-                # Write again to minmax.
-                minmax[:, 0] = min
-                minmax[:, 1] = max
-        # set label
-        if hasattr(trace[0], 'label'):
-            tr_id = trace[0].label
-        else:
-            tr_id = trace[0].id
-        # Write to self.stats.
-        self.stats.append([tr_id, minmax.mean(),
-                           minmax[:, 0].min(),
-                           minmax[:, 1].max()])
-        # Finally plot the data.
-        if self.type == 'relative':
-            start = 0
-            end = self.endtime - self.starttime
-            x_values = np.linspace(start, end, num=self.width)
-        else:
-            start, end = self.starttime, self.endtime
-            x_values = np.linspace(date2num(start), date2num(end),
-                                   num=self.width)
-        x_values = np.repeat(x_values, 2)
-        # Initialize completely masked array. This version is a little bit
-        # slower than first creating an empty array and then setting the mask
-        # to True. But on NumPy 1.1 this results in a 0-D array which can not
-        # be indexed.
-        y_values = np.ma.masked_all(2 * self.width)
-        y_values[0::2] = minmax[:, 0]
-        y_values[1::2] = minmax[:, 1]
-        ax.plot(x_values, y_values, color=self.color)
-        # Set the x-limit to avoid clipping of masked values.
-        ax.set_xlim(x_values[0], x_values[-1])
+                data = tr.data
+            data = data.reshape(pixel_count, pixel_length)
+            min_ = data.min(axis=1) * tr.stats.calib
+            max_ = data.max(axis=1) * tr.stats.calib
+            # Calculate extreme_values and put them into new array.
+            if remaining_samples:
+                extreme_values = np.empty((pixel_count + 1, 2), dtype=np.float)
+                extreme_values[:-1, 0] = min_
+                extreme_values[:-1, 1] = max_
+                extreme_values[-1, 0] = \
+                    tr.data[-remaining_samples:].min() * tr.stats.calib
+                extreme_values[-1, 1] = \
+                    tr.data[-remaining_samples:].max() * tr.stats.calib
+            else:
+                extreme_values = np.empty((pixel_count, 2), dtype=np.float)
+                extreme_values[:, 0] = min_
+                extreme_values[:, 1] = max_
+            # set label
+            if hasattr(trace[0], 'label'):
+                tr_id = trace[0].label
+            else:
+                tr_id = trace[0].id
+            # Write to self.stats.
+            self.stats.append([tr_id, extreme_values.mean(),
+                               extreme_values[:, 0].min(),
+                               extreme_values[:, 1].max()])
+            # Finally plot the data.
+            start = self._time_to_xvalue(tr.stats.starttime)
+            end = self._time_to_xvalue(tr.stats.endtime)
+            if remaining_samples:
+                # the last minmax pair is inconsistent regarding x-spacing
+                x_values = np.linspace(start, end - remaining_seconds,
+                                       num=extreme_values.shape[0] - 1)
+                x_values = np.concatenate([x_values, [end]])
+            else:
+                x_values = np.linspace(start, end, num=extreme_values.shape[0])
+            x_values = np.repeat(x_values, 2)
+            y_values = extreme_values.flatten()
+            ax.plot(x_values, y_values, color=self.color)
         # remember xlim state and add callback to warn when zooming in
-        self._initial_xrange = x_values[-1] - x_values[0]
+        self._initial_xrange = (self._time_to_xvalue(self.endtime) -
+                                self._time_to_xvalue(self.starttime))
         self._minmax_plot_xrange_dangerous = False
         ax.callbacks.connect("xlim_changed", self._warn_on_xaxis_zoom)
 
@@ -1363,6 +1325,12 @@ class WaveformPlotting(object):
         if self._minmax_warning_text in ax.texts:
             ax.texts.remove(self._minmax_warning_text)
         self._minmax_warning_text = None
+
+    def _time_to_xvalue(self, t):
+            if self.type == 'relative':
+                return t - self.reftime
+            else:
+                return date2num(t)
 
 
 def _compare_IDs(id1, id2):
