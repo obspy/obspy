@@ -27,6 +27,8 @@ install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
   - git status
+  - git branch -vv
+  - git remote -vv
   - pip install --no-deps --use-mirrors .
   - git status
 script:
