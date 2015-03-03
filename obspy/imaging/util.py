@@ -18,6 +18,8 @@ import re
 from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 from matplotlib.ticker import FuncFormatter
 
+from obspy import UTCDateTime
+
 
 def _seconds_to_days(sec):
     return sec / 3600.0 / 24.0
@@ -65,6 +67,30 @@ def decimal_seconds_format_date_first_tick(x, pos=None):
     return ret
 
 
+def format_hour_minute(x, pos=None):
+    """
+    Format tick like '%H:%M' but add date to first tick
+    """
+    t = num2date(x)
+    if pos == 0:
+        ret = t.strftime('%Y-%m-%dT%H:%M')
+    else:
+        ret = t.strftime('%H:%M')
+    return ret
+
+
+def format_hour_minute_second(x, pos=None):
+    """
+    Format tick like '%H:%M:%S' but add date to first tick
+    """
+    t = num2date(x)
+    if pos == 0:
+        ret = t.strftime('%Y-%m-%dT%H:%M:%S')
+    else:
+        ret = t.strftime('%H:%M:%S')
+    return ret
+
+
 class ObsPyAutoDateFormatter(AutoDateFormatter):
     """
     Derived class to allow for more customized formatting with older matplotlib
@@ -72,8 +98,9 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     """
     def __init__(self, *args, **kwargs):
         super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
-        self.scaled[1. / 24.] = '%H:%M'
-        self.scaled[1. / (24. * 60.)] = '%H:%M:%S'
+        self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
+        self.scaled[1. / (24. * 60.)] = \
+            FuncFormatter(format_hour_minute_second)
         self.scaled[_seconds_to_days(10)] = \
             FuncFormatter(decimal_seconds_format_x_decimals(1))
         # for some reason matplotlib is not using the following intermediate
@@ -89,6 +116,12 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             FuncFormatter(decimal_seconds_format_x_decimals(5))
 
     def __call__(self, x, pos=None):
+        # Always show full precision date string on info pane (pos=None)
+        # because for some zoom levels the ticks might be ambiguous (e.g. hours
+        # displayed, wrapped around days).
+        if pos is None:
+            return str(UTCDateTime(num2date(x)))
+
         scale = float(self._locator._get_unit())
         fmt = self.defaultfmt
 

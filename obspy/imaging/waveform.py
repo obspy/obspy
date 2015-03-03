@@ -791,7 +791,7 @@ class WaveformPlotting(object):
             locator = MaxNLocator(5)
         else:
             ax.xaxis_date()
-            locator = AutoDateLocator(minticks=5, maxticks=6)
+            locator = AutoDateLocator(minticks=3, maxticks=6)
             locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
             locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
             ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
