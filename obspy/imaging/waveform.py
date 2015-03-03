@@ -22,7 +22,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import io
-import re
 import warnings
 from copy import copy
 from datetime import datetime
@@ -40,18 +39,16 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
                              locations2degrees)
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.imaging.util import ObsPyAutoDateFormatter
+from obspy.imaging.util import (ObsPyAutoDateFormatter, _compare_IDs_keyfunc,
+                                _timestring)
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
 SECONDS_PER_DAY = 3600.0 * 24.0
-
-datelocator_warning_msg = (
+DATELOCATOR_WARNING_MSG = (
     "AutoDateLocator was unable to pick an appropriate interval for this date "
     "range. It may be necessary to add an interval value to the "
     "AutoDateLocator's intervald dictionary.")
-warnings.filterwarnings("ignore", datelocator_warning_msg, UserWarning,
-                        "matplotlib.dates")
 
 
 class WaveformPlotting(object):
@@ -244,7 +241,7 @@ class WaveformPlotting(object):
         ids = set()
         for tr in self.stream:
             ids.add(self.__getMergeId(tr))
-        return sorted(ids, cmp=_compare_IDs)
+        return sorted(ids, key=_compare_IDs_keyfunc)
 
     def plotWaveform(self, *args, **kwargs):
         """
@@ -277,42 +274,46 @@ class WaveformPlotting(object):
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
-        if self.draw:
-            self.fig.canvas.draw()
-        # The following just serves as a unified way of saving and displaying
-        # the plots.
-        if not self.transparent:
-            extra_args = {'dpi': self.dpi,
-                          'facecolor': self.face_color,
-                          'edgecolor': self.face_color}
-        else:
-            extra_args = {'dpi': self.dpi,
-                          'transparent': self.transparent,
-                          'facecolor': 'k'}
-        if self.outfile:
-            # If format is set use it.
-            if self.format:
-                self.fig.savefig(self.outfile, format=self.format,
-                                 **extra_args)
-            # Otherwise use format from self.outfile or default to PNG.
+        with warnings.catch_warnings(record=True):
+            warnings.filterwarnings("ignore", DATELOCATOR_WARNING_MSG,
+                                    UserWarning, "matplotlib.dates")
+            if self.draw:
+                self.fig.canvas.draw()
+            # The following just serves as a unified way of saving and
+            # displaying the plots.
+            if not self.transparent:
+                extra_args = {'dpi': self.dpi,
+                              'facecolor': self.face_color,
+                              'edgecolor': self.face_color}
             else:
-                self.fig.savefig(self.outfile, **extra_args)
-        else:
-            # Return a binary image string if not self.outfile but self.format.
-            if self.format:
-                imgdata = io.BytesIO()
-                self.fig.savefig(imgdata, format=self.format,
-                                 **extra_args)
-                imgdata.seek(0)
-                return imgdata.read()
-            elif self.handle:
-                return self.fig
+                extra_args = {'dpi': self.dpi,
+                              'transparent': self.transparent,
+                              'facecolor': 'k'}
+            if self.outfile:
+                # If format is set use it.
+                if self.format:
+                    self.fig.savefig(self.outfile, format=self.format,
+                                     **extra_args)
+                # Otherwise use format from self.outfile or default to PNG.
+                else:
+                    self.fig.savefig(self.outfile, **extra_args)
             else:
-                if not self.fig_obj and self.show:
-                    try:
-                        plt.show(block=self.block)
-                    except:
-                        plt.show()
+                # Return a binary image string if not self.outfile but
+                # self.format.
+                if self.format:
+                    imgdata = io.BytesIO()
+                    self.fig.savefig(imgdata, format=self.format,
+                                     **extra_args)
+                    imgdata.seek(0)
+                    return imgdata.read()
+                elif self.handle:
+                    return self.fig
+                else:
+                    if not self.fig_obj and self.show:
+                        try:
+                            plt.show(block=self.block)
+                        except:
+                            plt.show()
 
     def plot(self, *args, **kwargs):
         """
@@ -1259,26 +1260,25 @@ class WaveformPlotting(object):
         self.fig.set_dpi(self.dpi)
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
-        # Default timestamp pattern
-        pattern = '%Y-%m-%dT%H:%M:%SZ'
 
         if hasattr(self.stream, 'label'):
             suptitle = self.stream.label
         elif self.type == 'relative':
-            suptitle = "Time in seconds relative to %s" % self.reftime
+            suptitle = ("Time in seconds relative to %s" %
+                        _timestring(self.reftime))
         elif self.type == 'dayplot':
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
                 (self.stream[-1].stats.network, self.stream[-1].stats.channel,
-                 len(self.stream),
-                 self.starttime.strftime(pattern))
+                 len(self.stream), _timestring(self.starttime))
         else:
-            suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
-                                      self.endtime.strftime(pattern))
+            suptitle = '%s  -  %s' % (_timestring(self.starttime),
+                                      _timestring(self.endtime))
         # add suptitle
-        self.fig.suptitle(suptitle, fontsize='small',
+        y = (self.height - 15.0) / self.height
+        self.fig.suptitle(suptitle, y=y, fontsize='small',
                           horizontalalignment='center')
 
     def _warn_on_xaxis_zoom(self, ax):
@@ -1329,102 +1329,6 @@ class WaveformPlotting(object):
                 return t - self.reftime
             else:
                 return date2num(t)
-
-
-def _compare_IDs(id1, id2):
-    """
-    Compare two trace IDs by network/station/location single character
-    component codes according to sane ZNE/ZRT/LQT order. Any other characters
-    are sorted afterwards alphabetically.
-
-    >>> networks = ["A", "B", "AB"]
-    >>> stations = ["X", "Y", "XY"]
-    >>> locations = ["00", "01"]
-    >>> channels = ["EHZ", "EHN", "EHE", "Z"]
-    >>> trace_ids = []
-    >>> for net in networks:
-    ...     for sta in stations:
-    ...         for loc in locations:
-    ...             for cha in channels:
-    ...                 trace_ids.append(".".join([net, sta, loc, cha]))
-    >>> from random import shuffle
-    >>> shuffle(trace_ids)
-    >>> trace_ids = sorted(trace_ids, cmp=_compare_IDs)
-    >>> print(trace_ids)  # doctest: +NORMALIZE_WHITESPACE
-    [u'A.X.00.Z', u'A.X.00.EHZ', u'A.X.00.EHN', u'A.X.00.EHE', u'A.X.01.Z',
-        u'A.X.01.EHZ', u'A.X.01.EHN', u'A.X.01.EHE', u'A.XY.00.Z',
-        u'A.XY.00.EHZ', u'A.XY.00.EHN', u'A.XY.00.EHE', u'A.XY.01.Z',
-        u'A.XY.01.EHZ', u'A.XY.01.EHN', u'A.XY.01.EHE', u'A.Y.00.Z',
-        u'A.Y.00.EHZ', u'A.Y.00.EHN', u'A.Y.00.EHE', u'A.Y.01.Z',
-        u'A.Y.01.EHZ', u'A.Y.01.EHN', u'A.Y.01.EHE', u'AB.X.00.Z',
-        u'AB.X.00.EHZ', u'AB.X.00.EHN', u'AB.X.00.EHE', u'AB.X.01.Z',
-        u'AB.X.01.EHZ', u'AB.X.01.EHN', u'AB.X.01.EHE', u'AB.XY.00.Z',
-        u'AB.XY.00.EHZ', u'AB.XY.00.EHN', u'AB.XY.00.EHE', u'AB.XY.01.Z',
-        u'AB.XY.01.EHZ', u'AB.XY.01.EHN', u'AB.XY.01.EHE', u'AB.Y.00.Z',
-        u'AB.Y.00.EHZ', u'AB.Y.00.EHN', u'AB.Y.00.EHE', u'AB.Y.01.Z',
-        u'AB.Y.01.EHZ', u'AB.Y.01.EHN', u'AB.Y.01.EHE', u'B.X.00.Z',
-        u'B.X.00.EHZ', u'B.X.00.EHN', u'B.X.00.EHE', u'B.X.01.Z',
-        u'B.X.01.EHZ', u'B.X.01.EHN', u'B.X.01.EHE', u'B.XY.00.Z',
-        u'B.XY.00.EHZ', u'B.XY.00.EHN', u'B.XY.00.EHE', u'B.XY.01.Z',
-        u'B.XY.01.EHZ', u'B.XY.01.EHN', u'B.XY.01.EHE', u'B.Y.00.Z',
-        u'B.Y.00.EHZ', u'B.Y.00.EHN', u'B.Y.00.EHE', u'B.Y.01.Z',
-        u'B.Y.01.EHZ', u'B.Y.01.EHN', u'B.Y.01.EHE']
-    """
-    # remove processing info which was added previously
-    id1 = re.sub(r'\[.*', '', id1)
-    id2 = re.sub(r'\[.*', '', id2)
-    netstaloc1, cha1 = id1.upper().rsplit(".", 1)
-    netstaloc2, cha2 = id2.upper().rsplit(".", 1)
-    netstaloc1 = netstaloc1.split()
-    netstaloc2 = netstaloc2.split()
-    # sort by network, station, location codes
-    cmp_ = cmp(netstaloc1, netstaloc2)
-    if cmp_ != 0:
-        return cmp_
-    # only channel is differing, sort by..
-    #  - length of channel code
-    #  - last letter of channel code
-    cmp_ = cmp(len(cha1), len(cha2))
-    if cmp_ != 0:
-        return cmp_
-    else:
-        if len(cha1) == 0:
-            return 0
-    return _compare_component_code(cha1[-1], cha2[-1])
-
-
-def _compare_component_code(comp1, comp2):
-    """
-    Compare two single character component codes according to sane ZNE/ZRT/LQT
-    order. Any other characters are sorted afterwards alphabetically.
-
-    >>> from random import shuffle
-    >>> from string import ascii_lowercase, ascii_uppercase
-    >>> lowercase = list(ascii_lowercase)
-    >>> uppercase = list(ascii_uppercase)
-    >>> shuffle(lowercase)
-    >>> shuffle(uppercase)
-    >>> component_codes = lowercase + uppercase
-    >>> component_codes = sorted(component_codes, cmp=_compare_component_code)
-    >>> print(component_codes)  # doctest: +NORMALIZE_WHITESPACE
-    ['z', 'Z', 'n', 'N', 'e', 'E', 'r', 'R', 'l', 'L', 'q', 'Q', 't', 'T', 'a',
-        'A', 'b', 'B', 'c', 'C', 'd', 'D', 'f', 'F', 'g', 'G', 'h', 'H', 'i',
-        'I', 'j', 'J', 'k', 'K', 'm', 'M', 'o', 'O', 'p', 'P', 's', 'S', 'u',
-        'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y']
-    """
-    order = "ZNERLQT"
-    comp1 = comp1.upper()
-    comp2 = comp2.upper()
-    if comp1 in order:
-        if comp2 in order:
-            return order.index(comp1) - order.index(comp2)
-        else:
-            return -1
-    else:
-        if comp2 in order:
-            return 1
-        else:
-            return cmp(comp1, comp2)
 
 
 if __name__ == '__main__':
