@@ -104,22 +104,23 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             AutoDateFormatter.__init__(self, *args, **kwargs)
         else:
             super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
-        self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
-        self.scaled[1. / (24. * 60.)] = \
-            FuncFormatter(format_hour_minute_second)
-        self.scaled[_seconds_to_days(10)] = \
-            FuncFormatter(decimal_seconds_format_x_decimals(1))
-        # for some reason matplotlib is not using the following intermediate
-        # decimal levels (probably some precision issue..) and falls back to
-        # the lowest level immediately.
-        self.scaled[_seconds_to_days(2e-1)] = \
-            FuncFormatter(decimal_seconds_format_x_decimals(2))
-        self.scaled[_seconds_to_days(2e-2)] = \
-            FuncFormatter(decimal_seconds_format_x_decimals(3))
-        self.scaled[_seconds_to_days(2e-3)] = \
-            FuncFormatter(decimal_seconds_format_x_decimals(4))
-        self.scaled[_seconds_to_days(2e-4)] = \
-            FuncFormatter(decimal_seconds_format_x_decimals(5))
+        if getMatplotlibVersion() >= [1, 0, 0]:
+            self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
+            self.scaled[1. / (24. * 60.)] = \
+                FuncFormatter(format_hour_minute_second)
+            self.scaled[_seconds_to_days(10)] = \
+                FuncFormatter(decimal_seconds_format_x_decimals(1))
+            # for some reason matplotlib is not using the following
+            # intermediate decimal levels (probably some precision issue..) and
+            # falls back to the lowest level immediately.
+            self.scaled[_seconds_to_days(2e-1)] = \
+                FuncFormatter(decimal_seconds_format_x_decimals(2))
+            self.scaled[_seconds_to_days(2e-2)] = \
+                FuncFormatter(decimal_seconds_format_x_decimals(3))
+            self.scaled[_seconds_to_days(2e-3)] = \
+                FuncFormatter(decimal_seconds_format_x_decimals(4))
+            self.scaled[_seconds_to_days(2e-4)] = \
+                FuncFormatter(decimal_seconds_format_x_decimals(5))
 
     def __call__(self, x, pos=None):
         # Always show full precision date string on info pane (pos=None)
