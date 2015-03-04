@@ -19,6 +19,7 @@ from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
+from obspy.core.util.base import getMatplotlibVersion
 
 
 def _seconds_to_days(sec):
@@ -97,7 +98,12 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     versions (see matplotlib/matplotlib#2507).
     """
     def __init__(self, *args, **kwargs):
-        super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
+        # the root class of AutoDateFormatter (TickHelper) is an old style
+        # class prior to matplotlib version 1.2
+        if getMatplotlibVersion() < [1, 2, 0]:
+            AutoDateFormatter.__init__(self, *args, **kwargs)
+        else:
+            super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
             FuncFormatter(format_hour_minute_second)
