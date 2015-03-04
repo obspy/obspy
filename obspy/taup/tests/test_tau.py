@@ -307,8 +307,8 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
-        np.testing.assert_allclose(interpolated_actual,
-                                   interpolated_expected, rtol=1E-4)
+        self.assertTrue(np.allclose(interpolated_actual,
+                                    interpolated_expected, rtol=1E-4, atol=0))
 
     def test_single_path_ak135(self):
         """
@@ -337,8 +337,8 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
-        np.testing.assert_allclose(interpolated_actual,
-                                   interpolated_expected, rtol=1E-4)
+        self.assertTrue(np.allclose(interpolated_actual,
+                                    interpolated_expected, rtol=1E-4, atol=0))
 
     def _read_ak135_test_files(self, filename):
         """
