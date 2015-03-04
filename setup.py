@@ -106,7 +106,7 @@ KEYWORDS = [
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED',
     'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
     'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
