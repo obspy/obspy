@@ -52,19 +52,3 @@ class Arrival(object):
     @property
     def purist_distance(self):
         return self.purist_dist * 180.0 / pi
-
-    def get_pierce(self):
-        """
-        Returns pierce points as TimeDist objects.
-        """
-        if not self.pierce:
-            self.pierce == self.phase.calc_pierce(self).get_pierce()
-        return self.pierce
-
-    def get_path(self):
-        """
-        Returns pierce points as TimeDist objects.
-        """
-        if not self.path:
-            self.path == self.phase.calc_path(self).get_path()
-        return self.path
