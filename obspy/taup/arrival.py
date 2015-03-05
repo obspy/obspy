@@ -68,13 +68,3 @@ class Arrival(object):
         if not self.path:
             self.path == self.phase.calc_path(self).get_path()
         return self.path
-
-    def get_modulo_dist_deg(self):
-        """
-        Returns distance in degrees from 0 - 180. Note this may not be the
-        actual distance travelled.
-        """
-        moduloDist = ((180.0 / pi) * self.purist_dist) % 360.0
-        if moduloDist > 180:
-            moduloDist = 360 - moduloDist
-        return moduloDist
