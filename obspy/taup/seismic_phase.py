@@ -820,7 +820,7 @@ class SeismicPhase(object):
         ray_param_b = self.ray_param[currArrival.ray_param_index + 1]
         distA = self.dist[currArrival.ray_param_index]
         distB = self.dist[currArrival.ray_param_index + 1]
-        distRatio = (currArrival.dist - distA) / (distB - distA)
+        distRatio = (currArrival.purist_dist - distA) / (distB - distA)
         distRayParam = distRatio * (ray_param_b - ray_param_a) + ray_param_a
 
         # + 2 for first point and kmps, if it exists.
@@ -891,8 +891,8 @@ class SeismicPhase(object):
                                                                 pierce,
                                                                 index)
         elif "kmps" in self.name:
-            pierce[index] = (distRayParam, currArrival.time, currArrival.dist,
-                             0)
+            pierce[index] = (distRayParam, currArrival.time,
+                             currArrival.purist_dist, 0)
             index += 1
 
         currArrival.pierce = pierce[:index]
@@ -935,10 +935,11 @@ class SeismicPhase(object):
                i < len(self.branchSeq) - 1 and
                self.branchSeq[i + 1] == self.tMod.cmbBranch - 1 and
                ("Pdiff" in self.name or "Sdiff" in self.name)):
+                dist_diff = currArrival.purist_dist - self.dist[0]
                 diffTD = np.array([(
                     currArrival.ray_param,
-                    (currArrival.dist - self.dist[0]) * currArrival.ray_param,
-                    currArrival.dist - self.dist[0],
+                    dist_diff * currArrival.ray_param,
+                    dist_diff,
                     self.tMod.cmbDepth)], dtype=TimeDist)
                 pathList.append(diffTD)
 
@@ -948,20 +949,22 @@ class SeismicPhase(object):
                  ("Pn" in self.name or "Sn" in self.name)):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 numFound = max(self.name.count("Pn"), self.name.count("Sn"))
+                dist_head = (currArrival.purist_dist - self.dist[0]) / numFound
                 headTD = np.array([(
                     currArrival.ray_param,
-                    ((currArrival.dist - self.dist[0]) / numFound *
-                     currArrival.ray_param),
-                    (currArrival.dist - self.dist[0]) / numFound,
+                    dist_head * currArrival.ray_param,
+                    dist_head,
                     self.tMod.mohoDepth)], dtype=TimeDist)
                 pathList.append(headTD)
 
         if "kmps" in self.name:
             # kmps phases have no branches, so need to end them at the arrival
             # distance.
-            headTD = np.array([(currArrival.ray_param,
-                                currArrival.dist * currArrival.ray_param,
-                                currArrival.dist, 0)], dtype=TimeDist)
+            headTD = np.array([(
+                currArrival.ray_param,
+                currArrival.purist_dist * currArrival.ray_param,
+                currArrival.purist_dist,
+                0)], dtype=TimeDist)
             pathList.append(headTD)
 
         currArrival.path = np.concatenate(pathList)
@@ -990,7 +993,7 @@ class SeismicPhase(object):
             headDepth = self.tMod.cmbDepth
 
         numFound = self.name.count(phaseSeg)
-        refractDist = currArrival.dist - self.dist[0]
+        refractDist = currArrival.purist_dist - self.dist[0]
         refractTime = refractDist * currArrival.ray_param
 
         # This is a little weird as we are not checking where we are in

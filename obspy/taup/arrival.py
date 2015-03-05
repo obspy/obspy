@@ -12,15 +12,15 @@ class Arrival(object):
     Convenience class for storing the parameters associated with a phase
     arrival.
     """
-    def __init__(self, phase, time, dist, ray_param, ray_param_index,
+    def __init__(self, phase, time, purist_dist, ray_param, ray_param_index,
                  name, purist_name, source_depth, takeoff_angle,
                  incident_angle):
         # phase that generated this arrival
         self.phase = phase
         # travel time in seconds
         self.time = time
-        # angular distance (great circle) in radians
-        self.dist = dist
+        # purist angular distance (great circle) in radians
+        self.purist_dist = purist_dist
         # ray parameter in seconds per radians
         self.ray_param = ray_param
         self.ray_param_index = ray_param_index
@@ -49,7 +49,7 @@ class Arrival(object):
 
     @property
     def purist_distance(self):
-        return self.dist * 180.0 / pi
+        return self.purist_dist * 180.0 / pi
 
     def get_pierce(self):
         """
@@ -72,7 +72,7 @@ class Arrival(object):
         Returns distance in degrees from 0 - 180. Note this may not be the
         actual distance travelled.
         """
-        moduloDist = ((180.0 / pi) * self.dist) % 360.0
+        moduloDist = ((180.0 / pi) * self.purist_dist) % 360.0
         if moduloDist > 180:
             moduloDist = 360 - moduloDist
         return moduloDist
