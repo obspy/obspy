@@ -125,7 +125,7 @@ class Arrivals(list):
             if _i.path is None:
                 continue
             dist = _i.purist_distance % 360.0
-            distance = _i.get_modulo_dist_deg()
+            distance = _i.distance
             if abs(dist - distance) / dist > 1E-5:
                 if plot_all is False:
                     continue
