@@ -12,11 +12,13 @@ class Arrival(object):
     Convenience class for storing the parameters associated with a phase
     arrival.
     """
-    def __init__(self, phase, time, purist_dist, ray_param, ray_param_index,
-                 name, purist_name, source_depth, takeoff_angle,
-                 incident_angle):
+    def __init__(self, phase, distance, time, purist_dist, ray_param,
+                 ray_param_index, name, purist_name, source_depth,
+                 takeoff_angle, incident_angle):
         # phase that generated this arrival
         self.phase = phase
+        # actual distance in degrees
+        self.distance = distance
         # travel time in seconds
         self.time = time
         # purist angular distance (great circle) in radians

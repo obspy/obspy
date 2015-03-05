@@ -781,7 +781,7 @@ class SeismicPhase(object):
         arrivals = []
         for _i in range(count):
             arrivals.append(self.linear_interp_arrival(
-                r_dist[_i], r_ray_num[_i], self.name, self.puristName,
+                degrees, r_dist[_i], r_ray_num[_i], self.name, self.puristName,
                 self.source_depth))
         return arrivals
 
@@ -1014,8 +1014,8 @@ class SeismicPhase(object):
 
         return pierce, index
 
-    def linear_interp_arrival(self, searchDist, rayNum, name, puristName,
-                              source_depth):
+    def linear_interp_arrival(self, degrees, searchDist, rayNum, name,
+                              puristName, source_depth):
         arrivalTime = ((searchDist - self.dist[rayNum]) /
                        (self.dist[rayNum + 1] - self.dist[rayNum]) *
                        (self.time[rayNum + 1] - self.time[rayNum]) +
@@ -1044,8 +1044,8 @@ class SeismicPhase(object):
             incidentAngle = np.degrees(math.asin(
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /
                 self.tMod.radiusOfEarth))
-        return Arrival(self, arrivalTime, searchDist, arrivalRayParam, rayNum,
-                       name, puristName, source_depth, takeoffAngle,
+        return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
+                       rayNum, name, puristName, source_depth, takeoffAngle,
                        incidentAngle)
 
     @classmethod
