@@ -40,8 +40,7 @@ from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
                              locations2degrees)
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.imaging.util import (ObsPyAutoDateFormatter, _compare_IDs_keyfunc,
-                                _timestring)
+from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
@@ -242,7 +241,7 @@ class WaveformPlotting(object):
         ids = set()
         for tr in self.stream:
             ids.add(self.__getMergeId(tr))
-        return sorted(ids, key=_compare_IDs_keyfunc)
+        return sorted(ids, key=_ID_key)
 
     def plotWaveform(self, *args, **kwargs):
         """

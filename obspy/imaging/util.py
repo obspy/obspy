@@ -146,7 +146,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             raise NotImplementedError()
 
 
-def _compare_IDs(id1, id2):
+def _ID_key(id_):
     """
     Compare two trace IDs by network/station/location single character
     component codes according to sane ZNE/ZRT/LQT order. Any other characters
@@ -164,7 +164,7 @@ def _compare_IDs(id1, id2):
     ...                 trace_ids.append(".".join([net, sta, loc, cha]))
     >>> from random import shuffle
     >>> shuffle(trace_ids)
-    >>> trace_ids = sorted(trace_ids, key=_compare_IDs_keyfunc)
+    >>> trace_ids = sorted(trace_ids, key=_ID_key)
     >>> print(" ".join(trace_ids))  # doctest: +NORMALIZE_WHITESPACE
     A.X.00.Z A.X.00.EHZ A.X.00.EHN A.X.00.EHE A.X.01.Z A.X.01.EHZ A.X.01.EHN
     A.X.01.EHE A.XY.00.Z A.XY.00.EHZ A.XY.00.EHN A.XY.00.EHE A.XY.01.Z
@@ -180,29 +180,19 @@ def _compare_IDs(id1, id2):
     B.Y.01.EHN B.Y.01.EHE
     """
     # remove processing info which was added previously
-    id1 = re.sub(r'\[.*', '', id1)
-    id2 = re.sub(r'\[.*', '', id2)
-    netstaloc1, cha1 = id1.upper().rsplit(".", 1)
-    netstaloc2, cha2 = id2.upper().rsplit(".", 1)
-    netstaloc1 = netstaloc1.split()
-    netstaloc2 = netstaloc2.split()
-    # sort by network, station, location codes
-    cmp_ = cmp(netstaloc1, netstaloc2)
-    if cmp_ != 0:
-        return cmp_
-    # only channel is differing, sort by..
+    id_ = re.sub(r'\[.*', '', id_)
+    netstaloc, cha = id_.upper().rsplit(".", 1)
+    key = netstaloc.split()
+    # sort by network, station, location codes, then by..
     #  - length of channel code
     #  - last letter of channel code
-    cmp_ = cmp(len(cha1), len(cha2))
-    if cmp_ != 0:
-        return cmp_
-    else:
-        if len(cha1) == 0:
-            return 0
-    return _compare_component_code(cha1[-1], cha2[-1])
+    key.append(len(cha))
+    if len(cha) != 0:
+        key.append(_component_code_key(cha[-1]))
+    return key
 
 
-def _compare_component_code(comp1, comp2):
+def _component_code_key(val):
     """
     Compare two single character component codes according to sane ZNE/ZRT/LQT
     order. Any other characters are sorted afterwards alphabetically.
@@ -215,7 +205,7 @@ def _compare_component_code(comp1, comp2):
     >>> shuffle(uppercase)
     >>> component_codes = lowercase + uppercase
     >>> component_codes = sorted(component_codes,
-    ...                          key=_compare_component_code_keyfunc)
+    ...                          key=_component_code_key)
     >>> print(component_codes)  # doctest: +NORMALIZE_WHITESPACE
     ['z', 'Z', 'n', 'N', 'e', 'E', 'r', 'R', 'l', 'L', 'q', 'Q', 't', 'T', 'a',
         'A', 'b', 'B', 'c', 'C', 'd', 'D', 'f', 'F', 'g', 'G', 'h', 'H', 'i',
@@ -223,58 +213,11 @@ def _compare_component_code(comp1, comp2):
         'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y']
     """
     order = "ZNERLQT"
-    comp1 = comp1.upper()
-    comp2 = comp2.upper()
-    if comp1 in order:
-        if comp2 in order:
-            return order.index(comp1) - order.index(comp2)
-        else:
-            return -1
-    else:
-        if comp2 in order:
-            return 1
-        else:
-            return cmp(comp1, comp2)
-
-
-# Python 3 was stripped of cmp() builtin..
-def cmp(a, b):
-    return (a > b) - (a < b)
-
-
-def cmp_to_key(mycmp):
-    '''
-    Convert a cmp= function into a key= function
-    '''
-    class K(object):
-        def __init__(self, obj, *args):
-            self.obj = obj
-
-        def __lt__(self, other):
-            return mycmp(self.obj, other.obj) < 0
-
-        def __gt__(self, other):
-            return mycmp(self.obj, other.obj) > 0
-
-        def __eq__(self, other):
-            return mycmp(self.obj, other.obj) == 0
-
-        def __le__(self, other):
-            return mycmp(self.obj, other.obj) <= 0
-
-        def __ge__(self, other):
-            return mycmp(self.obj, other.obj) >= 0
-
-        def __ne__(self, other):
-            return mycmp(self.obj, other.obj) != 0
-    return K
-
-
-# Python 3 doesn't have sorted(cmp=..) kwarg anymore. Python 2.6 does not have
-# cmp_to_key, so use from https://wiki.python.org/moin/HowTo/
-# Sorting#The_Old_Way_Using_the_cmp_Parameter
-_compare_IDs_keyfunc = cmp_to_key(_compare_IDs)
-_compare_component_code_keyfunc = cmp_to_key(_compare_component_code)
+    val = val.upper()
+    try:
+        return order.index(val)
+    except ValueError:
+        return val
 
 
 def _timestring(t):
