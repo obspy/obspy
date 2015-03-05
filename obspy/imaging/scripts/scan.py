@@ -40,7 +40,8 @@ from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
 import numpy as np
 
 from obspy import UTCDateTime, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction, \
+    getMatplotlibVersion
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
@@ -374,9 +375,10 @@ def main(argv=None):
     ax.xaxis_date()
     # set custom formatters to always show date in first tick
     formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
-    formatter.scaled[1 / 24.] = \
-        FuncFormatter(decimal_seconds_format_date_first_tick)
-    formatter.scaled.pop(1/(24.*60.))
+    if getMatplotlibVersion() >= [1, 0, 0]:
+        formatter.scaled[1 / 24.] = \
+            FuncFormatter(decimal_seconds_format_date_first_tick)
+        formatter.scaled.pop(1/(24.*60.))
     ax.xaxis.set_major_formatter(formatter)
     plt.subplots_adjust(left=0.2)
     if args.output is None:
