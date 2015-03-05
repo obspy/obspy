@@ -104,7 +104,7 @@ def call_git_describe(abbrev=4):
         if remote is not None:
             remote_tracking_branch = re.sub(r'[^A-Za-z0-9._-]', r'_',
                                             '%s-%s' % (remote, branch))
-    except (OSError, ValueError):
+    except (IndexError, OSError, ValueError):
         pass
 
     # (this line prevents official releases)
