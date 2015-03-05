@@ -215,7 +215,8 @@ def _component_code_key(val):
     order = "ZNERLQT"
     val = val.upper()
     try:
-        return order.index(val)
+        # Return symbols that sort first and are invalid.
+        return chr(order.index(val) + 32)
     except ValueError:
         return val
 
