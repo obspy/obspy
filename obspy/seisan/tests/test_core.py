@@ -11,6 +11,7 @@ import unittest
 
 import numpy as np
 
+from obspy.core import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
 
@@ -102,6 +103,18 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st1[0].stats.npts, 3675)
         self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
         self.assertEqual(list(st1[0].data), [])  # no data
+
+    def test_readSEISANVsReference(self):
+        """
+        Test for #970
+        """
+        _file = os.path.join(self.path, 'SEISAN_Bug',
+                             '2011-09-06-1311-36S.A1032_001BH_Z')
+        st = read(_file, format='SEISAN')
+        _file_ref = os.path.join(self.path, 'SEISAN_Bug',
+                                 '2011-09-06-1311-36S.A1032_001BH_Z_MSEED')
+        st_ref = read(_file_ref, format='MSEED')
+        self.assertTrue(np.allclose(st[0].data, st_ref[0].data))
 
 
 def suite():
