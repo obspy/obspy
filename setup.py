@@ -594,18 +594,19 @@ class Help2ManBuild(build):
         mandir = os.path.join(self.build_base, 'man')
         self.mkpath(mandir)
 
-        from pkg_resources import iter_entry_points
-        for entrypoint in iter_entry_points(group='console_scripts'):
-            if not entrypoint.module_name.startswith('obspy'):
+        from pkg_resources import EntryPoint
+        for entrypoint in ENTRY_POINTS['console_scripts']:
+            ep = EntryPoint.parse(entrypoint)
+            if not ep.module_name.startswith('obspy'):
                 continue
 
-            output = os.path.join(mandir, entrypoint.name + '.1')
+            output = os.path.join(mandir, ep.name + '.1')
             print('Generating %s ...' % (output))
             exec_command([self.help2man,
                           '--no-info', '--no-discard-stderr',
                           '--output', output,
                           '"%s -m %s"' % (sys.executable,
-                                          entrypoint.module_name)])
+                                          ep.module_name)])
 
 
 class Help2ManInstall(install):
