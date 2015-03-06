@@ -86,7 +86,7 @@ class VelocityModel(object):
         mask = np.logical_or(above['botPVelocity'] != below['topPVelocity'],
                              above['botSVelocity'] != below['topSVelocity'])
 
-        discontinuities = np.empty(np.count_nonzero(mask) + 2)
+        discontinuities = np.empty((mask != 0).sum() + 2)
         discontinuities[0] = self.layers[0]['topDepth']
         discontinuities[1:-1] = above[mask]['botDepth']
         discontinuities[-1] = self.layers[-1]['botDepth']

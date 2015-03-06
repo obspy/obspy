@@ -40,7 +40,10 @@ from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
 import numpy as np
 
 from obspy import UTCDateTime, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction, \
+    getMatplotlibVersion
+from obspy.imaging.util import ObsPyAutoDateFormatter, \
+    decimal_seconds_format_date_first_tick
 
 
 def compressStartend(x, stop_iteration):
@@ -242,8 +245,8 @@ def main(argv=None):
     if args.output is not None:
         import matplotlib
         matplotlib.use("agg")
-    global date2num
     from matplotlib.dates import date2num, num2date
+    from matplotlib.ticker import FuncFormatter
     from matplotlib.patches import Rectangle
     from matplotlib.collections import PatchCollection
     import matplotlib.pyplot as plt
@@ -328,9 +331,8 @@ def main(argv=None):
         startend_compressed = compressStartend(startend, 1000)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
-        ax.xaxis_date()
         if not args.no_x:
-            ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
+            ax.plot(startend[:, 0], offset, 'x', linewidth=2)
         ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0],
                   startend_compressed[:, 1], 'b', linewidth=2, zorder=3)
         # find the gaps
@@ -370,6 +372,14 @@ def main(argv=None):
     elif args.end_time:
         ax.set_xlim(right=args.end_time, auto=None)
     fig.autofmt_xdate()  # rotate date
+    ax.xaxis_date()
+    # set custom formatters to always show date in first tick
+    formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
+    if getMatplotlibVersion() >= [1, 0, 0]:
+        formatter.scaled[1 / 24.] = \
+            FuncFormatter(decimal_seconds_format_date_first_tick)
+        formatter.scaled.pop(1/(24.*60.))
+    ax.xaxis.set_major_formatter(formatter)
     plt.subplots_adjust(left=0.2)
     if args.output is None:
         plt.show()

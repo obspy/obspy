@@ -626,8 +626,8 @@ class SeismicPhase(object):
                 tMod.ray_params[self.maxRayParamIndex:
                                 self.minRayParamIndex + 1].copy()
 
-        self.dist = np.zeros_like(self.ray_param)
-        self.time = np.zeros_like(self.ray_param)
+        self.dist = np.zeros(shape=self.ray_param.shape)
+        self.time = np.zeros(shape=self.ray_param.shape)
 
         # Initialise the counter for each branch to 0. 0 is P and 1 is S.
         timesBranches = np.zeros((2, tMod.tauBranches.shape[1]))

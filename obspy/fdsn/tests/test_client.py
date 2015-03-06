@@ -377,9 +377,10 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            ignore_lines = [b'<Created>', b'<TotalNumberStations>',
-                            b'<Module>', b'<ModuleURI>']
-            msg = failmsg(got, expected, ignore_lines=ignore_lines)
+            ignore_lines = ['<Created>', '<TotalNumberStations>',
+                            '<Module>', '<ModuleURI>']
+            msg = failmsg(got.decode(), expected.decode(),
+                          ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
     def test_IRIS_example_queries_dataselect(self):

@@ -68,3 +68,6 @@ override_dh_installdeb:
 	find $(CURDIR)/debian/ -name README.txt -exec rm -f {} \;
 	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
 	dh_installdeb
+
+override_dh_auto_test:
+	echo

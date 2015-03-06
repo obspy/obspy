@@ -648,6 +648,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         <BLANKLINE>
         <BLANKLINE>
         <BLANKLINE>
+        ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)

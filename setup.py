@@ -106,7 +106,7 @@ KEYWORDS = [
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED',
     'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
     'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
@@ -118,7 +118,7 @@ KEYWORDS = [
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
-    'numpy>1.4.0',
+    'numpy>=1.4.0',
     'scipy>=0.7.2',
     'matplotlib',
     'lxml',
@@ -660,7 +660,8 @@ class BuildExtAndTauPy(build_ext):
         taulib = ctypes.CDLL(libpath)
 
         sys.path.insert(0, obspy_taup_path)
-        with patch('obspy.core.util.libnames._load_CDLL', return_value=taulib):
+        with patch('obspy.core.util.libnames._load_CDLL') as load:
+            load.return_value = taulib
             from taup.taup_create import TauP_Create
             from taup.utils import _get_model_filename
 
