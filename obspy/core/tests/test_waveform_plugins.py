@@ -181,7 +181,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     if any([n in file for n in KNOWN_FALSE]):
                         continue
                     if isFormat(file) is True:  # pragma: no cover
-                        print(file)
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
