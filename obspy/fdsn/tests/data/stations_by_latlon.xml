@@ -3,14 +3,14 @@
 <FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
- <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?latitude=-56.1&amp;maxradius=15.0&amp;longitude=-26.7</ModuleURI>
- <Created>2014-07-26T09:13:05</Created>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.10</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?latitude=-56.1&amp;longitude=-26.7&amp;maxradius=15.0</ModuleURI>
+ <Created>2015-03-06T09:16:19</Created>
  <Network code="AI" startDate="1992-01-01T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
   <Description>Antarctic Seismographic Argentinean Italian Network (ASAIN)</Description>
   <TotalNumberStations>6</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="ORCD" startDate="1997-03-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes=".UNRESTRICTED,_FDSN-ALL,_REALTIME">
+  <Station code="ORCD" startDate="1997-03-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN-ALL,_REALTIME,.UNRESTRICTED">
    <Latitude>-60.7381</Latitude>
    <Longitude>-44.7361</Longitude>
    <Elevation>20.0</Elevation>
@@ -26,7 +26,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/IDA)</Description>
   <TotalNumberStations>50</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,_STS-1,.UNRESTRICTED,_GSN,_FDSN-ALL,_LACSN,_CARIBE-EWS,_REALTIME">
+  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_CARIBE-EWS,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_LACSN,_REALTIME,_STS-1,.UNRESTRICTED">
    <Comment>
     <Value>Day contains positive leap second (86401 s/day).</Value>
     <BeginEffectiveTime>1998-12-31T00:00:00</BeginEffectiveTime>
@@ -39,13 +39,13 @@
     <Name>Hope Point, South Georgia Island</Name>
    </Site>
    <CreationDate>1996-12-10T00:00:00</CreationDate>
-   <TotalNumberChannels>140</TotalNumberChannels>
+   <TotalNumberChannels>201</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
  </Network>
  <Network code="SY" startDate="1900-01-01T00:00:00" endDate="2500-12-31T23:59:59" restrictedStatus="open">
   <Description>Synthetic Seismograms</Description>
-  <TotalNumberStations>4157</TotalNumberStations>
+  <TotalNumberStations>4335</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
   <Station code="HOPE" startDate="1900-01-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes=".UNRESTRICTED">
    <Latitude>-54.2836</Latitude>
