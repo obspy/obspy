@@ -333,7 +333,7 @@ class Network(BaseNode):
         net.stations = stations
         return net
 
-    def plot(self, projection='cyl', resolution='l',
+    def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', time=None, show=True,
              outfile=None, **kwargs):  # @UnusedVariable
@@ -343,11 +343,11 @@ class Network(BaseNode):
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
 
-            * ``"cyl"`` (Will plot the whole world.)
+            * ``"global"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
 
-            Defaults to "cyl"
+            Defaults to "global"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:
@@ -387,7 +387,7 @@ class Network(BaseNode):
 
         .. rubric:: Example
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> from obspy import read_inventory
         >>> net = read_inventory()[0]
@@ -409,7 +409,7 @@ class Network(BaseNode):
             net = read_inventory()[0]
             net.plot(projection="ortho")
 
-        Local (azimuthal equidistant) projection:
+        Local (Albers equal area) projection:
 
         >>> net.plot(projection="local")  # doctest:+SKIP
 

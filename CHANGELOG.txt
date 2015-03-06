@@ -60,6 +60,11 @@
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+   * The projections of Catalog.plot() have been modified slightly to provide
+     equal-area projections:
+     * The `"cyl"` projection is now named `"global"`. It is now the Mollweide
+       projection.
+     * The '"local"` projection now uses the Albers Equal Area projection.
  - obspy.mseed:
    * proper error reporting while reading
    * `details=True` when reading will now write to

@@ -51,8 +51,8 @@ else:
     HAS_BASEMAP = False
 
 
-def plot_basemap(lons, lats, size, color, labels=None,
-                 projection='cyl', resolution='l', continent_fill_color='0.8',
+def plot_basemap(lons, lats, size, color, labels=None, projection='global',
+                 resolution='l', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
                  show=True, **kwargs):  # @UnusedVariable
@@ -75,10 +75,10 @@ def plot_basemap(lons, lats, size, color, labels=None,
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
     :param projection: The map projection. Currently supported are
-        * ``"cyl"`` (Will plot the whole world.)
+        * ``"global"`` (Will plot the whole world.)
         * ``"ortho"`` (Will center around the mean lat/long.)
         * ``"local"`` (Will plot around local events)
-        Defaults to "cyl"
+        Defaults to "global"
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
         based directly to the basemap module. Possible values are
@@ -144,6 +144,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
 
     if projection == "local":
         ax_x0, ax_width = 0.10, 0.80
+    elif projection == "global":
+        ax_x0, ax_width = 0.01, 0.98
     else:
         ax_x0, ax_width = 0.05, 0.90
 
@@ -157,8 +159,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
             ax_height -= 0.05
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
-    if projection == 'cyl':
-        bmap = Basemap(resolution=resolution, ax=map_ax)
+    if projection == 'global':
+        bmap = Basemap(projection='moll', lon_0=np.mean(lons),
+                       resolution=resolution, ax=map_ax)
     elif projection == 'ortho':
         bmap = Basemap(projection='ortho', resolution=resolution,
                        area_thresh=1000.0, lat_0=np.mean(lats),
@@ -196,7 +199,7 @@ def plot_basemap(lons, lats, size, color, labels=None,
         else:
             height = width / aspect
 
-        bmap = Basemap(projection='aeqd', resolution=resolution,
+        bmap = Basemap(projection='aea', resolution=resolution,
                        area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
                        width=width, height=height, ax=map_ax)
         # not most elegant way to calculate some round lats/lons

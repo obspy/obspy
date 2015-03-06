@@ -425,7 +425,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
     @skipIf(not BASEMAP_VERSION, 'basemap not installed')
-    def test_catalog_plot_cylindrical(self):
+    def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters.
         """

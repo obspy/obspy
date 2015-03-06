@@ -405,7 +405,7 @@ class Inventory(ComparingObject):
         inv.networks = networks
         return inv
 
-    def plot(self, projection='cyl', resolution='l',
+    def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', color_per_network=False,
              colormap="jet", legend="upper left", time=None, show=True,
@@ -417,11 +417,11 @@ class Inventory(ComparingObject):
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
 
-            * ``"cyl"`` (Will plot the whole world.)
+            * ``"global"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
 
-            Defaults to ``"cyl"``
+            Defaults to ``"global"``
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:
@@ -477,7 +477,7 @@ class Inventory(ComparingObject):
 
         .. rubric:: Example
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> from obspy import read_inventory
         >>> inv = read_inventory()
@@ -500,7 +500,7 @@ class Inventory(ComparingObject):
             inv = read_inventory()
             inv.plot(projection="ortho", label=False, color_per_network=True)
 
-        Local (azimuthal equidistant) projection, with custom colors:
+        Local (Albers equal area) projection, with custom colors:
 
         >>> colors = {'GR': 'blue', 'BW': 'green'}
         >>> inv.plot(projection="local",
