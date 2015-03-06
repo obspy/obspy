@@ -49,28 +49,39 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
 # contains the long name first and the short name second. If it has no short
 # name, it is simply a tuple with only one entry.
 DEFAULT_DATASELECT_PARAMETERS = [
-    "starttime", "endtime", "network", "station", "location", "channel",
+    "starttime", "endtime", "network", "station", "location", "channel"]
+
+OPTIONAL_DATASELECT_PARAMETERS = [
     "quality", "minimumlength", "longestonly"]
 
 DEFAULT_STATION_PARAMETERS = [
-    "starttime", "endtime", "startbefore", "startafter", "endbefore",
-    "endafter", "network", "station", "location", "channel", "minlatitude",
-    "maxlatitude", "minlongitude", "maxlongitude", "latitude", "longitude",
-    "minradius", "maxradius", "level", "includerestricted",
+    "starttime", "endtime", "network", "station", "location", "channel",
+    "minlatitude", "maxlatitude", "minlongitude", "maxlongitude", "level"]
+
+OPTIONAL_STATION_PARAMETERS = [
+    "startbefore", "startafter", "endbefore", "endafter", "latitude",
+    "longitude", "minradius", "maxradius", "includerestricted",
     "includeavailability", "updatedafter", "matchtimeseries"]
 
 DEFAULT_EVENT_PARAMETERS = [
     "starttime", "endtime", "minlatitude", "maxlatitude", "minlongitude",
-    "maxlongitude", "latitude", "longitude", "minradius", "maxradius",
-    "mindepth", "maxdepth", "minmagnitude", "maxmagnitude", "magnitudetype",
-    "includeallorigins", "includeallmagnitudes", "includearrivals",
-    "eventid", "limit", "offset", "orderby", "catalog", "contributor",
-    "updatedafter"]
+    "maxlongitude", "mindepth", "maxdepth", "minmagnitude", "maxmagnitude",
+    "orderby"]
+
+OPTIONAL_EVENT_PARAMETERS = [
+    "latitude", "longitude", "minradius", "maxradius", "magnitudetype",
+    "includeallorigins", "includeallmagnitudes", "includearrivals", "eventid",
+    "limit", "offset", "catalog", "contributor", "updatedafter"]
 
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
     "event": DEFAULT_EVENT_PARAMETERS,
     "station": DEFAULT_STATION_PARAMETERS}
+
+OPTIONAL_PARAMETERS = {
+    "dataselect": OPTIONAL_DATASELECT_PARAMETERS,
+    "event": OPTIONAL_EVENT_PARAMETERS,
+    "station": OPTIONAL_STATION_PARAMETERS}
 
 PARAMETER_ALIASES = {
     "net": "network",

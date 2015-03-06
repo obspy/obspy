@@ -34,8 +34,9 @@ from lxml import etree
 import obspy
 from obspy import UTCDateTime, read_inventory
 from obspy.fdsn.header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
-                               PARAMETER_ALIASES, URL_MAPPINGS,
-                               WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException)
+                               OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
+                               URL_MAPPINGS, WADL_PARAMETERS_NOT_TO_BE_PARSED,
+                               FDSNException)
 from obspy.fdsn.wadl_parser import WADLParser
 
 
@@ -1077,6 +1078,7 @@ class Client(object):
             if service not in FDSNWS:
                 continue
             SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
+            SERVICE_OPTIONAL = OPTIONAL_PARAMETERS[service]
 
             msg.append("Parameter description for the "
                        "'%s' service (v%s) of '%s':" % (
@@ -1084,11 +1086,12 @@ class Client(object):
                            self._get_webservice_versionstring(service),
                            self.base_url))
 
-            # Loop over all parameters and group them in three list: available
-            # default parameters, missing default parameters and additional
-            # parameters
+            # Loop over all parameters and group them in four lists: available
+            # default parameters, missing default parameters, optional
+            # parameters and additional parameters.
             available_default_parameters = []
             missing_default_parameters = []
+            optional_parameters = []
             additional_parameters = []
 
             printed_something = False
@@ -1099,8 +1102,13 @@ class Client(object):
                 else:
                     missing_default_parameters.append(name)
 
+            for name in SERVICE_OPTIONAL:
+                if name in self.services[service]:
+                    optional_parameters.append(name)
+
+            defined_parameters = SERVICE_DEFAULT + SERVICE_OPTIONAL
             for name in self.services[service].keys():
-                if name not in SERVICE_DEFAULT:
+                if name not in defined_parameters:
                     additional_parameters.append(name)
 
             def _param_info_string(name):
@@ -1128,6 +1136,13 @@ class Client(object):
 
                 return "    {name}{req_def}{doc_title}".format(
                     name=name, req_def=req_def, doc_title=doc_title)
+
+            if optional_parameters:
+                printed_something = True
+                msg.append("The service offers the following optional "
+                           "standard parameters:")
+                for name in optional_parameters:
+                    msg.append(_param_info_string(name))
 
             if additional_parameters:
                 printed_something = True
@@ -1299,7 +1314,7 @@ class Client(object):
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
-            msg = ("No FDSN services could be discoverd at '%s'. This could "
+            msg = ("No FDSN services could be discovered at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
             raise FDSNException(msg)
