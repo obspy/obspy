@@ -330,7 +330,8 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            self.assertEqual(got, expected, failmsg(got, expected))
+            self.assertEqual(got, expected,
+                             filename + '\n' + failmsg(got, expected))
 
     def test_IRIS_example_queries_station(self):
         """
@@ -381,7 +382,7 @@ class ClientTestCase(unittest.TestCase):
                             '<Module>', '<ModuleURI>']
             msg = failmsg(got.decode(), expected.decode(),
                           ignore_lines=ignore_lines)
-            self.assertEqual(msg, "", msg)
+            self.assertEqual(msg, "", filename + '\n' + msg)
 
     def test_IRIS_example_queries_dataselect(self):
         """
@@ -417,7 +418,8 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            self.assertEqual(got, expected, failmsg(got, expected))
+            self.assertEqual(got, expected,
+                             filename + '\n' + failmsg(got, expected))
 
     def test_authentication(self):
         """
