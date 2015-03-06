@@ -3,12 +3,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
-import numpy as np
-from obspy import UTCDateTime, Trace, read
-from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
-from obspy.signal.filter import lowpassCheby2
 import unittest
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Trace, UTCDateTime, read
+from obspy.signal import bandpass, bandstop, highpass, lowpass, seisSim
+from obspy.signal.filter import lowpassCheby2
 
 
 class TraceTestCase(unittest.TestCase):

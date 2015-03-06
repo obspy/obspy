@@ -41,12 +41,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from optparse import OptionParser
-import warnings
-import mmap
 import contextlib
+import mmap
 import os
-from binascii import b2a_hex, a2b_hex
+import warnings
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from binascii import a2b_hex, b2a_hex
+
+from obspy import __version__
+
 
 # The REFTEK documentation defines other packets too, but these seem to be the
 # only ones appearing in normal acquisition.
@@ -138,51 +141,46 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
         os.rename(filename_old, filename_new)
 
 
-def main():
+def main(argv=None):
     warnings.simplefilter('always')
-    # would make more sense to use argparse module but it is not part of the
-    # Python Standard Library for versions < 2.7
-    usage = "USAGE: %prog [options]\n\n" + \
-            "\n".join(__doc__.split("\n")[3:])
-    parser = OptionParser(usage.strip())
-    parser.add_option("-i", "--input-file", default="/export/data/A03F.IMG",
-                      type="string", dest="input_file",
-                      help="Path and filename of input file.")
-    parser.add_option("-e", "--experiment-number", default="00",
-                      type="string", dest="experiment_number",
-                      help="Experiment number set during acquisition " +
-                           "(2 decimal characters)")
-    parser.add_option("-r", "--reftek-id", default="A03F",
-                      type="string", dest="reftek_id",
-                      help="REFTEK DAS ID of unit used for acquisition " +
-                           "(4 hex characters)")
-    parser.add_option("-y", "--year", default="11",
-                      type="string", dest="year",
-                      help="Year of acquisition (last 2 characters)")
-    parser.add_option("-o", "--output-folder", default="/export/data/rescue",
-                      type="string", dest="output_folder",
-                      help="Folder for output of reconstructed data. " +
-                           "An empty folder has to be specified.")
-    (options, _) = parser.parse_args()
+    parser = ArgumentParser(prog='obspy-reftekrescue',
+                            description=__doc__.strip(),
+                            formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-i', '--input-file', default='/export/data/A03F.IMG',
+                        help='Path and filename of input file.')
+    parser.add_argument('-e', '--experiment-number', default='00',
+                        help='Experiment number set during acquisition '
+                             '(2 decimal characters)')
+    parser.add_argument('-r', '--reftek-id', default='A03F',
+                        help='REFTEK DAS ID of unit used for acquisition '
+                             '(4 hex characters)')
+    parser.add_argument('-y', '--year', default='11',
+                        help='Year of acquisition (last 2 characters)')
+    parser.add_argument('-o', '--output-folder', default='/export/data/rescue',
+                        help='Folder for output of reconstructed data. '
+                             'An empty folder has to be specified.')
+    args = parser.parse_args(argv)
     # be friendly, do some checks.
     msg = "Invalid length for "
-    if len(options.experiment_number) != 2:
+    if len(args.experiment_number) != 2:
         msg += "experiment number."
         raise ValueError(msg)
-    if len(options.year) != 2:
+    if len(args.year) != 2:
         msg += "year."
         raise ValueError(msg)
-    if len(options.reftek_id) != 4:
+    if len(args.reftek_id) != 4:
         msg += "REFTEK DAS ID."
         raise ValueError(msg)
     # check if output folder is empty (and implicitly if it is there at all)
-    if os.listdir(options.output_folder) != []:
+    if os.listdir(args.output_folder) != []:
         msg = "Output directory must be empty as data might get appended " + \
               "to existing files otherwise."
         raise Exception(msg)
 
-    reftek_rescue(options.input_file, options.output_folder, options.reftek_id,
-                  options.year, options.experiment_number)
+    reftek_rescue(args.input_file, args.output_folder, args.reftek_id,
+                  args.year, args.experiment_number)
 
 
 if __name__ == "__main__":

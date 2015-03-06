@@ -23,6 +23,7 @@
        :toctree: autogen
        :nosignatures:
 
+       easyseedlink
        slclient
        slpacket
        seedlinkexception

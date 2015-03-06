@@ -4,15 +4,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, Stream, UTCDateTime
-from obspy.core.util import AttribDict
-from obspy.signal.array_analysis import array_transff_freqslowness, \
-    array_processing, array_transff_wavenumber, get_spoint
-from obspy.signal.util import utlLonLat
-
 import io
-import numpy as np
 import unittest
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util import AttribDict
+from obspy.signal.array_analysis import (array_processing,
+                                         array_transff_freqslowness,
+                                         array_transff_wavenumber, get_spoint)
+from obspy.signal.util import utlLonLat
 
 
 class SonicTestCase(unittest.TestCase):

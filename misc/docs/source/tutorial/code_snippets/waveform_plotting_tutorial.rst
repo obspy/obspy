@@ -97,7 +97,7 @@ setting the ``type`` parameter to ``'dayplot'``:
 Event information can be included in the plot as well (experimental feature, syntax might change):
 
     >>> from obspy import read
-    >>> st = read("/tmp/GR.BFO..LHZ.2012.108")
+    >>> st = read("http://examples.obspy.org/GR.BFO..LHZ.2012.108")
     >>> st.filter("lowpass", freq=0.1, corners=2)
     >>> st.plot(type="dayplot", interval=60, right_vertical_labels=False,
     ...         vertical_scaling_range=5e3, one_tick_per_line=True,

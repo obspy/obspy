@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+
+.PHONY: binary
+
+%:
+	dh $@ --buildsystem=python_distutils --with=python2 --with quilt
+
+binary:
+	dh binary
+
+override_dh_auto_install:
+	dh_auto_install #-- release
+	dh_numpy
+
+override_dh_install:
+	# data files get separated into /usr/share for both python2/3 to use
+	sh -x debian/_dh_install_data_files.sh
+	# files for normal packages
+	## bin
+	dh_install -p python-obspy "debian/tmp/usr/bin/obspy-*"
+	## lib
+	dh_install -p python-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python2*/*-packages/*"
+	# Continue with regular dh_install
+	dh_install
+
+override_dh_installman:
+	python setup.py build_man
+	ln build/man/* debian/
+	ls -1 build/man/* | sed 's#.*/#./debian/#' > debian/python-obspy.manpages
+	dh_installman
+
+override_dh_link:
+	sh -x debian/_dh_link_data_files.sh
+	dh_link
+
+override_dh_installdeb:
+	find $(CURDIR)/debian/ -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian/ -name README.txt -exec rm -f {} \;
+	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
+	find $(CURDIR)/debian/ -type d -name src | xargs rm -rf \; # in principle only needed for some modules
+	find $(CURDIR) -name .gitignore | xargs rm -rf \; # obspy/libs/.gitignore strangely gets included in package
+	dh_installdeb

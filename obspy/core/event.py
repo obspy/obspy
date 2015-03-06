@@ -22,36 +22,40 @@ format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.request
+from future.utils import native_str
 
-from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
-    EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
-    EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
-    AmplitudeCategory, AmplitudeUnit, DataUsedWaveType, MTInversionType, \
-    SourceTimeFunctionType, MomentTensorCategory
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import uncompressFile, _readFromPlugin, \
-    NamedTemporaryFile, AttribDict
-from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import deprecated_keywords, deprecated
-
-
-import io
-from pkg_resources import load_entry_point
-from uuid import uuid4
-from copy import deepcopy
 import collections
 import copy
 import glob
 import inspect
+import io
 import os
 import re
 import warnings
 import weakref
+from copy import deepcopy
+from uuid import uuid4
+
+with standard_library.hooks():
+    import urllib.request
+
+from pkg_resources import load_entry_point
+
+from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
+                                     DataUsedWaveType, EvaluationMode,
+                                     EvaluationStatus, EventDescriptionType,
+                                     EventType, EventTypeCertainty,
+                                     MomentTensorCategory, MTInversionType,
+                                     OriginDepthType, OriginType,
+                                     OriginUncertaintyDescription, PickOnset,
+                                     PickPolarity, SourceTimeFunctionType)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import (AttribDict, NamedTemporaryFile, _readFromPlugin,
+                             uncompressFile)
+from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util.decorator import (deprecated, deprecated_keywords,
+                                       map_example_filename)
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -369,6 +373,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                         [element_str % (_i, len(getattr(self, _i)))
                          for _i in containers])
             return ret_str
+
+        def _repr_pretty_(self, p, cycle):
+            p.text(str(self))
 
         def copy(self):
             return copy.deepcopy(self)
@@ -837,6 +844,9 @@ class ResourceIdentifier(object):
 
     def __str__(self):
         return self.id
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __repr__(self):
         return 'ResourceIdentifier(id="%s")' % self.id
@@ -2665,6 +2675,9 @@ class Event(__Event):
             self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def __repr__(self):
         return super(Event, self).__str__(force_one_line=True)
 
@@ -2680,7 +2693,7 @@ class Event(__Event):
 
     def preferred_magnitude(self):
         """
-        Returns the preferred origin
+        Returns the preferred magnitude
         """
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
@@ -2690,13 +2703,33 @@ class Event(__Event):
 
     def preferred_focal_mechanism(self):
         """
-        Returns the preferred origin
+        Returns the preferred focal mechanism
         """
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
                 getReferredObject()
         except AttributeError:
             return None
+
+    def write(self, filename, format, **kwargs):
+        """
+        Saves event information into a file.
+
+        :type filename: str
+        :param filename: The name of the file to write.
+        :type format: str
+        :param format: The file format to use (e.g. ``"QUAKEML"``). See
+            :meth:`Catalog.write()` for a list of supported formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            plugin's writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy import readEvents
+        >>> event = readEvents()[0]  # doctest: +SKIP
+        >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
+        """
+        Catalog(events=[self]).write(filename, format, **kwargs)
 
 
 class Catalog(object):
@@ -2890,8 +2923,11 @@ class Catalog(object):
             out += "\n...\n"
             out += "\n".join([ev.short_str() for ev in self[-2:]])
             out += "\nTo see all events call " + \
-                   "'print CatalogObject.__str__(print_all=True)'"
+                   "'print(CatalogObject.__str__(print_all=True))'"
         return out
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(self.__str__(print_all=p.verbose))
 
     def append(self, event):
         """
@@ -2970,7 +3006,7 @@ class Catalog(object):
         2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions. Only first argument might be None. Avoid
-        # unorderable types by checking first shortcut on positiv is None
+        # unorderable types by checking first shortcut on positive is None
         # also for the greater stuff (is confusing but correct)
         def __is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:
@@ -3111,7 +3147,7 @@ class Catalog(object):
         :param format: The file format to use (e.g. ``"QUAKEML"``). See the
             `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
-            waveform writer method.
+            plugin's writer method.
 
         .. rubric:: Example
 
@@ -3122,8 +3158,9 @@ class Catalog(object):
         Writing single events into files with meaningful filenames can be done
         e.g. using event.id
 
-        >>> for ev in catalog: #doctest: +SKIP
-        ...     ev.write(ev.id + ".xml", format="QUAKEML") #doctest: +SKIP
+        >>> for ev in catalog:  # doctest: +SKIP
+        ...     filename = str(ev.resource_id) + ".xml"
+        ...     ev.write(filename, format="QUAKEML") # doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
@@ -3150,7 +3187,7 @@ class Catalog(object):
         writeFormat(self, filename, **kwargs)
 
     @deprecated_keywords({'date_colormap': 'colormap'})
-    def plot(self, projection='cyl', resolution='l',
+    def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9',
              water_fill_color='1.0',
              label='magnitude',
@@ -3163,11 +3200,11 @@ class Catalog(object):
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
 
-            * ``"cyl"`` (Will plot the whole world.)
+            * ``"global"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
 
-            Defaults to "cyl"
+            Defaults to "global"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:
@@ -3223,7 +3260,7 @@ class Catalog(object):
 
         .. rubric:: Examples
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> cat = readEvents()
         >>> cat.plot()  # doctest:+SKIP
@@ -3244,7 +3281,7 @@ class Catalog(object):
             cat = readEvents()
             cat.plot(projection="ortho")
 
-        Local (azimuthal equidistant) projection:
+        Local (Albers equal area) projection:
 
         >>> cat.plot(projection="local")  # doctest:+SKIP
 

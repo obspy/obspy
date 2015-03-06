@@ -4,7 +4,18 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import UTCDateTime, Stream, Trace, read
+import ctypes as C
+import io
+import multiprocessing
+import os
+import random
+import sys
+import unittest
+import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
@@ -14,15 +25,6 @@ from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
 
-import ctypes as C
-import io
-import numpy as np
-import os
-import random
-import sys
-import unittest
-import warnings
-
 
 # some Python version don't support negative timestamps
 NO_NEGATIVE_TIMESTAMPS = False
@@ -30,6 +32,17 @@ try:
     UTCDateTime(-50000)
 except:
     NO_NEGATIVE_TIMESTAMPS = True
+
+
+def _testFunction(filename):
+    """
+    Internal function used by MSEEDSpecialIssueTestCase.test_infinite_loop
+    """
+    try:
+        st = read(filename)  # noqa @UnusedVariable
+    except ValueError:
+        # Should occur with broken files
+        pass
 
 
 class MSEEDSpecialIssueTestCase(unittest.TestCase):
@@ -397,7 +410,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         Tests issue #289.
 
-        Reading MiniSEED using start-/endtime outside of data should result in
+        Reading MiniSEED using start/end time outside of data should result in
         an empty Stream object.
         """
         # 1
@@ -417,7 +430,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        # start and endtime
+        # start and end time
         ms = _MSStruct(filename)
         ms.read(-1, 0, 1, 0)
         blkt_link = ms.msr.contents.blkts.contents
@@ -651,6 +664,21 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # Assert that the data is the same.
         np.testing.assert_array_equal(data_m, data_r)
         np.testing.assert_array_equal(data_m, data_q)
+
+    def test_infinite_loop(self):
+        """
+        Tests that libmseed doesn't enter an infinite loop on buggy files.
+        """
+        filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
+
+        process = multiprocessing.Process(target=_testFunction,
+                                          args=(filename, ))
+        process.start()
+        process.join(60)
+
+        fail = process.is_alive()
+        process.terminate()
+        self.assertFalse(fail)
 
 
 def suite():

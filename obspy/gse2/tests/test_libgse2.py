@@ -7,17 +7,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, CatchOutput
-from obspy.gse2 import libgse2
-from obspy.gse2.libgse2 import ChksumError, GSEUtiError, parse_STA2, \
-    compile_STA2
-
-from ctypes import ArgumentError
 import io
-import numpy as np
 import os
 import unittest
+from ctypes import ArgumentError
+
+import numpy as np
+
+from obspy import UTCDateTime
+from obspy.core.util import CatchOutput, NamedTemporaryFile
+from obspy.gse2 import libgse2
+from obspy.gse2.libgse2 import (ChksumError, GSEUtiError, compile_STA2,
+                                parse_STA2)
 
 
 class LibGSE2TestCase(unittest.TestCase):

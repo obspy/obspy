@@ -8,6 +8,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 
+
 # All the files and information about them. These files will be used in
 # most tests. data_sample_enc is the encoding of the data value and
 # sample_size the size in bytes of these samples.

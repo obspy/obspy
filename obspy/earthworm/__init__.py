@@ -14,7 +14,7 @@ Basic Usage
 (1) :meth:`~obspy.earthworm.client.Client.getWaveform()`: The following example
     illustrates how to request and plot 30 seconds of all three broadband
     channels (``"BH*"``) of station ``"TUCA"`` of the `Pacific Northwest
-    Seismic Network <http://www.pnsn.org/>`_ (``"UW"``).
+    Seismic Network <http://pnsn.org/>`_ (``"UW"``).
 
     >>> from obspy.earthworm import Client
     >>> client = Client("pele.ess.washington.edu", 16017)

@@ -23,6 +23,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import numpy as np
+
 from obspy.signal import util
 
 
@@ -53,9 +54,13 @@ def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     cwt = np.zeros((npts // 2, nf), dtype=np.complex)
 
     if wl == 'morlet':
-        psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
-            np.exp(-t ** 2 / 2.)
-        scale = lambda f: w0 / (2 * np.pi * f)
+
+        def psi(t):
+            return np.pi ** (-.25) * np.exp(1j * w0 * t) * \
+                np.exp(-t ** 2 / 2.)
+
+        def scale(f):
+            return w0 / (2 * np.pi * f)
     else:
         raise ValueError('wavelet type "' + wl + '" not defined!')
 

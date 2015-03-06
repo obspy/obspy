@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import re
+
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    FloatWithUncertaintiesFixedUnit
-import re
-import copy
+from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit,
+                                         FloatWithUncertaintiesFixedUnit)
 
 
 class BaseNode(ComparingObject):
@@ -199,6 +200,9 @@ class DataAvailability(ComparingObject):
         return "Data Availability from %s to %s." % (str(self.start),
                                                      str(self.end))
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Equipment(ComparingObject):
     """
@@ -232,8 +236,8 @@ class Equipment(ComparingObject):
         :type resource_id: str
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
-            differently depending on the datacenter/software that generated the
-            document. Also, we recommend to use something like
+            differently depending on the data center/software that generated
+            the document. Also, we recommend to use something like
             GENERATOR:Meaningful ID. As a common behavior equipment with the
             same ID should contain the same information/be derived from the
             same base instruments.
@@ -299,8 +303,8 @@ class Operator(ComparingObject):
     @agencies.setter
     def agencies(self, value):
         if not hasattr(value, "__iter__") or len(value) < 1:
-            msg = ("agencies needs to iterable, e.g. a list and contain at "
-                   "least one entry.")
+            msg = ("agencies needs to be iterable, e.g. a list, and contain "
+                   "at least one entry.")
             raise ValueError(msg)
         self._agencies = value
 
@@ -311,7 +315,7 @@ class Operator(ComparingObject):
     @contacts.setter
     def contacts(self, value):
         if not hasattr(value, "__iter__"):
-            msg = ("contacts needs to iterable, e.g. a list.")
+            msg = ("contacts needs to be iterable, e.g. a list.")
             raise ValueError(msg)
         self._contacts = value
 
@@ -565,6 +569,9 @@ class Site(ComparingObject):
             town=self.town, county=self.county, region=self.region,
             country=self.country)
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class Latitude(FloatWithUncertaintiesFixedUnit):

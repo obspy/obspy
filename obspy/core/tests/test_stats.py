@@ -3,13 +3,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
-from obspy.core.util import AttribDict
 import copy
 import pickle
 import unittest
 import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
+from obspy.core.util import AttribDict
 
 
 class StatsTestCase(unittest.TestCase):
@@ -167,7 +168,7 @@ class StatsTestCase(unittest.TestCase):
         st = st + st
         st[3].stats.station = 'BBB'
         # changed in rev. 1625: adding streams doesn't deepcopy
-        # therefore all traces in the test stream are idential
+        # therefore all traces in the test stream are identical
         # (python list behavior)
         for tr in st:
             self.assertTrue(tr == st[0])

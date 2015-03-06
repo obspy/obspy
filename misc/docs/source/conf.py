@@ -8,9 +8,10 @@
 import glob
 import os
 import sys
-import obspy
+
 import sphinx_bootstrap_theme
 
+import obspy
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -309,10 +310,10 @@ man_pages = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/2.7/', None),
+    'python': ('https://docs.python.org/2.7/', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-    'matplotlib': ('http://matplotlib.sourceforge.net/', None),
+    'matplotlib': ('http://matplotlib.org/', None),
     'sqlalchemy': ('http://docs.sqlalchemy.org/en/latest/', None),
 }
 

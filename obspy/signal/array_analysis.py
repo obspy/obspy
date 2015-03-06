@@ -23,12 +23,14 @@ from future.builtins import *  # NOQA
 
 import math
 import warnings
+
 import numpy as np
-from obspy.signal.util import utlGeoKm, nextpow2
-from obspy.signal.headers import clibsignal
-from obspy.core import Stream
 from scipy.integrate import cumtrapz
+
+from obspy.core import Stream
+from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosTaper
+from obspy.signal.util import nextpow2, utlGeoKm
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -644,7 +646,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         raise TypeError('only Stream or numpy.ndarray allowed')
 
     if verbose:
-        print(("coordys = " + coordsys))
+        print("coordsys = " + coordsys)
 
     if coordsys == 'lonlat':
         center_lon = geometry[:, 0].mean()
@@ -919,7 +921,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(geometry)
         print("stream contains following traces:")
         print(stream)
-        print(("stime = " + str(stime) + ", etime = " + str(etime)))
+        print("stime = " + str(stime) + ", etime = " + str(etime))
 
     time_shift_table = get_timeshift(geometry, sll_x, sll_y,
                                      sl_s, grdpts_x, grdpts_y)
@@ -941,7 +943,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nlow = max(1, nlow)  # avoid using the offset
     nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
-    # to spead up the routine a bit we estimate all steering vectors in advance
+    # to speed up the routine a bit we estimate all steering vectors in advance
     steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                          deltaf, time_shift_table, steer)
@@ -1004,7 +1006,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
             if verbose:
-                print((newstart, (newstart + (nsamp / fs)), res[-1][1:]))
+                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
         if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep
@@ -1014,8 +1016,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     if timestamp == 'julsec':
         pass
     elif timestamp == 'mlabday':
-        # 719162 == hours between 1970 and 0001
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
+        # 719163 == days between 1970 and 0001 + 1
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719163
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)

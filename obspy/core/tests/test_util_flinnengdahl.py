@@ -4,9 +4,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util import FlinnEngdahl
 import os
 import unittest
+
+from obspy.core.scripts.flinnengdahl import main as obspy_flinnengdahl
+from obspy.core.util import FlinnEngdahl
+from obspy.core.util.misc import CatchOutput
 
 
 class UtilFlinnEngdahlTestCase(unittest.TestCase):
@@ -29,13 +32,34 @@ class UtilFlinnEngdahlTestCase(unittest.TestCase):
                 self.assertEqual(
                     region,
                     checked_region,
-                    msg="%f, %f got %s instead of %s" % (
+                    msg="(%f, %f) got %s instead of %s" % (
                         longitude,
                         latitude,
                         region,
                         checked_region
                     )
                 )
+
+    def test_script(self):
+        with open(self.samples_file, 'r') as fh:
+            # Testing once is sufficient.
+            line = fh.readline()
+            longitude, latitude, checked_region = line.strip().split('\t')
+
+            with CatchOutput() as out:
+                obspy_flinnengdahl([longitude, latitude])
+            region = out.stdout.strip()
+
+            self.assertEqual(
+                region,
+                checked_region.encode('utf-8'),
+                msg='(%s, %s) got %s instead of %s' % (
+                    longitude,
+                    latitude,
+                    region,
+                    checked_region
+                )
+            )
 
 
 def suite():

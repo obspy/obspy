@@ -1,0 +1,33 @@
+This is the Debian GNU prepackaged version of ObsPy, which was
+written by the ObsPy Development Team.
+
+This package was debianized by the ObsPy Development Team. The source for
+this release was taken from:
+git://github.com/obspy/obspy.git
+
+Program Copyright (C) 2009-2015 The ObsPy Development Team <devs@obspy.org>,
+Thomas Lecocq (datamark), Adolfo Inza (datamark), Philippe Lesage (datamark),
+Anthony Lomax (realtime, seedlink), Marcus Walther (css),
+David Ketchum (neic), and other contributors (see README.txt of submodules
+and repository history at https://github.com/obspy/obspy).
+
+The underlying C code in 'gse2' subpackage was written Stefan Stange.
+The underlying C code in 'mseed' subpackage was written Chad Trabant.
+Some C parts in 'signal' subpackage were written by Joachim Wassermann.
+
+Development of 'realtime' and 'seedlink' subpackages has been supported by the
+NERA project ["Network of European Research Infrastructures for Earthquake Risk
+Assessment and Mitigation" under the European Community's Seventh Framework
+Programme (FP7/2007-2013) grant agreement n° 262330] and implemented within the
+activities of the JRA2/WP12 "Tools for real-time seismology, acquisition and
+mining".
+
+Copyright:
+
+This program is free software. It can be redistributed and/or modified
+under the terms of:
+
+The GNU Lesser General Public License, as published by the Free
+Software Foundation; either version 3, or (at your option) any
+later version. A copy of this license is in the file
+/usr/share/common-licenses/LGPL-3

@@ -16,15 +16,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime
-from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
-    DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
-
-from collections import defaultdict
 import io
-from lxml import etree
 import warnings
+from collections import defaultdict
+
+from lxml import etree
+
+from obspy import UTCDateTime
+from obspy.fdsn.header import (DEFAULT_DATASELECT_PARAMETERS,
+                               DEFAULT_EVENT_PARAMETERS,
+                               DEFAULT_STATION_PARAMETERS, DEFAULT_TYPES,
+                               WADL_PARAMETERS_NOT_TO_BE_PARSED)
 
 
 class WADLParser(object):
@@ -63,7 +65,7 @@ class WADLParser(object):
         # list of special cases for different WADLs is not a good solution.
         all_parameters = defaultdict(list)
 
-        # Group the parameters by the 'id' attribute of the greatparents tag.
+        # Group the parameters by the 'id' attribute of the grandparents tag.
         # The 'name' tag will always be 'GET' due to the construction of the
         # xpath expression.
         for param in parameters:

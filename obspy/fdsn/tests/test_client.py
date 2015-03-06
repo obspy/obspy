@@ -13,21 +13,21 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import readEvents, UTCDateTime, read, read_inventory
-from obspy.fdsn import Client
-from obspy.fdsn.client import build_url, parse_simple_xml
-from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.compatibility import mock
-from obspy.station import Response
-
-from difflib import Differ
 import io
 import os
 import re
 import sys
 import unittest
 import warnings
+from difflib import Differ
+
+from obspy import UTCDateTime, read, read_inventory, readEvents
+from obspy.core.compatibility import mock
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.fdsn import Client
+from obspy.fdsn.client import build_url, parse_simple_xml
+from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.station import Response
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -377,9 +377,10 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            ignore_lines = [b'<Created>', b'<TotalNumberStations>',
-                            b'<Module>', b'<ModuleURI>']
-            msg = failmsg(got, expected, ignore_lines=ignore_lines)
+            ignore_lines = ['<Created>', '<TotalNumberStations>',
+                            '<Module>', '<ModuleURI>']
+            msg = failmsg(got.decode(), expected.decode(),
+                          ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
     def test_IRIS_example_queries_dataselect(self):
@@ -572,7 +573,7 @@ class ClientTestCase(unittest.TestCase):
                 client.get_waveforms_bulk(bulk, filename=tf.name)
                 got = read(tf.name)
             self.assertEqual(got, expected, failmsg(got, expected))
-        # test cases for providing a filename
+        # test cases for providing a file name
         for client in clients:
             with NamedTemporaryFile() as tf:
                 with open(tf.name, "wt") as fh:

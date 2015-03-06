@@ -1,8 +1,11 @@
+import gzip
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+
 from obspy.imaging.beachball import Beach
-import gzip
+
 
 # read in topo data (on a regular lat/lon grid)
 # (SRTM data from: http://srtm.csi.cgiar.org/)

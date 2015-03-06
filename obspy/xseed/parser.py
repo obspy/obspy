@@ -11,10 +11,8 @@ Main module containing XML-SEED parser.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
 from future import standard_library
-with standard_library.hooks():
-    import urllib.request  # @UnresolvedImport
+from future.utils import native_str
 
 import copy
 import datetime
@@ -24,14 +22,18 @@ import os
 import warnings
 import zipfile
 
-from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+with standard_library.hooks():
+    import urllib.request  # @UnresolvedImport
+
+from lxml.etree import parse as xmlparse
+from lxml.etree import Element, SubElement, tostring
 import numpy as np
 
-from obspy import Trace, Stream, __version__
+from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
 from obspy.xseed import DEFAULT_XSEED_VERSION, blockette
-from obspy.xseed.utils import SEEDParserException, toTag, IGNORE_ATTR
+from obspy.xseed.utils import IGNORE_ATTR, SEEDParserException, toTag
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -138,6 +140,9 @@ class Parser(object):
                  channel["instrument"], start_date, end_date,
                  channel["latitude"], channel["longitude"])
         return ret_str.strip()
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @map_example_filename("data")
     def read(self, data):
@@ -284,7 +289,7 @@ class Parser(object):
                     fn = filename.split('.xml')[0]
                     fn = "%s.%s.xml" % (filename, UTCDateTime(key).timestamp)
                 else:
-                    # current meta data - leave original filename
+                    # current meta data - leave original file name
                     fn = filename
                 with open(fn, 'wb') as f:
                     f.write(value)
@@ -311,9 +316,11 @@ class Parser(object):
         volume, abbreviations, stations = self._createBlockettes11and12()
         # Delete Blockette 11 again.
         self._deleteBlockettes11and12()
+
         # Finally write the actual SEED String.
-        fmt_seed = lambda cnt, i: \
-            ('%06i' % cnt).encode('ascii', 'strict') + i
+        def fmt_seed(cnt, i):
+            return ('%06i' % cnt).encode('ascii', 'strict') + i
+
         for _i in volume:
             seed_string += fmt_seed(cur_count, _i)
             cur_count += 1
@@ -371,7 +378,7 @@ class Parser(object):
                         # Send the blockettes to the parser and append to list.
                         self._getRESPString(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
-                    # Create the filename.
+                    # Create the file name.
                     filename = 'RESP.%s.%s.%s.%s' \
                         % (cur_network, cur_station, cur_location, cur_channel)
                     # Create new BytesIO and list.
@@ -414,7 +421,7 @@ class Parser(object):
         Selects all blockettes related to given SEED id and datetime.
         """
         old_format = self._format
-        # parse blockettes if not SEED. Needed foe XSEED to be intialized.
+        # parse blockettes if not SEED. Needed for XSEED to be initialized.
         # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
             self.__init__(self.getSEED())
@@ -514,9 +521,10 @@ class Parser(object):
                     resp = blkt
                     label = 'transfer_function_types'
                 # Check if Laplace transform
-                if getattr(resp, label) != "A":
-                    msg = 'Only supporting Laplace transform response ' + \
-                          'type. Skipping other response information.'
+                if getattr(resp, label) not in ["A", "B"]:
+                    msg = 'Only the Laplace (rad/sec) or Analog (Hz) ' + \
+                          'transform response types are supported. ' + \
+                          'Skipping other response information.'
                     warnings.warn(msg, UserWarning)
                     continue
                 # A0_normalization_factor
@@ -537,6 +545,16 @@ class Parser(object):
                     except TypeError:
                         z = complex(resp.real_zero, resp.imaginary_zero)
                     data['zeros'].append(z)
+                # force conversion from Hz to Laplace
+                if getattr(resp, label) == "B":
+                    def x2pi(x):
+                        return x * 2 * np.pi
+
+                    data['poles'] = list(map(x2pi, data['poles']))
+                    data['zeros'] = list(map(x2pi, data['zeros']))
+                    data['gain'] = resp.A0_normalization_factor * \
+                        (2 * np.pi) ** \
+                        (len(data['poles']) - len(data['zeros']))
         return data
 
     def getCoordinates(self, seed_id, datetime=None):
@@ -588,7 +606,7 @@ class Parser(object):
                 file.close()
         else:
             # Create a ZIP archive.
-            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "wb")
+            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "w")
             for response in new_resp_list:
                 response[1].seek(0, 0)
                 zip_file.writestr(response[0], response[1].read())
@@ -629,7 +647,7 @@ class Parser(object):
             raise SEEDParserException(msg)
         self.record_length = length
         if self.debug:
-            print(("RECORD LENGTH: %d" % (self.record_length)))
+            print("RECORD LENGTH: %d" % (self.record_length))
         # Set all temporary attributes.
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Jump back to beginning.

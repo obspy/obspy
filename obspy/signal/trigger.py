@@ -29,13 +29,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import warnings
 import ctypes as C
+import warnings
 from collections import deque
+
 import numpy as np
+
 from obspy import UTCDateTime
-from obspy.signal.headers import clibsignal, head_stalta_t
 from obspy.signal.cross_correlation import templatesMaxSimilarity
+from obspy.signal.headers import clibsignal, head_stalta_t
 
 
 def recSTALTA(a, nsta, nlta):
@@ -95,7 +97,7 @@ def recSTALTAPy(a, nsta, nlta):
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = 1e-99  # avoid zero devision
+    lta = 1e-99  # avoid zero division
     charfct = [0.0] * len(a)
     icsta = 1 - csta
     iclta = 1 - clta
@@ -216,34 +218,30 @@ def classicSTALTAPy(a, nsta, nlta):
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of classic STA/LTA
     """
-    # XXX From NumPy 1.3 use numpy.lib.stride_tricks.as_strided
-    #    This should be faster then the for loops in this fct
-    #    Currently debian lenny ships 1.1.1
-    m = len(a)
-    # indexes start at 0, length must be subtracted by one
-    nsta_1 = nsta - 1
-    nlta_1 = nlta - 1
-    # compute the short time average (STA)
-    sta = np.zeros(len(a), dtype=np.float64)
-    pad_sta = np.zeros(nsta_1)
-    # Tricky: Construct a big window of length len(a)-nsta. Now move this
-    # window nsta points, i.e. the window "sees" every point in a at least
-    # once.
-    for i in range(nsta):  # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - nsta_1 + i] ** 2))
-    sta = sta / nsta
-    #
-    # compute the long time average (LTA)
-    lta = np.zeros(len(a), dtype=np.float64)
-    pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
-    for i in range(nlta):  # window size to smooth over
-        lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
-    lta = lta / nlta
-    #
-    # pad zeros of length nlta to avoid overfit and
-    # return STA/LTA ratio
-    sta[0:nlta_1] = 0
-    lta[0:nlta_1] = 1  # avoid devision by zero
+    # The cumulative sum can be exploited to calculate a moving average (the
+    # cumsum function is quite efficient)
+    sta = np.cumsum(a ** 2)
+
+    # Convert to float
+    sta = np.require(sta, dtype=np.float)
+
+    # Copy for LTA
+    lta = sta.copy()
+
+    # Compute the STA and the LTA
+    sta[nsta:] = sta[nsta:] - sta[:-nsta]
+    sta /= nsta
+    lta[nlta:] = lta[nlta:] - lta[:-nlta]
+    lta /= nlta
+
+    # Pad zeros
+    sta[:nlta - 1] = 0
+
+    # Avoid division by zero by setting zero values to tiny float
+    dtiny = np.finfo(0.0).tiny
+    idx = lta < dtiny
+    lta[idx] = dtiny
+
     return sta / lta
 
 
@@ -371,7 +369,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
                 continue
             of.appendleft(on[0] + max_len)
         pick.append([on[0], of[0]])
-    return np.array(pick)
+    return np.array(pick, dtype=np.int64)
 
 
 def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
@@ -379,7 +377,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     """
     Wrapper for P-picker routine by M. Baer, Schweizer Erdbebendienst.
 
-    :param reltrc: timeseries as numpy.ndarray float32 data, possibly filtered
+    :param reltrc: time series as numpy.ndarray float32 data, possibly filtered
     :param samp_int: number of samples per second
     :param tdownmax: if dtime exceeds tdownmax, the trigger is examined for
         validity
@@ -402,13 +400,13 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
     reltrc = np.ascontiguousarray(reltrc, np.float32)
-    # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
+    # index in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
     errcode = clibsignal.ppick(reltrc, *args)
     if errcode != 0:
-        raise Exception("Error in function ppick of mk_mbaer.c")
+        raise MemoryError("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
     # pfm has to be decoded from byte to string
     return pptime.value + 1, pfm.value.decode('utf-8')
@@ -448,7 +446,12 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
             C.byref(stime), l_p, l_s, s_pick)
     errcode = clibsignal.ar_picker(a, b, c, *args)
     if errcode != 0:
-        raise Exception("Error in function ar_picker of arpicker.c")
+        BUFS = ['buff1', 'buff1_s', 'buff2', 'buff3', 'buff4', 'buff4_s',
+                'f_error', 'b_error', 'ar_f', 'ar_b', 'buf_sta', 'buf_lta',
+                'extra_tr1', 'extra_tr2', 'extra_tr3']
+        if errcode <= len(BUFS):
+            raise MemoryError('Unable to allocate %s!' % (BUFS[errcode - 1]))
+        raise Exception('Error during PAZ calculation!')
     return ptime.value, stime.value
 
 
@@ -625,11 +628,16 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             continue
         if trigger_type is not None:
             tr.trigger(trigger_type, **options)
-        kwargs['max_len'] = max_trigger_length * tr.stats.sampling_rate
+        kwargs['max_len'] = int(
+            max_trigger_length * tr.stats.sampling_rate + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
-            cft_peak = tr.data[on:off].max()
-            cft_std = tr.data[on:off].std()
+            try:
+                cft_peak = tr.data[on:off].max()
+                cft_std = tr.data[on:off].std()
+            except ValueError:
+                cft_peak = tr.data[on]
+                cft_std = 0
             on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
             off = tr.stats.starttime + float(off) / tr.stats.sampling_rate
             triggers.append((on.timestamp, off.timestamp, tr.id, cft_peak,

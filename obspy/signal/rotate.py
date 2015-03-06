@@ -21,7 +21,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from math import pi, sin, cos
+from math import cos, pi, sin
+
 import numpy as np
 
 

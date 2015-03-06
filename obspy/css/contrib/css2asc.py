@@ -4,11 +4,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
+import locale
 import os
 import struct
+import sys
 import time
-import locale
+
+
 locale.setlocale(locale.LC_ALL, 'C')
 
 formats = (str, str, float, int, int, int, float, int, float, float, float,

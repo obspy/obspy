@@ -22,10 +22,13 @@ int _obspy_check_channel(struct channel *chan)
   int rc;
   if ((rc = setjmp(jump_buffer)) == 0) {
     /* Direct invocation */
+    GblChanPtr = chan;
     check_channel(chan);
+    GblChanPtr = NULL;
     return 0;
   } else {
     /* Error called by longjmp */
+    GblChanPtr = NULL;
     return rc;
   }
 }
@@ -36,10 +39,13 @@ int _obspy_norm_resp(struct channel *chan, int start_stage, int stop_stage)
   int rc;
   if ((rc = setjmp(jump_buffer)) == 0) {
     /* Direct invocation */
+    GblChanPtr = chan;
     norm_resp(chan, start_stage, stop_stage);
+    GblChanPtr = NULL;
     return 0;
   } else {
     /* Error called by longjmp */
+    GblChanPtr = NULL;
     return rc;
   }
 }
@@ -53,11 +59,14 @@ int _obspy_calc_resp(struct channel *chan, double *freq, int nfreqs,
   int rc;
   if ((rc = setjmp(jump_buffer)) == 0) {
     /* Direct invocation */
+    GblChanPtr = chan;
     calc_resp(chan, freq, nfreqs, output, out_units, start_stage, stop_stage,
               useTotalSensitivityFlag);
+    GblChanPtr = NULL;
     return 0;
   } else {
     /* Error called by longjmp */
+    GblChanPtr = NULL;
     return rc;
   }
 }

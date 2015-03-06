@@ -4,13 +4,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
-    Loop
-from obspy.xseed.utils import formatRESP, LookupCode
-
 import io
 import os
+
+from obspy.xseed.blockette import Blockette
+from obspy.xseed.fields import (FixedString, Float, Integer, Loop,
+                                VariableString)
+from obspy.xseed.utils import LookupCode, formatRESP
 
 
 class Blockette041(Blockette):

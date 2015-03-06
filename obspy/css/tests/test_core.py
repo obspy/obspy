@@ -7,14 +7,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import read
-from obspy.core import UTCDateTime, Trace, Stream
-from obspy.core.util import NamedTemporaryFile
-from obspy.css.core import readCSS, isCSS
-import os
 import gzip
-import numpy as np
+import os
 import unittest
+
+import numpy as np
+
+from obspy import read
+from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core.util import NamedTemporaryFile
+from obspy.css.core import isCSS, readCSS
 
 
 class CoreTestCase(unittest.TestCase):
@@ -41,7 +43,14 @@ class CoreTestCase(unittest.TestCase):
         # traces in the test files are sorted ZEN
         st = Stream()
         for x, cha in zip(data.reshape((3, 4800)), ('HHZ', 'HHE', 'HHN')):
+            # big-endian copy
             tr = Trace(x, header.copy())
+            tr.stats.station += 'be'
+            tr.stats.channel = cha
+            st += tr
+            # little-endian copy
+            tr = Trace(x, header.copy())
+            tr.stats.station += 'le'
             tr.stats.channel = cha
             st += tr
         self.st_result = st

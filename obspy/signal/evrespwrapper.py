@@ -4,8 +4,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import numpy as np
 import ctypes as C
+
+import numpy as np
+
 from obspy.signal.headers import clibevresp
 
 
@@ -216,6 +218,9 @@ channel._fields_ = [
     ("nstages", C.c_int),
     ("first_stage", C.POINTER(stage)),
 ]
+
+
+clibevresp.curr_file = C.c_char_p.in_dll(clibevresp, 'curr_file')
 
 
 # int _obspy_calc_resp(struct channel *chan, double *freq, int nfreqs,

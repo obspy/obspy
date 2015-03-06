@@ -6,9 +6,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, Stream
-from obspy.gse2 import libgse2, libgse1
 import numpy as np
+
+from obspy import Stream, Trace
+from obspy.gse2 import libgse1, libgse2
 
 
 def isGSE2(filename):

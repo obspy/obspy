@@ -30,7 +30,7 @@ for seismology.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
+from future.utils import PY2, native_str
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
@@ -48,7 +48,7 @@ read.__doc__ = \
 readEvents.__doc__ = \
     readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
 
-from future.utils import PY2
+
 if PY2:
     Stream.write.im_func.func_doc = \
         Stream.write.__doc__ % make_format_plugin_table("waveform", "write",

@@ -15,12 +15,11 @@ from future.builtins import *  # NOQA
 
 import fnmatch
 import inspect
-
-import os
-import unittest
-import re
-
 import io
+import os
+import re
+import unittest
+
 import obspy
 import obspy.station
 
@@ -52,7 +51,7 @@ class StationXMLTestCase(unittest.TestCase):
                      if not _i.strip().startswith("<Module")]
 
         for new_line, org_line in zip(new_lines, org_lines):
-            regex = "<(.*?) (.*?)>"
+            regex = "<(.*?) (.*?)/?>"
 
             def callback(pattern):
                 part2 = " ".join(sorted(pattern.group(2).split(" ")))

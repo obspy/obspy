@@ -8,7 +8,8 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
-from obspy import read, UTCDateTime
+
+from obspy import UTCDateTime, read
 from obspy.signal.cross_correlation import xcorrPickCorrection
 
 

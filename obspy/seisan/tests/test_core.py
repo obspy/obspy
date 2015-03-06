@@ -6,11 +6,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
 
 
 class CoreTestCase(unittest.TestCase):

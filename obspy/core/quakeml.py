@@ -24,20 +24,25 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
-    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
-    QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier, StationMagnitudeContribution, Amplitude, TimeWindow
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict
-import warnings
-
 import inspect
 import io
-from lxml import etree
 import os
+import warnings
+
+from lxml import etree
+
+from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
+                              CompositeTime, ConfidenceEllipsoid, CreationInfo,
+                              DataUsed, Event, EventDescription,
+                              FocalMechanism, Magnitude, MomentTensor,
+                              NodalPlane, NodalPlanes, Origin, OriginQuality,
+                              OriginUncertainty, Pick, PrincipalAxes,
+                              QuantityError, ResourceIdentifier,
+                              SourceTimeFunction, StationMagnitude,
+                              StationMagnitudeContribution, Tensor, TimeWindow,
+                              WaveformStreamID)
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -908,7 +913,17 @@ class Unpickler(object):
             # event type. Will be replaced with 'not reported'.
             if event_type == "null":
                 event_type = "not reported"
-            event.event_type = event_type
+            # USGS event types contain '_' which is not compliant with
+            # the QuakeML standard
+            if isinstance(event_type, str):
+                event_type = event_type.replace("_", " ")
+            try:
+                event.event_type = event_type
+            except ValueError:
+                msg = "Event type '%s' does not comply " % event_type
+                msg += "with QuakeML standard -- event will be ignored."
+                warnings.warn(msg, UserWarning)
+                continue
             event.event_type_certainty = self._xpath2obj(
                 'typeCertainty', event_el)
             event.creation_info = self._creation_info(event_el)

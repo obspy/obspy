@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Header files for the FDSN webservice.
@@ -13,9 +12,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import __version__, UTCDateTime
-
 import platform
+
+from obspy import UTCDateTime, __version__
 
 
 class FDSNException(Exception):
@@ -34,7 +33,8 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "NERIES": "http://www.seismicportal.eu",
                 "SCEC": "http://www.data.scec.org",
                 "GEONET": "http://service.geonet.org.nz",
-                "INGV": "http://webservices.rm.ingv.it"
+                "INGV": "http://webservices.rm.ingv.it",
+                "BGR": "http://eida.bgr.de",
                 }
 
 FDSNWS = ("dataselect", "event", "station")

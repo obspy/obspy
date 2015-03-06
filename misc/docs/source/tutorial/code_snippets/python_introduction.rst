@@ -68,21 +68,21 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 
 .. rubric:: Further Resources
 
-* http://docs.python.org/tutorial/
+* https://docs.python.org/2/tutorial/
     Official Python tutorial.
-* http://docs.python.org/library/index.html
+* https://docs.python.org/2/library/index.html
     Python library reference
-* http://software-carpentry.org/4_0/
+* http://software-carpentry.org/v4/
     Very instructive video lectures on various computer related topics. A good
     starting point for learning Python and Version Control with Subversion.
-* http://ipython.scipy.org/moin
+* http://ipython.org/
     An enhanced interactive Python shell.
-* http://docs.scipy.org
+* http://docs.scipy.org/doc/
    NumPy and SciPy are the matrix based computation modules of Python. The
    allow fast array manipulation (functions in C). NumPy and SciPy provide
    access to FFTW, LAPACK, ATLAS or BLAS. That is svd, eigenvalues...
    ObsPy uses the numpy.ndarrays for storing the data (e.g. tr.data).
-* http://matplotlib.sourceforge.net/gallery.html
+* http://matplotlib.org/gallery.html
    matplotlib is the 2-D plotting package for Python. The gallery is the market
    place which allows you to go shopping for all kind of figures. The source
    code for each figure is linked. Note matplotlib has even its own latex
@@ -100,5 +100,5 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    Multitaper spectrum bindings for Python
 
 
-.. _Python: http://www.python.org
+.. _Python: https://www.python.org
 .. _IPython: http://ipython.org

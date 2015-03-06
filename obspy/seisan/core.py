@@ -13,10 +13,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import numpy as np
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.compatibility import frombuffer
-import numpy as np
 
 
 def isSEISAN(filename):

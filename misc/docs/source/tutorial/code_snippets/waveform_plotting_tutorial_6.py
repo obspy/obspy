@@ -1,5 +1,6 @@
-from obspy.core.stream import read, Stream
+from obspy.core.stream import Stream, read
 from obspy.core.util import gps2DistAzimuth
+
 
 host = 'http://examples.obspy.org/'
 # Files (fmt: SAC)

@@ -6,17 +6,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util import NamedTemporaryFile
-from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
-    DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
-from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile, \
-    readSEGY
-from obspy.segy.tests.header import FILES, DTYPES
-
 import io
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy.core.util import NamedTemporaryFile
+from obspy.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
+                               DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
+from obspy.segy.segy import (SEGYBinaryFileHeader, SEGYFile, SEGYTraceHeader,
+                             readSEGY)
+from obspy.segy.tests.header import DTYPES, FILES
 
 
 class SEGYTestCase(unittest.TestCase):

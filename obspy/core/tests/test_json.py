@@ -4,14 +4,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.core.json import (Default, get_dump_kwargs, writeJSON)
-from obspy.core.quakeml import readQuakeML
-
 import io
 import json
 import os
 import unittest
 import warnings
+
+from obspy.core.json import Default, get_dump_kwargs, writeJSON
+from obspy.core.quakeml import readQuakeML
+
 
 warnings.filterwarnings("ignore")
 

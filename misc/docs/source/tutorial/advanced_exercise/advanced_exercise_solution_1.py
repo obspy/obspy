@@ -1,5 +1,7 @@
 from __future__ import print_function
+
 import obspy.neries
+
 
 client = obspy.neries.Client()
 

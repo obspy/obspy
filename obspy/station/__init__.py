@@ -40,8 +40,8 @@ Inventory created at 2013-12-07T18:00:42.878000Z
         Channels (3):
             BW.RJOB..EHE, BW.RJOB..EHN, BW.RJOB..EHZ
 
-The file format in priciple is autodected. However, the autodetection uses the
-official StationXML XSD schema and unfortunately many real world files
+The file format in principle is autodetected. However, the autodetection uses
+the official StationXML XSD schema and unfortunately many real world files
 currently show minor deviations from the official StationXML definition causing
 the autodetection to fail. Thus, manually specifying the format is a good idea:
 
@@ -199,16 +199,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.station.util import BaseNode, Equipment, Operator, Person, \
-    PhoneNumber, ExternalReference, Comment, Site
+# Don't change order! obspy.station.util must be first.
+from obspy.station.util import (BaseNode, Comment, Equipment,
+                                ExternalReference, Operator, Person,
+                                PhoneNumber, Site)
 from obspy.station.channel import Channel
-from obspy.station.station import Station
-from obspy.station.network import Network
 from obspy.station.inventory import Inventory, read_inventory
-from obspy.station.response import ResponseStage, PolesZerosResponseStage, \
-    CoefficientsTypeResponseStage, ResponseListResponseStage, \
-    FIRResponseStage, PolynomialResponseStage, Response, \
-    InstrumentSensitivity, InstrumentPolynomial
+from obspy.station.network import Network
+from obspy.station.response import (CoefficientsTypeResponseStage,
+                                    FIRResponseStage, InstrumentPolynomial,
+                                    InstrumentSensitivity,
+                                    PolesZerosResponseStage,
+                                    PolynomialResponseStage, Response,
+                                    ResponseListResponseStage, ResponseStage)
+from obspy.station.station import Station
 
 
 if __name__ == '__main__':

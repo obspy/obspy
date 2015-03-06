@@ -1,0 +1,34 @@
+The input-data in *.CNV - format contains a summary-card of the format:
+
+(3i2.2,1x,2i2.2,1x,f5.2,1x,f7.4,a1,1x,f8.4,a1,f7.2,f7.2,i2...)
+iyear,month,iday,ihr,min,sec,xlat,cns,xlon,cew,depth,emag,ifx...
+        (where cns is 'N' or 'S' and cew is 'E' or 'W')
+
+This summary card is followed by an unspecified number of lines each with six phase
+data. The end of the event is marked by a blank line. For each phase the station name,
+the phase type, the observation weight, and the observation time (in sec) relative to the
+origin time must be specified.
+
+Example of earthquake data file in *.CNV format:
+
+90 1 1  1349 0.36 36.6745N 121.3038W      6.08   2.10      1
+BLRMP0   1.51   BCGMP0 1.59     BSCMP0 1.62    BHRMP0 2.42    BJOMP0 1.71    BEHMP0 3.22
+BSLMP0   3.33   BVYMP0 2.59     BVLMP0 3.08    HJSMP1 3.88    BJCMP0 2.91    BEMMP2 4.19
+HFPMP2   3.32   BSRMP0 3.43     HQRMP1 4.55    HLTMP1 5.39    BPIMP0 4.27    BAVMP0 5.36
+
+90 1 2 310 7.67 36.6922N 121.3207W        4.32   3.20        0
+BCGMP0 1.11     BLRMP0 1.58     BHRMP0 2.23    BSCMP0 1.85    BJOMP0 2.37    BSLMP0 2.88
+
+
+Switch IFX: Default value=0
+For each event the switch IFX (i2, after magn.) may be set. If IFX=1, then adjustement
+of this hypocenter in y-direction (to rotate y-axis see parameter ROTATE in control
+file *.CMN) is inhibited.
+
+In the same event only one phase of the same type (P or S) is accepted for the same
+station! VELEST may also use S-P travel time differences. They must be written into
+a phase file of INPUTSED format (ISED=2). The phase description is "S-P". The
+phase identifier is a "-" rather than P or S.Reflected waves are computed only if the
+arrival-time is specified as one of a reflected wave (see below); in this case, the ray is
+forced to be a reflected one and no other raypaths are computed (because a reflected
+wave hardly is the first arrival...!).

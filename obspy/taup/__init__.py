@@ -2,23 +2,29 @@
 """
 obspy.taup - Travel time calculation tool
 =========================================
-The obspy.taup package contains Python wrappers for iaspei-tau - a travel time
-library by Arthur Snoke (http://www.iris.edu/pub/programs/iaspei-tau/).
-The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
-
-.. seealso:: [Snoke2009]_
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
-    Unknown
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import inspect
+import os
+
 # Convenience imports.
-from obspy.taup.taup import getTravelTimes, travelTimePlot
+from .tau import TauPyModel  # NOQA
+from .taup import getTravelTimes, travelTimePlot  # NOQA
+
+
+# Most generic way to get the data directory.
+__DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
+    inspect.currentframe()))), "data")
+
 
 if __name__ == '__main__':
     import doctest
