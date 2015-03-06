@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import numpy as np
+import warnings
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -199,7 +200,11 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
                 dtype=dtype)
             # convert to system byte order
             data = np.require(data, stype)
-            stream.append(Trace(data=data[2:], header=header))
+            nbytes = (data.size - 2) * dtype.itemsize
+            if nbytes != data[0] or nbytes != data[-1]:
+                msg = "Mismatching byte size %d, %d, %d"
+                warnings.warn(msg % (nbytes, data[0], data[-1]))
+            stream.append(Trace(data=data[1:-1], header=header))
     fh.close()
     return stream
 

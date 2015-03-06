@@ -73,14 +73,14 @@ class CoreTestCase(unittest.TestCase):
         # compare with ASCII values of trace
         # XXX: extracted ASCII file contains less values than the original
         # Seisan file!
-        self.assertEqual(list(st1[20].data[0:3665]),
+        self.assertEqual(list(st1[20].data[1:3666]),
                          np.loadtxt(datafile, dtype=np.int32).tolist())
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         st2 = readSEISAN(file)
         st2.verify()
         self.assertEqual(len(st2), 4)
-        self.assertEqual(list(st2[0].data[0:3]), [492, 519, 542])
+        self.assertEqual(list(st2[0].data[1:4]), [492, 519, 542])
 
     def test_readSEISANHeadOnly(self):
         """
